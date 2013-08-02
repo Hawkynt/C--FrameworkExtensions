@@ -35,6 +35,16 @@ namespace System {
     }
 
     /// <summary>
+    /// Divides the time by a divisor.
+    /// </summary>
+    /// <param name="This">This TimeSpan.</param>
+    /// <param name="divisor">The divisor.</param>
+    /// <returns>A fraction of the original timespan.</returns>
+    public static double DivideBy(this TimeSpan This, TimeSpan divisor) {
+      return (This.Ticks / (double)divisor.Ticks);
+    }
+
+    /// <summary>
     /// Multiplies the time by a given factor.
     /// </summary>
     /// <param name="This">This TimeSpan.</param>

@@ -19,11 +19,6 @@
 */
 #endregion
 
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Reflection;
-
 namespace System {
   internal static partial class ActivatorExtensions {
     /// <summary>
@@ -32,79 +27,7 @@ namespace System {
     /// <typeparam name="TType">The type to create.</typeparam>
     /// <returns>The instance of the given type.</returns>
     public static TType FromConstructor<TType>() {
-      return (TType)Activator.CreateInstance(typeof(TType));
-    }
-
-    /// <summary>
-    /// Compares two arrays of types for complete equality.
-    /// </summary>
-    /// <param name="array1">The 1st array.</param>
-    /// <param name="array2">The 2nd array.</param>
-    /// <param name="allowImplicitConversion">if set to <c>true</c> [allow implicit conversion].</param>
-    /// <returns>
-    ///   <c>true</c> if both arrays are equal; otherwise, <c>false</c>.
-    /// </returns>
-    private static bool _TypeArrayEquals(Type[] array1, ParameterInfo[] array2, bool allowImplicitConversion = false) {
-
-      // if only one of the arrays is null, return false
-      if ((array1 == null || array2 == null) && !(array1 == null && array2 == null))
-        return (false);
-
-      // both arrays are null, return true
-      if (array1 == null)
-        return (true);
-
-      // no array is null, compare
-      if (array1.Length != array2.Length)
-        return (false);
-
-      // compare elements
-      if (allowImplicitConversion)
-        return (array1.All((t, i) => array2[i].ParameterType.IsAssignableFrom(t)));
-
-      return (array1.All((t, i) => array2[i].ParameterType == t));
-    }
-
-    /// <summary>
-    /// Creates an instance from a ctor matching the given parameter types.
-    /// </summary>
-    /// <typeparam name="TType">The type to create.</typeparam>
-    /// <param name="parameters">The parameters.</param>
-    /// <returns>Anew types' instance.</returns>
-    private static TType _FromConstructor<TType>(IEnumerable<Tuple<Type, object>> parameters) {
-      Contract.Requires(parameters != null);
-      var pars = parameters.ToArray();
-
-      var typeToCreate = typeof(TType);
-      var typeOfParams = (
-        from i in pars
-        select i.Item1
-        ).ToArray();
-
-      var ctors = typeToCreate.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-      var matchingCtor = (
-
-        // try to find an exact matching ctor first
-        from i in ctors
-        let par = i.GetParameters()
-        where par != null && par.Length == typeOfParams.Length && _TypeArrayEquals(typeOfParams, par)
-        select i
-      ).FirstOrDefault() ?? (
-
-        // if none found, try to get a ctor that could be filled by implicit parameter conversions
-        from i in ctors
-        let par = i.GetParameters()
-        where par != null && par.Length == typeOfParams.Length && _TypeArrayEquals(typeOfParams, par, true)
-        select i
-        ).FirstOrDefault();
-
-      if (matchingCtor == null)
-        throw new NotSupportedException("No matching ctor found");
-
-      return (TType)matchingCtor.Invoke((from i in pars
-                                         select i.Item2).ToArray());
-
+      return typeof(TType).CreateInstance<TType>();
     }
 
     /// <summary>
@@ -115,9 +38,7 @@ namespace System {
     /// <param name="param0">The 1st parameter.</param>
     /// <returns>The instance of the given type.</returns>
     public static TType FromConstructor<TType, TParam0>(TParam0 param0) {
-      return _FromConstructor<TType>(new[] {
-        Tuple.Create(typeof (TParam0), (object)param0)
-      });
+      return typeof(TType).FromConstructor<TType, TParam0>(param0);
     }
 
     /// <summary>
@@ -132,10 +53,7 @@ namespace System {
     /// The instance of the given type.
     /// </returns>
     public static TType FromConstructor<TType, TParam0, TParam1>(TParam0 param0, TParam1 param1) {
-      return _FromConstructor<TType>(new[] {
-        Tuple.Create(typeof (TParam0), (object)param0),
-        Tuple.Create(typeof (TParam1), (object)param1)
-      });
+      return typeof(TType).FromConstructor<TType, TParam0, TParam1>(param0, param1);
     }
 
     /// <summary>
@@ -152,11 +70,7 @@ namespace System {
     /// The instance of the given type.
     /// </returns>
     public static TType FromConstructor<TType, TParam0, TParam1, TParam2>(TParam0 param0, TParam1 param1, TParam2 param2) {
-      return _FromConstructor<TType>(new[] {
-        Tuple.Create(typeof (TParam0), (object)param0),
-        Tuple.Create(typeof (TParam1), (object)param1),
-        Tuple.Create(typeof (TParam2), (object)param2)
-      });
+      return typeof(TType).FromConstructor<TType, TParam0, TParam1, TParam2>(param0, param1, param2);
     }
   }
 }

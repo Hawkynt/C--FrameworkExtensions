@@ -25,6 +25,18 @@ using qword = System.UInt64;
 namespace System {
   internal static partial class RandomExtensions {
     /// <summary>
+    /// Creates a random number between the given limits.
+    /// </summary>
+    /// <param name="This">This Random.</param>
+    /// <param name="minValue">The min value.</param>
+    /// <param name="maxValue">The max value.</param>
+    /// <returns>A value between the given boundaries</returns>
+    public static double NextDouble(this Random This, double minValue, double maxValue) {
+      Contract.Requires(This != null);
+      return (This.NextDouble() * (maxValue - minValue) + minValue);
+    }
+
+    /// <summary>
     /// Generates a random password.
     /// </summary>
     /// <param name="This">The this.</param>

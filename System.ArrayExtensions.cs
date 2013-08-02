@@ -31,6 +31,26 @@ namespace System {
     private static readonly Exception _noElements = new InvalidOperationException("No Elements!");
 
     /// <summary>
+    /// Gets a random element.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <param name="This">This Array.</param>
+    /// <param name="random">The random number generator, if any.</param>
+    /// <returns>A random element from the array.</returns>
+    public static TValue GetRandomElement<TValue>(this TValue[] This, Random random = null) {
+      Contract.Requires(This != null);
+      var length = This.Length;
+      if (length == 0)
+        throw _noElements;
+
+      if (random == null)
+        random = new Random();
+
+      var index = random.Next(length);
+      return (This[index]);
+    }
+
+    /// <summary>
     /// Gets a small portion of a byte array.
     /// </summary>
     /// <param name="This">This byte[].</param>
@@ -448,13 +468,15 @@ namespace System {
     public static TItem First<TItem>(this TItem[] This) {
       Contract.Requires(This != null);
       var length = This.Length;
-      if (length == 0) throw _noElements;
+      if (length == 0)
+        throw _noElements;
       return (This[0]);
     }
     public static TItem Last<TItem>(this TItem[] This) {
       Contract.Requires(This != null);
       var length = This.LongLength;
-      if (length == 0) throw _noElements;
+      if (length == 0)
+        throw _noElements;
       return (This[length - 1]);
     }
     public static TItem First<TItem>(this TItem[] This, Predicate<TItem> predicate) {
@@ -482,13 +504,15 @@ namespace System {
     public static TItem FirstOrDefault<TItem>(this TItem[] This) {
       Contract.Requires(This != null);
       var length = This.Length;
-      if (length == 0) return (default(TItem));
+      if (length == 0)
+        return (default(TItem));
       return (This[0]);
     }
     public static TItem LastOrDefault<TItem>(this TItem[] This) {
       Contract.Requires(This != null);
       var length = This.LongLength;
-      if (length == 0) return (default(TItem));
+      if (length == 0)
+        return (default(TItem));
       return (This[length - 1]);
     }
     public static TItem FirstOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate) {
@@ -517,7 +541,8 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(func != null);
       var length = This.LongLength;
-      if (length == 0) throw _noElements;
+      if (length == 0)
+        throw _noElements;
       var result = This[0];
       for (var i = 1; i < length; i++)
         result = func(result, This[i]);
@@ -527,7 +552,8 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(func != null);
       var length = This.LongLength;
-      if (length == 0) throw _noElements;
+      if (length == 0)
+        throw _noElements;
       var result = seed;
       for (var i = 0; i < length; i++)
         result = func(result, This[i]);

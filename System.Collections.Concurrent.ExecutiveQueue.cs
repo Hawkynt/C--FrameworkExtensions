@@ -28,12 +28,23 @@ namespace System.Collections.Concurrent {
   /// </summary>
   /// <typeparam name="TItem">The type of items contained in this queue.</typeparam>
   internal class ExecutiveQueue<TItem> : IQueue<TItem> {
-    private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
+
+    #region consts
+    private const int _IDLE = 0;
+    private const int _PROCESSING = 1;
+    #endregion
+
+    #region fields
     private readonly Action<TItem> _callback;
+    private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
     private readonly Action<TItem, Exception> _exceptionCallback;
     private readonly bool _isAsync;
     private readonly int _maxItems;
-    private int _isRunning;
+    private int _processing = _IDLE;
+    #endregion
+
+    private ConcurrentQueue<TItem> _Items { get { return (this._items); } }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ExecutiveQueue&lt;T&gt;"/> class.
     /// </summary>
@@ -97,7 +108,7 @@ namespace System.Collections.Concurrent {
       queue.Enqueue(item);
 
       // if already running just return
-      if (Thread.VolatileRead(ref this._isRunning) != 0)
+      if (Thread.VolatileRead(ref this._isRunning) != _IDLE)
         return;
 
       try {
@@ -105,7 +116,7 @@ namespace System.Collections.Concurrent {
         call.BeginInvoke(call.EndInvoke, null);
       } catch {
         // in case we're crashing
-        Interlocked.CompareExchange(ref this._isRunning, 0, 1);
+        Interlocked.CompareExchange(ref this._isRunning, _IDLE, _PROCESSING);
         throw;
       }
     }
@@ -123,7 +134,7 @@ namespace System.Collections.Concurrent {
       Contract.Requires(callback != null);
 
       // in case the value has alread changed
-      if (Interlocked.CompareExchange(ref isRunning, 1, 0) != 0)
+      if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
         return;
 
       try {
@@ -141,7 +152,7 @@ namespace System.Collections.Concurrent {
 
       } finally {
         // reset flag when done
-        Interlocked.CompareExchange(ref isRunning, 0, 1);
+        Interlocked.CompareExchange(ref isRunning, _IDLE, _PROCESSING);
       }
     }
 

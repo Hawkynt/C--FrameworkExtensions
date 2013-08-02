@@ -20,6 +20,9 @@
 #endregion
 
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 
 namespace System {
@@ -27,15 +30,14 @@ namespace System {
     /// <summary>
     /// Gets the property values of the object.
     /// </summary>
-    /// <param name="This">The this.</param>
-    /// <param name="flattenHierarchy">if set to <c>true</c> [flatten hierarchy].</param>
-    /// <param name="allowNonPublic">if set to <c>true</c> [allow non public].</param>
-    /// <param name="specialNames">if set to <c>true</c> [special names].</param>
-    /// <returns></returns>
-    public static Dictionary<string, object> GetProperties(this object This, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true) {
-      if (This == null)
-        return (null);
-
+    /// <param name="This">This Object.</param>
+    /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
+    /// <param name="allowNonPublic">if set to <c>true</c> allows non public to be returned.</param>
+    /// <param name="specialNames">if set to <c>true</c> special names will also be returned.</param>
+    /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
+    /// <returns>A collection of KeyValuePairs.</returns>
+    public static Dictionary<string, object> GetProperties(this object This, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
+      Contract.Requires(This != null);
       var result = new Dictionary<string, object>();
       var type = This.GetType();
       var flags =
@@ -54,10 +56,10 @@ namespace System {
         object value;
         try {
           value = prop.GetValue(This, null);
-        } catch {
-          value = null;
+        } catch (Exception e) {
+          value = exceptionHandler == null ? null : exceptionHandler(e);
         }
-        result.Add(prop.Name, value);
+        result.AddOrUpdate(prop.Name, value);
       }
 
       return (result);
@@ -66,14 +68,14 @@ namespace System {
     /// <summary>
     /// Gets the field values of the object.
     /// </summary>
-    /// <param name="This">The this.</param>
-    /// <param name="flattenHierarchy">if set to <c>true</c> [flatten hierarchy].</param>
-    /// <param name="allowNonPublic">if set to <c>true</c> [allow non public].</param>
-    /// <param name="specialNames">if set to <c>true</c> [special names].</param>
-    /// <returns></returns>
-    public static Dictionary<string, object> GetFields(this object This, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true) {
-      if (This == null)
-        return (null);
+    /// <param name="This">This Object.</param>
+    /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
+    /// <param name="allowNonPublic">if set to <c>true</c> allows non public to be returned.</param>
+    /// <param name="specialNames">if set to <c>true</c> special names will also be returned.</param>
+    /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
+    /// <returns>A collection of KeyValuePairs.</returns>
+    public static Dictionary<string, object> GetFields(this object This, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
+      Contract.Requires(This != null);
 
       var result = new Dictionary<string, object>();
       var type = This.GetType();
@@ -90,13 +92,59 @@ namespace System {
         object value;
         try {
           value = field.GetValue(This);
-        } catch {
-          value = null;
+        } catch (Exception e) {
+          value = exceptionHandler == null ? null : exceptionHandler(e);
         }
-        result.Add(field.Name, value);
+        result.AddOrUpdate(field.Name, value);
       }
 
       return (result);
+    }
+
+    /// <summary>
+    /// Resets the default values on properties that have one.
+    /// </summary>
+    /// <param name="This">This Object.</param>
+    /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
+    public static void ResetDefaultValues(this object This, bool flattenHierarchy = true) {
+      Contract.Requires(This != null);
+
+      var type = This.GetType();
+      var flags =
+        (flattenHierarchy ? BindingFlags.FlattenHierarchy : 0) |
+        BindingFlags.NonPublic |
+        (BindingFlags.Instance | BindingFlags.Public);
+
+      foreach (var prop in type.GetProperties(flags)) {
+        var defaultValueAttribute = prop.GetCustomAttributes(typeof(DefaultValueAttribute), flattenHierarchy).Cast<DefaultValueAttribute>().FirstOrDefault();
+        if (defaultValueAttribute == null)
+          continue;
+        prop.SetValue(This, defaultValueAttribute.Value, null);
+      }
+    }
+
+    /// <summary>
+    /// Determines whether this object is of a specific type.
+    /// </summary>
+    /// <typeparam name="TType">The type of the type.</typeparam>
+    /// <param name="This">This Object.</param>
+    /// <returns>
+    ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool Is<TType>(this object This) {
+      return (This is TType);
+    }
+
+    /// <summary>
+    /// Determines whether this object is of a specific type.
+    /// </summary>
+    /// <typeparam name="TType">The type of the type.</typeparam>
+    /// <param name="This">This Object.</param>
+    /// <returns>
+    ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
+    /// </returns>
+    public static TType As<TType>(this object This) where TType : class {
+      return (This as TType);
     }
   }
 }

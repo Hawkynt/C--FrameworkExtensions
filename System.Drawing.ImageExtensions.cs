@@ -18,12 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
 using System.Diagnostics.Contracts;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows.Media.Imaging;
 
 namespace System.Drawing {
   internal static partial class ImageExtensions {
@@ -140,6 +142,26 @@ namespace System.Drawing {
 
         // return icon
         return (Icon.FromHandle(hIcon));
+      }
+    }
+
+    /// <summary>
+    /// Converts a GDI+ image into a WPF BitmapImage.
+    /// </summary>
+    /// <param name="image">The image.</param>
+    /// <returns>The BitmapImage</returns>
+    public static BitmapImage ToBitmapImage(this Image image) {
+      Contract.Requires(image != null);
+      using (var memoryStream = new MemoryStream()) {
+        image.Save(memoryStream, ImageFormat.Png);
+        memoryStream.Position = 0;
+        var result = new BitmapImage();
+        result.BeginInit();
+        result.CacheOption = BitmapCacheOption.OnLoad;
+        result.UriSource = null;
+        result.StreamSource = memoryStream;
+        result.EndInit();
+        return (result);
       }
     }
   }
