@@ -146,5 +146,33 @@ namespace System {
     public static TType As<TType>(this object This) where TType : class {
       return (This as TType);
     }
+
+    /// <summary>
+    /// Determines whether the specified condition is true.
+    /// </summary>
+    /// <typeparam name="TType">The type of the object.</typeparam>
+    /// <param name="This">This Object.</param>
+    /// <param name="condition">The predicate.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified object matches the condition; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsTrue<TType>(this TType This, Predicate<TType> condition) {
+      Contract.Requires(condition != null);
+      return (condition(This));
+    }
+
+    /// <summary>
+    /// Determines whether the specified condition is false.
+    /// </summary>
+    /// <typeparam name="TType">The type of the object.</typeparam>
+    /// <param name="This">This Object.</param>
+    /// <param name="condition">The predicate.</param>
+    /// <returns>
+    ///   <c>false</c> if the specified object matches the condition; otherwise, <c>true</c>.
+    /// </returns>
+    public static bool IsFalse<TType>(this TType This, Predicate<TType> condition) {
+      Contract.Requires(condition != null);
+      return (!condition(This));
+    }
   }
 }
