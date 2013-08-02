@@ -43,7 +43,10 @@ namespace System.Collections.Concurrent {
     private int _processing = _IDLE;
     #endregion
 
-    private ConcurrentQueue<TItem> _Items { get { return (this._items); } }
+    /// <summary>
+    /// Gets the items.
+    /// </summary>
+    private ConcurrentQueue<TItem> _Items { get { return (this._queue); } }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExecutiveQueue&lt;T&gt;"/> class.
@@ -108,15 +111,15 @@ namespace System.Collections.Concurrent {
       queue.Enqueue(item);
 
       // if already running just return
-      if (Thread.VolatileRead(ref this._isRunning) != _IDLE)
+      if (Thread.VolatileRead(ref this._processing) != _IDLE)
         return;
 
       try {
-        Action call = () => _Worker(queue, callback, this._exceptionCallback, ref this._isRunning);
+        Action call = () => _Worker(queue, callback, this._exceptionCallback, ref this._processing);
         call.BeginInvoke(call.EndInvoke, null);
       } catch {
         // in case we're crashing
-        Interlocked.CompareExchange(ref this._isRunning, _IDLE, _PROCESSING);
+        Interlocked.CompareExchange(ref this._processing, _IDLE, _PROCESSING);
         throw;
       }
     }

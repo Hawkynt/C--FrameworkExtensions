@@ -26,7 +26,6 @@ namespace System.Collections.Generic {
   internal static partial class DictionaryExtensions {
     /// <summary>
     /// Adds the given key/value pairs.
-    /// Note: the number of parameters must be divisble by two to add all keys.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
@@ -34,12 +33,9 @@ namespace System.Collections.Generic {
     /// <param name="keyValuePairs">The key/value pairs.</param>
     public static void AddRange<TKey, TValue>(this Dictionary<TKey, TValue> This, params object[] keyValuePairs) {
       Contract.Requires(This != null);
-      if (keyValuePairs == null)
-        return;
-      var length = keyValuePairs.LongLength;
-      if ((length & 1) == 1)
-        length--;
-      for (var i = 0; i < length; i += 2) {
+      Contract.Requires(keyValuePairs != null && (keyValuePairs.Length & 1) == 0, "Length must be divisble by two!");
+
+      for (var i = 0; i < keyValuePairs.LongLength; i += 2) {
         var key = keyValuePairs[i];
         var value = keyValuePairs[i + 1];
         This.Add((TKey)key, (TValue)value);
@@ -393,19 +389,6 @@ namespace System.Collections.Generic {
       return (This.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value));
     }
 
-    /// <summary>
-    /// Adds the a bunch of key/value pairs.
-    /// </summary>
-    /// <typeparam name="TKey">The type of the keys.</typeparam>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="This">This Dictionary.</param>
-    /// <param name="values">The values.</param>
-    public static void AddRange<TKey, TValue>(this Dictionary<TKey, TValue> This, IEnumerable<KeyValuePair<TKey, TValue>> values) {
-      Contract.Requires(This != null);
-      Contract.Requires(values != null);
-      foreach (var kvp in values)
-        This.Add(kvp.Key, kvp.Value);
-    }
   }
 
   /// <summary>

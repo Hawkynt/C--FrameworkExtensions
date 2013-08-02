@@ -1086,20 +1086,5 @@ namespace System.Collections.Generic {
       return (count == 0 ? defaultValue : result / count);
     }
     #endregion
-
-    /// <summary>
-    /// Executes the given action on each element of the enumeration.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This enumerable.</param>
-    /// <param name="action">The action.</param>
-    public static void ForEach<TItem>(this IEnumerable<TItem> This, Action<TItem> action) {
-      Contract.Requires(This != null);
-      Contract.Requires(action != null);
-
-      foreach (var item in This)
-        action(item);
-
-    }
   }
 }
