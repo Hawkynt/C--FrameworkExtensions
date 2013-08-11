@@ -30,7 +30,7 @@ namespace System.Diagnostics {
     /// A utility class to determine a process parent.     
     /// </summary>     
     [StructLayout(LayoutKind.Sequential)]
-    public struct ParentProcessUtilities {
+    private struct ProcessBasicInformation {
       // These members must match PROCESS_BASIC_INFORMATION         
       internal IntPtr Reserved1;
       internal IntPtr PebBaseAddress;
@@ -41,13 +41,27 @@ namespace System.Diagnostics {
     }
 
     [DllImport("ntdll.dll", EntryPoint = "NtQueryInformationProcess")]
-    private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
+    private static extern int _NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ProcessBasicInformation processInformation, int processInformationLength, out int returnLength);
 
+    /// <summary>
+    /// Gets the parent process of the given process.
+    /// </summary>
+    /// <param name="This">This Process.</param>
+    /// <returns>The parent process or <c>null</c>.</returns>
     public static Process Parent(this Process This) {
       Contract.Requires(This != null);
-      return (GetParentProcess(This.Handle));
+      try {
+        return (GetParentProcess(This.Handle));
+      } catch {
+        return (null);
+      }
     }
 
+    /// <summary>
+    /// Recursively gets all parent processes of the given process.
+    /// </summary>
+    /// <param name="This">This Process.</param>
+    /// <returns></returns>
     public static IEnumerable<Process> Parents(this Process This) {
       var currentChild = This;
       var dontSkip = false;
@@ -78,9 +92,19 @@ namespace System.Diagnostics {
     /// <param name="handle">The process handle.</param>   
     /// <returns>An instance of the Process class.</returns>  
     public static Process GetParentProcess(IntPtr handle) {
-      var pbi = new ParentProcessUtilities(); int returnLength; int status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength); if (status != 0) throw new Win32Exception(status); try { return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32()); } catch (ArgumentException) {
+      var pbi = new ProcessBasicInformation();
+      int returnLength;
+      var status = _NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength);
+
+      if (status != 0)
+        throw new Win32Exception(status);
+
+      try {
+        return (Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32()));
+      } catch (ArgumentException) {
+
         // not found               
-        return null;
+        return (null);
       }
     }
 

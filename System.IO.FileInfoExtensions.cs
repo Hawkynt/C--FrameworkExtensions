@@ -22,6 +22,7 @@
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace System.IO {
   internal static partial class FileInfoExtensions {
@@ -107,6 +108,64 @@ namespace System.IO {
       This.CopyTo(destFileName, overwrite);
       This.Delete();
     }
+
+    /// <summary>
+    /// Computes the hash.
+    /// </summary>
+    /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The result of the hash algorithm</returns>
+    public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
+      using (var provider = new THashAlgorithm())
+      using (var stream = new FileStream(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+        return (provider.ComputeHash(stream));
+    }
+
+    /// <summary>
+    /// Calculates the SHA512 hash.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA512Hash(this FileInfo This) {
+      return (This.ComputeHash<SHA512CryptoServiceProvider>());
+    }
+
+    /// <summary>
+    /// Calculates the SHA384 hash.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA384Hash(this FileInfo This) {
+      return (This.ComputeHash<SHA384CryptoServiceProvider>());
+    }
+
+    /// <summary>
+    /// Calculates the SHA256 hash.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA256Hash(this FileInfo This) {
+      return (This.ComputeHash<SHA256CryptoServiceProvider>());
+    }
+
+    /// <summary>
+    /// Calculates the SHA-1 hash.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA1Hash(this FileInfo This) {
+      return (This.ComputeHash<SHA1CryptoServiceProvider>());
+    }
+
+    /// <summary>
+    /// Calculates the MD5 hash.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeMD5Hash(this FileInfo This) {
+      return (This.ComputeHash<MD5CryptoServiceProvider>());
+    }
+
   }
 }
 

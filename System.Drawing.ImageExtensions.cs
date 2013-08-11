@@ -164,5 +164,61 @@ namespace System.Drawing {
         return (result);
       }
     }
+
+    /// <summary>
+    /// Converts image to grayscale.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    public static Bitmap MakeGrayscale(this Image source) {
+      Contract.Requires(source != null && source is Bitmap);
+      return (source.ApplyPixelProcessor(c => {
+        var grayScale = (int)((c.R * .3) + (c.G * .59) + (c.B * .11));
+        return (Color.FromArgb(grayScale, grayScale, grayScale));
+      }));
+    }
+
+    /// <summary>
+    /// Converts image to grayscale.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    public static Bitmap Threshold(this Image source, byte threshold = 127) {
+      Contract.Requires(source != null && source is Bitmap);
+      return (source.ApplyPixelProcessor(c => {
+        var mean = (c.R + c.G + c.B) / 3.0;
+        var color = mean < threshold ? byte.MinValue : byte.MaxValue;
+        return (Color.FromArgb(color, color, color));
+      }));
+    }
+
+    /// <summary>
+    /// Applies a pixel processor to the image.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <param name="processor">The processor.</param>
+    /// <returns>The processed image.</returns>
+    public static Bitmap ApplyPixelProcessor(this Image source, Func<Color, Color> processor) {
+      Contract.Requires(source != null && source is Bitmap);
+      Contract.Requires(processor != null);
+      var original = (Bitmap)source;
+      //make an empty bitmap the same size as original
+      var newBitmap = new Bitmap(original.Width, original.Height);
+
+      for (var i = 0; i < original.Width; i++) {
+        for (var j = 0; j < original.Height; j++) {
+          //get the pixel from the original image
+          var originalColor = original.GetPixel(i, j);
+
+          //create the color object
+          var newColor = processor(originalColor);
+
+          //set the new image's pixel to the grayscale version
+          newBitmap.SetPixel(i, j, newColor);
+        }
+      }
+
+      return newBitmap;
+    }
   }
 }

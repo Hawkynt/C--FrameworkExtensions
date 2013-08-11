@@ -85,8 +85,10 @@ namespace System {
     /// <param name="count">The count.</param>
     /// <returns></returns>
     public static string Repeat(this string This, int count) {
-      if (This == null || count < 1)
+      if (This == null)
         return (null);
+      if (count < 1)
+        return string.Empty;
       var n = new StringBuilder(This.Length * count);
       for (int i = 0; i < count; i++) {
         n.Append(This);
@@ -884,6 +886,55 @@ namespace System {
     }
 
     #region parsers
+    #region Byte
+    public static byte ParseByte(this string This) {
+      Contract.Requires(This != null);
+      return (byte.Parse(This));
+    }
+
+    public static byte ParseByte(this string This, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (byte.Parse(This, provider));
+    }
+
+    public static byte ParseByte(this string This, NumberStyles numberStyles) {
+      Contract.Requires(This != null);
+      return (byte.Parse(This, numberStyles));
+    }
+
+    public static byte ParseByte(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (byte.Parse(This, numberStyles, provider));
+    }
+
+    public static bool TryParseByte(this string This, out byte result) {
+      return (byte.TryParse(This, out result));
+    }
+
+    public static bool TryParseByte(this string This, NumberStyles numberStyles, IFormatProvider provider, out byte result) {
+      return (byte.TryParse(This, numberStyles, provider, out result));
+    }
+
+    public static byte ParseByteOrDefault(this string This, byte defaultValue = default(byte)) {
+      byte result;
+      return (This.TryParseByte(out result) ? result : defaultValue);
+    }
+
+    public static byte ParseByteOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, byte defaultValue = default(byte)) {
+      byte result;
+      return (This.TryParseByte(numberStyles, provider, out result) ? result : defaultValue);
+    }
+
+    public static byte? ParseByteOrNull(this string This) {
+      byte result;
+      return (This.TryParseByte(out result) ? result : (byte?)null);
+    }
+
+    public static byte? ParseByteOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      byte result;
+      return (This.TryParseByte(numberStyles, provider, out result) ? result : (byte?)null);
+    }
+    #endregion
     #region Word
     public static word ParseWord(this string This) {
       Contract.Requires(This != null);
@@ -1031,6 +1082,55 @@ namespace System {
       return (This.TryParseFloat(numberStyles, provider, out result) ? result : (float?)null);
     }
     #endregion
+    #region Double
+    public static double ParseDouble(this string This) {
+      Contract.Requires(This != null);
+      return (double.Parse(This));
+    }
+
+    public static double ParseDouble(this string This, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (double.Parse(This, provider));
+    }
+
+    public static double ParseDouble(this string This, NumberStyles numberStyles) {
+      Contract.Requires(This != null);
+      return (double.Parse(This, numberStyles));
+    }
+
+    public static double ParseDouble(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (double.Parse(This, numberStyles, provider));
+    }
+
+    public static bool TryParseDouble(this string This, out double result) {
+      return (double.TryParse(This, out result));
+    }
+
+    public static bool TryParseDouble(this string This, NumberStyles numberStyles, IFormatProvider provider, out double result) {
+      return (double.TryParse(This, numberStyles, provider, out result));
+    }
+
+    public static double ParseDoubleOrDefault(this string This, double defaultValue = default(double)) {
+      double result;
+      return (This.TryParseDouble(out result) ? result : defaultValue);
+    }
+
+    public static double ParseDoubleOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, double defaultValue = default(double)) {
+      double result;
+      return (This.TryParseDouble(numberStyles, provider, out result) ? result : defaultValue);
+    }
+
+    public static double? ParseDoubleOrNull(this string This) {
+      double result;
+      return (This.TryParseDouble(out result) ? result : (double?)null);
+    }
+
+    public static double? ParseDoubleOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      double result;
+      return (This.TryParseDouble(numberStyles, provider, out result) ? result : (double?)null);
+    }
+    #endregion
 
     #endregion
 
@@ -1118,6 +1218,22 @@ namespace System {
           return (null);
       }
       return (Tuple.Create(host, port));
+    }
+
+    /// <summary>
+    /// Replaces any of the given characters in the string.
+    /// </summary>
+    /// <param name="This">This String.</param>
+    /// <param name="chars">The chars to replace.</param>
+    /// <param name="replacement">The replacement.</param>
+    /// <returns>The new string with replacements done.</returns>
+    public static string ReplaceAnyOf(this string This, string chars, string replacement) {
+      Contract.Requires(This != null);
+      Contract.Requires(chars != null);
+      return (
+        from c in This
+        select chars.IndexOf(c) >= 0 ? replacement ?? string.Empty : c.ToString()
+      ).Join(string.Empty);
     }
   }
 }

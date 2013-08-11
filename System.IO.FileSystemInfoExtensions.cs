@@ -139,6 +139,5 @@ namespace System.IO {
 
       return (drive == otherdrive);
     }
-
   }
 }
