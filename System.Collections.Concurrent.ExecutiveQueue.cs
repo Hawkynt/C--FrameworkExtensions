@@ -40,6 +40,7 @@ namespace System.Collections.Concurrent {
     private readonly Action<TItem, Exception> _exceptionCallback;
     private readonly bool _isAsync;
     private readonly int _maxItems;
+    private readonly TimeSpan _executionDelay;
     private int _processing = _IDLE;
     #endregion
 
@@ -49,19 +50,21 @@ namespace System.Collections.Concurrent {
     private ConcurrentQueue<TItem> _Items { get { return (this._queue); } }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ExecutiveQueue&lt;T&gt;"/> class.
+    /// Initializes a new instance of the <see cref="ExecutiveQueue&lt;T&gt;" /> class.
     /// </summary>
     /// <param name="callback">The callback that will get executed.</param>
     /// <param name="isAsync">if set to <c>true</c> the callback is executed asnychronousely.</param>
     /// <param name="exceptionCallback">The exception callback.</param>
     /// <param name="maxItems">The max items; if more items are enqueued, the queue will be block.</param>
-    public ExecutiveQueue(Action<TItem> callback, bool isAsync = true, Action<TItem, Exception> exceptionCallback = null, int maxItems = 1000000) {
+    /// <param name="executionDelay">The execution delay in ms.</param>
+    public ExecutiveQueue(Action<TItem> callback, bool isAsync = true, Action<TItem, Exception> exceptionCallback = null, int maxItems = 1000000, TimeSpan executionDelay = default(TimeSpan)) {
       Contract.Requires(callback != null);
       Contract.Requires(maxItems > 0);
       this._isAsync = isAsync;
       this._callback = callback;
       this._exceptionCallback = exceptionCallback;
       this._maxItems = maxItems;
+      this._executionDelay = executionDelay;
     }
 
     #region iQueue<T> Member
@@ -106,6 +109,7 @@ namespace System.Collections.Concurrent {
         return;
       }
 
+      //overflow protection
       while (queue.Count >= this._maxItems)
         Thread.Sleep(5);
       queue.Enqueue(item);
@@ -115,7 +119,7 @@ namespace System.Collections.Concurrent {
         return;
 
       try {
-        Action call = () => _Worker(queue, callback, this._exceptionCallback, ref this._processing);
+        Action call = () => _Worker(queue, callback, this._executionDelay, this._exceptionCallback, ref this._processing);
         call.BeginInvoke(call.EndInvoke, null);
       } catch {
         // in case we're crashing
@@ -130,9 +134,10 @@ namespace System.Collections.Concurrent {
     /// </summary>
     /// <param name="queue">The queue.</param>
     /// <param name="callback">The callback.</param>
+    /// <param name="executionDelay">The execution delay.</param>
     /// <param name="exceptionCallback">The exception callback, if any.</param>
     /// <param name="isRunning">The reference to the isRunning flag.</param>
-    private static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
+    private static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan executionDelay, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
       Contract.Requires(queue != null);
       Contract.Requires(callback != null);
 
@@ -140,10 +145,14 @@ namespace System.Collections.Concurrent {
       if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
         return;
 
-      try {
+      //
+      var useDelay = executionDelay != default(TimeSpan);
 
+      try {
         TItem current;
         while (queue.TryDequeue(out current)) {
+          if(useDelay)
+            Thread.Sleep(executionDelay);
           try {
             callback(current);
           } catch (Exception e) {
