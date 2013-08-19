@@ -56,7 +56,7 @@ namespace System.Collections.Concurrent {
     /// <param name="isAsync">if set to <c>true</c> the callback is executed asnychronousely.</param>
     /// <param name="exceptionCallback">The exception callback.</param>
     /// <param name="maxItems">The max items; if more items are enqueued, the queue will be block.</param>
-    /// <param name="executionDelay">The execution delay in ms.</param>
+    /// <param name="executionDelay">The execution delay timespan</param>
     public ExecutiveQueue(Action<TItem> callback, bool isAsync = true, Action<TItem, Exception> exceptionCallback = null, int maxItems = 1000000, TimeSpan executionDelay = default(TimeSpan)) {
       Contract.Requires(callback != null);
       Contract.Requires(maxItems > 0);
@@ -145,7 +145,6 @@ namespace System.Collections.Concurrent {
       if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
         return;
 
-      //
       var useDelay = executionDelay != default(TimeSpan);
 
       try {
