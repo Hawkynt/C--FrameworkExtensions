@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using word = System.UInt16;
+using dword = System.UInt32;
 using qword = System.UInt64;
 namespace System {
   internal static partial class StringExtensions {
@@ -762,7 +763,24 @@ namespace System {
     public static bool IsSurroundedWith(this string This, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
       Contract.Requires(This != null);
       Contract.Requires(text != null);
-      return (This.StartsWith(text, stringComparison) && This.EndsWith(text, stringComparison));
+      return (This.IsSurroundedWith(text, text, stringComparison));
+    }
+
+    /// <summary>
+    /// Determines whether the given string is surrounded by two others.
+    /// </summary>
+    /// <param name="This">This String.</param>
+    /// <param name="prefix">The prefix.</param>
+    /// <param name="postfix">The postfix.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <returns>
+    ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsSurroundedWith(this string This, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
+      Contract.Requires(This != null);
+      Contract.Requires(prefix != null);
+      Contract.Requires(postfix != null);
+      return (This.StartsWith(prefix, stringComparison) && This.EndsWith(postfix, stringComparison));
     }
 
     /// <summary>
@@ -982,6 +1000,55 @@ namespace System {
     public static word? ParseWordOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
       word result;
       return (This.TryParseWord(numberStyles, provider, out result) ? result : (word?)null);
+    }
+    #endregion
+    #region DWord
+    public static dword ParseDWord(this string This) {
+      Contract.Requires(This != null);
+      return (dword.Parse(This));
+    }
+
+    public static dword ParseDWord(this string This, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (dword.Parse(This, provider));
+    }
+
+    public static dword ParseDWord(this string This, NumberStyles numberStyles) {
+      Contract.Requires(This != null);
+      return (dword.Parse(This, numberStyles));
+    }
+
+    public static dword ParseDWord(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      Contract.Requires(This != null);
+      return (dword.Parse(This, numberStyles, provider));
+    }
+
+    public static bool TryParseDWord(this string This, out dword result) {
+      return (dword.TryParse(This, out result));
+    }
+
+    public static bool TryParseDWord(this string This, NumberStyles numberStyles, IFormatProvider provider, out dword result) {
+      return (dword.TryParse(This, numberStyles, provider, out result));
+    }
+
+    public static dword ParseDWordOrDefault(this string This, dword defaultValue = default(dword)) {
+      dword result;
+      return (This.TryParseDWord(out result) ? result : defaultValue);
+    }
+
+    public static dword ParseDWordOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, dword defaultValue = default(dword)) {
+      dword result;
+      return (This.TryParseDWord(numberStyles, provider, out result) ? result : defaultValue);
+    }
+
+    public static dword? ParseDWordOrNull(this string This) {
+      dword result;
+      return (This.TryParseDWord(out result) ? result : (dword?)null);
+    }
+
+    public static dword? ParseDWordOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
+      dword result;
+      return (This.TryParseDWord(numberStyles, provider, out result) ? result : (dword?)null);
     }
     #endregion
     #region Integer
