@@ -1297,10 +1297,11 @@ namespace System {
     public static string ReplaceAnyOf(this string This, string chars, string replacement) {
       Contract.Requires(This != null);
       Contract.Requires(chars != null);
-      return (
+      return string.Join(
+        string.Empty,
         from c in This
         select chars.IndexOf(c) >= 0 ? replacement ?? string.Empty : c.ToString()
-      ).Join(string.Empty);
+      );
     }
   }
 }

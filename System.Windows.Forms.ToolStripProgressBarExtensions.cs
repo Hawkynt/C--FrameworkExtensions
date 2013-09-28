@@ -38,6 +38,16 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="This">This ToolStripProgressBar.</param>
     /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
+    public static void SetNormalizedValue(this ToolStripProgressBar This, float value) {
+      Contract.Requires(This != null);
+      This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
+    }
+
+    /// <summary>
+    /// Sets the progressbar's normalized value.
+    /// </summary>
+    /// <param name="This">This ToolStripProgressBar.</param>
+    /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
     public static void SetNormalizedValue(this ToolStripProgressBar This, double value) {
       Contract.Requires(This != null);
       This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));

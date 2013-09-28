@@ -62,43 +62,36 @@ namespace System.Reflection {
         var result = "";
         result += this.GetExpandedOffset(this.offset) + " : " + this.code;
         if (this.operand != null) {
+          result += " ";
           switch (this.code.OperandType) {
             case OperandType.InlineField: {
               var fOperand = ((FieldInfo)this.operand);
-              result += " " + fOperand.FieldType + " " +
-                fOperand.ReflectedType +
-                  "::" + fOperand.Name + "";
+              result += fOperand.FieldType + " " + fOperand.ReflectedType + "::" + fOperand.Name + "";
               break;
             }
             case OperandType.InlineMethod: {
-              try {
-                var mOperand = (MethodInfo)this.operand;
-                result += " ";
+              var mOperand = this.operand as MethodInfo;
+              if (mOperand != null) {
                 if (!mOperand.IsStatic)
                   result += "instance ";
-                result += mOperand.ReturnType +
-                  " " + mOperand.ReflectedType +
-                    "::" + mOperand.Name + "()";
-              } catch {
-                try {
-                  var mOperand = (ConstructorInfo)this.operand;
+
+                result += mOperand.ReturnType + " " + mOperand.ReflectedType + "::" + mOperand.Name + "()";
+              } else {
+                var cOperand = (ConstructorInfo)this.operand;
                   result += " ";
-                  if (!mOperand.IsStatic)
+                if (!cOperand.IsStatic)
                     result += "instance ";
-                  result += "void " +
-                    mOperand.ReflectedType +
-                      "::" + mOperand.Name + "()";
-                } catch { }
+                result += "void " + cOperand.ReflectedType + "::" + cOperand.Name + "()";
               }
               break;
             }
             case OperandType.ShortInlineBrTarget:
             case OperandType.InlineBrTarget: {
-              result += " " + this.GetExpandedOffset((int)this.operand);
+              result += this.GetExpandedOffset((int)this.operand);
               break;
             }
             case OperandType.InlineType: {
-              result += " " + this.operand;
+              result += this.operand;
               break;
             }
             case OperandType.InlineString: {
@@ -149,6 +142,10 @@ namespace System.Reflection {
         for (var i = 0; result.Length < 4; i++)
           result = "0" + result;
         return result;
+      }
+
+      public override string ToString() {
+        return this.GetCode();
       }
     }
 
@@ -233,6 +230,14 @@ namespace System.Reflection {
         var metadataToken = 0;
 
         // get the operand of the current operation
+        position = _ReadOperand(This, code, position, il, module, instruction);
+        result.Add(instruction);
+      }
+      return (result.ToArray());
+    }
+
+    private static int _ReadOperand(MethodBase This, OpCode code, int position, byte[] il, Module module, ILInstruction instruction) {
+      int metadataToken;
         switch (code.OperandType) {
           case OperandType.InlineBrTarget: {
             metadataToken = ReadInt32(il, ref position);
@@ -319,7 +324,10 @@ namespace System.Reflection {
             break;
           }
           case OperandType.ShortInlineI: {
+          if (instruction.Code == OpCodes.Ldc_I4_S)
             instruction.Operand = ReadSByte(il, ref position);
+          else
+            instruction.Operand = ReadByte(il, ref position);
             break;
           }
           case OperandType.ShortInlineR: {
@@ -334,31 +342,33 @@ namespace System.Reflection {
             throw new Exception("Unknown operand type.");
           }
         }
-        result.Add(instruction);
-      }
-      return (result.ToArray());
+      return position;
     }
 
     #region il read methods
 
-    private static int ReadInt16(byte[] il, ref int position) {
-      return ((il[position++] | (il[position++] << 8)));
-    }
-
     private static ushort ReadUInt16(byte[] il, ref int position) {
-      return (ushort)((il[position++] | (il[position++] << 8)));
+      var result = BitConverter.ToUInt16(il, position);
+      position += 2;
+      return (result);
     }
 
     private static int ReadInt32(byte[] il, ref int position) {
-      return (((il[position++] | (il[position++] << 8)) | (il[position++] << 0x10)) | (il[position++] << 0x18));
+      var result = BitConverter.ToInt32(il, position);
+      position += 4;
+      return (result);
     }
 
-    private static ulong ReadInt64(byte[] il, ref int position) {
-      return (ulong)(((il[position++] | (il[position++] << 8)) | (il[position++] << 0x10)) | (il[position++] << 0x18) | (il[position++] << 0x20) | (il[position++] << 0x28) | (il[position++] << 0x30) | (il[position++] << 0x38));
+    private static long ReadInt64(byte[] il, ref int position) {
+      var result = BitConverter.ToInt64(il, position);
+      position += 8;
+      return (result);
     }
 
     private static double ReadDouble(byte[] il, ref int position) {
-      return (((il[position++] | (il[position++] << 8)) | (il[position++] << 0x10)) | (il[position++] << 0x18) | (il[position++] << 0x20) | (il[position++] << 0x28) | (il[position++] << 0x30) | (il[position++] << 0x38));
+      var result = BitConverter.ToDouble(il, position);
+      position += 8;
+      return (result);
     }
 
     private static sbyte ReadSByte(byte[] il, ref int position) {
@@ -370,7 +380,9 @@ namespace System.Reflection {
     }
 
     private static Single ReadSingle(byte[] il, ref int position) {
-      return (((il[position++] | (il[position++] << 8)) | (il[position++] << 0x10)) | (il[position++] << 0x18));
+      var result = BitConverter.ToSingle(il, position);
+      position += 4;
+      return (result);
     }
 
     #endregion
