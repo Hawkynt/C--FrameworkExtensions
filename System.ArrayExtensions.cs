@@ -108,7 +108,7 @@ namespace System {
           result.Append(join);
         else
           gotElements = true;
-        result.Append(ptrConverter == null ? item.ToString() : ptrConverter(item));
+        result.Append(ptrConverter == null ? ReferenceEquals(null, item) ? string.Empty : item.ToString() : ptrConverter(item));
       }
       // ReSharper restore ForCanBeConvertedToForeach
       return (gotElements ? result.ToString() : null);

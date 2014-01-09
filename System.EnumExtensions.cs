@@ -11,7 +11,7 @@ namespace System {
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="field">The field.</param>
     /// <returns>The content of the description attribute or <c>null</c>.</returns>
-    public static string GetFieldDescription<TEnum>(TEnum field) where TEnum : struct {
+    public static string GetFieldDescription<TEnum>(this TEnum field) where TEnum : struct {
       var result = GetFieldAttribute<TEnum, DescriptionAttribute>(field);
       return (result == null ? null : result.Description);
     }
@@ -22,7 +22,7 @@ namespace System {
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="field">The field.</param>
     /// <returns>The content of the description attribute or <c>null</c>.</returns>
-    public static string GetFieldDisplayName<TEnum>(TEnum field) where TEnum : struct {
+    public static string GetFieldDisplayName<TEnum>(this TEnum field) where TEnum : struct {
       var result = GetFieldAttribute<TEnum, DisplayNameAttribute>(field);
       return (result == null ? null : result.DisplayName);
     }
@@ -34,7 +34,7 @@ namespace System {
     /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
     /// <param name="field">The field.</param>
     /// <returns>The attribute or <c>null</c>.</returns>
-    public static TAttribute GetFieldAttribute<TEnum, TAttribute>(TEnum field)
+    public static TAttribute GetFieldAttribute<TEnum, TAttribute>(this TEnum field)
       where TEnum : struct
       where TAttribute : Attribute {
 

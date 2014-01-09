@@ -369,6 +369,14 @@ namespace System {
               // skip the following bracket
               ++i;
             }
+          } else if (current == '}' && (i < length - 1) && This[i] == '}') {
+            // copy what we've already got
+            var textContent = This.Substring(lastStartPos, i - lastStartPos-1);
+            lastStartPos = i ;
+            result.Append(textContent);
+
+            // skip double brackets
+            ++i;
           }
         }
       }
@@ -1255,9 +1263,9 @@ namespace System {
           yield return (currentPart);
           currentPart = string.Empty;
           pos += delimiter.Length - 1;
-        } else if (currentPart.Length == 0 && chr == '\'') {
+        } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
-        } else if (currentPart.Length == 0 && chr == '"') {
+        } else if (/*currentPart.Length == 0 &&*/ chr == '"') {
           currentlyInDoubleQuote = true;
         } else {
           currentPart += chr;

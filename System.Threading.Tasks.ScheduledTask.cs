@@ -110,14 +110,14 @@ namespace System.Threading.Tasks {
       // as long as there is fresh data available, re-use the thread
       while (this._dataAvailable != 0) {
 
-      // sleep if needed);
-      if (sleepTime != null)
-        Thread.Sleep((int)sleepTime);
+        // sleep if needed);
+        if (sleepTime != null)
+          Thread.Sleep((int)sleepTime);
 
-      // refresh current value
-      TValue currentValue;
+        // refresh current value
+        TValue currentValue;
         lock (this._lock) {
-        currentValue = this._currentValue;
+          currentValue = this._currentValue;
 
           // clear fresh data
           Interlocked.CompareExchange(ref this._dataAvailable, 0, 1);
@@ -125,18 +125,18 @@ namespace System.Threading.Tasks {
 
 
         // reset scheduler so more tasks can be scheduled
-      if (!this._waitUntilTaskReturnedBeforeNextSchedule)
-        Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
-
-      // execute task
-      try {
-        this._action(currentValue);
-      } finally {
-
-        // reset scheduler so more tasks can be scheduled
-        if (this._waitUntilTaskReturnedBeforeNextSchedule)
+        if (!this._waitUntilTaskReturnedBeforeNextSchedule)
           Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
-      }
+
+        // execute task
+        try {
+          this._action(currentValue);
+        } finally {
+
+          // reset scheduler so more tasks can be scheduled
+          if (this._waitUntilTaskReturnedBeforeNextSchedule)
+            Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
+        }
 
       }
     }

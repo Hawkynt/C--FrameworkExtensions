@@ -109,7 +109,7 @@ namespace System.Windows.Forms {
       if (This.IsDisposed)
         throw new ObjectDisposedException("Control already disposed.");
 
-        task();
+      task();
       return (true);
     }
 

@@ -21,6 +21,7 @@
 
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Windows.Forms;
 
 namespace System.Windows.Controls {
   internal static partial class TextBoxExtensions {

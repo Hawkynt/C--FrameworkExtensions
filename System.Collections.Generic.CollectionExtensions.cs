@@ -40,8 +40,8 @@ namespace System.Collections.Generic {
     /// <param name="arrThis">The collection.</param>
     /// <param name="ptrConverter">The converter function.</param>
     /// <returns></returns>
-    public static TOUT[] ConvertAll<TIN,TOUT>(this ICollection<TIN> arrThis, Converter<TIN, TOUT> ptrConverter) {
-      return(Array.ConvertAll(arrThis.ToArray(), ptrConverter));
+    public static TOUT[] ConvertAll<TIN, TOUT>(this ICollection<TIN> arrThis, Converter<TIN, TOUT> ptrConverter) {
+      return (Array.ConvertAll(arrThis.ToArray(), ptrConverter));
     }
 
     /// <summary>

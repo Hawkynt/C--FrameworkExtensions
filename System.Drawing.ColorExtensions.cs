@@ -19,7 +19,11 @@
 */
 #endregion
 
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime;
+using System.Windows.Forms.VisualStyles;
 
 namespace System.Drawing {
   internal static partial class ColorExtensions {
@@ -102,6 +106,48 @@ namespace System.Drawing {
     /// <returns>A new color.</returns>
     public static Color GetComplementaryColor(this Color This) {
       return (Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B));
+    }
+
+    /// <summary>
+    /// Cache
+    /// </summary>
+    private static Dictionary<int, Color> _colorLookupTable;
+
+    /// <summary>
+    /// Gets the color lookup table with all known colors in it.
+    /// </summary>
+    private static Dictionary<int, Color> _ColorLookupTable {
+      get {
+        if (_colorLookupTable != null)
+          return (_colorLookupTable);
+
+        var result = typeof(Color)
+               .GetProperties(BindingFlags.Public | BindingFlags.Static)
+               .Select(f => (Color)f.GetValue(null, null))
+               .Where(c => c.IsNamedColor)
+               .ToDictionary(c => c.ToArgb(), c => c);
+
+        return (_colorLookupTable = result);
+      }
+    }
+
+    /// <summary>
+    /// Gets the colors name.
+    /// Note: Fixes the issue with colors that were generated instead of chosen directly by looking up the ARGB value.
+    /// </summary>
+    /// <param name="This">This Color.</param>
+    /// <returns>The name of the color or <c>null</c>.</returns>
+    public static string GetName(this Color This) {
+      if (!string.IsNullOrWhiteSpace(This.Name))
+        return (This.Name);
+
+      if (!This.IsNamedColor)
+        return (null);
+
+      var table = _ColorLookupTable;
+
+      Color color;
+      return (table.TryGetValue(This.ToArgb(), out color) ? color.Name : null);
     }
 
     #region private methods

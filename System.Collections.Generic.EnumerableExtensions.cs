@@ -31,6 +31,17 @@ namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
 
     /// <summary>
+    /// Determines whether the enumeration is <c>null</c> or empty.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns>
+    ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> This) {
+      return This == null || !This.GetEnumerator().MoveNext();
+    }
+
+    /// <summary>
     /// Concats all byte arrays into one.
     /// </summary>
     /// <param name="This">This Enumerable of byte[].</param>

@@ -52,9 +52,9 @@ namespace System.ComponentModel {
   /// Tells the propertygrid what the maximum value for this number is.
   /// </summary>
   [AttributeUsage(AttributeTargets.Field)]
-  public class EnumDisplayNameAttribute : Attribute {
+  public class EnumDisplayNameAttribute : DisplayNameAttribute {
     private readonly string _displayName;
-    public string DisplayName { get { return (this._displayName); } }
+    public override string DisplayName { get { return (this._displayName); } }
     public EnumDisplayNameAttribute(string displayName) {
       this._displayName = displayName;
     }

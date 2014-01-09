@@ -78,9 +78,9 @@ namespace System.Reflection {
                 result += mOperand.ReturnType + " " + mOperand.ReflectedType + "::" + mOperand.Name + "()";
               } else {
                 var cOperand = (ConstructorInfo)this.operand;
-                  result += " ";
+                result += " ";
                 if (!cOperand.IsStatic)
-                    result += "instance ";
+                  result += "instance ";
                 result += "void " + cOperand.ReflectedType + "::" + cOperand.Name + "()";
               }
               break;
@@ -96,9 +96,9 @@ namespace System.Reflection {
             }
             case OperandType.InlineString: {
               if (this.operand.ToString() == "\r\n")
-                result += " \"\\r\\n\"";
+                result += "\"\\r\\n\"";
               else
-                result += " \"" + this.operand + "\"";
+                result += "\"" + this.operand + "\"";
               break;
             }
             case OperandType.ShortInlineVar: {
@@ -238,110 +238,110 @@ namespace System.Reflection {
 
     private static int _ReadOperand(MethodBase This, OpCode code, int position, byte[] il, Module module, ILInstruction instruction) {
       int metadataToken;
-        switch (code.OperandType) {
-          case OperandType.InlineBrTarget: {
-            metadataToken = ReadInt32(il, ref position);
-            metadataToken += position;
-            instruction.Operand = metadataToken;
-            break;
+      switch (code.OperandType) {
+        case OperandType.InlineBrTarget: {
+          metadataToken = ReadInt32(il, ref position);
+          metadataToken += position;
+          instruction.Operand = metadataToken;
+          break;
+        }
+        case OperandType.InlineField: {
+          metadataToken = ReadInt32(il, ref position);
+          instruction.Operand = module.ResolveField(metadataToken);
+          break;
+        }
+        case OperandType.InlineMethod: {
+          metadataToken = ReadInt32(il, ref position);
+          try {
+            instruction.Operand = module.ResolveMethod(metadataToken);
+          } catch {
+            instruction.Operand = module.ResolveMember(metadataToken);
           }
-          case OperandType.InlineField: {
-            metadataToken = ReadInt32(il, ref position);
-            instruction.Operand = module.ResolveField(metadataToken);
-            break;
-          }
-          case OperandType.InlineMethod: {
-            metadataToken = ReadInt32(il, ref position);
-            try {
-              instruction.Operand = module.ResolveMethod(metadataToken);
-            } catch {
-              instruction.Operand = module.ResolveMember(metadataToken);
-            }
-            break;
-          }
-          case OperandType.InlineSig: {
-            metadataToken = ReadInt32(il, ref position);
-            instruction.Operand = module.ResolveSignature(metadataToken);
-            break;
-          }
-          case OperandType.InlineTok: {
-            metadataToken = ReadInt32(il, ref position);
-            try {
-              instruction.Operand = module.ResolveType(metadataToken);
-            } catch { }
-            // SSS : see what to do here
-            break;
-          }
-          case OperandType.InlineType: {
-            metadataToken = ReadInt32(il, ref position);
-            // now we call the ResolveType always using the generic attributes type in order
-            // to support decompilation of generic methods and classes
+          break;
+        }
+        case OperandType.InlineSig: {
+          metadataToken = ReadInt32(il, ref position);
+          instruction.Operand = module.ResolveSignature(metadataToken);
+          break;
+        }
+        case OperandType.InlineTok: {
+          metadataToken = ReadInt32(il, ref position);
+          try {
+            instruction.Operand = module.ResolveType(metadataToken);
+          } catch { }
+          // SSS : see what to do here
+          break;
+        }
+        case OperandType.InlineType: {
+          metadataToken = ReadInt32(il, ref position);
+          // now we call the ResolveType always using the generic attributes type in order
+          // to support decompilation of generic methods and classes
 
-            // thanks to the guys from code project who commented on this missing feature
+          // thanks to the guys from code project who commented on this missing feature
 
-            instruction.Operand = module.ResolveType(metadataToken, This.DeclaringType.GetGenericArguments(), This.GetGenericArguments());
-            break;
-          }
-          case OperandType.InlineI: {
-            instruction.Operand = ReadInt32(il, ref position);
-            break;
-          }
-          case OperandType.InlineI8: {
-            instruction.Operand = ReadInt64(il, ref position);
-            break;
-          }
-          case OperandType.InlineNone: {
-            instruction.Operand = null;
-            break;
-          }
-          case OperandType.InlineR: {
-            instruction.Operand = ReadDouble(il, ref position);
-            break;
-          }
-          case OperandType.InlineString: {
-            metadataToken = ReadInt32(il, ref position);
-            instruction.Operand = module.ResolveString(metadataToken);
-            break;
-          }
-          case OperandType.InlineSwitch: {
-            var count = ReadInt32(il, ref position);
-            var casesAddresses = new int[count];
-            for (var i = 0; i < count; i++)
-              casesAddresses[i] = ReadInt32(il, ref position);
+          instruction.Operand = module.ResolveType(metadataToken, This.DeclaringType.GetGenericArguments(), This.GetGenericArguments());
+          break;
+        }
+        case OperandType.InlineI: {
+          instruction.Operand = ReadInt32(il, ref position);
+          break;
+        }
+        case OperandType.InlineI8: {
+          instruction.Operand = ReadInt64(il, ref position);
+          break;
+        }
+        case OperandType.InlineNone: {
+          instruction.Operand = null;
+          break;
+        }
+        case OperandType.InlineR: {
+          instruction.Operand = ReadDouble(il, ref position);
+          break;
+        }
+        case OperandType.InlineString: {
+          metadataToken = ReadInt32(il, ref position);
+          instruction.Operand = module.ResolveString(metadataToken);
+          break;
+        }
+        case OperandType.InlineSwitch: {
+          var count = ReadInt32(il, ref position);
+          var casesAddresses = new int[count];
+          for (var i = 0; i < count; i++)
+            casesAddresses[i] = ReadInt32(il, ref position);
 
-            var cases = new int[count];
-            for (var i = 0; i < count; i++)
-              cases[i] = position + casesAddresses[i];
+          var cases = new int[count];
+          for (var i = 0; i < count; i++)
+            cases[i] = position + casesAddresses[i];
 
-            break;
-          }
-          case OperandType.InlineVar: {
-            instruction.Operand = ReadUInt16(il, ref position);
-            break;
-          }
-          case OperandType.ShortInlineBrTarget: {
-            instruction.Operand = ReadSByte(il, ref position) + position;
-            break;
-          }
-          case OperandType.ShortInlineI: {
+          break;
+        }
+        case OperandType.InlineVar: {
+          instruction.Operand = ReadUInt16(il, ref position);
+          break;
+        }
+        case OperandType.ShortInlineBrTarget: {
+          instruction.Operand = ReadSByte(il, ref position) + position;
+          break;
+        }
+        case OperandType.ShortInlineI: {
           if (instruction.Code == OpCodes.Ldc_I4_S)
             instruction.Operand = ReadSByte(il, ref position);
           else
             instruction.Operand = ReadByte(il, ref position);
-            break;
-          }
-          case OperandType.ShortInlineR: {
-            instruction.Operand = ReadSingle(il, ref position);
-            break;
-          }
-          case OperandType.ShortInlineVar: {
-            instruction.Operand = ReadByte(il, ref position);
-            break;
-          }
-          default: {
-            throw new Exception("Unknown operand type.");
-          }
+          break;
         }
+        case OperandType.ShortInlineR: {
+          instruction.Operand = ReadSingle(il, ref position);
+          break;
+        }
+        case OperandType.ShortInlineVar: {
+          instruction.Operand = ReadByte(il, ref position);
+          break;
+        }
+        default: {
+          throw new Exception("Unknown operand type.");
+        }
+      }
       return position;
     }
 

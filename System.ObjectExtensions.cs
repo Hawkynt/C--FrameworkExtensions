@@ -136,6 +136,38 @@ namespace System {
     }
 
     /// <summary>
+    /// Determines whether this object is of any specified type.
+    /// </summary>
+    /// <param name="This">This Object.</param>
+    /// <param name="types">The types.</param>
+    /// <returns>
+    ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsAnyOf(this object This, params Type[] types) {
+      Contract.Requires(types != null);
+      if (This == null) {
+        return (types.Any(t => t == null || !t.IsValueType));
+      }
+      var type = This.GetType();
+      return (types.Any(t => t == type));
+    }
+
+    public static bool IsAnyOf<TType1, TType2>(this object This) {
+      return (This.IsAnyOf(typeof(TType1), typeof(TType2)));
+    }
+    public static bool IsAnyOf<TType1, TType2, TType3>(this object This) {
+      return (This.IsAnyOf(typeof(TType1), typeof(TType2), typeof(TType3)));
+    }
+    public static bool IsAnyOf<TType1, TType2, TType3, TType4>(this object This) {
+      return (This.IsAnyOf(typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4)));
+    }
+    public static bool IsAnyOf<TType1, TType2, TType3, TType4, TType5>(this object This) {
+      return (This.IsAnyOf(typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4), typeof(TType5)));
+    }
+    public static bool IsAnyOf<TType1, TType2, TType3, TType4, TType5, TType6>(this object This) {
+      return (This.IsAnyOf(typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4), typeof(TType5), typeof(TType6)));
+    }
+    /// <summary>
     /// Determines whether this object is of a specific type.
     /// </summary>
     /// <typeparam name="TType">The type of the type.</typeparam>

@@ -20,7 +20,7 @@
 #endregion
 
 // as long as fake db is defined, this will not execute any statement on the sql server, instead it will print statement to the console and do not use sql parameters, so values can be seen
-#define FAKE_DB
+#undef FAKE_DB
 
 
 #if FAKE_DB

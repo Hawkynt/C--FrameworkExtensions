@@ -21,54 +21,41 @@
 using System.Diagnostics.Contracts;
 
 namespace System.Collections.Generic {
-  internal static partial class StackExtensions {
-    /// <summary>
-    /// Inverts the specified stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">The stack to invert.</param>
-    public static void Invert<TItem>(this Stack<TItem> This) {
-      Contract.Requires(This != null);
-      var helpStack = new Queue<TItem>(This.Count);
-      while (This.Count > 0)
-        helpStack.Enqueue(This.Pop());
-      while (helpStack.Count > 0)
-        This.Push(helpStack.Dequeue());
-    }
+  internal static partial class QueueExtensions {
 
     /// <summary>
-    /// Adds all given items to the stack.
+    /// Adds all given items to the queue.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <param name="items">The items to push on top of the stack.</param>
-    public static void AddRange<TItem>(this Stack<TItem> This, IEnumerable<TItem> items) {
+    /// <param name="This">This Queue.</param>
+    /// <param name="items">The items to enqeue.</param>
+    public static void AddRange<TItem>(this Queue<TItem> This, IEnumerable<TItem> items) {
       Contract.Requires(This != null);
       Contract.Requires(items != null);
       foreach (var item in items)
-        This.Push(item);
+        This.Enqueue(item);
     }
 
     /// <summary>
-    /// Adds a given item to the stack.
+    /// Adds a given item to the queue.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <param name="item">The item to push on top of the stack.</param>
-    public static void Add<TItem>(this Stack<TItem> This, TItem item) {
+    /// <param name="This">This Queue.</param>
+    /// <param name="item">The item to enqeue.</param>
+    public static void Add<TItem>(this Queue<TItem> This, TItem item) {
       Contract.Requires(This != null);
-      This.Push(item);
+      This.Enqueue(item);
     }
 
     /// <summary>
     /// Fetches one item.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <returns>The top-most item.</returns>
-    public static TItem Fetch<TItem>(this Stack<TItem> This) {
+    /// <param name="This">This Queue.</param>
+    /// <returns>The first item.</returns>
+    public static TItem Fetch<TItem>(this Queue<TItem> This) {
       Contract.Requires(This != null);
-      return (This.Pop());
+      return (This.Dequeue());
     }
   }
 }
