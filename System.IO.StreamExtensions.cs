@@ -21,6 +21,7 @@
 
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Text;
 using qword = System.UInt64;
 namespace System.IO {
   /// <summary>
@@ -121,6 +122,42 @@ namespace System.IO {
     public static bool IsAtEndOfStream(this Stream This) {
       Contract.Requires(This != null);
       return (This.Position >= This.Length);
+    }
+
+    /// <summary>
+    /// Copies the whole stream to an array.
+    /// </summary>
+    /// <param name="This">This Stream.</param>
+    /// <returns>The content of the stream.</returns>
+    public static byte[] ToArray(this Stream This) {
+      Contract.Requires(This != null);
+      using (var data = new MemoryStream()) {
+        This.CopyTo(data);
+        return (data.ToArray());
+      }
+    }
+
+    /// <summary>
+    /// Reads all text from the stream..
+    /// </summary>
+    /// <param name="This">This Stream.</param>
+    /// <param name="encoding">The encoding.</param>
+    /// <returns>The text from the stream.</returns>
+    public static string ReadAllText(this Stream This, Encoding encoding = null) {
+      Contract.Requires(This != null);
+      if (encoding == null)
+        encoding = Encoding.Default;
+
+      return (This.CanRead ? encoding.GetString(This.ToArray()) : null);
+    }
+
+
+    public static void WriteAllText(this Stream This, string data, Encoding encoding = null) {
+      Contract.Requires(This != null);
+      if (encoding == null)
+        encoding = Encoding.Default;
+
+      This.Write(encoding.GetBytes(data));
     }
   }
 

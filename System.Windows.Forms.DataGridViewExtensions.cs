@@ -24,6 +24,24 @@ using System.Linq;
 
 namespace System.Windows.Forms {
   internal static partial class DataGridViewExtensions {
+
+    /// <summary>
+    /// Scrolls to the end.
+    /// </summary>
+    /// <param name="This">This DataGridView.</param>
+    public static void ScrollToEnd(this DataGridView This) {
+      Contract.Requires(This != null);
+      var rowCount = This.RowCount;
+      if (rowCount <= 0)
+        return;
+
+      try {
+        This.FirstDisplayedScrollingRowIndex = rowCount - 1;
+      } catch (Exception) {
+        ;
+      }
+    }
+
     /// <summary>
     /// Clones the columns to another datagridview.
     /// </summary>

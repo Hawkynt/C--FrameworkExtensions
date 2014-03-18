@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace System.Data.SqlClient {
   /// <summary>
@@ -125,7 +126,7 @@ namespace System.Data.SqlClient {
         sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = " + kvp.Value.MsSqlDataEscape());
 #else
         sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = @val" + paramIndex);
-        This.Parameters.AddWithValue("@val" + paramIndex, kvp.Value);
+        This.Parameters.AddWithValue("@val" + paramIndex, kvp.Value ?? DBNull.Value);
 #endif
         paramIndex++;
       }
@@ -167,19 +168,14 @@ namespace System.Data.SqlClient {
       Contract.Requires(This != null);
       Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
 
-      // TODO: conflicts with existing parameters
       var sqlCommand = new StringBuilder();
       sqlCommand.Append("INSERT INTO " + tableName.MsSqlIdentifierEscape());
 
-      // convert all enum values to longs, all bools to 1/0
       var realValues = values == null ? null : (
         from i in values
         select new {
           ColumnName = i.Key,
-          Value = i.Value == null ? null :
-            i.Value.GetType().IsEnum ? Convert.ToInt64(i.Value) :
-            i.Value is bool ? ((bool)i.Value ? 1 : 0) :
-            i.Value
+          Value = _ConvertDataValue(i.Value)
         }
       ).ToArray();
 
@@ -191,17 +187,23 @@ namespace System.Data.SqlClient {
 #if DO_NOT_USE_PARAMETERS
         sqlCommand.Append(string.Join(", ", realValues.Select((i, n) => i.Value.MsSqlDataEscape())));
 #else
-        sqlCommand.Append(string.Join(", ", realValues.Select((i, n) => "@val" + n)));
+        sqlCommand.Append(string.Join(", ", realValues.Select(i => {
+          var name = "@" + _ConvertParameterName(i.ColumnName);
+
+          // find a name for the param if it already exists using a counter postfix
+          var index = 1;
+          while (This.Parameters.Contains(name + (index < 2 ? string.Empty : index.ToString())))
+            index++;
+
+          // add value and mark "allow null" when the value is null
+          This.Parameters.AddWithValue(name, i.Value ?? DBNull.Value);
+          if (i.Value == null)
+            This.Parameters[name].IsNullable = true;
+
+          return (name);
+        })));
 #endif
         sqlCommand.Append(")");
-
-#if !DO_NOT_USE_PARAMETERS
-        var paramIndex = 0;
-        foreach (var kvp in realValues) {
-          This.Parameters.AddWithValue("@val" + paramIndex, kvp.Value);
-          paramIndex++;
-        }
-#endif
       }
 
       // no identity column, return number of rows affected, usually 1
@@ -227,6 +229,42 @@ namespace System.Data.SqlClient {
 #endif
 
       return (identityResult);
+    }
+
+    /// <summary>
+    /// Converts parameter names.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <returns></returns>
+    private static string _ConvertParameterName(string name) {
+      return (new Regex("[^a-z0-9]+", RegexOptions.IgnoreCase).Replace(name, string.Empty));
+    }
+
+    /// <summary>
+    /// Converts all enum values to longs, all bools to 1/0
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>The converted value</returns>
+    private static object _ConvertDataValue(object value) {
+      if (value == null)
+        return null;
+
+      if (!value.GetType().IsEnum) {
+
+        // convert bools to ints
+        if (value is bool)
+          return (bool)value ? 1 : 0;
+
+        // let the rest as it is
+        return value;
+      }
+
+      // enum derived from ulong
+      if (value is ulong)
+        return Convert.ToUInt64(value);
+
+      // all other enum bases
+      return Convert.ToInt64(value);
     }
 
     /// <summary>
@@ -283,9 +321,18 @@ namespace System.Data.SqlClient {
       sql.Append(columnName.MsSqlIdentifierEscape());
       sql.Append(" ");
       sql.Append(dbType.ToString());
-      if (charLength >= 0 && (dbType == SqlDbType.Char || dbType == SqlDbType.VarChar || dbType == SqlDbType.NChar || dbType == SqlDbType.NVarChar))
-        sql.Append(charLength == 0 ? "(MAX)" : "(" + charLength + ")");
-      else if ((decimalDigits != 0 || totalDigits != 0) && (dbType == SqlDbType.Decimal))
+
+      if (charLength >= 0 && (dbType == SqlDbType.Char || dbType == SqlDbType.VarChar || dbType == SqlDbType.NChar || dbType == SqlDbType.NVarChar)) {
+
+        if (charLength == 0) {
+          var version = This.Connection.ServerVersion == null ? null : This.Connection.ServerVersion.Split('.');
+
+          // HACK: work-around for sql server <2005(<v9.0.0), limit string columns to 1024 chars
+          sql.Append(version == null || version.Length < 1 || int.Parse(version[0]) < 9 ? "(1024)" : "(MAX)");
+        } else {
+          sql.Append("(" + charLength + ")");
+        }
+      } else if ((decimalDigits != 0 || totalDigits != 0) && (dbType == SqlDbType.Decimal))
         sql.Append("(" + totalDigits + "," + decimalDigits + ")");
 
       if (isNotNull)

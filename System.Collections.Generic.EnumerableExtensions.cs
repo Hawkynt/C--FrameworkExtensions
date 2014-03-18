@@ -19,10 +19,14 @@
 */
 #endregion
 
+#if NET35
+using System.Diagnostics;
+#else
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
+#endif
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using dword = System.UInt32;
 using qword = System.UInt64;
 using word = System.UInt16;
@@ -84,8 +88,13 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> list) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(list != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(list != null);
+#endif
 
       // we'll cache all visited values from the list, so we don't have to enumerate more than once
       var itemCache = new List<TItem>();
@@ -136,8 +145,13 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumerable.</param>
     /// <param name="action">The action.</param>
     public static void ForEach<TItem>(this IEnumerable<TItem> This, Action<TItem> action) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(action != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
 
       foreach (var item in This)
         action(item);
@@ -151,8 +165,13 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(action != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       var index = 0;
       foreach (var item in This)
         action(item, index++);
@@ -164,9 +183,16 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn> action) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(action != null);
+      foreach (var item in This)
+        action.BeginInvoke(item, action.EndInvoke, null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
       Parallel.ForEach(This, action);
+#endif
     }
     /// <summary>
     /// Executes a callback for each item in parallel.
@@ -175,10 +201,18 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(action != null);
+      var index = 0;
+      foreach (var item in This)
+        action.BeginInvoke(item, index++, action.EndInvoke, null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
       var index = 0;
       Parallel.ForEach(This, item => action(item, index++));
+#endif
     }
     /// <summary>
     /// Converts all.
@@ -189,8 +223,13 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> This, Func<TIn, TOut> converter) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(converter != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
+#endif
       return (This.Select(converter));
     }
 
@@ -205,8 +244,13 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<double> progressCallback, bool delayed = false) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(progressCallback != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
       var collection = This as ICollection<TIn> ?? new List<TIn>(This);
       return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
     }
@@ -221,8 +265,13 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<double> progressCallback, bool delayed = false) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(progressCallback != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
       if (length == 0) {
         progressCallback(100);
       } else {
@@ -247,8 +296,13 @@ namespace System.Collections.Generic {
     /// <param name="condition">The condition.</param>
     /// <returns></returns>
     public static bool All<TSource>(this IEnumerable<TSource> This, Func<TSource, int, bool> condition) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(condition != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(condition != null);
+#endif
 
       // original but slower implementation
       //return (!This.Where((o, i) => !condition(o, i)).Any());
@@ -272,8 +326,13 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>An enumeration with distinct elements.</returns>
     public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> This, Func<TIn, TCompare> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
 
       var list = (
         from i in This
@@ -307,7 +366,11 @@ namespace System.Collections.Generic {
     /// <param name="ptrConverter">The converter.</param>
     /// <returns>The joines string.</returns>
     public static string Join<TIn>(this IEnumerable<TIn> This, string join = ", ", bool skipDefaults = false, Func<TIn, string> ptrConverter = null) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var result = new StringBuilder();
       var gotElements = false;
       var defaultValue = default(TIn);
@@ -337,8 +400,13 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The index of the matched item or the given default value.</returns>
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, int defaultValue = -1) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       var result = 0;
       foreach (var item in This)
         if (selector(item))
@@ -357,8 +425,13 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -372,7 +445,11 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       foreach (var item in This)
         return (item);
 
@@ -387,9 +464,15 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+      Debug.Assert(defaultValueFactory != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
       Contract.Requires(defaultValueFactory != null);
+#endif
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -403,7 +486,11 @@ namespace System.Collections.Generic {
     /// <param name="This">The this.</param>
     /// <returns></returns>
     public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       return (This.OrderBy(i => i));
     }
 
@@ -434,7 +521,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static TimeSpan Sum(this IEnumerable<TimeSpan> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       return (TimeSpan.FromMilliseconds(This.Select(i => i.TotalMilliseconds).Sum()));
     }
 
@@ -446,8 +537,13 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static TimeSpan Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, TimeSpan> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Sum());
     }
 
@@ -457,7 +553,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static word Sum(this IEnumerable<word> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       return (This.Aggregate((word)0, (current, i) => (word)(current + i)));
     }
 
@@ -469,8 +569,13 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static word Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, word> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Sum());
     }
 
@@ -480,7 +585,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static dword Sum(this IEnumerable<dword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       return (This.Aggregate((dword)0, (current, i) => current + i));
     }
 
@@ -492,8 +601,13 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static dword Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, dword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Sum());
     }
 
@@ -503,7 +617,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static qword Sum(this IEnumerable<qword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       return (This.Aggregate((qword)0, (current, i) => current + i));
     }
 
@@ -515,14 +633,23 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static qword Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, qword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Sum());
     }
     #endregion
     #region min
     public static sbyte Min(this IEnumerable<sbyte> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = sbyte.MaxValue;
       foreach (var item in This) {
@@ -539,7 +666,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static byte Min(this IEnumerable<byte> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = byte.MaxValue;
       foreach (var item in This) {
@@ -556,7 +687,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static word Min(this IEnumerable<word> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = word.MaxValue;
       foreach (var item in This) {
@@ -573,7 +708,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static short Min(this IEnumerable<short> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = short.MaxValue;
       foreach (var item in This) {
@@ -590,7 +729,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static dword Min(this IEnumerable<dword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = dword.MaxValue;
       foreach (var item in This) {
@@ -607,7 +750,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static qword Min(this IEnumerable<qword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = qword.MaxValue;
       foreach (var item in This) {
@@ -625,33 +772,63 @@ namespace System.Collections.Generic {
     }
 
     public static sbyte Min<TItem>(this IEnumerable<TItem> This, Func<TItem, sbyte> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     public static byte Min<TItem>(this IEnumerable<TItem> This, Func<TItem, byte> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     public static word Min<TItem>(this IEnumerable<TItem> This, Func<TItem, word> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     public static short Min<TItem>(this IEnumerable<TItem> This, Func<TItem, short> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     public static dword Min<TItem>(this IEnumerable<TItem> This, Func<TItem, dword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     public static qword Min<TItem>(this IEnumerable<TItem> This, Func<TItem, qword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Min());
     }
     #endregion
@@ -724,77 +901,123 @@ namespace System.Collections.Generic {
     }
 
     public static sbyte MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, sbyte> selector, sbyte defaultValue = 0) {
+#if NET35
+
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static byte MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, byte> selector, byte defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static word MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, word> selector, word defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static short MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, short> selector, short defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static dword MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, dword> selector, dword defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static int MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, int> selector, int defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static qword MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, qword> selector, qword defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static long MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, long> selector, long defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static float MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, float> selector, float defaultValue = 0) {
+#if NET35
+
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static double MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, double> selector, double defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Min(selector));
     }
     public static decimal MinOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, decimal> selector, decimal defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
@@ -803,7 +1026,11 @@ namespace System.Collections.Generic {
     #endregion
     #region max
     public static sbyte Max(this IEnumerable<sbyte> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = sbyte.MinValue;
       foreach (var item in This) {
@@ -820,7 +1047,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static byte Max(this IEnumerable<byte> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = byte.MinValue;
       foreach (var item in This) {
@@ -837,7 +1068,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static word Max(this IEnumerable<word> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = word.MinValue;
       foreach (var item in This) {
@@ -854,7 +1089,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static short Max(this IEnumerable<short> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = short.MinValue;
       foreach (var item in This) {
@@ -871,7 +1110,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static dword Max(this IEnumerable<dword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = dword.MinValue;
       foreach (var item in This) {
@@ -888,7 +1131,11 @@ namespace System.Collections.Generic {
       return (result);
     }
     public static qword Max(this IEnumerable<qword> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
       Contract.Requires(This != null);
+#endif
       var hasValues = false;
       var result = qword.MinValue;
       foreach (var item in This) {
@@ -906,33 +1153,63 @@ namespace System.Collections.Generic {
     }
 
     public static sbyte Max<TItem>(this IEnumerable<TItem> This, Func<TItem, sbyte> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     public static byte Max<TItem>(this IEnumerable<TItem> This, Func<TItem, byte> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     public static word Max<TItem>(this IEnumerable<TItem> This, Func<TItem, word> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     public static short Max<TItem>(this IEnumerable<TItem> This, Func<TItem, short> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     public static dword Max<TItem>(this IEnumerable<TItem> This, Func<TItem, dword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     public static qword Max<TItem>(this IEnumerable<TItem> This, Func<TItem, qword> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       return (This.Select(selector).Max());
     }
     #endregion
@@ -1005,77 +1282,121 @@ namespace System.Collections.Generic {
     }
 
     public static sbyte MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, sbyte> selector, sbyte defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static byte MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, byte> selector, byte defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static word MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, word> selector, word defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static short MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, short> selector, short defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static dword MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, dword> selector, dword defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static int MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, int> selector, int defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static qword MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, qword> selector, qword defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static long MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, long> selector, long defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static float MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, float> selector, float defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static double MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, double> selector, double defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();
       return (items.Count == 0 ? defaultValue : items.Max(selector));
     }
     public static decimal MaxOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, decimal> selector, decimal defaultValue = 0) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
       Contract.Requires(selector != null);
+#endif
       if (This == null)
         return (defaultValue);
       var items = This.ToList();

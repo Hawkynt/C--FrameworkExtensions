@@ -220,5 +220,69 @@ namespace System.Drawing {
 
       return newBitmap;
     }
+
+    /// <summary>
+    /// Resizes the specified Image.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <param name="width">The width in pixels.</param>
+    /// <param name="height">The height in pixels.</param>
+    /// <param name="interpolation">The interpolation.</param>
+    /// <returns></returns>
+    public static Bitmap Resize(this Image This, int width = -1, int height = -1, InterpolationMode interpolation = InterpolationMode.Default) {
+      Contract.Requires(This != null);
+      if (width < 1 && height < 1)
+        throw new ArgumentException("At least one argument has to be > 0", "width");
+
+      // aspect ratio-preserving resize
+      if (width < 1)
+        width = (int)(This.Width * height / (double)This.Height);
+      if (height < 1)
+        height = (int)(This.Height * width / (double)This.Width);
+
+      // set resolution
+      var result = new Bitmap(width, height, This.PixelFormat);
+      result.SetResolution(This.HorizontalResolution, This.VerticalResolution);
+
+      // do resize action
+      using (var graphics = Graphics.FromImage(result)) {
+        graphics.InterpolationMode = interpolation;
+        graphics.DrawImage(This, new Rectangle(0, 0, width, height), new Rectangle(0, 0, This.Width, This.Height), GraphicsUnit.Pixel);
+      }
+      return (result);
+    }
+
+    /// <summary>
+    /// Rotates the specified image.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <param name="angle">The angle.</param>
+    /// <returns></returns>
+    public static Bitmap Rotate(this Image This, float angle) {
+      Contract.Requires(This != null);
+      var result = new Bitmap(This);
+      if (Math.Abs(angle) % 360 == 0)
+        return (result);
+      if (angle == 90 || angle == -270) {
+        result.RotateFlip(RotateFlipType.Rotate90FlipNone);
+        return (result);
+      }
+      if (Math.Abs(angle) % 180 == 0) {
+        result.RotateFlip(RotateFlipType.Rotate180FlipNone);
+        return (result);
+      }
+      if (angle == 270 || angle == -90) {
+        result.RotateFlip(RotateFlipType.Rotate270FlipNone);
+        return (result);
+      }
+
+      using (var graphics = Graphics.FromImage(result)) {
+        graphics.TranslateTransform(result.Width / 2f, result.Height / 2f);
+        graphics.RotateTransform(angle);
+        graphics.TranslateTransform(-result.Width / 2f, -result.Height / 2f);
+        graphics.DrawImage(result, new Point(0, 0));
+      }
+      return (result);
+    }
   }
 }

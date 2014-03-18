@@ -29,7 +29,7 @@ namespace System {
   internal class FastLazy<TValue> {
 
     private Func<TValue> _getter;
-    private Func<TValue> _factory;
+    private readonly Func<TValue> _factory;
     private TValue _value;
     private bool _hasValue = false;
 
@@ -41,9 +41,7 @@ namespace System {
       Contract.Requires(factory != null);
 
       this._factory = factory;
-
-      // initialize the getter with something that creates the value and then replaces the getter with a method that returns the current value.
-      this._getter = this._InitializeValue;
+      this.Reset();
     }
 
     /// <summary>
@@ -56,6 +54,7 @@ namespace System {
       this._value = value;
       this._hasValue = true;
       this._getter = this._GetValue;
+      this._factory = () => value;
     }
 
     /// <summary>
@@ -66,11 +65,18 @@ namespace System {
 
       // locking keeps value creation thread-safe and it only occurs when initializing the value
       lock (this) {
-        this._value = this._factory();
-        this._factory = this._getter = this._GetValue;
+
+        // in case another thread already initialized
+        if (this._hasValue)
+          return (this._value);
+
+        // create value exactly once
+        var value = this._factory();
+        this._value = value;
+        this._getter = this._GetValue;
+        this._hasValue = true;
+        return (value);
       }
-      this._hasValue = true;
-      return (this._value);
     }
 
     /// <summary>
@@ -93,6 +99,18 @@ namespace System {
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
     public bool HasValue { get { return (this._hasValue); } }
+
+    /// <summary>
+    /// Resets the value cached from the factory and triggers to call the factory, next time a value is needed.
+    /// </summary>
+    public void Reset() {
+      lock (this) {
+        this._hasValue = false;
+
+        // initialize the getter with something that creates the value and then replaces the getter with a method that returns the current value.
+        this._getter = this._InitializeValue;
+      }
+    }
 
     /// <summary>
     /// Performs an implicit conversion from <see cref="System.FastLazy&lt;TValue&gt;"/> to <see cref="TValue"/>.

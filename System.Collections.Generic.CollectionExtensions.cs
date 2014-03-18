@@ -64,5 +64,18 @@ namespace System.Collections.Generic {
       foreach (var item in items)
         This.Add(item);
     }
+
+    /// <summary>
+    /// Removes the range of items.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This Collection.</param>
+    /// <param name="items">The items.</param>
+    public static void RemoveRange<TItem>(this ICollection<TItem> This, IEnumerable<TItem> items) {
+      Contract.Requires(This != null);
+      Contract.Requires(items != null);
+      foreach (var item in items)
+        This.Remove(item);
+    }
   }
 }
