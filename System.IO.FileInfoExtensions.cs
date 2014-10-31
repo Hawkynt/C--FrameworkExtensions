@@ -22,7 +22,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Drawing;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
@@ -118,7 +117,7 @@ namespace System.IO {
       int result;
       using (var f = File.Open(This.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
         result = NativeMethods.DeviceIoControl(
-          f.Handle,
+          f.SafeFileHandle.DangerousGetHandle(),
           NativeMethods.FSCTL_SET_COMPRESSION,
           ref COMPRESSION_FORMAT_DEFAULT,
           2 /*sizeof(short)*/,
@@ -172,11 +171,23 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="destFileName">Name of the destination file.</param>
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
-    public static void MoveTo(this FileInfo This, string destFileName, bool overwrite) {
+    /// <param name="timeout">The timeout.</param>
+    public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
       Contract.Requires(This != null);
       using (var scope = new TransactionScope()) {
         This.CopyTo(destFileName, overwrite);
-        This.Delete();
+        var delay = TimeSpan.FromSeconds(1);
+        var tries = (int)((timeout.HasValue ? timeout.Value : TimeSpan.FromSeconds(30)).Ticks / delay.Ticks);
+        while (true) {
+          try {
+            This.Delete();
+            break;
+          } catch (IOException) {
+            if (tries-- < 1)
+              throw;
+            Thread.Sleep(delay);
+          }
+        }
         scope.Complete();
       }
     }
@@ -669,6 +680,16 @@ namespace System.IO {
     public static string GetFilenameWithoutExtension(this FileInfo This) {
       Contract.Requires(This != null);
       return (Path.GetFileNameWithoutExtension(This.FullName));
+    }
+
+    /// <summary>
+    /// Gets the filename.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>The filename.</returns>
+    public static string GetFilename(this FileInfo This) {
+      Contract.Requires(This != null);
+      return (Path.GetFileName(This.FullName));
     }
   }
 }

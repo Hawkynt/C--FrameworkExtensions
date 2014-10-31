@@ -383,6 +383,7 @@ namespace System {
       // and parts that simply need to be copied
       while (i < length) {
         var current = This[i++];
+        var next = i < length ? This[i].ToString() : null;
 
         if (isInField) {
 
@@ -415,16 +416,17 @@ namespace System {
             result.Append(textContent);
 
             // filter out double brackets
-            if ((i >= length - 1 || This[i] != '{')) {
-
-              // field start found, switch mode
-              isInField = true;
-            } else {
+            if (next != null && next == "{") {
 
               // skip the following bracket
               ++i;
+            } else {
+
+              // field start found, switch mode
+              isInField = true;
             }
-          } else if (current == '}' && (i < length - 1) && This[i] == '}') {
+          } else if (current == '}' && (next != null) && next == "}") {
+
             // copy what we've already got
             var textContent = This.Substring(lastStartPos, i - lastStartPos - 1);
             lastStartPos = i;
@@ -684,6 +686,28 @@ namespace System {
       Contract.Assume(This.Length > 1);
 #endif
       return This.Substring(0, 1).ToLowerInvariant() + This.Substring(1);
+    }
+
+    /// <summary>
+    /// Splits the specified string by another one.
+    /// </summary>
+    /// <param name="This">This string.</param>
+    /// <param name="splitter">The splitter.</param>
+    /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+    /// <returns>The parts.</returns>
+    public static string[] Split(this string This, char splitter, int max = 0) {
+      return (This.Split(splitter.ToString(), (qword)max).ToArray());
+    }
+
+    /// <summary>
+    /// Splits the specified string by another one.
+    /// </summary>
+    /// <param name="This">This string.</param>
+    /// <param name="splitter">The splitter.</param>
+    /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+    /// <returns>The parts.</returns>
+    public static IEnumerable<string> Split(this string This, char splitter, qword max = 0) {
+      return (This.Split(splitter.ToString(), max));
     }
 
     /// <summary>
@@ -1091,400 +1115,6 @@ namespace System {
 
       return count < 1 ? (This.Split(new[] { delimiter }, options)) : (This.Split(new[] { delimiter }, count, options));
     }
-
-    #region parsers
-    #region Byte
-    public static byte ParseByte(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (byte.Parse(This));
-    }
-
-    public static byte ParseByte(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (byte.Parse(This, provider));
-    }
-
-    public static byte ParseByte(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (byte.Parse(This, numberStyles));
-    }
-
-    public static byte ParseByte(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (byte.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseByte(this string This, out byte result) {
-      return (byte.TryParse(This, out result));
-    }
-
-    public static bool TryParseByte(this string This, NumberStyles numberStyles, IFormatProvider provider, out byte result) {
-      return (byte.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static byte ParseByteOrDefault(this string This, byte defaultValue = default(byte)) {
-      byte result;
-      return (This.TryParseByte(out result) ? result : defaultValue);
-    }
-
-    public static byte ParseByteOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, byte defaultValue = default(byte)) {
-      byte result;
-      return (This.TryParseByte(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static byte? ParseByteOrNull(this string This) {
-      byte result;
-      return (This.TryParseByte(out result) ? result : (byte?)null);
-    }
-
-    public static byte? ParseByteOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      byte result;
-      return (This.TryParseByte(numberStyles, provider, out result) ? result : (byte?)null);
-    }
-    #endregion
-    #region Word
-    public static word ParseWord(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (word.Parse(This));
-    }
-
-    public static word ParseWord(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (word.Parse(This, provider));
-    }
-
-    public static word ParseWord(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (word.Parse(This, numberStyles));
-    }
-
-    public static word ParseWord(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (word.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseWord(this string This, out word result) {
-      return (word.TryParse(This, out result));
-    }
-
-    public static bool TryParseWord(this string This, NumberStyles numberStyles, IFormatProvider provider, out word result) {
-      return (word.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static word ParseWordOrDefault(this string This, word defaultValue = default(word)) {
-      word result;
-      return (This.TryParseWord(out result) ? result : defaultValue);
-    }
-
-    public static word ParseWordOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, word defaultValue = default(word)) {
-      word result;
-      return (This.TryParseWord(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static word? ParseWordOrNull(this string This) {
-      word result;
-      return (This.TryParseWord(out result) ? result : (word?)null);
-    }
-
-    public static word? ParseWordOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      word result;
-      return (This.TryParseWord(numberStyles, provider, out result) ? result : (word?)null);
-    }
-    #endregion
-    #region DWord
-    public static dword ParseDWord(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (dword.Parse(This));
-    }
-
-    public static dword ParseDWord(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (dword.Parse(This, provider));
-    }
-
-    public static dword ParseDWord(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (dword.Parse(This, numberStyles));
-    }
-
-    public static dword ParseDWord(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (dword.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseDWord(this string This, out dword result) {
-      return (dword.TryParse(This, out result));
-    }
-
-    public static bool TryParseDWord(this string This, NumberStyles numberStyles, IFormatProvider provider, out dword result) {
-      return (dword.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static dword ParseDWordOrDefault(this string This, dword defaultValue = default(dword)) {
-      dword result;
-      return (This.TryParseDWord(out result) ? result : defaultValue);
-    }
-
-    public static dword ParseDWordOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, dword defaultValue = default(dword)) {
-      dword result;
-      return (This.TryParseDWord(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static dword? ParseDWordOrNull(this string This) {
-      dword result;
-      return (This.TryParseDWord(out result) ? result : (dword?)null);
-    }
-
-    public static dword? ParseDWordOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      dword result;
-      return (This.TryParseDWord(numberStyles, provider, out result) ? result : (dword?)null);
-    }
-    #endregion
-    #region Integer
-    public static int ParseInteger(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (int.Parse(This));
-    }
-
-    public static int ParseInteger(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (int.Parse(This, provider));
-    }
-
-    public static int ParseInteger(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (int.Parse(This, numberStyles));
-    }
-
-    public static int ParseInteger(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (int.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseInteger(this string This, out int result) {
-      return (int.TryParse(This, out result));
-    }
-
-    public static bool TryParseInteger(this string This, NumberStyles numberStyles, IFormatProvider provider, out int result) {
-      return (int.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static int ParseIntegerOrDefault(this string This, int defaultValue = default(int)) {
-      int result;
-      return (This.TryParseInteger(out result) ? result : defaultValue);
-    }
-
-    public static int ParseIntegerOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, int defaultValue = default(int)) {
-      int result;
-      return (This.TryParseInteger(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static int? ParseIntegerOrNull(this string This) {
-      int result;
-      return (This.TryParseInteger(out result) ? result : (int?)null);
-    }
-
-    public static int? ParseIntegerOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      int result;
-      return (This.TryParseInteger(numberStyles, provider, out result) ? result : (int?)null);
-    }
-    #endregion
-    #region Float
-    public static float ParseFloat(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (float.Parse(This));
-    }
-
-    public static float ParseFloat(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (float.Parse(This, provider));
-    }
-
-    public static float ParseFloat(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (float.Parse(This, numberStyles));
-    }
-
-    public static float ParseFloat(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (float.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseFloat(this string This, out float result) {
-      return (float.TryParse(This, out result));
-    }
-
-    public static bool TryParseFloat(this string This, NumberStyles numberStyles, IFormatProvider provider, out float result) {
-      return (float.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static float ParseFloatOrDefault(this string This, float defaultValue = default(float)) {
-      float result;
-      return (This.TryParseFloat(out result) ? result : defaultValue);
-    }
-
-    public static float ParseFloatOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, float defaultValue = default(float)) {
-      float result;
-      return (This.TryParseFloat(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static float? ParseFloatOrNull(this string This) {
-      float result;
-      return (This.TryParseFloat(out result) ? result : (float?)null);
-    }
-
-    public static float? ParseFloatOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      float result;
-      return (This.TryParseFloat(numberStyles, provider, out result) ? result : (float?)null);
-    }
-    #endregion
-    #region Double
-    public static double ParseDouble(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (double.Parse(This));
-    }
-
-    public static double ParseDouble(this string This, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (double.Parse(This, provider));
-    }
-
-    public static double ParseDouble(this string This, NumberStyles numberStyles) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (double.Parse(This, numberStyles));
-    }
-
-    public static double ParseDouble(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-#if NET35
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (double.Parse(This, numberStyles, provider));
-    }
-
-    public static bool TryParseDouble(this string This, out double result) {
-      return (double.TryParse(This, out result));
-    }
-
-    public static bool TryParseDouble(this string This, NumberStyles numberStyles, IFormatProvider provider, out double result) {
-      return (double.TryParse(This, numberStyles, provider, out result));
-    }
-
-    public static double ParseDoubleOrDefault(this string This, double defaultValue = default(double)) {
-      double result;
-      return (This.TryParseDouble(out result) ? result : defaultValue);
-    }
-
-    public static double ParseDoubleOrDefault(this string This, NumberStyles numberStyles, IFormatProvider provider, double defaultValue = default(double)) {
-      double result;
-      return (This.TryParseDouble(numberStyles, provider, out result) ? result : defaultValue);
-    }
-
-    public static double? ParseDoubleOrNull(this string This) {
-      double result;
-      return (This.TryParseDouble(out result) ? result : (double?)null);
-    }
-
-    public static double? ParseDoubleOrNull(this string This, NumberStyles numberStyles, IFormatProvider provider) {
-      double result;
-      return (This.TryParseDouble(numberStyles, provider, out result) ? result : (double?)null);
-    }
-    #endregion
-
-    #endregion
 
     /// <summary>
     /// Splits the given string respecting single and double quotes and allows for escape seququences to be used in these strings.

@@ -34,6 +34,16 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Sets the progress bar value.
+    /// </summary>
+    /// <param name="This">This ProgressBar.</param>
+    /// <param name="value">The normalized value to set (0&lt;x&lt;1).</param>
+    public static void SetNormalizedValue(this ProgressBar This, double value) {
+      Contract.Requires(This != null);
+      This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
+    }
+
+    /// <summary>
     /// Sets the progress bar according to current and max, without changing it's minimum and maximum values.
     /// </summary>
     /// <param name="This">This ProgressBar.</param>

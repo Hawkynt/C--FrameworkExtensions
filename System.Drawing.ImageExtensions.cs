@@ -179,9 +179,10 @@ namespace System.Drawing {
     }
 
     /// <summary>
-    /// Converts image to grayscale.
+    /// Converts image to black&amp;white.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <param name="threshold">The threshold under which a pixel is considered black.</param>
     /// <returns></returns>
     public static Bitmap Threshold(this Image source, byte threshold = 127) {
       Contract.Requires(source != null && source is Bitmap);
@@ -219,6 +220,28 @@ namespace System.Drawing {
       }
 
       return newBitmap;
+    }
+
+    /// <summary>
+    /// Mirrors the image along X.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <returns>A mirrored image version</returns>
+    public static Image MirrorAlongX(this Image This) {
+      var result = (Image)This.Clone();
+      result.RotateFlip(RotateFlipType.RotateNoneFlipX);
+      return (result);
+    }
+
+    /// <summary>
+    /// Mirrors the image along Y.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <returns>A mirrored image version</returns>
+    public static Image MirrorAlongY(this Image This) {
+      var result = (Image)This.Clone();
+      result.RotateFlip(RotateFlipType.RotateNoneFlipY);
+      return (result);
     }
 
     /// <summary>

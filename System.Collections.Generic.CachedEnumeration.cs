@@ -46,6 +46,24 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>
+    /// Gets the <see cref="TItem"/> at the specified index.
+    /// </summary>
+    public TItem this[int index] {
+      get {
+        TItem item;
+        if (this._GetItemAtPosition(index, out item))
+          return (item);
+
+        throw new ArgumentOutOfRangeException("cachePosition", "Position out of enumeration");
+      }
+    }
+
+    /// <summary>
+    /// Gets the cached item count.
+    /// </summary>
+    public int CachedItemCount { get { return (this._cachedItems.Count); } }
+
+    /// <summary>
     /// Gets the cached item at the given position and returns a new one from the enumeration if possible.
     /// </summary>
     /// <param name="cachePosition">The cache position.</param>
@@ -67,10 +85,18 @@ namespace System.Collections.Generic {
           return (true);
         }
 
-        // get next item from underlying enumeration
-        return (this._GetNextItem(out item));
-      }
+        // get next items from underlying enumeration
+        cachePosition++;
+        while (!this._enumerationEnded) {
+          var result = this._GetNextItem(out item);
+          if (cachePosition == cachedItems.Count)
+            return (result);
+        }
 
+        // return default value
+        item = default(TItem);
+        return (false);
+      }
     }
 
     /// <summary>

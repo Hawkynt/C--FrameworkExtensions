@@ -51,27 +51,6 @@ namespace System {
     }
 
     /// <summary>
-    /// Gets a small portion of a byte array.
-    /// </summary>
-    /// <param name="This">This byte[].</param>
-    /// <param name="offset">The offset.</param>
-    /// <param name="count">The count.</param>
-    /// <returns>The subsequent elements.</returns>
-    public static byte[] Range(this byte[] This, int offset, int count) {
-      if (This == null)
-        return (null);
-      if (count < 0)
-        return (null);
-      if (offset < 0)
-        return (null);
-      var length = This.Length;
-      var max = count < (length - offset) ? count : length - offset;
-      var result = new byte[max];
-      Buffer.BlockCopy(This, offset, result, 0, max);
-      return (result);
-    }
-
-    /// <summary>
     /// Clones the specified array.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
@@ -706,6 +685,66 @@ namespace System {
     #endregion
 
     #region byte-array specials
+
+    /// <summary>
+    /// Copies the given buffer.
+    /// </summary>
+    /// <param name="This">This byte[].</param>
+    /// <returns>A copy of the original array.</returns>
+    public static byte[] Copy(this byte[] This) {
+      if (This == null)
+        return (null);
+
+      var length = This.Length;
+      var result = new byte[length];
+      Buffer.BlockCopy(This, 0, result, 0, length);
+      return (result);
+    }
+
+    /// <summary>
+    /// Gets a small portion of a byte array.
+    /// </summary>
+    /// <param name="This">This byte[].</param>
+    /// <param name="offset">The offset.</param>
+    /// <param name="count">The count.</param>
+    /// <returns>The subsequent elements.</returns>
+    public static byte[] Range(this byte[] This, int offset, int count) {
+      if (This == null)
+        return (null);
+      if (count < 0)
+        return (null);
+      if (offset < 0)
+        return (null);
+      var length = This.Length;
+      var max = count < (length - offset) ? count : length - offset;
+      var result = new byte[max];
+      Buffer.BlockCopy(This, offset, result, 0, max);
+      return (result);
+    }
+
+    /// <summary>
+    /// Padds the specified byte array to a certain length if it is smaller.
+    /// </summary>
+    /// <param name="This">This Byte-Array.</param>
+    /// <param name="length">The final length.</param>
+    /// <param name="data">The data to use for padding, default to null-bytes.</param>
+    /// <returns>The original array if it already exceeds the wanted size, or an array with the correct size.</returns>
+    public static byte[] Padd(this byte[] This, int length, byte data = 0) {
+      if (This == null)
+        return (null);
+
+      var currentSize = This.Length;
+      if (currentSize >= length)
+        return (This);
+
+      var result = new byte[length];
+      Buffer.BlockCopy(This, 0, result, 0, currentSize);
+      for (var i = currentSize; i < length; ++i)
+        result[i] = data;
+
+      return (result);
+    }
+
     /// <summary>
     /// GZips the given bytes.
     /// </summary>
@@ -744,6 +783,1034 @@ namespace System {
         return (targetStream.ToArray());
       }
     }
+
+    #region utility classes
+    private static class RuntimeConfiguration {
+      public static readonly int MaxDegreeOfParallelism = Environment.ProcessorCount;
+
+      public static bool Has16BitRegisters {
+        get {
+          return (IntPtr.Size >= 2);
+        }
+      }
+
+      public static bool Has32BitRegisters {
+        get {
+          return (IntPtr.Size >= 4);
+        }
+      }
+
+      public static bool Has64BitRegisters {
+        get {
+          return (IntPtr.Size >= 8);
+        }
+      }
+
+      public const int MIN_ITEMS_FOR_PARALELLISM = 2048;
+      public const int MIN_ITEMS_PER_THREAD = 128;
+
+      public const int DEFAULT_MAX_CHUNK_SIZE = 1024 * 64;
+
+      public const int ALLOCATION_WORD = 128;
+      public const int ALLOCATION_DWORD = 256;
+      public const int ALLOCATION_QWORD = 512;
+
+      public const int BLOCKCOPY_WORD = 2;
+      public const int BLOCKCOPY_DWORD = 4;
+      public const int BLOCKCOPY_QWORD = 8;
+    }
+
+    private static class FastXor {
+      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
+        var end = offset + length;
+        for (var i = offset; i < end; ++i)
+          source[i] ^= operand[i];
+      }
+
+      private static void _DoWords(ushort[] source, ushort[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] ^= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoDWords(uint[] source, uint[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] ^= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoQWords(ulong[] source, ulong[] operand) {
+
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] ^= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      public static void ProcessBytewise(byte[] source, byte[] operand) {
+        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+      }
+
+#if UNSAFE
+      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        fixed (byte* srcPointer = source, opPointer = operand) {
+
+          if (RuntimeConfiguration.Has64BitRegisters) {
+            var sourcePtr = (ulong*)(srcPointer + offset);
+            var operandPtr = (ulong*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+              *sourcePtr ^= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 8;
+              offset += 8;
+            }
+          }
+          if (RuntimeConfiguration.Has32BitRegisters) {
+            var sourcePtr = (uint*)(srcPointer + offset);
+            var operandPtr = (uint*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+              *sourcePtr ^= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 4;
+              offset += 4;
+            }
+          }
+          if (RuntimeConfiguration.Has16BitRegisters) {
+            var sourcePtr = (ushort*)(srcPointer + offset);
+            var operandPtr = (ushort*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+              *sourcePtr ^= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 2;
+              offset += 2;
+            }
+          }
+          {
+            var sourcePtr = srcPointer + offset;
+            var operandPtr = opPointer + offset;
+            while (bytesLeft > 0) {
+              *sourcePtr ^= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft--;
+              offset++;
+            }
+          }
+        }
+      }
+#endif
+
+      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        // long part
+        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
+
+          var chunk = new ulong[maxChunkSize >> 3];
+          var secondChunk = new ulong[maxChunkSize >> 3];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 3;
+            chunkLength = itemCount << 3;
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoQWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+
+        }
+
+        // int part
+        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
+          var chunk = new uint[maxChunkSize >> 2];
+          var secondChunk = new uint[maxChunkSize >> 2];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 2;
+            chunkLength = itemCount << 2;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoDWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // short part
+        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
+          var chunk = new ushort[maxChunkSize >> 1];
+          var secondChunk = new ushort[maxChunkSize >> 1];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 1;
+            chunkLength = itemCount << 1;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // remaining bytes
+        if (bytesLeft > 0)
+          _DoBytes(source, operand, offset, bytesLeft);
+
+      }
+    }
+
+    private static class FastAnd {
+      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
+        var end = offset + length;
+        for (var i = offset; i < end; ++i)
+          source[i] &= operand[i];
+      }
+
+      private static void _DoWords(ushort[] source, ushort[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] &= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoDWords(uint[] source, uint[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] &= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoQWords(ulong[] source, ulong[] operand) {
+
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] &= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      public static void ProcessBytewise(byte[] source, byte[] operand) {
+        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+      }
+
+#if UNSAFE
+      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        fixed (byte* srcPointer = source, opPointer = operand) {
+
+          if (RuntimeConfiguration.Has64BitRegisters) {
+            var sourcePtr = (ulong*)(srcPointer + offset);
+            var operandPtr = (ulong*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+              *sourcePtr &= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 8;
+              offset += 8;
+            }
+          }
+          if (RuntimeConfiguration.Has32BitRegisters) {
+            var sourcePtr = (uint*)(srcPointer + offset);
+            var operandPtr = (uint*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+              *sourcePtr &= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 4;
+              offset += 4;
+            }
+          }
+          if (RuntimeConfiguration.Has16BitRegisters) {
+            var sourcePtr = (ushort*)(srcPointer + offset);
+            var operandPtr = (ushort*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+              *sourcePtr &= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 2;
+              offset += 2;
+            }
+          }
+          {
+            var sourcePtr = srcPointer + offset;
+            var operandPtr = opPointer + offset;
+            while (bytesLeft > 0) {
+              *sourcePtr &= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft--;
+              offset++;
+            }
+          }
+        }
+      }
+#endif
+
+      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        // long part
+        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
+
+          var chunk = new ulong[maxChunkSize >> 3];
+          var secondChunk = new ulong[maxChunkSize >> 3];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 3;
+            chunkLength = itemCount << 3;
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoQWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+
+        }
+
+        // int part
+        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
+          var chunk = new uint[maxChunkSize >> 2];
+          var secondChunk = new uint[maxChunkSize >> 2];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 2;
+            chunkLength = itemCount << 2;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoDWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // short part
+        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
+          var chunk = new ushort[maxChunkSize >> 1];
+          var secondChunk = new ushort[maxChunkSize >> 1];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 1;
+            chunkLength = itemCount << 1;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // remaining bytes
+        if (bytesLeft > 0)
+          _DoBytes(source, operand, offset, bytesLeft);
+
+      }
+    }
+
+    private static class FastOr {
+      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
+        var end = offset + length;
+        for (var i = offset; i < end; ++i)
+          source[i] |= operand[i];
+      }
+
+      private static void _DoWords(ushort[] source, ushort[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] |= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoDWords(uint[] source, uint[] operand) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] |= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoQWords(ulong[] source, ulong[] operand) {
+
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] |= operand[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      public static void ProcessBytewise(byte[] source, byte[] operand) {
+        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+      }
+
+#if UNSAFE
+      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        fixed (byte* srcPointer = source, opPointer = operand) {
+
+          if (RuntimeConfiguration.Has64BitRegisters) {
+            var sourcePtr = (ulong*)(srcPointer + offset);
+            var operandPtr = (ulong*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+              *sourcePtr |= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 8;
+              offset += 8;
+            }
+          }
+          if (RuntimeConfiguration.Has32BitRegisters) {
+            var sourcePtr = (uint*)(srcPointer + offset);
+            var operandPtr = (uint*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+              *sourcePtr |= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 4;
+              offset += 4;
+            }
+          }
+          if (RuntimeConfiguration.Has16BitRegisters) {
+            var sourcePtr = (ushort*)(srcPointer + offset);
+            var operandPtr = (ushort*)(opPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+              *sourcePtr |= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft -= 2;
+              offset += 2;
+            }
+          }
+          {
+            var sourcePtr = srcPointer + offset;
+            var operandPtr = opPointer + offset;
+            while (bytesLeft > 0) {
+              *sourcePtr |= *operandPtr;
+              sourcePtr++;
+              operandPtr++;
+              bytesLeft--;
+              offset++;
+            }
+          }
+        }
+      }
+#endif
+
+      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
+          return;
+        }
+
+        var bytesLeft = Math.Min(source.Length, operand.Length);
+        var offset = 0;
+
+        // long part
+        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
+
+          var chunk = new ulong[maxChunkSize >> 3];
+          var secondChunk = new ulong[maxChunkSize >> 3];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 3;
+            chunkLength = itemCount << 3;
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoQWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+
+        }
+
+        // int part
+        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
+          var chunk = new uint[maxChunkSize >> 2];
+          var secondChunk = new uint[maxChunkSize >> 2];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 2;
+            chunkLength = itemCount << 2;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoDWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // short part
+        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
+          var chunk = new ushort[maxChunkSize >> 1];
+          var secondChunk = new ushort[maxChunkSize >> 1];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 1;
+            chunkLength = itemCount << 1;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
+            _DoWords(chunk, secondChunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // remaining bytes
+        if (bytesLeft > 0)
+          _DoBytes(source, operand, offset, bytesLeft);
+
+      }
+    }
+
+    private static class FastNot {
+      private static void _DoBytes(byte[] source, int offset, int length) {
+        var end = offset + length;
+        for (var i = offset; i < end; ++i)
+          source[i] ^= 0xff;
+      }
+
+      private static void _DoWords(ushort[] source) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= 0xffff;
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] ^= 0xffff;
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoDWords(uint[] source) {
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] = ~source[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] = ~source[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      private static void _DoQWords(ulong[] source) {
+
+        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+          for (var i = 0; i < source.Length; i++)
+            source[i] = ~source[i];
+
+          return;
+        }
+
+        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
+        var index = 0;
+        var o = new object();
+        Action action = () => {
+          int start;
+          lock (o)
+            start = index++;
+          for (var i = start; i < source.Length; i += maxDegree)
+            source[i] = ~source[i];
+        };
+
+        var actions = new Action[maxDegree];
+        for (var i = maxDegree - 1; i >= 0; --i)
+          actions[i] = action;
+
+        Parallel.Invoke(actions);
+      }
+
+      public static void ProcessBytewise(byte[] source) {
+        _DoBytes(source, 0, source.Length);
+      }
+
+#if UNSAFE
+      public static unsafe void ProcessInUnsafeChunks(byte[] source, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, 0, source.Length);
+          return;
+        }
+
+        var bytesLeft = source.Length;
+        var offset = 0;
+
+        fixed (byte* srcPointer = source) {
+
+          if (RuntimeConfiguration.Has64BitRegisters) {
+            var sourcePtr = (ulong*)(srcPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+              *sourcePtr = ~*sourcePtr;
+              sourcePtr++;
+              bytesLeft -= 8;
+              offset += 8;
+            }
+          }
+          if (RuntimeConfiguration.Has32BitRegisters) {
+            var sourcePtr = (uint*)(srcPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+              *sourcePtr = ~*sourcePtr;
+              sourcePtr++;
+              bytesLeft -= 4;
+              offset += 4;
+            }
+          }
+          if (RuntimeConfiguration.Has16BitRegisters) {
+            var sourcePtr = (ushort*)(srcPointer + offset);
+            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+              *sourcePtr ^= 0xffff;
+              sourcePtr++;
+              bytesLeft -= 2;
+              offset += 2;
+            }
+          }
+          {
+            var sourcePtr = srcPointer + offset;
+            while (bytesLeft > 0) {
+              *sourcePtr ^= 0xff;
+              sourcePtr++;
+              bytesLeft--;
+              offset++;
+            }
+          }
+        }
+      }
+#endif
+
+      public static void ProcessInChunks(byte[] source, int maxChunkSize = -1) {
+        if (maxChunkSize < 1)
+          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
+
+        if (maxChunkSize < 2) {
+          _DoBytes(source, 0, source.Length);
+          return;
+        }
+
+        var bytesLeft = source.Length;
+        var offset = 0;
+
+        // long part
+        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
+
+          var chunk = new ulong[maxChunkSize >> 3];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 3;
+            chunkLength = itemCount << 3;
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            _DoQWords(chunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+
+        }
+
+        // int part
+        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
+          var chunk = new uint[maxChunkSize >> 2];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 2;
+            chunkLength = itemCount << 2;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            _DoDWords(chunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // short part
+        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
+          var chunk = new ushort[maxChunkSize >> 1];
+
+          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
+
+            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
+            var itemCount = chunkLength >> 1;
+            chunkLength = itemCount << 1;
+
+
+            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
+            _DoWords(chunk);
+            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
+
+            bytesLeft -= chunkLength;
+            offset += chunkLength;
+          }
+        }
+
+        // remaining bytes
+        if (bytesLeft > 0)
+          _DoBytes(source, offset, bytesLeft);
+
+      }
+    }
+    #endregion
+
+    public static void Xor(this byte[] This, byte[] operand) {
+#if UNSAFE
+      FastXor.ProcessInUnsafeChunks(This, operand);
+#else
+      FastXor.ProcessInChunks(This, operand);
+#endif
+    }
+
+    public static void XorBytewise(this byte[] This, byte[] operand) {
+      FastXor.ProcessBytewise(This, operand);
+    }
+
+    public static void And(this byte[] This, byte[] operand) {
+#if UNSAFE
+      FastAnd.ProcessInUnsafeChunks(This, operand);
+#else
+      FastAnd.ProcessInChunks(This, operand);
+#endif
+    }
+
+    public static void AndBytewise(this byte[] This, byte[] operand) {
+      FastAnd.ProcessBytewise(This, operand);
+    }
+
+    public static void Or(this byte[] This, byte[] operand) {
+#if UNSAFE
+      FastOr.ProcessInUnsafeChunks(This, operand);
+#else
+      FastOr.ProcessInChunks(This, operand);
+#endif
+    }
+
+    public static void OrBytewise(this byte[] This, byte[] operand) {
+      FastOr.ProcessBytewise(This, operand);
+    }
+
+    public static void Not(this byte[] This) {
+#if UNSAFE
+      FastNot.ProcessInUnsafeChunks(This);
+#else
+      FastNot.ProcessInChunks(This);
+#endif
+    }
+
+    public static void NotBytewise(this byte[] This) {
+      FastNot.ProcessBytewise(This);
+    }
+
     #endregion
 
   }

@@ -27,27 +27,25 @@ namespace System.Collections {
     /// <summary>
     /// Executes an action on each item.
     /// </summary>
-    /// <typeparam name="TVALUE">The type of the values.</typeparam>
     /// <param name="This">The collection.</param>
     /// <param name="call">The call to execute.</param>
-    public static void ForEach<TVALUE>(this ICollection This, Action<TVALUE> call) {
+    public static void ForEach(this ICollection This, Action<object> call) {
       Contract.Requires(This != null);
-      foreach (TVALUE value in This)
+      foreach (var value in This)
         call(value);
     }
     /// <summary>
     /// Converts all.
     /// </summary>
-    /// <typeparam name="TIN">The type of the input collection.</typeparam>
     /// <typeparam name="TOUT">The type of the output collection.</typeparam>
     /// <param name="This">The collection to convert.</param>
     /// <param name="converter">The converter.</param>
     /// <returns></returns>
-    public static TOUT[] ConvertAll<TIN, TOUT>(this ICollection This, Converter<TIN, TOUT> converter) {
+    public static TOUT[] ConvertAll<TOUT>(this ICollection This, Converter<object, TOUT> converter) {
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
       return (
-        from TIN data in This
+        from object data in This
         select converter(data)
       ).ToArray();
     }
@@ -64,5 +62,6 @@ namespace System.Collections {
       This.CopyTo(result, 0);
       return (result);
     }
+
   }
 }

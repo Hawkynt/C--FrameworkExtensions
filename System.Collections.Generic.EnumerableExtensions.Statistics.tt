@@ -1,0 +1,667 @@
+<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+#region (c)2010-2020 Hawkynt
+/*
+  This file is part of Hawkynt's .NET Framework extensions.
+
+    Hawkynt's .NET Framework extensions are free software: 
+    you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Hawkynt's .NET Framework extensions is distributed in the hope that 
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+    the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Hawkynt's .NET Framework extensions.  
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+#endregion
+
+using System.Linq;
+using dword = System.UInt32;
+using qword = System.UInt64;
+using word = System.UInt16;
+#if !NET35
+  using System.Diagnostics.Contracts;
+#endif
+
+// This file holds statistical routines on enumerations.
+
+namespace System.Collections.Generic {
+  internal static partial class EnumerableExtensions {
+    #region Sum
+    #region TimeSpan
+    /// <summary>
+    /// Sums the specified elements in an enumeration.
+    /// </summary>
+    /// <param name="This">This enumeration.</param>
+    /// <returns>The sum of all given elements.</returns>
+    public static TimeSpan Sum(this IEnumerable<TimeSpan> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (TimeSpan.FromMilliseconds(This.Select(i => i.TotalMilliseconds).Sum()));
+    }
+
+    /// <summary>
+    /// Sums the specified elements in an enumeration using a selector.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items in the enumeration.</typeparam>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns>The sum of all given elements.</returns>
+    public static TimeSpan Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, TimeSpan> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return (This.Select(selector).Sum());
+    }
+    #endregion
+<#foreach(var i in new[]{"word","dword","qword"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Sums the specified elements in an enumeration.
+    /// </summary>
+    /// <param name="This">This enumeration.</param>
+    /// <returns>The sum of all given elements.</returns>
+    public static <#=i#> Sum(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      // ReSharper disable once RedundantCast
+      return (This.Aggregate((<#=i#>)0, (current, i) => (<#=i#>)(current + i)));
+    }
+
+    /// <summary>
+    /// Sums the specified elements in an enumeration using a selector.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items in the enumeration.</typeparam>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns>The sum of all given elements.</returns>
+    public static <#=i#> Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, <#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return (This.Select(selector).Sum());
+    }
+    #endregion
+<#}#>
+
+    #endregion
+<#foreach(var j in new[]{"Min","Max"}){#>
+    #region <#=j#>
+<#foreach(var i in new[]{"sbyte","byte","short","word","dword","qword"}){#>
+    #region <#=i#>
+    public static <#=i#> <#=j#>(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i#> result;
+      using(var enumerator=This.GetEnumerator()) {
+        if(!enumerator.MoveNext())
+          throw new InvalidOperationException("Enumeration is empty.");
+        
+        result=enumerator.Current;
+        while(enumerator.MoveNext())
+          if (enumerator.Current <#=j=="Min"?"<":">"#> result)
+            result = enumerator.Current;
+      }
+      
+      return (result);
+    }
+
+    public static <#=i#> <#=j#><TItem>(this IEnumerable<TItem> This, Func<TItem, <#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return (This.Select(selector).<#=j#>());
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region <#=j#>OrDefault
+<#foreach(var i in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+    #region <#=i#>
+    public static <#=i#> <#=j#>OrDefault(this IEnumerable<<#=i#>> This, <#=i#> defaultValue = default(<#=i#>)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      var items = This as ICollection<<#=i#>> ?? This.ToList();
+      return (items.Count == 0 ? defaultValue : items.<#=j#>());
+    }
+
+    public static <#=i#> <#=j#>OrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, <#=i#>> selector, <#=i#> defaultValue = default(<#=i#>)) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return (This.Select(selector).<#=j#>OrDefault());
+    }
+    #endregion
+    #region <#=i#>?
+    public static <#=i#>? <#=j#>OrDefault(this IEnumerable<<#=i#>?> This, <#=i#>? defaultValue = default(<#=i#>?)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      var items = This.Where(x=>x.HasValue).ToList();
+      // ReSharper disable once PossibleInvalidOperationException
+      return (items.Count == 0 ? defaultValue : items.<#=j#>(x=>x.Value));
+    }
+    #endregion
+<#}#>
+    #endregion
+<#}#>
+    #region AverageOrDefault
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    public static <#=i#> AverageOrDefault(this IEnumerable<<#=i#>> This, <#=i#> defaultValue = default(<#=i#>)) {
+      if (This == null)
+        return (defaultValue);
+
+      <#=i#> result = 0;
+      var count = 0;
+      foreach (var item in This) {
+        result += item;
+        count++;
+      }
+
+      return (count == 0 ? defaultValue : result / count);
+    }
+
+    public static <#=i#> AverageOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem,<#=i#>> selector, <#=i#> defaultValue = default(<#=i#>)) {
+#if NET35
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).AverageOrDefault(defaultValue));
+    }
+    #endregion
+    #region <#=i#>?
+    public static <#=i#>? AverageOrDefault(this IEnumerable<<#=i#>?> This, <#=i#>? defaultValue = default(<#=i#>?)) {
+      if (This == null)
+        return (defaultValue);
+
+      <#=i#> result = 0;
+      var count = 0;
+      foreach (var item in This.Where(x=>x.HasValue)) {
+        result += item.Value;
+        count++;
+      }
+
+      return (count == 0 ? defaultValue : result / count);
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Variance
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Variance is the measure of the amount of variation of all the scores for a variable (not just the extremes which give the range).
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Variance(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      var collection=This as ICollection<<#=i#>> ?? This.ToList();
+      var count = collection.Count;
+      var mean = collection.Aggregate((<#=i#>)0, (r, x) => r + x) / count;
+      var sum = collection.Aggregate((<#=i#>)0, (r, x) => r + (x - mean) * (x - mean));
+      var result = sum / (count - 1);
+      return(result);
+    }
+    
+    /// <summary>
+    /// Variance is the measure of the amount of variation of all the scores for a variable (not just the extremes which give the range).
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> Variance<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).Variance());
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// Variance is the measure of the amount of variation of all the scores for a variable (not just the extremes which give the range).
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Variance(this IEnumerable<<#=i#>?> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      // ReSharper disable once PossibleInvalidOperationException
+      return(This.Where(x=>x.HasValue).Variance(x=>x.Value));
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Standard Deviation
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// The Standard Deviation of a statistical population, a data set, or a probability distribution is the square root of its variance.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> StdDev(this IEnumerable<<#=i#>> This) {
+      var result = This.Variance();
+      result = _Sqrt(result);
+      return (result);
+    }
+    
+    /// <summary>
+    /// The Standard Deviation of a statistical population, a data set, or a probability distribution is the square root of its variance.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> StdDev<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).StdDev());
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// The Standard Deviation of a statistical population, a data set, or a probability distribution is the square root of its variance.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> StdDev(this IEnumerable<<#=i#>?> This) {
+      // ReSharper disable once PossibleInvalidOperationException
+      return (This.Where(x=>x.HasValue).StdDev(x=>x.Value));
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Center
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Center(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      var sortedList = This.OrderBy(v => v).ToList();
+      var index = sortedList.Count >> 1;
+      return (sortedList.Count & 1) == 0 ? (sortedList[index] + sortedList[index - 1]) / 2 : sortedList[index];
+    }
+    
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> Center<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).Center());
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Center(this IEnumerable<<#=i#>?> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      // ReSharper disable once PossibleInvalidOperationException
+      return (This.Where(x=>x.HasValue).Center(x=>x.Value));
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Median
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Median(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(This.Min()+This.Range()/2);
+    }
+    
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> Median<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).Median());
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// Median is the number separating the higher half of a sample, a population, or a probability distribution, from the lower half.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Median(this IEnumerable<<#=i#>?> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      // ReSharper disable once PossibleInvalidOperationException
+      return (This.Where(x=>x.HasValue).Median(x=>x.Value));
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Mode
+    /// <summary>
+    /// Mode is the value that occurs the most frequently in a data set or a probability distribution.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static T Mode<T>(this IEnumerable<T> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (
+        from v in This
+        group v by v
+          into i
+          select new { i.Key, Count = i.Count() } into j
+          orderby j.Count descending
+          select j.Key
+        ).First();
+    }
+    #endregion
+    #region Range
+<#foreach(var i in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Range is the length of the smallest interval which contains all the data.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Range(this IEnumerable<<#=i#>> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i#> min;
+      <#=i#> max;
+
+      using(var enumerator=This.GetEnumerator()) {
+        if(!enumerator.MoveNext())
+          throw new InvalidOperationException("Enumeration is empty.");
+        
+        min=max=enumerator.Current;
+        while(enumerator.MoveNext()){
+          var x=enumerator.Current;
+          if (x < min) {
+            min = x;
+            continue;
+          }
+          if (x > max)
+            max = x;
+        }
+      }
+      
+      // ReSharper disable once RedundantCast
+      return (<#=i#>)(max - min);
+    }
+    
+    /// <summary>
+    /// Range is the length of the smallest interval which contains all the data.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> Range<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).Range());
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// Range is the length of the smallest interval which contains all the data.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Range(this IEnumerable<<#=i#>?> This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      // ReSharper disable once PossibleInvalidOperationException
+      return(This.Where(x=>x.HasValue).Range(x=>x.Value));
+    }
+    #endregion
+<#}#> 
+    #endregion
+    #region Covariance
+<#foreach(var i in new[]{"float","double","decimal"}){#>
+    #region <#=i#>
+    /// <summary>
+    /// Covariance is a measure of how much two variables change together.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="other">The other enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Covariance(this IEnumerable<<#=i#>> This, IEnumerable<<#=i#>> other) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(other != null);
+#endif
+      var a = This as IList<<#=i#>> ?? This.ToList();
+      var b = other as IList<<#=i#>> ?? other.ToList();
+      var avga = a.Average();
+      var avgb = b.Average();
+      var result = (<#=i#>)0;
+      var length = Math.Min(a.Count, b.Count);
+      for (var i = length - 1; i >= 0; --i)
+        result += (a[i] - avga) * (b[i] - avgb);
+
+      return (result / length);
+    }
+
+    /// <summary>
+    /// Covariance is a measure of how much two variables change together.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="other">The other enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns></returns>
+    public static <#=i#> Covariance<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> other,Func<TItem,<#=i#>> selector) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(other != null);
+      Contract.Requires(selector != null);
+#endif
+      return(This.Select(selector).Covariance(other.Select(selector)));
+    }
+    
+    /// <summary>
+    /// Covariance is a measure of how much two variables change together.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="other">The other enumeration.</param>
+    /// <param name="selector1">The selector.</param>
+    /// <param name="selector2">The selector for the other enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Covariance<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector1, IEnumerable<TItem> other,Func<TItem,<#=i#>> selector2) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+      Debug.Assert(selector1 != null);
+      Debug.Assert(selector2 != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(other != null);
+      Contract.Requires(selector1 != null);
+      Contract.Requires(selector2 != null);
+#endif
+      return(This.Select(selector1).Covariance(other.Select(selector2)));
+    }
+    #endregion
+    #region <#=i#>?
+    /// <summary>
+    /// Covariance is a measure of how much two variables change together.
+    /// </summary>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="other">The other enumeration.</param>
+    /// <returns></returns>
+    public static <#=i#> Covariance(this IEnumerable<<#=i#>?> This, IEnumerable<<#=i#>?> other) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(other != null);
+#endif
+      // ReSharper disable PossibleInvalidOperationException
+      return(This.Where(x=>x.HasValue).Covariance(x=>x.Value,other.Where(x=>x.HasValue),x=>x.Value));
+      // ReSharper restore PossibleInvalidOperationException
+    }
+    #endregion
+<#}#>
+    #endregion
+    #region Math Utils
+    /// <summary>
+    /// Calculate a less accurate square root.
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <returns>
+    /// The square root of x
+    /// </returns>
+    private static float _Sqrt(float x) {
+      return ((float)Math.Sqrt(x));
+    }
+    
+    /// <summary>
+    /// Just a wrapper for math.sqrt,
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <returns>The square root of x</returns>
+    private static double _Sqrt(double x) {
+      return (Math.Sqrt(x));
+    }
+    
+    /// <summary>
+    /// Calculate a more accurate square root, see http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="epsilon">The epsilon.</param>
+    /// <returns>The square root of x</returns>
+    private static decimal _Sqrt(decimal x, decimal epsilon = 0) {
+      if (x < 0) throw new OverflowException("Cannot calculate square root from a negative number");
+
+      decimal current = (decimal)Math.Sqrt((double)x), previous;
+      const decimal factor = 2m;
+      const decimal zero = decimal.Zero;
+
+      do {
+        previous = current;
+        if (previous == zero) return zero;
+        current = (previous + x / previous) / factor;
+      }
+      while (Math.Abs(previous - current) > epsilon);
+      return current;
+    }
+    #endregion
+  }
+}

@@ -1,0 +1,217 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+#region (c)2010-2020 Hawkynt
+/*
+  This file is part of Hawkynt's .NET Framework extensions.
+
+    Hawkynt's .NET Framework extensions are free software: 
+    you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Hawkynt's .NET Framework extensions is distributed in the hope that 
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+    the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Hawkynt's .NET Framework extensions.  
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+#endregion
+
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Threading;
+
+// This file holds parsing routines to convert from normal strings to a certain primitive data type.
+
+namespace System {
+  internal static partial class StringExtensions {
+    
+    #region Consts
+    private const NumberStyles _STYLE_FLOAT = NumberStyles.Float|NumberStyles.AllowThousands;
+    private const NumberStyles _STYLE_INT   = NumberStyles.Integer;
+    #endregion
+
+<#foreach(var i in new[]{
+  Tuple.Create("Float","float","FLOAT"),
+  Tuple.Create("Double","double","FLOAT"),
+  Tuple.Create("Decimal","decimal","FLOAT"),
+  Tuple.Create("Byte","byte","INT"),
+  Tuple.Create("SByte","sbyte","INT"),
+  Tuple.Create("Word","ushort","INT"),
+  Tuple.Create("Short","short","INT"),
+  Tuple.Create("DWord","uint","INT"),
+  Tuple.Create("Int","int","INT"),
+  Tuple.Create("QWord","ulong","INT"),
+  Tuple.Create("Long","long","INT"),
+}){#>
+
+    #region Parsing <#=i.Item1#>
+    #region Parse
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.Parse(This));
+    }
+    
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,IFormatProvider provider){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.Parse(This,provider));
+    }
+
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,NumberStyles style){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.Parse(This,style));
+    }
+    
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,NumberStyles style,IFormatProvider provider){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.Parse(This,style,provider));
+    }
+    #endregion
+
+    #region TryParse
+    public static bool TryParse<#=i.Item1#>(this string This,out <#=i.Item2#> result){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.TryParse(This, out result));
+    }
+    
+    public static bool TryParse<#=i.Item1#>(this string This,IFormatProvider provider,out <#=i.Item2#> result){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.TryParse(This,_STYLE_<#=i.Item3#>,provider,out result));
+    }
+
+    public static bool TryParse<#=i.Item1#>(this string This,NumberStyles style,out <#=i.Item2#> result){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.TryParse(This,style,Thread.CurrentThread.CurrentCulture,out result));
+    }
+    
+    public static bool TryParse<#=i.Item1#>(this string This,NumberStyles style,IFormatProvider provider,out <#=i.Item2#> result){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return(<#=i.Item2#>.TryParse(This,style,provider,out result));
+    }
+    #endregion
+
+    #region ParseOrDefault
+    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,out result)?result:defaultValue);
+    }
+    
+    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,IFormatProvider provider,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,provider,out result)?result:defaultValue);
+    }
+
+    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,NumberStyles style,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,style,out result)?result:defaultValue);
+    }
+    
+    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,NumberStyles style,IFormatProvider provider,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,style,provider,out result)?result:defaultValue);
+    }
+    #endregion
+
+    #region ParseOrNull
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,out result)?result:(<#=i.Item2#>?)null);
+    }
+    
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,IFormatProvider provider){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,provider,out result)?result:(<#=i.Item2#>?)null);
+    }
+
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,NumberStyles style){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,style,out result)?result:(<#=i.Item2#>?)null);
+    }
+    
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,NumberStyles style,IFormatProvider provider){
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      <#=i.Item2#> result;
+      return(TryParse<#=i.Item1#>(This,style,provider,out result)?result:(<#=i.Item2#>?)null);
+    }
+    #endregion
+    #endregion
+
+<#}#>
+
+  }
+}

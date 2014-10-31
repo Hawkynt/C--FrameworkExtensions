@@ -113,9 +113,36 @@ namespace System.Windows.Forms {
       return (true);
     }
 
+
+    /// <summary>
+    /// Safelies executes an action and returns the result..
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="This">The this.</param>
+    /// <param name="function">The function.</param>
+    /// <returns>Whatever the method returned.</returns>
+    public static TResult SafelyInvoke<TResult>(this Control This, Func<TResult> function) {
+      return (This.InvokeRequired ? (TResult)This.Invoke(function) : function());
+    }
+
+    /// <summary>
+    /// Safelies executes an action and returns the result..
+    /// </summary>
+    /// <typeparam name="TControl">The type of the control.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="This">The this.</param>
+    /// <param name="function">The function.</param>
+    /// <returns>
+    /// Whatever the method returned.
+    /// </returns>
+    public static TResult SafelyInvoke<TControl, TResult>(this TControl This, Func<TControl, TResult> function) where TControl : Control {
+      return (This.InvokeRequired ? (TResult)This.Invoke(function, This) : function(This));
+    }
+
     /// <summary>
     /// Safely invokes the given code on the control's thread.
     /// </summary>
+    /// <typeparam name="TControl">The type of the control.</typeparam>
     /// <param name="This">This Control.</param>
     /// <param name="task">The task to perform in its thread.</param>
     /// <returns><c>true</c> when no thread switch was needed; otherwise, <c>false</c>.</returns>
@@ -200,18 +227,6 @@ namespace System.Windows.Forms {
       });
     }
 
-    /// <summary>
-    /// Safelies executes an action and returns the result..
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result.</typeparam>
-    /// <param name="This">The this.</param>
-    /// <param name="function">The function.</param>
-    /// <returns>Whatever the method returned.</returns>
-    public static TResult SafelyInvoke<TResult>(this Control This, Func<TResult> function) {
-      if (This.InvokeRequired)
-        return ((TResult)This.Invoke(function));
-      return (function());
-    }
     /// <summary>
     /// Gets the text property, and converts empty values automatically to <c>null</c>.
     /// </summary>

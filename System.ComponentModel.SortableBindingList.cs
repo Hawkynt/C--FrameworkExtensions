@@ -31,7 +31,16 @@ namespace System.ComponentModel {
     private ListSortDirection _sortDirection = ListSortDirection.Ascending;
     private PropertyDescriptor _sortProperty;
 
-    public SortableBindingList() { }
+    private bool _blockEvents;
+
+    public SortableBindingList() {
+      base.ListChanged += (s, e) => {
+        if (this._blockEvents || this._listChanged == null)
+          return;
+
+        this._listChanged(s, e);
+      };
+    }
 
     public SortableBindingList(IEnumerable<TValue> enumerable) {
       this.AddRange(enumerable);
@@ -40,24 +49,45 @@ namespace System.ComponentModel {
     public SortableBindingList(List<TValue> list)
       : base(list) { }
 
+    private ListChangedEventHandler _listChanged;
+
+    public new event ListChangedEventHandler ListChanged {
+      add { this._listChanged += value; }
+      remove { this._listChanged -= value; }
+    }
+
     /// <summary>
-    /// Adds multiple elements to this instance.
+    ///   Adds multiple elements to this instance.
     /// </summary>
     /// <param name="items">The items.</param>
     public void AddRange(IEnumerable<TValue> items) {
       Contract.Requires(items != null);
+      this._blockEvents = true;
       foreach (var item in items)
         this.Add(item);
+      this._blockEvents = false;
+
+      this._ReApplySortIfNeeded();
+
+      if (this._listChanged != null)
+        this._listChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+    }
+
+    private void _ReApplySortIfNeeded() {
+      if (this.IsSortedCore)
+        this.ApplySortCore();
     }
 
     /// <summary>
-    /// Removes multiple elements from this instance.
+    ///   Removes multiple elements from this instance.
     /// </summary>
     /// <param name="items">The items.</param>
     public void RemoveRange(IEnumerable<TValue> items) {
       Contract.Requires(items != null);
       foreach (var item in items)
         this.Remove(item);
+
+      this._ReApplySortIfNeeded();
     }
 
     protected override bool SupportsSortingCore {
@@ -74,6 +104,10 @@ namespace System.ComponentModel {
 
     protected override PropertyDescriptor SortPropertyCore {
       get { return this._sortProperty; }
+    }
+
+    protected void ApplySortCore() {
+      this.ApplySortCore(this._sortProperty, this._sortDirection);
     }
 
     protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction) {

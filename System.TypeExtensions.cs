@@ -22,6 +22,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Microsoft.Win32;
 #if !NET35
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -885,6 +886,30 @@ namespace System {
         Tuple.Create(typeof (TParam1), (object)param1),
         Tuple.Create(typeof (TParam2), (object)param2)
       });
+    }
+
+    /// <summary>
+    /// Returns the file location for the given type or COM object.
+    /// </summary>
+    /// <param name="This">This Type.</param>
+    /// <returns>The path to the executable or type library or <c>null</c>.</returns>
+    public static string FileLocation(this Type This) {
+      if (This == null)
+        return (null);
+
+      if (!This.IsCOMObject)
+        return (This.Assembly.Location);
+
+      var guid = This.GUID;
+
+      var key = string.Format(@"HKEY_CLASSES_ROOT\CLSID\{{{0}}}\InprocServer32", guid);
+      var result = (string)Registry.GetValue(key, null, null);
+      if (result != null)
+        return (result);
+
+      key = string.Format(@"HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{{{0}}}\LocalServer32", guid);
+      result = (string)Registry.GetValue(key, null, null);
+      return (result);
     }
   }
 }
