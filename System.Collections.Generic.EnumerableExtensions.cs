@@ -27,9 +27,6 @@ using System.Threading.Tasks;
 #endif
 using System.Linq;
 using System.Text;
-using dword = System.UInt32;
-using qword = System.UInt64;
-using word = System.UInt16;
 
 namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
@@ -281,6 +278,28 @@ namespace System.Collections.Generic {
     /// </summary>
     /// <typeparam name="TIn">The type of the items.</typeparam>
     /// <param name="This">This enumeration.</param>
+    /// <param name="progressCallback">The progress callback.</param>
+    /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
+    /// <returns>
+    /// A new enumeration which automatically calls the progress callback when items are pulled.
+    /// </returns>
+    public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<long, long> progressCallback, bool delayed = false) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(progressCallback != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(progressCallback != null);
+#endif
+      var collection = This as ICollection<TIn> ?? This.ToList();
+      return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
+    }
+
+    /// <summary>
+    /// Reports the progress while walking through the enumerable.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items.</typeparam>
+    /// <param name="This">This enumeration.</param>
     /// <param name="length">The length of the enumeration.</param>
     /// <param name="progressCallback">The progress callback.</param>
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
@@ -293,13 +312,32 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
 #endif
-      if (length == 0) {
-        progressCallback(1);
-      } else {
-        progressCallback(0);
+      return (This.AsProgressReporting(length, (i, c) => progressCallback(i == c ? 1 : (double)i / c), delayed));
+    }
 
-        var quotient = 1d / length;
-        Action<int> action = i => progressCallback(Math.Min(1, i * quotient));
+    /// <summary>
+    /// Reports the progress while walking through the enumerable.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="length">The length of the enumeration.</param>
+    /// <param name="progressCallback">The progress callback.</param>
+    /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
+    /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
+    public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<long, long> progressCallback, bool delayed = false) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(progressCallback != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(progressCallback != null);
+#endif
+      if (length == 0) {
+        progressCallback(0, 0);
+      } else {
+        progressCallback(0, length);
+
+        Action<int> action = i => progressCallback(i, length);
         Action<int> nullAction = _ => { };
         var preAction = delayed ? action : nullAction;
         var postAction = delayed ? nullAction : action;
@@ -311,7 +349,7 @@ namespace System.Collections.Generic {
           postAction(currentIndex);
           currentIndex++;
         }
-        progressCallback(1);
+        progressCallback(length, length);
       }
     }
 

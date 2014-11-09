@@ -30,16 +30,22 @@ namespace System {
 
     private readonly Func<TIndexer, TResult> _getter;
     private readonly Action<TIndexer, TResult> _setter;
-    public IndexedProperty(Func<TIndexer, TResult> getter, Action<TIndexer, TResult> setter) {
+    public IndexedProperty(Func<TIndexer, TResult> getter, Action<TIndexer, TResult> setter = null) {
       this._getter = getter;
       this._setter = setter;
     }
 
     public TResult this[TIndexer index] {
       get {
+        if (this._getter == null)
+          throw new NotSupportedException("Has no getter");
+
         return (this._getter(index));
       }
       set {
+        if (this._setter == null)
+          throw new NotSupportedException("Has no setter");
+
         this._setter(index, value);
       }
     }
