@@ -29,6 +29,33 @@ using System.Windows.Media.Imaging;
 
 namespace System.Drawing {
   internal static partial class ImageExtensions {
+    /// <summary>
+    /// Gets a single page of a multipage image.
+    /// </summary>
+    /// <param name="This">The image.</param>
+    /// <param name="page">The page.</param>
+    /// <returns>The content of the requested page.</returns>
+    public static Image GetPageAt(this Image This, int page) {
+      var totalPages = This.GetPageCount();
+      if (page >= totalPages)
+        return (null);
+
+      if (page < 0)
+        return (null);
+
+      This.SelectActiveFrame(FrameDimension.Page, page);
+      var result = new Bitmap(This);
+      return (result);
+    }
+
+    /// <summary>
+    /// Gets the number of pages of the given image.
+    /// </summary>
+    /// <param name="This">The image.</param>
+    /// <returns>Number of pages.</returns>
+    public static int GetPageCount(this Image This) {
+      return This.GetFrameCount(FrameDimension.Page);
+    }
 
     /// <summary>
     /// Saves an image into a jpeg file.
@@ -83,7 +110,7 @@ namespace System.Drawing {
     /// <summary>
     /// All sizes that are supported for icons.
     /// </summary>
-    private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = new[] { 16, 24, 32, 48, 64, 128 };
+    private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = { 16, 24, 32, 48, 64, 128 };
     /// <summary>
     /// Converts a given image to an icon.
     /// </summary>

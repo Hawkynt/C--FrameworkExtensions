@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -38,32 +39,89 @@ namespace System.IO {
     private static class NativeMethods {
 
       #region consts
-      public const int FSCTL_SET_COMPRESSION = 0x9C040;
-      public const uint SHGFI_DISPLAYNAME = 0x200;
-      public const uint SHGFI_TYPENAME = 0x400;
-      public const uint SHGFI_ICON = 0x100;
-      public const uint SHGFI_LARGEICON = 0x0; // 'Large icon
-      public const uint SHGFI_SMALLICON = 0x1; // 'Small icon
-      public const uint FILE_ATTRIBUTE_NORMAL = 0x80;
-      public const uint SHGFI_LINKOVERLAY = 0x8000;
-      public const uint SHGFI_USEFILEATTRIBUTES = 0x10;
+
+      public enum FileSystemControl : int {
+        SetCompression = 0x9C040,
+      }
+
+      [Flags]
+      public enum ShellFileInfoFlags : uint {
+        AddOverlays = 0x20,
+        AttributesSpecified = 0x20000,
+        Attributes = 0x800,
+        DisplayName = 0x200,
+        ExecutableType = 0x2000,
+        Icon = 0x100,
+        IconLocation = 0x1000,
+        LargeIcon = 0x00,
+        LinkOverlay = 0x8000,
+        OpenIcon = 0x02,
+        OverlayIndex = 0x40,
+        PointerToItemList = 0x08,
+        Selected = 0x10000,
+        ShellIconSize = 0x04,
+        SmallIcon = 0x01,
+        SystemIconIndex = 0x4000,
+        Typename = 0x400,
+        UseFileAttributes = 0x10,
+      }
+
+      [Flags]
+      public enum FileAttribute : uint {
+        Normal = 0x80,
+      }
+
+      public enum SFGAO : uint {
+        CanCopy = 0x01,
+        CanMove = 0x02,
+        CanLink = 0x04,
+        Storage = 0x08,
+        CanRename = 0x10,
+        CanDelete = 0x20,
+        HasPropertySheet = 0x40,
+        IsDropTarget = 0x100,
+        CapabilityMask = CanCopy | CanMove | CanLink | CanRename | CanDelete | HasPropertySheet | IsDropTarget,
+        IsSystem = 0x1000,
+        IsEncrypted = 0x2000,
+        IsSlow = 0x4000,
+        IsGhosted = 0x8000,
+        IsShortcut = 0x10000,
+        IsShared = 0x20000,
+        IsReadOnly = 0x40000,
+        IsHidden = 0x80000,
+        IsNonEnumerated = 0x100000,
+        IsNewContent = 0x200000,
+        HasStream = 0x400000,
+        HasStorageAncestor = 0x800000,
+        Validate = 0x1000000,
+        IsRemovable = 0x2000000,
+        IsCompressed = 0x4000000,
+        IsBrowseable = 0x8000000,
+        HasFilesystemAncestor = 0x10000000,
+        IsFolder = 0x20000000,
+        IsFilesystemItem = 0x40000000,
+        StorageCapabilityMask = Storage | IsShortcut | IsReadOnly | HasStream | HasStorageAncestor | HasFilesystemAncestor | IsFolder | IsFilesystemItem,
+        HasSubFolder = 0x80000000,
+      }
 
       #endregion
 
       #region imports
-      [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl")]
+      [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Auto)]
       public static extern int DeviceIoControl(
         IntPtr hDevice,
-        int dwIoControlCode,
+        [MarshalAs(UnmanagedType.I4)]FileSystemControl dwIoControlCode,
         ref short lpInBuffer,
         int nInBufferSize,
         IntPtr lpOutBuffer,
         int nOutBufferSize,
-        ref int lpBytesReturned,
+        out int lpBytesReturned,
         IntPtr lpOverlapped
-        );
+      );
+
       [DllImport("shell32.dll", EntryPoint = "SHGetFileInfo")]
-      public static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, uint uFlags);
+      public static extern IntPtr SHGetFileInfo(string pszPath, [MarshalAs(UnmanagedType.U4)] FileAttribute dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, [MarshalAs(UnmanagedType.U4)] ShellFileInfoFlags uFlags);
+
       [DllImport("user32.dll", SetLastError = true, EntryPoint = "DestroyIcon")]
       public static extern bool DestroyIcon(IntPtr hIcon);
 
@@ -76,7 +134,7 @@ namespace System.IO {
         private const int _MAX_DISPLAY_NAME_SIZE = 260;
         public IntPtr hIcon;
         public int iIcon;
-        public uint dwAttributes;
+        public SFGAO dwAttributes;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = _MAX_DISPLAY_NAME_SIZE)]
         public string szDisplayName;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = _MAX_TYPE_NAME_SIZE)]
@@ -101,34 +159,68 @@ namespace System.IO {
 
     #endregion
 
+    #region native file compression
     /// <summary>
     /// Enables the file compression on NTFS volumes.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
-    /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
-    public static bool EnableCompression(this FileInfo This) {
+    public static void EnableCompression(this FileInfo This) {
       Contract.Requires(This != null);
 
       if (!This.Exists)
         throw new FileNotFoundException(This.FullName);
       short COMPRESSION_FORMAT_DEFAULT = 1;
 
-      var lpBytesReturned = 0;
       int result;
       using (var f = File.Open(This.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+        int lpBytesReturned;
         result = NativeMethods.DeviceIoControl(
           f.SafeFileHandle.DangerousGetHandle(),
-          NativeMethods.FSCTL_SET_COMPRESSION,
+          NativeMethods.FileSystemControl.SetCompression,
           ref COMPRESSION_FORMAT_DEFAULT,
-          2 /*sizeof(short)*/,
+          sizeof(short),
           IntPtr.Zero,
           0,
-          ref lpBytesReturned,
-          IntPtr.Zero);
+          out lpBytesReturned,
+          IntPtr.Zero
+        );
+      }
+      if (result < 0 || result > 0x7FFFFFFF)
+        throw new Win32Exception();
+
+    }
+
+    /// <summary>
+    /// Tries to enable the file compression on NTFS volumes.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
+    public static bool TryEnableCompression(this FileInfo This) {
+      Contract.Requires(This != null);
+      if (!This.Exists)
+        return (false);
+
+      short COMPRESSION_FORMAT_DEFAULT = 1;
+
+      int result;
+      using (var f = File.Open(This.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+        int lpBytesReturned;
+        result = NativeMethods.DeviceIoControl(
+          f.SafeFileHandle.DangerousGetHandle(),
+          NativeMethods.FileSystemControl.SetCompression,
+          ref COMPRESSION_FORMAT_DEFAULT,
+          sizeof(short),
+          IntPtr.Zero,
+          0,
+          out lpBytesReturned,
+          IntPtr.Zero
+        );
       }
       return (result >= 0 && result <= 0x7FFFFFFF);
     }
+    #endregion
 
+    #region shell information
     /// <summary>
     /// Gets the type description.
     /// </summary>
@@ -138,7 +230,7 @@ namespace System.IO {
       Contract.Requires(This != null);
 
       var shinfo = new NativeMethods.SHFILEINFO();
-      NativeMethods.SHGetFileInfo(This.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.SHGFI_TYPENAME);
+      NativeMethods.SHGetFileInfo(This.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.ShellFileInfoFlags.Typename);
       return (shinfo.szTypeName.Trim());
     }
 
@@ -152,17 +244,30 @@ namespace System.IO {
     public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
       Contract.Requires(This != null);
 
-      var flags = NativeMethods.SHGFI_ICON | NativeMethods.SHGFI_USEFILEATTRIBUTES | (smallIcon ? NativeMethods.SHGFI_SMALLICON : NativeMethods.SHGFI_LARGEICON);
+      var flags = NativeMethods.ShellFileInfoFlags.Icon | NativeMethods.ShellFileInfoFlags.UseFileAttributes | (smallIcon ? NativeMethods.ShellFileInfoFlags.SmallIcon : NativeMethods.ShellFileInfoFlags.LargeIcon);
       if (linkOverlay)
-        flags |= NativeMethods.SHGFI_LINKOVERLAY;
+        flags |= NativeMethods.ShellFileInfoFlags.LinkOverlay;
 
       var shfi = new NativeMethods.SHFILEINFO();
-      NativeMethods.SHGetFileInfo(This.FullName, NativeMethods.FILE_ATTRIBUTE_NORMAL, ref shfi, (uint)Marshal.SizeOf(shfi), flags);
+      NativeMethods.SHGetFileInfo(This.FullName, NativeMethods.FileAttribute.Normal, ref shfi, (uint)Marshal.SizeOf(shfi), flags);
 
       var result = (Icon)Icon.FromHandle(shfi.hIcon).Clone();
       NativeMethods.DestroyIcon(shfi.hIcon);
 
       return (result);
+    }
+    #endregion
+
+    #region file copy/move/rename
+    /// <summary>
+    /// Moves the file to the target directory.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <param name="destFile">The destination file.</param>
+    /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
+    /// <param name="timeout">The timeout.</param>
+    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan? timeout = null) {
+      This.MoveTo(destFile.FullName, overwrite, timeout);
     }
 
     /// <summary>
@@ -174,6 +279,8 @@ namespace System.IO {
     /// <param name="timeout">The timeout.</param>
     public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
       Contract.Requires(This != null);
+
+      // copy file and delete source, retry during timeout
       using (var scope = new TransactionScope()) {
         This.CopyTo(destFileName, overwrite);
         var delay = TimeSpan.FromSeconds(1);
@@ -182,16 +289,20 @@ namespace System.IO {
           try {
             This.Delete();
             break;
+
           } catch (IOException) {
             if (tries-- < 1)
               throw;
+
             Thread.Sleep(delay);
           }
         }
         scope.Complete();
       }
     }
+    #endregion
 
+    #region hash computation
     /// <summary>
     /// Computes the hash.
     /// </summary>
@@ -249,7 +360,9 @@ namespace System.IO {
     public static byte[] ComputeMD5Hash(this FileInfo This) {
       return (This.ComputeHash<MD5CryptoServiceProvider>());
     }
+    #endregion
 
+    #region reading
     /// <summary>
     /// Reads all text.
     /// </summary>
@@ -325,7 +438,9 @@ namespace System.IO {
       Contract.Requires(encoding != null);
       return (File.ReadLines(This.FullName, encoding));
     }
+    #endregion
 
+    #region writing
     /// <summary>
     /// Writes all text.
     /// </summary>
@@ -401,7 +516,9 @@ namespace System.IO {
       Contract.Requires(encoding != null);
       File.WriteAllLines(This.FullName, contents, encoding);
     }
+    #endregion
 
+    #region appending
     /// <summary>
     /// Appends all text.
     /// </summary>
@@ -466,7 +583,9 @@ namespace System.IO {
     public static void AppendLine(this FileInfo This, string contents, Encoding encoding) {
       This.AppendAllLines(new[] { contents }, encoding);
     }
+    #endregion
 
+    #region trimming text files
     /// <summary>
     /// Keeps the first lines of a text file.
     /// </summary>
@@ -596,7 +715,9 @@ namespace System.IO {
           tempFile.Delete();
       }
     }
+    #endregion
 
+    #region opening
     /// <summary>
     /// Opens the specified file.
     /// </summary>
@@ -671,7 +792,9 @@ namespace System.IO {
       Contract.Requires(This != null);
       return (new FileStream(This.FullName, mode, rights, share, bufferSize, options, security));
     }
+    #endregion
 
+    #region get part of filename
     /// <summary>
     /// Gets the filename without extension.
     /// </summary>
@@ -690,6 +813,34 @@ namespace System.IO {
     public static string GetFilename(this FileInfo This) {
       Contract.Requires(This != null);
       return (Path.GetFileName(This.FullName));
+    }
+    #endregion
+
+    /// <summary>
+    /// Tries to create a new file.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns>
+    ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool TryCreate(this FileInfo This) {
+      Contract.Requires(This != null);
+      if (This.Exists)
+        return (false);
+
+      try {
+        var fileHandle = This.Open(FileMode.CreateNew, FileAccess.Write);
+        fileHandle.Close();
+        return (true);
+      } catch (UnauthorizedAccessException) {
+
+        // in case multiple threads try to create the same file, this gets fired
+        return (false);
+      } catch (IOException) {
+
+        // file already exists
+        return (false);
+      }
     }
   }
 }

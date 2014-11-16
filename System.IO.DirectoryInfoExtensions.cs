@@ -21,9 +21,58 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace System.IO {
+  /// <summary>
+  /// Extensions for the DirectoryInfo type.
+  /// </summary>
   internal static partial class DirectoryInfoExtensions {
+
+    /// <summary>
+    /// Gets a directory under the current directory.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="subdirectories">The relative path to the sub-directory.</param>
+    /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
+    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) {
+      return (new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray())));
+    }
+
+    /// <summary>
+    /// Gets a file under the current directory.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="filePath">The relative path to the file.</param>
+    /// <returns>A FileInfo instance pointing to the given path.</returns>
+    public static FileInfo File(this DirectoryInfo This, params string[] filePath) {
+      return (new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray())));
+    }
+
+    /// <summary>
+    /// Determines whether the specified subdirectory exists.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="searchPattern">The search pattern.</param>
+    /// <param name="searchOption">The search option.</param>
+    /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
+    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+      Contract.Requires(This != null);
+      return (This.EnumerateDirectories(searchPattern, searchOption).Any());
+    }
+
+    /// <summary>
+    /// Determines whether the specified file exists.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="searchPattern">The search pattern.</param>
+    /// <param name="searchOption">The search option.</param>
+    /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+      Contract.Requires(This != null);
+      return (This.EnumerateFiles(searchPattern, searchOption).Any());
+    }
+
     /// <summary>
     /// Creates the directory recursively.
     /// </summary>
@@ -56,8 +105,8 @@ namespace System.IO {
         var targetPath = Path.Combine(target.FullName, relativePath);
 
         // create directory if it does not exist
-        if (!Directory.Exists(targetPath))
-          Directory.CreateDirectory(targetPath);
+        if (!IO.Directory.Exists(targetPath))
+          IO.Directory.CreateDirectory(targetPath);
 
         foreach (var fileSystemInfo in current.Item1.GetFileSystemInfos()) {
           var fileInfo = fileSystemInfo as FileInfo;

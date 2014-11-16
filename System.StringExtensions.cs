@@ -246,6 +246,56 @@ namespace System {
     }
 
     /// <summary>
+    /// Determines whether the specified string matches the given regex.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="regex">The regex.</param>
+    /// <returns>
+    ///   <c>true</c> if it matches; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsMatch(this string This, Regex regex) {
+      Contract.Requires(This != null);
+      return (regex.IsMatch(This));
+    }
+
+    /// <summary>
+    /// Determines whether the specified string matches the given regex.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="regex">The regex.</param>
+    /// <returns>
+    ///   <c>false</c> if it matches; otherwise, <c>true</c>.
+    /// </returns>
+    public static bool IsNotMatch(this string This, Regex regex) {
+      Contract.Requires(This != null);
+      return (!regex.IsMatch(This));
+    }
+
+    /// <summary>
+    /// Determines whether the specified string matches the given regex.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="regex">The regex.</param>
+    /// <param name="regexOptions">The regex options.</param>
+    /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
+    public static bool IsMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
+      Contract.Requires(This != null);
+      return (This.IsMatch(new Regex(regex, regexOptions)));
+    }
+
+    /// <summary>
+    /// Determines whether the specified string matches the given regex.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="regex">The regex.</param>
+    /// <param name="regexOptions">The regex options.</param>
+    /// <returns><c>false</c> if it matches; otherwise, <c>true</c>.</returns>
+    public static bool IsNotMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
+      Contract.Requires(This != null);
+      return (This.IsNotMatch(new Regex(regex, regexOptions)));
+    }
+
+    /// <summary>
     /// Matches the specified regex.
     /// </summary>
     /// <param name="regex">The regex.</param>
@@ -916,6 +966,17 @@ namespace System {
       Contract.Requires(This != null);
 #endif
       return (This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison));
+    }
+
+    /// <summary>
+    /// Checks whether the given string starts not with the specified text.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <returns></returns>
+    public static bool StartsNotWith(this string This,string value,StringComparison stringComparison = StringComparison.CurrentCulture) {
+      return (!This.StartsWith(value, stringComparison));
     }
 
     /// <summary>

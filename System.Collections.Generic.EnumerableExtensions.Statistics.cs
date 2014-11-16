@@ -3095,7 +3095,7 @@ namespace System.Collections.Generic {
         current = (previous + x / previous) / factor;
       }
       while (Math.Abs(previous - current) > epsilon);
-      return current;
+      return(current);
     }
     #endregion
   }

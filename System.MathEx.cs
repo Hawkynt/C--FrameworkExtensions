@@ -20,13 +20,13 @@
 #endregion
 
 using System.Diagnostics.Contracts;
+using System.Runtime;
 using word = System.UInt16;
 using dword = System.UInt32;
 using qword = System.UInt64;
 
 namespace System {
   internal static class MathEx {
-
     [Pure]
     public static bool IsOdd(this byte This) {
       return ((This & 1) != 0);
@@ -180,14 +180,28 @@ namespace System {
       return (This == short.MinValue ? (ushort)-short.MinValue : (ushort)Math.Abs(This));
     }
 
+    [TargetedPatchingOptOut("")]
     [Pure]
     public static uint Abs(this int This) {
-      return (This == int.MinValue ? 2147483648U : (uint)Math.Abs(This));
+#if DEBUG
+      return (uint)(This < 0 ? -This : This);
+#else
+      var mask = This >> 31;
+      var r = (uint)((This ^ mask) - mask);
+      return (r);
+#endif
     }
 
+    [TargetedPatchingOptOut("")]
     [Pure]
     public static ulong Abs(this long This) {
-      return (This == long.MinValue ? 9223372036854775808UL : (ulong)Math.Abs(This));
+#if DEBUG
+      return (uint)(This < 0 ? -This : This);
+#else
+      var mask = This >> 63;
+      var r = (uint)((This ^ mask) - mask);
+      return (r);
+#endif
     }
 
     [Pure]

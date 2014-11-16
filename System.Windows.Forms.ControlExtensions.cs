@@ -28,6 +28,43 @@ namespace System.Windows.Forms {
   internal static partial class ControlExtensions {
 
     /// <summary>
+    /// The token that resumes layout on disposal.
+    /// </summary>
+    public interface ISuspendedLayoutToken : IDisposable { }
+
+    private class SuspendedLayoutToken : ISuspendedLayoutToken {
+      private readonly Control _targetControl;
+      public SuspendedLayoutToken(Control targetControl) {
+        targetControl.SuspendLayout();
+        this._targetControl = targetControl;
+      }
+
+      ~SuspendedLayoutToken() {
+        this._Dispose(false);
+      }
+
+      private void _Dispose(bool isManagedDisposal) {
+        this._targetControl.ResumeLayout(true);
+        if (isManagedDisposal)
+          GC.SuppressFinalize(this);
+      }
+
+      public void Dispose() {
+        this._Dispose(true);
+      }
+    }
+
+    /// <summary>
+    /// Stops the layout and returns a token which will continue layoutint on disposal.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <returns></returns>
+    public static ISuspendedLayoutToken PauseLayout(this Control This) {
+      Contract.Requires(This != null);
+      return (new SuspendedLayoutToken(This));
+    }
+
+    /// <summary>
     /// Executes the given action with the current control after a period of time.
     /// </summary>
     /// <param name="This">This Control.</param>
@@ -228,7 +265,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Gets the text property, and converts empty values automatically to <c>null</c>.
+    /// Gets the trimmed text property, and converts empty values automatically to <c>null</c>.
     /// </summary>
     /// <param name="This">This control.</param>
     /// <returns>A string with text or <c>null</c>.</returns>
@@ -238,7 +275,7 @@ namespace System.Windows.Forms {
       Contract.Ensures(r == null || r.Length > 0);
       var text = This.Text;
       if (string.IsNullOrWhiteSpace(text))
-        return null;
+        return (null);
       Contract.Assume(text.Trim().Length > 0);
       return text.Trim();
     }

@@ -515,7 +515,7 @@ namespace System.Collections.Generic {
       return (defaultValue);
     }
     /// <summary>
-    /// Firsts the or default.
+    /// Gets the first item or the default value.
     /// </summary>
     /// <typeparam name="TIn">The type of the in.</typeparam>
     /// <param name="This">The this.</param>
@@ -554,6 +554,57 @@ namespace System.Collections.Generic {
         return (item);
 
       return (defaultValueFactory());
+    }
+
+
+    /// <summary>
+    /// Gets the last item matching the condition or the given default value.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>The matched item or the given default value.</returns>
+    public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (This.Reverse().FirstOrDefault(selector, defaultValue));
+    }
+
+    /// <summary>
+    /// Gets the last item or the default value.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the in.</typeparam>
+    /// <param name="This">The this.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns></returns>
+    public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (This.Reverse().FirstOrDefault(defaultValue));
+    }
+
+    /// <summary>
+    /// Gets the last item matching the condition or the given default value.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <param name="defaultValueFactory">The default value.</param>
+    /// <returns>The matched item or the given default value.</returns>
+    public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (This.Reverse().FirstOrDefault(selector, defaultValueFactory));
     }
 
     /// <summary>

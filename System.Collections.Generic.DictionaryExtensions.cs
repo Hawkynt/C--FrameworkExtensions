@@ -32,7 +32,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This Dictionary.</param>
     /// <param name="keyValuePairs">The key/value pairs.</param>
-    public static void AddRange<TKey, TValue>(this Dictionary<TKey, TValue> This, params object[] keyValuePairs) {
+    public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> This, params object[] keyValuePairs) {
       Contract.Requires(This != null);
       if (keyValuePairs == null)
         return;
@@ -53,7 +53,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This Dictionary.</param>
     /// <param name="keyValuePairs">The key/value pairs.</param>
-    public static void AddRange<TKey, TValue>(this Dictionary<TKey, TValue> This, IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) {
+    public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> This, IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) {
       Contract.Requires(This != null);
       Contract.Requires(keyValuePairs != null);
       foreach (var kvp in keyValuePairs)
@@ -393,6 +393,19 @@ namespace System.Collections.Generic {
       return (This.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value));
     }
 
+    /// <summary>
+    /// Checks if the given key is missing.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="This">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
+    public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key) {
+      Contract.Requires(This != null);
+      Contract.Requires(!ReferenceEquals(null, key));
+      return (!This.ContainsKey(key));
+    }
   }
 
   /// <summary>

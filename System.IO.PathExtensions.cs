@@ -60,11 +60,20 @@ namespace System.IO {
     /// <returns><c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.</returns>
     public static bool TryCreateFile(string fileName) {
       Contract.Requires(fileName != null);
+      if (File.Exists(fileName))
+        return (false);
+
       try {
         var fileHandle = File.Open(fileName, FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
         return (true);
+      } catch (UnauthorizedAccessException) {
+
+        // in case multiple threads try to create the same file, this gets fired
+        return (false);
       } catch (IOException) {
+
+        // file already exists
         return (false);
       }
     }
@@ -125,9 +134,10 @@ namespace System.IO {
     /// <returns><c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.</returns>
     public static bool TryCreateDirectory(string pathName) {
       Contract.Requires(!string.IsNullOrEmpty(pathName));
+      if (Directory.Exists(pathName))
+        return (false);
+
       try {
-        if (Directory.Exists(pathName))
-          return (false);
         Directory.CreateDirectory(pathName);
         return (true);
       } catch (IOException) {
