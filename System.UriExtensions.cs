@@ -19,13 +19,24 @@
 */
 #endregion
 
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace System {
   internal static partial class UriExtensions {
+
+    private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new Dictionary<HttpRequestHeader, string> {
+      {HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12"},
+      {HttpRequestHeader.Accept, "*/*"},
+      {HttpRequestHeader.AcceptLanguage, "en-gb,en;q=0.5"},
+      {HttpRequestHeader.AcceptCharset, "ISO-8859-1,utf-8;q=0.7,*;q=0.7"},
+    };
 
     /// <summary>
     /// Reads all text.
@@ -33,32 +44,70 @@ namespace System {
     /// <param name="This">This Uri.</param>
     /// <param name="encoding">The encoding.</param>
     /// <param name="retryCount">The retry count.</param>
-    /// <returns></returns>
-    public static string ReadAllText(this Uri This, Encoding encoding = null, int retryCount = 0) {
+    /// <param name="headers">The headers.</param>
+    /// <param name="postValues">The post values.</param>
+    /// <returns>
+    /// The text of the target url
+    /// </returns>
+    public static string ReadAllText(this Uri This, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
       Contract.Requires(This != null);
+      Trace.WriteLine(This.AbsoluteUri);
 
       if (This.IsFile)
         return (encoding == null ? File.ReadAllText(This.AbsolutePath) : File.ReadAllText(This.AbsolutePath, encoding));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12");
-        webClient.Headers.Add("Accept", "*/*");
-        webClient.Headers.Add("Accept-Language", "en-gb,en;q=0.5");
-        webClient.Headers.Add("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
         if (encoding != null)
           webClient.Encoding = encoding;
 
         Exception ex = null;
         while (retryCount-- >= 0) {
           try {
-            return (webClient.DownloadString(This));
+            if (postValues == null)
+              return (webClient.DownloadString(This));
+
+            var nameValCollection = new NameValueCollection();
+            foreach (var kvp in postValues)
+              nameValCollection.Add(kvp.Key, kvp.Value);
+
+            return (encoding ?? Encoding.Default).GetString(webClient.UploadValues(This, nameValCollection));
           } catch (Exception e) {
             ex = e;
           }
         }
         throw (ex);
       }
+    }
 
+    /// <summary>
+    /// Reads all text.
+    /// </summary>
+    /// <param name="This">This Uri.</param>
+    /// <param name="encoding">The encoding.</param>
+    /// <param name="retryCount">The retry count.</param>
+    /// <returns>The text of the target url</returns>
+    public static async Task<string> ReadAllTextTaskAsync(this Uri This, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null) {
+      Contract.Requires(This != null);
+
+      if (This.IsFile)
+        return await (new Task<string>(() => encoding == null ? File.ReadAllText(This.AbsolutePath) : File.ReadAllText(This.AbsolutePath, encoding)));
+
+      using (var webClient = new WebClient()) {
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        if (encoding != null)
+          webClient.Encoding = encoding;
+
+        Exception ex = null;
+        while (retryCount-- >= 0) {
+          try {
+            return await (webClient.DownloadStringTaskAsync(This));
+          } catch (Exception e) {
+            ex = e;
+          }
+        }
+        throw (ex);
+      }
     }
 
     /// <summary>
@@ -66,21 +115,60 @@ namespace System {
     /// </summary>
     /// <param name="This">This Uri.</param>
     /// <param name="retryCount">The retry count.</param>
-    /// <returns></returns>
-    public static byte[] ReadAllBytes(this Uri This, int retryCount = 0) {
+    /// <param name="headers">The headers.</param>
+    /// <param name="postValues">The post values.</param>
+    /// <returns>
+    /// The bytes of the target url
+    /// </returns>
+    public static byte[] ReadAllBytes(this Uri This, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
       if (This.IsFile)
         return (File.ReadAllBytes(This.AbsolutePath));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12");
-        webClient.Headers.Add("Accept", "*/*");
-        webClient.Headers.Add("Accept-Language", "en-gb,en;q=0.5");
-        webClient.Headers.Add("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
 
         Exception ex = null;
         while (retryCount-- >= 0) {
           try {
-            return (webClient.DownloadData(This));
+            if (postValues == null)
+              return (webClient.DownloadData(This));
+
+            var nameValCollection = new NameValueCollection();
+            foreach (var kvp in postValues)
+              nameValCollection.Add(kvp.Key, kvp.Value);
+
+            return webClient.UploadValues(This, nameValCollection);
+          } catch (Exception e) {
+            ex = e;
+          }
+        }
+        throw (ex);
+      }
+    }
+
+    /// <summary>
+    /// Reads all bytes.
+    /// </summary>
+    /// <param name="This">This Uri.</param>
+    /// <param name="retryCount">The retry count.</param>
+    /// <param name="headers">The headers.</param>
+    /// <returns>
+    /// The bytes of the target url
+    /// </returns>
+    public static async Task<byte[]> ReadAllBytesTaskAsync(
+      this Uri This,
+      int retryCount = 0,
+      IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null) {
+      if (This.IsFile)
+        return await (new Task<byte[]>(() => File.ReadAllBytes(This.AbsolutePath)));
+
+      using (var webClient = new WebClient()) {
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+
+        Exception ex = null;
+        while (retryCount-- >= 0) {
+          try {
+            return await webClient.DownloadDataTaskAsync(This);
           } catch (Exception e) {
             ex = e;
           }
@@ -105,12 +193,12 @@ namespace System {
     /// <param name="This">This Uri.</param>
     /// <param name="path">The path.</param>
     /// <returns></returns>
-    public static Uri GetByRelativePath(this Uri This, string path) {
-      if (path.IsNullOrWhiteSpace())
-        return (This);
-
-      return (new Uri(This.AbsoluteUri + (path.StartsWith("/") ? path.Substring(1) : path)));
+    public static Uri Path(this Uri This, string path) {
+      return (
+        path.IsNullOrWhiteSpace()
+        ? This
+        : new Uri(This.AbsoluteUri + (path.StartsWith("/") ? path.Substring(1) : path)))
+        ;
     }
-
   }
 }
