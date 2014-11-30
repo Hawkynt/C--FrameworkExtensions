@@ -213,5 +213,150 @@ namespace System {
 
 <#}#>
 
+    #region Parsing DateTime
+    #region Parse
+    public static DateTime ParseDateTime(this string This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.Parse(This));
+    }
+
+    public static DateTime ParseDateTime(this string This, IFormatProvider provider) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.Parse(This, provider));
+    }
+    #endregion
+
+    #region TryParse
+    public static bool TryParseDateTime(this string This, out DateTime result) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.TryParse(This, out result));
+    }
+
+    public static bool TryParseDateTime(this string This, IFormatProvider provider, out DateTime result) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.TryParse(This, provider, DateTimeStyles.None, out result));
+    }
+
+    public static bool TryParseDateTime(this string This, DateTimeStyles style, out DateTime result) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.TryParse(This, Thread.CurrentThread.CurrentCulture,style, out result));
+    }
+
+    public static bool TryParseDateTime(this string This, DateTimeStyles style, IFormatProvider provider, out DateTime result) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return (DateTime.TryParse(This,  provider,style, out result));
+    }
+    #endregion
+
+    #region ParseOrDefault
+    public static DateTime ParseDateTimeOrDefault(this string This, DateTime defaultValue = default(DateTime)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, out result) ? result : defaultValue);
+    }
+
+    public static DateTime ParseDateTimeOrDefault(this string This, IFormatProvider provider, DateTime defaultValue = default(DateTime)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, provider, out result) ? result : defaultValue);
+    }
+
+    public static DateTime ParseDateTimeOrDefault(this string This, DateTimeStyles style, DateTime defaultValue = default(DateTime)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, style, out result) ? result : defaultValue);
+    }
+
+    public static DateTime ParseDateTimeOrDefault(this string This, DateTimeStyles style, IFormatProvider provider, DateTime defaultValue = default(DateTime)) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, style, provider, out result) ? result : defaultValue);
+    }
+    #endregion
+
+    #region ParseOrNull
+    public static DateTime? ParseDateTimeOrNull(this string This) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, out result) ? result : (DateTime?)null);
+    }
+
+    public static DateTime? ParseDateTimeOrNull(this string This, IFormatProvider provider) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, provider, out result) ? result : (DateTime?)null);
+    }
+
+    public static DateTime? ParseDateTimeOrNull(this string This, DateTimeStyles style) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, style, out result) ? result : (DateTime?)null);
+    }
+
+    public static DateTime? ParseDateTimeOrNull(this string This, DateTimeStyles style, IFormatProvider provider) {
+#if NET35
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      DateTime result;
+      return (TryParseDateTime(This, style, provider, out result) ? result : (DateTime?)null);
+    }
+    #endregion
+    #endregion
+
+
   }
 }
