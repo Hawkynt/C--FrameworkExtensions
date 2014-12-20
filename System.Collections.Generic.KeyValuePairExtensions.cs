@@ -30,12 +30,20 @@ namespace System.Collections.Generic {
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This enumeration of key/value pairs.</param>
-    /// <returns>A new dictionary.</returns>
-    public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> This) {
+    /// <param name="comparer">The equality comparer.</param>
+    /// <returns>
+    /// A new dictionary.
+    /// </returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> This, IEqualityComparer<TKey> comparer = null) {
       Contract.Requires(This != null);
       Contract.Ensures(Contract.Result<Dictionary<TKey, TValue>>() != null);
+
       // if the enumeration is a collection, than initialize the dictionary with a known number of items.
-      var result = This is ICollection ? new Dictionary<TKey, TValue>(((ICollection)This).Count) : new Dictionary<TKey, TValue>();
+      var result = This is ICollection
+        ? comparer == null ? new Dictionary<TKey, TValue>(((ICollection)This).Count) : new Dictionary<TKey, TValue>(((ICollection)This).Count, comparer)
+        : comparer == null ? new Dictionary<TKey, TValue>() : new Dictionary<TKey, TValue>(comparer)
+        ;
+
       foreach (var keyValuePair in This) {
         var key = keyValuePair.Key;
         var val = keyValuePair.Value;

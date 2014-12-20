@@ -19,6 +19,7 @@
 */
 #endregion
 
+
 #if NET35
 using System.Diagnostics;
 #else
@@ -30,6 +31,66 @@ using System.Text;
 
 namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
+
+    /// <summary>
+    /// Tests whether two enumerations of the same type are equal.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="This">This IEnumerable.</param>
+    /// <param name="other">The other IEnumerable.</param>
+    /// <param name="comparer">The comparer, if any; otherwise, uses the default comparer for the given item type.</param>
+    /// <returns></returns>
+    public static bool AreEqual<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> other, IEqualityComparer<TItem> comparer = null) {
+      if (ReferenceEquals(This, other))
+        return (true);
+
+      if (This == null || other == null)
+        return (false);
+
+      if (comparer == null)
+        comparer = EqualityComparer<TItem>.Default;
+
+      using (var thisEnumerator = This.GetEnumerator())
+      using (var otherEnumerator = other.GetEnumerator()) {
+        bool hasMoreItems;
+
+        // until at least one enumeration has ended
+        while ((hasMoreItems = thisEnumerator.MoveNext()) == otherEnumerator.MoveNext()) {
+
+          // both ended, so they must be equal
+          if (!hasMoreItems)
+            return (true);
+
+          // if current element differs, break
+          if (!comparer.Equals(thisEnumerator.Current, otherEnumerator.Current))
+            return (false);
+
+        }
+
+        // one of the enumerations ended first, so they are not equal
+        return (false);
+      }
+    }
+
+    /// <summary>
+    /// Shuffles the specified enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This IEnumerable.</param>
+    /// <param name="rng">The random number generator.</param>
+    /// <returns>A shuffled enumeration.</returns>
+    public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> This, Random rng = null) {
+      Contract.Requires(This != null);
+      if (rng == null)
+        rng = new Random();
+
+      return (
+        This
+        .Select(i => new { r = rng.Next(), i })
+        .OrderBy(a => a.r)
+        .Select(a => a.i)
+      );
+    }
 
     /// <summary>
     /// Determines whether the enumeration is <c>null</c> or empty.
@@ -81,10 +142,11 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="This">This enumeration.</param>
     /// <param name="list">The list of items we should look for.</param>
+    /// <param name="equalityComparer">The equality comparer.</param>
     /// <returns>
     ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
     /// </returns>
-    public static bool ContainsAny<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> list) {
+    public static bool ContainsAny<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> list, IEqualityComparer<TItem> equalityComparer = null) {
 #if NET35
       Debug.Assert(This != null);
       Debug.Assert(list != null);
@@ -98,7 +160,8 @@ namespace System.Collections.Generic {
       var enumerator = list.GetEnumerator();
 
       // we'll need this for direct comparisons
-      var equalityComparer = EqualityComparer<TItem>.Default;
+      if (equalityComparer == null)
+        equalityComparer = EqualityComparer<TItem>.Default;
 
       // let's look at all our items
       foreach (var item in This) {

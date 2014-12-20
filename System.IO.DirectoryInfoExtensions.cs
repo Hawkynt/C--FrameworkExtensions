@@ -30,12 +30,189 @@ namespace System.IO {
   internal static partial class DirectoryInfoExtensions {
 
     /// <summary>
+    /// Determines the order in which sub-items will be returned.
+    /// </summary>
+    public enum RecursionMode {
+      /// <summary>
+      /// The toplevel items only (eg. /a, /b)
+      /// </summary>
+      ToplevelOnly,
+      /// <summary>
+      /// The shortest path first (eg. /a, /b, /a/c, /b/d)
+      /// </summary>
+      ShortestPathFirst,
+      /// <summary>
+      /// The deepest path first (eg. /a , /a/c, /b, /b/d)
+      /// </summary>
+      DeepestPathFirst,
+    }
+
+    /// <summary>
+    /// Enumerates the file system infos.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="mode">The recursion mode.</param>
+    /// <param name="recursionFilter">The filter to use for recursing into sub-directories (Walks on <c>true</c>; otherwise, skips recursion).</param>
+    /// <returns>
+    /// The FileSystemInfos
+    /// </returns>
+    /// <exception cref="System.NotSupportedException">RecursionMode</exception>
+    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo This, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
+      switch (mode) {
+        case RecursionMode.ToplevelOnly: {
+          foreach (var result in This.EnumerateFileSystemInfos())
+            yield return (result);
+          break;
+        }
+        case RecursionMode.ShortestPathFirst: {
+          var results = new Queue<DirectoryInfo>();
+          results.Enqueue(This);
+          while (results.Any()) {
+            var result = results.Dequeue();
+            foreach (var fsi in result.EnumerateFileSystemInfos()) {
+              yield return (fsi);
+              var di = fsi as DirectoryInfo;
+              if (di == null)
+                continue;
+
+              if (recursionFilter == null || recursionFilter(di))
+                results.Enqueue(di);
+            }
+          }
+          break;
+        }
+        case RecursionMode.DeepestPathFirst: {
+          var results = new Stack<DirectoryInfo>();
+          results.Push(This);
+          while (results.Any()) {
+            var result = results.Pop();
+            foreach (var fsi in result.EnumerateFileSystemInfos()) {
+              yield return (fsi);
+              var di = fsi as DirectoryInfo;
+              if (di == null)
+                continue;
+
+              if (recursionFilter == null || recursionFilter(di))
+                results.Push(di);
+            }
+          }
+          break;
+        }
+        default: {
+          throw new NotSupportedException("RecursionMode");
+        }
+      }
+    }
+
+    /// <summary>
+    /// Tries to set the last write time.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
+      Contract.Requires(This != null);
+      This.Refresh();
+
+      if (!This.Exists)
+        return (false);
+
+      if (This.LastWriteTimeUtc == lastWriteTimeUtc)
+        return (true);
+
+      try {
+        This.LastWriteTimeUtc = lastWriteTimeUtc;
+        return (true);
+      } catch {
+        return (This.LastWriteTimeUtc == lastWriteTimeUtc);
+      }
+    }
+
+    /// <summary>
+    /// Tries to set the creation time.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="creationTimeUtc">The date&amp;time.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
+      Contract.Requires(This != null);
+      This.Refresh();
+
+      if (!This.Exists)
+        return (false);
+
+      if (This.CreationTimeUtc == creationTimeUtc)
+        return (true);
+
+      try {
+        This.CreationTimeUtc = creationTimeUtc;
+        return (true);
+      } catch {
+        return (This.CreationTimeUtc == creationTimeUtc);
+      }
+    }
+
+    /// <summary>
+    /// Tries to set the attributes.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="attributes">The attributes.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
+      Contract.Requires(This != null);
+      This.Refresh();
+
+      if (!This.Exists)
+        return (false);
+
+      if (This.Attributes == attributes)
+        return (true);
+
+      try {
+        This.Attributes = attributes;
+        return (true);
+      } catch {
+        return (This.Attributes == attributes);
+      }
+    }
+
+    /// <summary>
+    /// Tries to create the given directory.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TryCreate(this DirectoryInfo This) {
+      Contract.Requires(This != null);
+      if (This.Exists)
+        return (true);
+
+      try {
+        This.Create();
+        return (true);
+      } catch {
+        return (This.Exists);
+      }
+
+    }
+
+    /// <summary>
+    /// Checks whether the given directory does not exist.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
+    public static bool NotExists(this DirectoryInfo This) {
+      Contract.Requires(This != null);
+      return (!This.Exists);
+    }
+
+    /// <summary>
     /// Gets a directory under the current directory.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="subdirectories">The relative path to the sub-directory.</param>
     /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
     public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) {
+      Contract.Requires(This != null);
       return (new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray())));
     }
 
@@ -46,6 +223,7 @@ namespace System.IO {
     /// <param name="filePath">The relative path to the file.</param>
     /// <returns>A FileInfo instance pointing to the given path.</returns>
     public static FileInfo File(this DirectoryInfo This, params string[] filePath) {
+      Contract.Requires(This != null);
       return (new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray())));
     }
 

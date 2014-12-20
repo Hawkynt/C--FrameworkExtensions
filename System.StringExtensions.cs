@@ -117,6 +117,23 @@ namespace System {
 
       return (This.Substring(0, This.Length - count));
     }
+
+    /// <summary>
+    /// Removes the first n chars from a string.
+    /// </summary>
+    /// <param name="This">This String.</param>
+    /// <param name="count">The number of characters to remove.</param>
+    /// <returns>The new string</returns>
+    public static string RemoveFirst(this string This, int count) {
+      if (string.IsNullOrEmpty(This) || count < 1)
+        return (This);
+
+      if (This.Length < count)
+        return (string.Empty);
+
+      return (This.Substring(count));
+    }
+
     /// <summary>
     /// Gets a substring.
     /// </summary>
@@ -706,18 +723,19 @@ namespace System {
     /// Lowers the first char in a string.
     /// </summary>
     /// <param name="This">This string.</param>
+    /// <param name="culture">The culture.</param>
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
-    public static string LowerFirst(this string This) {
+    public static string LowerFirst(this string This, CultureInfo culture = null) {
       if (This == null)
         return null;
       if (This.Length == 1)
-        return This.ToLower();
+        return culture == null ? This.ToLower() : This.ToLower(culture);
 #if !NET35
       Contract.Assume(This.Length > 1);
 #endif
-      return This.Substring(0, 1).ToLower() + This.Substring(1);
+      return (culture == null ? This.Substring(0, 1).ToLower() : This.Substring(0, 1).ToLower(culture)) + This.Substring(1);
     }
 
     /// <summary>
@@ -828,10 +846,14 @@ namespace System {
 
       var result = new StringBuilder();
       var hump = true;
-      const string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      const string numbers = "0123456789";
+      const string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
       foreach (var chr in This) {
-        if (allowedChars.IndexOf(chr) < 0)
+        if (numbers.IndexOf(chr) >= 0) {
+          result.Append(chr);
+          hump = true;
+        } else if (allowedChars.IndexOf(chr) < 0)
           hump = true;
         else {
           result.Append(hump ? chr.ToString(culture).ToUpper(culture) : chr.ToString(culture));
@@ -840,6 +862,16 @@ namespace System {
       }
 
       return (result.ToString());
+    }
+
+    /// <summary>
+    /// Converts a word to pascal case.
+    /// </summary>
+    /// <param name="This">This String.</param>
+    /// <param name="culture">The culture to use; defaults to current culture.</param>
+    /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
+    public static string ToPascalCase(this string This, CultureInfo culture = null) {
+      return (This.ToCamelCase().LowerFirst(culture));
     }
 
     /// <summary>
@@ -863,7 +895,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <returns></returns>
     public static string MsSqlDataEscape(this object This) {
-      return (This == null ? "NULL" : "'" + This.ToString().Replace("'", "''") + "'");
+      return (This == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", This).Replace("'", "''") + "'");
     }
 
     /// <summary>
@@ -971,12 +1003,23 @@ namespace System {
     /// <summary>
     /// Checks whether the given string starts not with the specified text.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="This">This String.</param>
     /// <param name="value">The value.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
     public static bool StartsNotWith(this string This,string value,StringComparison stringComparison = StringComparison.CurrentCulture) {
       return (!This.StartsWith(value, stringComparison));
+    }
+
+    /// <summary>
+    /// Checks whether the given string ends not with the specified text.
+    /// </summary>
+    /// <param name="This">This String.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <returns></returns>
+    public static bool EndsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) {
+      return (!This.EndsWith(value, stringComparison));
     }
 
     /// <summary>
@@ -1124,6 +1167,26 @@ namespace System {
       Contract.Requires(other != null);
 #endif
       return (This.IndexOf(other, comparisonType) >= 0);
+    }
+
+    /// <summary>
+    /// Determines whether a given string contains one of others.
+    /// </summary>
+    /// <param name="This">This string.</param>
+    /// <param name="other">The strings to look for.</param>
+    /// <param name="comparisonType">Type of the comparison.</param>
+    /// <returns>
+    ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
+#if NET35
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(other != null);
+#endif
+      return (other.Any(item => This.Contains(item, comparisonType)));
     }
 
     /// <summary>

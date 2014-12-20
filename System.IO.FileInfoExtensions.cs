@@ -842,6 +842,17 @@ namespace System.IO {
         return (false);
       }
     }
+
+    /// <summary>
+    /// Checks whether the given file does not exist.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
+    public static bool NotExists(this FileInfo This) {
+      Contract.Requires(This != null);
+      return (!This.Exists);
+    }
+
   }
 }
 

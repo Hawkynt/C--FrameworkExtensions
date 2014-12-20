@@ -86,7 +86,6 @@ namespace System.Data.SqlClient {
     public static SqlDataReader ExecuteReader(this SqlCommand This, string commandText) {
       Contract.Requires(This != null);
       Contract.Requires(!string.IsNullOrWhiteSpace(commandText));
-      Console.WriteLine(commandText);
 #if FAKE_DB
       return (null);
 #else
@@ -102,8 +101,11 @@ namespace System.Data.SqlClient {
     /// <param name="tableName">Name of the table.</param>
     /// <param name="values">The values.</param>
     /// <param name="whereStatement">The where statement; if any.</param>
-    /// <returns>The number of updated rows.</returns>
-    public static int ExecuteUpdate(this SqlCommand This, string tableName, IEnumerable<KeyValuePair<string, object>> values, string whereStatement = null) {
+    /// <param name="dontUseParameters">if set to <c>true</c> doesn't use parameters.</param>
+    /// <returns>
+    /// The number of updated rows.
+    /// </returns>
+    public static int ExecuteUpdate(this SqlCommand This, string tableName, IEnumerable<KeyValuePair<string, object>> values, string whereStatement = null, bool dontUseParameters = false) {
       Contract.Requires(This != null);
       Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
       Contract.Requires(values != null);
@@ -122,12 +124,12 @@ namespace System.Data.SqlClient {
       foreach (var kvp in realValues) {
         if (paramIndex > 0)
           sqlCommand.Append(", ");
-#if DO_NOT_USE_PARAMETERS
-        sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = " + kvp.Value.MsSqlDataEscape());
-#else
-        sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = @val" + paramIndex);
-        This.Parameters.AddWithValue("@val" + paramIndex, kvp.Value ?? DBNull.Value);
-#endif
+        if (dontUseParameters)
+          sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = " + kvp.Value.MsSqlDataEscape());
+        else {
+          sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = @val" + paramIndex);
+          This.Parameters.AddWithValue("@val" + paramIndex, kvp.Value ?? DBNull.Value);
+        }
         paramIndex++;
       }
 
@@ -137,9 +139,9 @@ namespace System.Data.SqlClient {
       var result = This.ExecuteNonQuery(sqlCommand.ToString());
 
       // remove all parameters we added
-#if !DO_NOT_USE_PARAMETERS
-      This.Parameters.Clear();
-#endif
+      if (!dontUseParameters)
+        This.Parameters.Clear();
+
       return result;
     }
 
@@ -229,6 +231,32 @@ namespace System.Data.SqlClient {
 #endif
 
       return (identityResult);
+    }
+
+    /// <summary>
+    /// Gets the records.
+    /// </summary>
+    /// <param name="This">This SqlCommand.</param>
+    /// <param name="tableName">Name of the table.</param>
+    /// <param name="whereStatement">The where statement.</param>
+    /// <returns></returns>
+    public static IEnumerable<Dictionary<string, object>> GetRecords(this SqlCommand This, string tableName, string whereStatement = null) {
+      Contract.Requires(!string.IsNullOrWhiteSpace(whereStatement));
+      var sqlCommand = string.Format("SELECT * FROM {0}", tableName.MsSqlIdentifierEscape());
+      if (whereStatement != null)
+        sqlCommand += " WHERE " + whereStatement;
+
+      using (var results = This.ExecuteReader(sqlCommand)) {
+        foreach (IDataRecord record in results) {
+          var result = (
+            from i in Enumerable.Range(0, results.FieldCount)
+            let k = results.GetName(i)
+            let v = record.GetValue(i)
+            select new KeyValuePair<string, object>(k, v)
+            ).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+          yield return result;
+        }
+      }
     }
 
     /// <summary>
@@ -345,7 +373,6 @@ namespace System.Data.SqlClient {
       if (useDefaultValueForExistingRecords)
         sql.Append(" WITH VALUE");
 
-      Console.WriteLine(sql.ToString());
       This.ExecuteNonQuery(sql.ToString());
     }
   }
