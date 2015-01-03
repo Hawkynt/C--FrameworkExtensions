@@ -84,10 +84,14 @@ namespace System.ComponentModel {
     /// <param name="items">The items.</param>
     public void RemoveRange(IEnumerable<TValue> items) {
       Contract.Requires(items != null);
+      this._blockEvents = true;
       foreach (var item in items)
         this.Remove(item);
+      this._blockEvents = false;
 
       this._ReApplySortIfNeeded();
+      if (this._listChanged != null)
+        this._listChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 
     protected override bool SupportsSortingCore {

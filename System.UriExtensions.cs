@@ -61,15 +61,16 @@ namespace System {
         if (encoding != null)
           webClient.Encoding = encoding;
 
+        var nameValCollection = new NameValueCollection();
+        if (postValues != null)
+          foreach (var kvp in postValues)
+            nameValCollection.Add(kvp.Key, kvp.Value);
+
         Exception ex = null;
         while (retryCount-- >= 0) {
           try {
             if (postValues == null)
               return (webClient.DownloadString(This));
-
-            var nameValCollection = new NameValueCollection();
-            foreach (var kvp in postValues)
-              nameValCollection.Add(kvp.Key, kvp.Value);
 
             return (encoding ?? Encoding.Default).GetString(webClient.UploadValues(This, nameValCollection));
           } catch (Exception e) {
@@ -78,6 +79,67 @@ namespace System {
         }
         throw (ex);
       }
+    }
+
+    public static Uri GetResponseUri(this Uri This, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
+      Contract.Requires(This != null);
+      Trace.WriteLine(This.AbsoluteUri);
+
+      if (This.IsFile)
+        return (This);
+
+      using (var webClient = new WebClientFake()) {
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+
+        var nameValCollection = new NameValueCollection();
+        if (postValues != null)
+          foreach (var kvp in postValues)
+            nameValCollection.Add(kvp.Key, kvp.Value);
+
+        Exception ex = null;
+        byte[] dummy;
+        while (retryCount-- >= 0) {
+          try {
+            if (postValues == null) {
+              dummy = webClient.DownloadData(This);
+              return (webClient.ResponseUri);
+            }
+
+            dummy = webClient.UploadValues(This, nameValCollection);
+            return (webClient.ResponseUri);
+          } catch (Exception e) {
+            ex = e;
+          }
+        }
+        throw (ex);
+      }
+    }
+
+    private class WebClientFake : WebClient {
+      Uri _responseUri;
+
+      public Uri ResponseUri {
+        get { return _responseUri; }
+      }
+
+      #region Overrides of WebClient
+      protected override WebResponse GetWebResponse(WebRequest request) {
+        try {
+          var response = base.GetWebResponse(request);
+          _responseUri = response.ResponseUri;
+          return (response);
+        } catch (WebException) {
+          return (null);
+        }
+      }
+
+      protected override WebResponse GetWebResponse(WebRequest request, IAsyncResult result) {
+        var response = base.GetWebResponse(request, result);
+        _responseUri = response.ResponseUri;
+        return (response);
+      }
+
+      #endregion
     }
 
     /// <summary>
@@ -127,17 +189,65 @@ namespace System {
       using (var webClient = new WebClient()) {
         webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
 
+        var nameValCollection = new NameValueCollection();
+        if (postValues != null)
+          foreach (var kvp in postValues)
+            nameValCollection.Add(kvp.Key, kvp.Value);
+
         Exception ex = null;
         while (retryCount-- >= 0) {
           try {
+            return (postValues == null) ? webClient.DownloadData(This) : webClient.UploadValues(This, nameValCollection);
+          } catch (Exception e) {
+            ex = e;
+          }
+        }
+        throw (ex);
+      }
+    }
+
+    /// <summary>
+    /// Downloads to file.
+    /// </summary>
+    /// <param name="This">This Uri.</param>
+    /// <param name="file">The file.</param>
+    /// <param name="overwrite">if set to <c>true</c> overwrites target file.</param>
+    /// <param name="retryCount">The retry count.</param>
+    /// <param name="headers">The headers.</param>
+    /// <param name="postValues">The post values.</param>
+    /// <exception cref="System.Exception">Target file already exists</exception>
+    public static void DownloadToFile(
+      this Uri This,
+      FileInfo file,
+      bool overwrite = false,
+      int retryCount = 0,
+      IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null,
+      IDictionary<string, string> postValues = null) {
+      if (This.IsFile) {
+        File.Copy(This.AbsolutePath, file.FullName, overwrite);
+        return;
+      }
+
+      using (var webClient = new WebClient()) {
+        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+
+        var nameValCollection = new NameValueCollection();
+        if (postValues != null)
+          foreach (var kvp in postValues)
+            nameValCollection.Add(kvp.Key, kvp.Value);
+
+        Exception ex = null;
+        while (retryCount-- >= 0) {
+          try {
+            if (file.Exists && !overwrite)
+              throw new Exception("Target file already exists");
+
             if (postValues == null)
-              return (webClient.DownloadData(This));
+              webClient.DownloadFile(This, file.FullName);
+            else
+              file.WriteAllBytes(webClient.UploadValues(This, nameValCollection));
 
-            var nameValCollection = new NameValueCollection();
-            foreach (var kvp in postValues)
-              nameValCollection.Add(kvp.Key, kvp.Value);
-
-            return webClient.UploadValues(This, nameValCollection);
+            return;
           } catch (Exception e) {
             ex = e;
           }
