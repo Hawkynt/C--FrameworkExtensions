@@ -33,6 +33,29 @@ namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
 
     /// <summary>
+    /// Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <returns>A hashset</returns>
+    public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> This) {
+      return (new HashSet<TItem>(This));
+    }
+
+    /// <summary>
+    /// Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns>A hashset</returns>
+    public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> This, Func<TItem, TResult> selector) {
+      Contract.Requires(selector != null);
+      return (new HashSet<TResult>(This.Select(selector)));
+    }
+
+    /// <summary>
     /// Tests whether two enumerations of the same type are equal.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
@@ -100,7 +123,11 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> This) {
-      return This == null || !This.GetEnumerator().MoveNext();
+      if (This == null)
+        return (true);
+
+      using (var enumerator = This.GetEnumerator())
+        return (!enumerator.MoveNext());
     }
 
     /// <summary>

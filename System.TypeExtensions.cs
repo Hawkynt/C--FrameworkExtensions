@@ -786,9 +786,9 @@ namespace System {
 
       // compare elements
       if (allowImplicitConversion)
-        return (array1.All((t, i) => array2[i].ParameterType.IsAssignableFrom(t)));
+        return (array1.Select((t, i) => Tuple.Create(t, i)).All(t => array2[t.Item2].ParameterType.IsAssignableFrom(t.Item1)));
 
-      return (array1.All((t, i) => array2[i].ParameterType == t));
+      return (array1.Select((t, i) => Tuple.Create(t, i)).All(t => array2[t.Item2].ParameterType == t.Item1));
     }
 
     /// <summary>
@@ -910,6 +910,36 @@ namespace System {
       key = string.Format(@"HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{{{0}}}\LocalServer32", guid);
       result = (string)Registry.GetValue(key, null, null);
       return (result);
+    }
+
+    /// <summary>
+    /// Gets the static property value.
+    /// </summary>
+    /// <typeparam name="TType">The type of the property.</typeparam>
+    /// <param name="This">This Type.</param>
+    /// <param name="name">The name.</param>
+    /// <returns>The value of the static property</returns>
+    /// <exception cref="System.ArgumentException">Property not found;name</exception>
+    public static TType GetStaticPropertyValue<TType>(this Type This, string name) {
+      Contract.Requires(This != null);
+      var prop = This.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
+      if (prop == null) throw new ArgumentException("Property not found", "name");
+      return ((TType)prop.GetValue(null, null));
+    }
+
+    /// <summary>
+    /// Gets the static field value.
+    /// </summary>
+    /// <typeparam name="TType">The type of the field.</typeparam>
+    /// <param name="This">This field.</param>
+    /// <param name="name">The name.</param>
+    /// <returns>The value of the static field</returns>
+    /// <exception cref="System.ArgumentException">Property not found;name</exception>
+    public static TType GetStaticFieldValue<TType>(this Type This, string name) {
+      Contract.Requires(This != null);
+      var prop = This.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
+      if (prop == null) throw new ArgumentException("Property not found", "name");
+      return ((TType)prop.GetValue(null));
     }
   }
 }

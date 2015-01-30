@@ -582,7 +582,9 @@ namespace System {
 
       var mask = This.Replace("{", "{{").Replace("}", "}}");
       var parameters = new List<object>();
-      foreach (var keyValuePair in replacements) {
+
+      // order by length desc to avoid conflicts
+      foreach (var keyValuePair in replacements.OrderByDescending(p => p.Key.Length)) {
         if (string.IsNullOrEmpty(keyValuePair.Key))
           continue;
         var index = parameters.Count;

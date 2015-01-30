@@ -58,6 +58,23 @@ namespace System.Drawing {
     }
 
     /// <summary>
+    /// Saves an image into a png file.
+    /// </summary>
+    /// <param name="This">This image.</param>
+    /// <param name="fileName">The file where it should be saved.</param>
+    /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
+    public static void SaveToPng(this Image This, string fileName) {
+      Contract.Requires(This != null);
+      Contract.Requires(fileName != null);
+      var encoder = GetEncoder(ImageFormat.Png);
+      if (encoder == null)
+        throw new NotSupportedException("Png encoder not available");
+
+      This.Save(fileName, ImageFormat.Png);
+    }
+
+
+    /// <summary>
     /// Saves an image into a jpeg file.
     /// </summary>
     /// <param name="This">This image.</param>
@@ -69,6 +86,7 @@ namespace System.Drawing {
       var encoder = GetEncoder(ImageFormat.Jpeg);
       if (encoder == null)
         throw new NotSupportedException("Jpeg encoder not available");
+
       using (var encoderParameters = new EncoderParameters(1)) {
         encoderParameters.Param[0] = new EncoderParameter(
           Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
@@ -88,6 +106,7 @@ namespace System.Drawing {
       var encoder = GetEncoder(ImageFormat.Jpeg);
       if (encoder == null)
         throw new NotSupportedException("Jpeg encoder not available");
+
       using (var encoderParameters = new EncoderParameters(1)) {
         encoderParameters.Param[0] = new EncoderParameter(
           Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));

@@ -46,8 +46,38 @@ namespace System.ComponentModel {
     public static void AddRange<T>(this BindingList<T> This, IEnumerable<T> items) {
       Contract.Requires(This != null);
       Contract.Requires(items != null);
-      foreach (var item in items)
-        This.Add(item);
+      var oldState = This.RaiseListChangedEvents;
+      try {
+        This.RaiseListChangedEvents = false;
+        foreach (var item in items)
+          This.Add(item);
+      } finally {
+        This.RaiseListChangedEvents = oldState;
+        if (oldState)
+          This.ResetBindings();
+      }
+    }
+
+    /// <summary>
+    /// Replaces all elements.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="This">This BindingList.</param>
+    /// <param name="items">The items.</param>
+    public static void ReplaceAll<T>(this BindingList<T> This, IEnumerable<T> items) {
+      Contract.Requires(This != null);
+      Contract.Requires(items != null);
+      var oldState = This.RaiseListChangedEvents;
+      try {
+        This.RaiseListChangedEvents = false;
+        This.Clear();
+        foreach (var item in items)
+          This.Add(item);
+      } finally {
+        This.RaiseListChangedEvents = oldState;
+        if (oldState)
+          This.ResetBindings();
+      }
     }
   }
 }

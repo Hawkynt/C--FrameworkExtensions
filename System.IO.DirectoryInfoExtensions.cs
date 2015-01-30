@@ -22,12 +22,24 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace System.IO {
   /// <summary>
   /// Extensions for the DirectoryInfo type.
   /// </summary>
   internal static partial class DirectoryInfoExtensions {
+
+    #region nested types
+
+    private static class NativeMethods {
+      [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+      public static extern int WNetGetConnection(
+          [MarshalAs(UnmanagedType.LPTStr)] string localName,
+          [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
+          ref int length);
+    }
 
     /// <summary>
     /// Determines the order in which sub-items will be returned.
@@ -45,6 +57,39 @@ namespace System.IO {
       /// The deepest path first (eg. /a , /a/c, /b, /b/d)
       /// </summary>
       DeepestPathFirst,
+    }
+    #endregion
+
+    /// <summary>
+    /// Given a path, returns the UNC path or the original. (No exceptions
+    /// are raised by this function directly). For example, "P:\2008-02-29"
+    /// might return: "\\networkserver\Shares\Photos\2008-02-09"
+    /// </summary>
+    /// <param name="This">The path to convert to a UNC Path</param>
+    /// <returns>A UNC path. If a network drive letter is specified, the
+    /// drive letter is converted to a UNC or network path. If the
+    /// originalPath cannot be converted, it is returned unchanged.</returns>
+    public static DirectoryInfo GetRealPath(this DirectoryInfo This) {
+      var originalPath = This.FullName;
+
+      // look for the {LETTER}: combination ...
+      if (originalPath.Length < 2 || originalPath[1] != ':')
+        return (This);
+
+      // don't use char.IsLetter here - as that can be misleading
+      // the only valid drive letters are a-z && A-Z.
+      var c = originalPath[0];
+      if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z'))
+        return (This);
+
+      var sb = new StringBuilder(512);
+      var size = sb.Capacity;
+      var error = NativeMethods.WNetGetConnection(originalPath.Substring(0, 2), sb, ref size);
+      if (error != 0)
+        return (This);
+
+      var path = originalPath.Substring(This.Root.FullName.Length);
+      return (new DirectoryInfo(Path.Combine(sb.ToString().TrimEnd(), path)));
     }
 
     /// <summary>
