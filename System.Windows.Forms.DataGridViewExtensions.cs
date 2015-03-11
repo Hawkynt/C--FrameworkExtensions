@@ -78,5 +78,27 @@ namespace System.Windows.Forms {
       var matches = This.FindColumns(predicate);
       return (matches == null ? null : matches.FirstOrDefault());
     }
+
+    /// <summary>
+    /// Gets the selected items.
+    /// </summary>
+    /// <param name="This">This DataGridView.</param>
+    /// <returns>The currently selected items</returns>
+    public static IEnumerable<object> GetSelectedItems(this DataGridView This) {
+      Contract.Requires(This != null);
+      return (This.SelectedRows.Cast<DataGridViewRow>().OrderBy(i => i.Index).Select(i => i.DataBoundItem));
+    }
+
+    /// <summary>
+    /// Gets the selectedd items.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This DataGridView.</param>
+    /// <returns>The currently selected items</returns>
+    public static IEnumerable<TItem> GetSelecteddItems<TItem>(this DataGridView This) {
+      Contract.Requires(This != null);
+      return (This.GetSelectedItems().Cast<TItem>());
+    }
+
   }
 }

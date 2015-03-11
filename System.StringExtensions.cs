@@ -20,19 +20,14 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Net;
-#if NET35
-using System.Diagnostics;
-#else
 using System.Diagnostics.Contracts;
-#endif
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using word = System.UInt16;
-using dword = System.UInt32;
 using qword = System.UInt64;
+using word = System.UInt16;
 namespace System {
   internal static partial class StringExtensions {
     #region consts
@@ -157,10 +152,8 @@ namespace System {
         if (len > length)
           len = length - start;
 
-#if !NET35
         Contract.Assume(len >= 0);
         Contract.Assume(start + len <= This.Length);
-#endif
         result = This.Substring(start, len);
       } else {
         result = string.Empty;
@@ -174,11 +167,7 @@ namespace System {
     /// <param name="length">The number of chars to get.</param>
     /// <returns>A string with the first n chars.</returns>
     public static string Left(this string This, int length) {
-#if NET35
-      Debug.Assert(length >= 0);
-#else
       Contract.Requires(length >= 0);
-#endif
       if (This == null)
         return null;
       return This.Substring(0, Math.Min(length, This.Length));
@@ -191,11 +180,7 @@ namespace System {
     /// <param name="length">The number of chars to get.</param>
     /// <returns>A string with the last n chars.</returns>
     public static string Right(this string This, int length) {
-#if NET35
-      Debug.Assert(length >= 0);
-#else
       Contract.Requires(length >= 0);
-#endif
       if (This == null)
         return (null);
       var totalLen = This.Length;
@@ -252,13 +237,8 @@ namespace System {
     /// <param name="pattern">The pattern to apply.</param>
     /// <returns><c>true</c> if the string matches the file pattern; otherwise, <c>false</c>.</returns>
     public static bool MatchesFilePattern(this string This, string pattern) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(pattern != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(pattern != null);
-#endif
       return (_ConvertFilePatternToRegex(pattern).IsMatch(This));
     }
 
@@ -320,13 +300,8 @@ namespace System {
     /// <param name="regexOptions">The regex options.</param>
     /// <returns>A <see cref="MatchCollection"/> containing the matches.</returns>
     public static MatchCollection Matches(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(regex != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
-#endif
       return (new Regex(regex, regexOptions).Matches(This));
     }
 
@@ -340,13 +315,8 @@ namespace System {
     /// A <see cref="GroupCollection"/> containing the found groups.
     /// </returns>
     public static GroupCollection MatchGroups(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(regex != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
-#endif
       return (new Regex(regex, regexOptions).Match(This).Groups);
     }
 
@@ -357,13 +327,8 @@ namespace System {
     /// <param name="parameters">The parameters to use for formatting.</param>
     /// <returns>A formatted string.</returns>
     public static string FormatWith(this string This, params object[] parameters) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(parameters != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(parameters != null);
-#endif
       return (string.Format(This, parameters));
     }
 
@@ -375,13 +340,8 @@ namespace System {
     /// <param name="comparer">The comparer.</param>
     /// <returns></returns>
     public static string FormatWithEx(this string This, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(fields != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(fields != null);
-#endif
       var fieldCache = fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, comparer);
       return (This.FormatWithEx(f => fieldCache.ContainsKey(f) ? fieldCache[f] : null));
     }
@@ -394,13 +354,8 @@ namespace System {
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
     public static string FormatWithEx(this string This, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(fields != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(fields != null);
-#endif
       return (This.FormatWithEx(fields, comparer));
     }
 
@@ -411,13 +366,8 @@ namespace System {
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
     public static string FormatWithEx(this string This, params KeyValuePair<string, object>[] fields) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(fields != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(fields != null);
-#endif
       return (This.FormatWithEx(fields, null));
     }
 
@@ -429,13 +379,8 @@ namespace System {
     /// <param name="passFieldFormatToGetter">if set to <c>true</c> passes the field format to getter.</param>
     /// <returns>A formatted string.</returns>
     public static string FormatWithEx(this string This, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(fieldGetter != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(fieldGetter != null);
-#endif
 
       var length = This.Length;
 
@@ -452,6 +397,9 @@ namespace System {
         var current = This[i++];
         var next = i < length ? This[i].ToString() : null;
 
+        var fieldContentLength = i - lastStartPos - 1;
+        Contract.Assume(fieldContentLength < This.Length);
+
         if (isInField) {
 
           // we're currently reading a field
@@ -459,7 +407,7 @@ namespace System {
 
             // end of field found, pass field description to field getter
             isInField = false;
-            var fieldContent = This.Substring(lastStartPos, i - lastStartPos - 1);
+            var fieldContent = This.Substring(lastStartPos, fieldContentLength);
             lastStartPos = i;
 
             int formatStartIndex;
@@ -478,7 +426,7 @@ namespace System {
           if (current == '{') {
 
             // copy what we've already got
-            var textContent = This.Substring(lastStartPos, i - lastStartPos - 1);
+            var textContent = This.Substring(lastStartPos, fieldContentLength);
             lastStartPos = i;
             result.Append(textContent);
 
@@ -495,7 +443,7 @@ namespace System {
           } else if (current == '}' && (next != null) && next == "}") {
 
             // copy what we've already got
-            var textContent = This.Substring(lastStartPos, i - lastStartPos - 1);
+            var textContent = This.Substring(lastStartPos, fieldContentLength);
             lastStartPos = i;
             result.Append(textContent);
 
@@ -515,11 +463,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <returns>An new instance of RegularExpression.</returns>
     public static Regex AsRegularExpression(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (new Regex(This));
     }
 
@@ -532,11 +476,7 @@ namespace System {
     /// An new instance of RegularExpression.
     /// </returns>
     public static Regex AsRegularExpression(this string This, RegexOptions options) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (new Regex(This, options));
     }
 
@@ -589,10 +529,8 @@ namespace System {
           continue;
         var index = parameters.Count;
         var oldValue = keyValuePair.Key.Replace("{", "{{").Replace("}", "}}");
-#if !NET35
         Contract.Assume(mask.Length > 0);
         Contract.Assume(oldValue.Length > 0);
-#endif
         mask = mask.Replace(oldValue, "{" + index + "}");
         parameters.Add(keyValuePair.Value);
       }
@@ -608,12 +546,9 @@ namespace System {
     /// <param name="newValue">The replacement.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns>A string with the replacements.</returns>
+    [Pure]
     public static string ReplaceRegex(this string This, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
-#if NET35
-      Debug.Assert(regex != null);
-#else
       Contract.Requires(regex != null);
-#endif
       return (This == null ? null : new Regex(regex, regexOptions).Replace(This, newValue ?? string.Empty));
     }
     /// <summary>
@@ -625,14 +560,10 @@ namespace System {
     /// <returns>
     /// A string with the replacements.
     /// </returns>
+    [Pure]
     public static string Replace(this string This, Regex regex, string newValue) {
-#if NET35
-      Debug.Assert(regex != null);
-      Debug.Assert(newValue != null);
-#else
       Contract.Requires(regex != null);
       Contract.Requires(newValue != null);
-#endif
       return (This == null ? null : regex.Replace(This, newValue));
     }
 
@@ -645,12 +576,9 @@ namespace System {
     /// <param name="count">The number of times this gets replaced.</param>
     /// <param name="comparison">The comparison mode; defaults to CurrentCulture.</param>
     /// <returns></returns>
+    [Pure]
     public static string Replace(this string This, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(Enum.IsDefined(typeof(StringComparison), comparison));
-#else
       Contract.Requires(Enum.IsDefined(typeof(StringComparison), comparison));
-#endif
       if (This == null || oldValue == null || count < 1)
         return (This);
       if (newValue == null)
@@ -663,21 +591,15 @@ namespace System {
       var pos = 0;
       for (var i = count; i > 0; ) {
         --i;
-#if !NET35
         Contract.Assume(pos < result.Length);
-#endif
         var n = result.IndexOf(oldValue, pos, comparison);
         if (n < 0)
           break;
         if (n == 0) {
-#if !NET35
           Contract.Assume(removedLength <= result.Length);
-#endif
           result = newValue + result.Substring(removedLength);
         } else {
-#if !NET35
           Contract.Assume((n + removedLength) <= result.Length);
-#endif
           result = result.Substring(0, n) + newValue + result.Substring(n + removedLength);
         }
         pos = n + newLength;
@@ -692,14 +614,13 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
+    [Pure]
     public static string UpperFirst(this string This) {
       if (This == null)
         return null;
       if (This.Length == 1)
         return This.ToUpper();
-#if !NET35
       Contract.Assume(This.Length > 1);
-#endif
       return This.Substring(0, 1).ToUpper() + This.Substring(1);
     }
 
@@ -710,14 +631,13 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
+    [Pure]
     public static string UpperFirstInvariant(this string This) {
       if (This == null)
         return null;
       if (This.Length == 1)
         return This.ToUpperInvariant();
-#if !NET35
       Contract.Assume(This.Length > 1);
-#endif
       return This.Substring(0, 1).ToUpperInvariant() + This.Substring(1);
     }
 
@@ -729,14 +649,13 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
+    [Pure]
     public static string LowerFirst(this string This, CultureInfo culture = null) {
       if (This == null)
         return null;
       if (This.Length == 1)
         return culture == null ? This.ToLower() : This.ToLower(culture);
-#if !NET35
       Contract.Assume(This.Length > 1);
-#endif
       return (culture == null ? This.Substring(0, 1).ToLower() : This.Substring(0, 1).ToLower(culture)) + This.Substring(1);
     }
 
@@ -747,14 +666,13 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
+    [Pure]
     public static string LowerFirstInvariant(this string This) {
       if (This == null)
         return null;
       if (This.Length == 1)
         return This.ToLowerInvariant();
-#if !NET35
       Contract.Assume(This.Length > 1);
-#endif
       return This.Substring(0, 1).ToLowerInvariant() + This.Substring(1);
     }
 
@@ -765,6 +683,7 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
+    [Pure]
     public static string[] Split(this string This, char splitter, int max = 0) {
       return (This.Split(splitter.ToString(), (qword)max).ToArray());
     }
@@ -776,6 +695,7 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
+    [Pure]
     public static IEnumerable<string> Split(this string This, char splitter, qword max = 0) {
       return (This.Split(splitter.ToString(), max));
     }
@@ -787,12 +707,9 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
+    [Pure]
     public static IEnumerable<string> Split(this string This, string splitter, qword max = 0) {
-#if NET35
-      Debug.Assert(!string.IsNullOrEmpty(splitter));
-#else
       Contract.Requires(!string.IsNullOrEmpty(splitter));
-#endif
       if (This == null)
         yield break;
 
@@ -803,17 +720,13 @@ namespace System {
 
       var currentStartIndex = 0;
 
-#if !NET35
       Contract.Assume(currentStartIndex <= This.Length);
-#endif
       while (max-- > 0 && (startIndex = This.IndexOf(splitter, currentStartIndex)) >= 0) {
         yield return (This.Substring(currentStartIndex, startIndex - currentStartIndex));
         currentStartIndex = startIndex + splitterLength;
       }
 
-#if !NET35
       Contract.Assume(currentStartIndex <= This.Length);
-#endif
       yield return (This.Substring(currentStartIndex));
     }
 
@@ -823,14 +736,10 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="regex">The regex to use.</param>
     /// <returns>The parts.</returns>
+    [Pure]
     public static string[] Split(this string This, Regex regex) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(regex != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
-#endif
       return (regex.Split(This));
     }
 
@@ -840,16 +749,20 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="culture">The culture to use; defaults to current culture.</param>
     /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
+    [Pure]
     public static string ToCamelCase(this string This, CultureInfo culture = null) {
       if (This == null)
         return (null);
       if (culture == null)
         culture = CultureInfo.CurrentCulture;
 
-      var result = new StringBuilder();
+      var result = new StringBuilder(This.Length);
       var hump = true;
-      const string numbers = "0123456789";
-      const string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+      // ReSharper disable ConvertToConstant.Local
+      var numbers = "0123456789";
+      var allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      // ReSharper restore ConvertToConstant.Local
 
       foreach (var chr in This) {
         if (numbers.IndexOf(chr) >= 0) {
@@ -858,7 +771,7 @@ namespace System {
         } else if (allowedChars.IndexOf(chr) < 0)
           hump = true;
         else {
-          result.Append(hump ? chr.ToString(culture).ToUpper(culture) : chr.ToString(culture));
+          result.Append((hump ? char.ToUpper(chr, culture) : chr).ToString(culture));
           hump = false;
         }
       }
@@ -872,6 +785,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="culture">The culture to use; defaults to current culture.</param>
     /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
+    [Pure]
     public static string ToPascalCase(this string This, CultureInfo culture = null) {
       return (This.ToCamelCase().LowerFirst(culture));
     }
@@ -881,12 +795,9 @@ namespace System {
     /// </summary>
     /// <param name="This">This ConnectionString.</param>
     /// <returns>The transformed result.</returns>
+    [Pure]
     public static string ToLinq2SqlConnectionString(this string This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       var regex = new Regex(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
       return (regex.Replace(This, string.Empty));
     }
@@ -896,6 +807,7 @@ namespace System {
     /// </summary>
     /// <param name="This">This String.</param>
     /// <returns></returns>
+    [Pure]
     public static string MsSqlDataEscape(this object This) {
       return (This == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", This).Replace("'", "''") + "'");
     }
@@ -905,12 +817,9 @@ namespace System {
     /// </summary>
     /// <param name="This">This String.</param>
     /// <returns></returns>
+    [Pure]
     public static string MsSqlIdentifierEscape(this string This) {
-#if NET35
-      Debug.Assert(!This.IsNullOrWhiteSpace());
-#else
       Contract.Requires(!This.IsNullOrWhiteSpace());
-#endif
       return ("[" + This.Replace("]", "]]") + "]");
     }
 
@@ -922,11 +831,7 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
     public static bool EqualsAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(values != null);
-#else
       Contract.Requires(values != null);
-#endif
       return (values.Any(s => string.Equals(This, s, stringComparison)));
     }
 
@@ -938,13 +843,8 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
     public static bool StartsWithAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(values != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(values != null);
-#endif
       return (values.Any(s => This.StartsWith(s, stringComparison)));
     }
 
@@ -956,13 +856,8 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
     public static bool EndsWithAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(values != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(values != null);
-#endif
       return (values.Any(s => This.EndsWith(s, stringComparison)));
     }
 
@@ -975,12 +870,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string starts with the given character; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool StartsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.Length > 0 && string.Equals(This[0] + string.Empty, value + string.Empty, stringComparison));
     }
 
@@ -993,12 +885,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string ends with the given character; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool EndsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison));
     }
 
@@ -1009,7 +898,8 @@ namespace System {
     /// <param name="value">The value.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
-    public static bool StartsNotWith(this string This,string value,StringComparison stringComparison = StringComparison.CurrentCulture) {
+    [Pure]
+    public static bool StartsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) {
       return (!This.StartsWith(value, stringComparison));
     }
 
@@ -1020,6 +910,7 @@ namespace System {
     /// <param name="value">The value.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
+    [Pure]
     public static bool EndsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) {
       return (!This.EndsWith(value, stringComparison));
     }
@@ -1033,14 +924,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsSurroundedWith(this string This, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(text != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(text != null);
-#endif
       return (This.IsSurroundedWith(text, text, stringComparison));
     }
 
@@ -1054,16 +941,11 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsSurroundedWith(this string This, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(prefix != null);
-      Debug.Assert(postfix != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(prefix != null);
       Contract.Requires(postfix != null);
-#endif
       return (This.StartsWith(prefix, stringComparison) && This.EndsWith(postfix, stringComparison));
     }
 
@@ -1075,6 +957,7 @@ namespace System {
     /// <param name="replacement">The replacement.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
+    [Pure]
     public static string ReplaceAtStart(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
         return (replacement);
@@ -1091,6 +974,7 @@ namespace System {
     /// <param name="replacement">The replacement.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
+    [Pure]
     public static string ReplaceAtEnd(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
         return (replacement);
@@ -1106,6 +990,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsNullOrEmpty(this string This) {
       return (string.IsNullOrEmpty(This));
     }
@@ -1117,6 +1002,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsNotNullOrEmpty(this string This) {
       return (!string.IsNullOrEmpty(This));
     }
@@ -1128,12 +1014,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsNullOrWhiteSpace(this string This) {
-#if NET35
-      return (This == null || This.Trim().Length == 0);
-#else
       return (string.IsNullOrWhiteSpace(This));
-#endif
     }
 
     /// <summary>
@@ -1143,12 +1026,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool IsNotNullOrWhiteSpace(this string This) {
-#if NET35
-      return (This != null && This.Trim().Length > 0);
-#else
       return (!string.IsNullOrWhiteSpace(This));
-#endif
     }
 
     /// <summary>
@@ -1160,14 +1040,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the other string is part of the given string; otherwise, <c>false</c>.
     /// </returns>
+    [Pure]
     public static bool Contains(this string This, string other, StringComparison comparisonType) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(other != null);
-#endif
       return (This.IndexOf(other, comparisonType) >= 0);
     }
 
@@ -1181,13 +1057,8 @@ namespace System {
     ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(other != null);
-#endif
       return (other.Any(item => This.Contains(item, comparisonType)));
     }
 
@@ -1197,6 +1068,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
+    [Pure]
     public static string DefaultIfNullOrEmpty(this string This, string defaultValue = null) {
       return (This.IsNullOrEmpty() ? defaultValue : This);
     }
@@ -1207,6 +1079,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
+    [Pure]
     public static string DefaultIfNullOrWhiteSpace(this string This, string defaultValue = null) {
       return (This.IsNullOrWhiteSpace() ? defaultValue : This);
     }
@@ -1219,6 +1092,7 @@ namespace System {
     /// <param name="count">The maximum number of lines to support, 0 means unlimited.</param>
     /// <param name="options">The options.</param>
     /// <returns>The lines which where identified.</returns>
+    [Pure]
     public static string[] Lines(this string This, string delimiter = null, int count = 0, StringSplitOptions options = StringSplitOptions.None) {
       if (This == null)
         return (null);
@@ -1249,6 +1123,7 @@ namespace System {
     /// <param name="delimiter">The delimiter to use.</param>
     /// <param name="escapeSequence">The escape sequence.</param>
     /// <returns>A sequence containing the parts of the string.</returns>
+    [Pure]
     public static IEnumerable<string> QuotedSplit(this string This, string delimiter = ",", string escapeSequence = "\\") {
       if (This == null)
         yield break;
@@ -1345,6 +1220,7 @@ namespace System {
     /// </summary>
     /// <param name="This">This String, e.g. 172.17.4.3:http .</param>
     /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
+    [Pure]
     public static HostEndPoint ParseHostAndPort(this string This) {
       if (This.IsNullOrWhiteSpace())
         return (null);
@@ -1367,14 +1243,10 @@ namespace System {
     /// <param name="chars">The chars to replace.</param>
     /// <param name="replacement">The replacement.</param>
     /// <returns>The new string with replacements done.</returns>
+    [Pure]
     public static string ReplaceAnyOf(this string This, string chars, string replacement) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(chars != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(chars != null);
-#endif
       return string.Join(
         string.Empty, (
           from c in This

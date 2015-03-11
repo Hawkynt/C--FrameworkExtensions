@@ -20,7 +20,6 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace System.Collections.Specialized {
@@ -47,11 +46,11 @@ namespace System.Collections.Specialized {
       this._keys.Clear();
     }
 
-    public IEnumerable<TKey> Keys {
+    public new IEnumerable<TKey> Keys {
       get { return (this._keys.Select(k => k)); }
     }
 
-    public IEnumerable<TValue> Values {
+    public new IEnumerable<TValue> Values {
       get { return (this._keys.Select(k => this[k])); }
     }
 

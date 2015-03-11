@@ -39,8 +39,10 @@ namespace System.Collections.Generic {
       var length = keyValuePairs.LongLength;
       if ((length & 1) == 1)
         length--;
+
       for (var i = 0; i < length; i += 2) {
         var key = keyValuePairs[i];
+        Contract.Assume(i + 1 < keyValuePairs.Length);
         var value = keyValuePairs[i + 1];
         This.Add((TKey)key, (TValue)value);
       }
@@ -203,8 +205,10 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       Contract.Requires(values != null);
       // ReSharper disable AssignNullToNotNullAttribute
-      foreach (var kvp in values)
+      foreach (var kvp in values) {
+        Contract.Assume(!ReferenceEquals(kvp.Item1, null));
         This.AddOrUpdate(kvp.Item1, kvp.Item2);
+      }
       // ReSharper restore AssignNullToNotNullAttribute
     }
 
@@ -219,8 +223,10 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       Contract.Requires(values != null);
       // ReSharper disable AssignNullToNotNullAttribute
-      foreach (var kvp in values)
+      foreach (var kvp in values) {
+        Contract.Assume(!ReferenceEquals(kvp.Key, null));
         This.AddOrUpdate(kvp.Key, kvp.Value);
+      }
       // ReSharper restore AssignNullToNotNullAttribute
     }
 

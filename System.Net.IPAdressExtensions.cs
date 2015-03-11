@@ -59,7 +59,7 @@ namespace System.Net {
       try {
         var hostEntry = Dns.GetHostEntry(This);
         return (hostEntry.HostName);
-      } catch (Exception ex) {
+      } catch (Exception) {
         return (null);
       }
     }

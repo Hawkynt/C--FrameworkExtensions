@@ -317,7 +317,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="target">The target directory to place files.</param>
-    public static void Copy(this DirectoryInfo This, DirectoryInfo target) {
+    public static void CopyTo(this DirectoryInfo This, DirectoryInfo target) {
       Contract.Requires(This != null);
       Contract.Requires(target != null);
       var stack = new Stack<Tuple<DirectoryInfo, string>>();

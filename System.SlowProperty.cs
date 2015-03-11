@@ -35,10 +35,6 @@ namespace System {
 
     #region fields
     /// <summary>
-    /// Whether the value is already available and thus cached.
-    /// </summary>
-    private bool _isValueReady;
-    /// <summary>
     /// Whehter the value is currently generated. (e.G thread is running to fetch value)
     /// </summary>
     private int _isGeneratingValue = _FALSE;
@@ -47,6 +43,7 @@ namespace System {
     private readonly Func<SlowProperty<TValue, TIntermediateValue>, TValue> _valueGetter;
     private readonly Action<SlowProperty<TValue, TIntermediateValue>> _valueGeneratedCallback;
     private readonly Func<TValue, TIntermediateValue> _valueConverter;
+    private ManualResetEventSlim _valueWaiter = new ManualResetEventSlim();
     #endregion
 
     #region ctor
@@ -76,13 +73,30 @@ namespace System {
     /// </value>
     public TIntermediateValue Value {
       get {
-        if (this._isValueReady)
+        if (this._valueWaiter.IsSet)
           return (this._valueConverter(this._value));
 
         this._TryStartGeneratingValue();
         return (this._intermediateValue);
       }
     }
+
+    /// <summary>
+    /// Gets the raw value (waits for it to be created if not yet done).
+    /// </summary>
+    /// <value>
+    /// The raw value.
+    /// </value>
+    public TValue RawValue {
+      get {
+        if (!this._valueWaiter.IsSet)
+          this._TryStartGeneratingValue();
+
+        this._valueWaiter.Wait();
+        return (this._value);
+      }
+    }
+
     #endregion
 
     #region methods
@@ -91,7 +105,7 @@ namespace System {
     /// </summary>
     public void Reset() {
       this._value = default(TValue);
-      this._isValueReady = false;
+      this._valueWaiter.Reset();
     }
 
     /// <summary>
@@ -111,7 +125,7 @@ namespace System {
     private void _GenerateValue() {
       try {
         this._value = this._valueGetter(this);
-        this._isValueReady = true;
+        this._valueWaiter.Set(); ;
 
         var callback = this._valueGeneratedCallback;
         if (callback != null)

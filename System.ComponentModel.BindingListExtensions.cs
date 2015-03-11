@@ -21,18 +21,23 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace System.ComponentModel {
+  /// <summary>
+  /// 
+  /// </summary>
   internal static partial class BindingListExtensions {
+
     /// <summary>
     /// Copies the content of the BindingList to an array.
     /// </summary>
-    /// <typeparam name="T">The type of items.</typeparam>
+    /// <typeparam name="TItem">The type of items.</typeparam>
     /// <param name="This">This BindingList.</param>
     /// <returns>A copy of the list.</returns>
-    public static T[] ToArray<T>(this BindingList<T> This) {
+    public static TItem[] ToArray<TItem>(this BindingList<TItem> This) {
       Contract.Requires(This != null);
-      var result = new T[This.Count];
+      var result = new TItem[This.Count];
       This.CopyTo(result, 0);
       return (result);
     }
@@ -40,21 +45,101 @@ namespace System.ComponentModel {
     /// <summary>
     /// Adds the given elements.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="This">This BindingList.</param>
     /// <param name="items">The items.</param>
-    public static void AddRange<T>(this BindingList<T> This, IEnumerable<T> items) {
+    public static void AddRange<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
       Contract.Requires(This != null);
       Contract.Requires(items != null);
-      var oldState = This.RaiseListChangedEvents;
+      foreach (var item in items)
+        This.Add(item);
+    }
+
+    /// <summary>
+    /// Moves the given items to the front of the list.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="This">This BindingList.</param>
+    /// <param name="items">The items.</param>
+    public static void MoveToFront<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+      Contract.Requires(This != null);
+      Contract.Requires(items != null);
+      var raiseEvents = This.RaiseListChangedEvents;
       try {
         This.RaiseListChangedEvents = false;
-        foreach (var item in items)
-          This.Add(item);
+        foreach (var item in items.Reverse()) {
+          This.Remove(item);
+          This.Insert(0, item);
+        }
       } finally {
-        This.RaiseListChangedEvents = oldState;
-        if (oldState)
-          This.ResetBindings();
+        This.RaiseListChangedEvents = raiseEvents;
+        This.ResetBindings();
+      }
+    }
+
+    /// <summary>
+    /// Moves the given items to the back of the list.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="This">This BindingList.</param>
+    /// <param name="items">The items.</param>
+    public static void MoveToBack<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+      Contract.Requires(This != null);
+      Contract.Requires(items != null);
+      var raiseEvents = This.RaiseListChangedEvents;
+      try {
+        This.RaiseListChangedEvents = false;
+        foreach (var item in items) {
+          This.Remove(item);
+          This.Add(item);
+        }
+      } finally {
+        This.RaiseListChangedEvents = raiseEvents;
+        This.ResetBindings();
+      }
+    }
+
+    /// <summary>
+    /// Moves the given items relative.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="This">This BindingList.</param>
+    /// <param name="items">The items.</param>
+    /// <param name="delta">The delta.</param>
+    public static void MoveRelative<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items, int delta) {
+      Contract.Requires(This != null);
+      Contract.Requires(items != null);
+      if (delta == 0)
+        return;
+
+      var raiseEvents = This.RaiseListChangedEvents;
+      try {
+        This.RaiseListChangedEvents = false;
+
+        var count = This.Count - 1;
+
+        if (delta < 0) {
+          var start = 0;
+          foreach (var item in items) {
+            var index = This.IndexOf(item);
+            This.RemoveAt(index);
+            var newIndex = index + delta;
+            This.Insert(newIndex < 0 ? start++ : newIndex, item);
+          }
+        } else {
+          var end = count;
+          foreach (var item in items.Reverse()) {
+            var index = This.IndexOf(item);
+            This.RemoveAt(index);
+            var newIndex = index + delta;
+            This.Insert(newIndex > end ? end-- : newIndex, item);
+          }
+        }
+
+
+      } finally {
+        This.RaiseListChangedEvents = raiseEvents;
+        This.ResetBindings();
       }
     }
 
