@@ -19,8 +19,13 @@
 */
 #endregion
 
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Text.RegularExpressions {
   internal static partial class RegexExtensions {
     /// <summary>
@@ -134,5 +139,16 @@ namespace System.Text.RegularExpressions {
       return (regex._ReplaceGroup(source, replacement, groupName, null, matchCount));
     }
 
+    /// <summary>
+    /// Gets the named groups.
+    /// </summary>
+    /// <param name="This">This Regex.</param>
+    /// <returns>A dictionary with all named groups and their indexes.</returns>
+    public static Dictionary<int, string> GetNamedGroups(this Regex This) {
+      Contract.Requires(This != null);
+      var groupNames = This.GetGroupNames();
+      var groupNumbers = This.GetGroupNumbers();
+      return (Enumerable.Range(0, Math.Min(groupNames.Length, groupNumbers.Length)).Where(i => groupNames[i] != groupNumbers[i].ToString("0")).ToDictionary(i => groupNumbers[i], i => groupNames[i]));
+    }
   }
 }

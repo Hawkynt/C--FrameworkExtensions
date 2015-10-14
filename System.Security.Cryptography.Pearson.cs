@@ -19,7 +19,6 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace System.Security.Cryptography {
@@ -64,7 +63,9 @@ namespace System.Security.Cryptography {
     public int OutputBits {
       get { return (this._state.Length << 3); }
       set {
-        Contract.Requires(SupportedOutputBits.Contains(value));
+        if (!SupportedOutputBits.Contains(value))
+          throw new ArgumentException();
+
         this._state = new byte[value >> 3];
         this.Initialize();
       }
@@ -73,7 +74,9 @@ namespace System.Security.Cryptography {
     public byte[] IV {
       get { return (this._sBox); }
       set {
-        Contract.Requires(value == null || SupportedIVBits.Contains(value.Length << 3));
+        if (value != null && !SupportedIVBits.Contains(value.Length << 3))
+          throw new ArgumentException();
+
         this._sBox = value ?? _DEFAULT_S_BOX;
         this.Initialize();
       }
@@ -93,7 +96,7 @@ namespace System.Security.Cryptography {
 
     #region Overrides of HashAlgorithm
 
-    public override void Initialize() {
+    public override sealed void Initialize() {
       this._isStarted = false;
     }
 

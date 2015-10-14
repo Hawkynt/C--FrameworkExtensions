@@ -190,26 +190,28 @@ namespace System.Windows.Forms {
         // if mouse is near to the top, scroll up
         if (pt.Y < _SCROLL_PIXEL_RANGE) {
           // set actual node to the upper one
-          if (node.PrevVisibleNode != null) {
-            node = node.PrevVisibleNode;
+          if (node.PrevVisibleNode == null)
+            return;
 
-            // hide drag image
-            DragHelper.ImageList_DragShowNolock(false);
+          node = node.PrevVisibleNode;
 
-            // scroll and refresh
-            node.EnsureVisible();
-            this._Draw();
-          }
+          // hide drag image
+          DragHelper.ImageList_DragShowNolock(false);
+
+          // scroll and refresh
+          node.EnsureVisible();
+          this._Draw();
         }
-          // if mouse is near to the bottom, scroll down
+        // if mouse is near to the bottom, scroll down
         else if (pt.Y > treeView.Size.Height - _SCROLL_PIXEL_RANGE) {
-          if (node.NextVisibleNode != null) {
-            node = node.NextVisibleNode;
+          if (node.NextVisibleNode == null)
+            return;
 
-            DragHelper.ImageList_DragShowNolock(false);
-            node.EnsureVisible();
-            this._Draw();
-          }
+          node = node.NextVisibleNode;
+
+          DragHelper.ImageList_DragShowNolock(false);
+          node.EnsureVisible();
+          this._Draw();
         }
       }
 
@@ -270,16 +272,17 @@ namespace System.Windows.Forms {
         this._dragImageList.Images.Add(bmp);
 
         // Compute hotspot
-        var dx = 16;
-        var dy = 16;
+        const int dx = 16;
+        const int dy = 16;
 
         // Begin dragging image
-        if (DragHelper.ImageList_BeginDrag(this._dragImageList.Handle, 0, -dx, -dy)) {
-          treeView.DoDragDrop(treeNode, DragDropEffects.Move);
+        if (!DragHelper.ImageList_BeginDrag(this._dragImageList.Handle, 0, -dx, -dy))
+          return;
 
-          // End dragging image
-          DragHelper.ImageList_EndDrag();
-        }
+        treeView.DoDragDrop(treeNode, DragDropEffects.Move);
+
+        // End dragging image
+        DragHelper.ImageList_EndDrag();
       }
 
       /// <summary>
@@ -291,6 +294,7 @@ namespace System.Windows.Forms {
         var treeView = sender as TreeView;
         if (treeView == null || treeView != this._treeView)
           return;
+
         if (!e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false) || (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode") != this._draggedNode) {
           e.Effect = DragDropEffects.None;
           return;
@@ -624,26 +628,32 @@ namespace System.Windows.Forms {
         var hoveredNode = this._nodeOver;
         if (hoveredNode != null && hoveredNode.TreeView != null) {
           switch (this._placeHolder) {
-            case PlaceHolderType.LeafTop: {
+            case PlaceHolderType.LeafTop:
+            {
               this._DrawLeafTopPlaceholders(hoveredNode);
               break;
             }
-            case PlaceHolderType.LeafBottom: {
+            case PlaceHolderType.LeafBottom:
+            {
               this._DrawLeafBottomPlaceholders(hoveredNode, this._parentDragDrop);
               break;
             }
-            case PlaceHolderType.AddToFolder: {
+            case PlaceHolderType.AddToFolder:
+            {
               this._DrawAddToFolderPlaceholder(hoveredNode);
               break;
             }
-            case PlaceHolderType.FolderTop: {
+            case PlaceHolderType.FolderTop:
+            {
               this._DrawFolderTopPlaceholders(hoveredNode);
               break;
             }
-            case PlaceHolderType.None: {
+            case PlaceHolderType.None:
+            {
               break;
             }
-            default: {
+            default:
+            {
               throw new NotImplementedException("Unknown place holder type");
             }
           }

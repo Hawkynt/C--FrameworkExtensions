@@ -64,22 +64,16 @@ namespace System.Threading {
     /// <value>
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
-    public bool HasValue {
-      get {
-        return (this._HasValueAlready.IsSet);
-      }
-    }
+    public bool HasValue => this._HasValueAlready.IsSet;
+
     /// <summary>
     /// Gets a value indicating whether this instance is completed.
     /// </summary>
     /// <value>
     /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
     /// </value>
-    public bool IsCompleted {
-      get {
-        return (this.HasValue);
-      }
-    }
+    public bool IsCompleted => this.HasValue;
+
     /// <summary>
     /// Gets the value.
     /// </summary>
@@ -100,18 +94,15 @@ namespace System.Threading {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator TValue(Future<TValue> future) {
-      return (future.Value);
-    }
+    public static implicit operator TValue(Future<TValue> future) => future.Value;
+
     /// <summary>
     /// Returns a <see cref="System.String"/> that represents this instance.
     /// </summary>
     /// <returns>
     /// A <see cref="System.String"/> that represents this instance.
     /// </returns>
-    public override string ToString() {
-      return (this.HasValue ? this.Value.ToString() : ("Future of type:" + typeof(TValue).Name));
-    }
+    public override string ToString() => this.HasValue ? this.Value.ToString() : ("Future of type:" + typeof(TValue).Name);
   }
 
   /// <summary>
@@ -124,8 +115,7 @@ namespace System.Threading {
         action();
         return (byte.MaxValue);
       }, _ => {
-        if (callback != null)
-          callback();
+        callback?.Invoke();
       });
     }
     /// <summary>
@@ -134,10 +124,6 @@ namespace System.Threading {
     /// <value>
     /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
     /// </value>
-    public bool IsCompleted {
-      get {
-        return (this._future.HasValue);
-      }
-    }
+    public bool IsCompleted => this._future.HasValue;
   }
 }

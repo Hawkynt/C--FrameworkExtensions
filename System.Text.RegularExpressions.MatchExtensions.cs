@@ -19,7 +19,6 @@
 */
 #endregion
 
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
@@ -49,9 +48,7 @@ namespace System.Text.RegularExpressions {
     /// </summary>
     /// <param name="This">This Match.</param>
     /// <returns>The text that generated this match.</returns>
-    public static string GetTextSource(this Match This) {
-      return (This._GetPrivateTextFieldValue());
-    }
+    public static string GetTextSource(this Match This) => This._GetPrivateTextFieldValue();
 
     /// <summary>
     /// Gets the private field value of a match.
@@ -70,7 +67,7 @@ namespace System.Text.RegularExpressions {
       }
 
       if (fieldInfo == null)
-        throw new ArgumentOutOfRangeException("propName", string.Format("Field {0} was not found in Type {1}", propName, typeof(Match).FullName));
+        throw new ArgumentOutOfRangeException("propName", $"Field {propName} was not found in Type {typeof(Match).FullName}");
 
       return (string)fieldInfo.GetValue(match);
     }

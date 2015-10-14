@@ -21,8 +21,11 @@
 
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class CharExtensions {
     /// <summary>
@@ -32,18 +35,16 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsDigit(this char This) {
-      return (This >= '0' && This <= '9');
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool IsDigit(this char This) => This >= '0' && This <= '9';
 
     /// <summary>
     /// converts the given character to uppercase.
     /// </summary>
     /// <param name="This">This Char.</param>
     /// <returns>The upper-case char.</returns>
-    public static char ToUpper(this char This) {
-      return (char.ToUpper(This));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static char ToUpper(this char This) => char.ToUpper(This);
 
     /// <summary>
     /// converts the given character to uppercase.
@@ -51,19 +52,16 @@ namespace System {
     /// <param name="This">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The upper-case char.</returns>
-    public static char ToUpper(this char This, CultureInfo culture) {
-      Contract.Requires(culture != null);
-      return (char.ToUpper(This, culture));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static char ToUpper(this char This, CultureInfo culture) => char.ToUpper(This, culture);
 
     /// <summary>
     /// converts the given character to lowercase.
     /// </summary>
     /// <param name="This">This Char.</param>
     /// <returns>The lower-case char.</returns>
-    public static char ToLower(this char This) {
-      return (char.ToLower(This));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static char ToLower(this char This) => char.ToLower(This);
 
     /// <summary>
     /// converts the given character to lowercase.
@@ -71,10 +69,8 @@ namespace System {
     /// <param name="This">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The lower-case char.</returns>
-    public static char ToLower(this char This, CultureInfo culture) {
-      Contract.Requires(culture != null);
-      return (char.ToLower(This, culture));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static char ToLower(this char This, CultureInfo culture) => char.ToLower(This, culture);
 
     /// <summary>
     /// Determines whether the given char is any of the ones in the list.
@@ -84,10 +80,8 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsAnyOf(this char This, params char[] list) {
-      Contract.Requires(list != null);
-      return (list.Any(c => c == This));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool IsAnyOf(this char This, params char[] list) => list.Any(c => c == This);
 
     /// <summary>
     /// Repeats this character several times.
@@ -95,8 +89,7 @@ namespace System {
     /// <param name="This">This Char.</param>
     /// <param name="count">The count.</param>
     /// <returns>A new string containing the given character the specified times.</returns>
-    public static string Repeat(this char This, int count) {
-      return (new string(This, count));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static string Repeat(this char This, int count) => new string(This, count);
   }
 }

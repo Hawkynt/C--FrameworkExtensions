@@ -18,9 +18,15 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+#if NETFX_4
 using System.Diagnostics.Contracts;
-using System.Text;
+#endif
 using System.Linq;
+using System.Text;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Reflection {
   internal static partial class MethodInfoExtensions {
@@ -50,7 +56,9 @@ namespace System.Reflection {
     /// <param name="type">The type.</param>
     /// <returns>A tidied version of the type name.</returns>
     private static string _tidyTypeName(Type type) {
+#if NETFX_4
       Contract.Requires(type != null);
+#endif
 
       Type elementType;
       if (type.IsByRef && (elementType = type.GetElementType()) != null) {
@@ -113,7 +121,7 @@ namespace System.Reflection {
       }
 
       if (type.IsGenericType)
-        return (fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_tidyTypeName)) + ">");
+        return (fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_tidyTypeName).ToArray()) + ">");
 
       return (fullName);
     }
@@ -124,7 +132,9 @@ namespace System.Reflection {
     /// <param name="This">This MethodInfo.</param>
     /// <returns>The full signature of the method.</returns>
     public static string GetFullSignature(this MethodInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var sb = new StringBuilder();
 
       if (This.IsPublic)

@@ -21,6 +21,9 @@
 
 using System.Diagnostics.Contracts;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic {
   /// <summary>
   /// This class allows cached lazy access to an enumeration's items.
@@ -61,7 +64,7 @@ namespace System.Collections.Generic {
     /// <summary>
     /// Gets the cached item count.
     /// </summary>
-    public int CachedItemCount { get { return (this._cachedItems.Count); } }
+    public int CachedItemCount => this._cachedItems.Count;
 
     /// <summary>
     /// Gets the cached item at the given position and returns a new one from the enumeration if possible.
@@ -132,15 +135,12 @@ namespace System.Collections.Generic {
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
+    /// Note: If enumeration has already ended, returns an enumerator to the cache, otherwise uses the more complex cached enumerator.
     /// </summary>
     /// <returns>
     /// A <see cref="T:System.Collections.Generic.IEnumerator`1"></see> that can be used to iterate through the collection.
     /// </returns>
-    public IEnumerator<TItem> GetEnumerator() {
-
-      // if enumeration has already ended, just return an enumerator to the cache, otherwise use the more complex cached enumerator
-      return (this._enumerationEnded ? ((IEnumerable<TItem>)this._cachedItems).GetEnumerator() : new CachedEnumerator(this));
-    }
+    public IEnumerator<TItem> GetEnumerator() => this._enumerationEnded ? ((IEnumerable<TItem>)this._cachedItems).GetEnumerator() : new CachedEnumerator(this);
 
     /// <summary>
     /// Gibt einen Enumerator zurück, der eine Auflistung durchläuft.
@@ -148,9 +148,7 @@ namespace System.Collections.Generic {
     /// <returns>
     /// Ein <see cref="T:System.Collections.IEnumerator"/>-Objekt, das zum Durchlaufen der Auflistung verwendet werden kann.
     /// </returns>
-    IEnumerator IEnumerable.GetEnumerator() {
-      return this.GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
     #endregion
 
@@ -172,22 +170,15 @@ namespace System.Collections.Generic {
 
       #region Implementation of IEnumerator
 
-      public bool MoveNext() {
-        return (this._cache._GetItemAtPosition(this._currentIndex++, out this._current));
-      }
+      public bool MoveNext() => this._cache._GetItemAtPosition(this._currentIndex++, out this._current);
 
       public void Reset() {
         this._currentIndex = 0;
         this._current = default(TItem);
       }
 
-      public TItem Current {
-        get { return (this._current); }
-      }
-
-      object IEnumerator.Current {
-        get { return Current; }
-      }
+      public TItem Current => this._current;
+      object IEnumerator.Current => this.Current;
 
       #endregion
     }
@@ -205,8 +196,6 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">Type of the elements.</typeparam>
     /// <param name="This">This Enumeration.</param>
     /// <returns>A cached version which will never been enumerated more than once.</returns>
-    public static CachedEnumeration<TItem> ToCache<TItem>(this IEnumerable<TItem> This) {
-      return (new CachedEnumeration<TItem>(This));
-    }
+    public static CachedEnumeration<TItem> ToCache<TItem>(this IEnumerable<TItem> This) => new CachedEnumeration<TItem>(This);
   }
 }

@@ -19,7 +19,6 @@
 */
 #endregion
 
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -71,7 +70,7 @@ namespace System.Collections {
     /// <param name="This">This enumeration..</param>
     /// <returns>The array containing the elements.</returns>
     public static object[] ToObjectArray(this IEnumerable This) {
-      return (This == null ? null : This.Cast<object>().ToArray());
+      return This?.Cast<object>().ToArray();
     }
     #region linq
     /// <summary>

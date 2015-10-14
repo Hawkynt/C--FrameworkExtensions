@@ -19,16 +19,124 @@
 */
 #endregion
 
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class ArrayExtensions {
+
+    #region nested types
+    [DebuggerDisplay("{ToString()}")]
+    internal class ReadOnlyArraySlice<TItem> : IEnumerable<TItem> {
+
+      protected readonly TItem[] _source;
+      protected readonly int _start;
+
+      public ReadOnlyArraySlice(TItem[] source, int start, int length) {
+#if NETFX_4
+        Contract.Requires(source != null);
+#endif
+        if (start + length > source.Length)
+          throw new ArgumentException("Exceeding source length", nameof(length));
+
+        this._source = source;
+        this._start = start;
+        this.Length = length;
+      }
+
+      public int Length { get; }
+
+      public TItem this[int index] {
+        get {
+#if NETFX_4
+          Contract.Requires(index < this.Length);
+#endif
+          return (this._source[index + this._start]);
+        }
+      }
+
+      public IEnumerable<TItem> Values {
+        get {
+          var maxIndex = this._start + this.Length;
+          for (var i = this._start; i < maxIndex; ++i)
+            yield return this._source[i];
+        }
+      }
+
+      #region Implementation of IEnumerable
+
+      public IEnumerator<TItem> GetEnumerator() => this.Values.GetEnumerator();
+      IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+      #endregion
+
+      public static explicit operator TItem[] (ReadOnlyArraySlice<TItem> @this) => @this.ToArray();
+
+      #region Overrides of Object
+
+      public override string ToString() => $"{typeof(TItem).Name}[{this._start}..{this._start + this.Length - 1}]";
+
+      #endregion
+    }
+    internal class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
+
+      public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
+#if NETFX_4
+        Contract.Requires(source != null);
+#endif
+      }
+
+      public new TItem this[int index] {
+        get {
+#if NETFX_4
+          Contract.Requires(index < this.Length);
+#endif
+          return (this._source[index + this._start]);
+        }
+        set {
+#if NETFX_4
+          Contract.Requires(index < this.Length);
+#endif
+          this._source[index + this._start] = value;
+        }
+      }
+    }
+    #endregion
+
     private static readonly Exception _noElements = new InvalidOperationException("No Elements!");
+
+    /// <summary>
+    /// Slices the specified array.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This array.</param>
+    /// <param name="start">The start.</param>
+    /// <param name="length">The length.</param>
+    /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
+    public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length) => new ReadOnlyArraySlice<TItem>(@this, start, length);
+
+    /// <summary>
+    /// Slices the specified array.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This array.</param>
+    /// <param name="start">The start.</param>
+    /// <param name="length">The length.</param>
+    /// <returns>An array slice which accesses the underlying array.</returns>
+    public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length) => new ArraySlice<TItem>(@this, start, length);
 
     /// <summary>
     /// Gets a random element.
@@ -38,7 +146,9 @@ namespace System {
     /// <param name="random">The random number generator, if any.</param>
     /// <returns>A random element from the array.</returns>
     public static TValue GetRandomElement<TValue>(this TValue[] This, Random random = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.Length;
       if (length == 0)
         throw _noElements;
@@ -74,7 +184,9 @@ namespace System {
     /// <param name="ptrConverter">The converter.</param>
     /// <returns>The joines string.</returns>
     public static string Join<TIn>(this TIn[] This, string join = ", ", bool skipDefaults = false, Func<TIn, string> ptrConverter = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = new StringBuilder();
       var gotElements = false;
       var defaultValue = default(TIn);
@@ -101,9 +213,11 @@ namespace System {
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
     public static TValue[] Range<TValue>(this TValue[] This, int startIndex, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(startIndex + count <= This.Length);
       Contract.Requires(startIndex >= 0);
+#endif
       var result = new TValue[count];
       Array.Copy(This, startIndex, result, 0, count);
       return (result);
@@ -116,7 +230,9 @@ namespace System {
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
     public static void Swap<TValue>(this TValue[] This, int firstElementIndex, int secondElementIndex) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var value = This[firstElementIndex];
       This[firstElementIndex] = This[secondElementIndex];
       This[secondElementIndex] = value;
@@ -127,7 +243,9 @@ namespace System {
     /// <typeparam name="TValue">Type of elements in the array.</typeparam>
     /// <param name="This">This array.</param>
     public static void Shuffle<TValue>(this TValue[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var index = This.Length;
       var random = new Random();
       while (index > 1)
@@ -140,7 +258,9 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <returns>A sorted array copy.</returns>
     public static TValue[] QuickSorted<TValue>(this TValue[] This) where TValue : IComparable<TValue> {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = new TValue[This.Length];
       This.CopyTo(result, 0);
       result.QuickSort();
@@ -152,7 +272,9 @@ namespace System {
     /// <typeparam name="TValue">The type of the elements.</typeparam>
     /// <param name="This">This array.</param>
     public static void QuickSort<TValue>(this TValue[] This) where TValue : IComparable<TValue> {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (This.Length > 0)
         QuickSort_Comparable(This, 0, This.Length - 1);
     }
@@ -190,12 +312,8 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-    [Pure]
-    public static TOutput[] ConvertAll<TInput, TOutput>(this TInput[] This, Converter<TInput, TOutput> converter) {
-      Contract.Requires(This != null);
-      Contract.Requires(converter != null);
-      return (Array.ConvertAll(This, converter));
-    }
+    public static TOutput[] ConvertAll<TInput, TOutput>(this TInput[] This, Converter<TInput, TOutput> converter) => Array.ConvertAll(This, converter);
+
     /// <summary>
     /// Converts all elements.
     /// </summary>
@@ -204,10 +322,11 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-    [Pure]
     public static TOutput[] ConvertAll<TInput, TOutput>(this TInput[] This, Func<TInput, int, TOutput> converter) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
+#endif
       var length = This.Length;
       var result = new TOutput[length];
       for (var index = length - 1; index >= 0; index--)
@@ -220,22 +339,16 @@ namespace System {
     /// <typeparam name="TInput">The type of the input array.</typeparam>
     /// <param name="This">This array.</param>
     /// <param name="action">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Action<TInput> action) {
-      Contract.Requires(This != null);
-      Contract.Requires(action != null);
-      Array.ForEach(This, action);
-    }
+    public static void ForEach<TInput>(this TInput[] This, Action<TInput> action) => Array.ForEach(This, action);
+
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
     /// <typeparam name="TInput">The type of the input array.</typeparam>
     /// <param name="This">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
-    public static void ParallelForEach<TInput>(this TInput[] This, Action<TInput> action) {
-      Contract.Requires(This != null);
-      Contract.Requires(action != null);
-      Parallel.ForEach(This, action);
-    }
+    public static void ParallelForEach<TInput>(this TInput[] This, Action<TInput> action) => Parallel.ForEach(This, action);
+
     /// <summary>
     /// Executes a callback with each element in an array.
     /// </summary>
@@ -243,8 +356,10 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="action">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Action<TInput, int> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       for (var intI = This.Length - 1; intI >= 0; intI--)
         action(This[intI], intI);
     }
@@ -255,8 +370,10 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="action">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Action<TInput, long> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       for (var intI = This.LongLength - 1; intI >= 0; intI--)
         action(This[intI], intI);
     }
@@ -267,8 +384,10 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Func<TInput, TInput> worker) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(worker != null);
+#endif
       for (var index = This.LongLength - 1; index >= 0; index--)
         This[index] = worker(This[index]);
     }
@@ -279,8 +398,10 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Func<TInput, int, TInput> worker) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(worker != null);
+#endif
       for (var index = This.Length - 1; index >= 0; index--)
         This[index] = worker(This[index], index);
     }
@@ -291,8 +412,10 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Func<TInput, long, TInput> worker) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(worker != null);
+#endif
       for (var index = This.LongLength - 1; index >= 0; index--)
         This[index] = worker(This[index], index);
     }
@@ -303,21 +426,21 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-    [Pure]
-    public static bool Exists<TInput>(this TInput[] This, Predicate<TInput> predicate) {
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
-      return (Array.Exists(This, predicate));
-    }
+    public static bool Exists<TInput>(this TInput[] This, Predicate<TInput> predicate) => Array.Exists(This, predicate);
+
     /// <summary>
     /// Gets the reverse.
     /// </summary>
     /// <typeparam name="TInput">The type of the input array.</typeparam>
     /// <param name="This">This array.</param>
     /// <returns>An array where all values are inverted.</returns>
+#if NETFX_4
     [Pure]
+#endif
     public static TInput[] Reverse<TInput>(this TInput[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.LongLength;
       var result = new TInput[length];
       for (long i = 0, j = length - 1; j >= 0; i++, j--)
@@ -334,9 +457,13 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
     /// </returns>
+#if NETFX_4
     [Pure]
+#endif
     public static bool Contains<TItem>(this TItem[] This, TItem value) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (This.IndexOf(value) >= 0);
     }
 
@@ -348,9 +475,13 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
     /// </returns>
+#if NETFX_4
     [Pure]
+#endif
     public static bool Contains(this Array This, object value) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       // ReSharper disable LoopCanBeConvertedToQuery
       foreach (var item in This)
         if (item == value)
@@ -364,12 +495,16 @@ namespace System {
     /// </summary>
     /// <param name="This">This Array.</param>
     /// <returns>An array of objects holding the contents.</returns>
+#if NETFX_4
     [Pure]
+#endif
     public static object[] ToArray(this Array This) {
+#if NETFX_4
       Contract.Requires(This != null && This.Rank > 0);
+#endif
       var result = new object[This.Length];
       var lbound = This.GetLowerBound(0);
-      for (var i = This.Length; i > 0; ) {
+      for (var i = This.Length; i > 0;) {
         --i;
         result[i] = This.GetValue(i + lbound);
       }
@@ -385,10 +520,11 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-    [Pure]
     public static int IndexOf<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       for (var i = 0; i < This.Length; i++)
         if (predicate(This[i]))
           return (i);
@@ -404,9 +540,13 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
+#if NETFX_4
     [Pure]
+#endif
     public static int IndexOf<TItem>(this TItem[] This, TItem value) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var comparer = EqualityComparer<TItem>.Default;
       for (var i = 0; i < This.Length; i++)
         if (comparer.Equals(value, This[i]))
@@ -420,10 +560,11 @@ namespace System {
     /// <param name="This">This Array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>The index of the item in the array or -1.</returns>
-    [Pure]
     public static int IndexOf(this Array This, Predicate<object> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       for (var i = This.GetLowerBound(0); i <= This.GetUpperBound(0); i++)
         if (predicate(This.GetValue(i)))
           return (i);
@@ -431,13 +572,13 @@ namespace System {
     }
 
     #region high performance linq for arrays
-    public static bool Any<TItem>(this TItem[] This) {
-      Contract.Requires(This != null);
-      return (This.Length > 0);
-    }
+    public static bool Any<TItem>(this TItem[] This) => This.Length > 0;
+
     public static bool Any<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++)
         if (predicate(This[i]))
@@ -445,22 +586,28 @@ namespace System {
       return (false);
     }
     public static TItem First<TItem>(this TItem[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.Length;
       if (length == 0)
         throw _noElements;
       return (This[0]);
     }
     public static TItem Last<TItem>(this TItem[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.LongLength;
       if (length == 0)
         throw _noElements;
       return (This[length - 1]);
     }
     public static TItem First<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++) {
         var current = This[i];
@@ -470,8 +617,10 @@ namespace System {
       throw _noElements;
     }
     public static TItem Last<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = length - 1; i >= 0; i--) {
         var current = This[i];
@@ -480,23 +629,20 @@ namespace System {
       }
       throw _noElements;
     }
-    public static TItem FirstOrDefault<TItem>(this TItem[] This) {
-      Contract.Requires(This != null);
-      var length = This.Length;
-      if (length == 0)
-        return (default(TItem));
-      return (This[0]);
-    }
+    public static TItem FirstOrDefault<TItem>(this TItem[] This) => This.Length == 0 ? default(TItem) : This[0];
+
     public static TItem LastOrDefault<TItem>(this TItem[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.LongLength;
-      if (length == 0)
-        return (default(TItem));
-      return (This[length - 1]);
+      return length == 0 ? default(TItem) : This[length - 1];
     }
     public static TItem FirstOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++) {
         var current = This[i];
@@ -506,8 +652,10 @@ namespace System {
       return (default(TItem));
     }
     public static TItem LastOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = length - 1; i >= 0; i--) {
         var current = This[i];
@@ -517,8 +665,10 @@ namespace System {
       return (default(TItem));
     }
     public static TItem Aggregate<TItem>(this TItem[] This, Func<TItem, TItem, TItem> func) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(func != null);
+#endif
       var length = This.LongLength;
       if (length == 0)
         throw _noElements;
@@ -528,8 +678,10 @@ namespace System {
       return (result);
     }
     public static TAccumulate Aggregate<TItem, TAccumulate>(this TItem[] This, TAccumulate seed, Func<TAccumulate, TItem, TAccumulate> func) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(func != null);
+#endif
       var length = This.LongLength;
       if (length == 0)
         throw _noElements;
@@ -538,17 +690,15 @@ namespace System {
         result = func(result, This[i]);
       return (result);
     }
-    public static int Count<TItem>(this TItem[] This) {
-      Contract.Requires(This != null);
-      return (This.Length);
-    }
-    public static long LongCount<TItem>(this TItem[] This) {
-      Contract.Requires(This != null);
-      return (This.LongLength);
-    }
+    public static int Count<TItem>(this TItem[] This) => This.Length;
+
+    public static long LongCount<TItem>(this TItem[] This) => This.LongLength;
+
     public static int Count<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var result = 0;
       // ReSharper disable LoopCanBeConvertedToQuery
       // ReSharper disable ForCanBeConvertedToForeach
@@ -560,8 +710,10 @@ namespace System {
       return (result);
     }
     public static long LongCount<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var result = (long)0;
       for (var i = 0; i < This.LongLength; i++)
         if (predicate(This[i]))
@@ -571,8 +723,10 @@ namespace System {
 
 
     public static TItem FirstOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate, TItem defaultValue) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       foreach (var item in This.Where(predicate))
         return (item);
       return (defaultValue);
@@ -580,7 +734,9 @@ namespace System {
 
     #region these special Array ...s
     public static IEnumerable<TResult> OfType<TResult>(this Array This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       for (var i = 0; i < This.LongLength; i++) {
         var item = This.GetValue(i);
         if (item is TResult)
@@ -589,8 +745,10 @@ namespace System {
     }
 
     public static object FirstOrDefault(this Array This, Predicate<object> predicate, object defaultValue = null) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       foreach (var item in This) {
         if (predicate(item))
           return (item);
@@ -606,8 +764,10 @@ namespace System {
     }
 
     public static TItem FirstOrDefault<TItem>(this Array This, Predicate<TItem> predicate, TItem defaultValue = default(TItem)) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       foreach (var item in This) {
         if (predicate((TItem)item))
           return ((TItem)item);
@@ -616,7 +776,9 @@ namespace System {
     }
 
     public static IEnumerable<TResult> Cast<TResult>(this Array This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       for (var i = This.GetLowerBound(0); i <= This.GetUpperBound(0); i++) {
         var value = This.GetValue(i);
         yield return value == null ? default(TResult) : (TResult)value;
@@ -625,36 +787,46 @@ namespace System {
     #endregion
 
     public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] This, Func<TItem, TResult> selector) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       var length = This.Length;
       for (var i = 0; i < length; i++)
         yield return selector(This[i]);
     }
     public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] This, Func<TItem, TResult> selector) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++)
         yield return selector(This[i]);
     }
     public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] This, Func<TItem, int, TResult> selector) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       var length = This.Length;
       for (var i = 0; i < length; i++)
         yield return selector(This[i], i);
     }
     public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] This, Func<TItem, long, TResult> selector) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++)
         yield return selector(This[i], i);
     }
     public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++) {
         var current = This[i];
@@ -663,8 +835,10 @@ namespace System {
       }
     }
     public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Func<TItem, int, bool> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.Length;
       for (var i = 0; i < length; i++) {
         var current = This[i];
@@ -673,8 +847,10 @@ namespace System {
       }
     }
     public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Func<TItem, long, bool> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var length = This.LongLength;
       for (var i = 0; i < length; i++) {
         var current = This[i];
@@ -751,7 +927,9 @@ namespace System {
     /// <param name="This">This Byte-Array.</param>
     /// <returns>A GZipped byte array.</returns>
     public static byte[] GZip(this byte[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       using (var targetStream = new MemoryStream()) {
         using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
           gZipStream.Write(This, 0, This.Length);
@@ -766,7 +944,9 @@ namespace System {
     /// <param name="This">This Byte-Array.</param>
     /// <returns>The unzipped byte array.</returns>
     public static byte[] UnGZip(this byte[] This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       using (var targetStream = new MemoryStream()) {
         using (var sourceStream = new MemoryStream(This)) {
           using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress, false)) {
@@ -784,27 +964,68 @@ namespace System {
       }
     }
 
+    #region hash computation
+    /// <summary>
+    /// Computes the hash.
+    /// </summary>
+    /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The result of the hash algorithm</returns>
+    public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+
+      using (var provider = new THashAlgorithm())
+        return (provider.ComputeHash(@this));
+    }
+
+    /// <summary>
+    /// Calculates the SHA512 hash.
+    /// </summary>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA512Hash(this byte[] @this) => @this.ComputeHash<SHA512CryptoServiceProvider>();
+
+    /// <summary>
+    /// Calculates the SHA384 hash.
+    /// </summary>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA384Hash(this byte[] @this) => @this.ComputeHash<SHA384CryptoServiceProvider>();
+
+    /// <summary>
+    /// Calculates the SHA256 hash.
+    /// </summary>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA256Hash(this byte[] @this) => @this.ComputeHash<SHA256CryptoServiceProvider>();
+
+    /// <summary>
+    /// Calculates the SHA-1 hash.
+    /// </summary>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeSHA1Hash(this byte[] @this) => @this.ComputeHash<SHA1CryptoServiceProvider>();
+
+    /// <summary>
+    /// Calculates the MD5 hash.
+    /// </summary>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The hash</returns>
+    public static byte[] ComputeMD5Hash(this byte[] @this) => @this.ComputeHash<MD5CryptoServiceProvider>();
+
+    #endregion
+
     #region utility classes
     private static class RuntimeConfiguration {
       public static readonly int MaxDegreeOfParallelism = Environment.ProcessorCount;
 
-      public static bool Has16BitRegisters {
-        get {
-          return (IntPtr.Size >= 2);
-        }
-      }
+      public static bool Has16BitRegisters => (IntPtr.Size >= 2);
 
-      public static bool Has32BitRegisters {
-        get {
-          return (IntPtr.Size >= 4);
-        }
-      }
+      public static bool Has32BitRegisters => (IntPtr.Size >= 4);
 
-      public static bool Has64BitRegisters {
-        get {
-          return (IntPtr.Size >= 8);
-        }
-      }
+      public static bool Has64BitRegisters => (IntPtr.Size >= 8);
 
       public const int MIN_ITEMS_FOR_PARALELLISM = 2048;
       public const int MIN_ITEMS_PER_THREAD = 128;

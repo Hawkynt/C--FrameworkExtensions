@@ -39,8 +39,9 @@ namespace System.Collections.Generic {
       Contract.Ensures(Contract.Result<Dictionary<TKey, TValue>>() != null);
 
       // if the enumeration is a collection, than initialize the dictionary with a known number of items.
-      var result = This is ICollection
-        ? comparer == null ? new Dictionary<TKey, TValue>(((ICollection)This).Count) : new Dictionary<TKey, TValue>(((ICollection)This).Count, comparer)
+      var collection = This as ICollection;
+      var result = collection != null
+        ? comparer == null ? new Dictionary<TKey, TValue>(collection.Count) : new Dictionary<TKey, TValue>(collection.Count, comparer)
         : comparer == null ? new Dictionary<TKey, TValue>() : new Dictionary<TKey, TValue>(comparer)
         ;
 

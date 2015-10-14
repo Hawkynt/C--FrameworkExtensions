@@ -20,9 +20,15 @@
 #endregion
 
 using System.Collections.Generic;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Threading;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms {
   internal static partial class ControlExtensions {
@@ -60,7 +66,9 @@ namespace System.Windows.Forms {
     /// <param name="This">The this.</param>
     /// <returns></returns>
     public static ISuspendedLayoutToken PauseLayout(this Control This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (new SuspendedLayoutToken(This));
     }
 
@@ -71,8 +79,10 @@ namespace System.Windows.Forms {
     /// <param name="dueTime">The time to wait until execution.</param>
     /// <param name="action">The action.</param>
     public static void SetTimeout<TControl>(this TControl This, TimeSpan dueTime, Action<TControl> action) where TControl : Control {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       This.Async(() => {
         Thread.Sleep(dueTime);
         This.SafelyInvoke(() => action(This));
@@ -85,7 +95,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This Control.</param>
     /// <returns>The position of it relative to it's form.</returns>
     public static Drawing.Point GetLocationOnForm(this Control This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = This.Location;
       var c = This;
       for (; (c as Form) == null; c = c.Parent)
@@ -94,7 +106,9 @@ namespace System.Windows.Forms {
     }
 
     public static Drawing.Point GetLocationOnClient(this Control This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = Drawing.Point.Empty;
       var c = This;
       for (; c.Parent != null; c = c.Parent)
@@ -109,7 +123,9 @@ namespace System.Windows.Forms {
     /// <param name="task">The task to perform in its thread.</param>
     /// <returns><c>true</c> when no thread switch was needed; otherwise, <c>false</c>.</returns>
     public static bool SafelyInvoke(this Control This, Action task, bool @async = true) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       if (This.InvokeRequired) {
 
@@ -158,9 +174,7 @@ namespace System.Windows.Forms {
     /// <param name="This">The this.</param>
     /// <param name="function">The function.</param>
     /// <returns>Whatever the method returned.</returns>
-    public static TResult SafelyInvoke<TResult>(this Control This, Func<TResult> function) {
-      return (This.InvokeRequired ? (TResult)This.Invoke(function) : function());
-    }
+    public static TResult SafelyInvoke<TResult>(this Control This, Func<TResult> function) => This.InvokeRequired ? (TResult)This.Invoke(function) : function();
 
     /// <summary>
     /// Safelies executes an action and returns the result..
@@ -172,9 +186,7 @@ namespace System.Windows.Forms {
     /// <returns>
     /// Whatever the method returned.
     /// </returns>
-    public static TResult SafelyInvoke<TControl, TResult>(this TControl This, Func<TControl, TResult> function) where TControl : Control {
-      return (This.InvokeRequired ? (TResult)This.Invoke(function, This) : function(This));
-    }
+    public static TResult SafelyInvoke<TControl, TResult>(this TControl This, Func<TControl, TResult> function) where TControl : Control => This.InvokeRequired ? (TResult)This.Invoke(function, This) : function(This);
 
     /// <summary>
     /// Safely invokes the given code on the control's thread.
@@ -184,7 +196,9 @@ namespace System.Windows.Forms {
     /// <param name="task">The task to perform in its thread.</param>
     /// <returns><c>true</c> when no thread switch was needed; otherwise, <c>false</c>.</returns>
     public static bool SafelyInvoke<TControl>(this TControl This, Action<TControl> task, bool @async = true) where TControl : Control {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       if (This.InvokeRequired) {
 
@@ -231,8 +245,10 @@ namespace System.Windows.Forms {
     /// <param name="task">The task.</param>
     /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
     public static bool Async(this Control This, Action task) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(task != null);
+#endif
       if (This.InvokeRequired) {
         task();
         return (false);
@@ -250,9 +266,11 @@ namespace System.Windows.Forms {
     /// <param name="task">The task.</param>
     /// <param name="syncPostAction">The sync post action.</param>
     public static void Async<TType>(this TType This, Action<TType> syncPreAction, Action task, Action<TType> syncPostAction = null) where TType : Control {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(syncPreAction != null);
       Contract.Requires(task != null);
+#endif
       This.SafelyInvoke(() => syncPreAction(This), false);
       This.Async(() => {
         try {
@@ -270,13 +288,17 @@ namespace System.Windows.Forms {
     /// <param name="This">This control.</param>
     /// <returns>A string with text or <c>null</c>.</returns>
     public static string GetTextProperty(this Control This) {
+#if NETFX_4
       Contract.Requires(This != null);
       var r = Contract.Result<string>();
       Contract.Ensures(r == null || r.Length > 0);
+#endif
       var text = This.Text;
-      if (string.IsNullOrWhiteSpace(text))
+      if (text == null || text.Trim().Length < 1)
         return (null);
+#if NETFX_4
       Contract.Assume(text.Trim().Length > 0);
+#endif
       return text.Trim();
     }
 
@@ -286,7 +308,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This Control.</param>
     /// <param name="predicate">The predicate, default to <c>null</c>.</param>
     public static void ClearChildren(this Control This, Predicate<Control> predicate = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var children = This.Controls;
       foreach (var child in children.Cast<Control>().Where(c => c != null && (predicate == null || predicate(c))).ToArray()) {
         children.Remove(child);
@@ -300,8 +324,10 @@ namespace System.Windows.Forms {
     /// <param name="This">This Control.</param>
     /// <returns>An enumeration of child controls.</returns>
     public static IEnumerable<Control> AllControls(this Control This) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Ensures(Contract.Result<IEnumerable<Control>>() != null);
+#endif
       foreach (Control child in This.Controls) {
         yield return child;
         foreach (var subchild in child.AllControls())
@@ -316,9 +342,12 @@ namespace System.Windows.Forms {
     /// <param name="newName">The name for the new control; defaults to auto-name.</param>
     /// <returns>A new control with the same properties as the given one.</returns>
     public static Control Duplicate(this Control This, string newName = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (newName == null)
         newName = new Guid().ToString();
+
       if (This is Label) {
         var label = (new Label {
           AllowDrop = This.AllowDrop,
@@ -364,6 +393,7 @@ namespace System.Windows.Forms {
         });
         return label;
       }
+
       newName = new Guid().ToString();
       if (This is Button) {
         return (new Button {

@@ -19,6 +19,8 @@
 */
 #endregion
 using System.Diagnostics.Contracts;
+using System.Linq;
+
 namespace System.Windows.Forms {
   internal static partial class ToolTipExtensions {
 
@@ -32,9 +34,8 @@ namespace System.Windows.Forms {
       Contract.Requires(This != null);
       Contract.Requires(baseControl != null);
       This.SetToolTip(baseControl, toolTipText);
-      foreach (Control c in baseControl.Controls)
-        if (c != null)
-          This.SetToolTip(c, toolTipText);
+      foreach (var c in baseControl.Controls.Cast<Control>().Where(c => c != null))
+        This.SetToolTip(c, toolTipText);
     }
   }
 }

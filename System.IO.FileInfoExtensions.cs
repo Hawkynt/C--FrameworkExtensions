@@ -21,7 +21,9 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -29,6 +31,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Transactions;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace System.IO {
   internal static partial class FileInfoExtensions {
@@ -165,7 +169,9 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     public static void EnableCompression(this FileInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       if (!This.Exists)
         throw new FileNotFoundException(This.FullName);
@@ -196,7 +202,10 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
     public static bool TryEnableCompression(this FileInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       if (!This.Exists)
         return (false);
 
@@ -227,7 +236,9 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The description shown in the windows explorer under filetype.</returns>
     public static string GetTypeDescription(this FileInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       var shinfo = new NativeMethods.SHFILEINFO();
       NativeMethods.SHGetFileInfo(This.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.ShellFileInfoFlags.Typename);
@@ -242,7 +253,9 @@ namespace System.IO {
     /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
     /// <returns>The icon used by the windows explorer for this file.</returns>
     public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       var flags = NativeMethods.ShellFileInfoFlags.Icon | NativeMethods.ShellFileInfoFlags.UseFileAttributes | (smallIcon ? NativeMethods.ShellFileInfoFlags.SmallIcon : NativeMethods.ShellFileInfoFlags.LargeIcon);
       if (linkOverlay)
@@ -266,9 +279,7 @@ namespace System.IO {
     /// <param name="destFile">The destination file.</param>
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
-    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan? timeout = null) {
-      This.MoveTo(destFile.FullName, overwrite, timeout);
-    }
+    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan? timeout = null) => This.MoveTo(destFile.FullName, overwrite, timeout);
 
     /// <summary>
     /// Moves the file to the target directory.
@@ -278,13 +289,15 @@ namespace System.IO {
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
     public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       // copy file and delete source, retry during timeout
       using (var scope = new TransactionScope()) {
         This.CopyTo(destFileName, overwrite);
         var delay = TimeSpan.FromSeconds(1);
-        var tries = (int)((timeout.HasValue ? timeout.Value : TimeSpan.FromSeconds(30)).Ticks / delay.Ticks);
+        var tries = (int)((timeout ?? TimeSpan.FromSeconds(30)).Ticks / delay.Ticks);
         while (true) {
           try {
             This.Delete();
@@ -310,7 +323,10 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The result of the hash algorithm</returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       using (var provider = new THashAlgorithm())
       using (var stream = new FileStream(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
         return (provider.ComputeHash(stream));
@@ -321,45 +337,36 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA512Hash(this FileInfo This) {
-      return (This.ComputeHash<SHA512CryptoServiceProvider>());
-    }
+    public static byte[] ComputeSHA512Hash(this FileInfo This) => This.ComputeHash<SHA512CryptoServiceProvider>();
 
     /// <summary>
     /// Calculates the SHA384 hash.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA384Hash(this FileInfo This) {
-      return (This.ComputeHash<SHA384CryptoServiceProvider>());
-    }
+    public static byte[] ComputeSHA384Hash(this FileInfo This) => This.ComputeHash<SHA384CryptoServiceProvider>();
 
     /// <summary>
     /// Calculates the SHA256 hash.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA256Hash(this FileInfo This) {
-      return (This.ComputeHash<SHA256CryptoServiceProvider>());
-    }
+    public static byte[] ComputeSHA256Hash(this FileInfo This) => This.ComputeHash<SHA256CryptoServiceProvider>();
 
     /// <summary>
     /// Calculates the SHA-1 hash.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA1Hash(this FileInfo This) {
-      return (This.ComputeHash<SHA1CryptoServiceProvider>());
-    }
+    public static byte[] ComputeSHA1Hash(this FileInfo This) => This.ComputeHash<SHA1CryptoServiceProvider>();
 
     /// <summary>
     /// Calculates the MD5 hash.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeMD5Hash(this FileInfo This) {
-      return (This.ComputeHash<MD5CryptoServiceProvider>());
-    }
+    public static byte[] ComputeMD5Hash(this FileInfo This) => This.ComputeHash<MD5CryptoServiceProvider>();
+
     #endregion
 
     #region reading
@@ -368,10 +375,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-    public static string ReadAllText(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (File.ReadAllText(This.FullName));
-    }
+    public static string ReadAllText(this FileInfo This) => File.ReadAllText(This.FullName);
 
     /// <summary>
     /// Reads all text.
@@ -379,21 +383,14 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-    public static string ReadAllText(this FileInfo This, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      return (File.ReadAllText(This.FullName, encoding));
-    }
+    public static string ReadAllText(this FileInfo This, Encoding encoding) => File.ReadAllText(This.FullName, encoding);
 
     /// <summary>
     /// Reads all lines.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-    public static string[] ReadAllLines(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (File.ReadAllLines(This.FullName));
-    }
+    public static string[] ReadAllLines(this FileInfo This) => File.ReadAllLines(This.FullName);
 
     /// <summary>
     /// Reads all lines.
@@ -401,31 +398,25 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-    public static string[] ReadAllLines(this FileInfo This, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      return (File.ReadAllLines(This.FullName, encoding));
-    }
+    public static string[] ReadAllLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
 
     /// <summary>
     /// Reads all bytes.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-    public static byte[] ReadAllBytes(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (File.ReadAllBytes(This.FullName));
-    }
+    public static byte[] ReadAllBytes(this FileInfo This) => File.ReadAllBytes(This.FullName);
 
     /// <summary>
     /// Reads the lines.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-    public static IEnumerable<string> ReadLines(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (File.ReadLines(This.FullName));
-    }
+#if NETFX_4
+    public static IEnumerable<string> ReadLines(this FileInfo This) => File.ReadLines(This.FullName);
+#else
+    public static IEnumerable<string> ReadLines(this FileInfo This) => File.ReadAllLines(This.FullName);
+#endif
 
     /// <summary>
     /// Reads the lines.
@@ -433,11 +424,12 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-    public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      return (File.ReadLines(This.FullName, encoding));
-    }
+#if NETFX_4
+    public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadLines(This.FullName, encoding);
+#else
+    public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
+#endif
+
     #endregion
 
     #region writing
@@ -446,10 +438,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void WriteAllText(this FileInfo This, string contents) {
-      Contract.Requires(This != null);
-      File.WriteAllText(This.FullName, contents);
-    }
+    public static void WriteAllText(this FileInfo This, string contents) => File.WriteAllText(This.FullName, contents);
 
     /// <summary>
     /// Writes all text.
@@ -457,21 +446,14 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void WriteAllText(this FileInfo This, string contents, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      File.WriteAllText(This.FullName, contents, encoding);
-    }
+    public static void WriteAllText(this FileInfo This, string contents, Encoding encoding) => File.WriteAllText(This.FullName, contents, encoding);
 
     /// <summary>
     /// Writes all lines.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void WriteAllLines(this FileInfo This, string[] contents) {
-      Contract.Requires(This != null);
-      File.WriteAllLines(This.FullName, contents);
-    }
+    public static void WriteAllLines(this FileInfo This, string[] contents) => File.WriteAllLines(This.FullName, contents);
 
     /// <summary>
     /// Writes all lines.
@@ -479,31 +461,25 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void WriteAllLines(this FileInfo This, string[] contents, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      File.WriteAllLines(This.FullName, contents, encoding);
-    }
+    public static void WriteAllLines(this FileInfo This, string[] contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents, encoding);
 
     /// <summary>
     /// Writes all bytes.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="bytes">The bytes.</param>
-    public static void WriteAllBytes(this FileInfo This, byte[] bytes) {
-      Contract.Requires(This != null);
-      File.WriteAllBytes(This.FullName, bytes);
-    }
+    public static void WriteAllBytes(this FileInfo This, byte[] bytes) => File.WriteAllBytes(This.FullName, bytes);
 
     /// <summary>
     /// Writes all lines.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) {
-      Contract.Requires(This != null);
-      File.WriteAllLines(This.FullName, contents);
-    }
+#if NETFX_4
+    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents);
+#else
+    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents.ToArray());
+#endif
 
     /// <summary>
     /// Writes all lines.
@@ -511,11 +487,12 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      File.WriteAllLines(This.FullName, contents, encoding);
-    }
+#if NETFX_4
+    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents, encoding);
+#else
+    public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents.ToArray(), encoding);
+#endif
+
     #endregion
 
     #region appending
@@ -524,10 +501,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void AppendAllText(this FileInfo This, string contents) {
-      Contract.Requires(This != null);
-      File.AppendAllText(This.FullName, contents);
-    }
+    public static void AppendAllText(this FileInfo This, string contents) => File.AppendAllText(This.FullName, contents);
 
     /// <summary>
     /// Appends all text.
@@ -535,22 +509,18 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void AppendAllText(this FileInfo This, string contents, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-      File.AppendAllText(This.FullName, contents, encoding);
-    }
+    public static void AppendAllText(this FileInfo This, string contents, Encoding encoding) => File.AppendAllText(This.FullName, contents, encoding);
 
     /// <summary>
     /// Appends all lines.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) {
-      Contract.Requires(This != null);
-      Contract.Requires(contents != null);
-      File.AppendAllLines(This.FullName, contents);
-    }
+#if NETFX_4
+    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllLines(This.FullName, contents);
+#else
+    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()));
+#endif
 
     /// <summary>
     /// Appends all lines.
@@ -558,21 +528,18 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) {
-      Contract.Requires(This != null);
-      Contract.Requires(contents != null);
-      Contract.Requires(encoding != null);
-      File.AppendAllLines(This.FullName, contents, encoding);
-    }
+#if NETFX_4
+    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllLines(This.FullName, contents, encoding);
+#else
+    public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()), encoding);
+#endif
 
     /// <summary>
     /// Appends the line.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-    public static void AppendLine(this FileInfo This, string contents) {
-      This.AppendAllLines(new[] { contents });
-    }
+    public static void AppendLine(this FileInfo This, string contents) => This.AppendAllLines(new[] { contents });
 
     /// <summary>
     /// Appends the line.
@@ -580,9 +547,8 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void AppendLine(this FileInfo This, string contents, Encoding encoding) {
-      This.AppendAllLines(new[] { contents }, encoding);
-    }
+    public static void AppendLine(this FileInfo This, string contents, Encoding encoding) => This.AppendAllLines(new[] { contents }, encoding);
+
     #endregion
 
     #region trimming text files
@@ -591,9 +557,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void KeepFirstLines(this FileInfo This, int count) {
-      This.KeepFirstLines(count, UTF8NoBOM);
-    }
+    public static void KeepFirstLines(this FileInfo This, int count) => This.KeepFirstLines(count, UTF8NoBOM);
 
     /// <summary>
     /// Keeps the first lines of a text file.
@@ -602,8 +566,10 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepFirstLines(this FileInfo This, int count, Encoding encoding) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
+#endif
 
       FileInfo tempFile = null;
       try {
@@ -616,6 +582,7 @@ namespace System.IO {
           for (var i = 0; i < count && !inputReader.EndOfStream; ++i)
             outputWriter.WriteLine(inputReader.ReadLine());
 
+        tempFile.Attributes = This.Attributes;
         tempFile.MoveTo(This.FullName, true);
 
       } finally {
@@ -629,9 +596,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void KeepLastLines(this FileInfo This, int count) {
-      This.KeepLastLines(count, UTF8NoBOM);
-    }
+    public static void KeepLastLines(this FileInfo This, int count) => This.KeepLastLines(count, UTF8NoBOM);
 
     /// <summary>
     /// Keeps the last lines of a text file.
@@ -640,8 +605,10 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepLastLines(this FileInfo This, int count, Encoding encoding) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
+#endif
 
       // TODO: this is not optimal because it reads the whole file in, first
       FileInfo tempFile = null;
@@ -663,6 +630,7 @@ namespace System.IO {
           while (lineBuffer.Count > 0)
             outputWriter.WriteLine(lineBuffer.Dequeue());
 
+        tempFile.Attributes = This.Attributes;
         tempFile.MoveTo(This.FullName, true);
 
       } finally {
@@ -676,9 +644,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void RemoveFirstLines(this FileInfo This, int count) {
-      This.RemoveFirstLines(count, UTF8NoBOM);
-    }
+    public static void RemoveFirstLines(this FileInfo This, int count) => This.RemoveFirstLines(count, UTF8NoBOM);
 
     /// <summary>
     /// Removes the first n lines from a file.
@@ -687,8 +653,10 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void RemoveFirstLines(this FileInfo This, int count, Encoding encoding) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
+#endif
 
       FileInfo tempFile = null;
       try {
@@ -707,7 +675,7 @@ namespace System.IO {
           while (!inputReader.EndOfStream)
             outputWriter.WriteLine(inputReader.ReadLine());
         }
-
+        tempFile.Attributes = This.Attributes;
         tempFile.MoveTo(This.FullName, true);
 
       } finally {
@@ -727,10 +695,7 @@ namespace System.IO {
     /// <param name="share">The share.</param>
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize) {
-      Contract.Requires(This != null);
-      return (new FileStream(This.FullName, mode, access, share, bufferSize));
-    }
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize) => new FileStream(This.FullName, mode, access, share, bufferSize);
 
     /// <summary>
     /// Opens the specified file.
@@ -742,10 +707,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="options">The options.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options) {
-      Contract.Requires(This != null);
-      return (new FileStream(This.FullName, mode, access, share, bufferSize, options));
-    }
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options) => new FileStream(This.FullName, mode, access, share, bufferSize, options);
 
     /// <summary>
     /// Opens the specified file.
@@ -757,10 +719,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="useAsync">if set to <c>true</c> [use async].</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, bool useAsync) {
-      Contract.Requires(This != null);
-      return (new FileStream(This.FullName, mode, access, share, bufferSize, useAsync));
-    }
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, bool useAsync) => new FileStream(This.FullName, mode, access, share, bufferSize, useAsync);
 
     /// <summary>
     /// Opens the specified file.
@@ -772,10 +731,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="options">The options.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) {
-      Contract.Requires(This != null);
-      return (new FileStream(This.FullName, mode, rights, share, bufferSize, options));
-    }
+    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new FileStream(This.FullName, mode, rights, share, bufferSize, options);
 
     /// <summary>
     /// Opens the specified file.
@@ -788,10 +744,8 @@ namespace System.IO {
     /// <param name="options">The options.</param>
     /// <param name="security">The security.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) {
-      Contract.Requires(This != null);
-      return (new FileStream(This.FullName, mode, rights, share, bufferSize, options, security));
-    }
+    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new FileStream(This.FullName, mode, rights, share, bufferSize, options, security);
+
     #endregion
 
     #region get part of filename
@@ -800,37 +754,45 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The filename without the extension.</returns>
-    public static string GetFilenameWithoutExtension(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (Path.GetFileNameWithoutExtension(This.FullName));
-    }
+    public static string GetFilenameWithoutExtension(this FileInfo This) => Path.GetFileNameWithoutExtension(This.FullName);
 
     /// <summary>
     /// Gets the filename.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns>The filename.</returns>
-    public static string GetFilename(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (Path.GetFileName(This.FullName));
-    }
+    public static string GetFilename(this FileInfo This) => Path.GetFileName(This.FullName);
+
+    /// <summary>
+    /// Creates an instance with a new extension.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="extension">The extension.</param>
+    /// <returns>A new FileInfo instance with given extension.</returns>
+    public static FileInfo WithNewExtension(this FileInfo @this, string extension) => new FileInfo(Path.ChangeExtension(@this.FullName, extension));
+
     #endregion
 
     /// <summary>
     /// Tries to create a new file.
     /// </summary>
     /// <param name="This">This FileInfo.</param>
+    /// <param name="attributes">The attributes.</param>
     /// <returns>
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
-    public static bool TryCreate(this FileInfo This) {
+    public static bool TryCreate(this FileInfo This, FileAttributes attributes = FileAttributes.Normal) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       if (This.Exists)
         return (false);
 
       try {
         var fileHandle = This.Open(FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
+        This.Attributes = attributes;
         return (true);
       } catch (UnauthorizedAccessException) {
 
@@ -848,11 +810,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-    public static bool NotExists(this FileInfo This) {
-      Contract.Requires(This != null);
-      return (!This.Exists);
-    }
-
+    public static bool NotExists(this FileInfo This) => !This.Exists;
   }
 }
 

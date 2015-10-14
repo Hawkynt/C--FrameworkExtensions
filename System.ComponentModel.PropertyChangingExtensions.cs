@@ -30,41 +30,7 @@ using System.Diagnostics;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.ComponentModel {
-  internal static partial class PropertyChangedExtensions {
-
-    /// <summary>
-    /// The synchornization context to use for all safe invocations if any.
-    /// </summary>
-    public static ISynchronizeInvoke SynchronizationContext;
-
-    /// <summary>
-    /// Safely invokes the event.
-    /// </summary>
-    /// <param name="This">This event.</param>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The <see cref="System.ComponentModel.PropertyChangedEventArgs"/> instance containing the event data.</param>
-    public static void SafeInvoke(this PropertyChangedEventHandler This, object sender, PropertyChangedEventArgs e) {
-      if (This == null)
-        return;
-
-      var context = SynchronizationContext;
-      if (context != null) {
-        context.Invoke(new Action(() => This(sender, e)), null);
-        return;
-      }
-
-      foreach (var subscriber in This.GetInvocationList()) {
-        var sync = subscriber.Target as ISynchronizeInvoke;
-        if (sync != null) {
-          if (sync.InvokeRequired) {
-            sync.Invoke(subscriber, new[] { sender, e });
-            continue;
-          }
-        }
-        subscriber.DynamicInvoke(sender, e);
-
-      }
-    }
+  internal static partial class PropertyChangingExtensions {
 
   
     /// <summary>
@@ -73,6 +39,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -80,7 +47,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -92,6 +59,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref bool backingField, 
       bool value, 
@@ -100,11 +68,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -114,6 +81,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -125,6 +94,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -132,7 +102,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -144,6 +114,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref byte backingField, 
       byte value, 
@@ -152,11 +123,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -166,6 +136,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -177,6 +149,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -184,7 +157,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -196,6 +169,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref sbyte backingField, 
       sbyte value, 
@@ -204,11 +178,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -218,6 +191,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -229,6 +204,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -236,7 +212,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -248,6 +224,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref char backingField, 
       char value, 
@@ -256,11 +233,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -270,6 +246,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -281,6 +259,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -288,7 +267,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -300,6 +279,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref short backingField, 
       short value, 
@@ -308,11 +288,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -322,6 +301,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -333,6 +314,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -340,7 +322,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -352,6 +334,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref ushort backingField, 
       ushort value, 
@@ -360,11 +343,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -374,6 +356,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -385,6 +369,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -392,7 +377,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -404,6 +389,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref int backingField, 
       int value, 
@@ -412,11 +398,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -426,6 +411,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -437,6 +424,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -444,7 +432,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -456,6 +444,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref uint backingField, 
       uint value, 
@@ -464,11 +453,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -478,6 +466,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -489,6 +479,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -496,7 +487,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -508,6 +499,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref long backingField, 
       long value, 
@@ -516,11 +508,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -530,6 +521,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -541,6 +534,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -548,7 +542,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -560,6 +554,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref ulong backingField, 
       ulong value, 
@@ -568,11 +563,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -582,6 +576,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -593,6 +589,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -600,7 +597,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -612,6 +609,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref float backingField, 
       float value, 
@@ -620,11 +618,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -634,6 +631,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -645,6 +644,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -652,7 +652,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -664,6 +664,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref double backingField, 
       double value, 
@@ -672,11 +673,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -686,6 +686,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -697,6 +699,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -704,7 +707,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -716,6 +719,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref decimal backingField, 
       decimal value, 
@@ -724,11 +728,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -738,6 +741,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -749,6 +754,7 @@ namespace System.ComponentModel {
     /// </summary>
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -756,7 +762,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -768,6 +774,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref string backingField, 
       string value, 
@@ -776,11 +783,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (backingField == value)
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -790,6 +796,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }
@@ -802,6 +810,7 @@ namespace System.ComponentModel {
     /// <typeparam name="This">Type of the object.</typeparam>
     /// <typeparam name="T">Type of the property.</typeparam>
     /// <param name="this">This object.</param>
+    /// <param name="onPropertyChanging">The property changing event invocator.</param>
     /// <param name="onPropertyChanged">The property changed event invocator.</param>
     /// <param name="backingField">Reference to a property with both getter and setter.</param>
     /// <param name="value">Desired value for the property.</param>
@@ -809,7 +818,7 @@ namespace System.ComponentModel {
     /// value is optional and can be provided automatically when invoked from compilers that
     /// support CallerMemberName.</param>
     /// <returns>
-    /// True if the value was changed, false if the existing value matched the
+    /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
 #if NETFX_45
@@ -821,6 +830,7 @@ namespace System.ComponentModel {
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static bool SetProperty<This,T>(
       this This @this, 
+      Action<string> onPropertyChanging, 
       Action<string> onPropertyChanged, 
       ref T backingField, 
       T value, 
@@ -829,11 +839,10 @@ namespace System.ComponentModel {
 #else
       string propertyName = null
 #endif
-    ) where This:INotifyPropertyChanged {
+    ) where This:INotifyPropertyChanged,INotifyPropertyChanging {
       if (Equals(backingField, value))
         return (false);
 
-      backingField = value;
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
@@ -843,6 +852,8 @@ namespace System.ComponentModel {
         propertyName=name;
       }
 #endif
+      onPropertyChanging(propertyName);
+      backingField = value;
       onPropertyChanged(propertyName);
       return (true);
     }

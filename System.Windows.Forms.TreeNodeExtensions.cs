@@ -58,7 +58,7 @@ namespace System.Windows.Forms {
       var myId = 0;
       foreach (var neighbour in neighbours)
         if (neighbour == This)
-          return (string.Format("{0}/{1:000000000}", baseId, myId));
+          return ($"{baseId}/{myId:000000000}");
         else
           myId++;
       return (null);
@@ -73,10 +73,8 @@ namespace System.Windows.Forms {
       Contract.Requires(This != null);
 
       var treeView = This.TreeView;
-      if (treeView == null)
-        return (null);
 
-      var imageList = treeView.ImageList;
+      var imageList = treeView?.ImageList;
       if (imageList == null)
         return (null);
 

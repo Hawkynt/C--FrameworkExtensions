@@ -65,11 +65,11 @@ namespace System.Collections.Generic {
     }
 
     public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> arrThis, Converter<TInput, TOutput> ptrConverter) {
-      return (Array.ConvertAll(arrThis.ToArray(),ptrConverter));
+      return (Array.ConvertAll(arrThis.ToArray(), ptrConverter));
     }
 
     public static void ForEach<TInput>(this IList<TInput> arrThis, Action<TInput> ptrCall) {
-      Array.ForEach(arrThis.ToArray(),ptrCall);
+      Array.ForEach(arrThis.ToArray(), ptrCall);
     }
 
     /// <summary>
@@ -235,6 +235,150 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       var remaining = This.Count - count;
       This.KeepFirst(remaining);
+    }
+
+    /// <summary>
+    /// Returns all permutations of the specified items.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="This">The items.</param>
+    /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+    /// <returns></returns>
+    public static IEnumerable<T[]> Permutate<T>(this IList<T> This, bool separateArrays = false) {
+      Contract.Requires(This != null);
+      var length = This.Count;
+      if (length < 1)
+        yield break;
+
+      var current = new T[length];
+      var state = new int[length];
+      for (var i = 0; i < length; ++i)
+        current[i] = This[state[i] = i];
+
+      var lastIndex = length - 1;
+      while (true) {
+
+        // return copy or working array
+        if (separateArrays) {
+          var result = new T[length];
+          current.CopyTo(result, 0);
+          yield return (result);
+        } else
+          yield return (current);
+
+        // increment the 2nd last digit
+        var index = lastIndex - 1;
+        while (true) {
+
+          // increment as long as there are matching slots
+          var slotsBefore = state.Take(index).ToHashSet(length);
+          do {
+            ++state[index];
+          } while (slotsBefore.Contains(state[index]));
+
+          // if we did not ran out of digits
+          if (state[index] <= lastIndex)
+            break;
+
+          // otherwise, try incrementing the left next slot
+          --index;
+
+          // no more slots, all permutations done
+          if (index < 0)
+            yield break;
+        }
+
+        // fill content by digit
+        current[index] = This[state[index]];
+
+        // fill all slots after the incremented one
+        for (var i = index + 1; i < length; ++i) {
+          state[i] = 0;
+
+          var slotsBefore = state.Take(i).ToHashSet(length);
+          while (slotsBefore.Contains(state[i]))
+            ++state[i];
+
+          current[i] = This[state[i]];
+        }
+
+      }
+
+    }
+
+    /// <summary>
+    /// Returns all permutations of the specified items.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="This">The items.</param>
+    /// <param name="length">The length of each permutation.</param>
+    /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+    /// <returns></returns>
+    public static IEnumerable<T[]> Permutate<T>(this IList<T> This, int length, bool separateArrays = false) {
+      Contract.Requires(This != null);
+      if (length < 1)
+        yield break;
+
+      var itemLastIndex = This.Count - 1;
+      if (itemLastIndex < 0)
+        yield break;
+
+      var current = new T[length];
+      for (var i = 0; i < length; ++i)
+        current[i] = This[0];
+
+      var states = new int[length];
+      --length;
+
+      // this version creates a new array for each permutations and returns it
+      if (separateArrays) {
+        while (true) {
+          var result = new T[length + 1];
+          current.CopyTo(result, 0);
+          yield return (result);
+
+          if (!_ArePermutationsLeft(This, length, states, itemLastIndex, current))
+            yield break;
+        }
+      }
+
+      while (true) {
+        yield return (current);
+
+        if (!_ArePermutationsLeft(This, length, states, itemLastIndex, current))
+          yield break;
+      }
+
+    }
+
+    /// <summary>
+    /// The permutation core.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="items">The items.</param>
+    /// <param name="length">The length.</param>
+    /// <param name="states">The states.</param>
+    /// <param name="itemLastIndex">Last index of the item.</param>
+    /// <param name="current">The current.</param>
+    /// <returns><c>true</c> if there are more permutations available; otherwise, <c>false</c>.</returns>
+    private static bool _ArePermutationsLeft<T>(IList<T> items, int length, int[] states, int itemLastIndex, T[] current) {
+
+      // set counter position back to last index
+      var index = length;
+      while (states[index] >= itemLastIndex) {
+        states[index] = 0;
+        current[index] = items[0];
+        --index;
+
+        // all permutations done
+        if (index < 0)
+          return (false);
+      }
+
+      // create next permutation
+      current[index] = items[++states[index]];
+
+      return (true);
     }
 
   }

@@ -20,11 +20,14 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using System.Runtime;
-using System.Windows.Forms.VisualStyles;
+using System.Runtime.CompilerServices;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Drawing {
   internal static partial class ColorExtensions {
     /// <summary>
@@ -33,9 +36,8 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of lightning to add.</param>
     /// <returns>A new color.</returns>
-    public static Color Lighten(this Color This, byte amount) {
-      return (This.Add(amount));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color Lighten(this Color This, byte amount) => This.Add(amount);
 
     /// <summary>
     /// Darkens the given color.
@@ -43,9 +45,8 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of darkness to add.</param>
     /// <returns>A new color.</returns>
-    public static Color Darken(this Color This, byte amount) {
-      return (This.Add(-amount));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color Darken(this Color This, byte amount) => This.Add(-amount);
 
     /// <summary>
     /// Adds a value to the RGB components of a given color.
@@ -53,9 +54,8 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to add.</param>
     /// <returns>A new color.</returns>
-    public static Color Add(this Color This, int value) {
-      return (This.Add(value, value, value));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color Add(this Color This, int value) => This.Add(value, value, value);
 
     /// <summary>
     /// Multiplies the RGB components of a given color by a given value.
@@ -63,9 +63,8 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to multiply with.</param>
     /// <returns>A new color.</returns>
-    public static Color Multiply(this Color This, double value) {
-      return (This.Multiply(value, value, value));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
 
     /// <summary>
     /// Adds values to the RGB components of a given color.
@@ -104,9 +103,8 @@ namespace System.Drawing {
     /// </summary>
     /// <param name="This">This Color.</param>
     /// <returns>A new color.</returns>
-    public static Color GetComplementaryColor(this Color This) {
-      return (Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
 
     /// <summary>
     /// Cache
@@ -151,19 +149,12 @@ namespace System.Drawing {
     }
 
     #region private methods
-    [TargetedPatchingOptOut("Performance critical to inline across NGen image boundaries")]
-    private static byte _ClipToByte(int value) {
-      if (value < byte.MinValue)
-        return (byte.MinValue);
-      if (value > byte.MaxValue)
-        return (byte.MaxValue);
-      return ((byte)value);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    private static byte _ClipToByte(int value) => (byte)(Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value)));
 
-    [TargetedPatchingOptOutAttribute("Performance critical to inline across NGen image boundaries")]
-    private static byte _ClipToByte(double value) {
-      return (_ClipToByte((int)value));
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    private static byte _ClipToByte(double value) => _ClipToByte((int)value);
+
     #endregion
 
   }

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+#region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,34 +20,20 @@
 #endregion
 
 
-namespace System.Security.Cryptography {
-  /// <summary>
-  /// </summary>
-  public class Fletcher64 : HashAlgorithm {
 
-    public Fletcher64() {
-      this.Initialize();
+namespace System.Collections.Generic {
+  internal static partial class HashSetExtensions {
+
+    /// <summary>
+    /// Determines whether the specified HashSet does not contain the given item.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This HashSet.</param>
+    /// <param name="item">The item.</param>
+    /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
+    public static bool ContainsNot<TItem>(this HashSet<TItem> @this, TItem item) {
+      return (!@this.Contains(item));
     }
 
-    private uint _state;
-    private uint _sum;
-
-    #region Overrides of HashAlgorithm
-
-    public override void Initialize() {
-      this._state = 0;
-      this._sum = 0;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-      for (var i = ibStart; i < ibStart + cbSize; ++i)
-        _sum += (_state += array[i]);
-    }
-
-    protected override byte[] HashFinal() {
-      return (BitConverter.GetBytes((ulong)_sum << 32 | _state));
-    }
-
-    #endregion
   }
 }

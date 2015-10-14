@@ -1,3 +1,5 @@
+<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
 #region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -50,29 +52,11 @@ namespace System.Runtime.Serialization {
 
     #region get key or default value
     #region numbers
-    
-    public static SByte GetValueOrDefault(this SerializationInfo This, string name, SByte defaultValue = 0)=>This.ContainsKey(name) ? This.GetSByte(name) : defaultValue;
-    
-    public static Int16 GetValueOrDefault(this SerializationInfo This, string name, Int16 defaultValue = 0)=>This.ContainsKey(name) ? This.GetInt16(name) : defaultValue;
-    
-    public static Int32 GetValueOrDefault(this SerializationInfo This, string name, Int32 defaultValue = 0)=>This.ContainsKey(name) ? This.GetInt32(name) : defaultValue;
-    
-    public static Int64 GetValueOrDefault(this SerializationInfo This, string name, Int64 defaultValue = 0)=>This.ContainsKey(name) ? This.GetInt64(name) : defaultValue;
-    
-    public static Byte GetValueOrDefault(this SerializationInfo This, string name, Byte defaultValue = 0)=>This.ContainsKey(name) ? This.GetByte(name) : defaultValue;
-    
-    public static UInt16 GetValueOrDefault(this SerializationInfo This, string name, UInt16 defaultValue = 0)=>This.ContainsKey(name) ? This.GetUInt16(name) : defaultValue;
-    
-    public static UInt32 GetValueOrDefault(this SerializationInfo This, string name, UInt32 defaultValue = 0)=>This.ContainsKey(name) ? This.GetUInt32(name) : defaultValue;
-    
-    public static UInt64 GetValueOrDefault(this SerializationInfo This, string name, UInt64 defaultValue = 0)=>This.ContainsKey(name) ? This.GetUInt64(name) : defaultValue;
-    
-    public static Single GetValueOrDefault(this SerializationInfo This, string name, Single defaultValue = 0)=>This.ContainsKey(name) ? This.GetSingle(name) : defaultValue;
-    
-    public static Double GetValueOrDefault(this SerializationInfo This, string name, Double defaultValue = 0)=>This.ContainsKey(name) ? This.GetDouble(name) : defaultValue;
-    
-    public static Decimal GetValueOrDefault(this SerializationInfo This, string name, Decimal defaultValue = 0)=>This.ContainsKey(name) ? This.GetDecimal(name) : defaultValue;
-    
+    <#foreach(var type in new[]{"SByte","Int16","Int32","Int64","Byte","UInt16","UInt32","UInt64","Single","Double","Decimal"}){#>
+
+    public static <#=type#> GetValueOrDefault(this SerializationInfo This, string name, <#=type#> defaultValue = 0)=>This.ContainsKey(name) ? This.Get<#=type#>(name) : defaultValue;
+    <#}#>
+
     #endregion
     #region bools
     public static bool GetValueOrDefault(this SerializationInfo This, string name, bool defaultValue = false) => This.ContainsKey(name) ? This.GetBoolean(name) : defaultValue;

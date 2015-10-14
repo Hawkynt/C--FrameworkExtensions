@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+#region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,35 +19,17 @@
 */
 #endregion
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
-namespace System.Security.Cryptography {
-  /// <summary>
-  /// </summary>
-  public class Fletcher32 : HashAlgorithm {
+namespace System.Collections.Generic {
+  internal static partial class EnumeratorExtensions {
 
-    public Fletcher32() {
-      this.Initialize();
+    public static IEnumerable<TValue> Take<TValue>(this IEnumerator<TValue> @this, int count) {
+      for (var i = 0; i < count && @this.MoveNext(); ++i)
+        yield return @this.Current;
     }
 
-    private ushort _state;
-    private ushort _sum;
-
-    #region Overrides of HashAlgorithm
-
-    public override void Initialize() {
-      this._state = 0;
-      this._sum = 0;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-      for (var i = ibStart; i < ibStart + cbSize; ++i)
-        _sum += (_state += array[i]);
-    }
-
-    protected override byte[] HashFinal() {
-      return (BitConverter.GetBytes(_sum << 16 | _state));
-    }
-
-    #endregion
   }
 }

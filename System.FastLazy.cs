@@ -21,6 +21,9 @@
 
 using System.Diagnostics.Contracts;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   /// <summary>
   /// Creates a value that is only calculated on first access and then cached.
@@ -90,7 +93,7 @@ namespace System {
     /// <summary>
     /// Gets the value.
     /// </summary>
-    public TValue Value { get { return (this._getter()); } }
+    public TValue Value => this._getter();
 
     /// <summary>
     /// Gets a value indicating whether this instance has a value.
@@ -98,7 +101,7 @@ namespace System {
     /// <value>
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
-    public bool HasValue { get { return (this._hasValue); } }
+    public bool HasValue => this._hasValue;
 
     /// <summary>
     /// Resets the value cached from the factory and triggers to call the factory, next time a value is needed.
@@ -119,9 +122,7 @@ namespace System {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator TValue(FastLazy<TValue> This) {
-      return (This.Value);
-    }
+    public static implicit operator TValue(FastLazy<TValue> This) => This.Value;
 
     /// <summary>
     /// Performs an implicit conversion from <see cref="TValue"/> to <see cref="System.FastLazy&lt;TValue&gt;"/>.
@@ -130,9 +131,7 @@ namespace System {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator FastLazy<TValue>(TValue This) {
-      return (new FastLazy<TValue>(This));
-    }
+    public static implicit operator FastLazy<TValue>(TValue This) => new FastLazy<TValue>(This);
 
     /// <summary>
     /// Performs an implicit conversion from <see cref="System.Func&lt;TValue&gt;"/> to <see cref="System.FastLazy&lt;TValue&gt;"/>.

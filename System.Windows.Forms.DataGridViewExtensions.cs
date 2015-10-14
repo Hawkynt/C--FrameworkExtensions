@@ -19,8 +19,14 @@
 */
 #endregion
 using System.Collections.Generic;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms {
   internal static partial class DataGridViewExtensions {
@@ -30,7 +36,9 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="This">This DataGridView.</param>
     public static void ScrollToEnd(this DataGridView This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var rowCount = This.RowCount;
       if (rowCount <= 0)
         return;
@@ -48,9 +56,11 @@ namespace System.Windows.Forms {
     /// <param name="This">This DataGridView.</param>
     /// <param name="target">The target DataGridView.</param>
     public static void CloneColumns(this DataGridView This, DataGridView target) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(target != null);
       Contract.Requires(This != target);
+#endif
       target.Columns.AddRange((from i in This.Columns.Cast<DataGridViewColumn>() select (DataGridViewColumn)i.Clone()).ToArray());
     }
 
@@ -61,8 +71,10 @@ namespace System.Windows.Forms {
     /// <param name="predicate">The predicate.</param>
     /// <returns>An enumeration of columns.</returns>
     public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView This, Predicate<DataGridViewColumn> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       return (from i in This.Columns.Cast<DataGridViewColumn>() where predicate(i) select i);
     }
 
@@ -73,10 +85,12 @@ namespace System.Windows.Forms {
     /// <param name="predicate">The predicate.</param>
     /// <returns>The first matching column or <c>null</c>.</returns>
     public static DataGridViewColumn FindFirstColumn(this DataGridView This, Predicate<DataGridViewColumn> predicate) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(predicate != null);
+#endif
       var matches = This.FindColumns(predicate);
-      return (matches == null ? null : matches.FirstOrDefault());
+      return matches?.FirstOrDefault();
     }
 
     /// <summary>
@@ -85,7 +99,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This DataGridView.</param>
     /// <returns>The currently selected items</returns>
     public static IEnumerable<object> GetSelectedItems(this DataGridView This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (This.SelectedRows.Cast<DataGridViewRow>().OrderBy(i => i.Index).Select(i => i.DataBoundItem));
     }
 
@@ -95,8 +111,10 @@ namespace System.Windows.Forms {
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="This">This DataGridView.</param>
     /// <returns>The currently selected items</returns>
-    public static IEnumerable<TItem> GetSelecteddItems<TItem>(this DataGridView This) {
+    public static IEnumerable<TItem> GetSelectedItems<TItem>(this DataGridView This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (This.GetSelectedItems().Cast<TItem>());
     }
 

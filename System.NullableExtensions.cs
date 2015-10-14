@@ -19,11 +19,10 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
-using word = System.UInt16;
-using dword = System.UInt32;
-using qword = System.UInt64;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class NullableExtensions {
 
@@ -37,7 +36,7 @@ namespace System {
     private readonly TType _value;
     private readonly bool _hasValue;
 
-    public bool HasValue { get { return (this._hasValue); } }
+    public bool HasValue => this._hasValue;
 
     public TType Value {
       get {
@@ -77,9 +76,7 @@ namespace System {
     /// true, wenn der <paramref name="other"/>-Parameter gleich dem aktuellen <see cref="T:System.Nullable`1"/>-Objekt ist, andernfalls false. Diese Tabelle beschreibt, wie Gleichheit für die verglichenen Werte definiert wird: RückgabewertBeschreibungtrueDie <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft ist false, und der <paramref name="other"/>-Parameter ist null.Das heißt, zwei NULL-Werte sind per Definition gleich.- oder -Die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft ist true, und der von der <see cref="P:System.Nullable`1.Value"/>-Eigenschaft zurückgegebene Wert ist gleich dem <paramref name="other"/>-Parameter.falseDie <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft für die aktuelle <see cref="T:System.Nullable`1"/>-Struktur ist true, und der <paramref name="other"/>-Parameter ist null.- oder -Die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft für die aktuelle <see cref="T:System.Nullable`1"/>-Struktur ist false, und der <paramref name="other"/>-Parameter ist nicht null.- oder -Die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft der aktuellen <see cref="T:System.Nullable`1"/>-Struktur ist true, und der von der <see cref="P:System.Nullable`1.Value"/>-Eigenschaft zurückgegebene Wert ist ungleich dem <paramref name="other"/>-Parameter.
     /// </returns>
     /// <param name="other">Ein Objekt.</param><filterpriority>1</filterpriority>
-    public override bool Equals(object other) {
-      return this.HasValue ? other != null && this._value.Equals(other) : other == null;
-    }
+    public override bool Equals(object other) => this.HasValue ? other != null && this._value.Equals(other) : other == null;
 
     /// <summary>
     /// Ruft den Hashcode des Objekts ab, das von der <see cref="P:System.Nullable`1.Value"/>-Eigenschaft zurückgegeben wird.
@@ -89,9 +86,7 @@ namespace System {
     /// Der Hashcode des Objekts, das von der <see cref="P:System.Nullable`1.Value"/>-Eigenschaft zurückgegeben wird, wenn die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft true ist, oder 0 (null), wenn die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft false ist.
     /// </returns>
     /// <filterpriority>1</filterpriority>
-    public override int GetHashCode() {
-      return this.HasValue ? this._value.GetHashCode() : 0;
-    }
+    public override int GetHashCode() => this.HasValue ? this._value.GetHashCode() : 0;
 
     /// <summary>
     /// Gibt die Textdarstellung des Werts des aktuellen <see cref="T:System.Nullable`1"/>-Objekts zurück.
@@ -101,9 +96,7 @@ namespace System {
     /// Die Textdarstellung des Werts des aktuellen <see cref="T:System.Nullable`1"/>-Objekts, wenn die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft true ist, oder eine leere Zeichenfolge (""), wenn die <see cref="P:System.Nullable`1.HasValue"/>-Eigenschaft false ist.
     /// </returns>
     /// <filterpriority>1</filterpriority>
-    public override string ToString() {
-      return this.HasValue ? this._value.ToString() : "";
-    }
+    public override string ToString() => this.HasValue ? this._value.ToString() : "";
   }
 
 }

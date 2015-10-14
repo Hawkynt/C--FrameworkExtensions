@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-using System.Diagnostics.Contracts;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
+
+#if NETFX_45
+using System.Runtime.CompilerServices;
+#endif
 
 namespace System.Xml {
   internal static partial class XmlAttributeCollectionExtensions {
@@ -30,10 +37,9 @@ namespace System.Xml {
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The value of that attribute or the given default value.</returns>
     /// <remarks></remarks>
-    public static string GetValueOrDefault(this XmlAttributeCollection This, string key, string defaultValue = null) {
-      Contract.Requires(This != null);
-      Contract.Requires(key != null);
-      return (This[key] == null ? defaultValue : This[key].Value);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string GetValueOrDefault(this XmlAttributeCollection This, string key, string defaultValue = null) => This[key] == null ? defaultValue : This[key].Value;
   }
 }

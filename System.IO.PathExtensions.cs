@@ -19,11 +19,26 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Text;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.IO {
   internal static partial class PathExtensions {
+
+    /// <summary>
+    /// Generates a temporary filename which is most like the given one in the temporary folder.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
+    /// <returns>A <see cref="FileInfo">FileInfo</see> instance pointing to the file.</returns>
+    public static FileInfo GetTempFile(string name = null, string baseDirectory = null) => new FileInfo(GetTempFileName(name, baseDirectory));
+
     /// <summary>
     /// Generates a temporary filename which is most like the given one in the temporary folder.
     /// </summary>
@@ -38,7 +53,9 @@ namespace System.IO {
 
       var path = baseDirectory ?? Path.GetTempPath();
       name = Path.GetFileName(name);
+#if NETFX_4
       Contract.Assert(name != null, "Filename went <null>");
+#endif
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name
@@ -49,7 +66,7 @@ namespace System.IO {
       var i = 1;
       var fileName = Path.GetFileNameWithoutExtension(name);
       var ext = Path.GetExtension(name);
-      while (!TryCreateFile(fullName = Path.Combine(path, string.Format("{0}.{1}{2}", fileName, ++i, ext)))) { }
+      while (!TryCreateFile(fullName = Path.Combine(path, $"{fileName}.{++i}{ext}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
       return (fullName);
     }
 
@@ -57,15 +74,21 @@ namespace System.IO {
     /// Tries to create a new file.
     /// </summary>
     /// <param name="fileName">The file to create.</param>
-    /// <returns><c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.</returns>
-    public static bool TryCreateFile(string fileName) {
+    /// <param name="attributes">The attributes.</param>
+    /// <returns>
+    ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool TryCreateFile(string fileName, FileAttributes attributes = FileAttributes.Normal) {
+#if NETFX_4
       Contract.Requires(fileName != null);
+#endif
       if (File.Exists(fileName))
         return (false);
 
       try {
         var fileHandle = File.Open(fileName, FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
+        File.SetAttributes(fileName, attributes);
         return (true);
       } catch (UnauthorizedAccessException) {
 
@@ -77,6 +100,14 @@ namespace System.IO {
         return (false);
       }
     }
+
+    /// <summary>
+    /// Generates a temporary directory which is most like the given one in the temporary folder.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
+    /// <returns>A <see cref="DirectoryInfo">DirectoryInfo</see> instance pointint to the directory.</returns>
+    public static DirectoryInfo GetTempDirectory(string name = null, string baseDirectory = null) => new DirectoryInfo(GetTempDirectoryName(name, baseDirectory));
 
     /// <summary>
     /// Generates a temporary directory which is most like the given one in the temporary folder.
@@ -105,7 +136,9 @@ namespace System.IO {
 
           tempName.Append(SUFFIX);
           result = Path.Combine(path, tempName.ToString());
+#if NETFX_4
           Contract.Assume(!string.IsNullOrEmpty(result));
+#endif
         } while (!TryCreateDirectory(result));
 
         return (result);
@@ -113,17 +146,21 @@ namespace System.IO {
 
       // a name is given, so try to accommodate this
       name = Path.GetFileName(name);
+#if NETFX_4
       Contract.Assert(name != null, "DirectoryName went <null>");
+#endif
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name, return it
+#if NETFX_4
       Contract.Assume(!string.IsNullOrEmpty(fullName));
-      if (TryCreateDirectory(fullName))
+#endif
+      if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed | FileAttributes.Temporary))
         return (fullName);
 
       // otherwise count up
       var i = 1;
-      while (!TryCreateDirectory(fullName = Path.Combine(path, string.Format("{0}{1}", name, ++i)))) { }
+      while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
       return (fullName);
     }
 
@@ -131,14 +168,21 @@ namespace System.IO {
     /// Tries to create a new folder.
     /// </summary>
     /// <param name="pathName">The directory name.</param>
-    /// <returns><c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.</returns>
-    public static bool TryCreateDirectory(string pathName) {
+    /// <param name="attributes">The attributes.</param>
+    /// <returns>
+    ///   <c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
+#if NETFX_4
       Contract.Requires(!string.IsNullOrEmpty(pathName));
+#endif
       if (Directory.Exists(pathName))
         return (false);
 
       try {
         Directory.CreateDirectory(pathName);
+        var directory = new DirectoryInfo(pathName);
+        directory.Attributes = attributes;
         return (true);
       } catch (IOException) {
         return (false);
@@ -169,9 +213,21 @@ namespace System.IO {
         get { return (this._password); }
         set { this._password = value; this._InvalidateUnc(); }
       }
-      public string Server { get { return (this._server); } set { this._server = value; this._InvalidateFullPath(); } }
-      public string Share { get { return (this._share); } set { this._share = value; this._InvalidateFullPath(); } }
-      public string DirectoryAndOrFileName { get { return (this._directory); } set { this._directory = value; this._InvalidateFullPath(); } }
+
+      public string Server {
+        get { return (this._server); }
+        set { this._server = value; this._InvalidateFullPath(); }
+      }
+
+      public string Share {
+        get { return (this._share); }
+        set { this._share = value; this._InvalidateFullPath(); }
+      }
+
+      public string DirectoryAndOrFileName {
+        get { return (this._directory); }
+        set { this._directory = value; this._InvalidateFullPath(); }
+      }
       public string FullPath {
         get { return (this._fullPath); }
         set {
@@ -197,7 +253,9 @@ namespace System.IO {
         var value = this._fullPath;
         // extract server
         if (value != null && value.StartsWith(_pathSeparator + string.Empty + _pathSeparator)) {
+#if NETFX_4
           Contract.Assume(value.Length > 2);
+#endif
           var idx = value.IndexOf(_pathSeparator, 2);
           if (idx < 0) {
             this._server = value.Substring(2);
@@ -212,7 +270,9 @@ namespace System.IO {
 
         // extract share
         if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
+#if NETFX_4
           Contract.Assume(value.Length > 1);
+#endif
           var idx = value.IndexOf(_pathSeparator, 1);
           if (idx < 0) {
             this._share = value.Substring(1);

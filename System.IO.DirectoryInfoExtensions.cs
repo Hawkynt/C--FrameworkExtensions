@@ -20,11 +20,20 @@
 #endregion
 
 using System.Collections.Generic;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
+#if NETFX_45
+using System.Runtime.CompilerServices;
+#endif
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.IO {
   /// <summary>
   /// Extensions for the DirectoryInfo type.
@@ -32,6 +41,16 @@ namespace System.IO {
   internal static partial class DirectoryInfoExtensions {
 
     #region nested types
+
+    private class SubdirectoryInfo {
+      public SubdirectoryInfo(DirectoryInfo directory, string pathRelativeToRoot) {
+        this.Directory = directory;
+        this.PathRelativeToRoot = pathRelativeToRoot;
+      }
+
+      public DirectoryInfo Directory { get; }
+      public string PathRelativeToRoot { get; }
+    }
 
     private static class NativeMethods {
       [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -59,6 +78,93 @@ namespace System.IO {
       DeepestPathFirst,
     }
     #endregion
+
+    /// <summary>
+    /// Deletes all files and directories in this DirectoryInfo.
+    /// </summary>
+    /// <param name="this">This DirectoryInfo.</param>
+    /// <exception cref="System.NotSupportedException">Unknown FileSystem item</exception>
+    public static void Clear(this DirectoryInfo @this) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      foreach (var item in @this.EnumerateFileSystemInfos()) {
+#else
+      foreach (var item in @this.GetFileSystemInfos()) {
+#endif
+        var file = item as FileInfo;
+        if (file != null) {
+          file.Delete();
+          continue;
+        }
+
+        var directory = item as DirectoryInfo;
+        if (directory != null) {
+          directory.Delete(true);
+          continue;
+        }
+
+        throw new NotSupportedException("Unknown FileSystem item");
+      }
+    }
+
+    /// <summary>
+    /// Gets the size.
+    /// </summary>
+    /// <param name="this">This DirectoryInfo.</param>
+    /// <returns>The number of bytes in this directory</returns>
+    public static long GetSize(this DirectoryInfo @this) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      // if less than 4 cores, use sequential approach
+      if (Environment.ProcessorCount < 4)
+#if NETFX_4
+        return (@this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum());
+#else
+        return (@this.GetFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum());
+#endif
+
+      // otherwise, use MT approach
+      var result = 0L;
+      long[] itemsLeft = { 1L };
+      var evente = new AutoResetEvent(false);
+
+      Action<DirectoryInfo> factory = null;
+      factory = d => {
+        try {
+#if NETFX_4
+          foreach (var item in d.EnumerateFileSystemInfos()) {
+#else
+          foreach (var item in d.GetFileSystemInfos()) {
+#endif
+            var file = item as FileInfo;
+            if (file != null) {
+              Interlocked.Add(ref result, file.Length);
+              continue;
+            }
+
+            var folder = item as DirectoryInfo;
+            if (folder != null) {
+              Interlocked.Increment(ref itemsLeft[0]);
+              if (!ThreadPool.QueueUserWorkItem(_ => factory(folder)))
+                factory.BeginInvoke(folder, factory.EndInvoke, null);
+              continue;
+            }
+
+            throw new NotSupportedException("Unknown FileSystemInfo item");
+          }
+        } finally {
+          Interlocked.Decrement(ref itemsLeft[0]);
+          evente.Set();
+        }
+      };
+      factory.BeginInvoke(@this, factory.EndInvoke, null);
+
+      while (Interlocked.Read(ref itemsLeft[0]) > 0)
+        evente.WaitOne();
+
+      return (result);
+    }
 
     /// <summary>
     /// Given a path, returns the UNC path or the original. (No exceptions
@@ -104,17 +210,28 @@ namespace System.IO {
     /// <exception cref="System.NotSupportedException">RecursionMode</exception>
     public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo This, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
       switch (mode) {
-        case RecursionMode.ToplevelOnly: {
+        case RecursionMode.ToplevelOnly:
+        {
+#if NETFX_4
           foreach (var result in This.EnumerateFileSystemInfos())
+#else
+          foreach (var result in This.GetFileSystemInfos())
+#endif
             yield return (result);
+
           break;
         }
-        case RecursionMode.ShortestPathFirst: {
+        case RecursionMode.ShortestPathFirst:
+        {
           var results = new Queue<DirectoryInfo>();
           results.Enqueue(This);
           while (results.Any()) {
             var result = results.Dequeue();
+#if NETFX_4
             foreach (var fsi in result.EnumerateFileSystemInfos()) {
+#else
+            foreach (var fsi in result.GetFileSystemInfos()) {
+#endif
               yield return (fsi);
               var di = fsi as DirectoryInfo;
               if (di == null)
@@ -126,12 +243,17 @@ namespace System.IO {
           }
           break;
         }
-        case RecursionMode.DeepestPathFirst: {
+        case RecursionMode.DeepestPathFirst:
+        {
           var results = new Stack<DirectoryInfo>();
           results.Push(This);
           while (results.Any()) {
             var result = results.Pop();
+#if NETFX_4
             foreach (var fsi in result.EnumerateFileSystemInfos()) {
+#else
+            foreach (var fsi in result.GetFileSystemInfos()) {
+#endif
               yield return (fsi);
               var di = fsi as DirectoryInfo;
               if (di == null)
@@ -143,7 +265,8 @@ namespace System.IO {
           }
           break;
         }
-        default: {
+        default:
+        {
           throw new NotSupportedException("RecursionMode");
         }
       }
@@ -156,7 +279,9 @@ namespace System.IO {
     /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       This.Refresh();
 
       if (!This.Exists)
@@ -180,7 +305,9 @@ namespace System.IO {
     /// <param name="creationTimeUtc">The date&amp;time.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       This.Refresh();
 
       if (!This.Exists)
@@ -204,7 +331,9 @@ namespace System.IO {
     /// <param name="attributes">The attributes.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       This.Refresh();
 
       if (!This.Exists)
@@ -227,7 +356,9 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryCreate(this DirectoryInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (This.Exists)
         return (true);
 
@@ -245,10 +376,10 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-    public static bool NotExists(this DirectoryInfo This) {
-      Contract.Requires(This != null);
-      return (!This.Exists);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool NotExists(this DirectoryInfo This) => !This.Exists;
 
     /// <summary>
     /// Gets a directory under the current directory.
@@ -256,10 +387,14 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="subdirectories">The relative path to the sub-directory.</param>
     /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
-    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) {
-      Contract.Requires(This != null);
-      return (new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray())));
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+#if NETFX_4
+    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
+#else
+    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
+#endif
 
     /// <summary>
     /// Gets a file under the current directory.
@@ -267,10 +402,14 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="filePath">The relative path to the file.</param>
     /// <returns>A FileInfo instance pointing to the given path.</returns>
-    public static FileInfo File(this DirectoryInfo This, params string[] filePath) {
-      Contract.Requires(This != null);
-      return (new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray())));
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+#if NETFX_4
+    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
+#else
+    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
+#endif
 
     /// <summary>
     /// Determines whether the specified subdirectory exists.
@@ -279,10 +418,12 @@ namespace System.IO {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-      Contract.Requires(This != null);
-      return (This.EnumerateDirectories(searchPattern, searchOption).Any());
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
+#else
+    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.GetDirectories(searchPattern, searchOption).Any();
+#endif
 
     /// <summary>
     /// Determines whether the specified file exists.
@@ -291,17 +432,21 @@ namespace System.IO {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-      Contract.Requires(This != null);
-      return (This.EnumerateFiles(searchPattern, searchOption).Any());
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
+#else
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.GetFiles(searchPattern, searchOption).Any();
+#endif
 
     /// <summary>
     /// Creates the directory recursively.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     public static void CreateDirectory(this DirectoryInfo This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (This.Parent != null && !This.Exists)
         CreateDirectory(This.Parent);
 
@@ -318,20 +463,22 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="target">The target directory to place files.</param>
     public static void CopyTo(this DirectoryInfo This, DirectoryInfo target) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(target != null);
-      var stack = new Stack<Tuple<DirectoryInfo, string>>();
-      stack.Push(Tuple.Create(This, "."));
+#endif
+      var stack = new Stack<SubdirectoryInfo>();
+      stack.Push(new SubdirectoryInfo(This, "."));
       while (stack.Count > 0) {
         var current = stack.Pop();
-        var relativePath = current.Item2;
+        var relativePath = current.PathRelativeToRoot;
         var targetPath = Path.Combine(target.FullName, relativePath);
 
         // create directory if it does not exist
         if (!IO.Directory.Exists(targetPath))
           IO.Directory.CreateDirectory(targetPath);
 
-        foreach (var fileSystemInfo in current.Item1.GetFileSystemInfos()) {
+        foreach (var fileSystemInfo in current.Directory.GetFileSystemInfos()) {
           var fileInfo = fileSystemInfo as FileInfo;
           if (fileInfo != null) {
             fileInfo.CopyTo(Path.Combine(targetPath, fileInfo.Name));
@@ -339,11 +486,146 @@ namespace System.IO {
           }
 
           var directoryInfo = fileSystemInfo as DirectoryInfo;
+#if NETFX_4
           Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
+#endif
 
-          stack.Push(Tuple.Create(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
+          stack.Push(new SubdirectoryInfo(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
         }
+      }
+    }
+
+    /// <summary>
+    /// Gets the or adds a subdirectory.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="name">The name.</param>
+    /// <returns></returns>
+    public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo This, string name) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
+      var fullPath = Path.Combine(This.FullName, name);
+      return IO.Directory.Exists(fullPath) ? new DirectoryInfo(fullPath) : This.CreateSubdirectory(name);
+    }
+
+    /// <summary>
+    /// Determines whether the specified directory contains file.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="fileName">Name of the file.</param>
+    /// <param name="option">The option.</param>
+    /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
+#else
+    public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetFiles(fileName, option).Any();
+#endif
+
+    /// <summary>
+    /// Determines whether the specified directory contains directory.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="directoryName">Name of the directory.</param>
+    /// <param name="option">The option.</param>
+    /// <returns>
+    ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
+    /// </returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
+#else
+    public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetDirectories(directoryName, option).Any();
+#endif
+
+    /// <summary>
+    /// Checks whether the given directory exists and contains at least one file.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="fileMask">The file mask; defaults to '*.*'.</param>
+    /// <returns><c>true</c> if it exists and has matching files; otherwise, <c>false</c>.</returns>
+    public static bool ExistsAndHasFiles(this DirectoryInfo This, string fileMask = "*.*") {
+      if (!This.Exists)
+        return (false);
+
+      try {
+        if (This.HasFile(fileMask, SearchOption.AllDirectories))
+          return (true);
+
+      } catch (IOException) {
+        return (false);
+      }
+      return (false);
+    }
+
+    /// <summary>
+    /// Tries to create a temporary file.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="extension">The extension; defaults to '.tmp'.</param>
+    /// <returns>A temporary file</returns>
+    public static FileInfo GetTempFile(this DirectoryInfo This, string extension = null) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
+      if (extension == null)
+        extension = ".tmp";
+      else
+        extension = '.' + extension.TrimStart('.');
+
+
+      const int LENGTH = 4;
+      const string PREFIX = "tmp";
+      var random = new Random();
+      Func<string> generator = () => {
+        var result = new StringBuilder(16);
+        result.Append(PREFIX);
+        for (var i = 0; i < LENGTH; ++i)
+          result.Append(random.Next(0, 16).ToString("X"));
+        result.Append(extension);
+        return result.ToString();
+      };
+
+      while (true) {
+        var result = This.TryCreateFile(generator(),  FileAttributes.NotContentIndexed | FileAttributes.Temporary);
+        if (result != null)
+          return result;
+      }
+
+    }
+
+    /// <summary>
+    /// Tries to create file.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="fileName">Name of the file.</param>
+    /// <param name="attributes">The attributes; defaults to FileAttributes.Normal.</param>
+    /// <returns>A FileInfo instance or <c>null</c> on error.</returns>
+    public static FileInfo TryCreateFile(this DirectoryInfo This, string fileName, FileAttributes attributes = FileAttributes.Normal) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
+
+      var fullFileName = Path.Combine(This.FullName, fileName);
+      if (IO.File.Exists(fullFileName))
+        return (null);
+
+      try {
+        var fileHandle = IO.File.Open(fullFileName, FileMode.CreateNew, FileAccess.Write);
+        fileHandle.Close();
+        IO.File.SetAttributes(fullFileName, attributes);
+        return (new FileInfo(fullFileName));
+      } catch (UnauthorizedAccessException) {
+
+        // in case multiple threads try to create the same file, this gets fired
+        return (null);
+      } catch (IOException) {
+
+        // file already exists
+        return (null);
       }
     }
   }
 }
+

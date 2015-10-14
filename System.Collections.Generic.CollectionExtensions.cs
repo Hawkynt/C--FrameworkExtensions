@@ -19,30 +19,32 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
+
+// ReSharper disable PartialTypeWithSinglePart
+
 namespace System.Collections.Generic {
   internal static partial class CollectionExtensions {
     /// <summary>
     /// Executes an action on each item.
     /// </summary>
-    /// <typeparam name="TVALUE">The type of the values.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="arrThis">The collection.</param>
     /// <param name="ptrCall">The call to execute.</param>
-    public static void ForEach<TVALUE>(this ICollection<TVALUE> arrThis, Action<TVALUE> ptrCall) {
-      Array.ForEach(arrThis.ToArray(), ptrCall);
-    }
+    public static void ForEach<TValue>(this ICollection<TValue> arrThis, Action<TValue> ptrCall) => Array.ForEach(arrThis.ToArray(), ptrCall);
+
     /// <summary>
     /// Converts all.
     /// </summary>
-    /// <typeparam name="TIN">The type of the input collection.</typeparam>
-    /// <typeparam name="TOUT">The type of the output collection.</typeparam>
+    /// <typeparam name="TIn">The type of the input collection.</typeparam>
+    /// <typeparam name="TOut">The type of the output collection.</typeparam>
     /// <param name="arrThis">The collection.</param>
     /// <param name="ptrConverter">The converter function.</param>
     /// <returns></returns>
-    public static TOUT[] ConvertAll<TIN, TOUT>(this ICollection<TIN> arrThis, Converter<TIN, TOUT> ptrConverter) {
-      return (Array.ConvertAll(arrThis.ToArray(), ptrConverter));
-    }
+    public static TOut[] ConvertAll<TIn, TOut>(this ICollection<TIn> arrThis, Converter<TIn, TOut> ptrConverter) => Array.ConvertAll(arrThis.ToArray(), ptrConverter);
 
     /// <summary>
     /// Adds a range of items.
@@ -51,8 +53,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Collection.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TItem>(this ICollection<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
 
       // PERF: check for special list first
       var list = This as List<TItem>;
@@ -72,8 +76,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Collection.</param>
     /// <param name="items">The items.</param>
     public static void RemoveRange<TItem>(this ICollection<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       foreach (var item in items)
         This.Remove(item);
     }

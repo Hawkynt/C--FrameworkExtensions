@@ -19,15 +19,14 @@
 */
 #endregion
 
-
-#if NET35
-using System.Diagnostics;
-#else
 using System.Diagnostics.Contracts;
-using System.Threading.Tasks;
-#endif
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+
+// ReSharper disable UnusedMember.Global
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
@@ -38,8 +37,32 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="This">This enumeration.</param>
     /// <returns>A hashset</returns>
-    public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> This) {
-      return (new HashSet<TItem>(This));
+    public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> This) => new HashSet<TItem>(This);
+
+    /// <summary>
+    /// Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="comparer">The comparer.</param>
+    /// <returns>
+    /// A hashset
+    /// </returns>
+    public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> This, IEqualityComparer<TItem> comparer) => new HashSet<TItem>(This, comparer);
+
+    /// <summary>
+    /// Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This enumeration.</param>
+    /// <param name="initialCapacity">The initial capacity.</param>
+    /// <returns>
+    /// A hashset
+    /// </returns>
+    public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> This, int initialCapacity) {
+      var items = new List<TItem>(initialCapacity);
+      items.AddRange(This);
+      return (new HashSet<TItem>(items));
     }
 
     /// <summary>
@@ -131,6 +154,28 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>
+    /// Determines whether the enumeration is <c>null</c> or empty.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="predicate">The predicate.</param>
+    /// <returns>
+    ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) {
+      Contract.Requires(predicate != null);
+      if (This == null)
+        return (true);
+
+      using (var enumerator = This.GetEnumerator())
+        while (enumerator.MoveNext())
+          if (predicate(enumerator.Current))
+            return (true);
+
+      return (false);
+    }
+
+    /// <summary>
     /// Concats all byte arrays into one.
     /// </summary>
     /// <param name="This">This Enumerable of byte[].</param>
@@ -138,6 +183,7 @@ namespace System.Collections.Generic {
     public static byte[] ConcatAll(this IEnumerable<byte[]> This) {
       if (This == null)
         return (null);
+
       var chunks = (
         from i in This
         where i != null && i.Length > 0
@@ -159,9 +205,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="This">The this.</param>
     /// <returns></returns>
-    public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> This) {
-      return (This.SelectMany(c => c));
-    }
+    public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> This) => This.SelectMany(c => c as TItem[] ?? c.ToArray());
 
     /// <summary>
     /// Determines whether the specified enumeration contains any of the items given by the second enumeration.
@@ -174,13 +218,8 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> list, IEqualityComparer<TItem> equalityComparer = null) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(list != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(list != null);
-#endif
 
       // we'll cache all visited values from the list, so we don't have to enumerate more than once
       var itemCache = new List<TItem>();
@@ -232,13 +271,8 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumerable.</param>
     /// <param name="action">The action.</param>
     public static void ForEach<TItem>(this IEnumerable<TItem> This, Action<TItem> action) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(action != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
-#endif
 
       foreach (var item in This)
         action(item);
@@ -252,13 +286,8 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(action != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
-#endif
       var index = 0;
       foreach (var item in This)
         action(item, index++);
@@ -270,16 +299,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn> action) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(action != null);
-      foreach (var item in This)
-        action.BeginInvoke(item, action.EndInvoke, null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
       Parallel.ForEach(This, action);
-#endif
     }
 
     /// <summary>
@@ -289,18 +311,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(action != null);
-      var index = 0;
-      foreach (var item in This)
-        action.BeginInvoke(item, index++, action.EndInvoke, null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(action != null);
       var index = 0;
       Parallel.ForEach(This, item => action(item, index++));
-#endif
     }
 
     /// <summary>
@@ -312,13 +326,8 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> This, Func<TIn, TOut> converter) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(converter != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
-#endif
       return (This.Select(converter));
     }
 
@@ -331,13 +340,8 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> This, Func<TIn, int, TOut> converter) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(converter != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
-#endif
       return (This.Select(converter));
     }
 
@@ -352,13 +356,8 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<double> progressCallback, bool delayed = false) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(progressCallback != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
-#endif
       var collection = This as ICollection<TIn> ?? This.ToList();
       return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
     }
@@ -374,13 +373,8 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<long, long> progressCallback, bool delayed = false) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(progressCallback != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
-#endif
       var collection = This as ICollection<TIn> ?? This.ToList();
       return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
     }
@@ -395,13 +389,8 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<double> progressCallback, bool delayed = false) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(progressCallback != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
-#endif
       return (This.AsProgressReporting(length, (i, c) => progressCallback(i == c ? 1 : (double)i / c), delayed));
     }
 
@@ -415,13 +404,8 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<long, long> progressCallback, bool delayed = false) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(progressCallback != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
-#endif
       if (length == 0) {
         progressCallback(0, 0);
       } else {
@@ -451,13 +435,8 @@ namespace System.Collections.Generic {
     /// <param name="condition">The condition.</param>
     /// <returns></returns>
     public static bool All<TSource>(this IEnumerable<TSource> This, Func<TSource, int, bool> condition) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(condition != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(condition != null);
-#endif
 
       // original but slower implementation
       //return (!This.Where((o, i) => !condition(o, i)).Any());
@@ -481,13 +460,8 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>An enumeration with distinct elements.</returns>
     public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> This, Func<TIn, TCompare> selector) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
-#endif
 
       var list = (
         from i in This
@@ -507,9 +481,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>A list of items.</returns>
-    public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> source) {
-      return (source.SelectMany(s => s));
-    }
+    public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> source) => source.SelectMany(s => s as TItem[] ?? s.ToArray());
 
     /// <summary>
     /// Joins the specified elements into a string.
@@ -521,11 +493,7 @@ namespace System.Collections.Generic {
     /// <param name="ptrConverter">The converter.</param>
     /// <returns>The joines string.</returns>
     public static string Join<TIn>(this IEnumerable<TIn> This, string join = ", ", bool skipDefaults = false, Func<TIn, string> ptrConverter = null) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       var result = new StringBuilder();
       var gotElements = false;
       var defaultValue = default(TIn);
@@ -555,13 +523,8 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The index of the matched item or the given default value.</returns>
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, int defaultValue = -1) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
-#endif
       var result = 0;
       foreach (var item in This)
         if (selector(item))
@@ -579,9 +542,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="item">The item.</param>
     /// <returns>The position of the item in the enumeration or -1</returns>
-    public static int IndexOf<TIn>(this IEnumerable<TIn> This, TIn item) {
-      return (This.IndexOrDefault(a => object.Equals(a, item)));
-    }
+    public static int IndexOf<TIn>(this IEnumerable<TIn> This, TIn item) => This.IndexOrDefault(a => Equals(a, item));
 
     /// <summary>
     /// Gets the first item matching the condition or the given default value.
@@ -592,13 +553,8 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
-#endif
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -612,11 +568,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       foreach (var item in This)
         return (item);
 
@@ -631,15 +583,9 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
-#if NET35
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-      Debug.Assert(defaultValueFactory != null);
-#else
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
       Contract.Requires(defaultValueFactory != null);
-#endif
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -656,11 +602,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.Reverse().FirstOrDefault(selector, defaultValue));
     }
 
@@ -672,11 +614,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.Reverse().FirstOrDefault(defaultValue));
     }
 
@@ -689,11 +627,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.Reverse().FirstOrDefault(selector, defaultValueFactory));
     }
 
@@ -704,11 +638,7 @@ namespace System.Collections.Generic {
     /// <param name="This">The this.</param>
     /// <returns></returns>
     public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> This) {
-#if NET35
-      Debug.Assert(This != null);
-#else
       Contract.Requires(This != null);
-#endif
       return (This.OrderBy(i => i));
     }
 
@@ -739,9 +669,7 @@ namespace System.Collections.Generic {
     /// <param name="This">The this.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns></returns>
-    public static IEnumerable<TItem> TakeUntil<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) {
-      return (This.TakeWhile(i => !predicate(i)));
-    }
+    public static IEnumerable<TItem> TakeUntil<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) => This.TakeWhile(i => !predicate(i));
 
     /// <summary>
     /// Skips items until a given condition is met.
@@ -750,9 +678,6 @@ namespace System.Collections.Generic {
     /// <param name="This">The this.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns></returns>
-    public static IEnumerable<TItem> SkipUntil<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) {
-      return (This.SkipWhile(i => !predicate(i)));
-    }
-
+    public static IEnumerable<TItem> SkipUntil<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) => This.SkipWhile(i => !predicate(i));
   }
 }

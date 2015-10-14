@@ -26,7 +26,8 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
+
+// ReSharper disable PartialTypeWithSinglePart
 
 namespace System {
   internal static partial class UriExtensions {
@@ -54,10 +55,10 @@ namespace System {
       Trace.WriteLine(This.AbsoluteUri);
 
       if (This.IsFile)
-        return (encoding == null ? File.ReadAllText(This.AbsolutePath) : File.ReadAllText(This.AbsolutePath, encoding));
+        return (encoding == null ? File.ReadAllText(This.LocalPath) : File.ReadAllText(This.LocalPath, encoding));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
         if (encoding != null)
           webClient.Encoding = encoding;
 
@@ -81,6 +82,11 @@ namespace System {
       }
     }
 
+    private static void _SetWebClientHeaders(WebClient webClient, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
+      foreach (var header in headers ?? _DEFAULT_HEADERS)
+        webClient.Headers.Add(header.Key, header.Value);
+    }
+
     public static Uri GetResponseUri(this Uri This, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
       Contract.Requires(This != null);
       Trace.WriteLine(This.AbsoluteUri);
@@ -89,7 +95,7 @@ namespace System {
         return (This);
 
       using (var webClient = new WebClientFake()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
 
         var nameValCollection = new NameValueCollection();
         if (postValues != null)
@@ -116,17 +122,13 @@ namespace System {
     }
 
     private class WebClientFake : WebClient {
-      Uri _responseUri;
-
-      public Uri ResponseUri {
-        get { return _responseUri; }
-      }
+      public Uri ResponseUri { get; private set; }
 
       #region Overrides of WebClient
       protected override WebResponse GetWebResponse(WebRequest request) {
         try {
           var response = base.GetWebResponse(request);
-          _responseUri = response.ResponseUri;
+          this.ResponseUri = response.ResponseUri;
           return (response);
         } catch (WebException) {
           return (null);
@@ -135,13 +137,14 @@ namespace System {
 
       protected override WebResponse GetWebResponse(WebRequest request, IAsyncResult result) {
         var response = base.GetWebResponse(request, result);
-        _responseUri = response.ResponseUri;
+        this.ResponseUri = response.ResponseUri;
         return (response);
       }
 
       #endregion
     }
 
+#if NETFX_45
     /// <summary>
     /// Reads all text.
     /// </summary>
@@ -156,7 +159,7 @@ namespace System {
         return await (new Task<string>(() => encoding == null ? File.ReadAllText(This.AbsolutePath) : File.ReadAllText(This.AbsolutePath, encoding)));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
         if (encoding != null)
           webClient.Encoding = encoding;
 
@@ -171,6 +174,7 @@ namespace System {
         throw (ex);
       }
     }
+#endif
 
     /// <summary>
     /// Reads all bytes.
@@ -184,10 +188,10 @@ namespace System {
     /// </returns>
     public static byte[] ReadAllBytes(this Uri This, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
       if (This.IsFile)
-        return (File.ReadAllBytes(This.AbsolutePath));
+        return (File.ReadAllBytes(This.LocalPath));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
 
         var nameValCollection = new NameValueCollection();
         if (postValues != null)
@@ -224,12 +228,12 @@ namespace System {
       IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null,
       IDictionary<string, string> postValues = null) {
       if (This.IsFile) {
-        File.Copy(This.AbsolutePath, file.FullName, overwrite);
+        File.Copy(This.LocalPath, file.FullName, overwrite);
         return;
       }
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
 
         var nameValCollection = new NameValueCollection();
         if (postValues != null)
@@ -245,7 +249,7 @@ namespace System {
             if (postValues == null)
               webClient.DownloadFile(This, file.FullName);
             else
-              file.WriteAllBytes(webClient.UploadValues(This, nameValCollection));
+              File.WriteAllBytes(file.FullName, webClient.UploadValues(This, nameValCollection));
 
             return;
           } catch (Exception e) {
@@ -256,6 +260,7 @@ namespace System {
       }
     }
 
+#if NETFX_45
     /// <summary>
     /// Reads all bytes.
     /// </summary>
@@ -273,7 +278,7 @@ namespace System {
         return await (new Task<byte[]>(() => File.ReadAllBytes(This.AbsolutePath)));
 
       using (var webClient = new WebClient()) {
-        webClient.Headers.AddRange(headers ?? _DEFAULT_HEADERS);
+        _SetWebClientHeaders(webClient, headers);
 
         Exception ex = null;
         while (retryCount-- >= 0) {
@@ -286,16 +291,20 @@ namespace System {
         throw (ex);
       }
     }
+#endif
 
     /// <summary>
     /// Gets the base part of the uri.
     /// </summary>
     /// <param name="This">This Uri.</param>
     /// <returns></returns>
-    public static Uri BaseUri(this Uri This) {
-      var result = new Uri(This.Scheme + "://" + This.Host + ":" + This.Port);
-      return (result);
-    }
+    public static Uri BaseUri(this Uri This) => new Uri(This.Scheme + "://" + (
+      This.IsFile
+        ? This.IsUnc
+          ? This.DnsSafeHost
+          : IO.Path.GetPathRoot(This.LocalPath)
+        : This.DnsSafeHost + (This.IsDefaultPort ? string.Empty : ":" + This.Port)
+      ));
 
     /// <summary>
     /// Gets a new uri from this one using a relative path.
@@ -304,11 +313,13 @@ namespace System {
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public static Uri Path(this Uri This, string path) {
-      return (
-        path.IsNullOrWhiteSpace()
+      const char SLASH = '/';
+      return string.IsNullOrWhiteSpace(path)
         ? This
-        : new Uri(This.AbsoluteUri + (path.StartsWith("/") ? path.Substring(1) : path)))
-        ;
+        : path.StartsWith(SLASH)
+          ? new Uri(This.BaseUri().AbsoluteUri.TrimEnd(SLASH) + path)
+          : new Uri(This.AbsoluteUri.TrimEnd(SLASH) + SLASH + path)
+          ;
     }
   }
 }

@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System {
   internal static partial class FunctionExtensions {
@@ -32,8 +38,10 @@ namespace System {
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryInvoke<TResult>(this Func<TResult> This, out TResult result, int repeatCount = 1) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(repeatCount > 0);
+#endif
 
       while (repeatCount-- > 0) {
         try {

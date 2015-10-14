@@ -22,6 +22,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Specialized {
   internal static partial class OrderedDictionaryExtensions {
   }
@@ -41,21 +44,18 @@ namespace System.Collections.Specialized {
       this._keys.Add(key);
     }
 
+    public new void Remove(TKey key) {
+      base.Remove(key);
+      this._keys.Remove(key);
+    }
+
     public new void Clear() {
       base.Clear();
       this._keys.Clear();
     }
 
-    public new IEnumerable<TKey> Keys {
-      get { return (this._keys.Select(k => k)); }
-    }
-
-    public new IEnumerable<TValue> Values {
-      get { return (this._keys.Select(k => this[k])); }
-    }
-
-    public new IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
-      return (this._keys.Select(k => new KeyValuePair<TKey, TValue>(k, this[k])).GetEnumerator());
-    }
+    public new IEnumerable<TKey> Keys => this._keys.Select(k => k);
+    public new IEnumerable<TValue> Values => this._keys.Select(k => this[k]);
+    public new IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => this._keys.Select(k => new KeyValuePair<TKey, TValue>(k, this[k])).GetEnumerator();
   }
 }

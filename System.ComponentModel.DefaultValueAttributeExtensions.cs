@@ -44,8 +44,8 @@ namespace System.ComponentModel {
         try {
           var targetValue = _TryChangeType(prop.PropertyType, value);
           prop.SetValue(This, targetValue, null);
-        } catch (Exception e) {
-          Trace.WriteLine(String.Format("Could not set property to default: type:{0}, property:{1}, value:{2}", type, prop.Name, value));
+        } catch (Exception) {
+          Trace.WriteLine($"Could not set property to default: type:{type}, property:{prop.Name}, value:{value}");
         }
       }
     }
@@ -60,7 +60,7 @@ namespace System.ComponentModel {
         return (Convert.ChangeType(value, targetType));
       if (targetType.IsIntegerType() && sourceType.IsIntegerType() && sourceType.IsSigned() && !targetType.IsSigned() && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
         return (Convert.ChangeType(value, targetType));
-      throw new InvalidOperationException("Can not convert from " + sourceType.FullName + " to " + targetType.FullName);
+      throw new InvalidOperationException($"Can not convert from {sourceType.FullName} to {targetType.FullName}");
     }
   }
 }

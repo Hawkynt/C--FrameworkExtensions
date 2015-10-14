@@ -19,11 +19,33 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
+#if NETFX_45
+using System.Runtime.CompilerServices;
+#endif
 using System.Linq;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic {
   internal static partial class DictionaryExtensions {
+    #region nested types
+
+    /// <summary>
+    /// Used to force the compiler to chose a method-overload with a class constraint on a generic type.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class ClassForcingTag<T> where T : class { private ClassForcingTag() { } }
+    /// <summary>
+    /// Used to force the compiler to chose a method-overload with a struct constraint on a generic type.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class StructForcingTag<T> where T : struct { private StructForcingTag() { } }
+    #endregion
+
     /// <summary>
     /// Adds the given key/value pairs.
     /// Note: the number of parameters must be divisble by two to add all keys.
@@ -33,7 +55,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This Dictionary.</param>
     /// <param name="keyValuePairs">The key/value pairs.</param>
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> This, params object[] keyValuePairs) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (keyValuePairs == null)
         return;
       var length = keyValuePairs.LongLength;
@@ -42,7 +66,9 @@ namespace System.Collections.Generic {
 
       for (var i = 0; i < length; i += 2) {
         var key = keyValuePairs[i];
+#if NETFX_4
         Contract.Assume(i + 1 < keyValuePairs.Length);
+#endif
         var value = keyValuePairs[i + 1];
         This.Add((TKey)key, (TValue)value);
       }
@@ -56,8 +82,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Dictionary.</param>
     /// <param name="keyValuePairs">The key/value pairs.</param>
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> This, IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(keyValuePairs != null);
+#endif
       foreach (var kvp in keyValuePairs)
         This.Add(kvp.Key, kvp.Value);
     }
@@ -73,8 +101,10 @@ namespace System.Collections.Generic {
     /// <returns><c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.</returns>
     /// <remarks></remarks>
     public static bool HasKeyDo<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Action<TKey, TValue> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue value;
       var result = This.TryGetValue(key, out value);
@@ -95,8 +125,10 @@ namespace System.Collections.Generic {
     /// <returns><c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.</returns>
     /// <remarks></remarks>
     public static bool HasKeyDo<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Action<TValue> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue value;
       var result = This.TryGetValue(key, out value);
@@ -113,12 +145,28 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This Dictionary.</param>
     /// <param name="key">The key to lookup.</param>
+    /// <param name="_">Reserved, to be filled by the compiler.</param>
     /// <returns>The value for the given key or the default value for that type if the key did not exist.</returns>
     /// <remarks></remarks>
-    public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key) {
-      Contract.Requires(This != null);
-      return (This.GetValueOrDefault(key, _ => default(TValue)));
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, StructForcingTag<TValue> _ = null) where TValue : struct => This.GetValueOrDefault(key, () => default(TValue));
+
+    /// <summary>
+    /// Gets the value or default.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <param name="This">This Dictionary.</param>
+    /// <param name="key">The key to lookup.</param>
+    /// <param name="_">Reserved, to be filled by the compiler.</param>
+    /// <returns>The value for the given key or the default value for that type if the key did not exist.</returns>
+    /// <remarks></remarks>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, ClassForcingTag<TValue> _ = null) where TValue : class => This.GetValueOrDefault(key, (TValue)null);
 
     /// <summary>
     /// Gets the value or a given default value.
@@ -131,11 +179,47 @@ namespace System.Collections.Generic {
     /// <returns>The value for the given key or the default value if the key did not exist.</returns>
     /// <remarks></remarks>
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, TValue defaultValue) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue result;
       return (This.TryGetValue(key, out result) ? result : defaultValue);
       // ReSharper restore AssignNullToNotNullAttribute
+    }
+
+    /// <summary>
+    /// Gets the value or null.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="This">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="_">Reserved, to be filled by the compiler.</param>
+    /// <returns>The value of the key or <c>null</c></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, ClassForcingTag<TValue> _ = null) where TValue : class {
+      TValue result;
+      return (This.TryGetValue(key, out result) ? result : null);
+    }
+
+    /// <summary>
+    /// Gets the value or null.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="This">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="_">Reserved, to be filled by the compiler.</param>
+    /// <returns>The value of the key or <c>null</c></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, StructForcingTag<TValue> _ = null) where TValue : struct {
+      TValue result;
+      return (This.TryGetValue(key, out result) ? result : (TValue?)null);
     }
 
     /// <summary>
@@ -149,8 +233,10 @@ namespace System.Collections.Generic {
     /// <returns>The value for the given key or the default value if the key did not exist.</returns>
     /// <remarks>The function gets only called when the key did not exist.</remarks>
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Func<TKey, TValue> factory) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(factory != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue result;
       return (This.TryGetValue(key, out result) ? result : factory(key));
@@ -168,8 +254,10 @@ namespace System.Collections.Generic {
     /// <returns>The value for the given key or the default value if the key did not exist.</returns>
     /// <remarks>The function gets only called when the key did not exist.</remarks>
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Func<TValue> factory) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(factory != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue result;
       return (This.TryGetValue(key, out result) ? result : factory());
@@ -186,14 +274,17 @@ namespace System.Collections.Generic {
     /// <param name="value">The new value.</param>
     /// <remarks></remarks>
     public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, TValue value) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(!ReferenceEquals(key, null));
+#endif
       if (This.ContainsKey(key))
         This[key] = value;
       else
         This.Add(key, value);
     }
 
+#if NETFX_4
     /// <summary>
     /// Adds values or updates existings.
     /// </summary>
@@ -211,6 +302,7 @@ namespace System.Collections.Generic {
       }
       // ReSharper restore AssignNullToNotNullAttribute
     }
+#endif
 
     /// <summary>
     /// Adds values or updates existings.
@@ -220,11 +312,15 @@ namespace System.Collections.Generic {
     /// <param name="This">This Dictionary.</param>
     /// <param name="values">The keys/values.</param>
     public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> This, IEnumerable<KeyValuePair<TKey, TValue>> values) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(values != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       foreach (var kvp in values) {
+#if NETFX_4
         Contract.Assume(!ReferenceEquals(kvp.Key, null));
+#endif
         This.AddOrUpdate(kvp.Key, kvp.Value);
       }
       // ReSharper restore AssignNullToNotNullAttribute
@@ -241,14 +337,17 @@ namespace System.Collections.Generic {
     /// <returns>The key's value or the value from the function.</returns>
     /// <remarks></remarks>
     public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Func<TKey, TValue> creatorFunction) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(creatorFunction != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue result;
-      if (!This.TryGetValue(key, out result)) {
-        result = creatorFunction(key);
-        This.Add(key, result);
-      }
+      if (This.TryGetValue(key, out result))
+        return (result);
+
+      result = creatorFunction(key);
+      This.Add(key, result);
       return (result);
       // ReSharper restore AssignNullToNotNullAttribute
     }
@@ -264,14 +363,17 @@ namespace System.Collections.Generic {
     /// <returns>The key's value or the value from the function.</returns>
     /// <remarks></remarks>
     public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, Func<TValue> creatorFunction) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(creatorFunction != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue result;
-      if (!This.TryGetValue(key, out result)) {
-        result = creatorFunction();
-        This.Add(key, result);
-      }
+      if (This.TryGetValue(key, out result))
+        return (result);
+
+      result = creatorFunction();
+      This.Add(key, result);
       return (result);
       // ReSharper restore AssignNullToNotNullAttribute
     }
@@ -287,8 +389,10 @@ namespace System.Collections.Generic {
     /// <returns>The key added.</returns>
     /// <remarks>Can loop infinitely, depending on the function !!!</remarks>
     public static TKey Add<TKey, TValue>(this IDictionary<TKey, TValue> This, TValue value, Func<TKey> generatorFunction) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(generatorFunction != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TKey result;
       do {
@@ -310,8 +414,10 @@ namespace System.Collections.Generic {
     /// <returns>The key added.</returns>
     /// <remarks>Can loop infinitely, depending on the enumeration !!!</remarks>
     public static TKey Add<TKey, TValue>(this IDictionary<TKey, TValue> This, TValue value, IEnumerator<TKey> keyEnumeration) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(keyEnumeration != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TKey result;
       do {
@@ -334,7 +440,9 @@ namespace System.Collections.Generic {
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     /// <remarks></remarks>
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, TValue value) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       if (This.ContainsKey(key))
         return (false);
@@ -354,7 +462,9 @@ namespace System.Collections.Generic {
     /// <returns>A value indicating whether the key was found and removed, or not.</returns>
     /// <remarks></remarks>
     public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, out TValue value) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       var result = This.TryGetValue(key, out value);
       if (result)
@@ -375,7 +485,9 @@ namespace System.Collections.Generic {
     /// <returns><c>true</c> if update was successful; otherwise, <c>false</c>.</returns>
     /// <remarks></remarks>
     public static bool TryUpdate<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key, TValue newValue, TValue comparisonValue) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       // ReSharper disable AssignNullToNotNullAttribute
       TValue oldValue;
       var result = This.TryGetValue(key, out oldValue) && (EqualityComparer<TValue>.Default.Equals(oldValue, comparisonValue));
@@ -394,10 +506,10 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
     /// <param name="This">This Dictionary.</param>
     /// <returns>A new dictionary with the casted values.</returns>
-    public static Dictionary<TKeyTarget, TValueTarget> FullCast<TKeySource, TValueSource, TKeyTarget, TValueTarget>(this IDictionary<TKeySource, TValueSource> This) {
-      Contract.Requires(This != null);
-      return (This.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value));
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static Dictionary<TKeyTarget, TValueTarget> FullCast<TKeySource, TValueSource, TKeyTarget, TValueTarget>(this IDictionary<TKeySource, TValueSource> This) => This.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value);
 
     /// <summary>
     /// Checks if the given key is missing.
@@ -408,8 +520,10 @@ namespace System.Collections.Generic {
     /// <param name="key">The key.</param>
     /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
     public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(!ReferenceEquals(null, key));
+#endif
       return (!This.ContainsKey(key));
     }
   }
@@ -438,7 +552,7 @@ namespace System.Collections.Generic {
     /// </summary>
     /// <param name="keyOrValue">The key or value.</param>
     public void Add(object keyOrValue) {
-      if (_addStateIsValue) {
+      if (this._addStateIsValue) {
         var value = keyOrValue;
         var key = this._lastKeyToAdd;
         this.Add((TKey)key, (TValue)value);
@@ -446,7 +560,7 @@ namespace System.Collections.Generic {
       } else {
         this._lastKeyToAdd = keyOrValue;
       }
-      _addStateIsValue = !_addStateIsValue;
+      this._addStateIsValue = !this._addStateIsValue;
     }
   }
 }

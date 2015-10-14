@@ -19,13 +19,21 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
+
+
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable PartialTypeWithSinglePart
 
 namespace System.Drawing {
   internal static partial class ImageExtensions {
@@ -53,19 +61,18 @@ namespace System.Drawing {
     /// </summary>
     /// <param name="This">The image.</param>
     /// <returns>Number of pages.</returns>
-    public static int GetPageCount(this Image This) {
-      return This.GetFrameCount(FrameDimension.Page);
-    }
+    public static int GetPageCount(this Image This) => This.GetFrameCount(FrameDimension.Page);
 
     /// <summary>
     /// Saves an image into a png file.
     /// </summary>
     /// <param name="This">This image.</param>
     /// <param name="fileName">The file where it should be saved.</param>
-    /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
     public static void SaveToPng(this Image This, string fileName) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(fileName != null);
+#endif
       var encoder = GetEncoder(ImageFormat.Png);
       if (encoder == null)
         throw new NotSupportedException("Png encoder not available");
@@ -81,8 +88,10 @@ namespace System.Drawing {
     /// <param name="fileName">The file where it should be saved.</param>
     /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
     public static void SaveToJpeg(this Image This, string fileName, double quality = 1) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(fileName != null);
+#endif
       var encoder = GetEncoder(ImageFormat.Jpeg);
       if (encoder == null)
         throw new NotSupportedException("Jpeg encoder not available");
@@ -101,8 +110,10 @@ namespace System.Drawing {
     /// <param name="stream">The stream where it should be saved.</param>
     /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
     public static void SaveToJpeg(this Image This, Stream stream, double quality = 1) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(stream != null);
+#endif
       var encoder = GetEncoder(ImageFormat.Jpeg);
       if (encoder == null)
         throw new NotSupportedException("Jpeg encoder not available");
@@ -120,7 +131,9 @@ namespace System.Drawing {
     /// <param name="format">The format to encode.</param>
     /// <returns>A suitable encoder or <c>null</c>.</returns>
     public static ImageCodecInfo GetEncoder(ImageFormat format) {
+#if NETFX_4
       Contract.Requires(format != null);
+#endif
       return (from i in ImageCodecInfo.GetImageEncoders()
               where i.FormatID == format.Guid
               select i).FirstOrDefault();
@@ -139,7 +152,9 @@ namespace System.Drawing {
     /// The icon.
     /// </returns>
     public static Icon ToIcon(this Image This, int targetRes = 0) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       if (targetRes <= 0) {
 
@@ -166,10 +181,7 @@ namespace System.Drawing {
             else {
 
               // if edge length is closer to the next smaller size, take it, otherwise use the next bigger size
-              if (longestEdge - nextLessIconSize < nextBiggerIconSize - longestEdge)
-                targetRes = nextLessIconSize;
-              else
-                targetRes = nextBiggerIconSize;
+              targetRes = longestEdge - nextLessIconSize < nextBiggerIconSize - longestEdge ? nextLessIconSize : nextBiggerIconSize;
             }
           }
         }
@@ -197,7 +209,9 @@ namespace System.Drawing {
     /// <param name="image">The image.</param>
     /// <returns>The BitmapImage</returns>
     public static BitmapImage ToBitmapImage(this Image image) {
+#if NETFX_4
       Contract.Requires(image != null);
+#endif
       using (var memoryStream = new MemoryStream()) {
         image.Save(memoryStream, ImageFormat.Png);
         memoryStream.Position = 0;
@@ -217,7 +231,9 @@ namespace System.Drawing {
     /// <param name="source">The source.</param>
     /// <returns></returns>
     public static Bitmap MakeGrayscale(this Image source) {
-      Contract.Requires(source != null && source is Bitmap);
+#if NETFX_4
+      Contract.Requires(source is Bitmap);
+#endif
       return (source.ApplyPixelProcessor(c => {
         var grayScale = (int)((c.R * .3) + (c.G * .59) + (c.B * .11));
         return (Color.FromArgb(grayScale, grayScale, grayScale));
@@ -231,11 +247,13 @@ namespace System.Drawing {
     /// <param name="threshold">The threshold under which a pixel is considered black.</param>
     /// <returns></returns>
     public static Bitmap Threshold(this Image source, byte threshold = 127) {
-      Contract.Requires(source != null && source is Bitmap);
+#if NETFX_4
+      Contract.Requires(source is Bitmap);
+#endif
       return (source.ApplyPixelProcessor(c => {
         var mean = (c.R + c.G + c.B) / 3.0;
         var color = mean < threshold ? byte.MinValue : byte.MaxValue;
-        return (Color.FromArgb(color, color, color));
+        return (Color.FromArgb(c.A, color, color, color));
       }));
     }
 
@@ -246,8 +264,10 @@ namespace System.Drawing {
     /// <param name="processor">The processor.</param>
     /// <returns>The processed image.</returns>
     public static Bitmap ApplyPixelProcessor(this Image source, Func<Color, Color> processor) {
-      Contract.Requires(source != null && source is Bitmap);
+#if NETFX_4
+      Contract.Requires(source is Bitmap);
       Contract.Requires(processor != null);
+#endif
       var original = (Bitmap)source;
       //make an empty bitmap the same size as original
       var newBitmap = new Bitmap(original.Width, original.Height);
@@ -274,6 +294,9 @@ namespace System.Drawing {
     /// <param name="This">This Image.</param>
     /// <returns>A mirrored image version</returns>
     public static Image MirrorAlongX(this Image This) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
       var result = (Image)This.Clone();
       result.RotateFlip(RotateFlipType.RotateNoneFlipX);
       return (result);
@@ -285,6 +308,9 @@ namespace System.Drawing {
     /// <param name="This">This Image.</param>
     /// <returns>A mirrored image version</returns>
     public static Image MirrorAlongY(this Image This) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
       var result = (Image)This.Clone();
       result.RotateFlip(RotateFlipType.RotateNoneFlipY);
       return (result);
@@ -299,9 +325,11 @@ namespace System.Drawing {
     /// <param name="interpolation">The interpolation.</param>
     /// <returns></returns>
     public static Bitmap Resize(this Image This, int width = -1, int height = -1, InterpolationMode interpolation = InterpolationMode.Default) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (width < 1 && height < 1)
-        throw new ArgumentException("At least one argument has to be > 0", "width");
+        throw new ArgumentException("At least one argument has to be > 0", nameof(width));
 
       // aspect ratio-preserving resize
       if (width < 1)
@@ -328,19 +356,31 @@ namespace System.Drawing {
     /// <param name="angle">The angle.</param>
     /// <returns></returns>
     public static Bitmap Rotate(this Image This, float angle) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = new Bitmap(This);
-      if (Math.Abs(angle) % 360 == 0)
+
+      while (angle < 0)
+        angle += 360;
+
+      if (angle >= 360)
+        angle = angle % 360;
+
+      if (angle == 0)
         return (result);
-      if (angle == 90 || angle == -270) {
+
+      if (angle == 90) {
         result.RotateFlip(RotateFlipType.Rotate90FlipNone);
         return (result);
       }
-      if (Math.Abs(angle) % 180 == 0) {
+
+      if (angle == 180) {
         result.RotateFlip(RotateFlipType.Rotate180FlipNone);
         return (result);
       }
-      if (angle == 270 || angle == -90) {
+
+      if (angle == 270) {
         result.RotateFlip(RotateFlipType.Rotate270FlipNone);
         return (result);
       }
@@ -353,5 +393,126 @@ namespace System.Drawing {
       }
       return (result);
     }
+
+    /// <summary>
+    /// Prints the image using the system's printer dialog.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <param name="documentName">Name of the document.</param>
+    /// <param name="dialog">The dialog to use; creates its own when none is given.</param>
+    /// <returns>The used printersettings</returns>
+    public static PrinterSettings PrintImageWithDialog(this Image This, string documentName = null, PrintDialog dialog = null) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
+      using (var document = new PrintDocument()) {
+        var pageCount = This.GetPageCount();
+
+        var noDialog = dialog == null;
+        try {
+
+          if (noDialog)
+            dialog = new PrintDialog();
+
+          if (documentName != null)
+            document.DocumentName = documentName;
+
+          var currentPageIndex = 0;
+          document.PrintPage += (o, ea) => {
+
+            using (var currentPage = This.GetPageAt(currentPageIndex)) {
+              var imageIsLandscape = currentPage.Width > currentPage.Height;
+              var marginBounds = ea.PageBounds;
+              var paperIsLandscape = marginBounds.Width > marginBounds.Height;
+              Image printImage = null;
+              try {
+                printImage = imageIsLandscape == paperIsLandscape ? currentPage : currentPage.Rotate(90);
+
+                var ratio = printImage.Width / (double)printImage.Height;
+                if (marginBounds.Width / ratio > marginBounds.Height)
+                  marginBounds.Width = (int)(marginBounds.Height * ratio);
+                else
+                  marginBounds.Height = (int)(marginBounds.Width / ratio);
+
+                ea.Graphics.CompositingQuality = CompositingQuality.HighQuality;
+                ea.Graphics.DrawImage(printImage, marginBounds);
+
+              } finally {
+                if (imageIsLandscape != paperIsLandscape)
+                  printImage?.Dispose();
+              }
+            }
+            ea.HasMorePages = ++currentPageIndex < pageCount;
+          };
+
+          dialog.PrinterSettings.MinimumPage = 1;
+          dialog.PrinterSettings.MaximumPage = pageCount;
+          dialog.Document = document;
+
+          if (dialog.ShowDialog() != DialogResult.OK)
+            return (null);
+
+          document.Print();
+          return (document.PrinterSettings);
+
+        } finally {
+          if (noDialog)
+            dialog?.Dispose();
+        }
+      }
+
+    }
+
+    /// <summary>
+    /// Prints the image without a printer dialog.
+    /// </summary>
+    /// <param name="This">This Image.</param>
+    /// <param name="documentName">Name of the document.</param>
+    /// <param name="settings">The settings.</param>
+    public static void PrintImage(this Image This, string documentName = null, PrinterSettings settings = null) {
+#if NETFX_4
+      Contract.Requires(This != null);
+#endif
+      using (var document = new PrintDocument()) {
+        var pageCount = This.GetPageCount();
+
+        if (documentName != null)
+          document.DocumentName = documentName;
+
+        var currentPageIndex = 0;
+        document.PrintPage += (o, ea) => {
+
+          using (var currentPage = This.GetPageAt(currentPageIndex)) {
+            var imageIsLandscape = currentPage.Width > currentPage.Height;
+            var marginBounds = ea.PageBounds;
+            var paperIsLandscape = marginBounds.Width > marginBounds.Height;
+            Image printImage = null;
+            try {
+              printImage = imageIsLandscape == paperIsLandscape ? currentPage : currentPage.Rotate(90);
+
+              var ratio = printImage.Width / (double)printImage.Height;
+              if (marginBounds.Width / ratio > marginBounds.Height)
+                marginBounds.Width = (int)(marginBounds.Height * ratio);
+              else
+                marginBounds.Height = (int)(marginBounds.Width / ratio);
+
+              ea.Graphics.CompositingQuality = CompositingQuality.HighQuality;
+              ea.Graphics.DrawImage(printImage, marginBounds);
+
+            } finally {
+              if (imageIsLandscape != paperIsLandscape)
+                printImage?.Dispose();
+            }
+          }
+          ea.HasMorePages = ++currentPageIndex < pageCount;
+        };
+
+        if (settings != null)
+          document.PrinterSettings = settings;
+
+        document.Print();
+      }
+    }
+
   }
 }

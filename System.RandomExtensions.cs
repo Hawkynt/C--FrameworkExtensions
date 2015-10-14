@@ -20,8 +20,13 @@
 #endregion
 
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Text;
 using qword = System.UInt64;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class RandomExtensions {
     /// <summary>
@@ -31,10 +36,8 @@ namespace System {
     /// <param name="minValue">The min value.</param>
     /// <param name="maxValue">The max value.</param>
     /// <returns>A value between the given boundaries</returns>
-    public static double NextDouble(this Random This, double minValue, double maxValue) {
-      Contract.Requires(This != null);
-      return (This.NextDouble() * (maxValue - minValue) + minValue);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double NextDouble(this Random This, double minValue, double maxValue) => This.NextDouble() * (maxValue - minValue) + minValue;
 
     /// <summary>
     /// Generates a random password.
@@ -54,23 +57,25 @@ namespace System {
       // generate a length
       if (maximumLength < minimumLength)
         maximumLength = minimumLength;
-      qword length;
-      if (maximumLength == minimumLength)
-        length = minimumLength;
-      else {
-        var range = maximumLength - minimumLength;
-        length = (qword)This.Next((int)range) + minimumLength;
-      }
+
+      var length =
+        maximumLength == minimumLength
+        ? minimumLength
+        : (qword)This.Next((int)(maximumLength - minimumLength)) + minimumLength
+        ;
 
       // find out which chars are allowed
       var allowedChars = string.Empty;
       if (string.IsNullOrEmpty(allowedCharset)) {
         if (useLetters)
           allowedChars += allowCaseSensitive ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
         if (allowNumbers)
           allowedChars += "0123456789";
+
         if (allowSpecialChars)
           allowedChars += @"!""$%&/()=?{[]}\#+*~-_.:,;<>@";
+
       } else {
         allowedChars = allowedCharset;
       }

@@ -33,7 +33,7 @@ namespace System.Security.Cryptography {
 
     #region Overrides of HashAlgorithm
 
-    public override void Initialize() {
+    public override sealed void Initialize() {
       this._state = 0;
     }
 

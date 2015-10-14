@@ -19,7 +19,9 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Threading.Tasks {
   /// <summary>
@@ -56,9 +58,11 @@ namespace System.Threading.Tasks {
     private Thread _currentThread;
 
     public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
+#if NETFX_4
       Contract.Requires(action != null);
+#endif
       this._action = action;
-      this._waitTime = waitTime == null ? TimeSpan.FromMilliseconds(_DEFAULT_WAIT_TIME_IN_MSECS) : waitTime.Value;
+      this._waitTime = waitTime ?? TimeSpan.FromMilliseconds(_DEFAULT_WAIT_TIME_IN_MSECS);
       this._allowTaskOverlapping = allowTaskOverlapping;
       this._autoAbortOnSchedule = autoAbortOnSchedule;
     }
@@ -71,7 +75,7 @@ namespace System.Threading.Tasks {
       if (this._autoAbortOnSchedule)
         this.Abort();
 
-      Interlocked.Exchange(ref _currentValue, Item.Schedule(value));
+      Interlocked.Exchange(ref this._currentValue, Item.Schedule(value));
 
       this._RunThreadIfNeeded();
     }
@@ -81,7 +85,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="value">The value.</param>
     public void Now(TValue value) {
-      Interlocked.Exchange(ref _currentValue, Item.Now(value));
+      Interlocked.Exchange(ref this._currentValue, Item.Now(value));
       if (this._autoAbortOnSchedule)
         this.Abort();
 

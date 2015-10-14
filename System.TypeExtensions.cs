@@ -19,19 +19,23 @@
 */
 #endregion
 
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Microsoft.Win32;
-#if !NET35
 using System.Diagnostics;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+using System.Collections.Concurrent;
 #endif
 using System.Linq;
 using System.Reflection;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class TypeExtensions {
+    #region nested types
     /// <summary>
     /// Holds information about properties which are important for designer components.
     /// </summary>
@@ -48,7 +52,7 @@ namespace System {
       /// <summary>
       /// Gets the name.
       /// </summary>
-      public string Name { get { return this.__name ?? (this.__name = (this.Info == null ? null : this.Info.Name)); } }
+      public string Name => this.__name ?? (this.__name = this.Info?.Name);
 
       /// <summary>
       /// Gets a value indicating whether this instance is readable.
@@ -56,7 +60,7 @@ namespace System {
       /// <value>
       /// 	<c>true</c> if this instance is readable; otherwise, <c>false</c>.
       /// </value>
-      public bool IsReadable { get { return (this.Info != null && this.Info.CanRead); } }
+      public bool IsReadable => this.Info != null && this.Info.CanRead;
 
       /// <summary>
       /// Gets a value indicating whether this instance is writable.
@@ -64,7 +68,7 @@ namespace System {
       /// <value>
       /// 	<c>true</c> if this instance is writable; otherwise, <c>false</c>.
       /// </value>
-      public bool IsWritable { get { return (this.Info != null && this.Info.CanWrite && !this.ReadOnly); } }
+      public bool IsWritable => this.Info != null && this.Info.CanWrite && !this.ReadOnly;
 
       /// <summary>
       /// Cache
@@ -73,11 +77,7 @@ namespace System {
       /// <summary>
       /// Gets the descriptions.
       /// </summary>
-      public string Descriptions {
-        get {
-          return (this.__description ?? (this.__description = this._customAttributes.OfType<DescriptionAttribute>().Where(i => i != null).Select(i => i.Description).FirstOrDefault()));
-        }
-      }
+      public string Descriptions => this.__description ?? (this.__description = this._customAttributes.OfType<DescriptionAttribute>().Where(i => i != null).Select(i => i.Description).FirstOrDefault());
 
       /// <summary>
       /// Cache
@@ -86,11 +86,7 @@ namespace System {
       /// <summary>
       /// Gets the descriptions.
       /// </summary>
-      public string DisplayName {
-        get {
-          return (this.__displayName ?? (this.__displayName = this._customAttributes.OfType<DisplayNameAttribute>().Where(i => i != null).Select(i => i.DisplayName).FirstOrDefault()));
-        }
-      }
+      public string DisplayName => this.__displayName ?? (this.__displayName = this._customAttributes.OfType<DisplayNameAttribute>().Where(i => i != null).Select(i => i.DisplayName).FirstOrDefault());
 
       /// <summary>
       /// Cache
@@ -99,11 +95,7 @@ namespace System {
       /// <summary>
       /// Gets the categories.
       /// </summary>
-      public string Category {
-        get {
-          return (this.__category ?? (this.__category = this._customAttributes.OfType<CategoryAttribute>().Where(i => i != null).Select(i => i.Category).FirstOrDefault()));
-        }
-      }
+      public string Category => this.__category ?? (this.__category = this._customAttributes.OfType<CategoryAttribute>().Where(i => i != null).Select(i => i.Category).FirstOrDefault());
 
       /// <summary>
       /// Cache
@@ -112,11 +104,7 @@ namespace System {
       /// <summary>
       /// Gets the categories.
       /// </summary>
-      public bool ReadOnly {
-        get {
-          return (bool)(this.__readOnly ?? (this.__readOnly = this._customAttributes.OfType<ReadOnlyAttribute>().Where(i => i != null).Any(i => i.IsReadOnly)));
-        }
-      }
+      public bool ReadOnly => (bool)(this.__readOnly ?? (this.__readOnly = this._customAttributes.OfType<ReadOnlyAttribute>().Where(i => i != null).Any(i => i.IsReadOnly)));
 
       /// <summary>
       /// Cache
@@ -125,11 +113,7 @@ namespace System {
       /// <summary>
       /// Gets the editor browseable states.
       /// </summary>
-      public IEnumerable<EditorBrowsableState> EditorBrowseableStates {
-        get {
-          return (this.__editorBrowseableStates ?? (this.__editorBrowseableStates = this._customAttributes.OfType<EditorBrowsableAttribute>().Where(i => i != null).Select(i => i.State)));
-        }
-      }
+      public IEnumerable<EditorBrowsableState> EditorBrowseableStates => this.__editorBrowseableStates ?? (this.__editorBrowseableStates = this._customAttributes.OfType<EditorBrowsableAttribute>().Where(i => i != null).Select(i => i.State));
 
       /// <summary>
       /// Cache
@@ -141,20 +125,18 @@ namespace System {
       /// <value>
       /// The type of the property.
       /// </value>
-      public Type PropertyType {
-        get { return this.__propertyType ?? (this.__propertyType = (this.Info == null ? TypeObject : this.Info.PropertyType)); }
-      }
+      public Type PropertyType => this.__propertyType ?? (this.__propertyType = this.Info?.PropertyType ?? TypeObject);
+
       #region value getter
       public object GetValue(object instance = null) {
         var propertyInfo = this.Info;
-#if !NET35
+#if NETFX_4
         Contract.Assume(propertyInfo != null);
 #endif
         return (propertyInfo.GetValue(instance, null));
       }
-      public TValue GetValue<TValue>(object instance = null) {
-        return ((TValue)this.GetValue(instance));
-      }
+      public TValue GetValue<TValue>(object instance = null) => (TValue)this.GetValue(instance);
+
       public object GetValueOrDefault(object instance = null, object defaultValue = null) {
         try {
           return (this.GetValue(instance));
@@ -224,41 +206,41 @@ namespace System {
       #region value setter
       public void SetValue(object value) {
         var propertyInfo = this.Info;
-#if !NET35
+#if NETFX_4
         Contract.Assume(propertyInfo != null);
 #endif
         propertyInfo.SetValue(null, value, null);
       }
       public void SetValue(object instance, object value) {
         var propertyInfo = this.Info;
-#if !NET35
+#if NETFX_4
         Contract.Assume(propertyInfo != null);
 #endif
         propertyInfo.SetValue(instance, value, null);
       }
       public bool TrySetValue(object value) {
         var propertyInfo = this.Info;
-#if !NET35
+#if NETFX_4
         Contract.Assume(propertyInfo != null);
 #endif
         try {
           propertyInfo.SetValue(null, value, null);
           return (true);
         } catch (Exception e) {
-          Trace.WriteLine(string.Format("Could not set static property {0}: {1}", this.Name, e));
+          Trace.WriteLine($"Could not set static property {this.Name}: {e}");
           return (false);
         }
       }
       public bool TrySetValue(object instance, object value) {
         var propertyInfo = this.Info;
-#if !NET35
+#if NETFX_4
         Contract.Assume(propertyInfo != null);
 #endif
         try {
           propertyInfo.SetValue(instance, value, null);
           return (true);
         } catch (Exception e) {
-          Trace.WriteLine(string.Format("Could not set instance property {0}: {1}", this.Name, e));
+          Trace.WriteLine($"Could not set instance property {this.Name}: {e}");
           return (false);
         }
       }
@@ -270,16 +252,30 @@ namespace System {
       /// <summary>
       /// Gets all custom attributes.
       /// </summary>
-      private object[] _customAttributes { get { return (this.__customAttributes ?? (this.__customAttributes = this.Info == null ? new object[0] : this.Info.GetCustomAttributes(true))); } }
+      private object[] _customAttributes => this.__customAttributes ?? (this.__customAttributes = this.Info?.GetCustomAttributes(true) ?? new object[0]);
 
       public PropertyDesignerDetails(PropertyInfo info)
         : this() {
-#if !NET35
+#if NETFX_4
         Contract.Requires(info != null);
 #endif
         this.Info = info;
       }
     }
+
+    /// <summary>
+    /// Holds parameters and their type information for ctor calls.
+    /// </summary>
+    private class CtorParameter {
+      public CtorParameter(Type type, object value) {
+        this.Type = type;
+        this.Value = value;
+      }
+
+      public Type Type { get; }
+      public object Value { get; }
+    }
+    #endregion
 
     #region specific type
     public static readonly Type TypeVoid = typeof(void);
@@ -325,13 +321,13 @@ namespace System {
     ///   <c>true</c> if the given type can be casted to the target; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCastableTo(this Type This, Type target) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(target != null);
 
 #else
-      Diagnostics.Debug.Assert(This != null);
-      Diagnostics.Debug.Assert(target != null);
+      Debug.Assert(This != null);
+      Debug.Assert(target != null);
 #endif
       // check inheritance
       if (target.IsAssignableFrom(This))
@@ -339,7 +335,9 @@ namespace System {
 
       // check cache
       if (_IMPLICIT_CONVERSIONS.ContainsKey(target)) {
+#if NETFX_4
         Contract.Assume(_IMPLICIT_CONVERSIONS[target] != null);
+#endif
         if (_IMPLICIT_CONVERSIONS[target].Contains(This))
           return true;
       }
@@ -362,23 +360,27 @@ namespace System {
     ///   <c>true</c> if this Type can be casted from the source; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCastableFrom(this Type This, Type source) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(source != null);
 
 #else
-      Diagnostics.Debug.Assert(This != null);
-      Diagnostics.Debug.Assert(source != null);
+      Debug.Assert(This != null);
+      Debug.Assert(source != null);
 #endif
       return (source.IsCastableTo(This));
     }
     #endregion
 
     #region messing for designers
+
     /// <summary>
     /// Cache
     /// </summary>
+#if NETFX_4
     private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>> _typeCache = new ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>>();
+#endif
+
     /// <summary>
     /// Gets the designer detailed properties from a given type.
     /// </summary>
@@ -386,15 +388,16 @@ namespace System {
     /// <param name="bindingFlags">The bindingflags to use, defaults to Public and Instance.</param>
     /// <returns>An array of PropertyDesignerDetails.</returns>
     public static PropertyDesignerDetails[] GetDesignerProperties(this Type This, BindingFlags? bindingFlags = null) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
 
+      // ReSharper disable once JoinDeclarationAndInitializer
       PropertyDesignerDetails[] result;
 
-#if !NET35
+#if NETFX_4
       if (bindingFlags == null)
         bindingFlags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -408,7 +411,7 @@ namespace System {
       var props = This.GetProperties(bindingFlags.Value);
       result = Array.ConvertAll(props, i => new PropertyDesignerDetails(i));
 
-#if !NET35
+#if NETFX_4
       // try to add to cache
       inner = _typeCache.GetOrAdd(This, i => new ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>());
       inner.TryAdd(bindingFlags.Value, result);
@@ -426,10 +429,10 @@ namespace System {
     /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
     /// <returns>The given attribute instance.</returns>
     public static TAttribute GetAssemblyAttribute<TAttribute>(this Type This, bool inherit = false, int index = 0) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
       return ((TAttribute)This.Assembly.GetCustomAttributes(typeof(TAttribute), inherit)[index]);
     }
@@ -440,10 +443,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns></returns>
     public static string SimpleName(this Type This) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
       var name = This.FullName;
       return (name == null ? null : name.Contains(".") ? name.Substring(name.LastIndexOf('.') + 1) : name);
@@ -457,10 +460,10 @@ namespace System {
     ///   <c>true</c> if the specified type is integer; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsIntegerType(this Type This) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
       return (This == TypeByte) || (This == TypeSByte) || (This == TypeShort) || (This == TypeWord) || (This == TypeInt) || (This == TypeDWord) || (This == TypeLong) || (This == TypeQWord);
     }
@@ -471,10 +474,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>The minium value supported for this type.</returns>
     public static decimal GetMinValueForIntType(this Type This) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
       if (This == TypeByte)
         return (byte.MinValue);
@@ -501,10 +504,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>The maxium value supported for this type.</returns>
     public static decimal GetMaxValueForIntType(this Type This) {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
+      Debug.Assert(This != null);
 #endif
       if (This == TypeByte)
         return (byte.MaxValue);
@@ -532,14 +535,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified this is signed; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsSigned(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This == TypeSByte) || (This == TypeShort) || (This == TypeInt) || (This == TypeLong) || (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
-    }
+    public static bool IsSigned(this Type This) => (This == TypeSByte) || (This == TypeShort) || (This == TypeInt) || (This == TypeLong) || (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified this is unsigned.
@@ -548,14 +544,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified this is unsigned; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsUnsigned(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (!This.IsSigned());
-    }
+    public static bool IsUnsigned(this Type This) => !IsSigned(This);
 
     /// <summary>
     /// Determines whether the specified type is a float type.
@@ -564,14 +553,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsFloatType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
-    }
+    public static bool IsFloatType(this Type This) => (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified type is a float type.
@@ -580,14 +562,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsDecimalType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This == TypeDecimal);
-    }
+    public static bool IsDecimalType(this Type This) => (This == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified type is a string.
@@ -596,14 +571,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a string type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsStringType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This == TypeString);
-    }
+    public static bool IsStringType(this Type This) => (This == TypeString);
 
     /// <summary>
     /// Determines whether the specified type is a boolean type.
@@ -612,14 +580,8 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a boolean type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsBooleanType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This == TypeBool);
-    }
+    public static bool IsBooleanType(this Type This) => (This == TypeBool);
+
     /// <summary>
     /// Determines whether the specified type is a TimeSpan type.
     /// </summary>
@@ -627,12 +589,8 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a TimeSpan type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsTimeSpanType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#endif
-      return (This == TypeTimeSpan);
-    }
+    public static bool IsTimeSpanType(this Type This) => (This == TypeTimeSpan);
+
     /// <summary>
     /// Determines whether the specified type is a DateTime type.
     /// </summary>
@@ -640,12 +598,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is a DateTime type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsDateTimeType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#endif
-      return (This == TypeDateTime);
-    }
+    public static bool IsDateTimeType(this Type This) => (This == TypeDateTime);
 
     /// <summary>
     /// Determines whether the specified type is an enum.
@@ -654,14 +607,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given type is an enum; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsEnumType(this Type This) {
-#if !NET35
-      Contract.Requires(This != null);
-#else
-      Diagnostics.Debug.Assert(This != null);
-#endif
-      return (This.IsEnum);
-    }
+    public static bool IsEnumType(this Type This) => (This.IsEnum);
+
+    /// <summary>
+    /// Determines whether the specified type is nullable.
+    /// </summary>
+    /// <param name="This">This Type.</param>
+    /// <returns><c>true</c> if it is Nullable; otherwise, <c>false</c>.</returns>
+    public static bool IsNullable(this Type This) => This.IsGenericType && This.GetGenericTypeDefinition() == typeof(Nullable<>);
 
     /// <summary>
     /// Gets the attribute value.
@@ -673,14 +626,14 @@ namespace System {
     /// <param name="getter">The getter.</param>
     /// <returns></returns>
     public static TValue GetFieldOrPropertyAttributeValue<TAttributeType, TValue>(this Type This, string fieldName, Func<TAttributeType, TValue> getter) where TAttributeType : Attribute {
-#if !NET35
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(fieldName != null);
       Contract.Requires(getter != null);
 #else
-      Diagnostics.Debug.Assert(This != null);
-      Diagnostics.Debug.Assert(fieldName != null);
-      Diagnostics.Debug.Assert(getter != null);
+      Debug.Assert(This != null);
+      Debug.Assert(fieldName != null);
+      Debug.Assert(getter != null);
 #endif
       object[] attributes;
       var field = This.GetField(fieldName);
@@ -701,9 +654,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>The value of the displayname attribute if any</returns>
     public static string GetDisplayName(this Type This) {
+#if NETFX_4
       Contract.Requires(This != null);
-      var attribute = This.GetCustomAttributes(false).OfType<DisplayNameAttribute>().FirstOrDefault();
-      return (attribute == null ? null : attribute.DisplayName);
+#endif
+      return This.GetCustomAttributes(false).OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
     }
 
     /// <summary>
@@ -712,9 +666,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>The value of the description attribute if any.</returns>
     public static string GetDescription(this Type This) {
+#if NETFX_4
       Contract.Requires(This != null);
-      var attribute = This.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault();
-      return (attribute == null ? null : attribute.Description);
+#endif
+      return This.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
     }
 
     /// <summary>
@@ -723,10 +678,17 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>The part behind the last dot (.).</returns>
     public static string GetShortTypeName(this Type This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var fullName = This.FullName;
+#if NETFX_4
       if (string.IsNullOrWhiteSpace(fullName))
+#else
+      if (fullName == null || fullName.Trim().Length < 1)
+#endif
         return (fullName);
+
       return (fullName.Split('.').LastOrDefault());
     }
 
@@ -736,7 +698,9 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>Every type in the current app domain, which implements the given type.</returns>
     public static IEnumerable<Type> GetImplementedTypes(this Type This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (
         AppDomain
           .CurrentDomain
@@ -756,8 +720,10 @@ namespace System {
     /// <param name="This">This Type.</param>
     /// <returns>An instance of the given type.</returns>
     public static TType CreateInstance<TType>(this Type This) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(typeof(TType).IsAssignableFrom(This));
+#endif
       return (TType)Activator.CreateInstance(This);
     }
 
@@ -786,9 +752,9 @@ namespace System {
 
       // compare elements
       if (allowImplicitConversion)
-        return (array1.Select((t, i) => Tuple.Create(t, i)).All(t => array2[t.Item2].ParameterType.IsAssignableFrom(t.Item1)));
+        return (array1.Select((t, i) => new { t, i }).All(t => array2[t.i].ParameterType.IsAssignableFrom(t.t)));
 
-      return (array1.Select((t, i) => Tuple.Create(t, i)).All(t => array2[t.Item2].ParameterType == t.Item1));
+      return (array1.Select((t, i) => new { t, i }).All(t => array2[t.i].ParameterType == t.t));
     }
 
     /// <summary>
@@ -800,14 +766,16 @@ namespace System {
     /// <returns>
     /// Anew types' instance.
     /// </returns>
-    private static TType _FromConstructor<TType>(Type type, IEnumerable<Tuple<Type, object>> parameters) {
+    private static TType _FromConstructor<TType>(Type type, IEnumerable<CtorParameter> parameters) {
+#if NETFX_4
       Contract.Requires(type != null && typeof(TType).IsAssignableFrom(type));
       Contract.Requires(parameters != null);
+#endif
       var pars = parameters.ToArray();
 
       var typeOfParams = (
         from i in pars
-        select i.Item1
+        select i.Type
         ).ToArray();
 
       var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -832,7 +800,7 @@ namespace System {
         throw new NotSupportedException("No matching ctor found");
 
       return (TType)matchingCtor.Invoke((from i in pars
-                                         select i.Item2).ToArray());
+                                         select i.Value).ToArray());
 
     }
 
@@ -843,11 +811,9 @@ namespace System {
     /// <typeparam name="TParam0">The type of the 1st parameter.</typeparam>
     /// <param name="param0">The 1st parameter.</param>
     /// <returns>The instance of the given type.</returns>
-    public static TType FromConstructor<TType, TParam0>(this Type type, TParam0 param0) {
-      return _FromConstructor<TType>(type, new[] {
-        Tuple.Create(typeof (TParam0), (object)param0)
-      });
-    }
+    public static TType FromConstructor<TType, TParam0>(this Type type, TParam0 param0) => _FromConstructor<TType>(type, new[] {
+      new CtorParameter(typeof (TParam0), param0)
+    });
 
     /// <summary>
     /// Creates an instance of the given type by calling the ctor with the given parameter type.
@@ -860,12 +826,10 @@ namespace System {
     /// <returns>
     /// The instance of the given type.
     /// </returns>
-    public static TType FromConstructor<TType, TParam0, TParam1>(this Type type, TParam0 param0, TParam1 param1) {
-      return _FromConstructor<TType>(type, new[] {
-        Tuple.Create(typeof (TParam0), (object)param0),
-        Tuple.Create(typeof (TParam1), (object)param1)
-      });
-    }
+    public static TType FromConstructor<TType, TParam0, TParam1>(this Type type, TParam0 param0, TParam1 param1) => _FromConstructor<TType>(type, new[] {
+      new CtorParameter(typeof (TParam0), param0),
+      new CtorParameter(typeof (TParam1), param1)
+    });
 
     /// <summary>
     /// Creates an instance of the given type by calling the ctor with the given parameter type.
@@ -880,13 +844,11 @@ namespace System {
     /// <returns>
     /// The instance of the given type.
     /// </returns>
-    public static TType FromConstructor<TType, TParam0, TParam1, TParam2>(this Type type, TParam0 param0, TParam1 param1, TParam2 param2) {
-      return _FromConstructor<TType>(type, new[] {
-        Tuple.Create(typeof (TParam0), (object)param0),
-        Tuple.Create(typeof (TParam1), (object)param1),
-        Tuple.Create(typeof (TParam2), (object)param2)
-      });
-    }
+    public static TType FromConstructor<TType, TParam0, TParam1, TParam2>(this Type type, TParam0 param0, TParam1 param1, TParam2 param2) => _FromConstructor<TType>(type, new[] {
+      new CtorParameter(typeof (TParam0), param0),
+      new CtorParameter(typeof (TParam1), param1),
+      new CtorParameter(typeof (TParam2), param2)
+    });
 
     /// <summary>
     /// Returns the file location for the given type or COM object.
@@ -902,12 +864,12 @@ namespace System {
 
       var guid = This.GUID;
 
-      var key = string.Format(@"HKEY_CLASSES_ROOT\CLSID\{{{0}}}\InprocServer32", guid);
+      var key = $@"HKEY_CLASSES_ROOT\CLSID\{{{guid}}}\InprocServer32";
       var result = (string)Registry.GetValue(key, null, null);
       if (result != null)
         return (result);
 
-      key = string.Format(@"HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{{{0}}}\LocalServer32", guid);
+      key = $@"HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{{{guid}}}\LocalServer32";
       result = (string)Registry.GetValue(key, null, null);
       return (result);
     }
@@ -921,9 +883,11 @@ namespace System {
     /// <returns>The value of the static property</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
     public static TType GetStaticPropertyValue<TType>(this Type This, string name) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var prop = This.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
-      if (prop == null) throw new ArgumentException("Property not found", "name");
+      if (prop == null) throw new ArgumentException("Property not found", nameof(name));
       return ((TType)prop.GetValue(null, null));
     }
 
@@ -936,9 +900,11 @@ namespace System {
     /// <returns>The value of the static field</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
     public static TType GetStaticFieldValue<TType>(this Type This, string name) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var prop = This.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
-      if (prop == null) throw new ArgumentException("Property not found", "name");
+      if (prop == null) throw new ArgumentException("Property not found", nameof(name));
       return ((TType)prop.GetValue(null));
     }
   }

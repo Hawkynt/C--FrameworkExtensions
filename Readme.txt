@@ -7,5 +7,5 @@ There are some rules for extensions which have proven one's worth:
 * The classname is always "<Type>Extensions". The class is always "internal static partial", thus allowing us to extend it further in a given project
   by adding another partial class with the same name and preventing us from accidentially using the extension in another project in the same solution.
 * All methods must be static.
-* The first parameter of all "public" methods must be the type itself and is called "This". For extensions to static classes like "Math" or "Activator",
+* The first parameter of all "public" methods must be the type itself and is called "@this" or alternatively "This". For extensions to static classes like "Math" or "Activator",
   there is no "This"-parameter.

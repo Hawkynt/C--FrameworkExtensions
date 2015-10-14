@@ -22,12 +22,18 @@
 #endregion
 
 using System.Collections.Generic;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 
 namespace System.ComponentModel {
+  /// <summary>
+  /// A BindingList which is sortable in DataGridViews.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the value.</typeparam>
   public class SortableBindingList<TValue> : BindingList<TValue> {
-    private bool _isSorted = false;
+    private bool _isSorted;
     private ListSortDirection _sortDirection = ListSortDirection.Ascending;
     private PropertyDescriptor _sortProperty;
 
@@ -43,10 +49,13 @@ namespace System.ComponentModel {
     }
 
     public SortableBindingList(IEnumerable<TValue> enumerable) {
+#if NETFX_4
+      Contract.Requires(enumerable != null);
+#endif
       this.AddRange(enumerable);
     }
 
-    public SortableBindingList(List<TValue> list)
+    public SortableBindingList(IList<TValue> list)
       : base(list) { }
 
     private ListChangedEventHandler _listChanged;
@@ -61,58 +70,53 @@ namespace System.ComponentModel {
     /// </summary>
     /// <param name="items">The items.</param>
     public void AddRange(IEnumerable<TValue> items) {
+#if NETFX_4
       Contract.Requires(items != null);
+#endif
       this._blockEvents = true;
-      foreach (var item in items)
-        this.Add(item);
-      this._blockEvents = false;
+      try {
+        foreach (var item in items)
+          this.Add(item);
+      } finally {
+        this._blockEvents = false;
+      }
 
       this._ReApplySortIfNeeded();
-
-      if (this._listChanged != null)
-        this._listChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+      this._listChanged?.Invoke(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 
-    private void _ReApplySortIfNeeded() {
-      if (this.IsSortedCore)
-        this.ApplySortCore();
-    }
+    /// <summary>
+    /// Adds items in the range if they not exist.
+    /// </summary>
+    /// <param name="items">The items.</param>
+    public void AddRangeIfNotExists(IEnumerable<TValue> items) => this.AddRange(items.Distinct().Where(i => !this.Contains(i)));
 
     /// <summary>
     ///   Removes multiple elements from this instance.
     /// </summary>
     /// <param name="items">The items.</param>
     public void RemoveRange(IEnumerable<TValue> items) {
+#if NETFX_4
       Contract.Requires(items != null);
+#endif
       this._blockEvents = true;
-      foreach (var item in items)
-        this.Remove(item);
-      this._blockEvents = false;
+      try {
+        foreach (var item in items)
+          this.Remove(item);
+      } finally {
+        this._blockEvents = false;
+      }
 
       this._ReApplySortIfNeeded();
-      if (this._listChanged != null)
-        this._listChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+      this._listChanged?.Invoke(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 
-    protected override bool SupportsSortingCore {
-      get { return true; }
-    }
+    protected override bool SupportsSortingCore => true;
+    protected override bool IsSortedCore => this._isSorted;
+    protected override ListSortDirection SortDirectionCore => this._sortDirection;
+    protected override PropertyDescriptor SortPropertyCore => this._sortProperty;
 
-    protected override bool IsSortedCore {
-      get { return this._isSorted; }
-    }
-
-    protected override ListSortDirection SortDirectionCore {
-      get { return this._sortDirection; }
-    }
-
-    protected override PropertyDescriptor SortPropertyCore {
-      get { return this._sortProperty; }
-    }
-
-    protected void ApplySortCore() {
-      this.ApplySortCore(this._sortProperty, this._sortDirection);
-    }
+    protected void ApplySortCore() => this.ApplySortCore(this._sortProperty, this._sortDirection);
 
     protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction) {
       this._sortDirection = direction;
@@ -125,24 +129,35 @@ namespace System.ComponentModel {
       IComparer<TValue> comparer = new SortComparer<TValue>(prop, direction);
 
       // stable sorting
-      var pairs = listRef.Select((v, i) => Tuple.Create(v, i)).ToList();
+      var pairs = listRef.Select((v, i) => new { v, i }).ToList();
       pairs.Sort((x, y) => {
-        var result = comparer.Compare(x.Item1, y.Item1);
-        return (result != 0 ? result : x.Item2 - y.Item2);
+        var result = comparer.Compare(x.v, y.v);
+        return (result != 0 ? result : x.i - y.i);
       });
       listRef.Clear();
-      listRef.AddRange(pairs.Select(p => p.Item1));
+      listRef.AddRange(pairs.Select(p => p.v));
 
       // unstable sorting
       //listRef.Sort(comparer);
 
       this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
+
+    /// <summary>
+    /// Reapplies sort core if needed.
+    /// </summary>
+    private void _ReApplySortIfNeeded() {
+      if (this.IsSortedCore)
+        this.ApplySortCore();
+    }
+
   }
 
   internal static class libSortableBindingListSatelliteExtensions {
     public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       return (new SortableBindingList<TItem>(This));
     }
   }

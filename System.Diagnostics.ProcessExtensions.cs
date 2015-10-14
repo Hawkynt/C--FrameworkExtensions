@@ -22,8 +22,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace System.Diagnostics {
   internal static partial class ProcessExtensions {
     /// <summary>     
@@ -77,14 +81,16 @@ namespace System.Diagnostics {
     /// Gets the parent process of the current process.      
     /// </summary>        
     /// <returns>An instance of the Process class.</returns>    
-    public static Process GetParentProcess() { return GetParentProcess(Process.GetCurrentProcess().Handle); }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
 
     /// <summary>       
     /// Gets the parent process of specified process.  
     /// </summary>    
     /// <param name="id">The process id.</param>   
     /// <returns>An instance of the Process class.</returns>   
-    public static Process GetParentProcess(int id) { Process process = Process.GetProcessById(id); return GetParentProcess(process.Handle); }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
 
     /// <summary>   
     /// Gets the parent process of a specified process.   

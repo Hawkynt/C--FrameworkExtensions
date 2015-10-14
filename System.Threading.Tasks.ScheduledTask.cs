@@ -66,39 +66,32 @@ namespace System.Threading.Tasks {
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void Execute(TValue value) {
-      this._Schedule(value, this._deferredTime);
-    }
+    public void Execute(TValue value) => this._Schedule(value, this._deferredTime);
+
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void Restart(TValue value) {
-      this._Schedule(value, this._deferredTime);
-    }
+    public void Restart(TValue value) => this._Schedule(value, this._deferredTime);
+
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void Schedule(TValue value) {
-      this._Schedule(value, this._deferredTime);
-    }
+    public void Schedule(TValue value) => this._Schedule(value, this._deferredTime);
 
     /// <summary>
     /// Executes the handler immediately with the given value.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void Now(TValue value) {
-      this._action(value);
-    }
+    public void Now(TValue value) => this._action(value);
+
     /// <summary>
     /// Schedule an execution with the specified value in at least this timespan.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="deferredTime">The time in ms to defer by.</param>
-    public void Schedule(TValue value, int deferredTime) {
-      this._Schedule(value, deferredTime);
-    }
+    public void Schedule(TValue value, int deferredTime) => this._Schedule(value, deferredTime);
 
     /// <summary>
     /// Is called when the time is over.
@@ -209,34 +202,28 @@ namespace System.Threading.Tasks {
     /// <summary>
     /// Forces the execution now.
     /// </summary>
-    public void ForceExecuteNow() {
-      this._action();
-    }
+    public void ForceExecuteNow() => this._action();
+
     /// <summary>
     /// Schedule an execution.
     /// </summary>
-    public void Execute() {
-      this._Schedule(this._deferredTime);
-    }
+    public void Execute() => this._Schedule(this._deferredTime);
+
     /// <summary>
     /// Schedule an execution.
     /// </summary>
-    public void Restart() {
-      this._Schedule(this._deferredTime);
-    }
+    public void Restart() => this._Schedule(this._deferredTime);
+
     /// <summary>
     /// Schedule an execution.
     /// </summary>
-    public void Schedule() {
-      this._Schedule(this._deferredTime);
-    }
+    public void Schedule() => this._Schedule(this._deferredTime);
+
     /// <summary>
     /// Schedule an execution.
     /// </summary>
     /// <param name="deferredTime">The ms to defer by at least.</param>
-    public void Schedule(int deferredTime) {
-      this._Schedule(deferredTime);
-    }
+    public void Schedule(int deferredTime) => this._Schedule(deferredTime);
 
     /// <summary>
     /// Is called when the time is up.
@@ -324,37 +311,32 @@ namespace System.Threading.Tasks {
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="varValue">The value.</param>
-    public void Execute(TValue varValue) {
-      this._Schedule(varValue, this._deferredTime);
-    }
+    public void Execute(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="varValue">The value.</param>
-    public void Restart(TValue varValue) {
-      this._Schedule(varValue, this._deferredTime);
-    }
+    public void Restart(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
     /// <param name="varValue">The value.</param>
-    public void Schedule(TValue varValue) {
-      this._Schedule(varValue, this._deferredTime);
-    }
+    public void Schedule(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+
     /// <summary>
     /// Schedule an execution with the specified value in at least this timespan.
     /// </summary>
     /// <param name="varValue">The value.</param>
     /// <param name="intDeferredBy">The time in ms to defer by.</param>
-    public void Schedule(TValue varValue, int intDeferredBy) {
-      this._Schedule(varValue, intDeferredBy);
-    }
+    public void Schedule(TValue varValue, int intDeferredBy) => this._Schedule(varValue, intDeferredBy);
+
     /// <summary>
     /// Aborts a running schedule if any.
     /// </summary>
-    public void Abort() {
-      Interlocked.CompareExchange(ref this._taskIsAborted, 1, 0);
-    }
+    public void Abort() => Interlocked.CompareExchange(ref this._taskIsAborted, 1, 0);
+
     /// <summary>
     /// Is called the the time is up.
     /// </summary>

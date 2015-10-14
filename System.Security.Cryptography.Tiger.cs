@@ -653,7 +653,7 @@ namespace System.Security.Cryptography {
 
     #region Overrides of HashAlgorithm
 
-    public override void Initialize() {
+    public override sealed void Initialize() {
       this.state0 = 0x0123456789ABCDEF;
       this.state1 = 0xFEDCBA9876543210;
       this.state2 = 0xF096A5B4C3B2E187;
@@ -735,7 +735,9 @@ namespace System.Security.Cryptography {
     public int OutputBits {
       get { return this._outputBits; }
       set {
-        Contract.Requires(SupportedOutputBits.Contains(value));
+        if (!SupportedOutputBits.Contains(value))
+          throw new ArgumentException();
+
         this._outputBits = value;
       }
     }

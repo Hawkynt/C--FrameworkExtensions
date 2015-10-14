@@ -21,8 +21,12 @@
 
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using qword = System.UInt64;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable PartialTypeWithSinglePart
+
 namespace System.IO {
   /// <summary>
   /// Extensions for Streams.
@@ -151,13 +155,80 @@ namespace System.IO {
       return (This.CanRead ? encoding.GetString(This.ToArray()) : null);
     }
 
-
-    public static void WriteAllText(this Stream This, string data, Encoding encoding = null) {
-      Contract.Requires(This != null);
+    /// <summary>
+    /// Writes all text.
+    /// </summary>
+    /// <param name="this">This <see cref="Stream">Stream</see>.</param>
+    /// <param name="data">The data.</param>
+    /// <param name="encoding">The encoding.</param>
+    public static void WriteAllText(this Stream @this, string data, Encoding encoding = null) {
+      Contract.Requires(@this != null);
       if (encoding == null)
         encoding = Encoding.Default;
 
-      This.Write(encoding.GetBytes(data));
+      @this.Write(encoding.GetBytes(data));
+    }
+
+    /// <summary>
+    /// Reads a struct from the given stream.
+    /// </summary>
+    /// <typeparam name="TStruct">The type of the structure.</typeparam>
+    /// <param name="this">This <see cref="Stream">Stream</see>.</param>
+    /// <returns>The filled structure.</returns>
+    public static TStruct Read<TStruct>(this Stream @this) where TStruct : struct {
+      var size = Marshal.SizeOf(typeof(TStruct));
+      var buffer = new byte[size];
+      @this.Read(buffer, 0, size);
+      return (_BytesToStruct<TStruct>(buffer));
+    }
+
+    /// <summary>
+    /// Converts a managed byte array to a structure.
+    /// </summary>
+    /// <typeparam name="TStruct">The type of the structure.</typeparam>
+    /// <param name="buffer">The buffer.</param>
+    /// <returns>The filled structure</returns>
+    private static TStruct _BytesToStruct<TStruct>(byte[] buffer) where TStruct : struct {
+      var size = buffer.Length;
+      var unmanagedMemory = IntPtr.Zero;
+      try {
+        unmanagedMemory = Marshal.AllocHGlobal(size);
+        Marshal.Copy(buffer, 0, unmanagedMemory, size);
+        var result = (TStruct)Marshal.PtrToStructure(unmanagedMemory, typeof(TStruct));
+        return result;
+      } finally {
+        if (unmanagedMemory != IntPtr.Zero)
+          Marshal.FreeHGlobal(unmanagedMemory);
+      }
+    }
+
+    /// <summary>
+    /// Writes the given structure to the stream.
+    /// </summary>
+    /// <typeparam name="TStruct">The type of the structure.</typeparam>
+    /// <param name="this">This <see cref="Stream">Stream</see>.</param>
+    /// <param name="value">The value.</param>
+    public static void Write<TStruct>(this Stream @this, TStruct value) where TStruct : struct => @this.Write(_StructToBytes(value));
+
+    /// <summary>
+    /// Converts a structure to a byte array.
+    /// </summary>
+    /// <typeparam name="TStruct">The type of the structure.</typeparam>
+    /// <param name="value">The value.</param>
+    /// <returns>A byte array with the content of the structure.</returns>
+    private static byte[] _StructToBytes<TStruct>(TStruct value) where TStruct : struct {
+      var size = Marshal.SizeOf(typeof(TStruct));
+      var unmanagedMemory = IntPtr.Zero;
+      try {
+        unmanagedMemory = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(value, unmanagedMemory, false);
+        var result = new byte[size];
+        Marshal.Copy(unmanagedMemory, result, 0, size);
+        return result;
+      } finally {
+        if (unmanagedMemory != IntPtr.Zero)
+          Marshal.FreeHGlobal(unmanagedMemory);
+      }
     }
   }
 

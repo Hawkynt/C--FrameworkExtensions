@@ -22,40 +22,50 @@ using System.Collections.Generic;
 
 namespace System.ComponentModel {
   public sealed class SortComparer<TValue> : IComparer<TValue> {
-    private readonly PropertyDescriptor _propertyDescriptor = null;
-    private readonly ListSortDirection _sortDirection = ListSortDirection.Ascending;
+    private readonly PropertyDescriptor _propertyDescriptor;
+    private readonly ListSortDirection _sortDirection;
 
     public SortComparer(PropertyDescriptor propertyDescriptor, ListSortDirection listSortDirection) {
-      _propertyDescriptor = propertyDescriptor;
-      _sortDirection = listSortDirection;
+      this._propertyDescriptor = propertyDescriptor;
+      this._sortDirection = listSortDirection;
     }
 
-    int IComparer<TValue>.Compare(TValue x, TValue y) {
-      var xValue = _propertyDescriptor.GetValue(x);
-      var yValue = _propertyDescriptor.GetValue(y);
-      return CompareValues(xValue, yValue, _sortDirection);
-    }
+    int IComparer<TValue>.Compare(TValue x, TValue y) => CompareValues(this._propertyDescriptor.GetValue(x), this._propertyDescriptor.GetValue(y), this._sortDirection);
 
     private static int CompareValues(object xValue, object yValue, ListSortDirection direction) {
-      var retValue = 0;
 
-      if (xValue == null && yValue == null)
+      if (ReferenceEquals(xValue, yValue))
         return (0);
 
-      if (xValue is IComparable) {
+      var factor = direction == ListSortDirection.Ascending ? 1 : -1;
 
-        //can ask the x value
-        retValue = ((IComparable)xValue).CompareTo(yValue);
-      } else if (yValue is IComparable) {
+      if (ReferenceEquals(xValue, null))
+        return (factor);
 
-        //can ask the y value
-        retValue = -((IComparable)yValue).CompareTo(xValue);
-      } else if (!xValue.Equals(yValue)) {
+      if (ReferenceEquals(yValue, null))
+        return (-factor);
 
-        //not comparable, compare string representations
-        retValue = xValue.ToString().CompareTo(yValue.ToString());
-      }
-      return direction == ListSortDirection.Ascending ? retValue : -retValue;
+      var comparable = xValue as IComparable;
+
+      //can ask the x value
+      if (comparable != null)
+        return (factor * comparable.CompareTo(yValue));
+
+      comparable = yValue as IComparable;
+
+      //can ask the y value
+      if (comparable != null)
+        return (-factor * comparable.CompareTo(xValue));
+
+      if (xValue.Equals(yValue))
+        return (0);
+
+      if (yValue.Equals(xValue))
+        return (0);
+
+      //not comparable, compare string representations
+      return (factor * string.Compare(xValue.ToString(), yValue.ToString(), StringComparison.Ordinal));
+
     }
   }
 }

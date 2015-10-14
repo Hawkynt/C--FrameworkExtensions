@@ -20,8 +20,14 @@
 #endregion
 
 using System.Collections.Generic;
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.ComponentModel {
   /// <summary>
@@ -36,7 +42,9 @@ namespace System.ComponentModel {
     /// <param name="This">This BindingList.</param>
     /// <returns>A copy of the list.</returns>
     public static TItem[] ToArray<TItem>(this BindingList<TItem> This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var result = new TItem[This.Count];
       This.CopyTo(result, 0);
       return (result);
@@ -49,8 +57,10 @@ namespace System.ComponentModel {
     /// <param name="This">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       foreach (var item in items)
         This.Add(item);
     }
@@ -62,8 +72,10 @@ namespace System.ComponentModel {
     /// <param name="This">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void MoveToFront<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       var raiseEvents = This.RaiseListChangedEvents;
       try {
         This.RaiseListChangedEvents = false;
@@ -84,8 +96,10 @@ namespace System.ComponentModel {
     /// <param name="This">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void MoveToBack<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       var raiseEvents = This.RaiseListChangedEvents;
       try {
         This.RaiseListChangedEvents = false;
@@ -107,8 +121,10 @@ namespace System.ComponentModel {
     /// <param name="items">The items.</param>
     /// <param name="delta">The delta.</param>
     public static void MoveRelative<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items, int delta) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       if (delta == 0)
         return;
 
@@ -122,6 +138,9 @@ namespace System.ComponentModel {
           var start = 0;
           foreach (var item in items) {
             var index = This.IndexOf(item);
+            if (index < 0)
+              continue;
+
             This.RemoveAt(index);
             var newIndex = index + delta;
             This.Insert(newIndex < 0 ? start++ : newIndex, item);
@@ -130,9 +149,18 @@ namespace System.ComponentModel {
           var end = count;
           foreach (var item in items.Reverse()) {
             var index = This.IndexOf(item);
+            if (index < 0)
+              continue;
+
             This.RemoveAt(index);
             var newIndex = index + delta;
-            This.Insert(newIndex > end ? end-- : newIndex, item);
+            if (newIndex > end) {
+#if NETFX_4
+              Contract.Assume(end >= 0);
+#endif
+              This.Insert(end--, item);
+            } else
+              This.Insert(newIndex, item);
           }
         }
 
@@ -150,8 +178,10 @@ namespace System.ComponentModel {
     /// <param name="This">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void ReplaceAll<T>(this BindingList<T> This, IEnumerable<T> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       var oldState = This.RaiseListChangedEvents;
       try {
         This.RaiseListChangedEvents = false;

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+#region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,22 +19,31 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable PartialTypeWithSinglePart
 
-namespace System.Security.Cryptography {
-  internal static partial class RandomNumberGeneratorExtenions {
+namespace System.Threading.Tasks {
+  internal static partial class TaskExtensions {
     /// <summary>
-    /// Gets a new random number.
+    /// Gets the result or a default value.
     /// </summary>
-    /// <param name="This">This RandomNumberGenerator.</param>
-    /// <param name="maxValue">The maximum exclusive value.</param>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="this">This Task.</param>
+    /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
-    public static int Next(this RandomNumberGenerator This, int maxValue) {
-      Contract.Requires(This != null);
-      var data = new byte[4];
-      This.GetBytes(data);
-      var result = BitConverter.ToInt32(data, 0);
-      return (Math.Abs(result) % maxValue);
+    public static TResult GetResultOrDefault<TResult>(this Task<TResult> @this, TResult defaultValue = default(TResult)) {
+      if (@this.IsFaulted)
+        return (defaultValue);
+
+      if (@this.IsCanceled)
+        return (defaultValue);
+
+      try {
+        return (@this.Result);
+      } catch {
+        return (defaultValue);
+      }
     }
   }
 }
