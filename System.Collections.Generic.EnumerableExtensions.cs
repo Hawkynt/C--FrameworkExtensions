@@ -19,7 +19,9 @@
 */
 #endregion
 
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -74,7 +76,9 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>A hashset</returns>
     public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> This, Func<TItem, TResult> selector) {
+#if NETFX_4
       Contract.Requires(selector != null);
+#endif
       return (new HashSet<TResult>(This.Select(selector)));
     }
 
@@ -126,7 +130,9 @@ namespace System.Collections.Generic {
     /// <param name="rng">The random number generator.</param>
     /// <returns>A shuffled enumeration.</returns>
     public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> This, Random rng = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (rng == null)
         rng = new Random();
 
@@ -163,7 +169,9 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> This, Func<TItem, bool> predicate) {
+#if NETFX_4
       Contract.Requires(predicate != null);
+#endif
       if (This == null)
         return (true);
 
@@ -207,6 +215,21 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> This) => This.SelectMany(c => c as TItem[] ?? c.ToArray());
 
+    public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(
+      this IEnumerable<TItem> @this,
+      Func<TItem, bool> predicate) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(predicate != null);
+#endif
+      var groups = @this.GroupBy(predicate).ToArray();
+      var result = Tuple.Create(
+        groups.Where(i => i.Key).SelectMany(i => i),
+        groups.Where(i => !i.Key).SelectMany(i => i)
+        );
+      return (result);
+    }
+
     /// <summary>
     /// Determines whether the specified enumeration contains any of the items given by the second enumeration.
     /// </summary>
@@ -218,8 +241,10 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> list, IEqualityComparer<TItem> equalityComparer = null) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(list != null);
+#endif
 
       // we'll cache all visited values from the list, so we don't have to enumerate more than once
       var itemCache = new List<TItem>();
@@ -271,8 +296,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumerable.</param>
     /// <param name="action">The action.</param>
     public static void ForEach<TItem>(this IEnumerable<TItem> This, Action<TItem> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
 
       foreach (var item in This)
         action(item);
@@ -286,8 +313,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
+
       var index = 0;
       foreach (var item in This)
         action(item, index++);
@@ -299,8 +329,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
+
       Parallel.ForEach(This, action);
     }
 
@@ -311,8 +344,11 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> This, Action<TIn, int> action) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
+
       var index = 0;
       Parallel.ForEach(This, item => action(item, index++));
     }
@@ -326,8 +362,11 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> This, Func<TIn, TOut> converter) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
+#endif
+
       return (This.Select(converter));
     }
 
@@ -340,8 +379,11 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> This, Func<TIn, int, TOut> converter) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
+#endif
+
       return (This.Select(converter));
     }
 
@@ -356,8 +398,11 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<double> progressCallback, bool delayed = false) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
+
       var collection = This as ICollection<TIn> ?? This.ToList();
       return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
     }
@@ -373,8 +418,11 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, Action<long, long> progressCallback, bool delayed = false) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
+
       var collection = This as ICollection<TIn> ?? This.ToList();
       return (collection.AsProgressReporting((collection).Count, progressCallback, delayed));
     }
@@ -389,8 +437,11 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<double> progressCallback, bool delayed = false) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
+
       return (This.AsProgressReporting(length, (i, c) => progressCallback(i == c ? 1 : (double)i / c), delayed));
     }
 
@@ -404,8 +455,11 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> This, int length, Action<long, long> progressCallback, bool delayed = false) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(progressCallback != null);
+#endif
+
       if (length == 0) {
         progressCallback(0, 0);
       } else {
@@ -435,8 +489,10 @@ namespace System.Collections.Generic {
     /// <param name="condition">The condition.</param>
     /// <returns></returns>
     public static bool All<TSource>(this IEnumerable<TSource> This, Func<TSource, int, bool> condition) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(condition != null);
+#endif
 
       // original but slower implementation
       //return (!This.Where((o, i) => !condition(o, i)).Any());
@@ -460,8 +516,10 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>An enumeration with distinct elements.</returns>
     public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> This, Func<TIn, TCompare> selector) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
 
       var list = (
         from i in This
@@ -493,7 +551,10 @@ namespace System.Collections.Generic {
     /// <param name="ptrConverter">The converter.</param>
     /// <returns>The joines string.</returns>
     public static string Join<TIn>(this IEnumerable<TIn> This, string join = ", ", bool skipDefaults = false, Func<TIn, string> ptrConverter = null) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       var result = new StringBuilder();
       var gotElements = false;
       var defaultValue = default(TIn);
@@ -523,8 +584,11 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The index of the matched item or the given default value.</returns>
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, int defaultValue = -1) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
+
       var result = 0;
       foreach (var item in This)
         if (selector(item))
@@ -553,8 +617,11 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#endif
+
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -568,7 +635,10 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       foreach (var item in This)
         return (item);
 
@@ -583,9 +653,12 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
       Contract.Requires(defaultValueFactory != null);
+#endif
+
       foreach (var item in This.Where(selector))
         return (item);
 
@@ -602,7 +675,10 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, TIn defaultValue = default(TIn)) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       return (This.Reverse().FirstOrDefault(selector, defaultValue));
     }
 
@@ -614,7 +690,10 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, TIn defaultValue) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       return (This.Reverse().FirstOrDefault(defaultValue));
     }
 
@@ -627,7 +706,10 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> This, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       return (This.Reverse().FirstOrDefault(selector, defaultValueFactory));
     }
 
@@ -638,7 +720,10 @@ namespace System.Collections.Generic {
     /// <param name="This">The this.</param>
     /// <returns></returns>
     public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> This) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
+
       return (This.OrderBy(i => i));
     }
 

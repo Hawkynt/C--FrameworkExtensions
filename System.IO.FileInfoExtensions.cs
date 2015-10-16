@@ -774,6 +774,27 @@ namespace System.IO {
     #endregion
 
     /// <summary>
+    /// Tries to delete the given file.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TryDelete(this FileInfo @this) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      try {
+        var fullName = @this.FullName;
+        if (File.Exists(fullName))
+          File.Delete(fullName);
+        else
+          return false;
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    /// <summary>
     /// Tries to create a new file.
     /// </summary>
     /// <param name="This">This FileInfo.</param>

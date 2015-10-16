@@ -24,6 +24,7 @@
 using System.Runtime.CompilerServices;
 #if !NETFX_45
 using System.Diagnostics;
+using System.Linq;
 #endif
 
 // ReSharper disable UnusedMember.Global
@@ -76,9 +77,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -131,9 +140,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -186,9 +203,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -241,9 +266,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -296,9 +329,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -351,9 +392,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -406,9 +455,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -461,9 +518,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -516,9 +581,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -571,9 +644,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -626,9 +707,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -681,9 +770,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -736,9 +833,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -791,9 +896,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
@@ -847,9 +960,17 @@ namespace System.ComponentModel {
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
-        if (method.IsSpecialName && ((name.StartsWith("get_") && method.DeclaringType.GetProperties().Any(p => p.GetGetMethod() == method)) || (name.StartsWith("set_") && method.DeclaringType.GetProperties().Any(p => p.GetSetMethod() == method))))
-          name = name.Substring(4);
-        propertyName=name;
+        if (method.IsSpecialName) {
+          var declaringType = method.DeclaringType;
+          if (
+            declaringType != null && (
+              (name.StartsWith("get_") && declaringType.GetProperties().Any(p => p.GetGetMethod() == method)) ||
+               (name.StartsWith("set_") && declaringType.GetProperties().Any(p => p.GetSetMethod() == method))
+            )
+          )
+            name = name.Substring(4);
+        }
+        propertyName = name;
       }
 #endif
       onPropertyChanging(propertyName);
