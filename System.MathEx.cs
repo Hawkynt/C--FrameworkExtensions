@@ -433,7 +433,9 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static float Round(this float @this, int digits) {
+#if NETFX_4
       Contract.Requires(digits >= 0 && digits <= 15);
+#endif
       return ((float)Math.Round(@this, digits));
     }
 
@@ -453,7 +455,9 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double Round(this double @this, int digits) {
+#if NETFX_4
       Contract.Requires(digits >= 0 && digits <= 15);
+#endif
       return (Math.Round(@this, digits));
     }
 
@@ -473,7 +477,9 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static decimal Round(this decimal @this, int digits) {
+#if NETFX_4
       Contract.Requires(digits >= 0 && digits <= 28);
+#endif
       return (Math.Round(@this, digits));
     }
 

@@ -26,6 +26,9 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
+#if NETFX_45
+using System.Threading.Tasks;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 

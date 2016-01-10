@@ -170,8 +170,9 @@ namespace System.Data.SqlClient {
       Contract.Requires(This != null);
       Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
 
-      var sqlCommand = new StringBuilder();
-      sqlCommand.Append("INSERT INTO " + tableName.MsSqlIdentifierEscape());
+      var sqlCommandTextWithParameters = new StringBuilder();
+      var sqlCommandTextWithoutParameters = new StringBuilder();
+      _AppendToBuilders($"INSERT INTO {tableName.MsSqlIdentifierEscape()}", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
 
       var realValues = values == null ? null : (
         from i in values
@@ -183,13 +184,13 @@ namespace System.Data.SqlClient {
 
       // if there are any columns to insert
       if (realValues != null && realValues.Any()) {
-        sqlCommand.Append(" (");
-        sqlCommand.Append(string.Join(", ", realValues.Select((i, n) => i.ColumnName.MsSqlIdentifierEscape())));
-        sqlCommand.Append(") VALUES (");
-#if DO_NOT_USE_PARAMETERS
-        sqlCommand.Append(string.Join(", ", realValues.Select((i, n) => i.Value.MsSqlDataEscape())));
-#else
-        sqlCommand.Append(string.Join(", ", realValues.Select(i => {
+        _AppendToBuilders(" (", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+        _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.ColumnName.MsSqlIdentifierEscape())), sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+        _AppendToBuilders(") VALUES (", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+        _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.Value.MsSqlDataEscape())), sqlCommandTextWithoutParameters);
+
+#if !DO_NOT_USE_PARAMETERS
+        _AppendToBuilders(string.Join(", ", realValues.Select(i => {
           var name = "@" + _ConvertParameterName(i.ColumnName);
 
           // find a name for the param if it already exists using a counter postfix
@@ -203,16 +204,19 @@ namespace System.Data.SqlClient {
             This.Parameters[name].IsNullable = true;
 
           return (name);
-        })));
+        })), sqlCommandTextWithParameters);
 #endif
-        sqlCommand.Append(")");
+        _AppendToBuilders(")", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
       }
 
       // no identity column, return number of rows affected, usually 1
       if (!tableContainsId) {
-        var numberOfAffectedRows = This.ExecuteNonQuery(sqlCommand.ToString());
 
-#if !DO_NOT_USE_PARAMETERS
+#if DO_NOT_USE_PARAMETERS
+        var numberOfAffectedRows = This.ExecuteNonQuery(sqlCommandNoParams.ToString());
+#else
+        var numberOfAffectedRows = This.ExecuteNonQuery(sqlCommandTextWithParameters.ToString());
+
         // clear parameter list
         This.Parameters.Clear();
 #endif
@@ -221,16 +225,24 @@ namespace System.Data.SqlClient {
       }
 
       // return scope if any
-      sqlCommand.Append(";SELECT SCOPE_IDENTITY() AS [ID]");
-      var result = This.ExecuteScalar(sqlCommand.ToString()) ?? 0;
-      var identityResult = (long)(decimal)result;
+      _AppendToBuilders(";SELECT SCOPE_IDENTITY() AS [ID]", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
 
-#if !DO_NOT_USE_PARAMETERS
+#if DO_NOT_USE_PARAMETERS
+      var result = This.ExecuteScalar(sqlCommandNoParams.ToString()) ?? 0;
+#else
+      var result = This.ExecuteScalar(sqlCommandTextWithParameters.ToString()) ?? 0;
+
       // clear parameter list
       This.Parameters.Clear();
 #endif
 
+      var identityResult = (long)(decimal)result;
       return (identityResult);
+    }
+
+    private static void _AppendToBuilders(string text, StringBuilder sb1, StringBuilder sb2 = null) {
+      sb1.Append(text);
+      sb2?.Append(text);
     }
 
     /// <summary>
@@ -242,9 +254,8 @@ namespace System.Data.SqlClient {
     /// <returns></returns>
     public static IEnumerable<Dictionary<string, object>> GetRecords(this SqlCommand This, string tableName, string whereStatement = null) {
       Contract.Requires(!string.IsNullOrWhiteSpace(whereStatement));
-      var sqlCommand = string.Format("SELECT * FROM {0}", tableName.MsSqlIdentifierEscape());
-      if (whereStatement != null)
-        sqlCommand += " WHERE " + whereStatement;
+      var sqlCommand = $"SELECT * FROM {tableName.MsSqlIdentifierEscape()}";
+      sqlCommand += " WHERE " + whereStatement;
 
       using (var results = This.ExecuteReader(sqlCommand)) {
         foreach (IDataRecord record in results) {

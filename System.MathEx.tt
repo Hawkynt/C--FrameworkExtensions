@@ -149,7 +149,9 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits) {
+#if NETFX_4
       Contract.Requires(digits >= 0 && digits <= <#=item.Item2#>);
+#endif
       return (<#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits));
     }
 

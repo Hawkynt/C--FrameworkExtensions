@@ -315,14 +315,14 @@ namespace System {
     /// <summary>
     /// Determines whether a given type can be casted to another one.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <param name="target">Target type.</param>
     /// <returns>
     ///   <c>true</c> if the given type can be casted to the target; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsCastableTo(this Type This, Type target) {
+    public static bool IsCastableTo(this Type @this, Type target) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(target != null);
 
 #else
@@ -330,7 +330,7 @@ namespace System {
       Debug.Assert(target != null);
 #endif
       // check inheritance
-      if (target.IsAssignableFrom(This))
+      if (target.IsAssignableFrom(@this))
         return true;
 
       // check cache
@@ -338,11 +338,11 @@ namespace System {
 #if NETFX_4
         Contract.Assume(_IMPLICIT_CONVERSIONS[target] != null);
 #endif
-        if (_IMPLICIT_CONVERSIONS[target].Contains(This))
+        if (_IMPLICIT_CONVERSIONS[target].Contains(@this))
           return true;
       }
       return (
-        This.GetMethods(BindingFlags.Public | BindingFlags.Static)
+        @this.GetMethods(BindingFlags.Public | BindingFlags.Static)
         .Any(
           m => m.ReturnType == target &&
           m.Name == "op_Implicit" ||
@@ -354,21 +354,21 @@ namespace System {
     /// <summary>
     /// Determines whether the given type can be casted from the given source type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <param name="source">The source type.</param>
     /// <returns>
     ///   <c>true</c> if this Type can be casted from the source; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsCastableFrom(this Type This, Type source) {
+    public static bool IsCastableFrom(this Type @this, Type source) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(source != null);
 
 #else
       Debug.Assert(This != null);
       Debug.Assert(source != null);
 #endif
-      return (source.IsCastableTo(This));
+      return (source.IsCastableTo(@this));
     }
     #endregion
 
@@ -384,12 +384,12 @@ namespace System {
     /// <summary>
     /// Gets the designer detailed properties from a given type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <param name="bindingFlags">The bindingflags to use, defaults to Public and Instance.</param>
     /// <returns>An array of PropertyDesignerDetails.</returns>
-    public static PropertyDesignerDetails[] GetDesignerProperties(this Type This, BindingFlags? bindingFlags = null) {
+    public static PropertyDesignerDetails[] GetDesignerProperties(this Type @this, BindingFlags? bindingFlags = null) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
@@ -403,17 +403,17 @@ namespace System {
 
       // try to get from cache first
       ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]> inner;
-      if (_typeCache.TryGetValue(This, out inner) && inner != null && inner.TryGetValue(bindingFlags.Value, out result))
+      if (_typeCache.TryGetValue(@this, out inner) && inner != null && inner.TryGetValue(bindingFlags.Value, out result))
         return (result);
 #endif
 
       // harvest properties
-      var props = This.GetProperties(bindingFlags.Value);
+      var props = @this.GetProperties(bindingFlags.Value);
       result = Array.ConvertAll(props, i => new PropertyDesignerDetails(i));
 
 #if NETFX_4
       // try to add to cache
-      inner = _typeCache.GetOrAdd(This, i => new ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>());
+      inner = _typeCache.GetOrAdd(@this, i => new ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>());
       inner.TryAdd(bindingFlags.Value, result);
 #endif
       return (result);
@@ -424,76 +424,76 @@ namespace System {
     /// Gets the assembly attribute.
     /// </summary>
     /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
-    /// <param name="This">This type.</param>
+    /// <param name="this">This type.</param>
     /// <param name="inherit">if set to <c>true</c> inherited attributes would also be returned; otherwise, not.</param>
     /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
     /// <returns>The given attribute instance.</returns>
-    public static TAttribute GetAssemblyAttribute<TAttribute>(this Type This, bool inherit = false, int index = 0) {
+    public static TAttribute GetAssemblyAttribute<TAttribute>(this Type @this, bool inherit = false, int index = 0) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
-      return ((TAttribute)This.Assembly.GetCustomAttributes(typeof(TAttribute), inherit)[index]);
+      return ((TAttribute)@this.Assembly.GetCustomAttributes(typeof(TAttribute), inherit)[index]);
     }
 
     /// <summary>
     /// Simples the name.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns></returns>
-    public static string SimpleName(this Type This) {
+    public static string SimpleName(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
-      var name = This.FullName;
+      var name = @this.FullName;
       return (name == null ? null : name.Contains(".") ? name.Substring(name.LastIndexOf('.') + 1) : name);
     }
 
     /// <summary>
     /// Determines whether the specified type is an integer type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the specified type is integer; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsIntegerType(this Type This) {
+    public static bool IsIntegerType(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
-      return (This == TypeByte) || (This == TypeSByte) || (This == TypeShort) || (This == TypeWord) || (This == TypeInt) || (This == TypeDWord) || (This == TypeLong) || (This == TypeQWord);
+      return (@this == TypeByte) || (@this == TypeSByte) || (@this == TypeShort) || (@this == TypeWord) || (@this == TypeInt) || (@this == TypeDWord) || (@this == TypeLong) || (@this == TypeQWord);
     }
 
     /// <summary>
     /// Gets the minimum value of an int type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The minium value supported for this type.</returns>
-    public static decimal GetMinValueForIntType(this Type This) {
+    public static decimal GetMinValueForIntType(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
-      if (This == TypeByte)
+      if (@this == TypeByte)
         return (byte.MinValue);
-      if (This == TypeSByte)
+      if (@this == TypeSByte)
         return (sbyte.MinValue);
-      if (This == TypeWord)
+      if (@this == TypeWord)
         return (ushort.MinValue);
-      if (This == TypeShort)
+      if (@this == TypeShort)
         return (short.MinValue);
-      if (This == TypeDWord)
+      if (@this == TypeDWord)
         return (uint.MinValue);
-      if (This == TypeInt)
+      if (@this == TypeInt)
         return (int.MinValue);
-      if (This == TypeQWord)
+      if (@this == TypeQWord)
         return (ulong.MinValue);
-      if (This == TypeLong)
+      if (@this == TypeLong)
         return (long.MinValue);
       throw new NotSupportedException();
     }
@@ -501,29 +501,29 @@ namespace System {
     /// <summary>
     /// Gets the maximum value of an int type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The maxium value supported for this type.</returns>
-    public static decimal GetMaxValueForIntType(this Type This) {
+    public static decimal GetMaxValueForIntType(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #else
       Debug.Assert(This != null);
 #endif
-      if (This == TypeByte)
+      if (@this == TypeByte)
         return (byte.MaxValue);
-      if (This == TypeSByte)
+      if (@this == TypeSByte)
         return (sbyte.MaxValue);
-      if (This == TypeWord)
+      if (@this == TypeWord)
         return (ushort.MaxValue);
-      if (This == TypeShort)
+      if (@this == TypeShort)
         return (short.MaxValue);
-      if (This == TypeDWord)
+      if (@this == TypeDWord)
         return (uint.MaxValue);
-      if (This == TypeInt)
+      if (@this == TypeInt)
         return (int.MaxValue);
-      if (This == TypeQWord)
+      if (@this == TypeQWord)
         return (ulong.MaxValue);
-      if (This == TypeLong)
+      if (@this == TypeLong)
         return (long.MaxValue);
       throw new NotSupportedException();
     }
@@ -531,103 +531,103 @@ namespace System {
     /// <summary>
     /// Determines whether the specified this is signed.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="this">The this.</param>
     /// <returns>
     ///   <c>true</c> if the specified this is signed; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsSigned(this Type This) => (This == TypeSByte) || (This == TypeShort) || (This == TypeInt) || (This == TypeLong) || (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
+    public static bool IsSigned(this Type @this) => (@this == TypeSByte) || (@this == TypeShort) || (@this == TypeInt) || (@this == TypeLong) || (@this == TypeFloat) || (@this == TypeDouble) || (@this == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified this is unsigned.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="this">The this.</param>
     /// <returns>
     ///   <c>true</c> if the specified this is unsigned; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsUnsigned(this Type This) => !IsSigned(This);
+    public static bool IsUnsigned(this Type @this) => !IsSigned(@this);
 
     /// <summary>
     /// Determines whether the specified type is a float type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsFloatType(this Type This) => (This == TypeFloat) || (This == TypeDouble) || (This == TypeDecimal);
+    public static bool IsFloatType(this Type @this) => (@this == TypeFloat) || (@this == TypeDouble) || (@this == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified type is a float type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsDecimalType(this Type This) => (This == TypeDecimal);
+    public static bool IsDecimalType(this Type @this) => (@this == TypeDecimal);
 
     /// <summary>
     /// Determines whether the specified type is a string.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a string type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsStringType(this Type This) => (This == TypeString);
+    public static bool IsStringType(this Type @this) => (@this == TypeString);
 
     /// <summary>
     /// Determines whether the specified type is a boolean type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a boolean type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsBooleanType(this Type This) => (This == TypeBool);
+    public static bool IsBooleanType(this Type @this) => (@this == TypeBool);
 
     /// <summary>
     /// Determines whether the specified type is a TimeSpan type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a TimeSpan type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsTimeSpanType(this Type This) => (This == TypeTimeSpan);
+    public static bool IsTimeSpanType(this Type @this) => (@this == TypeTimeSpan);
 
     /// <summary>
     /// Determines whether the specified type is a DateTime type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is a DateTime type; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsDateTimeType(this Type This) => (This == TypeDateTime);
+    public static bool IsDateTimeType(this Type @this) => (@this == TypeDateTime);
 
     /// <summary>
     /// Determines whether the specified type is an enum.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>
     ///   <c>true</c> if the given type is an enum; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsEnumType(this Type This) => (This.IsEnum);
+    public static bool IsEnumType(this Type @this) => (@this.IsEnum);
 
     /// <summary>
     /// Determines whether the specified type is nullable.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns><c>true</c> if it is Nullable; otherwise, <c>false</c>.</returns>
-    public static bool IsNullable(this Type This) => This.IsGenericType && This.GetGenericTypeDefinition() == typeof(Nullable<>);
+    public static bool IsNullable(this Type @this) => @this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Nullable<>);
 
     /// <summary>
     /// Gets the attribute value.
     /// </summary>
     /// <typeparam name="TAttributeType">The type of the attribute type.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="This">The this.</param>
+    /// <param name="this">The this.</param>
     /// <param name="fieldName">Name of the field.</param>
     /// <param name="getter">The getter.</param>
     /// <returns></returns>
-    public static TValue GetFieldOrPropertyAttributeValue<TAttributeType, TValue>(this Type This, string fieldName, Func<TAttributeType, TValue> getter) where TAttributeType : Attribute {
+    public static TValue GetFieldOrPropertyAttributeValue<TAttributeType, TValue>(this Type @this, string fieldName, Func<TAttributeType, TValue> getter) where TAttributeType : Attribute {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(fieldName != null);
       Contract.Requires(getter != null);
 #else
@@ -636,11 +636,11 @@ namespace System {
       Debug.Assert(getter != null);
 #endif
       object[] attributes;
-      var field = This.GetField(fieldName);
+      var field = @this.GetField(fieldName);
       if (field != null) {
         attributes = field.GetCustomAttributes(typeof(TAttributeType), true);
       } else {
-        var prop = This.GetProperty(fieldName);
+        var prop = @this.GetProperty(fieldName);
         if (prop == null) throw new ArgumentException();
         attributes = prop.GetCustomAttributes(typeof(TAttributeType), true);
       }
@@ -651,37 +651,37 @@ namespace System {
     /// <summary>
     /// Gets the display name.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The value of the displayname attribute if any</returns>
-    public static string GetDisplayName(this Type This) {
+    public static string GetDisplayName(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return This.GetCustomAttributes(false).OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
+      return @this.GetCustomAttributes(false).OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
     }
 
     /// <summary>
     /// Gets the description name.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The value of the description attribute if any.</returns>
-    public static string GetDescription(this Type This) {
+    public static string GetDescription(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return This.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
+      return @this.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
     }
 
     /// <summary>
     /// Gets the short name of the type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The part behind the last dot (.).</returns>
-    public static string GetShortTypeName(this Type This) {
+    public static string GetShortTypeName(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var fullName = This.FullName;
+      var fullName = @this.FullName;
 #if NETFX_4
       if (string.IsNullOrWhiteSpace(fullName))
 #else
@@ -695,11 +695,11 @@ namespace System {
     /// <summary>
     /// Gets the implemented types of the given interface/base type.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>Every type in the current app domain, which implements the given type.</returns>
-    public static IEnumerable<Type> GetImplementedTypes(this Type This) {
+    public static IEnumerable<Type> GetImplementedTypes(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
       return (
         AppDomain
@@ -709,7 +709,7 @@ namespace System {
           .SelectMany(a => a.GetTypes())
           .Where(t => t != null)
           .Distinct()
-          .Where(This.IsAssignableFrom)
+          .Where(@this.IsAssignableFrom)
       );
     }
 
@@ -717,14 +717,31 @@ namespace System {
     /// Creates the instance.
     /// </summary>
     /// <typeparam name="TType">The type of the instance.</typeparam>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>An instance of the given type.</returns>
-    public static TType CreateInstance<TType>(this Type This) {
+    public static TType CreateInstance<TType>(this Type @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(typeof(TType).IsAssignableFrom(This));
+      Contract.Requires(@this != null);
+      Contract.Requires(typeof(TType).IsAssignableFrom(@this));
 #endif
-      return (TType)Activator.CreateInstance(This);
+      return (TType)Activator.CreateInstance(@this);
+    }
+
+    /// <summary>
+    /// Creates the instance.
+    /// </summary>
+    /// <typeparam name="TType">The type of the instance.</typeparam>
+    /// <param name="this">This Type.</param>
+    /// <param name="parameters">The parameters.</param>
+    /// <returns>
+    /// An instance of the given type.
+    /// </returns>
+    public static TType CreateInstance<TType>(this Type @this, object[] parameters) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(typeof(TType).IsAssignableFrom(@this));
+#endif
+      return (TType)Activator.CreateInstance(@this, parameters);
     }
 
     /// <summary>
@@ -811,7 +828,7 @@ namespace System {
     /// <typeparam name="TParam0">The type of the 1st parameter.</typeparam>
     /// <param name="param0">The 1st parameter.</param>
     /// <returns>The instance of the given type.</returns>
-    public static TType FromConstructor<TType, TParam0>(this Type type, TParam0 param0) => _FromConstructor<TType>(type, new[] {
+    public static TType FromConstructor<TType, TParam0>(this Type @this, TParam0 param0) => _FromConstructor<TType>(@this, new[] {
       new CtorParameter(typeof (TParam0), param0)
     });
 
@@ -826,7 +843,7 @@ namespace System {
     /// <returns>
     /// The instance of the given type.
     /// </returns>
-    public static TType FromConstructor<TType, TParam0, TParam1>(this Type type, TParam0 param0, TParam1 param1) => _FromConstructor<TType>(type, new[] {
+    public static TType FromConstructor<TType, TParam0, TParam1>(this Type @this, TParam0 param0, TParam1 param1) => _FromConstructor<TType>(@this, new[] {
       new CtorParameter(typeof (TParam0), param0),
       new CtorParameter(typeof (TParam1), param1)
     });
@@ -844,7 +861,7 @@ namespace System {
     /// <returns>
     /// The instance of the given type.
     /// </returns>
-    public static TType FromConstructor<TType, TParam0, TParam1, TParam2>(this Type type, TParam0 param0, TParam1 param1, TParam2 param2) => _FromConstructor<TType>(type, new[] {
+    public static TType FromConstructor<TType, TParam0, TParam1, TParam2>(this Type @this, TParam0 param0, TParam1 param1, TParam2 param2) => _FromConstructor<TType>(@this, new[] {
       new CtorParameter(typeof (TParam0), param0),
       new CtorParameter(typeof (TParam1), param1),
       new CtorParameter(typeof (TParam2), param2)
@@ -853,16 +870,16 @@ namespace System {
     /// <summary>
     /// Returns the file location for the given type or COM object.
     /// </summary>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <returns>The path to the executable or type library or <c>null</c>.</returns>
-    public static string FileLocation(this Type This) {
-      if (This == null)
+    public static string FileLocation(this Type @this) {
+      if (@this == null)
         return (null);
 
-      if (!This.IsCOMObject)
-        return (This.Assembly.Location);
+      if (!@this.IsCOMObject)
+        return (@this.Assembly.Location);
 
-      var guid = This.GUID;
+      var guid = @this.GUID;
 
       var key = $@"HKEY_CLASSES_ROOT\CLSID\{{{guid}}}\InprocServer32";
       var result = (string)Registry.GetValue(key, null, null);
@@ -878,15 +895,15 @@ namespace System {
     /// Gets the static property value.
     /// </summary>
     /// <typeparam name="TType">The type of the property.</typeparam>
-    /// <param name="This">This Type.</param>
+    /// <param name="this">This Type.</param>
     /// <param name="name">The name.</param>
     /// <returns>The value of the static property</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
-    public static TType GetStaticPropertyValue<TType>(this Type This, string name) {
+    public static TType GetStaticPropertyValue<TType>(this Type @this, string name) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var prop = This.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
+      var prop = @this.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
       if (prop == null) throw new ArgumentException("Property not found", nameof(name));
       return ((TType)prop.GetValue(null, null));
     }
@@ -895,16 +912,16 @@ namespace System {
     /// Gets the static field value.
     /// </summary>
     /// <typeparam name="TType">The type of the field.</typeparam>
-    /// <param name="This">This field.</param>
+    /// <param name="this">This field.</param>
     /// <param name="name">The name.</param>
     /// <returns>The value of the static field</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
-    public static TType GetStaticFieldValue<TType>(this Type This, string name) {
+    public static TType GetStaticFieldValue<TType>(this Type @this, string name) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var prop = This.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
-      if (prop == null) throw new ArgumentException("Property not found", nameof(name));
+      var prop = @this.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
+      if (prop == null) throw new ArgumentException("Field not found", nameof(name));
       return ((TType)prop.GetValue(null));
     }
   }

@@ -161,6 +161,37 @@ namespace System {
     }
 
     /// <summary>
+    /// Gets the value or default.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">The @this.</param>
+    /// <param name="index">The index.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns></returns>
+    public static TValue GetValueOrDefault<TValue>(this TValue[] @this, int index, TValue defaultValue = default(TValue)) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      return (@this.Length <= index ? defaultValue : @this[index]);
+    }
+
+    /// <summary>
+    /// Gets the value or default.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">The @this.</param>
+    /// <param name="index">The index.</param>
+    /// <param name="factory">The factory to create default values.</param>
+    /// <returns></returns>
+    public static TValue GetValueOrDefault<TValue>(this TValue[] @this, int index, Func<int, TValue> factory) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(factory != null);
+#endif
+      return (@this.Length <= index ? factory(index) : @this[index]);
+    }
+
+    /// <summary>
     /// Clones the specified array.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>

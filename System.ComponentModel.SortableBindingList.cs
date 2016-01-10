@@ -55,8 +55,10 @@ namespace System.ComponentModel {
       this.AddRange(enumerable);
     }
 
-    public SortableBindingList(IList<TValue> list)
-      : base(list) { }
+    public SortableBindingList(IList<TValue> list) {
+      // WARNING: do not use the base.ctor(IEnumerable<TValue>) as it marks the collections as read-only thus making it impossible to be sorted
+      this.AddRange(list);
+    }
 
     private ListChangedEventHandler _listChanged;
 
@@ -122,8 +124,8 @@ namespace System.ComponentModel {
       this._sortDirection = direction;
       this._sortProperty = prop;
       this._isSorted = true;
-      var listRef = this.Items as List<TValue>;
-      if (listRef == null)
+      var listRef = this.Items;
+      if (this.Items.IsReadOnly)
         return;
 
       IComparer<TValue> comparer = new SortComparer<TValue>(prop, direction);
@@ -135,7 +137,7 @@ namespace System.ComponentModel {
         return (result != 0 ? result : x.i - y.i);
       });
       listRef.Clear();
-      listRef.AddRange(pairs.Select(p => p.v));
+      ((dynamic)listRef).AddRange(pairs.Select(p => p.v));
 
       // unstable sorting
       //listRef.Sort(comparer);
