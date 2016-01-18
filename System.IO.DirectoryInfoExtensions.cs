@@ -436,7 +436,25 @@ namespace System.IO {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
 #else
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.GetFiles(searchPattern, searchOption).Any();
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    {
+      var stack = new Stack<DirectoryInfo>();
+      stack.Push(This);
+      while (stack.Count > 0) {
+        var currentDirectory = stack.Pop();
+        try {
+          if (currentDirectory.EnumerateFiles(searchPattern).Any())
+            return true;
+
+          if (searchOption != SearchOption.TopDirectoryOnly)
+            foreach (var item in currentDirectory.EnumerateDirectories())
+              stack.Push(item);
+        } catch (UnauthorizedAccessException) {
+          ;
+        }
+      }
+      return false;
+    }
 #endif
 
     /// <summary>
