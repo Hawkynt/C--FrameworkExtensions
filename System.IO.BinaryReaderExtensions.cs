@@ -20,7 +20,6 @@
 #endregion
 
 using System.Diagnostics.Contracts;
-using dword = System.UInt32;
 
 namespace System.IO {
   internal static partial class BinaryReaderExtensions {
@@ -28,17 +27,17 @@ namespace System.IO {
     /// <summary>
     /// Reads all bytes from a binarystream's current position.
     /// </summary>
-    /// <param name="This">The reader.</param>
+    /// <param name="this">The reader.</param>
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <returns>All read bytes.</returns>
-    public static byte[] ReadAllBytes(this BinaryReader This, dword bufferSize = 65536) {
-      Contract.Requires(This != null);
+    public static byte[] ReadAllBytes(this BinaryReader @this, uint bufferSize = 65536) {
+      Contract.Requires(@this != null);
       Contract.Requires(bufferSize > 0);
       using (var result = new MemoryStream()) {
         var buffer = new byte[bufferSize];
 
         int count;
-        while ((count = This.Read(buffer, 0, buffer.Length)) != 0)
+        while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
           result.Write(buffer, 0, count);
 
         return (result.ToArray());

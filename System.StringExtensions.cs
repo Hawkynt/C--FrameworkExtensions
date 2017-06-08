@@ -2,19 +2,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 #endif
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 #if NETFX_45
@@ -31,8 +32,6 @@ using System.Runtime.CompilerServices;
 #endif
 using System.Text;
 using System.Text.RegularExpressions;
-using qword = System.UInt64;
-using word = System.UInt16;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -42,10 +41,10 @@ namespace System {
   internal static partial class StringExtensions {
     #region consts
     /// <summary>
-    /// This is a list of services which are registered to certain ports according to IANA. 
+    /// This is a list of services which are registered to certain ports according to IANA.
     /// It allows us to use names for these ports if we want to.
     /// </summary>
-    private static readonly Dictionary<string, word> _OFFICIAL_PORT_NAMES = new Dictionary<string, ushort> {
+    private static readonly Dictionary<string, ushort> _OFFICIAL_PORT_NAMES = new Dictionary<string, ushort> {
       {"tcpmux", 1},
       {"echo", 7},
       {"discard", 9},
@@ -89,6 +88,38 @@ namespace System {
     };
     #endregion
 
+    /// <summary>
+    /// Exchanges a certain part of the string with the given newString.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="index">The index to start the modification at.</param>
+    /// <param name="newString">The new string to insert.</param>
+    /// <returns>
+    /// The modified string
+    /// </returns>
+    public static string ExchangeAt(this string @this, int index, string newString) => ExchangeAt(@this, index, newString.Length, newString);
+
+    /// <summary>
+    /// Exchanges a certain character of the string with the given character.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="index">The index to start the modification at.</param>
+    /// <param name="character">The character.</param>
+    /// <returns>
+    /// The modified string
+    /// </returns>
+    public static string ExchangeAt(this string @this, int index, char character) => ExchangeAt(@this, index, 1, character.ToString());
+
+    /// <summary>
+    /// Exchanges a certain part of the string with the given newString.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="index">The index to start the modification at.</param>
+    /// <param name="count">The number of characters to replace.</param>
+    /// <param name="newString">The new string to insert.</param>
+    /// <returns>The modified string</returns>
+    public static string ExchangeAt(this string @this, int index, int count, string newString) => Left(@this, index) + newString + (@this.Length > index + count ? @this.Substring(index + count) : string.Empty);
+
     public static bool IsIn(this string @this, IEnumerable<string> values) => values.Contains(@this);
     public static bool IsNotIn(this string @this, IEnumerable<string> values) => !IsIn(@this, values);
 
@@ -100,7 +131,7 @@ namespace System {
     /// <returns></returns>
     public static string Repeat(this string @this, int count) {
       if (@this == null)
-        return (null);
+        return null;
 
       if (count < 1)
         return string.Empty;
@@ -110,7 +141,7 @@ namespace System {
       for (var i = 0; i < count; i++)
         n.Append(@this);
 
-      return (n.ToString());
+      return n.ToString();
     }
 
     /// <summary>
@@ -150,7 +181,7 @@ namespace System {
     /// <returns>the substring</returns>
     public static string SubString(this string @this, int start, int end = 0) {
       if (@this == null)
-        return (null);
+        return null;
       string result;
       var length = @this.Length;
       if (length > 0) {
@@ -171,7 +202,7 @@ namespace System {
       } else {
         result = string.Empty;
       }
-      return (result);
+      return result;
     }
     /// <summary>
     /// Gets the first n chars from a string.
@@ -210,10 +241,21 @@ namespace System {
 #endif
       // ReSharper disable once UseNullPropagation
       if (@this == null)
-        return (null);
+        return null;
 
       var totalLen = @this.Length;
-      return (@this.Substring(totalLen - Math.Min(totalLen, length)));
+      return @this.Substring(totalLen - Math.Min(totalLen, length));
+    }
+
+    /// <summary>
+    /// Sanitizes the text to use as a filename.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <returns>The sanitized string.</returns>
+    public static string SanitizeForFileName(this string @this) {
+      foreach (var c in Path.GetInvalidFileNameChars())
+        @this = @this.Replace(c, '_');
+      return @this;
     }
 
     #region needed consts for converting filename patterns into regexes
@@ -228,7 +270,7 @@ namespace System {
     /// <returns>The regex.</returns>
     private static Regex _ConvertFilePatternToRegex(string pattern) {
 
-      const string NonDotCharacters = @"[^.]*";
+      const string nonDotCharacters = @"[^.]*";
 
       if (pattern == null)
         throw new ArgumentNullException();
@@ -253,10 +295,10 @@ namespace System {
       regexString = Regex.Replace(regexString, @"\\\?", ".");
 
       if (!matchExact && hasExtension)
-        regexString += NonDotCharacters;
+        regexString += nonDotCharacters;
 
       regexString += "$";
-      return (new Regex(regexString, RegexOptions.IgnoreCase));
+      return new Regex(regexString, RegexOptions.IgnoreCase);
     }
 
     /// <summary>
@@ -276,13 +318,13 @@ namespace System {
       Contract.Requires(@this != null);
       Contract.Requires(pattern != null);
 #endif
-      return (_ConvertFilePatternToRegex(pattern).IsMatch(@this));
+      return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
     }
 
     /// <summary>
     /// Determines whether the specified string matches the given regex.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="This">This String.</param>
     /// <param name="regex">The regex.</param>
     /// <returns>
     ///   <c>true</c> if it matches; otherwise, <c>false</c>.
@@ -298,7 +340,7 @@ namespace System {
     /// <summary>
     /// Determines whether the specified string matches the given regex.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="This">This String.</param>
     /// <param name="regex">The regex.</param>
     /// <returns>
     ///   <c>false</c> if it matches; otherwise, <c>true</c>.
@@ -314,7 +356,7 @@ namespace System {
     /// <summary>
     /// Determines whether the specified string matches the given regex.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="This">This String.</param>
     /// <param name="regex">The regex.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
@@ -329,7 +371,7 @@ namespace System {
     /// <summary>
     /// Determines whether the specified string matches the given regex.
     /// </summary>
-    /// <param name="This">The this.</param>
+    /// <param name="This">This String.</param>
     /// <param name="regex">The regex.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns><c>false</c> if it matches; otherwise, <c>true</c>.</returns>
@@ -356,7 +398,7 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
-      return (new Regex(regex, regexOptions).Matches(This));
+      return new Regex(regex, regexOptions).Matches(This);
     }
 
     /// <summary>
@@ -376,7 +418,7 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
-      return (new Regex(regex, regexOptions).Match(This).Groups);
+      return new Regex(regex, regexOptions).Match(This).Groups;
     }
 
     /// <summary>
@@ -394,29 +436,29 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(parameters != null);
 #endif
-      return (string.Format(This, parameters));
+      return string.Format(This, parameters);
     }
 
     /// <summary>
     /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
     /// </summary>
-    /// <param name="This">This string.</param>
+    /// <param name="this">This string.</param>
     /// <param name="fields">The fields.</param>
     /// <param name="comparer">The comparer.</param>
     /// <returns></returns>
-    public static string FormatWithEx(this string This, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
+    public static string FormatWithEx(this string @this, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
       var fieldCache = fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, comparer);
-      return (This.FormatWithEx(f => fieldCache.ContainsKey(f) ? fieldCache[f] : null));
+      return @this.FormatWithEx(f => fieldCache.ContainsKey(f) ? fieldCache[f] : null);
     }
 
     /// <summary>
     /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
     /// </summary>
-    /// <param name="This">This string.</param>
+    /// <param name="this">This string.</param>
     /// <param name="comparer">The comparer.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
@@ -426,18 +468,18 @@ namespace System {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string FormatWithEx(this string This, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
+    public static string FormatWithEx(this string @this, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
-      return (This.FormatWithEx(fields, comparer));
+      return @this.FormatWithEx(fields, comparer);
     }
 
     /// <summary>
     /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
     /// </summary>
-    /// <param name="This">This string.</param>
+    /// <param name="this">This string.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
 #if NETFX_4
@@ -446,28 +488,26 @@ namespace System {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string FormatWithEx(this string This, params KeyValuePair<string, object>[] fields) {
+    public static string FormatWithEx(this string @this, params KeyValuePair<string, object>[] fields) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
-      return (This.FormatWithEx(fields, null));
+      return @this.FormatWithEx(fields, null);
     }
 
     /// <summary>
     /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
     /// </summary>
-    /// <param name="This">This string.</param>
+    /// <param name="this">This string.</param>
     /// <param name="fieldGetter">The field getter.</param>
     /// <param name="passFieldFormatToGetter">if set to <c>true</c> passes the field format to getter.</param>
     /// <returns>A formatted string.</returns>
-    public static string FormatWithEx(this string This, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(fieldGetter != null);
-#endif
+    public static string FormatWithEx(this string @this, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
+      if (@this == null) throw new NullReferenceException();
+      if (fieldGetter == null) throw new ArgumentNullException(nameof(fieldGetter));
 
-      var length = This.Length;
+      var length = @this.Length;
 
       // we will store parts of the newly generated string here
       var result = new StringBuilder(length);
@@ -476,15 +516,15 @@ namespace System {
       var lastStartPos = 0;
       var isInField = false;
 
-      // looping through all characters breaking it up into parts that need to be get using the field getter 
+      // looping through all characters breaking it up into parts that need to be get using the field getter
       // and parts that simply need to be copied
       while (i < length) {
-        var current = This[i++];
-        var next = i < length ? This[i].ToString() : null;
+        var current = @this[i++];
+        var next = i < length ? @this[i].ToString() : null;
 
         var fieldContentLength = i - lastStartPos - 1;
 #if NETFX_4
-        Contract.Assume(fieldContentLength >= 0 && fieldContentLength < This.Length);
+        Contract.Assume(fieldContentLength >= 0 && fieldContentLength < @this.Length);
 #endif
 
         if (isInField) {
@@ -495,7 +535,7 @@ namespace System {
 
           // end of field found, pass field description to field getter
           isInField = false;
-          var fieldContent = This.Substring(lastStartPos, fieldContentLength);
+          var fieldContent = @this.Substring(lastStartPos, fieldContentLength);
           lastStartPos = i;
 
           int formatStartIndex;
@@ -512,7 +552,7 @@ namespace System {
           if (current == '{') {
 
             // copy what we've already got
-            var textContent = This.Substring(lastStartPos, fieldContentLength);
+            var textContent = @this.Substring(lastStartPos, fieldContentLength);
             lastStartPos = i;
             result.Append(textContent);
 
@@ -529,7 +569,7 @@ namespace System {
           } else if (current == '}' && (next != null) && next == "}") {
 
             // copy what we've already got
-            var textContent = This.Substring(lastStartPos, fieldContentLength);
+            var textContent = @this.Substring(lastStartPos, fieldContentLength);
             lastStartPos = i;
             result.Append(textContent);
 
@@ -538,9 +578,9 @@ namespace System {
           }
         }
       }
-      var remainingContent = This.Substring(lastStartPos);
+      var remainingContent = @this.Substring(lastStartPos);
       result.Append(remainingContent);
-      return (result.ToString());
+      return result.ToString();
     }
 
     /// <summary>
@@ -616,7 +656,7 @@ namespace System {
     /// <returns>A new string containing all parts replaced.</returns>
     public static string MultipleReplace(this string This, IEnumerable<KeyValuePair<string, object>> replacements) {
       if (string.IsNullOrEmpty(This) || replacements == null)
-        return (This);
+        return This;
 
       var mask = This.Replace("{", "{{").Replace("}", "}}");
       var parameters = new List<object>();
@@ -635,7 +675,7 @@ namespace System {
         parameters.Add(keyValuePair.Value);
       }
       var result = string.Format(mask, parameters.ToArray());
-      return (result);
+      return result;
     }
 
     /// <summary>
@@ -656,7 +696,7 @@ namespace System {
 #if NETFX_4
       Contract.Requires(regex != null);
 #endif
-      return (This == null ? null : new Regex(regex, regexOptions).Replace(This, newValue ?? string.Empty));
+      return This == null ? null : new Regex(regex, regexOptions).Replace(This, newValue ?? string.Empty);
     }
     /// <summary>
     /// Replaces using a regular expression.
@@ -678,7 +718,7 @@ namespace System {
       Contract.Requires(regex != null);
       Contract.Requires(newValue != null);
 #endif
-      return (This == null ? null : regex.Replace(This, newValue));
+      return This == null ? null : regex.Replace(This, newValue);
     }
 
     /// <summary>
@@ -698,7 +738,7 @@ namespace System {
       Contract.Requires(Enum.IsDefined(typeof(StringComparison), comparison));
 #endif
       if (This == null || oldValue == null || count < 1)
-        return (This);
+        return This;
       if (newValue == null)
         newValue = string.Empty;
       var result = This;
@@ -722,13 +762,13 @@ namespace System {
           result = newValue + result.Substring(removedLength);
         } else {
 #if NETFX_4
-          Contract.Assume((n + removedLength) <= result.Length);
+          Contract.Assume(n + removedLength <= result.Length);
 #endif
           result = result.Substring(0, n) + newValue + result.Substring(n + removedLength);
         }
         pos = n + newLength;
       }
-      return (result);
+      return result;
     }
 
     /// <summary>
@@ -805,7 +845,7 @@ namespace System {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string[] Split(this string This, char splitter, int max = 0) => This.Split(splitter.ToString(), (qword)max).ToArray();
+    public static string[] Split(this string This, char splitter, int max = 0) => This.Split(splitter.ToString(), (ulong)max).ToArray();
 
     /// <summary>
     /// Splits the specified string by another one.
@@ -820,7 +860,7 @@ namespace System {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static IEnumerable<string> Split(this string This, char splitter, qword max = 0) => This.Split(splitter.ToString(), max);
+    public static IEnumerable<string> Split(this string This, char splitter, ulong max = 0) => This.Split(splitter.ToString(), max);
 
     /// <summary>
     /// Splits the specified string by another one.
@@ -832,7 +872,7 @@ namespace System {
 #if NETFX_4
     [Pure]
 #endif
-    public static IEnumerable<string> Split(this string This, string splitter, qword max = 0) {
+    public static IEnumerable<string> Split(this string This, string splitter, ulong max = 0) {
 #if NETFX_4
       Contract.Requires(!string.IsNullOrEmpty(splitter));
 #endif
@@ -842,7 +882,7 @@ namespace System {
       var splitterLength = splitter.Length;
       int startIndex;
       if (max == 0)
-        max = qword.MaxValue;
+        max = ulong.MaxValue;
 
       var currentStartIndex = 0;
 
@@ -850,14 +890,14 @@ namespace System {
       Contract.Assume(currentStartIndex <= This.Length);
 #endif
       while (max-- > 0 && (startIndex = This.IndexOf(splitter, currentStartIndex, StringComparison.Ordinal)) >= 0) {
-        yield return (This.Substring(currentStartIndex, startIndex - currentStartIndex));
+        yield return This.Substring(currentStartIndex, startIndex - currentStartIndex);
         currentStartIndex = startIndex + splitterLength;
       }
 
 #if NETFX_4
       Contract.Assume(currentStartIndex <= This.Length);
 #endif
-      yield return (This.Substring(currentStartIndex));
+      yield return This.Substring(currentStartIndex);
     }
 
     /// <summary>
@@ -877,7 +917,7 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
-      return (regex.Split(This));
+      return regex.Split(This);
     }
 
     /// <summary>
@@ -897,7 +937,7 @@ namespace System {
 #if NETFX_4
       Contract.Requires(This != null);
 #endif
-      return (This.Split(new[] { splitter }, options));
+      return This.Split(new[] { splitter }, options);
     }
 
     /// <summary>
@@ -911,7 +951,7 @@ namespace System {
 #endif
     public static string ToCamelCase(this string This, CultureInfo culture = null) {
       if (This == null)
-        return (null);
+        return null;
       if (culture == null)
         culture = CultureInfo.CurrentCulture;
 
@@ -919,8 +959,10 @@ namespace System {
       var hump = true;
 
       // ReSharper disable ConvertToConstant.Local
+#pragma warning disable CC0030 // Make Local Variable Constant.
       var numbers = "0123456789";
       var allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+#pragma warning restore CC0030 // Make Local Variable Constant.
       // ReSharper restore ConvertToConstant.Local
 
       foreach (var chr in This) {
@@ -935,7 +977,7 @@ namespace System {
         }
       }
 
-      return (result.ToString());
+      return result.ToString();
     }
 
     /// <summary>
@@ -968,7 +1010,7 @@ namespace System {
       Contract.Requires(This != null);
 #endif
       var regex = new Regex(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
-      return (regex.Replace(This, string.Empty));
+      return regex.Replace(This, string.Empty);
     }
 
     /// <summary>
@@ -999,51 +1041,104 @@ namespace System {
 #if NETFX_4
       Contract.Requires(!This.IsNullOrWhiteSpace());
 #endif
-      return ("[" + This.Replace("]", "]]") + "]");
+      return "[" + This.Replace("]", "]]") + "]";
     }
 
     /// <summary>
     /// Checks if the string equals to any from the given list.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns>
+    ///   <c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool EqualsAny(this string @this, params string[] values) => EqualsAny(@this, (IEnumerable<string>)values);
+
+    /// <summary>
+    /// Checks if the string equals to any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
+    public static bool EqualsAny(this string @this, StringComparison stringComparison, params string[] values) => EqualsAny(@this, values, stringComparison);
+
+    /// <summary>
+    /// Checks if the string equals to any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
-    public static bool EqualsAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    public static bool EqualsAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if NETFX_4
       Contract.Requires(values != null);
 #endif
-      return (values.Any(s => string.Equals(This, s, stringComparison)));
+      return values.Any(s => string.Equals(@this, s, stringComparison));
     }
 
     /// <summary>
     /// Checks if the string starts with any from the given list.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+    public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, (IEnumerable<string>)values);
+
+    /// <summary>
+    /// Checks if the string starts with any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+    public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
+
+    /// <summary>
+    /// Checks if the string starts with any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-    public static bool StartsWithAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(values != null);
 #endif
-      return (values.Any(s => This.StartsWith(s, stringComparison)));
+      return values.Any(s => @this.StartsWith(s, stringComparison));
     }
 
     /// <summary>
     /// Checks if the string ends with any from the given list.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+    public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, (IEnumerable<string>)values);
+
+    /// <summary>
+    /// Checks if the string ends with any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="stringComparison">The string comparison.</param>
+    /// <param name="values">The values to compare to.</param>
+    /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+    public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
+
+    /// <summary>
+    /// Checks if the string ends with any from the given list.
+    /// </summary>
+    /// <param name="this">This String.</param>
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-    public static bool EndsWithAny(this string This, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(values != null);
 #endif
-      return (values.Any(s => This.EndsWith(s, stringComparison)));
+      return values.Any(s => @this.EndsWith(s, stringComparison));
     }
 
     /// <summary>
@@ -1065,7 +1160,7 @@ namespace System {
 #if NETFX_4
       Contract.Requires(This != null);
 #endif
-      return (This.Length > 0 && string.Equals(This[0] + string.Empty, value + string.Empty, stringComparison));
+      return This.Length > 0 && string.Equals(This[0] + string.Empty, value + string.Empty, stringComparison);
     }
 
     /// <summary>
@@ -1087,7 +1182,7 @@ namespace System {
 #if NETFX_4
       Contract.Requires(This != null);
 #endif
-      return (This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison));
+      return This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison);
     }
 
     /// <summary>
@@ -1140,7 +1235,7 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(text != null);
 #endif
-      return (This.IsSurroundedWith(text, text, stringComparison));
+      return This.IsSurroundedWith(text, text, stringComparison);
     }
 
     /// <summary>
@@ -1165,7 +1260,7 @@ namespace System {
       Contract.Requires(prefix != null);
       Contract.Requires(postfix != null);
 #endif
-      return (This.StartsWith(prefix, stringComparison) && This.EndsWith(postfix, stringComparison));
+      return This.StartsWith(prefix, stringComparison) && This.EndsWith(postfix, stringComparison);
     }
 
     /// <summary>
@@ -1181,10 +1276,10 @@ namespace System {
 #endif
     public static string ReplaceAtStart(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
-        return (replacement);
+        return replacement;
       if (This == null || This.Length < what.Length)
-        return (This);
-      return (This.StartsWith(what, stringComparison) ? replacement + This.Substring(what.Length) : This);
+        return This;
+      return This.StartsWith(what, stringComparison) ? replacement + This.Substring(what.Length) : This;
     }
 
     /// <summary>
@@ -1200,10 +1295,10 @@ namespace System {
 #endif
     public static string ReplaceAtEnd(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
-        return (replacement);
+        return replacement;
       if (This == null || This.Length < what.Length)
-        return (This);
-      return (This.EndsWith(what, stringComparison) ? This.Substring(0, This.Length - what.Length) + replacement : This);
+        return This;
+      return This.EndsWith(what, stringComparison) ? This.Substring(0, This.Length - what.Length) + replacement : This;
     }
 
     /// <summary>
@@ -1290,8 +1385,20 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(other != null);
 #endif
-      return (This.IndexOf(other, comparisonType) >= 0);
+      return This.IndexOf(other, comparisonType) >= 0;
     }
+
+
+    public static bool ContainsAny(
+      this string This,
+      params string[] other
+      ) => ContainsAny(This, (IEnumerable<string>)other);
+
+    public static bool ContainsAny(
+      this string This,
+      StringComparison comparisonType,
+      params string[] other
+      ) => ContainsAny(This, other, comparisonType);
 
     /// <summary>
     /// Determines whether a given string contains one of others.
@@ -1307,7 +1414,7 @@ namespace System {
       Contract.Requires(This != null);
       Contract.Requires(other != null);
 #endif
-      return (other.Any(item => This.Contains(item, comparisonType)));
+      return other.Any(item => This.Contains(item, comparisonType));
     }
 
     /// <summary>
@@ -1327,7 +1434,7 @@ namespace System {
     /// <summary>
     /// Returns a default value if the given string is <c>null</c> or whitespace.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
 #if NETFX_4
@@ -1336,7 +1443,26 @@ namespace System {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string DefaultIfNullOrWhiteSpace(this string This, string defaultValue = null) => This.IsNullOrWhiteSpace() ? defaultValue : This;
+
+    public static string DefaultIfNullOrWhiteSpace(this string @this, Func<string> defaultValue) {
+      if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
+
+      return @this.IsNullOrWhiteSpace() ? defaultValue() : @this;
+    }
+
+    /// <summary>
+    /// Returns a default value if the given string is <c>null</c> or whitespace.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
+    /// <returns>The given string or the given default value.</returns>
+#if NETFX_4
+    [Pure]
+#endif
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
 
     /// <summary>
     /// Breaks the given string down into lines.
@@ -1351,7 +1477,7 @@ namespace System {
 #endif
     public static string[] Lines(this string This, string delimiter = null, int count = 0, StringSplitOptions options = StringSplitOptions.None) {
       if (This == null)
-        return (null);
+        return null;
 
       // if no delimtier given, try auto-detection
       if (delimiter == null) {
@@ -1367,76 +1493,157 @@ namespace System {
 
       // if no delimiter could be found, just return one line
       if (delimiter == null)
-        return (new[] { This });
+        return new[] { This };
 
-      var result = count < 1 ? (This.Split(new[] { delimiter }, options)) : (This.Split(new[] { delimiter }, count, options));
-      return (result);
+      var result = count < 1 ? This.Split(new[] { delimiter }, options) : This.Split(new[] { delimiter }, count, options);
+      return result;
     }
 
     /// <summary>
     /// Splits the given string respecting single and double quotes and allows for escape seququences to be used in these strings.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <param name="delimiter">The delimiter to use.</param>
     /// <param name="escapeSequence">The escape sequence.</param>
-    /// <returns>A sequence containing the parts of the string.</returns>
-    public static IEnumerable<string> QuotedSplit(this string This, string delimiter = ",", string escapeSequence = "\\") {
-      if (This == null)
+    /// <param name="options">The options.</param>
+    /// <returns>
+    /// A sequence containing the parts of the string.
+    /// </returns>
+    public static IEnumerable<string> QuotedSplit(this string @this, string delimiter = ",", string escapeSequence = "\\", StringSplitOptions options = StringSplitOptions.None) {
+      if (@this == null)
         yield break;
 
       if (delimiter.IsNullOrEmpty()) {
-        yield return This;
+        yield return @this;
         yield break;
       }
 
       if (escapeSequence == "")
         escapeSequence = null;
 
-      var length = This.Length;
+      var length = @this.Length;
       var pos = 0;
       var currentlyEscaping = false;
       var currentlyInSingleQuote = false;
       var currentlyInDoubleQuote = false;
-      var currentPart = string.Empty;
+      var currentPart = new StringBuilder();
 
       while (pos < length) {
-        var chr = This[pos++];
+        var chr = @this[pos++];
 
         if (currentlyEscaping) {
-          currentPart += chr;
+          currentPart.Append(chr);
           currentlyEscaping = false;
         } else if (currentlyInSingleQuote) {
-          if (escapeSequence != null && escapeSequence.StartsWith(chr) && This.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
+          if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
             currentlyEscaping = true;
             pos += escapeSequence.Length;
           } else if (chr == '\'')
             currentlyInSingleQuote = false;
           else
-            currentPart += chr;
+            currentPart.Append(chr);
         } else if (currentlyInDoubleQuote) {
-          if (escapeSequence != null && escapeSequence.StartsWith(chr) && This.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
+          if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
             currentlyEscaping = true;
             pos += escapeSequence.Length;
           } else if (chr == '"')
             currentlyInDoubleQuote = false;
           else
-            currentPart += chr;
-        } else if (chr == ' ') {
+            currentPart.Append(chr);
+        } else if (delimiter.StartsWith(chr) && @this.Substring(pos - 1, delimiter.Length) == delimiter) {
 
-        } else if (delimiter.StartsWith(chr) && This.Substring(pos - 1, delimiter.Length) == delimiter) {
-          yield return (currentPart);
-          currentPart = string.Empty;
+          if (options == StringSplitOptions.None || currentPart.Length > 0)
+            yield return currentPart.ToString();
+
+          currentPart.Clear();
           pos += delimiter.Length - 1;
         } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
         } else if (/*currentPart.Length == 0 &&*/ chr == '"') {
           currentlyInDoubleQuote = true;
+        } else if (chr == ' ') {
+
         } else {
-          currentPart += chr;
+          currentPart.Append(chr);
         }
 
       }
-      yield return (currentPart);
+
+      if (options == StringSplitOptions.None || currentPart.Length > 0)
+        yield return currentPart.ToString();
+    }
+
+    /// <summary>
+    /// Splits the given string respecting single and double quotes and allows for escape seququences to be used in these strings.
+    /// </summary>
+    /// <param name="this">This String.</param>
+    /// <param name="delimiters">The delimiters.</param>
+    /// <param name="escapeSequence">The escape sequence.</param>
+    /// <param name="options">The options.</param>
+    /// <returns>
+    /// A sequence containing the parts of the string.
+    /// </returns>
+    public static IEnumerable<string> QuotedSplit(this string @this, char[] delimiters, string escapeSequence = "\\", StringSplitOptions options = StringSplitOptions.None) {
+      if (@this == null)
+        yield break;
+
+      if (delimiters == null || delimiters.Length < 1) {
+        yield return @this;
+        yield break;
+      }
+
+      if (escapeSequence == "")
+        escapeSequence = null;
+
+      var length = @this.Length;
+      var pos = 0;
+      var currentlyEscaping = false;
+      var currentlyInSingleQuote = false;
+      var currentlyInDoubleQuote = false;
+      var currentPart = new StringBuilder();
+
+      while (pos < length) {
+        var chr = @this[pos++];
+
+        if (currentlyEscaping) {
+          currentPart.Append(chr);
+          currentlyEscaping = false;
+        } else if (currentlyInSingleQuote) {
+          if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
+            currentlyEscaping = true;
+            pos += escapeSequence.Length;
+          } else if (chr == '\'')
+            currentlyInSingleQuote = false;
+          else
+            currentPart.Append(chr);
+        } else if (currentlyInDoubleQuote) {
+          if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
+            currentlyEscaping = true;
+            pos += escapeSequence.Length;
+          } else if (chr == '"')
+            currentlyInDoubleQuote = false;
+          else
+            currentPart.Append(chr);
+        } else if (delimiters.Any(i => i == chr) && delimiters.Any(i => @this[pos - 1] == i)) {
+
+          if (options == StringSplitOptions.None || currentPart.Length > 0)
+            yield return currentPart.ToString();
+
+          currentPart.Clear();
+        } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
+          currentlyInSingleQuote = true;
+        } else if (/*currentPart.Length == 0 &&*/ chr == '"') {
+          currentlyInDoubleQuote = true;
+        } else if (chr == ' ') {
+
+        } else {
+          currentPart.Append(chr);
+        }
+
+      }
+
+      if (options == StringSplitOptions.None || currentPart.Length > 0)
+        yield return currentPart.ToString();
     }
 
     #region nested HostEndPoint
@@ -1473,19 +1680,19 @@ namespace System {
 #endif
     public static HostEndPoint ParseHostAndPort(this string This) {
       if (This.IsNullOrWhiteSpace())
-        return (null);
+        return null;
 
       var host = This;
-      word port = 0;
+      ushort port = 0;
       var index = host.IndexOf(':');
       if (index < 0)
-        return (new HostEndPoint(host, port));
+        return new HostEndPoint(host, port);
 
       var portText = host.Substring(index + 1);
       host = host.Left(index);
-      if (!word.TryParse(portText, out port) && !_OFFICIAL_PORT_NAMES.TryGetValue(portText.Trim().ToLower(), out port))
-        return (null);
-      return (new HostEndPoint(host, port));
+      if (!ushort.TryParse(portText, out port) && !_OFFICIAL_PORT_NAMES.TryGetValue(portText.Trim().ToLower(), out port))
+        return null;
+      return new HostEndPoint(host, port);
     }
 
     /// <summary>
@@ -1509,6 +1716,37 @@ namespace System {
           select chars.IndexOf(c) >= 0 ? replacement ?? string.Empty : c.ToString()
         ).ToArray()
       );
+    }
+
+    /// <summary>
+    /// Returns all characters left of a certain string.
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <param name="pattern">The pattern to find.</param>
+    /// <param name="comparison">The comparison mode.</param>
+    /// <returns>All characters left to the given text or the original string if text was not found.</returns>
+    public static string LeftUntil(this string @this, string pattern, StringComparison comparison = StringComparison.CurrentCulture) {
+      if (@this == null)
+        return null;
+
+      var index = @this.IndexOf(pattern, comparison);
+      return index < 0 ? @this : @this.Substring(0, index);
+    }
+
+    /// <summary>
+    /// Counts the number of lines in the given text.
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <returns>The number of lines.</returns>
+    public static long LineCount(this string @this) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      var crlf = @this.Split(new[] { "\r\n" }, StringSplitOptions.None);
+      var lfcr = string.Join("\n\r", crlf).Split(new[] { "\n\r" }, StringSplitOptions.None);
+      var cr = string.Join("\n", lfcr).Split(new[] { "\n" }, StringSplitOptions.None);
+      var lf = string.Join("\r", cr).Split(new[] { "\r" }, StringSplitOptions.None);
+      return lf.Length;
     }
   }
 }

@@ -34,9 +34,9 @@ namespace System.Reflection {
       Contract.Requires(This != null);
       try {
         This.SetValue(instance, value, null);
-        return (true);
+        return true;
       } catch {
-        return (false);
+        return false;
       }
     }
     /// <summary>
@@ -47,7 +47,7 @@ namespace System.Reflection {
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetValue(this PropertyInfo This, object value) {
       Contract.Requires(This != null);
-      return (This.TrySetValue(null, value));
+      return This.TrySetValue(null, value);
     }
 
     /// <summary>
@@ -62,9 +62,9 @@ namespace System.Reflection {
       Contract.Requires(This != null);
       Contract.Requires(value != null);
       try {
-        return (This.GetValue(value, index));
+        return This.GetValue(value, index);
       } catch {
-        return (defaultValue);
+        return defaultValue;
       }
     }
   }

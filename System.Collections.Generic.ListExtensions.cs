@@ -126,6 +126,19 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>
+    /// Adds if not null.
+    /// </summary>
+    /// <typeparam name="TInput">The type of the input.</typeparam>
+    /// <param name="this">This IList.</param>
+    /// <param name="item">The item.</param>
+    public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
+      Contract.Requires(@this != null);
+
+      if (item != null)
+        @this.Add(item);
+    }
+
+    /// <summary>
     /// Keeps the first n items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>

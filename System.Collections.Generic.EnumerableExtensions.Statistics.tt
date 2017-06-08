@@ -54,7 +54,7 @@ namespace System.Collections.Generic {
 #else
       Contract.Requires(This != null);
 #endif
-      return (TimeSpan.FromMilliseconds(This.Select(i => i.TotalMilliseconds).Sum()));
+      return TimeSpan.FromMilliseconds(This.Select(i => i.TotalMilliseconds).Sum());
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
 #endif
-      return (This.Select(selector).Sum());
+      return This.Select(selector).Sum();
     }
     #endregion
 <#foreach(var i in new[]{"word","dword","qword"}){#>
@@ -231,6 +231,39 @@ namespace System.Collections.Generic {
     }
     #endregion
 <#}#>
+    #region TimeSpan
+    /// <summary>
+    /// Averages the specified elements in an enumeration.
+    /// </summary>
+    /// <param name="This">This enumeration.</param>
+    /// <returns>The average of all given elements.</returns>
+    public static TimeSpan Average(this IEnumerable<TimeSpan> This) {
+#if !NETFX_4
+      Debug.Assert(This != null);
+#else
+      Contract.Requires(This != null);
+#endif
+      return new TimeSpan((long)This.Average(i => i.Ticks));
+    }
+
+    /// <summary>
+    /// Averages the specified elements in an enumeration using a selector.
+    /// </summary>
+    /// <typeparam name="TIn">The type of the items in the enumeration.</typeparam>
+    /// <param name="This">This Enumeration.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns>The average of all given elements.</returns>
+    public static TimeSpan Average<TIn>(this IEnumerable<TIn> This, Func<TIn, TimeSpan> selector) {
+#if !NETFX_4
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
+#else
+      Contract.Requires(This != null);
+      Contract.Requires(selector != null);
+#endif
+      return new TimeSpan((long)This.Average(i => selector(i).Ticks));
+    }
+    #endregion
     #endregion
     #region Variance
 <#foreach(var i in new[]{"float","double","decimal"}){#>

@@ -19,7 +19,9 @@
 */
 #endregion
 
-
+#if NETFX_4
+using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.Generic {
   internal static partial class HashSetExtensions {
@@ -33,6 +35,25 @@ namespace System.Collections.Generic {
     /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
     public static bool ContainsNot<TItem>(this HashSet<TItem> @this, TItem item) {
       return (!@this.Contains(item));
+    }
+
+    /// <summary>
+    /// Tries to add a value.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the values.</typeparam>
+    /// <param name="this">This HashSet.</param>
+    /// <param name="value">The value.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    /// <remarks></remarks>
+    public static bool TryAdd<TItem>(this HashSet<TItem> @this, TItem value) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      if (@this.Contains(value))
+        return (false);
+
+      @this.Add(value);
+      return (true);
     }
 
   }

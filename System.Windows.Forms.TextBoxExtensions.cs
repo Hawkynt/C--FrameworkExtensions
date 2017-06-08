@@ -20,7 +20,6 @@
 #endregion
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Collections.Generic;
 using word = System.UInt32;
 namespace System.Windows.Forms {
   internal static partial class TextBoxExtensions {
@@ -41,10 +40,10 @@ namespace System.Windows.Forms {
     /// <param name="count">The number of lines to keep.</param>
     public static void KeepLastLines(this TextBox This, word count) {
       Contract.Requires(This != null);
-      var lines = This.Text.Split(Environment.NewLine).ToList();
+      var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
       var linesToRemove = Math.Max(0, lines.Count - (int)count);
       This.Text = string.Empty;
-      This.AppendText(lines.Skip(linesToRemove).Join(Environment.NewLine));
+      This.AppendText(string.Join(Environment.NewLine, lines.Skip(linesToRemove)));
     }
 
     /// <summary>
@@ -54,9 +53,9 @@ namespace System.Windows.Forms {
     /// <param name="count">The number of lines to keep.</param>
     public static void KeepFirstLines(this TextBox This, word count) {
       Contract.Requires(This != null);
-      var lines = This.Text.Split(Environment.NewLine);
+      var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
       This.Text = string.Empty;
-      This.AppendText(lines.Take((int)count).Join(Environment.NewLine));
+      This.AppendText(string.Join(Environment.NewLine, lines.Take((int)count)));
     }
   }
 }

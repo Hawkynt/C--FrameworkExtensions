@@ -27,10 +27,11 @@ using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+#if NETFX_4
 using System.Threading.Tasks;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -57,8 +58,22 @@ namespace System {
         this.Length = length;
       }
 
+      /// <summary>
+      /// Gets the number of elements in this slice.
+      /// </summary>
+      /// <value>
+      /// The length.
+      /// </value>
       public int Length { get; }
 
+      /// <summary>
+      /// Gets the <see cref="TItem"/> at the specified index.
+      /// </summary>
+      /// <value>
+      /// The <see cref="TItem"/>.
+      /// </value>
+      /// <param name="index">The index.</param>
+      /// <returns>The item at the given index.</returns>
       public TItem this[int index] {
         get {
 #if NETFX_4
@@ -68,12 +83,48 @@ namespace System {
         }
       }
 
+      /// <summary>
+      /// Gets the values.
+      /// </summary>
+      /// <value>
+      /// The values.
+      /// </value>
       public IEnumerable<TItem> Values {
         get {
           var maxIndex = this._start + this.Length;
           for (var i = this._start; i < maxIndex; ++i)
             yield return this._source[i];
         }
+      }
+
+      /// <summary>
+      /// Slices the specified array.
+      /// </summary>
+      /// <typeparam name="TItem">The type of the items.</typeparam>
+      /// <param name="start">The start.</param>
+      /// <param name="length">The length; negative values mean: till the end.</param>
+      /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
+      public ReadOnlyArraySlice<TItem> ReadOnlySlice(int start, int length = -1) {
+        if (length < 0)
+          length = this.Length - start;
+
+        if ((start + length) > this.Length)
+          throw new ArgumentException("Exceeding source length", nameof(length));
+
+        return new ReadOnlyArraySlice<TItem>(this._source, start + this._start, length);
+      }
+
+      /// <summary>
+      /// Copies this slice into a new array.
+      /// </summary>
+      /// <returns></returns>
+      public TItem[] ToArray() {
+        var result = new TItem[this.Length];
+        if (typeof(TItem) == typeof(byte))
+          Buffer.BlockCopy(this._source, this._start, result, 0, this.Length);
+        else
+          Array.Copy(this._source, this._start, result, 0, this.Length);
+        return result;
       }
 
       #region Implementation of IEnumerable
@@ -91,6 +142,8 @@ namespace System {
 
       #endregion
     }
+
+    [DebuggerDisplay("{ToString()}")]
     internal class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
       public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
@@ -99,6 +152,14 @@ namespace System {
 #endif
       }
 
+      /// <summary>
+      /// Gets or sets the <see cref="TItem" /> at the specified index.
+      /// </summary>
+      /// <value>
+      /// The <see cref="TItem" />.
+      /// </value>
+      /// <param name="index">The index.</param>
+      /// <returns>The item at the given index</returns>
       public new TItem this[int index] {
         get {
 #if NETFX_4
@@ -113,10 +174,35 @@ namespace System {
           this._source[index + this._start] = value;
         }
       }
+
+      /// <summary>
+      /// Slices the specified array.
+      /// </summary>
+      /// <typeparam name="TItem">The type of the items.</typeparam>
+      /// <param name="start">The start.</param>
+      /// <param name="length">The length; negative values mean: till the end.</param>
+      /// <returns>An array slice which accesses the underlying array.</returns>
+      public ArraySlice<TItem> Slice(int start, int length = -1) {
+        if (length < 0)
+          length = this.Length - start;
+
+        if ((start + length) > this.Length)
+          throw new ArgumentException("Exceeding source length", nameof(length));
+
+        return new ArraySlice<TItem>(this._source, start + this._start, length);
+      }
     }
     #endregion
 
-    private static readonly Exception _noElements = new InvalidOperationException("No Elements!");
+    private static readonly Exception _EX_NO_ELEMENTS = new InvalidOperationException("No Elements!");
+
+    /// <summary>
+    /// Returns the enumeration or <c>null</c> if it is empty.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This Enumeration.</param>
+    /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
+    public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this?.Length > 0 ? @this : null;
 
     /// <summary>
     /// Slices the specified array.
@@ -124,9 +210,22 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="start">The start.</param>
-    /// <param name="length">The length.</param>
+    /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-    public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length) => new ReadOnlyArraySlice<TItem>(@this, start, length);
+    public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) => new ReadOnlyArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
+
+    /// <summary>
+    /// Slices the specified array for read-only access.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="size">The size of the slices.</param>
+    /// <returns>An enumeration of read-only slices</returns>
+    public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
+      var length = @this.Length;
+      for (var index = 0; index < length; index += size)
+        yield return new ReadOnlyArraySlice<TItem>(@this, index, Math.Min(length - index, size));
+    }
 
     /// <summary>
     /// Slices the specified array.
@@ -134,9 +233,22 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="start">The start.</param>
-    /// <param name="length">The length.</param>
+    /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array.</returns>
-    public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length) => new ArraySlice<TItem>(@this, start, length);
+    public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) => new ArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
+
+    /// <summary>
+    /// Slices the specified array.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="size">The size of the slices.</param>
+    /// <returns>An enumeration of slices</returns>
+    public static IEnumerable<ArraySlice<TItem>> Slices<TItem>(this TItem[] @this, int size) {
+      var length = @this.Length;
+      for (var index = 0; index < length; index += size)
+        yield return new ArraySlice<TItem>(@this, index, Math.Min(length - index, size));
+    }
 
     /// <summary>
     /// Gets a random element.
@@ -151,7 +263,7 @@ namespace System {
 #endif
       var length = This.Length;
       if (length == 0)
-        throw _noElements;
+        throw _EX_NO_ELEMENTS;
 
       if (random == null)
         random = new Random();
@@ -372,6 +484,7 @@ namespace System {
     /// <param name="action">The callback for each element.</param>
     public static void ForEach<TInput>(this TInput[] This, Action<TInput> action) => Array.ForEach(This, action);
 
+#if NETFX_4
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
@@ -379,6 +492,7 @@ namespace System {
     /// <param name="This">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
     public static void ParallelForEach<TInput>(this TInput[] This, Action<TInput> action) => Parallel.ForEach(This, action);
+#endif
 
     /// <summary>
     /// Executes a callback with each element in an array.
@@ -622,7 +736,7 @@ namespace System {
 #endif
       var length = This.Length;
       if (length == 0)
-        throw _noElements;
+        throw _EX_NO_ELEMENTS;
       return (This[0]);
     }
     public static TItem Last<TItem>(this TItem[] This) {
@@ -631,7 +745,7 @@ namespace System {
 #endif
       var length = This.LongLength;
       if (length == 0)
-        throw _noElements;
+        throw _EX_NO_ELEMENTS;
       return (This[length - 1]);
     }
     public static TItem First<TItem>(this TItem[] This, Predicate<TItem> predicate) {
@@ -645,7 +759,7 @@ namespace System {
         if (predicate(current))
           return (current);
       }
-      throw _noElements;
+      throw _EX_NO_ELEMENTS;
     }
     public static TItem Last<TItem>(this TItem[] This, Predicate<TItem> predicate) {
 #if NETFX_4
@@ -658,7 +772,7 @@ namespace System {
         if (predicate(current))
           return (current);
       }
-      throw _noElements;
+      throw _EX_NO_ELEMENTS;
     }
     public static TItem FirstOrDefault<TItem>(this TItem[] This) => This.Length == 0 ? default(TItem) : This[0];
 
@@ -702,7 +816,7 @@ namespace System {
 #endif
       var length = This.LongLength;
       if (length == 0)
-        throw _noElements;
+        throw _EX_NO_ELEMENTS;
       var result = This[0];
       for (var i = 1; i < length; i++)
         result = func(result, This[i]);
@@ -715,7 +829,7 @@ namespace System {
 #endif
       var length = This.LongLength;
       if (length == 0)
-        throw _noElements;
+        throw _EX_NO_ELEMENTS;
       var result = seed;
       for (var i = 0; i < length; i++)
         result = func(result, This[i]);
@@ -892,6 +1006,13 @@ namespace System {
     #endregion
 
     #region byte-array specials
+
+    /// <summary>
+    /// Creates random data in the given buffer; thus effectively overwriting it in-place.
+    /// </summary>
+    /// <param name="this">This buffer.</param>
+    /// <returns>The given buffer</returns>
+    public static void RandomizeBuffer(this byte[] @this) => new RNGCryptoServiceProvider().GetBytes(@this);
 
     /// <summary>
     /// Copies the given buffer.
@@ -1080,10 +1201,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1103,13 +1226,17 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
 
+#if NETFX_4
           return;
         }
 
@@ -1129,14 +1256,17 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1156,6 +1286,7 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       public static void ProcessBytewise(byte[] source, byte[] operand) {
@@ -1319,10 +1450,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1342,13 +1475,16 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1368,14 +1504,17 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1395,6 +1534,7 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       public static void ProcessBytewise(byte[] source, byte[] operand) {
@@ -1558,10 +1698,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1581,13 +1723,16 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1607,14 +1752,17 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1634,6 +1782,7 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       public static void ProcessBytewise(byte[] source, byte[] operand) {
@@ -1797,10 +1946,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= 0xffff;
-
+#if NETFX_4
           return;
         }
 
@@ -1820,13 +1971,16 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoDWords(uint[] source) {
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1846,14 +2000,17 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       private static void _DoQWords(ulong[] source) {
 
+#if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
+#endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-
+#if NETFX_4
           return;
         }
 
@@ -1873,6 +2030,7 @@ namespace System {
           actions[i] = action;
 
         Parallel.Invoke(actions);
+#endif
       }
 
       public static void ProcessBytewise(byte[] source) {

@@ -28,14 +28,26 @@ using System.Diagnostics.Contracts;
 #else
 using System.Diagnostics;
 #endif
+using System.Drawing;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 // This file holds parsing routines to convert from normal strings to a certain primitive data type.
-
+<#
+  Func<string,string,string> GenerateDefaultValueStubs=(typeName,code)=>{
+    var result=new System.Text.StringBuilder();
+    result.Append(string.Format(code,"","","default("+typeName+")"));
+    result.Append(string.Format(code,", "+typeName,"defaultValue","defaultValue"));
+    result.Append(string.Format(code,", Func<"+typeName+">","defaultValueFactory","defaultValueFactory()"));
+    result.Append(string.Format(code,", Func<string, "+typeName+">","defaultValueFactory","defaultValueFactory(@this)"));
+    return result.ToString();
+  };
+  #>
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ExpressionIsAlwaysNull
 namespace System {
   internal static partial class StringExtensions {
     
@@ -60,162 +72,151 @@ namespace System {
 
     #region Parsing <#=i.Item1#>
     #region Parse
-    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This){
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.Parse(This));
+      return(<#=i.Item2#>.Parse(@this));
     }
     
-    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,IFormatProvider provider){
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this,IFormatProvider provider){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.Parse(This,provider));
+      return(<#=i.Item2#>.Parse(@this,provider));
     }
 
-    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,NumberStyles style){
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this,NumberStyles style){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.Parse(This,style));
+      return(<#=i.Item2#>.Parse(@this,style));
     }
     
-    public static <#=i.Item2#> Parse<#=i.Item1#>(this string This,NumberStyles style,IFormatProvider provider){
+    public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this,NumberStyles style,IFormatProvider provider){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.Parse(This,style,provider));
+      return(<#=i.Item2#>.Parse(@this,style,provider));
     }
     #endregion
 
     #region TryParse
-    public static bool TryParse<#=i.Item1#>(this string This,out <#=i.Item2#> result){
+    public static bool TryParse<#=i.Item1#>(this string @this,out <#=i.Item2#> result){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.TryParse(This, out result));
+      return(<#=i.Item2#>.TryParse(@this, out result));
     }
     
-    public static bool TryParse<#=i.Item1#>(this string This,IFormatProvider provider,out <#=i.Item2#> result){
+    public static bool TryParse<#=i.Item1#>(this string @this,IFormatProvider provider,out <#=i.Item2#> result){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.TryParse(This,_STYLE_<#=i.Item3#>,provider,out result));
+      return(<#=i.Item2#>.TryParse(@this,_STYLE_<#=i.Item3#>,provider,out result));
     }
 
-    public static bool TryParse<#=i.Item1#>(this string This,NumberStyles style,out <#=i.Item2#> result){
+    public static bool TryParse<#=i.Item1#>(this string @this,NumberStyles style,out <#=i.Item2#> result){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.TryParse(This,style,Thread.CurrentThread.CurrentCulture,out result));
+      return(<#=i.Item2#>.TryParse(@this,style,Thread.CurrentThread.CurrentCulture,out result));
     }
     
-    public static bool TryParse<#=i.Item1#>(this string This,NumberStyles style,IFormatProvider provider,out <#=i.Item2#> result){
+    public static bool TryParse<#=i.Item1#>(this string @this,NumberStyles style,IFormatProvider provider,out <#=i.Item2#> result){
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return(<#=i.Item2#>.TryParse(This,style,provider,out result));
+      return <#=i.Item2#>.TryParse(@this,style,provider,out result);
     }
     #endregion
 
     #region ParseOrDefault
-    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,out result)?result:defaultValue);
-    }
-    
-    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,IFormatProvider provider,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,provider,out result)?result:defaultValue);
-    }
+<#=GenerateDefaultValueStubs(i.Item2,@"
+    public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this{0} {1}){{
+      if (@this==null)
+        return {2};
 
-    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,NumberStyles style,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,style,out result)?result:defaultValue);
-    }
-    
-    public static <#=i.Item2#> Parse<#=i.Item1#>OrDefault(this string This,NumberStyles style,IFormatProvider provider,<#=i.Item2#> defaultValue=default(<#=i.Item2#>)){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,style,provider,out result)?result:defaultValue);
-    }
+      "+i.Item2+@" result;
+      return TryParse"+i.Item1+@"(@this, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs(i.Item2,@"
+    public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, IFormatProvider provider{0} {1}){{
+      if (@this==null)
+        return {2};
+
+      "+i.Item2+@" result;
+      return TryParse"+i.Item1+@"(@this, provider, out result) ? result : {2};
+    }}
+")#>    
+<#=GenerateDefaultValueStubs(i.Item2,@"
+    public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, NumberStyles style{0} {1}){{
+      if (@this==null)
+        return {2};
+
+      "+i.Item2+@" result;
+      return TryParse"+i.Item1+@"(@this, style, out result) ? result : {2};
+    }}
+")#>    
+<#=GenerateDefaultValueStubs(i.Item2,@"
+    public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, NumberStyles style, IFormatProvider provider{0} {1}){{
+      if (@this==null)
+        return {2};
+
+      "+i.Item2+@" result;
+      return TryParse"+i.Item1+@"(@this, style, provider, out result) ? result : {2};
+    }}
+")#>    
     #endregion
 
     #region ParseOrNull
-    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this){
+      if(@this==null)
+        return null;
+      
       <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,out result)?result:(<#=i.Item2#>?)null);
+      return TryParse<#=i.Item1#>(@this,out result)?result:(<#=i.Item2#>?)null;
     }
     
-    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,IFormatProvider provider){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this,IFormatProvider provider){
+      if(@this==null)
+        return null;
+      
       <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,provider,out result)?result:(<#=i.Item2#>?)null);
+      return TryParse<#=i.Item1#>(@this,provider,out result)?result:(<#=i.Item2#>?)null;
     }
 
-    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,NumberStyles style){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this,NumberStyles style){
+      if(@this==null)
+        return null;
+      
       <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,style,out result)?result:(<#=i.Item2#>?)null);
+      return TryParse<#=i.Item1#>(@this,style,out result)?result:(<#=i.Item2#>?)null;
     }
     
-    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string This,NumberStyles style,IFormatProvider provider){
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this,NumberStyles style,IFormatProvider provider){
+      if(@this==null)
+        return null;
+      
       <#=i.Item2#> result;
-      return(TryParse<#=i.Item1#>(This,style,provider,out result)?result:(<#=i.Item2#>?)null);
+      return TryParse<#=i.Item1#>(@this,style,provider,out result)?result:(<#=i.Item2#>?)null;
     }
     #endregion
     #endregion
@@ -224,88 +225,72 @@ namespace System {
 
     #region Parsing TimeSpan
     #region Parse
-    public static TimeSpan ParseTimeSpan(this string This) {
+    public static TimeSpan ParseTimeSpan(this string @this) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (TimeSpan.Parse(This));
+      return TimeSpan.Parse(@this);
     }
 
-    public static TimeSpan ParseTimeSpan(this string This, IFormatProvider provider) {
+    public static TimeSpan ParseTimeSpan(this string @this, IFormatProvider provider) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (TimeSpan.Parse(This, provider));
+      return TimeSpan.Parse(@this, provider);
     }
     #endregion
 
     #region TryParse
-    public static bool TryParseTimeSpan(this string This, out TimeSpan result) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (TimeSpan.TryParse(This, out result));
+    public static bool TryParseTimeSpan(this string @this, out TimeSpan result) {
+      return TimeSpan.TryParse(@this, out result);
     }
 
-    public static bool TryParseTimeSpan(this string This, IFormatProvider provider, out TimeSpan result) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      return (TimeSpan.TryParse(This, provider, out result));
+    public static bool TryParseTimeSpan(this string @this, IFormatProvider provider, out TimeSpan result) {
+      return TimeSpan.TryParse(@this, provider, out result);
     }
 
     #endregion
 
     #region ParseOrDefault
-    public static TimeSpan ParseTimeSpanOrDefault(this string This, TimeSpan defaultValue = default(TimeSpan)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+<#=GenerateDefaultValueStubs("TimeSpan",@"
+    public static TimeSpan ParseTimeSpanOrDefault(this string @this{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
       TimeSpan result;
-      return (TryParseTimeSpan(This, out result) ? result : defaultValue);
-    }
-
-    public static TimeSpan ParseTimeSpanOrDefault(this string This, IFormatProvider provider, TimeSpan defaultValue = default(TimeSpan)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+      return TryParseTimeSpan(@this, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs("TimeSpan",@"
+    public static TimeSpan ParseTimeSpanOrDefault(this string @this, IFormatProvider provider{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
       TimeSpan result;
-      return (TryParseTimeSpan(This, provider, out result) ? result : defaultValue);
-    }
-
+      return TryParseTimeSpan(@this, provider, out result) ? result : {2};
+    }}
+")#>
     #endregion
 
     #region ParseOrNull
-    public static TimeSpan? ParseTimeSpanOrNull(this string This) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static TimeSpan? ParseTimeSpanOrNull(this string @this) {
+      if(@this==null)
+        return null;
+      
       TimeSpan result;
-      return (TryParseTimeSpan(This, out result) ? result : (TimeSpan?)null);
+      return (TryParseTimeSpan(@this, out result) ? result : (TimeSpan?)null);
     }
 
-    public static TimeSpan? ParseTimeSpanOrNull(this string This, IFormatProvider provider) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static TimeSpan? ParseTimeSpanOrNull(this string @this, IFormatProvider provider) {
+      if(@this==null)
+        return null;
+      
       TimeSpan result;
-      return (TryParseTimeSpan(This, provider, out result) ? result : (TimeSpan?)null);
+      return (TryParseTimeSpan(@this, provider, out result) ? result : (TimeSpan?)null);
     }
 
     #endregion
@@ -313,146 +298,435 @@ namespace System {
 
     #region Parsing DateTime
     #region Parse
-    public static DateTime ParseDateTime(this string This) {
+    public static DateTime ParseDateTime(this string @this) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.Parse(This));
+      return (DateTime.Parse(@this));
     }
 
-    public static DateTime ParseDateTime(this string This, IFormatProvider provider) {
+    public static DateTime ParseDateTime(this string @this, IFormatProvider provider) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.Parse(This, provider));
+      return (DateTime.Parse(@this, provider));
     }
+
+    public static DateTime ParseDateTime(this string @this, string exactFormat) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.ParseExact(@this,exactFormat, Thread.CurrentThread.CurrentCulture, DateTimeStyles.None));
+    }
+
+    public static DateTime ParseDateTime(this string @this, string exactFormat,IFormatProvider provider) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.ParseExact(@this,exactFormat, provider, DateTimeStyles.None));
+    }
+
+    public static DateTime ParseDateTime(this string @this, string exactFormat,DateTimeStyles style) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.ParseExact(@this,exactFormat, Thread.CurrentThread.CurrentCulture, style));
+    }
+
+    public static DateTime ParseDateTime(this string @this, string exactFormat,DateTimeStyles style,IFormatProvider provider) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.ParseExact(@this,exactFormat, provider, style));
+    }
+
     #endregion
 
     #region TryParse
-    public static bool TryParseDateTime(this string This, out DateTime result) {
+    public static bool TryParseDateTime(this string @this, out DateTime result) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.TryParse(This, out result));
+      return (DateTime.TryParse(@this, out result));
     }
 
-    public static bool TryParseDateTime(this string This, IFormatProvider provider, out DateTime result) {
+    public static bool TryParseDateTime(this string @this, IFormatProvider provider, out DateTime result) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.TryParse(This, provider, DateTimeStyles.None, out result));
+      return (DateTime.TryParse(@this, provider, DateTimeStyles.None, out result));
     }
 
-    public static bool TryParseDateTime(this string This, DateTimeStyles style, out DateTime result) {
+    public static bool TryParseDateTime(this string @this, DateTimeStyles style, out DateTime result) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.TryParse(This, Thread.CurrentThread.CurrentCulture,style, out result));
+      return (DateTime.TryParse(@this, Thread.CurrentThread.CurrentCulture,style, out result));
+    }
+        
+    public static bool TryParseDateTime(this string @this, string exactFormat, out DateTime result) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.TryParseExact(@this,exactFormat, Thread.CurrentThread.CurrentCulture,DateTimeStyles.None, out result));
     }
 
-    public static bool TryParseDateTime(this string This, DateTimeStyles style, IFormatProvider provider, out DateTime result) {
+    public static bool TryParseDateTime(this string @this, string exactFormat, DateTimeStyles style, out DateTime result) {
 #if !NETFX_4
-      Debug.Assert(This != null);
+      Debug.Assert(@this != null);
 #else
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      return (DateTime.TryParse(This,  provider,style, out result));
+      return (DateTime.TryParseExact(@this,exactFormat, Thread.CurrentThread.CurrentCulture,style, out result));
+    }
+
+    public static bool TryParseDateTime(this string @this, string exactFormat,IFormatProvider provider, out DateTime result) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.TryParseExact(@this,exactFormat, provider,DateTimeStyles.None, out result));
+    }
+
+    public static bool TryParseDateTime(this string @this, string exactFormat,DateTimeStyles style, IFormatProvider provider, out DateTime result) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.TryParseExact(@this,exactFormat, provider,style, out result));
+    }
+    
+    public static bool TryParseDateTime(this string @this, DateTimeStyles style, IFormatProvider provider, out DateTime result) {
+#if !NETFX_4
+      Debug.Assert(@this != null);
+#else
+      Contract.Requires(@this != null);
+#endif
+      return (DateTime.TryParse(@this,  provider,style, out result));
     }
     #endregion
 
     #region ParseOrDefault
-    public static DateTime ParseDateTimeOrDefault(this string This, DateTime defaultValue = default(DateTime)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
-      DateTime result;
-      return (TryParseDateTime(This, out result) ? result : defaultValue);
-    }
 
-    public static DateTime ParseDateTimeOrDefault(this string This, IFormatProvider provider, DateTime defaultValue = default(DateTime)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+<#=GenerateDefaultValueStubs("DateTime",@"
+    public static DateTime ParseDateTimeOrDefault(this string @this{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
       DateTime result;
-      return (TryParseDateTime(This, provider, out result) ? result : defaultValue);
-    }
-
-    public static DateTime ParseDateTimeOrDefault(this string This, DateTimeStyles style, DateTime defaultValue = default(DateTime)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+      return TryParseDateTime(@this, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs("DateTime",@"    
+    public static DateTime ParseDateTimeOrDefault(this string @this, IFormatProvider provider{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
       DateTime result;
-      return (TryParseDateTime(This, style, out result) ? result : defaultValue);
-    }
-
-    public static DateTime ParseDateTimeOrDefault(this string This, DateTimeStyles style, IFormatProvider provider, DateTime defaultValue = default(DateTime)) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+      return TryParseDateTime(@this, provider, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+    public static DateTime ParseDateTimeOrDefault(this string @this, DateTimeStyles style{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
       DateTime result;
-      return (TryParseDateTime(This, style, provider, out result) ? result : defaultValue);
-    }
+      return TryParseDateTime(@this, style, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+    public static DateTime ParseDateTimeOrDefault(this string @this, string exactFormat{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
+      DateTime result;
+      return TryParseDateTime(@this,exactFormat, out result) ? result : {2};
+    }}
+")#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+    public static DateTime ParseDateTimeOrDefault(this string @this, DateTimeStyles style, IFormatProvider provider{0} {1}) {{
+      if(@this==null)
+        return {2};
+      
+      DateTime result;
+      return TryParseDateTime(@this, style, provider, out result) ? result : {2};
+    }}
+")#>
     #endregion
 
     #region ParseOrNull
-    public static DateTime? ParseDateTimeOrNull(this string This) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static DateTime? ParseDateTimeOrNull(this string @this) {
+      if(@this==null)
+        return null;
+      
       DateTime result;
-      return (TryParseDateTime(This, out result) ? result : (DateTime?)null);
+      return (TryParseDateTime(@this, out result) ? result : (DateTime?)null);
     }
 
-    public static DateTime? ParseDateTimeOrNull(this string This, IFormatProvider provider) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static DateTime? ParseDateTimeOrNull(this string @this, IFormatProvider provider) {
+      if(@this==null)
+        return null;
+      
       DateTime result;
-      return (TryParseDateTime(This, provider, out result) ? result : (DateTime?)null);
+      return (TryParseDateTime(@this, provider, out result) ? result : (DateTime?)null);
     }
 
-    public static DateTime? ParseDateTimeOrNull(this string This, DateTimeStyles style) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static DateTime? ParseDateTimeOrNull(this string @this, DateTimeStyles style) {
+      if(@this==null)
+        return null;
+      
       DateTime result;
-      return (TryParseDateTime(This, style, out result) ? result : (DateTime?)null);
+      return (TryParseDateTime(@this, style, out result) ? result : (DateTime?)null);
     }
 
-    public static DateTime? ParseDateTimeOrNull(this string This, DateTimeStyles style, IFormatProvider provider) {
-#if !NETFX_4
-      Debug.Assert(This != null);
-#else
-      Contract.Requires(This != null);
-#endif
+    public static DateTime? ParseDateTimeOrNull(this string @this, string exactFormat) {
+      if(@this==null)
+        return null;
+      
       DateTime result;
-      return (TryParseDateTime(This, style, provider, out result) ? result : (DateTime?)null);
+      return (TryParseDateTime(@this, exactFormat, out result) ? result : (DateTime?)null);
+    }
+
+    public static DateTime? ParseDateTimeOrNull(this string @this, DateTimeStyles style, IFormatProvider provider) {
+      if(@this==null)
+        return null;
+      
+      DateTime result;
+      return (TryParseDateTime(@this, style, provider, out result) ? result : (DateTime?)null);
     }
     #endregion
+    #endregion
+
+    #region Parsing Boolean
+    #region Parse
+
+    public static bool ParseBoolean(this string @this, string trueValue)
+      => @this == trueValue
+      ;
+
+    public static bool ParseBoolean(this string @this, string trueValue, StringComparison stringComparison)
+      => string.Equals(@this, trueValue, stringComparison)
+      ;
+
+    public static bool ParseBoolean(this string @this, string trueValue, string falseValue) {
+      if (@this == trueValue)
+        return true;
+
+      if (@this == falseValue)
+        return false;
+
+      throw new ArgumentException($"{@this} is an unsupported value.");
+    }
+
+    public static bool ParseBoolean(this string @this, string trueValue, string falseValue, StringComparison stringComparison) {
+      if (string.Equals(@this, trueValue, stringComparison))
+        return true;
+
+      if (string.Equals(@this, falseValue, stringComparison))
+        return false;
+
+      throw new ArgumentException($"{@this} is an unsupported value.");
+    }
+
+    #endregion
+
+    #region TryParse
+
+    public static bool TryParseBoolean(this string @this, string trueValue, string falseValue, out bool result) {
+      if (@this == trueValue) {
+        result = true;
+        return true;
+      }
+
+      if (@this == falseValue) {
+        result = false;
+        return true;
+      }
+
+      result = default(bool);
+      return false;
+    }
+
+    public static bool TryParseBoolean(this string @this, string trueValue, string falseValue, StringComparison stringComparison, out bool result) {
+      if (string.Equals(@this, trueValue, stringComparison)) {
+        result = true;
+        return true;
+      }
+
+      if (string.Equals(@this, falseValue, stringComparison)) {
+        result = false;
+        return true;
+      }
+
+      result = default(bool);
+      return false;
+    }
+
+    #endregion
+
+    #region ParseOrDefault
+    <#=GenerateDefaultValueStubs("bool",@"
+    public static bool ParseBooleanOrDefault(this string @this, string trueValue, string falseValue{0} {1}) {{
+      if (@this == trueValue)
+        return true;
+
+      if (@this == falseValue)
+        return false;
+
+      return {2};
+    }}
+")#>
+
+    <#=GenerateDefaultValueStubs("bool",@"
+    public static bool ParseBooleanOrDefault(this string @this, string trueValue, string falseValue, StringComparison stringComparison{0} {1}) {{
+      if (string.Equals(@this, trueValue, stringComparison))
+        return true;
+
+      if (string.Equals(@this, falseValue, stringComparison))
+        return false;
+
+      return {2};
+    }}
+")#>
+
+    #endregion
+
+    #region ParseOrNull
+
+    public static bool? ParseBooleanOrNull(this string @this, string trueValue, string falseValue) {
+      if (@this == trueValue)
+        return true;
+
+      if (@this == falseValue)
+        return false;
+
+      return null;
+    }
+
+    public static bool? ParseBooleanOrNull(this string @this, string trueValue, string falseValue, StringComparison stringComparison) {
+      if (string.Equals(@this, trueValue, stringComparison))
+        return true;
+
+      if (string.Equals(@this, falseValue, stringComparison))
+        return false;
+
+      return null;
+    }
+
+    #endregion
+    #endregion
+
+    #region Parsing Color
+    private static readonly Regex _COLOR_MATCH = new Regex(@"^(?:#(?<eightdigit>[0-9a-z]{8}))|(?:#(?<sixdigit>[0-9a-z]{6}))|(?:#(?<fourdigit>[0-9a-z]{4}))|(?:#(?<threedigit>[0-9a-z]{3}))|(?<knowncolor>[a-z]+)|(?:'(?<systemcolor>[a-z]+)')$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
+      Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[3],16),
+        Convert.ToByte(string.Empty+v[4]+v[5],16),
+        Convert.ToByte(string.Empty+v[6]+v[7],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("sixdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[3],16),
+        Convert.ToByte(string.Empty+v[4]+v[5],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("fourdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[0],16),
+        Convert.ToByte(string.Empty+v[1]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[2],16),
+        Convert.ToByte(string.Empty+v[3]+v[3],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("threedigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[0],16),
+        Convert.ToByte(string.Empty+v[1]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[2],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
+      Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
+    };
+
+    #region Parse
+
+    public static Color ParseColor(this string @this) {
+      var match = _COLOR_MATCH.Match(@this);
+      if (!match.Success)
+        throw new ArgumentException("Unknown color", nameof(@this));
+
+      foreach (var parser in _COLOR_PARSERS) {
+        var group = match.Groups[parser.Item1];
+        if (group.Success)
+          return parser.Item2(@group.Value);
+
+      }
+
+      throw new ArgumentException("Unknown color", nameof(@this));
+    }
+
+    #endregion
+
+    #region TryParse
+
+    public static bool TryParseColor(this string @this, out Color result) {
+      try {
+        result = ParseColor(@this);
+        return true;
+      } catch {
+        result = default(Color);
+        return false;
+      }
+    }
+
+    #endregion
+
+    #region ParseOrDefault
+
+    <#=GenerateDefaultValueStubs("Color",@"
+    public static Color ParseColorOrDefault(this string @this{0} {1}) {{
+      try {{
+        return ParseColor(@this);
+      }} catch {{
+        return {2};
+      }}
+    }}
+")#>
+
+    #endregion
+
+    #region ParseOrNull
+
+    public static Color? ParseColorOrNull(this string @this) {
+      try {
+        return ParseColor(@this);
+      } catch {
+        return null;
+      }
+    }
+
+    #endregion
+
     #endregion
 
   }

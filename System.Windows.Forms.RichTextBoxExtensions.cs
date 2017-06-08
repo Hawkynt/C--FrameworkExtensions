@@ -30,12 +30,54 @@ namespace System.Windows.Forms {
 
     #region Native Methods
     private static partial class NativeMethods {
+      // ReSharper disable MemberCanBePrivate.Local
+
+      [StructLayout(LayoutKind.Sequential)]
+      public struct Rect {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+      }
+
+      [StructLayout(LayoutKind.Sequential)]
+      public struct Charrange {
+        public int cpMin;
+        public int cpMax;
+      }
+
+      [StructLayout(LayoutKind.Sequential)]
+      public struct Formatrange {
+        public IntPtr hdc;
+        public IntPtr hdcTarget;
+        public Rect rc;
+        public Rect rcPage;
+        public Charrange chrg;
+      }
+      // ReSharper restore MemberCanBePrivate.Local
+
       [DllImport("user32.dll")]
       private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
-      private const int WM_SETREDRAW = 0x0b;
 
-      public static void BeginUpdate(IntPtr handle) => SendMessage(handle, WM_SETREDRAW, (IntPtr)0, IntPtr.Zero);
-      public static void EndUpdate(IntPtr handle) => SendMessage(handle, WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+      [DllImport("user32.dll")]
+      private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wp, IntPtr lp);
+
+      private const int _WM_SETREDRAW = 0x0b;
+      private const int _WM_USER = 0x400;
+      private const int _EM_FORMATRANGE = _WM_USER + 57;
+
+      public static void BeginUpdate(IntPtr handle)
+        => SendMessage(handle, _WM_SETREDRAW, (IntPtr)0, IntPtr.Zero)
+        ;
+
+      public static void EndUpdate(IntPtr handle)
+        =>
+        SendMessage(handle, _WM_SETREDRAW, (IntPtr)1, IntPtr.Zero)
+        ;
+
+      public static void FormatRange(IntPtr handle, IntPtr formatRange)
+        => SendMessage(handle, _EM_FORMATRANGE, 1, formatRange)
+        ;
     }
     #endregion
 
@@ -145,6 +187,73 @@ namespace System.Windows.Forms {
     public static void ChangeSectionBackground(this RichTextBox @this, int start, int length, Color color) {
       @this.Select(start, length);
       @this.SelectionBackColor = color;
+    }
+
+    #region Struct_Const_4_DrawToBitmap
+
+    private const double _INCH = 14.4;
+    #endregion
+
+    public static Bitmap DrawToBitmap(this RichTextBox @this, int width, int height) {
+      var result = new Bitmap(width, height);
+      DrawToBitmap(@this, result);
+      return result;
+    }
+
+    public static Bitmap DrawToBitmap(this RichTextBox @this, Size size) => DrawToBitmap(@this, size.Width, size.Height);
+    public static void DrawToBitmap(this RichTextBox @this, Bitmap target) => _DrawToBitmap(@this, target);
+
+    /// <summary>
+    /// Draws to bitmap.
+    /// </summary>
+    /// <param name="this">This RichTextBox.</param>
+    /// <param name="target">The bitmap.</param>
+    // ReSharper disable once SuggestBaseTypeForParameter
+    private static void _DrawToBitmap(RichTextBox @this, Bitmap target) {
+      using (var graphics = Graphics.FromImage(target)) {
+        var hdc = IntPtr.Zero;
+        try {
+          hdc = graphics.GetHdc();
+
+          var intPtr = hdc;
+          var hDc = intPtr;
+
+          var rect = new NativeMethods.Rect {
+            Top = 0,
+            Left = 0,
+            Bottom = (int)(target.Height + target.Height * (target.HorizontalResolution / 100) * _INCH),
+            Right = (int)(target.Width + target.Width * (target.VerticalResolution / 100) * _INCH)
+          };
+
+          var fmtRange = new NativeMethods.Formatrange {
+            chrg = {
+              cpMin = 0,
+              cpMax = -1
+            },
+            hdc = hDc,
+            hdcTarget = hDc,
+            rc = rect,
+            rcPage = rect
+          };
+
+          var allocCoTaskMem = IntPtr.Zero;
+          try {
+            allocCoTaskMem = Marshal.AllocCoTaskMem(Marshal.SizeOf(fmtRange));
+
+            Marshal.StructureToPtr(fmtRange, allocCoTaskMem, false);
+            NativeMethods.FormatRange(@this.Handle, allocCoTaskMem);
+            NativeMethods.FormatRange(@this.Handle, IntPtr.Zero);
+
+          } finally {
+            if (allocCoTaskMem != IntPtr.Zero)
+              Marshal.FreeCoTaskMem(allocCoTaskMem);
+          }
+
+        } finally {
+          if (hdc != IntPtr.Zero)
+            graphics.ReleaseHdc();
+        }
+      }
     }
 
   }

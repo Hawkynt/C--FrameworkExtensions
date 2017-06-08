@@ -19,6 +19,8 @@
 */
 #endregion
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 #if NETFX_4
 using System.Diagnostics.Contracts;
 #endif
@@ -30,6 +32,9 @@ namespace System.Threading.Tasks {
   /// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
   internal class DeferredTask<TValue> {
 
+    /// <summary>
+    /// Stores the scheduled values, alongside their storage date.
+    /// </summary>
     private class Item {
       public readonly TValue value;
       public readonly DateTime createDate;
@@ -38,13 +43,9 @@ namespace System.Threading.Tasks {
         this.createDate = createDate;
       }
 
-      public static Item Now(TValue value) {
-        return (new Item(value, DateTime.MinValue));
-      }
+      public static Item Now(TValue value) => new Item(value, DateTime.MinValue);
+      public static Item Schedule(TValue value) => new Item(value, DateTime.UtcNow);
 
-      public static Item Schedule(TValue value) {
-        return (new Item(value, DateTime.UtcNow));
-      }
     }
 
     private const int _DEFAULT_WAIT_TIME_IN_MSECS = 500;
@@ -68,7 +69,7 @@ namespace System.Threading.Tasks {
     }
 
     /// <summary>
-    /// Schedules the specified value for execution.
+    /// Schedules the specified value for later execution.
     /// </summary>
     /// <param name="value">The value.</param>
     public void Schedule(TValue value) {
@@ -99,9 +100,13 @@ namespace System.Threading.Tasks {
       var thread = this._currentThread;
       if (thread == null || Interlocked.CompareExchange(ref this._currentThread, null, thread) != thread)
         return;
+
       thread.Abort();
     }
 
+    /// <summary>
+    /// Starts a new worker thread if values are available.
+    /// </summary>
     private void _RunThreadIfNeeded() {
       if (this._currentValue == null)
         return;
@@ -155,6 +160,5 @@ namespace System.Threading.Tasks {
         Interlocked.CompareExchange(ref this._currentThread, null, thread);
       }
     }
-
   }
 }

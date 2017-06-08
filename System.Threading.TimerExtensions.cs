@@ -35,7 +35,7 @@ namespace System.Threading {
     /// </summary>
     /// <param name="this">This <see cref="Timer">Timer</see>.</param>
     /// <param name="timeout">The timeout before the first run occurs.</param>
-    public static void Start(this Timer @this, TimeSpan timeout) => @this.Change(timeout, Timeout.InfiniteTimeSpan);
+    public static void Start(this Timer @this, TimeSpan timeout) => @this.Change((long)timeout.TotalMilliseconds, Timeout.Infinite);
 
     /// <summary>
     /// Starts the specified <see cref="Timer">Timer</see>.

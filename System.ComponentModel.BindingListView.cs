@@ -38,7 +38,7 @@ namespace System.ComponentModel {
 
     private bool _isFiltering;
     private Func<TItem, bool> _filterPredicate;
-    private bool _ignoreEvents;
+    private bool _ignoreDataSourceEvents;
 
     public BindingListView(BindingList<TItem> baseList) {
       Contract.Requires(baseList != null);
@@ -48,11 +48,12 @@ namespace System.ComponentModel {
 
     private void _Hook(BindingList<TItem> baseList) {
       baseList.ListChanged += (s, e) => {
-        if (this._ignoreEvents)
+        if (this._ignoreDataSourceEvents)
           return;
 
         switch (e.ListChangedType) {
-          default: {
+          default:
+          {
             this._ApplyFiltering();
             break;
           }
@@ -66,19 +67,17 @@ namespace System.ComponentModel {
     /// </summary>
     /// <param name="items">The items.</param>
     public new void AddRange(IEnumerable<TItem> items) {
-      this._ignoreEvents = true;
+      this._ignoreDataSourceEvents = true;
       foreach (var item in items)
         this.DataSource.Add(item);
-      this._ignoreEvents = false;
+      this._ignoreDataSourceEvents = false;
       this._ApplyFiltering();
     }
 
     /// <summary>
     ///   Gets the data source.
     /// </summary>
-    public BindingList<TItem> DataSource {
-      get { return (this._baseList); }
-    }
+    public BindingList<TItem> DataSource => this._baseList;
 
     /// <summary>
     ///   Gets or sets a value indicating whether this instance is filtering.
@@ -112,12 +111,18 @@ namespace System.ComponentModel {
     ///   Re-applies filtering to all elements.
     /// </summary>
     private void _ApplyFiltering() {
+      var ignoreEvents = this.RaiseListChangedEvents;
+      this.RaiseListChangedEvents = false;
+
       this.Clear();
       var isFiltering = this.IsFiltering;
       var filter = this.FilterPredicate;
       var results = this._baseList.Where(item => !isFiltering || (filter == null) || filter(item));
       // FIXME: calls this in a GUI thread
       base.AddRange(results);
+
+      this.RaiseListChangedEvents = ignoreEvents;
+      this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, 0));
     }
   }
 }

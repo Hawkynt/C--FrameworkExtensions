@@ -18,34 +18,23 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+using System.ComponentModel;
+using System.Data.Common;
 
-using System.Collections.Generic;
-
-namespace System.Windows.Forms {
-  // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class TreeNodeCollectionExtensions {
-
+namespace System.Data {
+  internal static partial class DataTableExtensions {
     /// <summary>
-    /// Flatteneds the hierarchy.
+    /// Fills a datatable from a dataadapter.
     /// </summary>
-    /// <param name="this">This TreeNodeCollection.</param>
-    /// <returns>An enumeration of nodes in the order of flat appearance.</returns>
-    public static IEnumerable<TreeNode> AllNodes(this TreeNodeCollection @this) {
-      var stack = new Stack<TreeNode>();
-      for (var i = @this.Count - 1; i >= 0; --i)
-        stack.Push(@this[i]);
+    /// <typeparam name="ATableAdapter">The type of the table adapter.</typeparam>
+    /// <param name="this">This DataTable.</param>
+    /// <param name="connection">Optional: A different connection string.</param>
+    public static void FillWith<ATableAdapter>(this DataTable @this, string connection = null) where ATableAdapter : Component, new() {
+      dynamic adapter = new ATableAdapter();
+      if (connection != null)
+        ((DbConnection)adapter.Connection).ConnectionString = connection;
 
-      while (stack.Count > 0) {
-        var node = stack.Pop();
-        yield return node;
-        if (node.Nodes.Count < 1)
-          continue;
-
-        for (var i = node.Nodes.Count - 1; i >= 0; --i)
-          stack.Push(node.Nodes[i]);
-
-      }
+      adapter.Fill((dynamic)@this);
     }
-
   }
 }

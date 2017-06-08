@@ -20,6 +20,7 @@
 #endregion
 
 using System.Diagnostics.Contracts;
+using System.Threading;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -30,22 +31,45 @@ namespace System.Collections.Generic {
   /// Items will be pulled out of the enumeration as late as possible, at least on first access, but never more than once, because they'll get cached.
   /// </summary>
   /// <typeparam name="TItem">The type of the underlying enumerations' items.</typeparam>
-  internal class CachedEnumeration<TItem> : IEnumerable<TItem> {
+  internal class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
     private IEnumerator<TItem> _enumerator;
     private bool _enumerationEnded;
     private readonly List<TItem> _cachedItems = new List<TItem>();
+    private readonly IEnumerable<TItem> _sourceEnumeration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CachedEnumeration&lt;T&gt;"/> class.
     /// </summary>
     /// <param name="enumeration">The enumeration.</param>
     internal CachedEnumeration(IEnumerable<TItem> enumeration) {
-      if (enumeration == null) {
+      this._sourceEnumeration = enumeration;
+      this._StartEnumeratingSource();
+    }
+
+    /// <summary>
+    /// Starts enumerating the source.
+    /// </summary>
+    private void _StartEnumeratingSource() {
+      lock (this._cachedItems)
+        this._cachedItems.Clear();
+
+      if (this._sourceEnumeration == null) {
+        this._enumerator = null;
         this._enumerationEnded = true;
       } else {
-        this._enumerator = enumeration.GetEnumerator();
+        this._enumerator = this._sourceEnumeration.GetEnumerator();
+        this._enumerationEnded = false;
       }
+    }
+
+    /// <summary>
+    /// Ends enumerating the source.
+    /// </summary>
+    private void _EndEnumeratingSource() {
+      this._enumerationEnded = true;
+      var enumerator = Interlocked.Exchange(ref this._enumerator, null);
+      enumerator?.Dispose();
     }
 
     /// <summary>
@@ -54,10 +78,10 @@ namespace System.Collections.Generic {
     public TItem this[int index] {
       get {
         TItem item;
-        if (this._GetItemAtPosition(index, out item))
-          return (item);
+        if (this._TryGetItemAtPosition(index, out item))
+          return item;
 
-        throw new ArgumentOutOfRangeException("cachePosition", "Position out of enumeration");
+        throw new ArgumentOutOfRangeException(nameof(index), "Position out of enumeration");
       }
     }
 
@@ -72,12 +96,12 @@ namespace System.Collections.Generic {
     /// <param name="cachePosition">The cache position.</param>
     /// <param name="item">The item to be returned.</param>
     /// <returns><c>true</c> if we could get an item somehow; otherwise, <c>false</c>.</returns>
-    private bool _GetItemAtPosition(int cachePosition, out TItem item) {
+    private bool _TryGetItemAtPosition(int cachePosition, out TItem item) {
       Contract.Requires(cachePosition >= 0);
       var cachedItems = this._cachedItems;
       if (cachePosition < cachedItems.Count) {
         item = cachedItems[cachePosition];
-        return (true);
+        return true;
       }
 
       lock (cachedItems) {
@@ -85,20 +109,20 @@ namespace System.Collections.Generic {
         // cache could have been changed by another thread already
         if (cachePosition < cachedItems.Count) {
           item = cachedItems[cachePosition];
-          return (true);
+          return true;
         }
 
         // get next items from underlying enumeration
-        cachePosition++;
+        ++cachePosition;
         while (!this._enumerationEnded) {
           var result = this._GetNextItem(out item);
           if (cachePosition == cachedItems.Count)
-            return (result);
+            return result;
         }
 
         // return default value
         item = default(TItem);
-        return (false);
+        return false;
       }
     }
 
@@ -112,7 +136,7 @@ namespace System.Collections.Generic {
       // if enumeration is already at end, there is nothing to pull from
       if (this._enumerationEnded) {
         item = default(TItem);
-        return (false);
+        return false;
       }
 
       // ask for new items
@@ -120,15 +144,23 @@ namespace System.Collections.Generic {
       if (enumerator.MoveNext()) {
         item = enumerator.Current;
         this._cachedItems.Add(item);
-        return (true);
+        return true;
       }
 
       // no new items available
-      enumerator.Dispose();
-      this._enumerator = null;
-      this._enumerationEnded = true;
+      this._EndEnumeratingSource();
       item = default(TItem);
-      return (false);
+      return false;
+    }
+
+    /// <summary>
+    /// Resets this instance, effectively clearing all cached content.
+    /// </summary>
+    public void Reset() {
+      lock (this._cachedItems) {
+        this._EndEnumeratingSource();
+        this._StartEnumeratingSource();
+      }
     }
 
     #region Implementation of IEnumerable
@@ -152,6 +184,24 @@ namespace System.Collections.Generic {
 
     #endregion
 
+    #region IDisposable Support
+
+    private bool _isAlreadyDisposed;
+
+    protected virtual void Dispose(bool disposing) {
+      if (this._isAlreadyDisposed)
+        return;
+
+      this._isAlreadyDisposed = true;
+
+      if (disposing)
+        this._EndEnumeratingSource();
+    }
+
+    public void Dispose() => this.Dispose(true);
+
+    #endregion
+
     #region enumerator
     /// <summary>
     /// Enumerates through the cached enumeration.
@@ -170,7 +220,7 @@ namespace System.Collections.Generic {
 
       #region Implementation of IEnumerator
 
-      public bool MoveNext() => this._cache._GetItemAtPosition(this._currentIndex++, out this._current);
+      public bool MoveNext() => this._cache._TryGetItemAtPosition(this._currentIndex++, out this._current);
 
       public void Reset() {
         this._currentIndex = 0;
@@ -182,6 +232,7 @@ namespace System.Collections.Generic {
 
       #endregion
     }
+
     #endregion
 
   }

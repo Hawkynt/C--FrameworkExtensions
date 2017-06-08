@@ -19,16 +19,18 @@
 */
 #endregion
 
+using System.Linq;
+
 namespace System.ComponentModel {
   /// <summary>
   /// Tells the propertygrid what the minimum value for this number is.
   /// </summary>
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
   public class MinValueAttribute : Attribute {
-    private readonly decimal _value;
-    public decimal Value { get { return (this._value); } }
+    public decimal Value { get; }
+
     public MinValueAttribute(decimal value) {
-      this._value = value;
+      this.Value = value;
     }
     public MinValueAttribute(int value)
       : this((decimal)value) {
@@ -39,10 +41,10 @@ namespace System.ComponentModel {
   /// </summary>
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
   public class MaxValueAttribute : Attribute {
-    private readonly decimal _value;
-    public decimal Value { get { return (this._value); } }
+    public decimal Value { get; }
+
     public MaxValueAttribute(decimal value) {
-      this._value = value;
+      this.Value = value;
     }
     public MaxValueAttribute(int value)
       : this((decimal)value) {
@@ -53,10 +55,15 @@ namespace System.ComponentModel {
   /// </summary>
   [AttributeUsage(AttributeTargets.Field)]
   public class EnumDisplayNameAttribute : DisplayNameAttribute {
-    private readonly string _displayName;
-    public override string DisplayName { get { return (this._displayName); } }
+    public override string DisplayName { get; }
+
     public EnumDisplayNameAttribute(string displayName) {
-      this._displayName = displayName;
+      this.DisplayName = displayName;
     }
+
+    public static string GetDisplayName<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(typeof(TEnum), value);
+    public static string GetDisplayName(Type type, object value) => (type.GetField(value.ToString())?.GetCustomAttributes(typeof(EnumDisplayNameAttribute), true).FirstOrDefault() as EnumDisplayNameAttribute)?.DisplayName;
+    public static string GetDisplayNameOrDefault<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(value) ?? value.ToString();
+    public static string GetDisplayNameOrDefault(Type type, object value) => GetDisplayName(type, value) ?? value.ToString();
   }
 }

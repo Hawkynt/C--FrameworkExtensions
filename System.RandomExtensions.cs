@@ -36,7 +36,9 @@ namespace System {
     /// <param name="minValue">The min value.</param>
     /// <param name="maxValue">The max value.</param>
     /// <returns>A value between the given boundaries</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static double NextDouble(this Random This, double minValue, double maxValue) => This.NextDouble() * (maxValue - minValue) + minValue;
 
     /// <summary>

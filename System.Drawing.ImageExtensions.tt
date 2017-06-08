@@ -98,6 +98,22 @@ namespace System.Drawing {
       This.Save(fileName, ImageFormat.Png);
     }
 
+    /// <summary>
+    /// Saves an image into a tif file.
+    /// </summary>
+    /// <param name="This">This image.</param>
+    /// <param name="fileName">The file where it should be saved.</param>
+    public static void SaveToTiff(this Image This, string fileName) {
+#if NETFX_4
+      Contract.Requires(This != null);
+      Contract.Requires(fileName != null);
+#endif
+      var encoder = GetEncoder(ImageFormat.Tiff);
+      if (encoder == null)
+        throw new NotSupportedException("Tiff encoder not available");
+
+      This.Save(fileName, ImageFormat.Tiff);
+    }
 
     /// <summary>
     /// Saves an image into a jpeg file.
@@ -205,13 +221,7 @@ namespace System.Drawing {
         }
       }
 
-      using (var bitmap = new Bitmap(targetRes, targetRes)) {
-
-        // draw/resize image
-        using (var graphics = Graphics.FromImage(bitmap)) {
-          graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-          graphics.DrawImage(This, 0, 0, targetRes, targetRes);
-        }
+      using (var bitmap = Resize(This,targetRes, targetRes,true)) {
 
         // create gdi handle
         var hIcon = bitmap.GetHicon();
@@ -254,10 +264,22 @@ namespace System.Drawing {
 #if NETFX_4
       Contract.Requires(source is Bitmap);
 #endif
-      return (source.ApplyPixelProcessor(c => {
-        var grayScale = (int)((c.R * .3) + (c.G * .59) + (c.B * .11));
-        return (Color.FromArgb(grayScale, grayScale, grayScale));
-      }));
+      
+      var result = new Bitmap(source.Width, source.Height);
+      using (var graphics = Graphics.FromImage(result)) {
+        var matrix = new ColorMatrix(new[] {
+          new[] { 0.3f, 0.3f, 0.3f, 0, 0},
+          new[] { 0.59f, 0.59f, 0.59f, 0, 0},
+          new[] { 0.11f, 0.11f, 0.11f, 0, 0},
+          new[] { 0, 0, 0, 1f, 0},
+          new[] { 0, 0, 0, 0, 1f}
+        });
+        var attributes = new ImageAttributes();
+        attributes.SetColorMatrix(matrix);
+        graphics.DrawImage(source, new Rectangle(Point.Empty, source.Size), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
+      }
+      
+      return result;
     }
 
     /// <summary>
@@ -334,6 +356,40 @@ namespace System.Drawing {
       var result = (Image)This.Clone();
       result.RotateFlip(RotateFlipType.RotateNoneFlipY);
       return (result);
+    }
+
+    /// <summary>
+    /// Resizes the specified Image.
+    /// </summary>
+    /// <param name="this">This Image.</param>
+    /// <param name="width">The width in pixels.</param>
+    /// <param name="height">The height in pixels.</param>
+    /// <param name="keepAspect">if set to <c>true</c> keeps image aspect and fills borders with fillColor.</param>
+    /// <param name="fillColor">Color of the fill.</param>
+    /// <returns></returns>
+    public static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null) {
+      var result = new Bitmap(width, height);
+      using (var graphics = Graphics.FromImage(result)) {
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        graphics.CompositingQuality = CompositingQuality.HighQuality;
+
+        if (keepAspect) {
+          var ratioX = (double) result.Width / @this.Width;
+          var ratioY = (double) result.Height / @this.Height;
+          var ratio = ratioX < ratioY ? ratioX : ratioY;
+          var newWidth = (int) (ratio * @this.Width);
+          var newHeight = (int) (ratio * @this.Height);
+          var x = (result.Width - newWidth) >> 1;
+          var y = (result.Height - newHeight) >> 1;
+          graphics.Clear(fillColor ?? Color.Transparent);
+          graphics.DrawImage(@this, x, y, newWidth, newHeight);
+        } else {
+          graphics.DrawImage(@this, 0, 0, result.Width, result.Height);
+        }
+      }
+      return result;
     }
 
     /// <summary>

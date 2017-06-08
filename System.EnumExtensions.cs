@@ -11,10 +11,9 @@ namespace System {
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="field">The field.</param>
     /// <returns>The content of the description attribute or <c>null</c>.</returns>
-    public static string GetFieldDescription<TEnum>(this TEnum field) where TEnum : struct {
-      var result = GetFieldAttribute<TEnum, DescriptionAttribute>(field);
-      return (result == null ? null : result.Description);
-    }
+    public static string GetFieldDescription<TEnum>(this TEnum field) where TEnum : struct
+      => GetFieldAttribute<TEnum, DescriptionAttribute>(field)?.Description
+      ;
 
     /// <summary>
     /// Gets the field description.
@@ -22,11 +21,20 @@ namespace System {
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="field">The field.</param>
     /// <returns>The content of the description attribute or <c>null</c>.</returns>
-    public static string GetFieldDisplayName<TEnum>(this TEnum field) where TEnum : struct {
-      var result = GetFieldAttribute<TEnum, DisplayNameAttribute>(field);
-      return (result == null ? null : result.DisplayName);
-    }
+    public static string GetFieldDisplayName<TEnum>(this TEnum field) where TEnum : struct
+      => GetFieldAttribute<TEnum, DisplayNameAttribute>(field)?.DisplayName
+      ;
 
+    /// <summary>
+    /// Gets the field description.
+    /// </summary>
+    /// <typeparam name="TEnum">The type of the enum.</typeparam>
+    /// <param name="field">The field.</param>
+    /// <returns>The content of the description attribute or <c>null</c>.</returns>
+    public static string GetFieldDisplayNameOrDefault<TEnum>(this TEnum field) where TEnum : struct
+      => GetFieldAttribute<TEnum, DisplayNameAttribute>(field)?.DisplayName ?? field.ToString()
+      ;
+      
     /// <summary>
     /// Gets the attribute of an enumeration field.
     /// </summary>
@@ -41,13 +49,12 @@ namespace System {
       var type = field.GetType();
       Contract.Assert(type.IsEnum, "Only supported on enumerations");
 
-      var name = field.ToString();
-
-      var fieldInfo = type.GetField(name);
-      Contract.Assert(fieldInfo != null, "Can not find field");
-
-      var attribute = (TAttribute)fieldInfo.GetCustomAttributes(typeof(TAttribute), false).FirstOrDefault();
-      return (attribute);
+      return
+        (TAttribute)type
+        .GetField(field.ToString())?
+        .GetCustomAttributes(typeof(TAttribute), false)
+        .FirstOrDefault()
+        ;
     }
   }
 }

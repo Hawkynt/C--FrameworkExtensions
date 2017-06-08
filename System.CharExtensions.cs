@@ -21,75 +21,132 @@
 
 using System.Diagnostics.Contracts;
 using System.Globalization;
+#if NETFX_45
 using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System {
   internal static partial class CharExtensions {
+
+    /// <summary>
+    /// Determines whether the given character is a whitespace.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
+
+    /// <summary>
+    /// Determines whether the given char is the null character or a whitespace.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
+
+    /// <summary>
+    /// Determines whether the given char is not the null character or a whitespace.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
+
     /// <summary>
     /// Determines whether the specified char is a digit.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <returns>
     ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
     /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
-    public static bool IsDigit(this char This) => This >= '0' && This <= '9';
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
 
     /// <summary>
     /// converts the given character to uppercase.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <returns>The upper-case char.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
-    public static char ToUpper(this char This) => char.ToUpper(This);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static char ToUpper(this char @this) => char.ToUpper(@this);
 
     /// <summary>
     /// converts the given character to uppercase.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The upper-case char.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static char ToUpper(this char This, CultureInfo culture) => char.ToUpper(This, culture);
+#endif
+    [Pure]
+    public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
 
     /// <summary>
     /// converts the given character to lowercase.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <returns>The lower-case char.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
-    public static char ToLower(this char This) => char.ToLower(This);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static char ToLower(this char @this) => char.ToLower(@this);
 
     /// <summary>
     /// converts the given character to lowercase.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The lower-case char.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static char ToLower(this char This, CultureInfo culture) => char.ToLower(This, culture);
+#endif
+    [Pure]
+    public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
 
     /// <summary>
     /// Determines whether the given char is any of the ones in the list.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <param name="list">The list.</param>
     /// <returns>
     ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
     /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
-    public static bool IsAnyOf(this char This, params char[] list) => list.Any(c => c == This);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
 
     /// <summary>
     /// Repeats this character several times.
     /// </summary>
-    /// <param name="This">This Char.</param>
+    /// <param name="this">This Char.</param>
     /// <param name="count">The count.</param>
     /// <returns>A new string containing the given character the specified times.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
-    public static string Repeat(this char This, int count) => new string(This, count);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static string Repeat(this char @this, int count) => new string(@this, count);
   }
 }

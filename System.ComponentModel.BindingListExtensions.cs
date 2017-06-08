@@ -194,5 +194,20 @@ namespace System.ComponentModel {
           This.ResetBindings();
       }
     }
+
+    public static int RemoveWhere<TItem>(this BindingList<TItem> @this, Predicate<TItem> selector) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(selector != null);
+#endif
+      var result = 0;
+      var items = @this.Where(i => selector(i)).ToArray();
+      foreach (var item in items) {
+        @this.Remove(item);
+        ++result;
+      }
+
+      return result;
+    }
   }
 }

@@ -93,8 +93,8 @@ namespace System.IO {
 
       [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "GetVolumePathNamesForVolumeNameW", CharSet = CharSet.Unicode)]
       [return: MarshalAs(UnmanagedType.Bool)]
-      public static extern bool GetVolumePathNamesForVolumeNameW(string lpszVolumeName, char[] lpszVolumePathNames, uint cchBuferLength, ref UInt32 lpcchReturnLength);
-    
+      public static extern bool GetVolumePathNamesForVolumeNameW(string lpszVolumeName, char[] lpszVolumePathNames, uint cchBuferLength, ref uint lpcchReturnLength);
+
     }
     #endregion
     /// <summary>
@@ -103,7 +103,7 @@ namespace System.IO {
     /// <param name="mask">The mask.</param>
     /// <returns>The compiled regex.</returns>
     private static Regex _ConvertMaskToRegex(string mask) {
-      Contract.Requires(mask!=null);
+      Contract.Requires(mask != null);
       mask = mask.Replace("\\", "\\\\");
       mask = mask.Replace("[", "\\[");
       mask = mask.Replace("]", "\\]");
@@ -115,7 +115,7 @@ namespace System.IO {
       mask = mask.Replace("+", "\\+");
       mask = mask.Replace("?", ".");
       mask = mask.Replace("*", ".*?");
-      return (new Regex(mask, RegexOptions.Compiled|RegexOptions.IgnoreCase|RegexOptions.Singleline));
+      return (new Regex(mask, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline));
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ namespace System.IO {
     /// <param name="regex">The regex.</param>
     /// <returns></returns>
     public static IEnumerable<Volume> GetVolumes(Regex regex) {
-      return (GetVolumes().Where(v=>regex.IsMatch(v.Name)));
+      return (GetVolumes().Where(v => regex.IsMatch(v.Name)));
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ namespace System.IO {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<Volume> GetVolumes() {
-      var cVolumeName = new StringBuilder(NativeMethods. _MAX_PATH);
+      var cVolumeName = new StringBuilder(NativeMethods._MAX_PATH);
       var volumeHandle = NativeMethods.INVALID_PTR;
       try {
         volumeHandle = NativeMethods.FindFirstVolume(cVolumeName, NativeMethods._MAX_PATH);
@@ -154,7 +154,7 @@ namespace System.IO {
       } finally {
         if (volumeHandle != NativeMethods.INVALID_PTR)
           NativeMethods.FindVolumeClose(volumeHandle);
-      }  
+      }
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ namespace System.IO {
           yield break;
 
         do {
-          yield return(cVolumeName.ToString());
+          yield return (cVolumeName.ToString());
         } while (NativeMethods.FindNextVolumeMountPoint(mountHandle, cVolumeName, NativeMethods._MAX_PATH));
       } finally {
         if (mountHandle != NativeMethods.INVALID_PTR)

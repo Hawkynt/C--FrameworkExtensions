@@ -248,15 +248,16 @@ namespace System.Windows.Forms {
         treeView.SelectedNode = this._draggedNode;
 
         // Reset image list used for drag image
-        this._dragImageList.Images.Clear();
+        var imageList = this._dragImageList;
+        imageList.Images.Clear();
 
         var nodeImage = treeNode.GetImage();
 
-        this._dragImageList.ImageSize = new Drawing.Size(treeNode.Bounds.Size.Width + (nodeImage == null ? 0 : nodeImage.Width + 1), treeNode.Bounds.Height);
+        imageList.ImageSize = new Size(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)), Math.Min(256, treeNode.Bounds.Height));
 
         // Create new bitmap
         // This bitmap will contain the tree node image to be dragged
-        var bmp = new Bitmap(this._dragImageList.ImageSize.Width, this._dragImageList.ImageSize.Height);
+        var bmp = new Bitmap(imageList.ImageSize.Width, imageList.ImageSize.Height);
 
         // Get graphics from bitmap
         var gfx = Graphics.FromImage(bmp);
@@ -266,17 +267,17 @@ namespace System.Windows.Forms {
           gfx.DrawImage(nodeImage, 0, 0);
 
         // Draw node label into bitmap
-        gfx.DrawString(treeNode.Text, treeView.Font, new SolidBrush(treeView.ForeColor), nodeImage == null ? 0 : nodeImage.Width + 1, 1.0f);
+        gfx.DrawString(treeNode.Text, treeView.Font, new SolidBrush(treeView.ForeColor), nodeImage?.Width + 1 ?? 0, 1.0f);
 
         // Add bitmap to imagelist
-        this._dragImageList.Images.Add(bmp);
+        imageList.Images.Add(bmp);
 
         // Compute hotspot
         const int dx = 16;
         const int dy = 16;
 
         // Begin dragging image
-        if (!DragHelper.ImageList_BeginDrag(this._dragImageList.Handle, 0, -dx, -dy))
+        if (!DragHelper.ImageList_BeginDrag(imageList.Handle, 0, -dx, -dy))
           return;
 
         treeView.DoDragDrop(treeNode, DragDropEffects.Move);
@@ -385,7 +386,8 @@ namespace System.Windows.Forms {
               if (XPos < hoveredNode.Bounds.Left) {
                 ParentDragDrop = hoveredNode.Parent;
 
-                if (XPos < (ParentDragDrop.Bounds.Left - ParentDragDrop.GetImage().Size.Width)) {
+                var image = ParentDragDrop.GetImage();
+                if (XPos < (ParentDragDrop.Bounds.Left - (image?.Size.Width ?? 0))) {
                   if (ParentDragDrop.Parent != null)
                     ParentDragDrop = ParentDragDrop.Parent;
                 }
@@ -528,14 +530,15 @@ namespace System.Windows.Forms {
             --insertIndex;
 
           // prepare move
-          if (this._OnNodeMove != null)
-            this._OnNodeMove(movingNode, newParent, insertIndex);
+          this._OnNodeMove?.Invoke(movingNode, newParent, insertIndex);
 
           // move
           movingNode.Remove();
           InsertCollection.Insert(insertIndex, movingNode);
 
-          treeView.SelectedNode = InsertCollection[Int32.Parse(NodeIndexes[NodeIndexes.Length - 1])];
+          var index2 = int.Parse(NodeIndexes[NodeIndexes.Length - 1]);
+          if (index2 < InsertCollection.Count)
+            treeView.SelectedNode = InsertCollection[index2];
 
           this._draggedNode = null;
           this._dragScrollTimer.Enabled = false;
@@ -628,34 +631,28 @@ namespace System.Windows.Forms {
         var hoveredNode = this._nodeOver;
         if (hoveredNode != null && hoveredNode.TreeView != null) {
           switch (this._placeHolder) {
-            case PlaceHolderType.LeafTop:
-            {
-              this._DrawLeafTopPlaceholders(hoveredNode);
-              break;
-            }
-            case PlaceHolderType.LeafBottom:
-            {
-              this._DrawLeafBottomPlaceholders(hoveredNode, this._parentDragDrop);
-              break;
-            }
-            case PlaceHolderType.AddToFolder:
-            {
-              this._DrawAddToFolderPlaceholder(hoveredNode);
-              break;
-            }
-            case PlaceHolderType.FolderTop:
-            {
-              this._DrawFolderTopPlaceholders(hoveredNode);
-              break;
-            }
-            case PlaceHolderType.None:
-            {
-              break;
-            }
-            default:
-            {
-              throw new NotImplementedException("Unknown place holder type");
-            }
+            case PlaceHolderType.LeafTop: {
+                this._DrawLeafTopPlaceholders(hoveredNode);
+                break;
+              }
+            case PlaceHolderType.LeafBottom: {
+                this._DrawLeafBottomPlaceholders(hoveredNode, this._parentDragDrop);
+                break;
+              }
+            case PlaceHolderType.AddToFolder: {
+                this._DrawAddToFolderPlaceholder(hoveredNode);
+                break;
+              }
+            case PlaceHolderType.FolderTop: {
+                this._DrawFolderTopPlaceholders(hoveredNode);
+                break;
+              }
+            case PlaceHolderType.None: {
+                break;
+              }
+            default: {
+                throw new NotImplementedException("Unknown place holder type");
+              }
           }
         }
 

@@ -63,11 +63,7 @@ namespace System {
       this._getter = getter;
     }
 
-    public TResult this[TIndexer index] {
-      get {
-        return (this._getter(index));
-      }
-    }
+    public TResult this[TIndexer index] => (this._getter(index));
   }
 
   /// <summary>

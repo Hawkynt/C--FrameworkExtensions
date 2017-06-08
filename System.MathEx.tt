@@ -43,6 +43,19 @@ using qword = System.UInt64;
 namespace System {
   internal static class MathEx {
   <# foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
+
+#if NETFX_4
+    [Pure]
+#endif
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static <#=type#> Bits(this <#=type#> @this, byte index, byte count) {
+      var result = @this >> index;
+      var andMask = ((<#=type#>)1 << count) - 1;
+      result = result & andMask;
+      return (<#=type#>)result;
+    }
     
     /// <summary>
     /// Determines whether the specified number is odd.

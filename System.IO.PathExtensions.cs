@@ -23,13 +23,99 @@
 using System.Diagnostics.Contracts;
 #endif
 using System.Text;
-
+// ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.IO {
   internal static partial class PathExtensions {
+
+    #region nested types
+
+    internal interface ITemporaryFileToken : IDisposable {
+      FileInfo File { get; }
+    }
+
+    internal interface ITemporaryDirectoryToken : IDisposable {
+      DirectoryInfo Directory { get; }
+    }
+
+    private class TemporaryFileToken : ITemporaryFileToken {
+      private bool _isDisposed;
+      public FileInfo File { get; }
+      public TemporaryFileToken(FileInfo file) {
+        this.File = file;
+      }
+
+      public void Dispose() {
+        if (this._isDisposed)
+          return;
+
+        this._isDisposed = true;
+        try {
+          var file = this.File;
+          file.Refresh();
+          if (file.Exists)
+            file.Delete();
+        } catch {
+          ;
+        }
+
+        GC.SuppressFinalize(this);
+      }
+
+      ~TemporaryFileToken() {
+        this.Dispose();
+      }
+    }
+
+    private class TemporaryDirectoryToken : ITemporaryDirectoryToken {
+      private bool _isDisposed;
+      public DirectoryInfo Directory { get; }
+      public TemporaryDirectoryToken(DirectoryInfo directory) {
+        this.Directory = directory;
+      }
+
+      public void Dispose() {
+        if (this._isDisposed)
+          return;
+
+        this._isDisposed = true;
+        try {
+          var directory = this.Directory;
+          directory.Refresh();
+          if (directory.Exists)
+            directory.Delete(true);
+        } catch {
+          ;
+        }
+
+        GC.SuppressFinalize(this);
+      }
+
+      ~TemporaryDirectoryToken() {
+        this.Dispose();
+      }
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Creates a temporary file and returns an IDisposable token which deletes the file upon dispose.
+    /// </summary>
+    /// <param name="name">The name of the file we're trying to create.</param>
+    /// <param name="baseDirectory">The base directory if different from systems' temp.</param>
+    /// <returns>The token to use.</returns>
+    public static ITemporaryFileToken GetTempFileToken(string name = null, string baseDirectory = null) => new TemporaryFileToken(GetTempFile(name, baseDirectory));
+
+    /// <summary>
+    /// Creates a temporary directory and returns an IDisposable token which deletes the directory upon dispose.
+    /// </summary>
+    /// <param name="name">The name of the directory we're trying to create.</param>
+    /// <param name="baseDirectory">The base directory if different from systems' temp.</param>
+    /// <returns>The token to use.</returns>
+    public static ITemporaryDirectoryToken GetTempDirectoryToken(string name = null, string baseDirectory = null) => new TemporaryDirectoryToken(GetTempDirectory(name, baseDirectory));
 
     /// <summary>
     /// Generates a temporary filename which is most like the given one in the temporary folder.
@@ -155,12 +241,12 @@ namespace System.IO {
 #if NETFX_4
       Contract.Assume(!string.IsNullOrEmpty(fullName));
 #endif
-      if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed | FileAttributes.Temporary))
+      if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
         return (fullName);
 
       // otherwise count up
       var i = 1;
-      while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
+      while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed)) { }
       return (fullName);
     }
 

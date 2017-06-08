@@ -22,33 +22,91 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Linq;
 
 namespace System.Windows.Forms {
   internal static partial class TabControlExtensions {
+
+    public static void AddImageToImageList(this TabControl @this, Image image, string key) {
+      Contract.Requires(image != null);
+      Contract.Requires(!string.IsNullOrEmpty(key));
+
+      var imageList = @this.ImageList;
+      Contract.Assert(imageList != null, "Can only work on TabControls with assigned ImageList.");
+
+      imageList.Images.Add(key, image);
+      if (!ImageAnimator.CanAnimate(image))
+        return;
+
+      var uniquePart = new Random().Next(); // NOTE: we shuffle the key to prevent users accidentially using the generated images
+      Func<string, int, string> keyGenerator = (@base, index) => @base + "\0" + uniquePart + "\0" + index;
+
+      var numImages = image.GetFrameCount(FrameDimension.Time);
+      var createdImages = new Dictionary<string, Image>();
+      for (var i = numImages - 1; i >= 0; --i) {
+        image.SelectActiveFrame(FrameDimension.Time, i);
+        var image2 = (Image)image.Clone();
+        var subKey = keyGenerator(key, i);
+        createdImages.Add(subKey, image2);
+        imageList.Images.Add(subKey, image2);
+      }
+
+      var currentlyShownImageIndex = 0;
+      EventHandler onFrameChangedHandler = (_, __) => {
+        currentlyShownImageIndex = (currentlyShownImageIndex + 1) % numImages;
+        var currentKey = keyGenerator(key, currentlyShownImageIndex);
+
+        // refresh all tabpages using this image
+        @this.SafelyInvoke(() => @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0")).ForEach(tp => tp.ImageKey = currentKey));
+      };
+
+      // start animating
+      ImageAnimator.Animate(image, onFrameChangedHandler);
+
+      // remove handler and dispose image on destruction of tabcontrol
+      @this.Disposed += (_, __) => {
+        ImageAnimator.StopAnimate(image, onFrameChangedHandler);
+        foreach (var kvp in createdImages) {
+          imageList.Images.RemoveByKey(kvp.Key);
+          kvp.Value.Dispose();
+        }
+      };
+    }
+
+    #region messing with tab color
+
     private static readonly Dictionary<TabControl, Dictionary<TabPage, Color>> _MANAGED_TABCONTROLS = new Dictionary<TabControl, Dictionary<TabPage, Color>>();
 
-    public static void SetTabHeaderColor(this TabControl This, TabPage page, Color? color = null) {
-      Contract.Requires(This != null);
+    /// <summary>
+    /// Sets the color of the tab header.
+    /// </summary>
+    /// <param name="this">This TabControl.</param>
+    /// <param name="page">The page.</param>
+    /// <param name="color">The color.</param>
+    public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
+      Contract.Requires(@this != null);
       Contract.Requires(page != null);
       Dictionary<TabPage, Color> managedTabs;
-      if (!_MANAGED_TABCONTROLS.TryGetValue(This, out managedTabs)) {
-        _MANAGED_TABCONTROLS.Add(This, managedTabs = new Dictionary<TabPage, Color>());
+      if (!_MANAGED_TABCONTROLS.TryGetValue(@this, out managedTabs)) {
+        _MANAGED_TABCONTROLS.Add(@this, managedTabs = new Dictionary<TabPage, Color>());
 
         // register handler
-        This.DrawItem += _HeaderPainter;
+        @this.DrawItem -= _HeaderPainter; // avoid duplicate subscription
+        @this.DrawItem += _HeaderPainter;
 
         // make sure it gets called
-        This.DrawMode = TabDrawMode.OwnerDrawFixed;
+        @this.DrawMode = TabDrawMode.OwnerDrawFixed;
 
         // make sure we forget about this control when its disposed
-        This.Disposed += (_, __) => {
+        @this.Disposed += (_, __) => {
 
           // remove painter
-          This.DrawItem -= _HeaderPainter;
+          @this.DrawItem -= _HeaderPainter;
 
           // forget the list of colored tabs
-          if (_MANAGED_TABCONTROLS.ContainsKey(This))
-            _MANAGED_TABCONTROLS.Remove(This);
+          if (_MANAGED_TABCONTROLS.ContainsKey(@this))
+            _MANAGED_TABCONTROLS.Remove(@this);
         };
       }
 
@@ -84,15 +142,14 @@ namespace System.Windows.Forms {
 
         // paint the default background
         using (var brush = new SolidBrush(tabControl.BackColor))
-          e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new Drawing.Size(e.Bounds.Width, e.Bounds.Height + 2)));
+          e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new Size(e.Bounds.Width, e.Bounds.Height + 2)));
 
         // check if we know this tab's color and it's not selected
         Color color;
         if (!isSelected && colors.TryGetValue(page, out color)) {
           // tint the tab header
           using (var brush = new SolidBrush(color))
-            e.Graphics.FillRectangle(
-              brush, new Rectangle(e.Bounds.Location, new Drawing.Size(e.Bounds.Width, e.Bounds.Height + 2)));
+            e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new Size(e.Bounds.Width, e.Bounds.Height + 2)));
 
           // decide on new textcolor
           textcolor = (color.R + color.B + color.G) / 3 > 127 ? Color.Black : Color.White;
@@ -120,7 +177,9 @@ namespace System.Windows.Forms {
         TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textcolor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
 
       }
-
     }
+
+    #endregion
+
   }
 }

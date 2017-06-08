@@ -62,49 +62,49 @@ namespace System.Reflection {
 
       Type elementType;
       if (type.IsByRef && (elementType = type.GetElementType()) != null) {
-        return (_tidyTypeName(elementType));
+        return _tidyTypeName(elementType);
       }
 
       if (type.IsArray && (elementType = type.GetElementType()) != null) {
-        return (_tidyTypeName(elementType) + "[]");
+        return _tidyTypeName(elementType) + "[]";
       }
 
       if (type == _tpVoid)
-        return ("void");
+        return "void";
       if (type == _tpBool)
-        return ("bool");
+        return "bool";
       if (type == _tpChar)
-        return ("char");
+        return "char";
       if (type == _tpByte)
-        return ("byte");
+        return "byte";
       if (type == _tpSByte)
-        return ("sbyte");
+        return "sbyte";
       if (type == _tpShort)
-        return ("short");
+        return "short";
       if (type == _tpWord)
-        return ("word");
+        return "word";
       if (type == _tpInt)
-        return ("int");
+        return "int";
       if (type == _tpDWord)
-        return ("dword");
+        return "dword";
       if (type == _tpLong)
-        return ("long");
+        return "long";
       if (type == _tpQWord)
-        return ("qword");
+        return "qword";
       if (type == _tpFloat)
-        return ("float");
+        return "float";
       if (type == _tpDouble)
-        return ("double");
+        return "double";
       if (type == _tpDecimal)
-        return ("decimal");
+        return "decimal";
       if (type == _tpString)
-        return ("string");
+        return "string";
       if (type == _tpObject)
-        return ("object");
+        return "object";
 
       var ntype = Nullable.GetUnderlyingType(type);
       if (ntype != null)
-        return (_tidyTypeName(ntype) + "?");
+        return _tidyTypeName(ntype) + "?";
 
       var fullName = type.IsGenericType || type.IsGenericParameter ? type.Name : type.FullName;
 
@@ -121,9 +121,9 @@ namespace System.Reflection {
       }
 
       if (type.IsGenericType)
-        return (fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_tidyTypeName).ToArray()) + ">");
+        return fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_tidyTypeName).ToArray()) + ">";
 
-      return (fullName);
+      return fullName;
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ namespace System.Reflection {
       }
 
       sb.Append(')');
-      return (sb.ToString());
+      return sb.ToString();
     }
   }
 }

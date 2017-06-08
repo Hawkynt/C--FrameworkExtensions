@@ -31,10 +31,9 @@ namespace System {
   /// <typeparam name="TValue">The type of the result.</typeparam>
   internal class FastLazy<TValue> {
 
-    private Func<TValue> _getter;
     private readonly Func<TValue> _factory;
+    private Func<TValue> _getter;
     private TValue _value;
-    private bool _hasValue = false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FastLazy&lt;TValue&gt;"/> class.
@@ -55,9 +54,9 @@ namespace System {
 
       // initialize the getter with a method that returns the current value.
       this._value = value;
-      this._hasValue = true;
+      this.HasValue = true;
       this._getter = this._GetValue;
-      this._factory = () => value;
+      this._factory = this._GetValue;
     }
 
     /// <summary>
@@ -70,14 +69,14 @@ namespace System {
       lock (this) {
 
         // in case another thread already initialized
-        if (this._hasValue)
+        if (this.HasValue)
           return (this._value);
 
         // create value exactly once
         var value = this._factory();
         this._value = value;
         this._getter = this._GetValue;
-        this._hasValue = true;
+        this.HasValue = true;
         return (value);
       }
     }
@@ -86,9 +85,7 @@ namespace System {
     /// Gets value stored earlier.
     /// </summary>
     /// <returns></returns>
-    private TValue _GetValue() {
-      return (this._value);
-    }
+    private TValue _GetValue() => (this._value);
 
     /// <summary>
     /// Gets the value.
@@ -101,14 +98,14 @@ namespace System {
     /// <value>
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
-    public bool HasValue => this._hasValue;
+    public bool HasValue { get; private set; }
 
     /// <summary>
     /// Resets the value cached from the factory and triggers to call the factory, next time a value is needed.
     /// </summary>
     public void Reset() {
       lock (this) {
-        this._hasValue = false;
+        this.HasValue = false;
 
         // initialize the getter with something that creates the value and then replaces the getter with a method that returns the current value.
         this._getter = this._InitializeValue;
@@ -140,9 +137,6 @@ namespace System {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator FastLazy<TValue>(Func<TValue> This) {
-      Contract.Requires(This != null);
-      return (new FastLazy<TValue>(This));
-    }
+    public static implicit operator FastLazy<TValue>(Func<TValue> This) => new FastLazy<TValue>(This);
   }
 }

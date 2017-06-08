@@ -35,7 +35,7 @@ namespace System {
 
     #region fields
     /// <summary>
-    /// Whehter the value is currently generated. (e.G thread is running to fetch value)
+    /// Whether the value is currently generated. (eg. thread is running to fetch value)
     /// </summary>
     private int _isGeneratingValue = _FALSE;
     private TValue _value;

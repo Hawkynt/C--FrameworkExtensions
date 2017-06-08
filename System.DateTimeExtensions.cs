@@ -19,33 +19,27 @@
 */
 #endregion
 
-using System.Collections.Generic;
-
-namespace System.Windows.Forms {
-  // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class TreeNodeCollectionExtensions {
+// ReSharper disable UnusedMember.Global
+// ReSharper disable PartialTypeWithSinglePart
+namespace System {
+  internal static partial class DateTimeExtensions {
 
     /// <summary>
-    /// Flatteneds the hierarchy.
+    /// Returns the end of the day of the given date.
     /// </summary>
-    /// <param name="this">This TreeNodeCollection.</param>
-    /// <returns>An enumeration of nodes in the order of flat appearance.</returns>
-    public static IEnumerable<TreeNode> AllNodes(this TreeNodeCollection @this) {
-      var stack = new Stack<TreeNode>();
-      for (var i = @this.Count - 1; i >= 0; --i)
-        stack.Push(@this[i]);
+    /// <param name="this">This DateTime.</param>
+    /// <returns>An instance pointing to the last moment of the given day.</returns>
+    public static DateTime EndOfDay(this DateTime @this)
+          => @this.AddDays(1).Subtract(@this.TimeOfDay).AddTicks(-1)
+          ;
 
-      while (stack.Count > 0) {
-        var node = stack.Pop();
-        yield return node;
-        if (node.Nodes.Count < 1)
-          continue;
-
-        for (var i = node.Nodes.Count - 1; i >= 0; --i)
-          stack.Push(node.Nodes[i]);
-
-      }
-    }
-
+    /// <summary>
+    /// Returns the start of the day of the given date.
+    /// </summary>
+    /// <param name="this">This DateTime.</param>
+    /// <returns>An instance pointing to the first moment of the given day.</returns>
+    public static DateTime StartOfDay(this DateTime @this)
+      => @this.Subtract(@this.TimeOfDay)
+      ;
   }
 }

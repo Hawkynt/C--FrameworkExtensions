@@ -26,6 +26,7 @@ using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 #endif
 using System.Linq;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -44,6 +45,30 @@ namespace System.Collections.Generic {
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public abstract class StructForcingTag<T> where T : struct { private StructForcingTag() { } }
+
+    public enum ChangeType {
+      NewKey,
+      MissingKey,
+      DifferentValue,
+    }
+
+    /// <summary>
+    /// Changeset between two dicts.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    public struct Changeset<TKey, TValue> {
+      public Changeset(ChangeType type, TKey key, TValue currentValue, TValue otherValue) {
+        this.Key = key;
+        this.CurrentValue = currentValue;
+        this.OtherValue = otherValue;
+        this.Type = type;
+      }
+      public ChangeType Type { get; }
+      public TKey Key { get; }
+      public TValue CurrentValue { get; }
+      public TValue OtherValue { get; }
+    }
     #endregion
 
     /// <summary>
@@ -516,16 +541,45 @@ namespace System.Collections.Generic {
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="This">This Dictionary.</param>
+    /// <param name="this">This Dictionary.</param>
     /// <param name="key">The key.</param>
     /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
-    public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> This, TKey key) {
+    public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(!ReferenceEquals(null, key));
 #endif
-      return (!This.ContainsKey(key));
+      return !@this.ContainsKey(key);
     }
+
+    /// <summary>
+    /// Compares to another dictionary with the same types.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="other">The other Dictionary.</param>
+    /// <returns>A changeset.</returns>
+    public static IEnumerable<Changeset<TKey, TValue>> CompareTo<TKey, TValue>(this Dictionary<TKey, TValue> @this, Dictionary<TKey, TValue> other) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(other != null);
+#endif
+
+      // missing keys
+      foreach (var key in @this.Keys.Where(i => !other.ContainsKey(i)))
+        yield return new Changeset<TKey, TValue>(ChangeType.NewKey, key, @this[key], default(TValue));
+
+      // new keys
+      foreach (var key in other.Keys.Where(i => !@this.ContainsKey(i)))
+        yield return new Changeset<TKey, TValue>(ChangeType.MissingKey, key, default(TValue), other[key]);
+
+      // changed keys
+      foreach (var key in @this.Keys.Where(other.ContainsKey))
+        if (!Equals(@this[key], other[key]))
+          yield return new Changeset<TKey, TValue>(ChangeType.DifferentValue, key, @this[key], other[key]);
+    }
+
   }
 
   /// <summary>

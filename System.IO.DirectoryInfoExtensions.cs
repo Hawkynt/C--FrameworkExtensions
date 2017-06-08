@@ -2,19 +2,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
@@ -119,51 +119,53 @@ namespace System.IO {
       // if less than 4 cores, use sequential approach
       if (Environment.ProcessorCount < 4)
 #if NETFX_4
-        return (@this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum());
+        return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
 #else
-        return (@this.GetFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum());
+        return @this.GetFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
 #endif
 
       // otherwise, use MT approach
       var result = 0L;
       long[] itemsLeft = { 1L };
-      var evente = new AutoResetEvent(false);
+      using (var evente = new AutoResetEvent(false)) {
 
-      Action<DirectoryInfo> factory = null;
-      factory = d => {
-        try {
+        Action<DirectoryInfo> factory = null;
+        factory = d => {
+          try {
 #if NETFX_4
-          foreach (var item in d.EnumerateFileSystemInfos()) {
+            foreach (var item in d.EnumerateFileSystemInfos()) {
 #else
           foreach (var item in d.GetFileSystemInfos()) {
 #endif
-            var file = item as FileInfo;
-            if (file != null) {
-              Interlocked.Add(ref result, file.Length);
-              continue;
-            }
+              var file = item as FileInfo;
+              if (file != null) {
+                Interlocked.Add(ref result, file.Length);
+                continue;
+              }
 
-            var folder = item as DirectoryInfo;
-            if (folder != null) {
-              Interlocked.Increment(ref itemsLeft[0]);
-              if (!ThreadPool.QueueUserWorkItem(_ => factory(folder)))
-                factory.BeginInvoke(folder, factory.EndInvoke, null);
-              continue;
-            }
+              var folder = item as DirectoryInfo;
+              if (folder != null) {
+                Interlocked.Increment(ref itemsLeft[0]);
+                if (!ThreadPool.QueueUserWorkItem(_ => factory(folder)))
+                  factory.BeginInvoke(folder, factory.EndInvoke, null);
 
-            throw new NotSupportedException("Unknown FileSystemInfo item");
+                continue;
+              }
+
+              throw new NotSupportedException("Unknown FileSystemInfo item");
+            }
+          } finally {
+            Interlocked.Decrement(ref itemsLeft[0]);
+            evente.Set();
           }
-        } finally {
-          Interlocked.Decrement(ref itemsLeft[0]);
-          evente.Set();
-        }
-      };
-      factory.BeginInvoke(@this, factory.EndInvoke, null);
+        };
+        factory.BeginInvoke(@this, factory.EndInvoke, null);
 
-      while (Interlocked.Read(ref itemsLeft[0]) > 0)
-        evente.WaitOne();
+        while (Interlocked.Read(ref itemsLeft[0]) > 0)
+          evente.WaitOne();
+      }
 
-      return (result);
+      return result;
     }
 
     /// <summary>
@@ -215,7 +217,7 @@ namespace System.IO {
 #if NETFX_4
           foreach (var result in This.EnumerateFileSystemInfos())
 #else
-          foreach (var result in This.GetFileSystemInfos())
+            foreach (var result in This.GetFileSystemInfos())
 #endif
             yield return (result);
 
@@ -230,7 +232,7 @@ namespace System.IO {
 #if NETFX_4
             foreach (var fsi in result.EnumerateFileSystemInfos()) {
 #else
-            foreach (var fsi in result.GetFileSystemInfos()) {
+              foreach (var fsi in result.GetFileSystemInfos()) {
 #endif
               yield return (fsi);
               var di = fsi as DirectoryInfo;
@@ -252,7 +254,7 @@ namespace System.IO {
 #if NETFX_4
             foreach (var fsi in result.EnumerateFileSystemInfos()) {
 #else
-            foreach (var fsi in result.GetFileSystemInfos()) {
+              foreach (var fsi in result.GetFileSystemInfos()) {
 #endif
               yield return (fsi);
               var di = fsi as DirectoryInfo;
@@ -267,7 +269,7 @@ namespace System.IO {
         }
         default:
         {
-          throw new NotSupportedException("RecursionMode");
+          throw new NotSupportedException(nameof(RecursionMode));
         }
       }
     }
@@ -285,16 +287,16 @@ namespace System.IO {
       This.Refresh();
 
       if (!This.Exists)
-        return (false);
+        return false;
 
       if (This.LastWriteTimeUtc == lastWriteTimeUtc)
-        return (true);
+        return true;
 
       try {
         This.LastWriteTimeUtc = lastWriteTimeUtc;
-        return (true);
-      } catch {
-        return (This.LastWriteTimeUtc == lastWriteTimeUtc);
+        return true;
+      } catch (Exception) {
+        return This.LastWriteTimeUtc == lastWriteTimeUtc;
       }
     }
 
@@ -319,7 +321,7 @@ namespace System.IO {
       try {
         This.CreationTimeUtc = creationTimeUtc;
         return (true);
-      } catch {
+      } catch (Exception) {
         return (This.CreationTimeUtc == creationTimeUtc);
       }
     }
@@ -345,7 +347,7 @@ namespace System.IO {
       try {
         This.Attributes = attributes;
         return (true);
-      } catch {
+      } catch (Exception) {
         return (This.Attributes == attributes);
       }
     }
@@ -353,22 +355,45 @@ namespace System.IO {
     /// <summary>
     /// Tries to create the given directory.
     /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="this">This DirectoryInfo.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryCreate(this DirectoryInfo This) {
+    public static bool TryCreate(this DirectoryInfo @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      if (This.Exists)
+      if (@this.Exists)
         return (true);
 
       try {
-        This.Create();
+        @this.Create();
         return (true);
-      } catch {
-        return (This.Exists);
+      } catch (Exception) {
+        @this.Refresh();
+        return (@this.Exists);
       }
 
+    }
+
+    /// <summary>
+    /// Tries to delete the given directory.
+    /// </summary>
+    /// <param name="this">This DirectoyInfo.</param>
+    /// <param name="recursive">if set to <c>true</c> deletes recursive.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TryDelete(this DirectoryInfo @this, bool recursive = false) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      if (!@this.Exists)
+        return (true);
+
+      try {
+        @this.Delete(recursive);
+        return (true);
+      } catch (Exception) {
+        @this.Refresh();
+        return (!@this.Exists);
+      }
     }
 
     /// <summary>
@@ -435,9 +460,8 @@ namespace System.IO {
 #if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
-#else
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly)
-    {
+#elif NETFX_4
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly){
       var stack = new Stack<DirectoryInfo>();
       stack.Push(This);
       while (stack.Count > 0) {
@@ -448,6 +472,25 @@ namespace System.IO {
 
           if (searchOption != SearchOption.TopDirectoryOnly)
             foreach (var item in currentDirectory.EnumerateDirectories())
+              stack.Push(item);
+        } catch (UnauthorizedAccessException) {
+          ;
+        }
+      }
+      return false;
+    }
+#else
+    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
+      var stack = new Stack<DirectoryInfo>();
+      stack.Push(This);
+      while (stack.Count > 0) {
+        var currentDirectory = stack.Pop();
+        try {
+          if (currentDirectory.GetFiles(searchPattern).Any())
+            return true;
+
+          if (searchOption != SearchOption.TopDirectoryOnly)
+            foreach (var item in currentDirectory.GetDirectories())
               stack.Push(item);
         } catch (UnauthorizedAccessException) {
           ;
@@ -587,11 +630,7 @@ namespace System.IO {
 #if NETFX_4
       Contract.Requires(This != null);
 #endif
-      if (extension == null)
-        extension = ".tmp";
-      else
-        extension = '.' + extension.TrimStart('.');
-
+      extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
 
       const int LENGTH = 4;
       const string PREFIX = "tmp";
@@ -606,7 +645,7 @@ namespace System.IO {
       };
 
       while (true) {
-        var result = This.TryCreateFile(generator(),  FileAttributes.NotContentIndexed | FileAttributes.Temporary);
+        var result = This.TryCreateFile(generator(), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
         if (result != null)
           return result;
       }

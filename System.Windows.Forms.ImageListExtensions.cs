@@ -19,33 +19,27 @@
 */
 #endregion
 
-using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+#if NETFX_4
+using System.Diagnostics.Contracts;
+#endif
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms {
-  // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class TreeNodeCollectionExtensions {
-
-    /// <summary>
-    /// Flatteneds the hierarchy.
-    /// </summary>
-    /// <param name="this">This TreeNodeCollection.</param>
-    /// <returns>An enumeration of nodes in the order of flat appearance.</returns>
-    public static IEnumerable<TreeNode> AllNodes(this TreeNodeCollection @this) {
-      var stack = new Stack<TreeNode>();
-      for (var i = @this.Count - 1; i >= 0; --i)
-        stack.Push(@this[i]);
-
-      while (stack.Count > 0) {
-        var node = stack.Pop();
-        yield return node;
-        if (node.Nodes.Count < 1)
-          continue;
-
-        for (var i = node.Nodes.Count - 1; i >= 0; --i)
-          stack.Push(node.Nodes[i]);
-
-      }
+  internal static partial class ImageListExtensions {
+    public static void SaveToDirectory(this ImageList @this, string directoryName) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+#endif
+      var images = @this.Images;
+      foreach (var image in from i in Enumerable.Range(0, images.Count) select Tuple.Create(i, images[i], images.Keys[i]))
+        image.Item2.Save(image.Item3 + ".png");
     }
 
+    public static void SaveToDirectory(this ImageList @this, DirectoryInfo directory) => SaveToDirectory(@this, directory.FullName);
   }
 }

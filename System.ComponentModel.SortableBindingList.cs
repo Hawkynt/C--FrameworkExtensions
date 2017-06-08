@@ -20,6 +20,9 @@
 */
 
 #endregion
+//
+// requires extension: System.ComponentModel.SortComparer
+//
 
 using System.Collections.Generic;
 #if NETFX_4
@@ -134,10 +137,19 @@ namespace System.ComponentModel {
       var pairs = listRef.Select((v, i) => new { v, i }).ToList();
       pairs.Sort((x, y) => {
         var result = comparer.Compare(x.v, y.v);
-        return (result != 0 ? result : x.i - y.i);
+        return result != 0 ? result : x.i - y.i;
       });
       listRef.Clear();
-      ((dynamic)listRef).AddRange(pairs.Select(p => p.v));
+
+      var mi = listRef.GetType().GetMethod("AddRange");
+      if (mi != null) {
+        mi.Invoke(listRef, new object[] { pairs.Select(p => p.v) });
+      } else {
+        foreach (var pair in pairs.Select(p => p.v))
+          listRef.Add(pair);
+      }
+
+      //((dynamic)listRef).AddRange(pairs.Select(p => p.v));
 
       // unstable sorting
       //listRef.Sort(comparer);
@@ -160,7 +172,7 @@ namespace System.ComponentModel {
 #if NETFX_4
       Contract.Requires(This != null);
 #endif
-      return (new SortableBindingList<TItem>(This));
+      return new SortableBindingList<TItem>(This);
     }
   }
 }

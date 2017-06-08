@@ -36,7 +36,7 @@ namespace System {
   internal static partial class UriExtensions {
 
     private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new Dictionary<HttpRequestHeader, string> {
-      {HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12"},
+      {HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.2.28) Gecko/20120306 Firefox/3.6.28"},
       {HttpRequestHeader.Accept, "*/*"},
       {HttpRequestHeader.AcceptLanguage, "en-gb,en;q=0.5"},
       {HttpRequestHeader.AcceptCharset, "ISO-8859-1,utf-8;q=0.7,*;q=0.7"},
@@ -316,6 +316,7 @@ namespace System {
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public static Uri Path(this Uri This, string path) {
+      Contract.Ensures(Contract.Result<Uri>() != null);
       const char SLASH = '/';
       return string.IsNullOrWhiteSpace(path)
         ? This
