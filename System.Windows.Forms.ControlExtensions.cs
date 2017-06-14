@@ -92,7 +92,7 @@ namespace System.Windows.Forms {
 
       var result = @this.Location;
       var c = @this;
-      for (; (c as Form) == null; c = c.Parent)
+      for (; c as Form == null; c = c.Parent)
         result.Offset(c.Location);
       return result;
     }
@@ -261,7 +261,9 @@ namespace System.Windows.Forms {
     /// <param name="this">This Control.</param>
     /// <param name="task">The task.</param>
     /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
+#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
     public static bool Async(this Control @this, Action task) {
+#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
       if (@this == null) throw new NullReferenceException();
       if (task == null) throw new ArgumentNullException(nameof(task));
 
@@ -282,7 +284,9 @@ namespace System.Windows.Forms {
     /// <param name="syncPreAction">The sync pre action.</param>
     /// <param name="task">The task.</param>
     /// <param name="syncPostAction">The sync post action.</param>
+#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
     public static void Async<TType>(this TType @this, Action<TType> syncPreAction, Action task, Action<TType> syncPostAction = null) where TType : Control {
+#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
       if (@this == null) throw new NullReferenceException();
       if (syncPreAction == null) throw new ArgumentNullException(nameof(syncPreAction));
       if (task == null) throw new ArgumentNullException(nameof(task));
@@ -364,7 +368,7 @@ namespace System.Windows.Forms {
         newName = new Guid().ToString();
 
       if (@this is Label) {
-        var label = (new Label {
+        var label = new Label {
           AllowDrop = @this.AllowDrop,
           Anchor = @this.Anchor,
           AutoEllipsis = ((Label)@this).AutoEllipsis,
@@ -405,13 +409,13 @@ namespace System.Windows.Forms {
           RightToLeft = @this.RightToLeft,
           MinimumSize = @this.MinimumSize,
           MaximumSize = @this.MaximumSize,
-        });
+        };
         return label;
       }
 
       newName = new Guid().ToString();
       if (@this is Button) {
-        return (new Button {
+        return new Button {
           AllowDrop = @this.AllowDrop,
           Anchor = @this.Anchor,
           AutoEllipsis = ((Button)@this).AutoEllipsis,
@@ -456,10 +460,10 @@ namespace System.Windows.Forms {
           UseCompatibleTextRendering = ((Button)@this).UseCompatibleTextRendering,
           AutoSizeMode = ((Button)@this).AutoSizeMode,
           DialogResult = ((Button)@this).DialogResult,
-        });
+        };
       }
       if (@this is CheckBox) {
-        return (new CheckBox {
+        return new CheckBox {
           AllowDrop = @this.AllowDrop,
           Anchor = @this.Anchor,
           AutoEllipsis = ((CheckBox)@this).AutoEllipsis,
@@ -506,11 +510,11 @@ namespace System.Windows.Forms {
           ThreeState = ((CheckBox)@this).ThreeState,
           TextImageRelation = ((CheckBox)@this).TextImageRelation,
           Appearance = ((CheckBox)@this).Appearance,
-        });
+        };
 
       }
       if (@this is NumericUpDown) {
-        return (new NumericUpDown {
+        return new NumericUpDown {
           AllowDrop = @this.AllowDrop,
           Anchor = @this.Anchor,
           AutoSize = @this.AutoSize,
@@ -558,12 +562,12 @@ namespace System.Windows.Forms {
           AutoScrollMargin = ((NumericUpDown)@this).AutoScrollMargin,
           AutoScrollMinSize = ((NumericUpDown)@this).AutoScrollMinSize,
           AutoScrollPosition = ((NumericUpDown)@this).AutoScrollPosition
-        });
+        };
 
       }
 
       if (@this is ComboBox) {
-        var comboBox = new ComboBox() {
+        var comboBox = new ComboBox {
           AllowDrop = @this.AllowDrop,
           Anchor = @this.Anchor,
           AutoSize = @this.AutoSize,

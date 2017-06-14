@@ -24,7 +24,9 @@ using System.Diagnostics;
 #if NETFX_4
 using System.Threading.Tasks;
 #endif
+#if NETFX_35
 using System.Linq;
+#endif
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -827,6 +829,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
+#if !NETFX_35
     /// <summary>
     /// Gets the first item matching the condition or the given default value.
     /// </summary>
@@ -845,6 +848,7 @@ namespace System.Collections.Generic {
 
       return default(TIn);
     }
+#endif
 
     /// <summary>
     /// Gets the first item matching the condition or the given default value.
@@ -910,6 +914,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
+#if !NETFX_35
     /// <summary>
     /// Gets the last item matching the condition or the given default value.
     /// </summary>
@@ -924,6 +929,7 @@ namespace System.Collections.Generic {
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector)
       => FirstOrDefault(@this.Reverse(), selector)
     ;
+#endif
 
     /// <summary>
     /// Gets the last item matching the condition or the given default value.

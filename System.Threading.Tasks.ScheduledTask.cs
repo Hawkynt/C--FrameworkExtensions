@@ -2,19 +2,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
@@ -42,6 +42,23 @@ namespace System.Threading.Tasks {
     private readonly bool _allowThreadSleep = true;
     private readonly Timer _timer;
 #endif
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;"/> class.
+    /// </summary>
+    /// <param name="action">The task to execute.</param>
+    /// <param name="deferredTime">The default time the task is deferred by.</param>
+    /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
+    public ScheduledTask(
+      Action<TValue> action,
+      TimeSpan deferredTime,
+      bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+        action,
+        (int)deferredTime.TotalMilliseconds,
+        waitUntilTaskReturnedBeforeNextSchedule
+        ) {
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;"/> class.
     /// </summary>
@@ -90,8 +107,15 @@ namespace System.Threading.Tasks {
     /// Schedule an execution with the specified value in at least this timespan.
     /// </summary>
     /// <param name="value">The value.</param>
-    /// <param name="deferredTime">The time in ms to defer by.</param>
-    public void Schedule(TValue value, int deferredTime) => this._Schedule(value, deferredTime);
+    /// <param name="deferredBy">The time to defer by.</param>
+    public void Schedule(TValue value, TimeSpan deferredBy) => this._Schedule(value, (int)deferredBy.TotalMilliseconds);
+
+    /// <summary>
+    /// Schedule an execution with the specified value in at least this timespan.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <param name="deferredBy">The time in ms to defer by.</param>
+    public void Schedule(TValue value, int deferredBy) => this._Schedule(value, deferredBy);
 
     /// <summary>
     /// Is called when the time is over.
@@ -183,6 +207,21 @@ namespace System.Threading.Tasks {
     /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
     /// </summary>
     /// <param name="action">The task to execute.</param>
+    /// <param name="deferredTime">The default time the task is deferred by.</param>
+    /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
+    public ScheduledTask(
+      Action action,
+      TimeSpan deferredTime,
+      bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+      action,
+      (int)deferredTime.TotalMilliseconds,
+      waitUntilTaskReturnedBeforeNextSchedule) {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
+    /// </summary>
+    /// <param name="action">The task to execute.</param>
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
@@ -222,8 +261,14 @@ namespace System.Threading.Tasks {
     /// <summary>
     /// Schedule an execution.
     /// </summary>
-    /// <param name="deferredTime">The ms to defer by at least.</param>
-    public void Schedule(int deferredTime) => this._Schedule(deferredTime);
+    /// <param name="deferredBy">The ms to defer by at least.</param>
+    public void Schedule(int deferredBy) => this._Schedule(deferredBy);
+
+    /// <summary>
+    /// Schedule an execution.
+    /// </summary>
+    /// <param name="deferredBy">The time to defer by at least.</param>
+    public void Schedule(TimeSpan deferredBy) => this._Schedule((int)deferredBy.TotalMilliseconds);
 
     /// <summary>
     /// Is called when the time is up.
@@ -287,6 +332,23 @@ namespace System.Threading.Tasks {
     private readonly bool _allowThreadSleep = true;
     private readonly Timer _timer;
 #endif
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;"/> class.
+    /// </summary>
+    /// <param name="action">The task to execute.</param>
+    /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
+    /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
+    public ScheduledCombinedTask(
+      Action<TValue[]> action,
+      TimeSpan deferredTime,
+      bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+      action,
+      (int)deferredTime.TotalMilliseconds,
+      waitUntilTaskReturnedBeforeNextSchedule
+    ) {
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;"/> class.
     /// </summary>
@@ -310,27 +372,34 @@ namespace System.Threading.Tasks {
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
-    /// <param name="varValue">The value.</param>
-    public void Execute(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+    /// <param name="value">The value.</param>
+    public void Execute(TValue value) => this._Schedule(value, this._deferredTime);
 
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
-    /// <param name="varValue">The value.</param>
-    public void Restart(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+    /// <param name="value">The value.</param>
+    public void Restart(TValue value) => this._Schedule(value, this._deferredTime);
 
     /// <summary>
     /// Schedule an execution with the specified value.
     /// </summary>
-    /// <param name="varValue">The value.</param>
-    public void Schedule(TValue varValue) => this._Schedule(varValue, this._deferredTime);
+    /// <param name="value">The value.</param>
+    public void Schedule(TValue value) => this._Schedule(value, this._deferredTime);
 
     /// <summary>
     /// Schedule an execution with the specified value in at least this timespan.
     /// </summary>
-    /// <param name="varValue">The value.</param>
-    /// <param name="intDeferredBy">The time in ms to defer by.</param>
-    public void Schedule(TValue varValue, int intDeferredBy) => this._Schedule(varValue, intDeferredBy);
+    /// <param name="value">The value.</param>
+    /// <param name="deferredBy">The time to defer by.</param>
+    public void Schedule(TValue value, TimeSpan deferredBy) => this._Schedule(value, (int)deferredBy.TotalMilliseconds);
+
+    /// <summary>
+    /// Schedule an execution with the specified value in at least this timespan.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <param name="deferredBy">The time in ms to defer by.</param>
+    public void Schedule(TValue value, int deferredBy) => this._Schedule(value, deferredBy);
 
     /// <summary>
     /// Aborts a running schedule if any.

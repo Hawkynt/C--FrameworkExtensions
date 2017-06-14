@@ -3,19 +3,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -47,7 +47,9 @@ namespace System.ComponentModel {
         if (this._blockEvents || this._listChanged == null)
           return;
 
+#pragma warning disable CC0067 // Do not call overrideable methods in ctor.
         this._listChanged(s, e);
+#pragma warning restore CC0067 // Do not call overrideable methods in ctor.
       };
     }
 
@@ -167,12 +169,11 @@ namespace System.ComponentModel {
 
   }
 
-  internal static class libSortableBindingListSatelliteExtensions {
-    public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> This) {
-#if NETFX_4
-      Contract.Requires(This != null);
-#endif
-      return new SortableBindingList<TItem>(This);
+  // ReSharper disable once PartialTypeWithSinglePart
+  internal static partial class EnumerableExtensions {
+    public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> @this) {
+      if (@this == null) throw new NullReferenceException();
+      return new SortableBindingList<TItem>(@this);
     }
   }
 }

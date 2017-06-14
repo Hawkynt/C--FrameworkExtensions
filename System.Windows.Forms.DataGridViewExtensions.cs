@@ -19,26 +19,190 @@
 */
 #endregion
 
-using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-// TODO: RowStyle attribute with propertynames and object instance
-// TODO: progessbarcolumn using progressbarrenderer or simple rectangle with text
 // TODO: buttoncolumn with image support
 namespace System.Windows.Forms {
 
   #region custom datagridviewcolumns
+
+  public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
+
+    public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
+      public DataGridViewProgressBarCell() {
+        this.Maximum = 100;
+        this.Minimum = 0;
+      }
+
+      public double Maximum { get; set; }
+      public double Minimum { get; set; }
+      public override object DefaultNewRowValue => 0;
+
+      public override object Clone() {
+        var cell = (DataGridViewProgressBarCell)base.Clone();
+        cell.Maximum = this.Maximum;
+        cell.Minimum = this.Minimum;
+        return cell;
+      }
+
+      protected override void Paint(
+        Graphics graphics,
+        Rectangle clipBounds,
+        Rectangle cellBounds,
+        int rowIndex,
+        DataGridViewElementStates cellState,
+        object value,
+        object formattedValue,
+        string errorText,
+        DataGridViewCellStyle cellStyle,
+        DataGridViewAdvancedBorderStyle advancedBorderStyle,
+        DataGridViewPaintParts paintParts
+      ) {
+
+        var intValue = 0d;
+        if (value is int)
+          intValue = (int)value;
+        if (value is float)
+          intValue = (float)value;
+        if (value is double)
+          intValue = (double)value;
+        if (value is decimal)
+          intValue = (double)(decimal)value;
+
+        if (intValue < this.Minimum)
+          intValue = this.Minimum;
+
+        if (intValue > this.Maximum)
+          intValue = this.Maximum;
+
+        var rate = (intValue - this.Minimum) / (this.Maximum - this.Minimum);
+
+        if ((paintParts & DataGridViewPaintParts.Border) == DataGridViewPaintParts.Border)
+          this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
+
+        var borderRect = this.BorderWidths(advancedBorderStyle);
+        var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
+
+        var isSelected = (cellState & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
+        var bkColor =
+            isSelected && (paintParts & DataGridViewPaintParts.SelectionBackground) == DataGridViewPaintParts.SelectionBackground
+              ? cellStyle.SelectionBackColor
+              : cellStyle.BackColor
+          ;
+
+        if ((paintParts & DataGridViewPaintParts.Background) == DataGridViewPaintParts.Background)
+          using (var backBrush = new SolidBrush(bkColor))
+            graphics.FillRectangle(backBrush, paintRect);
+
+        paintRect.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
+        paintRect.Width -= cellStyle.Padding.Horizontal;
+        paintRect.Height -= cellStyle.Padding.Vertical;
+
+        if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
+          if (ProgressBarRenderer.IsSupported) {
+            ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
+            var barBounds = new Rectangle(paintRect.Left + 3, paintRect.Top + 3, paintRect.Width - 4, paintRect.Height - 6);
+            barBounds.Width = Convert.ToInt32(Math.Round(barBounds.Width * rate));
+            ProgressBarRenderer.DrawHorizontalChunks(graphics, barBounds);
+          } else {
+            graphics.FillRectangle(Brushes.White, paintRect);
+            graphics.DrawRectangle(Pens.Black, paintRect);
+            var barBounds = new Rectangle(paintRect.Left + 1, paintRect.Top + 1, paintRect.Width - 1, paintRect.Height - 1);
+            barBounds.Width = Convert.ToInt32(Math.Round((barBounds.Width * rate)));
+            graphics.FillRectangle(Brushes.Blue, barBounds);
+          }
+        }
+
+        if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && (paintParts & DataGridViewPaintParts.Focus) == DataGridViewPaintParts.Focus && this.DataGridView.Focused) {
+          var focusRect = paintRect;
+          focusRect.Inflate(-3, -3);
+          ControlPaint.DrawFocusRectangle(graphics, focusRect);
+        }
+
+        if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
+          var txt = $"{Math.Round(rate * 100)}%";
+          const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+          var fColor = cellStyle.ForeColor;
+          paintRect.Inflate(-2, -2);
+          TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
+        }
+
+        if (
+          (paintParts & DataGridViewPaintParts.ErrorIcon) != DataGridViewPaintParts.ErrorIcon
+          || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText)
+        )
+          return;
+
+        var iconBounds = this.GetErrorIconBounds(graphics, cellStyle, rowIndex);
+        iconBounds.Offset(cellBounds.X, cellBounds.Y);
+        this.PaintErrorIcon(graphics, iconBounds, cellBounds, errorText);
+      }
+    }
+
+    public DataGridViewProgressBarColumn() {
+      this.CellTemplate = new DataGridViewProgressBarCell();
+    }
+
+    public override DataGridViewCell CellTemplate {
+      get { return base.CellTemplate; }
+      set {
+        if (value is DataGridViewProgressBarCell)
+          base.CellTemplate = value;
+        else
+          throw new InvalidCastException(nameof(DataGridViewProgressBarCell));
+      }
+    }
+
+    public double Maximum {
+      get { return ((DataGridViewProgressBarCell)this.CellTemplate).Maximum; }
+      set {
+        if (this.Maximum == value)
+          return;
+
+        ((DataGridViewProgressBarCell)this.CellTemplate).Maximum = value;
+
+        if (this.DataGridView == null)
+          return;
+
+        var rowCount = this.DataGridView.RowCount;
+        for (var i = 0; i <= rowCount - 1; ++i) {
+          var r = this.DataGridView.Rows.SharedRow(i);
+          ((DataGridViewProgressBarCell)r.Cells[this.Index]).Maximum = value;
+        }
+      }
+    }
+
+    public double Minimum {
+      get { return ((DataGridViewProgressBarCell)this.CellTemplate).Minimum; }
+      set {
+        if (this.Minimum == value)
+          return;
+
+        ((DataGridViewProgressBarCell)this.CellTemplate).Minimum = value;
+
+        if (this.DataGridView == null)
+          return;
+
+        var rowCount = this.DataGridView.RowCount;
+        for (var i = 0; i <= rowCount - 1; i++) {
+          var r = this.DataGridView.Rows.SharedRow(i);
+          ((DataGridViewProgressBarCell)r.Cells[this.Index]).Minimum = value;
+        }
+      }
+    }
+  }
 
   internal class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
 
@@ -124,6 +288,9 @@ namespace System.Windows.Forms {
 
   #region attributes for messing with auto-generated columns
 
+  /// <summary>
+  /// Allows specifying certain properties as read-only depending on the underlying object instance.
+  /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewConditionalReadOnlyAttribute : Attribute {
     public DataGridViewConditionalReadOnlyAttribute(string isReadOnlyWhen) {
@@ -131,31 +298,25 @@ namespace System.Windows.Forms {
     }
 
     public string IsReadOnlyWhen { get; }
-
-    public bool IsReadOnly(object value) {
-
-      // buttons are never enabled for null values
-      if (ReferenceEquals(null, value))
-        return false;
-
-      // if no property given, assume is readable
-      if (this.IsReadOnlyWhen == null)
-        return false;
-
-      // find property and ask for bool values
-      var property = value.GetType().GetProperty(this.IsReadOnlyWhen);
-      var result = property?.GetValue(value);
-      if (result is bool)
-        return (bool)result;
-
-      // property not found or not boolean type
-      return false;
-    }
-
+    public bool IsReadOnly(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.IsReadOnlyWhen, false, false, false, false);
   }
 
   /// <summary>
-  /// Allows specifying a string or image property to be sued as a button column.
+  /// Allows specifying a value to be used as a progressbar column.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewProgressBarColumnAttribute : Attribute {
+    public DataGridViewProgressBarColumnAttribute(double minimum = 0, double maximum = 100) {
+      this.Minimum = minimum;
+      this.Maximum = maximum;
+    }
+
+    public double Minimum { get; }
+    public double Maximum { get; }
+  }
+
+  /// <summary>
+  /// Allows specifying a string or image property to be used as a button column.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewButtonColumnAttribute : Attribute {
@@ -184,25 +345,8 @@ namespace System.Windows.Forms {
       property?.Invoke(value, null);
     }
 
-    public bool IsEnabled(object value) {
+    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.IsEnabledWhen, false, true, false, false);
 
-      // buttons are never enabled for null values
-      if (ReferenceEquals(null, value))
-        return false;
-
-      // if no property given, assume all buttons are enabled
-      if (this.IsEnabledWhen == null)
-        return true;
-
-      // find property and ask for bool values
-      var property = value.GetType().GetProperty(this.IsEnabledWhen);
-      var result = property?.GetValue(value);
-      if (result is bool)
-        return (bool)result;
-
-      // property not found or not boolean type, so assume button is disabled
-      return false;
-    }
   }
 
   /// <summary>
@@ -241,75 +385,79 @@ namespace System.Windows.Forms {
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
   internal sealed class DataGridViewCellStyleAttribute : Attribute {
 
-    private static readonly Regex _COLOR_MATCH = new Regex(@"^(?:#(?<eightdigit>[0-9a-z]{8}))|(?:#(?<sixdigit>[0-9a-z]{6}))|(?:#(?<fourdigit>[0-9a-z]{4}))|(?:#(?<threedigit>[0-9a-z]{3}))|(?<knowncolor>[a-z]+)|(?:'(?<systemcolor>[a-z]+)')$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
-      Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16),
-        Convert.ToByte(string.Empty+v[6]+v[7],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("sixdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("fourdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16),
-        Convert.ToByte(string.Empty+v[3]+v[3],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("threedigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
-      Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
-    };
-
-    #region Parse
-
-    private static Color _ParseColor(string @this) {
-      var match = _COLOR_MATCH.Match(@this);
-      if (!match.Success)
-        throw new ArgumentException("Unknown color", nameof(@this));
-
-      foreach (var parser in _COLOR_PARSERS) {
-        var group = match.Groups[parser.Item1];
-        if (group.Success)
-          return parser.Item2(@group.Value);
-
-      }
-
-      throw new ArgumentException("Unknown color", nameof(@this));
-    }
-
-    #endregion
-
-
-    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null) {
-      this.ForeColor = foreColor == null ? (Color?)null : _ParseColor(foreColor);
-      this.BackColor = backColor == null ? (Color?)null : _ParseColor(backColor);
+    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null) {
+      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
+      this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
+      this.ConditionalPropertyName = conditionalPropertyName;
       this.Format = format;
+      this.ForeColorPropertyName = foreColorPropertyName;
+      this.BackColorPropertyName = backColorPropertyName;
     }
 
+    public string ConditionalPropertyName { get; }
     public Color? ForeColor { get; }
     public Color? BackColor { get; }
     public string Format { get; }
+    public string ForeColorPropertyName { get; }
+    public string BackColorPropertyName { get; }
 
-    public void ApplyTo(DataGridViewCellStyle style) {
-      if (this.ForeColor != null)
-        style.ForeColor = this.ForeColor.Value;
+    public void ApplyTo(DataGridViewCellStyle style, object value) {
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+      if (color != null)
+        style.ForeColor = color.Value;
 
-      if (this.BackColor != null)
-        style.BackColor = this.BackColor.Value;
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      if (color != null)
+        style.BackColor = color.Value;
 
       if (this.Format != null)
         style.Format = this.Format;
     }
+
+    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+
   }
+
+  /// <summary>
+  /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
+  internal sealed class DataGridViewRowStyleAttribute : Attribute {
+
+    public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null) {
+      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
+      this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
+      this.ConditionalPropertyName = conditionalPropertyName;
+      this.Format = format;
+      this.ForeColorPropertyName = foreColorPropertyName;
+      this.BackColorPropertyName = backColorPropertyName;
+    }
+
+    public string ConditionalPropertyName { get; }
+    public Color? ForeColor { get; }
+    public Color? BackColor { get; }
+    public string Format { get; }
+    public string ForeColorPropertyName { get; }
+    public string BackColorPropertyName { get; }
+
+    public void ApplyTo(DataGridViewCellStyle style, object value) {
+
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+      if (color != null)
+        style.ForeColor = color.Value;
+
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      if (color != null)
+        style.BackColor = color.Value;
+
+      if (this.Format != null)
+        style.Format = this.Format;
+    }
+
+    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+
+  }
+
 
   #endregion
 
@@ -318,12 +466,14 @@ namespace System.Windows.Forms {
     #region messing with auto-generated columns
 
     public static void EnableExtendedAttributes(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       // unsubscribe first to avoid duplicate subscriptions
       @this.DataSourceChanged -= _DataSourceChanged;
       @this.CellPainting -= _CellPainting;
       @this.RowPostPaint -= _RowPostPaint;
+      @this.RowPrePaint -= _RowPrePaint;
       @this.CellClick -= _CellClick;
       @this.EnabledChanged -= _EnabledChanged;
       @this.Disposed -= _RemoveDisabledState;
@@ -332,39 +482,10 @@ namespace System.Windows.Forms {
       @this.CellPainting += _CellPainting;
       @this.DataSourceChanged += _DataSourceChanged;
       @this.RowPostPaint += _RowPostPaint;
+      @this.RowPrePaint += _RowPrePaint;
       @this.CellClick += _CellClick;
       @this.EnabledChanged += _EnabledChanged;
       @this.Disposed += _RemoveDisabledState;
-    }
-
-    /// <summary>
-    /// Queries for certain property attribute in given type and all inherited interfaces.
-    /// </summary>
-    /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
-    /// <param name="baseType">The base type.</param>
-    /// <param name="propertyName">Name of the property.</param>
-    /// <returns>An enumeration of all matching attributes or <c>null</c>.</returns>
-    private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType, string propertyName) where TAttribute : Attribute {
-      var property = baseType.GetProperty(propertyName);
-
-      // ignore missing properties
-      var declaringType = property?.DeclaringType;
-
-      if (declaringType == null)
-        return null;
-
-      // find all attributes, even in inherited interfaces
-      var results = property
-                .GetCustomAttributes(true)
-                .Concat(
-                  declaringType.GetInterfaces()
-                    .Select(intf => intf.GetProperty(propertyName))
-                    .Where(p => p != null)
-                    .SelectMany(p => p.GetCustomAttributes(true)))
-                .OfType<TAttribute>()
-                ;
-
-      return results;
     }
 
     /// <summary>
@@ -436,9 +557,30 @@ namespace System.Windows.Forms {
           continue;
 
         // if needed replace DataGridViewTextBoxColumns with DataGridViewButtonColumn
-        var buttonColumnAttribute = property.GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true).FirstOrDefault();
+        var buttonColumnAttribute = (DataGridViewButtonColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true).FirstOrDefault();
         if (buttonColumnAttribute != null) {
           var newColumn = new DataGridViewDisableButtonColumn {
+            Name = column.Name,
+            DataPropertyName = column.DataPropertyName,
+            HeaderText = column.HeaderText,
+            ReadOnly = true,
+            DisplayIndex = column.DisplayIndex,
+            Width = column.Width,
+            AutoSizeMode = column.AutoSizeMode,
+            ContextMenuStrip = column.ContextMenuStrip,
+            Visible = column.Visible,
+          };
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
+        // if needed replace DataGridViewTextBoxColumns with DataGridViewProgressBarColumn
+        var progressBarColumnAttribute = (DataGridViewProgressBarColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewProgressBarColumnAttribute), true).FirstOrDefault();
+        if (progressBarColumnAttribute != null) {
+          var newColumn = new DataGridViewProgressBarColumn {
+            Minimum = progressBarColumnAttribute.Minimum,
+            Maximum = progressBarColumnAttribute.Maximum,
             Name = column.Name,
             DataPropertyName = column.DataPropertyName,
             HeaderText = column.HeaderText,
@@ -527,10 +669,11 @@ namespace System.Windows.Forms {
 
       var rowIndex = e.RowIndex;
 
-      if (rowIndex >= dgv.RowCount)
+      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
-      var type = rowIndex < 0 ? FindItemType(dgv) : dgv.Rows[rowIndex].DataBoundItem?.GetType() ?? FindItemType(dgv);
+      var value = dgv.Rows[rowIndex].DataBoundItem;
+      var type = rowIndex < 0 ? FindItemType(dgv) : value?.GetType() ?? FindItemType(dgv);
 
       if (type == null)
         return;
@@ -540,8 +683,35 @@ namespace System.Windows.Forms {
 
       if (attributes != null)
         foreach (var attribute in attributes)
-          attribute.ApplyTo(e.CellStyle);
+          if (attribute.IsEnabled(value))
+            attribute.ApplyTo(e.CellStyle, value);
 
+    }
+
+    /// <summary>
+    /// Fixes row styles.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewRowPrePaintEventArgs" /> instance containing the event data.</param>
+    private static void _RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e) {
+      var dgv = sender as DataGridView;
+
+      if (dgv == null)
+        return;
+
+      var rowIndex = e.RowIndex;
+
+      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
+        return;
+
+      var value = dgv.Rows[rowIndex].DataBoundItem;
+      var type = value?.GetType() ?? FindItemType(dgv);
+
+      var attributes = _QueryPropertyAttribute<DataGridViewRowStyleAttribute>(type);
+      if (attributes != null)
+        foreach (var attribute in attributes)
+          if (attribute.IsEnabled(value))
+            attribute.ApplyTo(dgv.Rows[rowIndex].DefaultCellStyle, value);
     }
 
     /// <summary>
@@ -575,7 +745,9 @@ namespace System.Windows.Forms {
           continue;
 
         var cell = cells[column.Index];
-        _FixReadOnlyCellStyle(type, column, cell, value);
+        if (!dgv.ReadOnly)
+          _FixReadOnlyCellStyle(type, column, cell, value);
+
         _FixDisabledButtonCellStyle(type, column, cell, value);
 
       }
@@ -753,7 +925,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <returns>The identified item type or <c>null</c>.</returns>
     public static Type FindItemType(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       var source = @this.DataSource;
 
@@ -775,7 +948,8 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="this">This DataGridView.</param>
     public static void ScrollToEnd(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       var rowCount = @this.RowCount;
 
@@ -795,9 +969,12 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <param name="target">The target DataGridView.</param>
     public static void CloneColumns(this DataGridView @this, DataGridView target) {
-      if (@this == null) throw new NullReferenceException();
-      if (target == null) throw new ArgumentNullException(nameof(target));
-      if (ReferenceEquals(@this, target)) throw new ArgumentException("Source and target are equal.", nameof(target));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (target == null)
+        throw new ArgumentNullException(nameof(target));
+      if (ReferenceEquals(@this, target))
+        throw new ArgumentException("Source and target are equal.", nameof(target));
 
       target.Columns.AddRange((from i in @this.Columns.Cast<DataGridViewColumn>() select (DataGridViewColumn)i.Clone()).ToArray());
     }
@@ -809,8 +986,10 @@ namespace System.Windows.Forms {
     /// <param name="predicate">The predicate.</param>
     /// <returns>An enumeration of columns.</returns>
     public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView @this, Predicate<DataGridViewColumn> predicate) {
-      if (@this == null) throw new NullReferenceException();
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 
       return (from i in @this.Columns.Cast<DataGridViewColumn>() where predicate(i) select i);
     }
@@ -822,7 +1001,8 @@ namespace System.Windows.Forms {
     /// <param name="predicate">The predicate.</param>
     /// <returns>The first matching column or <c>null</c>.</returns>
     public static DataGridViewColumn FindFirstColumn(this DataGridView @this, Predicate<DataGridViewColumn> predicate) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       var matches = FindColumns(@this, predicate);
       return matches?.FirstOrDefault();
@@ -834,7 +1014,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <returns>The currently selected items</returns>
     public static IEnumerable<object> GetSelectedItems(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       return
       @this
@@ -855,7 +1036,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <returns>The currently selected items</returns>
     public static IEnumerable<TItem> GetSelectedItems<TItem>(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       return (@this.GetSelectedItems().Cast<TItem>());
     }
@@ -866,7 +1048,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <returns><c>true</c> if any cell is currently selected; otherwise <c>false</c>.</returns>
     public static bool IsAnyCellSelected(this DataGridView @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       return @this.SelectedCells.Count > 0;
     }
@@ -878,8 +1061,10 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <param name="items">The items to select.</param>
     public static void SelectItems<TItem>(this DataGridView @this, IEnumerable<TItem> items) {
-      if (@this == null) throw new NullReferenceException();
-      if (items == null) throw new ArgumentNullException(nameof(items));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (items == null)
+        throw new ArgumentNullException(nameof(items));
 
       var bucket = new HashSet<TItem>(items);
 
@@ -899,8 +1084,10 @@ namespace System.Windows.Forms {
     /// <param name="preAction">The pre action.</param>
     /// <param name="postAction">The post action.</param>
     public static void RefreshDataSource<TItem, TKey>(this DataGridView @this, IList<TItem> source, Func<TItem, TKey> keyGetter, Action preAction = null, Action postAction = null) {
-      if (@this == null) throw new NullReferenceException();
-      if (keyGetter == null) throw new ArgumentNullException(nameof(keyGetter));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (keyGetter == null)
+        throw new ArgumentNullException(nameof(keyGetter));
 
       try {
         @this.SuspendLayout();
@@ -937,7 +1124,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <param name="maxRowCount">The maximum row count, if any.</param>
     public static void AutoAdjustHeight(this DataGridView @this, int maxRowCount = -1) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       var headerHeight = @this.ColumnHeadersVisible ? @this.ColumnHeadersHeight : 0;
       var rows = @this.Rows.Cast<DataGridViewRow>();
@@ -948,163 +1136,153 @@ namespace System.Windows.Forms {
       var rowHeight = rows.Sum(row => row.Height + 1 /* 1px border between rows */ );
       @this.Height = headerHeight + rowHeight;
     }
+
+    #region various reflection caches
+
+    private static readonly ConcurrentDictionary<Type, object[]> _TYPE_ATTRIBUTE_CACHE = new ConcurrentDictionary<Type, object[]>();
+
+    /// <summary>
+    /// Queries for certain class/struct attribute in given type and all inherited interfaces.
+    /// </summary>
+    /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
+    /// <param name="baseType">The base type.</param>
+    /// <returns>An enumeration of all matching attributes or <c>null</c>.</returns>
+    private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType) where TAttribute : Attribute {
+      // find all attributes, even in inherited interfaces
+
+      var results = _TYPE_ATTRIBUTE_CACHE.GetOrAdd(baseType, type => {
+        return type
+          .GetCustomAttributes(true)
+          .Concat(baseType.GetInterfaces().SelectMany(p => p.GetCustomAttributes(true)))
+          .ToArray();
+      });
+
+      return results.OfType<TAttribute>();
+    }
+
+    private static readonly ConcurrentDictionary<string, object[]> _PROPERTY_ATTRIBUTE_CACHE = new ConcurrentDictionary<string, object[]>();
+
+    /// <summary>
+    /// Queries for certain property attribute in given type and all inherited interfaces.
+    /// </summary>
+    /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
+    /// <param name="baseType">The base type.</param>
+    /// <param name="propertyName">Name of the property.</param>
+    /// <returns>An enumeration of all matching attributes or <c>null</c>.</returns>
+    private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType, string propertyName) where TAttribute : Attribute {
+
+      var results = _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(baseType.FullName + "\0" + propertyName, _ => {
+        var property = baseType.GetProperty(propertyName);
+
+        // ignore missing properties
+        var declaringType = property?.DeclaringType;
+
+        if (declaringType == null)
+          return null;
+
+        // find all attributes, even in inherited interfaces
+        return property
+            .GetCustomAttributes(true)
+            .Concat(
+              declaringType.GetInterfaces()
+                .Select(intf => intf.GetProperty(propertyName))
+                .Where(p => p != null)
+                .SelectMany(p => p.GetCustomAttributes(true))
+            )
+            .ToArray()
+          ;
+      });
+
+      return results?.OfType<TAttribute>();
+    }
+
+
+    private static readonly ConcurrentDictionary<string, PropertyInfo> _PROPERTY_CACHE = new ConcurrentDictionary<string, PropertyInfo>();
+    /// <summary>
+    /// Gets the property value or default.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the property.</typeparam>
+    /// <param name="value">The value.</param>
+    /// <param name="propertyName">Name of the property.</param>
+    /// <param name="defaultValueNullValue">The default value to return when value is <c>null</c>.</param>
+    /// <param name="defaultValueNoProperty">The default value to return when propertyname is <c>null</c>.</param>
+    /// <param name="defaultValuePropertyNotFound">The default value to return when property not found.</param>
+    /// <param name="defaultValuePropertyWrongType">The default value to return when property type does not match.</param>
+    /// <returns></returns>
+    internal static TValue GetPropertyValueOrDefault<TValue>(object value, string propertyName, TValue defaultValueNullValue, TValue defaultValueNoProperty, TValue defaultValuePropertyNotFound, TValue defaultValuePropertyWrongType) {
+      // null value, return default
+      if (ReferenceEquals(null, value))
+        return defaultValueNullValue;
+
+      // if no property given, return default
+      if (propertyName == null)
+        return defaultValueNoProperty;
+
+      // find property and ask for bool values
+      var type = value.GetType();
+      var property = _PROPERTY_CACHE.GetOrAdd(type + "\0" + propertyName, _ => type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+
+      // property not found, return default
+      if (property == null)
+        return defaultValuePropertyNotFound;
+
+      var result = property.GetValue(value);
+      if (result is TValue)
+        return (TValue)result;
+
+      // not right type, return default
+      return defaultValuePropertyWrongType;
+    }
+
+    #endregion
+
+    #region parsing colors
+
+    private static readonly Regex _COLOR_MATCH = new Regex(@"^(?:#(?<eightdigit>[0-9a-z]{8}))|(?:#(?<sixdigit>[0-9a-z]{6}))|(?:#(?<fourdigit>[0-9a-z]{4}))|(?:#(?<threedigit>[0-9a-z]{3}))|(?<knowncolor>[a-z]+)|(?:'(?<systemcolor>[a-z]+)')$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
+      Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[3],16),
+        Convert.ToByte(string.Empty+v[4]+v[5],16),
+        Convert.ToByte(string.Empty+v[6]+v[7],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("sixdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[3],16),
+        Convert.ToByte(string.Empty+v[4]+v[5],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("fourdigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[0],16),
+        Convert.ToByte(string.Empty+v[1]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[2],16),
+        Convert.ToByte(string.Empty+v[3]+v[3],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("threedigit",v=>Color.FromArgb(
+        Convert.ToByte(string.Empty+v[0]+v[0],16),
+        Convert.ToByte(string.Empty+v[1]+v[1],16),
+        Convert.ToByte(string.Empty+v[2]+v[2],16)
+      )),
+      Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
+      Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
+    };
+
+    internal static Color _ParseColor(string @this) {
+      var match = _COLOR_MATCH.Match(@this);
+      if (!match.Success)
+        throw new ArgumentException("Unknown color", nameof(@this));
+
+      foreach (var parser in _COLOR_PARSERS) {
+        var group = match.Groups[parser.Item1];
+        if (group.Success)
+          return parser.Item2(group.Value);
+
+      }
+
+      throw new ArgumentException("Unknown color", nameof(@this));
+    }
+
+    #endregion
+
   }
 }
-
-public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
-
-  //Konstruktor
-  public DataGridViewProgressBarColumn() {
-    this.CellTemplate = new DataGridViewProgressBarCell();
-  }
-
-  public override DataGridViewCell CellTemplate {
-    get { return base.CellTemplate; }
-    set {
-      if (value is DataGridViewProgressBarCell)
-        base.CellTemplate = value;
-      else
-        throw new InvalidCastException(nameof(DataGridViewProgressBarCell));
-    }
-  }
-
-  public int Maximum {
-    get { return ((DataGridViewProgressBarCell)this.CellTemplate).Maximum; }
-    set {
-      if (this.Maximum == value)
-        return;
-
-      ((DataGridViewProgressBarCell)this.CellTemplate).Maximum = value;
-
-      if (this.DataGridView == null)
-        return;
-
-      var rowCount = this.DataGridView.RowCount;
-      for (var i = 0; i <= rowCount - 1; ++i) {
-        var r = this.DataGridView.Rows.SharedRow(i);
-        ((DataGridViewProgressBarCell)r.Cells[this.Index]).Maximum = value;
-      }
-    }
-  }
-
-  public int Mimimum {
-    get { return ((DataGridViewProgressBarCell)this.CellTemplate).Mimimum; }
-    set {
-      if (this.Mimimum == value)
-        return;
-
-      ((DataGridViewProgressBarCell)this.CellTemplate).Mimimum = value;
-
-      if (this.DataGridView == null)
-        return;
-
-      var rowCount = this.DataGridView.RowCount;
-      for (var i = 0; i <= rowCount - 1; i++) {
-        var r = this.DataGridView.Rows.SharedRow(i);
-        ((DataGridViewProgressBarCell)r.Cells[this.Index]).Mimimum = value;
-      }
-    }
-  }
-}
-
-public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
-  public DataGridViewProgressBarCell() {
-    this.Maximum = 100;
-    this.Mimimum = 0;
-  }
-
-  public int Maximum { get; set; }
-  public int Mimimum { get; set; }
-
-  public override Type ValueType => typeof(int);
-  public override object DefaultNewRowValue => 0;
-
-  public override object Clone() {
-    var cell = (DataGridViewProgressBarCell)base.Clone();
-    cell.Maximum = this.Maximum;
-    cell.Mimimum = this.Mimimum;
-    return cell;
-  }
-
-  protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle,
-    DataGridViewPaintParts paintParts) {
-
-    var intValue = 0;
-    if (value is int)
-      intValue = Convert.ToInt32(value);
-
-    if (intValue < this.Mimimum)
-      intValue = this.Mimimum;
-
-    if (intValue > this.Maximum)
-      intValue = this.Maximum;
-
-    var rate = Convert.ToDouble(intValue - this.Mimimum) / (this.Maximum - this.Mimimum);
-
-    if ((paintParts & DataGridViewPaintParts.Border) == DataGridViewPaintParts.Border)
-      this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
-
-    var borderRect = this.BorderWidths(advancedBorderStyle);
-    var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
-
-    var isSelected = (cellState & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
-    Color bkColor;
-    if (isSelected && (paintParts & DataGridViewPaintParts.SelectionBackground) == DataGridViewPaintParts.SelectionBackground)
-      bkColor = cellStyle.SelectionBackColor;
-    else
-      bkColor = cellStyle.BackColor;
-
-    if ((paintParts & DataGridViewPaintParts.Background) == DataGridViewPaintParts.Background) {
-      var backBrush = new SolidBrush(bkColor);
-      try {
-        graphics.FillRectangle(backBrush, paintRect);
-      } finally {
-        backBrush.Dispose();
-      }
-    }
-
-    paintRect.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
-    paintRect.Width -= cellStyle.Padding.Horizontal;
-    paintRect.Height -= cellStyle.Padding.Vertical;
-
-    if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
-      if (ProgressBarRenderer.IsSupported) {
-        ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
-        var barBounds = new Rectangle(paintRect.Left + 3, paintRect.Top + 3, paintRect.Width - 4, paintRect.Height - 6);
-        barBounds.Width = Convert.ToInt32(Math.Round(barBounds.Width * rate));
-        ProgressBarRenderer.DrawHorizontalChunks(graphics, barBounds);
-      } else {
-        graphics.FillRectangle(Brushes.White, paintRect);
-        graphics.DrawRectangle(Pens.Black, paintRect);
-        var barBounds = new Rectangle(paintRect.Left + 1, paintRect.Top + 1, paintRect.Width - 1, paintRect.Height - 1);
-        barBounds.Width = Convert.ToInt32(Math.Round((barBounds.Width * rate)));
-        graphics.FillRectangle(Brushes.Blue, barBounds);
-      }
-    }
-
-    if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && (paintParts & DataGridViewPaintParts.Focus) == DataGridViewPaintParts.Focus && this.DataGridView.Focused) {
-      var focusRect = paintRect;
-      focusRect.Inflate(-3, -3);
-      ControlPaint.DrawFocusRectangle(graphics, focusRect);
-    }
-
-    if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
-      var txt = string.Format("{0}%", Math.Round(rate * 100));
-      const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
-      var fColor = cellStyle.ForeColor;
-      paintRect.Inflate(-2, -2);
-      TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
-    }
-
-    if (
-      (paintParts & DataGridViewPaintParts.ErrorIcon) != DataGridViewPaintParts.ErrorIcon
-      || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText)
-    )
-      return;
-
-    var iconBounds = this.GetErrorIconBounds(graphics, cellStyle, rowIndex);
-    iconBounds.Offset(cellBounds.X, cellBounds.Y);
-    this.PaintErrorIcon(graphics, iconBounds, cellBounds, errorText);
-  }
-}
-

@@ -76,6 +76,12 @@ namespace System.IO {
     /// </summary>
     private static class NativeMethods {
 
+#pragma warning disable CC0021 // Use nameof
+#pragma warning disable CC0074 // Make field readonly
+// ReSharper disable UnusedMember.Local
+// ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable InconsistentNaming
+
       #region consts
 
       public enum FileSystemControl : int {
@@ -181,19 +187,25 @@ namespace System.IO {
         public string szTypeName;
       };
       #endregion
+
+// ReSharper restore InconsistentNaming
+// ReSharper restore MemberCanBePrivate.Local
+// ReSharper restore UnusedMember.Local
+#pragma warning restore CC0074 // Make field readonly
+#pragma warning restore CC0021 // Use nameof
+
     }
 
     #region consts
 
-    internal static Encoding _UTF8NoBOM;
-    internal static Encoding UTF8NoBOM {
+    private static Encoding _utf8NoBom;
+    internal static Encoding Utf8NoBom {
       get {
-        if (_UTF8NoBOM != null)
-          return _UTF8NoBOM;
+        if (_utf8NoBom != null)
+          return _utf8NoBom;
 
         var utF8Encoding = new UTF8Encoding(false, true);
-        Thread.MemoryBarrier();
-        return (_UTF8NoBOM = utF8Encoding);
+        return _utf8NoBom = utF8Encoding;
       }
     }
 
@@ -203,23 +215,25 @@ namespace System.IO {
     /// <summary>
     /// Enables the file compression on NTFS volumes.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
-    public static void EnableCompression(this FileInfo This) {
+    /// <param name="this">This FileInfo.</param>
+    public static void EnableCompression(this FileInfo @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
 
-      if (!This.Exists)
-        throw new FileNotFoundException(This.FullName);
-      short COMPRESSION_FORMAT_DEFAULT = 1;
+      @this.Refresh();
+      if (!@this.Exists)
+        throw new FileNotFoundException(@this.FullName);
+
+      short defaultCompressionFormat = 1;
 
       int result;
-      using (var f = File.Open(This.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+      using (var f = File.Open(@this.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
         int lpBytesReturned;
         result = NativeMethods.DeviceIoControl(
           f.SafeFileHandle.DangerousGetHandle(),
           NativeMethods.FileSystemControl.SetCompression,
-          ref COMPRESSION_FORMAT_DEFAULT,
+          ref defaultCompressionFormat,
           sizeof(short),
           IntPtr.Zero,
           0,
@@ -227,7 +241,7 @@ namespace System.IO {
           IntPtr.Zero
         );
       }
-      if (result < 0 || result > 0x7FFFFFFF)
+      if (result < 0)
         throw new Win32Exception();
 
     }
@@ -235,33 +249,40 @@ namespace System.IO {
     /// <summary>
     /// Tries to enable the file compression on NTFS volumes.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
-    public static bool TryEnableCompression(this FileInfo This) {
+    public static bool TryEnableCompression(this FileInfo @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
 
-      if (!This.Exists)
-        return (false);
+      @this.Refresh();
 
-      short COMPRESSION_FORMAT_DEFAULT = 1;
+      if (!@this.Exists)
+        return false;
 
-      int result;
-      using (var f = File.Open(This.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+      short defaultCompressionFormat = 1;
+
+      FileStream f = null;
+      try {
+        f = File.Open(@this.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         int lpBytesReturned;
-        result = NativeMethods.DeviceIoControl(
+        var result = NativeMethods.DeviceIoControl(
           f.SafeFileHandle.DangerousGetHandle(),
           NativeMethods.FileSystemControl.SetCompression,
-          ref COMPRESSION_FORMAT_DEFAULT,
+          ref defaultCompressionFormat,
           sizeof(short),
           IntPtr.Zero,
           0,
           out lpBytesReturned,
           IntPtr.Zero
         );
+        return result >= 0;
+      } catch (Exception) {
+        return false;
+      } finally {
+        f?.Dispose();
       }
-      return (result >= 0 && result <= 0x7FFFFFFF);
     }
     #endregion
 
@@ -739,7 +760,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void KeepFirstLines(this FileInfo This, int count) => This.KeepFirstLines(count, UTF8NoBOM);
+    public static void KeepFirstLines(this FileInfo This, int count) => This.KeepFirstLines(count, Utf8NoBom);
 
     /// <summary>
     /// Keeps the first lines of a text file.
@@ -778,7 +799,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void KeepLastLines(this FileInfo This, int count) => This.KeepLastLines(count, UTF8NoBOM);
+    public static void KeepLastLines(this FileInfo This, int count) => This.KeepLastLines(count, Utf8NoBom);
 
     /// <summary>
     /// Keeps the last lines of a text file.
@@ -826,7 +847,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="count">The count.</param>
-    public static void RemoveFirstLines(this FileInfo This, int count) => This.RemoveFirstLines(count, UTF8NoBOM);
+    public static void RemoveFirstLines(this FileInfo This, int count) => This.RemoveFirstLines(count, Utf8NoBom);
 
     /// <summary>
     /// Removes the first n lines from a file.
@@ -1025,19 +1046,14 @@ namespace System.IO {
     /// </summary>
     /// <param name="pattern">The pattern.</param>
     /// <returns>The regex.</returns>
-    private static Regex _ConvertFilePatternToRegex(string pattern) {
-
-      const string NonDotCharacters = @"[^.]*";
-
-      if (pattern == null)
-        throw new ArgumentNullException();
-
+    private static string _ConvertFilePatternToRegex(string pattern) {
+      if (pattern == null) throw new ArgumentNullException(nameof(pattern));
       pattern = pattern.Trim();
-      if (pattern.Length == 0)
-        throw new ArgumentException("Pattern is empty.");
 
-      if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern))
-        throw new ArgumentException("Patterns contains ilegal characters.");
+      if (pattern.Length == 0) throw new ArgumentException("Pattern is empty.", nameof(pattern));
+      if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern)) throw new ArgumentException("Patterns contains ilegal characters.", nameof(pattern));
+
+      const string nonDotCharacters = @"[^.]*";
 
       var hasExtension = _CATCH_EXTENSION_REGEX.IsMatch(pattern);
       var matchExact = false;
@@ -1052,15 +1068,15 @@ namespace System.IO {
       regexString = Regex.Replace(regexString, @"\\\?", ".");
 
       if (!matchExact && hasExtension)
-        regexString += NonDotCharacters;
+        regexString += nonDotCharacters;
 
       regexString += "$";
-      return (new Regex(regexString, RegexOptions.IgnoreCase));
+      return regexString;
     }
 
     public static bool MatchesFilter(this FileInfo @this,string filter){
       var regex=_ConvertFilePatternToRegex(filter);
-      return regex.IsMatch(@this.FullName);
+      return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
   }
