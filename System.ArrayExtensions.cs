@@ -2,19 +2,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
@@ -27,12 +27,15 @@ using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 #if NETFX_4
 using System.Threading.Tasks;
 #endif
 
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -40,7 +43,44 @@ namespace System {
   internal static partial class ArrayExtensions {
 
     #region nested types
-    [DebuggerDisplay("{ToString()}")]
+
+    internal enum ChangeType {
+      Equal = 0,
+      Changed = 1,
+      Added = 2,
+      Removed = 3,
+    }
+
+    internal interface IChangeSet<out TItem> {
+      ChangeType Type { get; }
+      int CurrentIndex { get; }
+      TItem Current { get; }
+      int OtherIndex { get; }
+      TItem Other { get; }
+    }
+
+    private class ChangeSet<TItem> : IChangeSet<TItem> {
+      public ChangeSet(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other) {
+        this.Type = type;
+        this.CurrentIndex = currentIndex;
+        this.Current = current;
+        this.OtherIndex = otherIndex;
+        this.Other = other;
+      }
+
+      #region Implementation of IChangeSet<TValue>
+
+      public ChangeType Type { get; }
+      public int CurrentIndex { get; }
+      public TItem Current { get; }
+      public int OtherIndex { get; }
+      public TItem Other { get; }
+
+      #endregion
+    }
+
+
+    [DebuggerDisplay("{" + nameof(ToString) + "()}")]
     internal class ReadOnlyArraySlice<TItem> : IEnumerable<TItem> {
 
       protected readonly TItem[] _source;
@@ -79,7 +119,7 @@ namespace System {
 #if NETFX_4
           Contract.Requires(index < this.Length);
 #endif
-          return (this._source[index + this._start]);
+          return this._source[index + this._start];
         }
       }
 
@@ -108,7 +148,7 @@ namespace System {
         if (length < 0)
           length = this.Length - start;
 
-        if ((start + length) > this.Length)
+        if (start + length > this.Length)
           throw new ArgumentException("Exceeding source length", nameof(length));
 
         return new ReadOnlyArraySlice<TItem>(this._source, start + this._start, length);
@@ -143,7 +183,7 @@ namespace System {
       #endregion
     }
 
-    [DebuggerDisplay("{ToString()}")]
+    [DebuggerDisplay("{" + nameof(ToString) + "()}")]
     internal class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
       public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
@@ -165,7 +205,7 @@ namespace System {
 #if NETFX_4
           Contract.Requires(index < this.Length);
 #endif
-          return (this._source[index + this._start]);
+          return this._source[index + this._start];
         }
         set {
 #if NETFX_4
@@ -186,15 +226,96 @@ namespace System {
         if (length < 0)
           length = this.Length - start;
 
-        if ((start + length) > this.Length)
+        if (start + length > this.Length)
           throw new ArgumentException("Exceeding source length", nameof(length));
 
         return new ArraySlice<TItem>(this._source, start + this._start, length);
       }
     }
+
     #endregion
 
-    private static readonly Exception _EX_NO_ELEMENTS = new InvalidOperationException("No Elements!");
+
+    /// <summary>
+    /// Compares two arrays against each other.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="other">The other Array.</param>
+    /// <param name="comparer">The value comparer; optional: uses default.</param>
+    /// <returns></returns>
+    [DebuggerStepThrough]
+    public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this TItem[] @this, TItem[] other, IEqualityComparer<TItem> comparer = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (other == null)
+        throw new ArgumentNullException(nameof(other));
+
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      if (comparer == null)
+        comparer = EqualityComparer<TItem>.Default;
+
+      var targetIndex = 0;
+      var currentSourceBuffer = new Queue<int>();
+
+      for (var i = 0; i < @this.Length; ++i) {
+        var item = @this[i];
+        var foundAt = _IndexOf(other, item, targetIndex, comparer);
+        if (foundAt < 0) {
+          // does not exist in target
+          currentSourceBuffer.Enqueue(i);
+          continue;
+        }
+
+        // found
+        while (targetIndex <= foundAt) {
+          if (targetIndex == foundAt) {
+            // last iteration
+            while (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], -1, default(TItem));
+            }
+
+            yield return new ChangeSet<TItem>(ChangeType.Equal, i, @this[i], targetIndex, other[targetIndex]);
+          } else {
+            if (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Changed, index, @this[index], targetIndex, other[targetIndex]);
+            } else
+              yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, other[targetIndex]);
+          }
+          ++targetIndex;
+        }
+      }
+
+      var targetLen = other.Length;
+      while (currentSourceBuffer.Count > 0) {
+        if (targetIndex < targetLen) {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Changed, index, @this[index], targetIndex, other[targetIndex]);
+          ++targetIndex;
+        } else {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], -1, default(TItem));
+        }
+      }
+
+      while (targetIndex < targetLen) {
+        yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, other[targetIndex]);
+        ++targetIndex;
+      }
+    }
+
+    private static int _IndexOf<TValue>(TValue[] values, TValue item, int startIndex, IEqualityComparer<TValue> comparer) {
+      for (var i = startIndex; i < values.Length; ++i)
+        if (ReferenceEquals(values[i], item) || comparer.Equals(values[i], item))
+          return i;
+
+      return -1;
+    }
 
     /// <summary>
     /// Returns the enumeration or <c>null</c> if it is empty.
@@ -202,6 +323,10 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This Enumeration.</param>
     /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this?.Length > 0 ? @this : null;
 
     /// <summary>
@@ -212,6 +337,10 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) => new ReadOnlyArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
 
     /// <summary>
@@ -220,8 +349,19 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This Array.</param>
     /// <param name="size">The size of the slices.</param>
-    /// <returns>An enumeration of read-only slices</returns>
+    /// <returns>
+    /// An enumeration of read-only slices
+    /// </returns>
+    [DebuggerStepThrough]
     public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (size < 1)
+        throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
         yield return new ReadOnlyArraySlice<TItem>(@this, index, Math.Min(length - index, size));
@@ -235,6 +375,10 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array.</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) => new ArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
 
     /// <summary>
@@ -244,7 +388,16 @@ namespace System {
     /// <param name="this">This Array.</param>
     /// <param name="size">The size of the slices.</param>
     /// <returns>An enumeration of slices</returns>
+    [DebuggerStepThrough]
     public static IEnumerable<ArraySlice<TItem>> Slices<TItem>(this TItem[] @this, int size) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (size < 1)
+        throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
         yield return new ArraySlice<TItem>(@this, index, Math.Min(length - index, size));
@@ -253,351 +406,434 @@ namespace System {
     /// <summary>
     /// Gets a random element.
     /// </summary>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="This">This Array.</param>
+    /// <typeparam name="TItem">The type of the values.</typeparam>
+    /// <param name="this">This Array.</param>
     /// <param name="random">The random number generator, if any.</param>
-    /// <returns>A random element from the array.</returns>
-    public static TValue GetRandomElement<TValue>(this TValue[] This, Random random = null) {
+    /// <returns>
+    /// A random element from the array.
+    /// </returns>
+    [DebuggerStepThrough]
+    public static TItem GetRandomElement<TItem>(this TItem[] @this, Random random = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (@this.Length == 0)
+        throw new InvalidOperationException("No Elements!");
+
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.Length;
-      if (length == 0)
-        throw _EX_NO_ELEMENTS;
 
       if (random == null)
-        random = new Random();
+        random = new Random((int)Stopwatch.GetTimestamp());
 
-      var index = random.Next(length);
-      return (This[index]);
+      var index = random.Next(@this.Length);
+      return @this[index];
     }
 
     /// <summary>
     /// Gets the value or default.
     /// </summary>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="this">The @this.</param>
+    /// <typeparam name="TItem">The type of the value.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="index">The index.</param>
+    /// <returns></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) => @this.Length <= index ? default(TItem) : @this[index];
+
+    /// <summary>
+    /// Gets the value or default.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the value.</typeparam>
+    /// <param name="this">This Array.</param>
     /// <param name="index">The index.</param>
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
-    public static TValue GetValueOrDefault<TValue>(this TValue[] @this, int index, TValue defaultValue = default(TValue)) {
-#if NETFX_4
-      Contract.Requires(@this != null);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      return (@this.Length <= index ? defaultValue : @this[index]);
-    }
+    [DebuggerStepThrough]
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) => @this.Length <= index ? defaultValue : @this[index];
 
     /// <summary>
     /// Gets the value or default.
     /// </summary>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="this">The @this.</param>
+    /// <typeparam name="TItem">The type of the value.</typeparam>
+    /// <param name="this">This Array.</param>
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-    public static TValue GetValueOrDefault<TValue>(this TValue[] @this, int index, Func<int, TValue> factory) {
-#if NETFX_4
-      Contract.Requires(@this != null);
-      Contract.Requires(factory != null);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      return (@this.Length <= index ? factory(index) : @this[index]);
-    }
+    [DebuggerStepThrough]
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) => @this.Length <= index ? factory() : @this[index];
+
+    /// <summary>
+    /// Gets the value or default.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the value.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="index">The index.</param>
+    /// <param name="factory">The factory to create default values.</param>
+    /// <returns></returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) => @this.Length <= index ? factory(index) : @this[index];
 
     /// <summary>
     /// Clones the specified array.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Array.</param>
+    /// <param name="this">This Array.</param>
     /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
-    public static TItem[] SafelyClone<TItem>(this TItem[] This) {
-      if (This == null)
-        return (null);
-      var len = This.Length;
+    [DebuggerStepThrough]
+    public static TItem[] SafelyClone<TItem>(this TItem[] @this) {
+      if (@this == null)
+        return null;
+
+      var len = @this.Length;
       var result = new TItem[len];
-      Array.Copy(This, result, len);
-      return (result);
+      if (len > 0)
+        Array.Copy(@this, result, len);
+
+      return result;
     }
+
     /// <summary>
     /// Joins the specified elements into a string.
     /// </summary>
-    /// <typeparam name="TIn">The type of the items.</typeparam>
-    /// <param name="This">This enumeration.</param>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This enumeration.</param>
     /// <param name="join">The delimiter.</param>
     /// <param name="skipDefaults">if set to <c>true</c> all default values will be skipped.</param>
-    /// <param name="ptrConverter">The converter.</param>
+    /// <param name="converter">The converter.</param>
     /// <returns>The joines string.</returns>
-    public static string Join<TIn>(this TIn[] This, string join = ", ", bool skipDefaults = false, Func<TIn, string> ptrConverter = null) {
+    [DebuggerStepThrough]
+    public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
+
       var result = new StringBuilder();
       var gotElements = false;
-      var defaultValue = default(TIn);
+      var defaultValue = default(TItem);
+
       // ReSharper disable ForCanBeConvertedToForeach
-      for (var i = 0; i < This.Length; i++) {
-        var item = This[i];
-        if (skipDefaults && EqualityComparer<TIn>.Default.Equals(item, defaultValue))
+      for (var i = 0; i < @this.Length; i++) {
+        var item = @this[i];
+        if (skipDefaults && (ReferenceEquals(item, defaultValue) || EqualityComparer<TItem>.Default.Equals(item, defaultValue)))
           continue;
+
         if (gotElements)
           result.Append(join);
         else
           gotElements = true;
-        result.Append(ptrConverter == null ? ReferenceEquals(null, item) ? string.Empty : item.ToString() : ptrConverter(item));
+
+        result.Append(converter == null ? ReferenceEquals(null, item) ? string.Empty : item.ToString() : converter(item));
       }
       // ReSharper restore ForCanBeConvertedToForeach
-      return (gotElements ? result.ToString() : null);
+
+      return gotElements ? result.ToString() : null;
     }
+
     /// <summary>
     /// Splices the specified array (returns part of that array).
     /// </summary>
-    /// <typeparam name="TValue">Type of data in the array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">Type of data in the array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="startIndex">The start element which should be included in the splice.</param>
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
-    public static TValue[] Range<TValue>(this TValue[] This, int startIndex, int count) {
+    public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(startIndex + count <= This.Length);
+      Contract.Requires(@this != null);
+      Contract.Requires(startIndex + count <= @this.Length);
       Contract.Requires(startIndex >= 0);
 #endif
-      var result = new TValue[count];
-      Array.Copy(This, startIndex, result, 0, count);
-      return (result);
+      var result = new TItem[count];
+      Array.Copy(@this, startIndex, result, 0, count);
+      return result;
     }
     /// <summary>
     /// Swaps the specified data in an array.
     /// </summary>
-    /// <typeparam name="TValue">Type of data in the array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">Type of data in the array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
-    public static void Swap<TValue>(this TValue[] This, int firstElementIndex, int secondElementIndex) {
+    public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var value = This[firstElementIndex];
-      This[firstElementIndex] = This[secondElementIndex];
-      This[secondElementIndex] = value;
+      var value = @this[firstElementIndex];
+      @this[firstElementIndex] = @this[secondElementIndex];
+      @this[secondElementIndex] = value;
     }
     /// <summary>
     /// Shuffles the specified data.
     /// </summary>
-    /// <typeparam name="TValue">Type of elements in the array.</typeparam>
-    /// <param name="This">This array.</param>
-    public static void Shuffle<TValue>(this TValue[] This) {
+    /// <typeparam name="TItem">Type of elements in the array.</typeparam>
+    /// <param name="this">This array.</param>
+    public static void Shuffle<TItem>(this TItem[] @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var index = This.Length;
+      var index = @this.Length;
       var random = new Random();
       while (index > 1)
-        This.Swap(random.Next(index), --index);
+        @this.Swap(random.Next(index), --index);
     }
     /// <summary>
     /// Quick-sort the given array.
     /// </summary>
-    /// <typeparam name="TValue">The type of the elements</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the elements</typeparam>
+    /// <param name="this">This array.</param>
     /// <returns>A sorted array copy.</returns>
-    public static TValue[] QuickSorted<TValue>(this TValue[] This) where TValue : IComparable<TValue> {
+    public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var result = new TValue[This.Length];
-      This.CopyTo(result, 0);
+      var result = new TItem[@this.Length];
+      @this.CopyTo(result, 0);
       result.QuickSort();
-      return (result);
+      return result;
     }
     /// <summary>
     /// Quick-sort the given array.
     /// </summary>
-    /// <typeparam name="TValue">The type of the elements.</typeparam>
-    /// <param name="This">This array.</param>
-    public static void QuickSort<TValue>(this TValue[] This) where TValue : IComparable<TValue> {
+    /// <typeparam name="TItem">The type of the elements.</typeparam>
+    /// <param name="this">This array.</param>
+    public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      if (This.Length > 0)
-        QuickSort_Comparable(This, 0, This.Length - 1);
+      if (@this.Length > 0)
+        QuickSort_Comparable(@this, 0, @this.Length - 1);
     }
-    private static void QuickSort_Comparable<TValue>(TValue[] This, int left, int right) where TValue : IComparable<TValue> {
-      if (This == null) {
+    private static void QuickSort_Comparable<TValue>(TValue[] @this, int left, int right) where TValue : IComparable<TValue> {
+      if (@this == null) {
         // nothing to sort
       } else {
         var leftIndex = left;
         var rightIndex = right;
-        var pivotItem = This[(leftIndex + rightIndex) >> 1];
+        var pivotItem = @this[(leftIndex + rightIndex) >> 1];
         while (leftIndex <= rightIndex) {
-          while (Comparer<TValue>.Default.Compare(pivotItem, This[leftIndex]) > 0)
+          while (Comparer<TValue>.Default.Compare(pivotItem, @this[leftIndex]) > 0)
             leftIndex++;
-          while (Comparer<TValue>.Default.Compare(pivotItem, This[rightIndex]) < 0)
+          while (Comparer<TValue>.Default.Compare(pivotItem, @this[rightIndex]) < 0)
             rightIndex--;
           if (leftIndex > rightIndex) {
             continue;
           }
-          This.Swap(leftIndex, rightIndex);
+          @this.Swap(leftIndex, rightIndex);
           leftIndex++;
           rightIndex--;
         }
         if (left < rightIndex)
-          QuickSort_Comparable(This, left, rightIndex);
+          QuickSort_Comparable(@this, left, rightIndex);
         if (leftIndex < right)
-          QuickSort_Comparable(This, leftIndex, right);
+          QuickSort_Comparable(@this, leftIndex, right);
       }
     }
 
     /// <summary>
     /// Converts all elements.
     /// </summary>
-    /// <typeparam name="TInput">The type the elements.</typeparam>
+    /// <typeparam name="TItem">The type the elements.</typeparam>
     /// <typeparam name="TOutput">The output type.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <param name="this">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-    public static TOutput[] ConvertAll<TInput, TOutput>(this TInput[] This, Converter<TInput, TOutput> converter) => Array.ConvertAll(This, converter);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) => Array.ConvertAll(@this, converter);
 
     /// <summary>
     /// Converts all elements.
     /// </summary>
-    /// <typeparam name="TInput">The type the elements.</typeparam>
+    /// <typeparam name="TItem">The type the elements.</typeparam>
     /// <typeparam name="TOutput">The output type.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <param name="this">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-    public static TOutput[] ConvertAll<TInput, TOutput>(this TInput[] This, Func<TInput, int, TOutput> converter) {
+    public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(converter != null);
 #endif
-      var length = This.Length;
+      var length = @this.Length;
       var result = new TOutput[length];
       for (var index = length - 1; index >= 0; index--)
-        result[index] = converter(This[index], index);
-      return (result);
+        result[index] = converter(@this[index], index);
+      return result;
     }
     /// <summary>
     /// Executes a callback with each element in an array.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Action<TInput> action) => Array.ForEach(This, action);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) => Array.ForEach(@this, action);
 
 #if NETFX_4
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
-    public static void ParallelForEach<TInput>(this TInput[] This, Action<TInput> action) => Parallel.ForEach(This, action);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) => Parallel.ForEach(@this, action);
+
 #endif
 
     /// <summary>
     /// Executes a callback with each element in an array.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Action<TInput, int> action) {
+    public static void ForEach<TItem>(this TItem[] @this, Action<TItem, int> action) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(action != null);
+      Contract.EndContractBlock();
 #endif
-      for (var intI = This.Length - 1; intI >= 0; intI--)
-        action(This[intI], intI);
+
+      for (var intI = @this.Length - 1; intI >= 0; intI--)
+        action(@this[intI], intI);
     }
     /// <summary>
     /// Executes a callback with each element in an array.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Action<TInput, long> action) {
+    public static void ForEach<TItem>(this TItem[] @this, Action<TItem, long> action) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(action != null);
+      Contract.EndContractBlock();
 #endif
-      for (var intI = This.LongLength - 1; intI >= 0; intI--)
-        action(This[intI], intI);
+
+      for (var intI = @this.LongLength - 1; intI >= 0; intI--)
+        action(@this[intI], intI);
     }
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Func<TInput, TInput> worker) {
+    public static void ForEach<TItem>(this TItem[] @this, Func<TItem, TItem> worker) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (worker == null)
+        throw new ArgumentNullException(nameof(worker));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(worker != null);
+      Contract.EndContractBlock();
 #endif
-      for (var index = This.LongLength - 1; index >= 0; index--)
-        This[index] = worker(This[index]);
+
+      for (var index = @this.LongLength - 1; index >= 0; index--)
+        @this[index] = worker(@this[index]);
     }
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Func<TInput, int, TInput> worker) {
+    public static void ForEach<TItem>(this TItem[] @this, Func<TItem, int, TItem> worker) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (worker == null)
+        throw new ArgumentNullException(nameof(worker));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(worker != null);
+      Contract.EndContractBlock();
 #endif
-      for (var index = This.Length - 1; index >= 0; index--)
-        This[index] = worker(This[index], index);
+
+      for (var index = @this.Length - 1; index >= 0; index--)
+        @this[index] = worker(@this[index], index);
     }
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
-    public static void ForEach<TInput>(this TInput[] This, Func<TInput, long, TInput> worker) {
+    public static void ForEach<TItem>(this TItem[] @this, Func<TItem, long, TItem> worker) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (worker == null)
+        throw new ArgumentNullException(nameof(worker));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(worker != null);
+      Contract.EndContractBlock();
 #endif
-      for (var index = This.LongLength - 1; index >= 0; index--)
-        This[index] = worker(This[index], index);
+
+      for (var index = @this.LongLength - 1; index >= 0; index--)
+        @this[index] = worker(@this[index], index);
     }
     /// <summary>
-    /// Returns true if there exists an array 
+    /// Returns true if there exists an array
     /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input.</typeparam>
+    /// <param name="this">This array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-    public static bool Exists<TInput>(this TInput[] This, Predicate<TInput> predicate) => Array.Exists(This, predicate);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) => Array.Exists(@this, predicate);
 
     /// <summary>
     /// Gets the reverse.
     /// </summary>
-    /// <typeparam name="TInput">The type of the input array.</typeparam>
-    /// <param name="This">This array.</param>
+    /// <typeparam name="TItem">The type of the input array.</typeparam>
+    /// <param name="this">This array.</param>
     /// <returns>An array where all values are inverted.</returns>
 #if NETFX_4
     [Pure]
 #endif
-    public static TInput[] Reverse<TInput>(this TInput[] This) {
+    public static TItem[] Reverse<TItem>(this TItem[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      var result = new TInput[length];
-      for (long i = 0, j = length - 1; j >= 0; i++, j--)
-        result[j] = This[i];
-      return (result);
+
+      var length = @this.LongLength;
+      var result = new TItem[length];
+      for (long i = 0, j = length - 1; j >= 0; ++i, --j)
+        result[j] = @this[i];
+
+      return result;
     }
 
     /// <summary>
     /// Determines whether the given array contains the specified value.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="This">The this.</param>
+    /// <param name="this">The this.</param>
     /// <param name="value">The value.</param>
     /// <returns>
     ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
@@ -605,17 +841,15 @@ namespace System {
 #if NETFX_4
     [Pure]
 #endif
-    public static bool Contains<TItem>(this TItem[] This, TItem value) {
-#if NETFX_4
-      Contract.Requires(This != null);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      return (This.IndexOf(value) >= 0);
-    }
+    public static bool Contains<TItem>(this TItem[] @this, TItem value) => @this.IndexOf(value) >= 0;
 
     /// <summary>
     /// Determines whether an array contains the specified value or not.
     /// </summary>
-    /// <param name="This">This array.</param>
+    /// <param name="this">This array.</param>
     /// <param name="value">The value.</param>
     /// <returns>
     ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
@@ -623,386 +857,567 @@ namespace System {
 #if NETFX_4
     [Pure]
 #endif
-    public static bool Contains(this Array This, object value) {
+    public static bool Contains(this Array @this, object value) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
+
       // ReSharper disable LoopCanBeConvertedToQuery
-      foreach (var item in This)
+      foreach (var item in @this)
         if (item == value)
-          return (true);
+          return true;
       // ReSharper restore LoopCanBeConvertedToQuery
-      return (false);
+      return false;
     }
 
     /// <summary>
     /// Converts the array instance to a real array.
     /// </summary>
-    /// <param name="This">This Array.</param>
+    /// <param name="this">This Array.</param>
     /// <returns>An array of objects holding the contents.</returns>
 #if NETFX_4
     [Pure]
 #endif
-    public static object[] ToArray(this Array This) {
+    public static object[] ToArray(this Array @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (@this.Rank < 1)
+        throw new ArgumentException("Rank must be > 0", nameof(@this));
 #if NETFX_4
-      Contract.Requires(This != null && This.Rank > 0);
+      Contract.EndContractBlock();
 #endif
-      var result = new object[This.Length];
-      var lbound = This.GetLowerBound(0);
-      for (var i = This.Length; i > 0;) {
+
+      var result = new object[@this.Length];
+      var lbound = @this.GetLowerBound(0);
+      for (var i = @this.Length; i > 0;) {
         --i;
-        result[i] = This.GetValue(i + lbound);
+        result[i] = @this.GetValue(i + lbound);
       }
-      return (result);
+      return result;
     }
 
     /// <summary>
     /// Gets the index of the first item matching the predicate, if any or -1.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="This">This Array.</param>
+    /// <param name="this">This Array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-    public static int IndexOf<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+    public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      for (var i = 0; i < This.Length; i++)
-        if (predicate(This[i]))
-          return (i);
-      return (-1);
+
+      for (var i = 0; i < @this.Length; ++i)
+        if (predicate(@this[i]))
+          return i;
+
+      return -1;
     }
 
     /// <summary>
     /// Gets the index of the first item matching the given, if any or -1.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="This">This Array.</param>
+    /// <param name="this">This Array.</param>
     /// <param name="value">The value.</param>
+    /// <param name="comparer">The comparer.</param>
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
 #if NETFX_4
     [Pure]
 #endif
-    public static int IndexOf<TItem>(this TItem[] This, TItem value) {
+    public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      var comparer = EqualityComparer<TItem>.Default;
-      for (var i = 0; i < This.Length; i++)
-        if (comparer.Equals(value, This[i]))
-          return (i);
-      return (-1);
+
+      if (comparer == null)
+        comparer = EqualityComparer<TItem>.Default;
+
+      for (var i = 0; i < @this.Length; ++i)
+        if (comparer.Equals(value, @this[i]))
+          return i;
+
+      return -1;
     }
 
     /// <summary>
     /// Gets the index of the first item matching the predicate, if any or -1.
     /// </summary>
-    /// <param name="This">This Array.</param>
+    /// <param name="this">This Array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>The index of the item in the array or -1.</returns>
-    public static int IndexOf(this Array This, Predicate<object> predicate) {
+    [DebuggerStepThrough]
+    public static int IndexOf(this Array @this, Predicate<object> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      for (var i = This.GetLowerBound(0); i <= This.GetUpperBound(0); i++)
-        if (predicate(This.GetValue(i)))
-          return (i);
-      return (-1);
+      for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
+        if (predicate(@this.GetValue(i)))
+          return i;
+
+      return -1;
     }
 
     #region high performance linq for arrays
-    public static bool Any<TItem>(this TItem[] This) => This.Length > 0;
 
-    public static bool Any<TItem>(this TItem[] This, Predicate<TItem> predicate) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++)
-        if (predicate(This[i]))
-          return (true);
-      return (false);
-    }
-    public static TItem First<TItem>(this TItem[] This) {
-#if NETFX_4
-      Contract.Requires(This != null);
-#endif
-      var length = This.Length;
-      if (length == 0)
-        throw _EX_NO_ELEMENTS;
-      return (This[0]);
-    }
-    public static TItem Last<TItem>(this TItem[] This) {
-#if NETFX_4
-      Contract.Requires(This != null);
-#endif
-      var length = This.LongLength;
-      if (length == 0)
-        throw _EX_NO_ELEMENTS;
-      return (This[length - 1]);
-    }
-    public static TItem First<TItem>(this TItem[] This, Predicate<TItem> predicate) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
-#endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++) {
-        var current = This[i];
-        if (predicate(current))
-          return (current);
-      }
-      throw _EX_NO_ELEMENTS;
-    }
-    public static TItem Last<TItem>(this TItem[] This, Predicate<TItem> predicate) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
-#endif
-      var length = This.LongLength;
-      for (var i = length - 1; i >= 0; i--) {
-        var current = This[i];
-        if (predicate(current))
-          return (current);
-      }
-      throw _EX_NO_ELEMENTS;
-    }
-    public static TItem FirstOrDefault<TItem>(this TItem[] This) => This.Length == 0 ? default(TItem) : This[0];
+    [DebuggerStepThrough]
+    public static bool Any<TItem>(this TItem[] @this) => @this.Length > 0;
 
-    public static TItem LastOrDefault<TItem>(this TItem[] This) {
+    [DebuggerStepThrough]
+    public static bool Any<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      return length == 0 ? default(TItem) : This[length - 1];
+
+      for (var i = 0; i < @this.LongLength; i++)
+        if (predicate(@this[i]))
+          return true;
+      return false;
     }
-    public static TItem FirstOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+
+    [DebuggerStepThrough]
+    public static TItem First<TItem>(this TItem[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++) {
-        var current = This[i];
-        if (predicate(current))
-          return (current);
-      }
-      return (default(TItem));
+
+      if (@this.Length == 0)
+        throw new InvalidOperationException("No Elements!");
+
+      return @this[0];
     }
-    public static TItem LastOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+
+    [DebuggerStepThrough]
+    public static TItem Last<TItem>(this TItem[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = length - 1; i >= 0; i--) {
-        var current = This[i];
-        if (predicate(current))
-          return (current);
-      }
-      return (default(TItem));
-    }
-    public static TItem Aggregate<TItem>(this TItem[] This, Func<TItem, TItem, TItem> func) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(func != null);
-#endif
-      var length = This.LongLength;
+
+      var length = @this.LongLength;
       if (length == 0)
-        throw _EX_NO_ELEMENTS;
-      var result = This[0];
-      for (var i = 1; i < length; i++)
-        result = func(result, This[i]);
-      return (result);
+        throw new InvalidOperationException("No Elements!");
+
+      return @this[length - 1];
     }
-    public static TAccumulate Aggregate<TItem, TAccumulate>(this TItem[] This, TAccumulate seed, Func<TAccumulate, TItem, TAccumulate> func) {
+
+    [DebuggerStepThrough]
+    public static TItem First<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(func != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      if (length == 0)
-        throw _EX_NO_ELEMENTS;
+
+      for (var i = 0; i < @this.LongLength; i++) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+      throw new InvalidOperationException("No Elements!");
+    }
+
+    [DebuggerStepThrough]
+    public static TItem Last<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      for (var i = @this.LongLength - 1; i >= 0; --i) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+      throw new InvalidOperationException("No Elements!");
+    }
+
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this TItem[] @this) => @this.Length == 0 ? default(TItem) : @this[0];
+
+    [DebuggerStepThrough]
+    public static TItem LastOrDefault<TItem>(this TItem[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      var length = @this.LongLength;
+      return length == 0 ? default(TItem) : @this[length - 1];
+    }
+
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      for (var i = 0; i < @this.LongLength; ++i) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+      return default(TItem);
+    }
+
+    [DebuggerStepThrough]
+    public static TItem LastOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      for (var i = @this.LongLength - 1; i >= 0; --i) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+      return default(TItem);
+    }
+
+    [DebuggerStepThrough]
+    public static TItem Aggregate<TItem>(this TItem[] @this, Func<TItem, TItem, TItem> func) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (func == null)
+        throw new ArgumentNullException(nameof(func));
+      if (@this.LongLength == 0)
+        throw new InvalidOperationException("No Elements!");
+
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      var result = @this[0];
+      for (var i = 1; i < @this.LongLength; i++)
+        result = func(result, @this[i]);
+
+      return result;
+    }
+
+    [DebuggerStepThrough]
+    public static TAccumulate Aggregate<TItem, TAccumulate>(this TItem[] @this, TAccumulate seed, Func<TAccumulate, TItem, TAccumulate> func) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (func == null)
+        throw new ArgumentNullException(nameof(func));
+      if (@this.LongLength == 0)
+        throw new InvalidOperationException("No Elements!");
+
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
       var result = seed;
-      for (var i = 0; i < length; i++)
-        result = func(result, This[i]);
-      return (result);
+      for (var i = 0; i < @this.LongLength; ++i)
+        result = func(result, @this[i]);
+
+      return result;
     }
-    public static int Count<TItem>(this TItem[] This) => This.Length;
 
-    public static long LongCount<TItem>(this TItem[] This) => This.LongLength;
-
-    public static int Count<TItem>(this TItem[] This, Predicate<TItem> predicate) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    [DebuggerStepThrough]
+    public static int Count<TItem>(this TItem[] @this) => @this.Length;
+
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static long LongCount<TItem>(this TItem[] @this) => @this.LongLength;
+
+    [DebuggerStepThrough]
+    public static int Count<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
       var result = 0;
       // ReSharper disable LoopCanBeConvertedToQuery
       // ReSharper disable ForCanBeConvertedToForeach
-      for (var i = 0; i < This.Length; i++)
-        if (predicate(This[i]))
-          result++;
+      for (var i = 0; i < @this.Length; ++i)
+        if (predicate(@this[i]))
+          ++result;
       // ReSharper restore ForCanBeConvertedToForeach
       // ReSharper restore LoopCanBeConvertedToQuery
-      return (result);
+      return result;
     }
-    public static long LongCount<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+
+    [DebuggerStepThrough]
+    public static long LongCount<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
+
       var result = (long)0;
-      for (var i = 0; i < This.LongLength; i++)
-        if (predicate(This[i]))
-          result++;
-      return (result);
+      for (var i = 0; i < @this.LongLength; ++i)
+        if (predicate(@this[i]))
+          ++result;
+
+      return result;
     }
 
 
-    public static TItem FirstOrDefault<TItem>(this TItem[] This, Predicate<TItem> predicate, TItem defaultValue) {
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, TItem defaultValue) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      foreach (var item in This.Where(predicate))
-        return (item);
-      return (defaultValue);
+
+      foreach (var item in @this)
+        if (predicate(item))
+          return item;
+
+      return defaultValue;
     }
 
     #region these special Array ...s
-    public static IEnumerable<TResult> OfType<TResult>(this Array This) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      for (var i = 0; i < This.LongLength; i++) {
-        var item = This.GetValue(i);
+
+      for (var i = 0; i < @this.LongLength; ++i) {
+        var item = @this.GetValue(i);
         if (item is TResult)
           yield return (TResult)item;
       }
     }
 
-    public static object FirstOrDefault(this Array This, Predicate<object> predicate, object defaultValue = null) {
+    [DebuggerStepThrough]
+    public static object FirstOrDefault(this Array @this, Predicate<object> predicate, object defaultValue = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      foreach (var item in This) {
+
+      foreach (var item in @this)
         if (predicate(item))
-          return (item);
-      }
-      return (defaultValue);
+          return item;
+
+      return defaultValue;
     }
 
-    public static IEnumerable<object> Reverse(this Array This) {
-      for (var i = This.GetUpperBound(0); i >= This.GetLowerBound(0); i--) {
-        var value = This.GetValue(i);
-        yield return value;
-      }
-    }
-
-    public static TItem FirstOrDefault<TItem>(this Array This, Predicate<TItem> predicate, TItem defaultValue = default(TItem)) {
+    [DebuggerStepThrough]
+    public static IEnumerable<object> Reverse(this Array @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      foreach (var item in This) {
+
+      for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
+        yield return @this.GetValue(i);
+    }
+
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this Array @this, Predicate<TItem> predicate, TItem defaultValue = default(TItem)) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      foreach (var item in @this)
         if (predicate((TItem)item))
-          return ((TItem)item);
-      }
-      return (defaultValue);
+          return (TItem)item;
+
+      return defaultValue;
     }
 
-    public static IEnumerable<TResult> Cast<TResult>(this Array This) {
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
-      for (var i = This.GetLowerBound(0); i <= This.GetUpperBound(0); i++) {
-        var value = This.GetValue(i);
-        yield return value == null ? default(TResult) : (TResult)value;
-      }
+
+      for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
+        yield return (TResult)@this.GetValue(i);
     }
+
     #endregion
 
-    public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] This, Func<TItem, TResult> selector) {
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(selector != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.Length;
-      for (var i = 0; i < length; i++)
-        yield return selector(This[i]);
+
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i]);
     }
-    public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] This, Func<TItem, TResult> selector) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(selector != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++)
-        yield return selector(This[i]);
+
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i]);
     }
-    public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] This, Func<TItem, int, TResult> selector) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, int, TResult> selector) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(selector != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.Length;
-      for (var i = 0; i < length; i++)
-        yield return selector(This[i], i);
+
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i], i);
     }
-    public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] This, Func<TItem, long, TResult> selector) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, long, TResult> selector) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(selector != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++)
-        yield return selector(This[i], i);
+
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i], i);
     }
-    public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Predicate<TItem> predicate) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++) {
-        var current = This[i];
+
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
         if (predicate(current))
           yield return current;
       }
     }
-    public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Func<TItem, int, bool> predicate) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Func<TItem, int, bool> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.Length;
-      for (var i = 0; i < length; i++) {
-        var current = This[i];
+
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
         if (predicate(current, i))
           yield return current;
       }
     }
-    public static IEnumerable<TItem> Where<TItem>(this TItem[] This, Func<TItem, long, bool> predicate) {
+
+    [DebuggerStepThrough]
+    public static IEnumerable<TItem> WhereLong<TItem>(this TItem[] @this, Func<TItem, long, bool> predicate) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 #if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(predicate != null);
+      Contract.EndContractBlock();
 #endif
-      var length = This.LongLength;
-      for (var i = 0; i < length; i++) {
-        var current = This[i];
+
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
         if (predicate(current, i))
           yield return current;
       }
     }
+
     #endregion
 
     #region byte-array specials
@@ -1012,95 +1427,125 @@ namespace System {
     /// </summary>
     /// <param name="this">This buffer.</param>
     /// <returns>The given buffer</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static void RandomizeBuffer(this byte[] @this) => new RNGCryptoServiceProvider().GetBytes(@this);
 
     /// <summary>
     /// Copies the given buffer.
     /// </summary>
-    /// <param name="This">This byte[].</param>
+    /// <param name="this">This byte[].</param>
     /// <returns>A copy of the original array.</returns>
-    public static byte[] Copy(this byte[] This) {
-      if (This == null)
-        return (null);
+    [DebuggerStepThrough]
+    public static byte[] Copy(this byte[] @this) {
+      if (@this == null)
+        return null;
 
-      var length = This.Length;
+      var length = @this.Length;
       var result = new byte[length];
-      Buffer.BlockCopy(This, 0, result, 0, length);
-      return (result);
+      if (length > 0)
+        Buffer.BlockCopy(@this, 0, result, 0, length);
+
+      return result;
     }
 
     /// <summary>
     /// Gets a small portion of a byte array.
     /// </summary>
-    /// <param name="This">This byte[].</param>
+    /// <param name="this">This byte[].</param>
     /// <param name="offset">The offset.</param>
     /// <param name="count">The count.</param>
     /// <returns>The subsequent elements.</returns>
-    public static byte[] Range(this byte[] This, int offset, int count) {
-      if (This == null)
-        return (null);
-      if (count < 0)
-        return (null);
+    [DebuggerStepThrough]
+    public static byte[] Range(this byte[] @this, int offset, int count) {
+      if (@this == null)
+        throw new NullReferenceException();
       if (offset < 0)
-        return (null);
-      var length = This.Length;
-      var max = count < (length - offset) ? count : length - offset;
+        throw new ArgumentOutOfRangeException(nameof(offset), offset, "Must be > 0");
+      if (count < 1)
+        throw new ArgumentOutOfRangeException(nameof(count), count, "Must be > 0");
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      var length = @this.Length;
+      var max = count < length - offset ? count : length - offset;
       var result = new byte[max];
-      Buffer.BlockCopy(This, offset, result, 0, max);
-      return (result);
+      if (max > 0)
+        Buffer.BlockCopy(@this, offset, result, 0, max);
+
+      return result;
     }
 
     /// <summary>
     /// Padds the specified byte array to a certain length if it is smaller.
     /// </summary>
-    /// <param name="This">This Byte-Array.</param>
+    /// <param name="this">This Byte-Array.</param>
     /// <param name="length">The final length.</param>
     /// <param name="data">The data to use for padding, default to null-bytes.</param>
     /// <returns>The original array if it already exceeds the wanted size, or an array with the correct size.</returns>
-    public static byte[] Padd(this byte[] This, int length, byte data = 0) {
-      if (This == null)
-        return (null);
+    [DebuggerStepThrough]
+    public static byte[] Padd(this byte[] @this, int length, byte data = 0) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (length < 1)
+        throw new ArgumentOutOfRangeException(nameof(length), length, "Must be > 0");
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
 
-      var currentSize = This.Length;
+      var currentSize = @this.Length;
       if (currentSize >= length)
-        return (This);
+        return @this;
 
       var result = new byte[length];
-      Buffer.BlockCopy(This, 0, result, 0, currentSize);
+      if (currentSize > 0)
+        Buffer.BlockCopy(@this, 0, result, 0, currentSize);
+
       for (var i = currentSize; i < length; ++i)
         result[i] = data;
 
-      return (result);
+      return result;
     }
 
     /// <summary>
     /// GZips the given bytes.
     /// </summary>
-    /// <param name="This">This Byte-Array.</param>
+    /// <param name="this">This Byte-Array.</param>
     /// <returns>A GZipped byte array.</returns>
-    public static byte[] GZip(this byte[] This) {
+    [DebuggerStepThrough]
+    public static byte[] GZip(this byte[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
+
       using (var targetStream = new MemoryStream()) {
         using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
-          gZipStream.Write(This, 0, This.Length);
+          gZipStream.Write(@this, 0, @this.Length);
 
-        return (targetStream.ToArray());
+        return targetStream.ToArray();
       }
     }
 
     /// <summary>
     /// Un-GZips the given bytes.
     /// </summary>
-    /// <param name="This">This Byte-Array.</param>
+    /// <param name="this">This Byte-Array.</param>
     /// <returns>The unzipped byte array.</returns>
-    public static byte[] UnGZip(this byte[] This) {
+    [DebuggerStepThrough]
+    public static byte[] UnGZip(this byte[] @this) {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.EndContractBlock();
 #endif
+
       using (var targetStream = new MemoryStream()) {
-        using (var sourceStream = new MemoryStream(This)) {
+        using (var sourceStream = new MemoryStream(@this)) {
           using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress, false)) {
 
             // decompress all bytes
@@ -1112,24 +1557,31 @@ namespace System {
             }
           }
         }
-        return (targetStream.ToArray());
+        return targetStream.ToArray();
       }
     }
 
     #region hash computation
+
     /// <summary>
     /// Computes the hash.
     /// </summary>
     /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The result of the hash algorithm</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
-      Contract.Requires(@this != null);
+      Contract.EndContractBlock();
 #endif
 
       using (var provider = new THashAlgorithm())
-        return (provider.ComputeHash(@this));
+        return provider.ComputeHash(@this);
     }
 
     /// <summary>
@@ -1137,6 +1589,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeSHA512Hash(this byte[] @this) => @this.ComputeHash<SHA512CryptoServiceProvider>();
 
     /// <summary>
@@ -1144,6 +1600,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeSHA384Hash(this byte[] @this) => @this.ComputeHash<SHA384CryptoServiceProvider>();
 
     /// <summary>
@@ -1151,6 +1611,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeSHA256Hash(this byte[] @this) => @this.ComputeHash<SHA256CryptoServiceProvider>();
 
     /// <summary>
@@ -1158,6 +1622,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeSHA1Hash(this byte[] @this) => @this.ComputeHash<SHA1CryptoServiceProvider>();
 
     /// <summary>
@@ -1165,6 +1633,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
     public static byte[] ComputeMD5Hash(this byte[] @this) => @this.ComputeHash<MD5CryptoServiceProvider>();
 
     #endregion
@@ -1173,11 +1645,11 @@ namespace System {
     private static class RuntimeConfiguration {
       public static readonly int MaxDegreeOfParallelism = Environment.ProcessorCount;
 
-      public static bool Has16BitRegisters => (IntPtr.Size >= 2);
+      public static bool Has16BitRegisters => IntPtr.Size >= 2;
 
-      public static bool Has32BitRegisters => (IntPtr.Size >= 4);
+      public static bool Has32BitRegisters => IntPtr.Size >= 4;
 
-      public static bool Has64BitRegisters => (IntPtr.Size >= 8);
+      public static bool Has64BitRegisters => IntPtr.Size >= 8;
 
       public const int MIN_ITEMS_FOR_PARALELLISM = 2048;
       public const int MIN_ITEMS_PER_THREAD = 128;
@@ -2173,53 +2645,73 @@ namespace System {
     }
     #endregion
 
-    public static void Xor(this byte[] This, byte[] operand) {
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void Xor(this byte[] @this, byte[] operand) {
 #if UNSAFE
-      FastXor.ProcessInUnsafeChunks(This, operand);
+      FastXor.ProcessInUnsafeChunks(@this, operand);
 #else
-      FastXor.ProcessInChunks(This, operand);
+      FastXor.ProcessInChunks(@this, operand);
 #endif
     }
 
-    public static void XorBytewise(this byte[] This, byte[] operand) {
-      FastXor.ProcessBytewise(This, operand);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void XorBytewise(this byte[] @this, byte[] operand) => FastXor.ProcessBytewise(@this, operand);
 
-    public static void And(this byte[] This, byte[] operand) {
+    public static void And(this byte[] @this, byte[] operand) {
 #if UNSAFE
-      FastAnd.ProcessInUnsafeChunks(This, operand);
+      FastAnd.ProcessInUnsafeChunks(@this, operand);
 #else
-      FastAnd.ProcessInChunks(This, operand);
+      FastAnd.ProcessInChunks(@this, operand);
 #endif
     }
 
-    public static void AndBytewise(this byte[] This, byte[] operand) {
-      FastAnd.ProcessBytewise(This, operand);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void AndBytewise(this byte[] @this, byte[] operand) => FastAnd.ProcessBytewise(@this, operand);
 
-    public static void Or(this byte[] This, byte[] operand) {
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void Or(this byte[] @this, byte[] operand) {
 #if UNSAFE
-      FastOr.ProcessInUnsafeChunks(This, operand);
+      FastOr.ProcessInUnsafeChunks(@this, operand);
 #else
-      FastOr.ProcessInChunks(This, operand);
+      FastOr.ProcessInChunks(@this, operand);
 #endif
     }
 
-    public static void OrBytewise(this byte[] This, byte[] operand) {
-      FastOr.ProcessBytewise(This, operand);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void OrBytewise(this byte[] @this, byte[] operand) => FastOr.ProcessBytewise(@this, operand);
 
-    public static void Not(this byte[] This) {
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void Not(this byte[] @this) {
 #if UNSAFE
-      FastNot.ProcessInUnsafeChunks(This);
+      FastNot.ProcessInUnsafeChunks(@this);
 #else
-      FastNot.ProcessInChunks(This);
+      FastNot.ProcessInChunks(@this);
 #endif
     }
 
-    public static void NotBytewise(this byte[] This) {
-      FastNot.ProcessBytewise(This);
-    }
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static void NotBytewise(this byte[] @this) => FastNot.ProcessBytewise(@this);
 
     #endregion
 

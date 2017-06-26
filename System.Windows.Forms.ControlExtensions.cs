@@ -97,6 +97,16 @@ namespace System.Windows.Forms {
       return result;
     }
 
+    /// <summary>
+    /// Gets the position of a given control relative to the screen.
+    /// </summary>
+    /// <param name="This">This Control.</param>
+    /// <returns>The position of it relative to it's screen.</returns>
+    public static Drawing.Point GetLocationOnScreen(this Control @this) {
+      if (@this == null) throw new NullReferenceException();
+      return @this.PointToScreen(Drawing.Point.Empty);
+    }
+
     public static Drawing.Point GetLocationOnClient(this Control @this) {
       if (@this == null) throw new NullReferenceException();
 

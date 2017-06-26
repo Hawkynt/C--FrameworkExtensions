@@ -2,23 +2,26 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NETFX_4
 using System.Diagnostics.Contracts;
+#endif
 
 using System.Linq;
 namespace System.Collections.Generic {
@@ -30,9 +33,11 @@ namespace System.Collections.Generic {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="This">This enumerable.</param>
     /// <param name="items">The items.</param>
-    public static void RemoveAll<TItem>(this List<TItem> This, IEnumerable<TItem> items) {
+    public static void RemoveAll<TItem>(this IList<TItem> This, IEnumerable<TItem> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
 
       var removeables = new List<TItem>(items);
       foreach (var item in removeables)
@@ -80,7 +85,9 @@ namespace System.Collections.Generic {
     /// <param name="start">The start.</param>
     /// <param name="count">The count.</param>
     public static void RemoveRange<TInput>(this IList<TInput> This, int start, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       // special case I - return when nothing to remove
       if (count < 1)
@@ -111,8 +118,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This IList.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TInput>(this IList<TInput> This, IEnumerable<TInput> items) {
+#if NETFX_4
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
 
       // special case, given a real List<T>
       var realList = This as List<TInput>;
@@ -132,7 +141,9 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="item">The item.</param>
     public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
+#if NETFX_4
       Contract.Requires(@this != null);
+#endif
 
       if (item != null)
         @this.Add(item);
@@ -145,7 +156,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This IList.</param>
     /// <param name="count">The count.</param>
     public static void KeepFirst<TInput>(this IList<TInput> This, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       // special case: keep nothing
       if (count < 1) {
@@ -190,7 +203,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This IList.</param>
     /// <param name="count">The count.</param>
     public static void KeepLast<TInput>(this IList<TInput> This, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
 
       // special case: remove all items
       if (count < 1) {
@@ -233,7 +248,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This IList.</param>
     /// <param name="count">The count.</param>
     public static void RemoveFirst<TInput>(this IList<TInput> This, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var remaining = This.Count - count;
       This.KeepLast(remaining);
     }
@@ -245,7 +262,9 @@ namespace System.Collections.Generic {
     /// <param name="This">This IList.</param>
     /// <param name="count">The count.</param>
     public static void RemoveLast<TInput>(this IList<TInput> This, int count) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var remaining = This.Count - count;
       This.KeepFirst(remaining);
     }
@@ -258,7 +277,9 @@ namespace System.Collections.Generic {
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
     public static IEnumerable<T[]> Permutate<T>(this IList<T> This, bool separateArrays = false) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       var length = This.Count;
       if (length < 1)
         yield break;
@@ -284,7 +305,7 @@ namespace System.Collections.Generic {
         while (true) {
 
           // increment as long as there are matching slots
-          var slotsBefore = state.Take(index).ToHashSet(length);
+          var slotsBefore = new HashSet<int>(state.Take(index));
           do {
             ++state[index];
           } while (slotsBefore.Contains(state[index]));
@@ -308,7 +329,7 @@ namespace System.Collections.Generic {
         for (var i = index + 1; i < length; ++i) {
           state[i] = 0;
 
-          var slotsBefore = state.Take(i).ToHashSet(length);
+          var slotsBefore = new HashSet<int>(state.Take(i));
           while (slotsBefore.Contains(state[i]))
             ++state[i];
 
@@ -328,7 +349,9 @@ namespace System.Collections.Generic {
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
     public static IEnumerable<T[]> Permutate<T>(this IList<T> This, int length, bool separateArrays = false) {
+#if NETFX_4
       Contract.Requires(This != null);
+#endif
       if (length < 1)
         yield break;
 

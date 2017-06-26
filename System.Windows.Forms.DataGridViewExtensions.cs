@@ -1074,6 +1074,18 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Resets the selection.
+    /// </summary>
+    /// <param name="this">This DataGridView.</param>
+    public static void ResetSelection(this DataGridView @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      foreach (DataGridViewRow row in @this.SelectedRows)
+        row.Selected = false;
+    }
+
+    /// <summary>
     /// Refreshes the data source and restores selections and scroll position.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
