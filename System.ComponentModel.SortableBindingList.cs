@@ -143,7 +143,7 @@ namespace System.ComponentModel {
       });
       listRef.Clear();
 
-      var mi = listRef.GetType().GetMethod("AddRange");
+      var mi = listRef.GetType().GetMethod(nameof(List<object>.AddRange));
       if (mi != null) {
         mi.Invoke(listRef, new object[] { pairs.Select(p => p.v) });
       } else {

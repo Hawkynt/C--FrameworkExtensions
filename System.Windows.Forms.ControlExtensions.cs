@@ -21,6 +21,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -29,6 +30,83 @@ using System.Threading;
 
 namespace System.Windows.Forms {
   internal static partial class ControlExtensions {
+
+    #region nested types
+
+
+    [CompilerGenerated]
+    // ReSharper disable once InconsistentNaming
+    private sealed class __ActionWithDummyParameterWrapper {
+#pragma warning disable CC0074 // Make field readonly
+      public Action method;
+#pragma warning restore CC0074 // Make field readonly
+
+#pragma warning disable CC0057 // Unused parameters
+      public void Invoke(object _) => this.method();
+#pragma warning restore CC0057 // Unused parameters
+
+    }
+
+    [CompilerGenerated]
+    // ReSharper disable once InconsistentNaming
+    private sealed class __ControlActionWithDummyParameterWrapper<TControl> where TControl : Control {
+#pragma warning disable CC0074 // Make field readonly
+      public Action<TControl> method;
+      public TControl control;
+#pragma warning restore CC0074 // Make field readonly
+
+#pragma warning disable CC0057 // Unused parameters
+      public void Invoke(object _) => this.method(this.control);
+#pragma warning restore CC0057 // Unused parameters
+
+    }
+
+    [CompilerGenerated]
+    // ReSharper disable once InconsistentNaming
+    private sealed class __FunctionWithDummyParameterWrapper<TResult> {
+#pragma warning disable CC0074 // Make field readonly
+      public Func<TResult> function;
+#pragma warning restore CC0074 // Make field readonly
+
+#pragma warning disable CC0057 // Unused parameters
+      public TResult Invoke(object _) => this.function();
+#pragma warning restore CC0057 // Unused parameters
+
+    }
+
+    [CompilerGenerated]
+    // ReSharper disable once InconsistentNaming
+    private sealed class __ReturnValueWithDummyParameterWrapper<TControl, TResult> where TControl : Control {
+#pragma warning disable CC0074 // Make field readonly
+      public TControl control;
+      public Func<TControl, TResult> function;
+      public TResult result;
+#pragma warning restore CC0074 // Make field readonly
+
+#pragma warning disable CC0057 // Unused parameters
+      public void Invoke(object _) => this.result = this.function(this.control);
+#pragma warning restore CC0057 // Unused parameters
+
+    }
+
+    [CompilerGenerated]
+    // ReSharper disable once InconsistentNaming
+    private sealed class __HandleCallback<TControl> where TControl : Control {
+#pragma warning disable CC0074 // Make field readonly
+      public Action<TControl> method;
+      public ManualResetEventSlim resetEvent;
+#pragma warning restore CC0074 // Make field readonly
+
+      public void Invoke(object sender, EventArgs _) {
+        var control = (TControl)sender;
+        control.HandleCreated -= this.Invoke;
+        try {
+          this.method(control);
+        } finally {
+          this.resetEvent?.Set();
+        }
+      }
+    }
 
     /// <summary>
     /// The token that resumes layout on disposal.
@@ -55,6 +133,8 @@ namespace System.Windows.Forms {
       public void Dispose() => this._Dispose(true);
     }
 
+    #endregion
+
     /// <summary>
     /// Stops the layout and returns a token which will continue layoutint on disposal.
     /// </summary>
@@ -62,6 +142,9 @@ namespace System.Windows.Forms {
     /// <returns></returns>
     public static ISuspendedLayoutToken PauseLayout(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       return new SuspendedLayoutToken(@this);
     }
@@ -75,10 +158,13 @@ namespace System.Windows.Forms {
     public static void SetTimeout<TControl>(this TControl @this, TimeSpan dueTime, Action<TControl> action) where TControl : Control {
       if (@this == null) throw new NullReferenceException();
       if (action == null) throw new ArgumentNullException(nameof(action));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
-      @this.Async(() => {
+      Async(@this, t => {
         Thread.Sleep(dueTime);
-        @this.SafelyInvoke(() => action(@this));
+        SafelyInvoke(t, action);
       });
     }
 
@@ -89,10 +175,13 @@ namespace System.Windows.Forms {
     /// <returns>The position of it relative to it's form.</returns>
     public static Drawing.Point GetLocationOnForm(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       var result = @this.Location;
       var c = @this;
-      for (; c as Form == null; c = c.Parent)
+      for (; !(c is Form); c = c.Parent)
         result.Offset(c.Location);
       return result;
     }
@@ -100,15 +189,22 @@ namespace System.Windows.Forms {
     /// <summary>
     /// Gets the position of a given control relative to the screen.
     /// </summary>
-    /// <param name="This">This Control.</param>
+    /// <param name="this">This Control.</param>
     /// <returns>The position of it relative to it's screen.</returns>
     public static Drawing.Point GetLocationOnScreen(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
+
       return @this.PointToScreen(Drawing.Point.Empty);
     }
 
     public static Drawing.Point GetLocationOnClient(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       var result = Drawing.Point.Empty;
       var c = @this;
@@ -128,51 +224,14 @@ namespace System.Windows.Forms {
     ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
     /// </returns>
     /// <exception cref="System.ObjectDisposedException">Control already disposed.</exception>
-    public static bool SafelyInvoke(this Control @this, Action task, bool @async = true) {
+    public static bool SafelyInvoke(this Control @this, Action task, bool async = true) {
       if (@this == null) throw new NullReferenceException();
       if (task == null) throw new ArgumentNullException(nameof(task));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
-      if (@this.InvokeRequired) {
-
-        // switch to gui thread if needed
-        if (@async)
-          @this.BeginInvoke(task);
-        else
-          @this.Invoke(task);
-
-        return false;
-      }
-
-      // already on gui thread
-      if (!@this.IsHandleCreated) {
-
-        // handle has not yet been created - puuuh
-        Action action = () => {
-          var tries = 1000;
-          while (!@this.IsHandleCreated && --tries > 0)
-            Thread.Sleep(10);
-
-          if (tries <= 0)
-            throw new NotSupportedException("Timed out waiting for the handle of the control to be created.");
-
-          // try again because it seems that the handle has yet been created
-          SafelyInvoke(@this, task);
-        };
-
-        // wait on another thread, so this gui thread can go on
-        if (@async)
-          action.BeginInvoke(action.EndInvoke, null);
-        else
-          action.Invoke();
-
-        return false;
-      }
-
-      if (@this.IsDisposed)
-        throw new ObjectDisposedException("Control already disposed.");
-
-      task();
-      return true;
+      return SafelyInvoke(@this, new __ActionWithDummyParameterWrapper { method = task }.Invoke, async);
     }
 
 
@@ -186,11 +245,11 @@ namespace System.Windows.Forms {
     public static TResult SafelyInvoke<TResult>(this Control @this, Func<TResult> function) {
       if (@this == null) throw new NullReferenceException();
       if (function == null) throw new ArgumentNullException(nameof(function));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
-      if (@this.IsDisposed)
-        return default(TResult);
-
-      return @this.InvokeRequired ? (TResult)@this.Invoke(function) : function();
+      return SafelyInvoke(@this, new __FunctionWithDummyParameterWrapper<TResult> { function = function }.Invoke);
     }
 
     /// <summary>
@@ -206,11 +265,30 @@ namespace System.Windows.Forms {
     public static TResult SafelyInvoke<TControl, TResult>(this TControl @this, Func<TControl, TResult> function) where TControl : Control {
       if (@this == null) throw new NullReferenceException();
       if (function == null) throw new ArgumentNullException(nameof(function));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       if (@this.IsDisposed)
-        return default(TResult);
+        throw new ObjectDisposedException(nameof(@this));
 
-      return @this.InvokeRequired ? (TResult)@this.Invoke(function, @this) : function(@this);
+      if (@this.IsHandleCreated)
+        return @this.InvokeRequired ? (TResult)@this.Invoke(function) : function(@this);
+
+      var context = SynchronizationContext.Current;
+      if (context != null) {
+        var wrapper = new __ReturnValueWithDummyParameterWrapper<TControl, TResult> {
+          control = @this,
+          function = function
+        };
+        context.Send(wrapper.Invoke, null);
+        return wrapper.result;
+      }
+
+      if (Application.MessageLoop)
+        return function(@this);
+
+      throw new InvalidOperationException("Handle not yet created");
     }
 
     /// <summary>
@@ -219,50 +297,59 @@ namespace System.Windows.Forms {
     /// <typeparam name="TControl">The type of the control.</typeparam>
     /// <param name="this">This Control.</param>
     /// <param name="task">The task to perform in its thread.</param>
-    /// <param name="async">if set to <c>true</c> [@async].</param>
+    /// <param name="async">if set to <c>true</c>, do not wait when passed to the gui thread.</param>
     /// <returns>
     ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
     /// </returns>
-    public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool @async = true) where TControl : Control {
+    public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool async = true) where TControl : Control {
       if (@this == null) throw new NullReferenceException();
       if (task == null) throw new ArgumentNullException(nameof(task));
-
-      if (@this.InvokeRequired) {
-
-        // switch to gui thread if needed
-        if (@async) {
-          @this.BeginInvoke(task, @this);
-        } else
-          @this.Invoke(task, @this);
-        return false;
-      }
-
-      // already on gui thread
-      if (!@this.IsHandleCreated) {
-
-        // handle has not yet been created - puuuh
-        Action action = () => {
-          var tries = 1000;
-          while (!@this.IsHandleCreated && --tries > 0)
-            Thread.Sleep(10);
-          if (tries <= 0)
-            throw new NotSupportedException("Timed out waiting for the handle of the control to be created.");
-
-          // try again because it seems that the handle has yet been created
-          SafelyInvoke(@this, task);
-        };
-
-        // wait on another thread, so this gui thread can go on
-        action.BeginInvoke(action.EndInvoke, null);
-
-        return false;
-      }
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       if (@this.IsDisposed)
-        throw new ObjectDisposedException("Control already disposed.");
+        throw new ObjectDisposedException(nameof(@this));
 
-      task(@this);
-      return true;
+      if (@this.IsHandleCreated)
+        if (@this.InvokeRequired) {
+          if (async) {
+            @this.BeginInvoke(task, @this);
+          } else
+            @this.Invoke(task, @this);
+
+          return false;
+        } else {
+          task(@this);
+          return true;
+        }
+
+      var context = SynchronizationContext.Current;
+      if (context != null) {
+        var wrapper = new __ControlActionWithDummyParameterWrapper<TControl> { method = task, control = @this };
+        if (async)
+          context.Post(wrapper.Invoke, null);
+        else
+          context.Send(wrapper.Invoke, null);
+
+        return false;
+      }
+
+      if (Application.MessageLoop) {
+        task(@this);
+        return true;
+      }
+
+      if (async) {
+        @this.HandleCreated += new __HandleCallback<TControl> { method = task }.Invoke;
+      } else {
+        using (var eventWaiter = new ManualResetEventSlim(false)) {
+          @this.HandleCreated += new __HandleCallback<TControl> { method = task, resetEvent = eventWaiter }.Invoke;
+          eventWaiter.Wait();
+        }
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -276,6 +363,9 @@ namespace System.Windows.Forms {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
       if (@this == null) throw new NullReferenceException();
       if (task == null) throw new ArgumentNullException(nameof(task));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       if (@this.InvokeRequired) {
         task();
@@ -287,27 +377,54 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Executes a task in a thread that is definitely not the GUI thread.
+    /// </summary>
+    /// <param name="this">This Control.</param>
+    /// <param name="task">The task.</param>
+    /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
+#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
+    public static bool Async<TControl>(this TControl @this, Action<TControl> task) where TControl : Control {
+#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
+      if (@this == null) throw new NullReferenceException();
+      if (task == null) throw new ArgumentNullException(nameof(task));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
+
+      if (@this.InvokeRequired) {
+        task(@this);
+        return false;
+      }
+
+      task.BeginInvoke(@this, task.EndInvoke, null);
+      return true;
+    }
+
+    /// <summary>
     /// Runs something in the gui thread before executing a task in a different thread.
     /// </summary>
-    /// <typeparam name="TType">The type of the type.</typeparam>
+    /// <typeparam name="TControl">The type of the type.</typeparam>
     /// <param name="this">The this.</param>
     /// <param name="syncPreAction">The sync pre action.</param>
     /// <param name="task">The task.</param>
     /// <param name="syncPostAction">The sync post action.</param>
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
-    public static void Async<TType>(this TType @this, Action<TType> syncPreAction, Action task, Action<TType> syncPostAction = null) where TType : Control {
+    public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task, Action<TControl> syncPostAction = null) where TControl : Control {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
       if (@this == null) throw new NullReferenceException();
       if (syncPreAction == null) throw new ArgumentNullException(nameof(syncPreAction));
       if (task == null) throw new ArgumentNullException(nameof(task));
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
-      SafelyInvoke(@this, () => syncPreAction(@this), false);
+      SafelyInvoke(@this, syncPreAction, false);
       Async(@this, () => {
         try {
           task();
         } finally {
           if (syncPostAction != null)
-            @this.SafelyInvoke(() => syncPostAction(@this), false);
+            SafelyInvoke(@this, syncPostAction, false);
         }
       });
     }
@@ -319,6 +436,9 @@ namespace System.Windows.Forms {
     /// <returns>A string with text or <c>null</c>.</returns>
     public static string GetTextProperty(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       var text = @this.Text;
       if (text == null)
@@ -334,12 +454,29 @@ namespace System.Windows.Forms {
     /// <param name="this">This Control.</param>
     /// <param name="predicate">The predicate, default to <c>null</c>.</param>
     public static void ClearChildren(this Control @this, Predicate<Control> predicate = null) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       var children = @this.Controls;
-      foreach (var child in children.Cast<Control>().Where(c => c != null && (predicate == null || predicate(c))).ToArray()) {
-        children.Remove(child);
-        child.Dispose();
+      if (predicate == null) {
+        for (var i = children.Count - 1; i >= 0; --i) {
+          var child = children[i];
+          children.RemoveAt(i);
+          child.Dispose();
+        }
+      } else {
+        for (var i = children.Count - 1; i >= 0; --i) {
+          var child = children[i];
+#pragma warning disable CC0031 // Check for null before calling a delegate
+          if (predicate(child)) {
+#pragma warning restore CC0031 // Check for null before calling a delegate
+            children.RemoveAt(i);
+            child.Dispose();
+          }
+        }
       }
     }
 
@@ -350,6 +487,9 @@ namespace System.Windows.Forms {
     /// <returns>An enumeration of child controls.</returns>
     public static IEnumerable<Control> AllControls(this Control @this) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       foreach (Control child in @this.Controls) {
         yield return child;
@@ -373,6 +513,9 @@ namespace System.Windows.Forms {
     /// <returns>A new control with the same properties as the given one.</returns>
     public static Control Duplicate(this Control @this, string newName = null) {
       if (@this == null) throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
 
       if (newName == null)
         newName = new Guid().ToString();
