@@ -27,106 +27,100 @@ namespace System {
     /// Can be locked to make console color transactions like lines with different colored words.
     /// </summary>
     public static readonly object Lock = new object();
-    private static ConsoleColor _enForeground = ConsoleColor.Gray;
-    private static ConsoleColor _enBackground = ConsoleColor.Black;
+    private static ConsoleColor _foreground = ConsoleColor.Gray;
+    private static ConsoleColor _background = ConsoleColor.Black;
 
-    private static ConsoleColor _enForegroundBackup;
-    private static ConsoleColor _enBackgroundBackup;
+    private static ConsoleColor _foregroundBackup;
+    private static ConsoleColor _backgroundBackup;
 
     /// <summary>
     /// Safes the actual console colors to backup.
     /// </summary>
-    private static void _voidSafeColors() {
-      _enForegroundBackup = Console.ForegroundColor;
-      _enBackgroundBackup = Console.BackgroundColor;
+    private static void _SafeColors() {
+      _foregroundBackup = Console.ForegroundColor;
+      _backgroundBackup = Console.BackgroundColor;
     }
     /// <summary>
     /// Loads the actual console colors from backup.
     /// </summary>
-    private static void _voidLoadColors() {
-      Console.ForegroundColor = _enForegroundBackup;
-      Console.BackgroundColor = _enBackgroundBackup;
+    private static void _LoadColors() {
+      Console.ForegroundColor = _foregroundBackup;
+      Console.BackgroundColor = _backgroundBackup;
     }
     /// <summary>
     /// Writes the data.
     /// </summary>
-    /// <param name="strText">The data.</param>
-    public static void Write<T>(T varData) {
-      Write(varData, _enForeground, _enBackground);
-    }
+    /// <param name="data">The data.</param>
+    public static void Write<T>(T data) => Write(data, _foreground, _background);
+
     /// <summary>
     /// Writes the line of data.
     /// </summary>
     /// <typeparam name="T">The type of data.</typeparam>
-    /// <param name="varData">The data.</param>
-    public static void WriteLine<T>(T varData) {
-      WriteLine(varData, _enForeground, _enBackground);
-    }
+    /// <param name="data">The data.</param>
+    public static void WriteLine<T>(T data) => WriteLine(data, _foreground, _background);
+
     /// <summary>
     /// Writes a new line.
     /// </summary>
-    public static void WriteLine() {
-      WriteLine("", _enForeground, _enBackground);
-    }
+    public static void WriteLine() => WriteLine(string.Empty, _foreground, _background);
+
     /// <summary>
     /// Writes the data.
     /// </summary>
     /// <typeparam name="T">The type of data.</typeparam>
-    /// <param name="varData">The data.</param>
-    /// <param name="enForeground">The foreground color used to write that piece.</param>
-    public static void Write<T>(T varData, ConsoleColor enForeground) {
-      Write(varData, enForeground, _enBackground);
-    }
+    /// <param name="data">The data.</param>
+    /// <param name="foreground">The foreground color used to write that piece.</param>
+    public static void Write<T>(T data, ConsoleColor foreground) => Write(data, foreground, _background);
+
     /// <summary>
     /// Writes the line of data.
     /// </summary>
     /// <typeparam name="T">The type of data.</typeparam>
-    /// <param name="varData">The data.</param>
-    /// <param name="enForeground">The foreground color used to write that piece.</param>
-    public static void WriteLine<T>(T varData, ConsoleColor enForeground) {
-      WriteLine(varData, enForeground, _enBackground);
-    }
+    /// <param name="data">The data.</param>
+    /// <param name="foreground">The foreground color used to write that piece.</param>
+    public static void WriteLine<T>(T data, ConsoleColor foreground) => WriteLine(data, foreground, _background);
+
     /// <summary>
     /// Writes the data.
     /// </summary>
     /// <typeparam name="T">The type of data.</typeparam>
-    /// <param name="varData">The data.</param>
-    /// <param name="enForeground">The foreground color used to write that piece.</param>
-    /// <param name="enBackground">The background color used to write that piece.</param>
-    public static void Write<T>(T varData, ConsoleColor enForeground, ConsoleColor enBackground) {
+    /// <param name="data">The data.</param>
+    /// <param name="foreground">The foreground color used to write that piece.</param>
+    /// <param name="background">The background color used to write that piece.</param>
+    public static void Write<T>(T data, ConsoleColor foreground, ConsoleColor background) {
       lock (Lock) {
-        _voidSafeColors();
-        Console.ForegroundColor = enForeground;
-        Console.BackgroundColor = enBackground;
-        Console.Write(varData);
-        _voidLoadColors();
+        _SafeColors();
+        Console.ForegroundColor = foreground;
+        Console.BackgroundColor = background;
+        Console.Write(data);
+        _LoadColors();
       }
     }
     /// <summary>
     /// Writes the line of data.
     /// </summary>
     /// <typeparam name="T">The type of data</typeparam>
-    /// <param name="varData">The data.</param>
-    /// <param name="enForeground">The foreground color used to write that piece.</param>
-    /// <param name="enBackground">The background color used to write that piece.</param>
-    public static void WriteLine<T>(T varData, ConsoleColor enForeground, ConsoleColor enBackground) {
+    /// <param name="data">The data.</param>
+    /// <param name="foreground">The foreground color used to write that piece.</param>
+    /// <param name="background">The background color used to write that piece.</param>
+    public static void WriteLine<T>(T data, ConsoleColor foreground, ConsoleColor background) {
       lock (Lock) {
-        _voidSafeColors();
-        Console.ForegroundColor = enForeground;
-        Console.BackgroundColor = enBackground;
-        Console.WriteLine(varData);
-        _voidLoadColors();
+        _SafeColors();
+        Console.ForegroundColor = foreground;
+        Console.BackgroundColor = background;
+        Console.WriteLine(data);
+        _LoadColors();
       }
     }
     /// <summary>
     /// Escapes the data to be displayed.
     /// </summary>
     /// <typeparam name="T">The type of data.</typeparam>
-    /// <param name="varData">The data.</param>
+    /// <param name="data">The data.</param>
     /// <returns>An escaped string version of the data.</returns>
-    public static string EscapeAdv<T>(T varData) {
-      return (varData.ToString().Replace("\\", "\\\\").Replace("{", "\\{"));
-    }
+    public static string EscapeAdv<T>(T data) => data.ToString().Replace("\\", "\\\\").Replace("{", "\\{");
+
     /// <summary>
     /// Advance write text line.
     /// NOTE: Every { and \ in the format string must be escaped with a leading \
@@ -135,13 +129,27 @@ namespace System {
     /// NOTE: Every {,b} switches the background to that color
     /// NOTE: Every {} resets to default
     /// </summary>
-    /// <param name="strFormat">The format string.</param>
-    public static void WriteLineAdv(string strFormat) {
+    /// <param name="format">The format string.</param>
+    public static void WriteLineAdv(string format) {
       lock (Lock) {
-        WriteAdv(strFormat);
-        WriteLine();
+        WriteAdv(format);
+        Console.WriteLine();
       }
     }
+
+    /// <summary>
+    /// Advance write text line.
+    /// NOTE: Every char between 0x00 and 0x0f changes foreground color
+    /// NOTE: Every char between 0x10 and 0x1f changes background color
+    /// </summary>
+    /// <param name="format">The format string.</param>
+    public static void WriteLineNoSpecials(string format) {
+      lock (Lock) {
+        WriteNoSpecials(format);
+        Console.WriteLine();
+      }
+    }
+
     /// <summary>
     /// Advance write text.
     /// NOTE: Every { and \ in the format string must be escaped with a leading \
@@ -150,139 +158,118 @@ namespace System {
     /// NOTE: Every {,b} switches the background to that color
     /// NOTE: Every {} resets to default
     /// </summary>
-    /// <param name="strFormat">The format string.</param>
-    public static void WriteAdv(string strFormat) {
-      if (strFormat != null) {
-        bool boolIsEscaping = false;
-        int intLen = strFormat.Length;
-        lock (Lock) {
-          ConsoleColor enF = _enForeground;
-          ConsoleColor enB = _enBackground;
-          for (int intI = 0; intI < intLen; intI++) {
-            char chrCur = strFormat[intI];
-            if (boolIsEscaping) {
-              // current char is escpaped
-              Console.Write(chrCur);
-              boolIsEscaping = false;
-            } else {
-              if (chrCur == '\\') {
-                // found escape char
-                boolIsEscaping = true;
-              } else if (chrCur == '{') {
-                // color indicator found
-                string strColor = "";
-                bool boolEnd = false;
-                while (intI < intLen && !boolEnd) {
-                  if (strFormat[++intI] == '}')
-                    boolEnd = true;
-                  else
-                    strColor += strFormat[intI];
-                }
-                string[] arrCols;
-                if (!string.IsNullOrWhiteSpace(strColor))
-                  arrCols = strColor.Split(new char[] { ',' }, 2);
-                else
-                  arrCols = null;
-                if (arrCols == null || arrCols.Length == 0) {
-                  // reset colors
-                  Console.ForegroundColor = enF;
-                  Console.BackgroundColor = enB;
-                } else if (arrCols.Length == 1) {
-                  // set only foreground color
-                  if (!string.IsNullOrWhiteSpace(arrCols[0]))
-                    Console.ForegroundColor = _enGetColor_ByIDX(byte.Parse(arrCols[0]));
-                } else {
-                  // set foreground and background color
-                  if (!string.IsNullOrWhiteSpace(arrCols[0]))
-                    Console.ForegroundColor = _enGetColor_ByIDX(byte.Parse(arrCols[0]));
-                  if (!string.IsNullOrWhiteSpace(arrCols[1]))
-                    Console.BackgroundColor = _enGetColor_ByIDX(byte.Parse(arrCols[1]));
-                }
-              } else {
-                Console.Write(chrCur);
-              }
-            }
-          } // next
-          Console.ForegroundColor = enF;
-          Console.BackgroundColor = enB;
-        }
-      } else {
+    /// <param name="format">The format string.</param>
+    public static void WriteAdv(string format) {
+      if (format == null) {
         // null means null
+        return;
+      }
+
+      var isEscaping = false;
+      var length = format.Length;
+      lock (Lock) {
+        var oldForeground = _foreground;
+        var oldBackground = _background;
+        for (var intI = 0; intI < length; intI++) {
+          var current = format[intI];
+          if (isEscaping) {
+            // current char is escpaped
+            Console.Write(current);
+            isEscaping = false;
+          } else {
+            if (current == '\\') {
+              // found escape char
+              isEscaping = true;
+            } else if (current == '{') {
+              // color indicator found
+              var colorDefinition = string.Empty;
+              var isEnded = false;
+              while (intI < length && !isEnded) {
+                if (format[++intI] == '}')
+                  isEnded = true;
+                else
+                  colorDefinition += format[intI];
+              }
+              var colors = string.IsNullOrWhiteSpace(colorDefinition) ? null : colorDefinition.Split(new[] { ',' }, 2);
+              if (colors == null || colors.Length == 0) {
+                // reset colors
+                Console.ForegroundColor = oldForeground;
+                Console.BackgroundColor = oldBackground;
+              } else if (colors.Length == 1) {
+                // set only foreground color
+                if (!string.IsNullOrWhiteSpace(colors[0]))
+                  Console.ForegroundColor = _GetColorByIndex(byte.Parse(colors[0]));
+              } else {
+                // set foreground and background color
+                if (!string.IsNullOrWhiteSpace(colors[0]))
+                  Console.ForegroundColor = _GetColorByIndex(byte.Parse(colors[0]));
+                if (!string.IsNullOrWhiteSpace(colors[1]))
+                  Console.BackgroundColor = _GetColorByIndex(byte.Parse(colors[1]));
+              }
+            } else {
+              Console.Write(current);
+            }
+          }
+        } // next
+        Console.ForegroundColor = oldForeground;
+        Console.BackgroundColor = oldBackground;
       }
     }
 
-    private static ConsoleColor _enGetColor_ByIDX(byte byteColor) {
-      ConsoleColor enRet;
-      switch (byteColor) {
-        case 0: {
-          enRet = ConsoleColor.Black;
-          break;
-        }
-        case 1: {
-          enRet = ConsoleColor.DarkBlue;
-          break;
-        }
-        case 2: {
-          enRet = ConsoleColor.DarkGreen;
-          break;
-        }
-        case 3: {
-          enRet = ConsoleColor.DarkCyan;
-          break;
-        }
-        case 4: {
-          enRet = ConsoleColor.DarkRed;
-          break;
-        }
-        case 5: {
-          enRet = ConsoleColor.DarkMagenta;
-          break;
-        }
-        case 6: {
-          enRet = ConsoleColor.DarkYellow;
-          break;
-        }
-        case 7: {
-          enRet = ConsoleColor.Gray;
-          break;
-        }
-        case 8: {
-          enRet = ConsoleColor.DarkGray;
-          break;
-        }
-        case 9: {
-          enRet = ConsoleColor.Blue;
-          break;
-        }
-        case 10: {
-          enRet = ConsoleColor.Green;
-          break;
-        }
-        case 11: {
-          enRet = ConsoleColor.Cyan;
-          break;
-        }
-        case 12: {
-          enRet = ConsoleColor.Red;
-          break;
-        }
-        case 13: {
-          enRet = ConsoleColor.Magenta;
-          break;
-        }
-        case 14: {
-          enRet = ConsoleColor.Yellow;
-          break;
-        }
-        case 15: {
-          enRet = ConsoleColor.White;
-          break;
-        }
-        default: {
-          throw new ArgumentOutOfRangeException("Color index must be between 0 and 15 inclusive.");
-        }
+    /// <summary>
+    /// Advance write text.
+    /// NOTE: Every char between 0x00 and 0x0f changes foreground color
+    /// NOTE: Every char between 0x10 and 0x1f changes background color
+    /// </summary>
+    /// <param name="format">The format string.</param>
+    public static void WriteNoSpecials(string format) {
+      if (format == null) {
+        // null means null
+        return;
       }
-      return (enRet);
+
+      var length = format.Length;
+      lock (Lock) {
+        var oldForeground = _foreground;
+        var oldBackground = _background;
+        for (var intI = 0; intI < length; intI++) {
+          var current = format[intI];
+          if (current <= '\x0f')
+            Console.ForegroundColor = _GetColorByIndex((byte)current);
+          else if (current <= '\x1f')
+            Console.BackgroundColor = _GetColorByIndex((byte)(current - 0x10));
+          else
+            Console.Write(current);
+        }
+        Console.ForegroundColor = oldForeground;
+        Console.BackgroundColor = oldBackground;
+      }
+    }
+
+    private static readonly ConsoleColor[] _COLORS = {
+      ConsoleColor.Black,
+      ConsoleColor.DarkBlue,
+      ConsoleColor.DarkGreen,
+      ConsoleColor.DarkCyan,
+      ConsoleColor.DarkRed,
+      ConsoleColor.DarkMagenta,
+      ConsoleColor.DarkYellow,
+      ConsoleColor.Gray,
+      ConsoleColor.DarkGray,
+      ConsoleColor.Blue,
+      ConsoleColor.Green,
+      ConsoleColor.Cyan,
+      ConsoleColor.Red,
+      ConsoleColor.Magenta,
+      ConsoleColor.Yellow,
+      ConsoleColor.White,
+    };
+
+    private static ConsoleColor _GetColorByIndex(byte color) {
+      if (color >= _COLORS.Length)
+        throw new ArgumentOutOfRangeException("Color index must be between 0 and 15 inclusive.");
+
+      return _COLORS[color];
     }
     /// <summary>
     /// Gets or sets the foreground color.
@@ -290,11 +277,11 @@ namespace System {
     /// <value>The color to use.</value>
     public static ConsoleColor Foreground {
       get {
-        return (_enForeground);
+        return _foreground;
       }
       set {
         lock (Lock)
-          _enForeground = value;
+          _foreground = value;
       }
     }
     /// <summary>
@@ -303,11 +290,11 @@ namespace System {
     /// <value>The color to use.</value>
     public static ConsoleColor Background {
       get {
-        return (_enBackground);
+        return _background;
       }
       set {
         lock (Lock)
-          _enBackground = value;
+          _background = value;
       }
     }
   }
