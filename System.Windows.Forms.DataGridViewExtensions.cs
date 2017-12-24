@@ -22,12 +22,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+#if NETFX_4
 using System.Runtime.CompilerServices;
+#endif
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
+using ThreadTimer = System.Threading.Timer;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -288,6 +292,68 @@ namespace System.Windows.Forms {
 
   #region attributes for messing with auto-generated columns
 
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal class DataGridViewClickableAttribute : Attribute {
+    public DataGridViewClickableAttribute(string onClickMethodName = null, string onDoubleClickMethodName = null) {
+      this.OnClickMethodName = onClickMethodName;
+      this.OnDoubleClickMethodName = onDoubleClickMethodName;
+    }
+
+    public string OnClickMethodName { get; }
+    public string OnDoubleClickMethodName { get; }
+
+    private static readonly ConcurrentDictionary<object, ThreadTimer> _clickTimers = new ConcurrentDictionary<object, ThreadTimer>();
+    public void OnClick(object row) {
+      if (this.OnDoubleClickMethodName == null)
+        DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
+
+      var newTimer = new ThreadTimer(_ => {
+        ThreadTimer __;
+        _clickTimers.TryRemove(row, out __);
+        DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
+      }, null, SystemInformation.DoubleClickTime, int.MaxValue);
+
+      do {
+        ThreadTimer timer;
+        if (_clickTimers.TryRemove(row, out timer))
+          timer.Dispose();
+      } while (!_clickTimers.TryAdd(row, newTimer));
+    }
+
+    public void OnDoubleClick(object row) {
+      ThreadTimer timer;
+      if (_clickTimers.TryRemove(row, out timer))
+        timer.Dispose();
+
+      DataGridViewExtensions.CallLateBoundMethod(row, this.OnDoubleClickMethodName);
+    }
+
+  }
+
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewImageColumnAttribute : DataGridViewClickableAttribute {
+    public DataGridViewImageColumnAttribute(string imageListPropertyName = null, string onClickMethodName = null, string onDoubleClickMethodName = null, string toolTipTextPropertyName = null) : base(onClickMethodName, onDoubleClickMethodName) {
+      this.ImageListPropertyName = imageListPropertyName;
+      this.ToolTipTextPropertyName = toolTipTextPropertyName;
+    }
+    public string ToolTipTextPropertyName { get; }
+    public string ImageListPropertyName { get; }
+
+    public Image GetImage(object row, object value) {
+      if (ReferenceEquals(value, null))
+        return null;
+      var imageList = DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(row, this.ImageListPropertyName, null, null, null, null);
+      if (imageList == null)
+        return value as Image;
+
+      var result = value is int && !value.GetType().IsEnum ? imageList.Images[(int)value] : imageList.Images[value.ToString()];
+      return result;
+    }
+
+    public string ToolTipText(object row) => DataGridViewExtensions.GetPropertyValueOrDefault<string>(row, this.ToolTipTextPropertyName, null, null, null, null);
+
+  }
+
   /// <summary>
   /// Allows specifying certain properties as read-only depending on the underlying object instance.
   /// </summary>
@@ -298,7 +364,7 @@ namespace System.Windows.Forms {
     }
 
     public string IsReadOnlyWhen { get; }
-    public bool IsReadOnly(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.IsReadOnlyWhen, false, false, false, false);
+    public bool IsReadOnly(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsReadOnlyWhen, false, false, false, false);
   }
 
   /// <summary>
@@ -306,7 +372,9 @@ namespace System.Windows.Forms {
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewProgressBarColumnAttribute : Attribute {
-    public DataGridViewProgressBarColumnAttribute(double minimum = 0, double maximum = 100) {
+    public DataGridViewProgressBarColumnAttribute() : this(0, 100) { }
+
+    public DataGridViewProgressBarColumnAttribute(double minimum, double maximum) {
       this.Minimum = minimum;
       this.Maximum = maximum;
     }
@@ -323,29 +391,26 @@ namespace System.Windows.Forms {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataGridViewButtonColumnAttribute"/> class.
     /// </summary>
-    /// <param name="targetMethod">The target method name to call upon click.</param>
+    /// <param name="onClickMethodName">The target method name to call upon click.</param>
     /// <param name="isEnabledWhen">The boolean property which enables or disables the buttons.</param>
-    public DataGridViewButtonColumnAttribute(string targetMethod, string isEnabledWhen = null) {
-      this.TargetMethod = targetMethod;
+    public DataGridViewButtonColumnAttribute(string onClickMethodName, string isEnabledWhen = null) {
+      this.OnClickMethodName = onClickMethodName;
       this.IsEnabledWhen = isEnabledWhen;
     }
     public string IsEnabledWhen { get; }
 
-    public string TargetMethod { get; }
+    public string OnClickMethodName { get; }
 
     /// <summary>
     /// Executes the callback with the given object instance.
     /// </summary>
-    /// <param name="value">The value.</param>
-    public void Execute(object value) {
-      if (ReferenceEquals(null, value))
-        return;
-
-      var property = value.GetType().GetMethod(this.TargetMethod);
-      property?.Invoke(value, null);
+    /// <param name="row">The value.</param>
+    public void OnClick(object row) {
+      if (this.IsEnabled(row))
+        DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
     }
 
-    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.IsEnabledWhen, false, true, false, false);
+    public bool IsEnabled(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsEnabledWhen, false, true, false, false);
 
   }
 
@@ -354,18 +419,33 @@ namespace System.Windows.Forms {
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewColumnWidthAttribute : Attribute {
+    public DataGridViewColumnWidthAttribute(char characters) {
+      this.Characters = new string('@', (int)characters);
+      this.Width = -1;
+      this.Mode = DataGridViewAutoSizeColumnMode.None;
+    }
+
+    public DataGridViewColumnWidthAttribute(string characters) {
+      this.Characters = characters;
+      this.Width = -1;
+      this.Mode = DataGridViewAutoSizeColumnMode.None;
+    }
+
     public DataGridViewColumnWidthAttribute(int width) {
+      this.Characters = null;
       this.Width = width;
       this.Mode = DataGridViewAutoSizeColumnMode.None;
     }
 
     public DataGridViewColumnWidthAttribute(DataGridViewAutoSizeColumnMode mode) {
+      this.Characters = null;
       this.Mode = mode;
       this.Width = -1;
     }
 
     public DataGridViewAutoSizeColumnMode Mode { get; }
     public int Width { get; }
+    public string Characters { get; }
 
     public void ApplyTo(DataGridViewColumn column) {
       if (this.Mode != DataGridViewAutoSizeColumnMode.None) {
@@ -374,8 +454,16 @@ namespace System.Windows.Forms {
       }
 
       column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-      column.MinimumWidth = this.Width;
-      column.Width = this.Width;
+
+      if (this.Characters != null) {
+        var font = column.DataGridView.Font;
+        var width = TextRenderer.MeasureText(this.Characters, font);
+        column.MinimumWidth = width.Width;
+        column.Width = width.Width;
+      } else if (this.Width >= 0) {
+        column.MinimumWidth = this.Width;
+        column.Width = this.Width;
+      }
     }
   }
 
@@ -401,12 +489,12 @@ namespace System.Windows.Forms {
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
 
-    public void ApplyTo(DataGridViewCellStyle style, object value) {
-      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+    public void ApplyTo(DataGridViewCellStyle style, object row) {
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
       if (color != null)
         style.ForeColor = color.Value;
 
-      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
       if (color != null)
         style.BackColor = color.Value;
 
@@ -414,7 +502,7 @@ namespace System.Windows.Forms {
         style.Format = this.Format;
     }
 
-    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+    public bool IsEnabled(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ConditionalPropertyName, true, true, false, false);
 
   }
 
@@ -440,13 +528,13 @@ namespace System.Windows.Forms {
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
 
-    public void ApplyTo(DataGridViewCellStyle style, object value) {
+    public void ApplyTo(DataGridViewCellStyle style, object row) {
 
-      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
       if (color != null)
         style.ForeColor = color.Value;
 
-      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(value, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
       if (color != null)
         style.BackColor = color.Value;
 
@@ -474,22 +562,53 @@ namespace System.Windows.Forms {
       @this.CellPainting -= _CellPainting;
       @this.RowPostPaint -= _RowPostPaint;
       @this.RowPrePaint -= _RowPrePaint;
-      @this.CellClick -= _CellClick;
+      @this.CellContentClick -= _CellClick;
+      @this.CellContentDoubleClick -= _CellDoubleClick;
       @this.EnabledChanged -= _EnabledChanged;
       @this.Disposed -= _RemoveDisabledState;
+      @this.CellFormatting -= _CellFormatting;
 
       // subscribe to events
       @this.CellPainting += _CellPainting;
       @this.DataSourceChanged += _DataSourceChanged;
       @this.RowPostPaint += _RowPostPaint;
       @this.RowPrePaint += _RowPrePaint;
-      @this.CellClick += _CellClick;
+      @this.CellContentClick += _CellClick;
+      @this.CellContentDoubleClick += _CellDoubleClick;
       @this.EnabledChanged += _EnabledChanged;
       @this.Disposed += _RemoveDisabledState;
+      @this.CellFormatting += _CellFormatting;
     }
 
     /// <summary>
-    /// Executes button column click events.
+    /// Executes image column double click events.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
+    private static void _CellDoubleClick(object sender, DataGridViewCellEventArgs e) {
+      var dgv = sender as DataGridView;
+
+      if (dgv == null)
+        return;
+
+      if (e.RowIndex < 0 || e.ColumnIndex < 0)
+        return;
+
+      var type = FindItemType(dgv);
+
+      if (type == null)
+        return;
+
+      var column = dgv.Columns[e.ColumnIndex];
+      if (column == null)
+        return;
+
+      var item = dgv.Rows[e.RowIndex].DataBoundItem;
+      _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnDoubleClick(item);
+    }
+
+    /// <summary>
+    /// Executes button/image column click events.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
@@ -507,21 +626,16 @@ namespace System.Windows.Forms {
       if (type == null)
         return;
 
-      var column = dgv.Columns[e.ColumnIndex] as DataGridViewButtonColumn;
+      var column = dgv.Columns[e.ColumnIndex];
       if (column == null)
-        return;
-
-      if (!column.IsDataBound)
         return;
 
       var item = dgv.Rows[e.RowIndex].DataBoundItem;
 
-      var buttonAttribute = _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault();
-      if (buttonAttribute == null)
-        return;
+      if (column is DataGridViewButtonColumn)
+        _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnClick(item);
 
-      if (buttonAttribute.IsEnabled(item))
-        buttonAttribute.Execute(item);
+      _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnClick(item);
     }
 
     /// <summary>
@@ -559,17 +673,7 @@ namespace System.Windows.Forms {
         // if needed replace DataGridViewTextBoxColumns with DataGridViewButtonColumn
         var buttonColumnAttribute = (DataGridViewButtonColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true).FirstOrDefault();
         if (buttonColumnAttribute != null) {
-          var newColumn = new DataGridViewDisableButtonColumn {
-            Name = column.Name,
-            DataPropertyName = column.DataPropertyName,
-            HeaderText = column.HeaderText,
-            ReadOnly = true,
-            DisplayIndex = column.DisplayIndex,
-            Width = column.Width,
-            AutoSizeMode = column.AutoSizeMode,
-            ContextMenuStrip = column.ContextMenuStrip,
-            Visible = column.Visible,
-          };
+          var newColumn = _ConstructDisableButtonColumn(column);
           columns.RemoveAt(i);
           columns.Insert(i, newColumn);
           column = newColumn;
@@ -578,19 +682,7 @@ namespace System.Windows.Forms {
         // if needed replace DataGridViewTextBoxColumns with DataGridViewProgressBarColumn
         var progressBarColumnAttribute = (DataGridViewProgressBarColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewProgressBarColumnAttribute), true).FirstOrDefault();
         if (progressBarColumnAttribute != null) {
-          var newColumn = new DataGridViewProgressBarColumn {
-            Minimum = progressBarColumnAttribute.Minimum,
-            Maximum = progressBarColumnAttribute.Maximum,
-            Name = column.Name,
-            DataPropertyName = column.DataPropertyName,
-            HeaderText = column.HeaderText,
-            ReadOnly = true,
-            DisplayIndex = column.DisplayIndex,
-            Width = column.Width,
-            AutoSizeMode = column.AutoSizeMode,
-            ContextMenuStrip = column.ContextMenuStrip,
-            Visible = column.Visible,
-          };
+          var newColumn = _ConstructProgressBarColumn(progressBarColumnAttribute, column);
           columns.RemoveAt(i);
           columns.Insert(i, newColumn);
           column = newColumn;
@@ -606,9 +698,79 @@ namespace System.Windows.Forms {
           column = newColumn;
         }
 
+        // if needed replace DataGridViewColumns with DataGridViewImageColumn
+        var imageColumnAttribute = (DataGridViewImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewImageColumnAttribute), true).FirstOrDefault();
+        if (imageColumnAttribute != null) {
+          var newColumn = _ConstructImageColumn(column);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
       }
+    }
+
+    /// <summary>
+    /// Constructs a button column where buttons can be disabled.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <returns></returns>
+    private static DataGridViewDisableButtonColumn _ConstructDisableButtonColumn(DataGridViewColumn column) {
+      return new DataGridViewDisableButtonColumn {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+      };
+    }
+
+    /// <summary>
+    /// Constructs a progressbar column.
+    /// </summary>
+    /// <param name="progressBarColumnAttribute">The progress bar column attribute.</param>
+    /// <param name="column">The column.</param>
+    /// <returns></returns>
+    private static DataGridViewProgressBarColumn _ConstructProgressBarColumn(DataGridViewProgressBarColumnAttribute progressBarColumnAttribute, DataGridViewColumn column) {
+      return new DataGridViewProgressBarColumn {
+        Minimum = progressBarColumnAttribute.Minimum,
+        Maximum = progressBarColumnAttribute.Maximum,
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+      };
+    }
+
+    /// <summary>
+    /// Constructs an image column.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <returns></returns>
+    private static DataGridViewImageColumn _ConstructImageColumn(DataGridViewColumn column) {
+      return new DataGridViewImageColumn {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+        DefaultCellStyle = { NullValue = null }
+      };
     }
 
     /// <summary>
@@ -645,6 +807,50 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Adjusts formatted values according to property attributes.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellFormattingEventArgs" /> instance containing the event data.</param>
+    private static void _CellFormatting(object sender, DataGridViewCellFormattingEventArgs e) {
+      var dgv = sender as DataGridView;
+
+      if (dgv == null)
+        return;
+
+      var columnIndex = e.ColumnIndex;
+
+      if (columnIndex < 0 || columnIndex >= dgv.ColumnCount)
+        return;
+
+      var column = dgv.Columns[e.ColumnIndex];
+
+      if (!column.IsDataBound)
+        return;
+
+      var columnPropertyName = column.DataPropertyName;
+
+      var rowIndex = e.RowIndex;
+
+      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
+        return;
+
+      var row = dgv.Rows[rowIndex].DataBoundItem;
+      var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
+
+      if (type == null)
+        return;
+
+      // find image columns
+      var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName).FirstOrDefault();
+      if (imageColumnAttribute != null) {
+        e.Value = imageColumnAttribute.GetImage(row, e.Value);
+        e.FormattingApplied = true;
+        dgv.Rows[rowIndex].Cells[columnIndex].ToolTipText = imageColumnAttribute.ToolTipText(row);
+      }
+
+    }
+
+    /// <summary>
     /// Adjusts styles according to property attributes.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
@@ -672,8 +878,8 @@ namespace System.Windows.Forms {
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
-      var value = dgv.Rows[rowIndex].DataBoundItem;
-      var type = rowIndex < 0 ? FindItemType(dgv) : value?.GetType() ?? FindItemType(dgv);
+      var row = dgv.Rows[rowIndex].DataBoundItem;
+      var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
 
       if (type == null)
         return;
@@ -683,8 +889,8 @@ namespace System.Windows.Forms {
 
       if (attributes != null)
         foreach (var attribute in attributes)
-          if (attribute.IsEnabled(value))
-            attribute.ApplyTo(e.CellStyle, value);
+          if (attribute.IsEnabled(row))
+            attribute.ApplyTo(e.CellStyle, row);
 
     }
 
@@ -938,7 +1144,7 @@ namespace System.Windows.Forms {
       if (type.HasElementType)
         return type.GetElementType(); /* only handle arrays ... */
       if (type.IsGenericType)
-        return type.GenericTypeArguments[0]; /* and IEnumerable<T>, etc. */
+        return type.GetGenericArguments()[0]; /* and IEnumerable<T>, etc. */
 
       return null;
     }
@@ -1208,8 +1414,8 @@ namespace System.Windows.Forms {
       return results?.OfType<TAttribute>();
     }
 
+    private static readonly ConcurrentDictionary<string, Func<object, object>> _PROPERTY_GETTER_CACHE = new ConcurrentDictionary<string, Func<object, object>>();
 
-    private static readonly ConcurrentDictionary<string, PropertyInfo> _PROPERTY_CACHE = new ConcurrentDictionary<string, PropertyInfo>();
     /// <summary>
     /// Gets the property value or default.
     /// </summary>
@@ -1232,18 +1438,77 @@ namespace System.Windows.Forms {
 
       // find property and ask for bool values
       var type = value.GetType();
-      var property = _PROPERTY_CACHE.GetOrAdd(type + "\0" + propertyName, _ => type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+      var property = _PROPERTY_GETTER_CACHE.GetOrAdd(type + "\0" + propertyName, (string _) => {
+        var prop = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
+      });
 
       // property not found, return default
       if (property == null)
         return defaultValuePropertyNotFound;
 
-      var result = property.GetValue(value);
+      var result = property(value);
       if (result is TValue)
         return (TValue)result;
 
       // not right type, return default
       return defaultValuePropertyWrongType;
+    }
+
+    /// <summary>
+    /// Creates a weakly typed delegate to call the get method very fast.
+    /// </summary>
+    /// <param name="property">The property.</param>
+    /// <returns></returns>
+    private static Func<object, object> _GetWeaklyTypedGetterDelegate(PropertyInfo property) {
+
+      // find getter
+      var method = property.GetGetMethod(true);
+      if (method == null)
+        return null;
+
+      // use helper method to get weakly typed version
+      var createWeaklyTypedDelegateMethod = typeof(DataGridViewExtensions).GetMethod(nameof(_CreateWeaklyTypedDelegate), BindingFlags.Static | BindingFlags.NonPublic);
+      var constructor = createWeaklyTypedDelegateMethod.MakeGenericMethod(method.DeclaringType, method.ReturnType);
+      return (Func<object, object>)constructor.Invoke(null, new object[] { method });
+    }
+
+    // ReSharper disable once UnusedMethodReturnValue.Local
+    /// <summary>
+    /// Creates a weakly-typed delegate for the given method info.
+    /// </summary>
+    /// <typeparam name="TTarget">The type of the method's first parameter, usually the methods declaring type.</typeparam>
+    /// <typeparam name="TReturn">The type of the return value.</typeparam>
+    /// <param name="method">The method.</param>
+    /// <returns></returns>
+    private static Func<object, object> _CreateWeaklyTypedDelegate<TTarget, TReturn>(MethodInfo method) where TTarget : class {
+
+      // get a type-safe delegate
+      var func = (Func<TTarget, TReturn>)Delegate.CreateDelegate(typeof(Func<TTarget, TReturn>), method);
+
+      // wrap it into a weakly typed delegate
+      return target => func((TTarget)target);
+    }
+
+    /// <summary>
+    /// Calls the late bound method.
+    /// </summary>
+    /// <param name="instance">The instance to call the method from.</param>
+    /// <param name="methodName">Name of the method.</param>
+    [DebuggerStepThrough]
+    internal static void CallLateBoundMethod(object instance, string methodName) {
+      if (ReferenceEquals(null, instance))
+        return;
+
+      if (methodName == null || methodName.Trim().Length < 1)
+        return;
+
+      var type = instance.GetType();
+      var method = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+      if (method == null)
+        return;
+
+      method.Invoke(instance, null);
     }
 
     #endregion

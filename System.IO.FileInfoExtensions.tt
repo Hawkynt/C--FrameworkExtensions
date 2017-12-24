@@ -1030,6 +1030,44 @@ namespace System.IO {
     }
 
     /// <summary>
+    /// Changes the last write time of the given file to the current date/time.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc=DateTime.UtcNow;
+    
+    /// <summary>
+    /// Tries to change the last write time of the given file to the current date/time.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TryTouch(this FileInfo @this) {
+      try {
+        Touch(@this);
+        return true;
+      } catch (Exception) {
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Tries to change the last write time of the given file to the current date/time.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="waitTime">The wait time.</param>
+    /// <param name="repeat">The repeat.</param>
+    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+    public static bool TryTouch(this FileInfo @this, TimeSpan waitTime, int repeat = 3) {
+      while(--repeat>=0) {
+        if(TryTouch(@this))
+          return true;
+
+        Thread.Sleep(waitTime);
+      }
+
+      return false;
+    }
+
+    /// <summary>
     /// Checks whether the given file does not exist.
     /// </summary>
     /// <param name="This">This FileInfo.</param>

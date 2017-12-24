@@ -80,6 +80,34 @@ namespace System.IO {
     #endregion
 
     /// <summary>
+    /// Renames this directory.
+    /// </summary>
+    /// <param name="this">This DirectoryInfo.</param>
+    /// <param name="newName">The new name.</param>
+    public static void RenameTo(this DirectoryInfo @this, string newName) {
+      if (newName.Contains(Path.DirectorySeparatorChar) || newName.Contains(Path.AltDirectorySeparatorChar) || newName.Contains(Path.VolumeSeparatorChar))
+        throw new ArgumentException("No support for new directory structures", nameof(newName));
+
+      // nothing to do on same name
+      if (@this.Name == newName)
+        return;
+
+      // more than just casing
+      if (!string.Equals(@this.Name, newName, StringComparison.OrdinalIgnoreCase)) {
+        @this.MoveTo(Path.Combine(@this.Parent.FullName, newName));
+        return;
+      }
+
+      // only case has changed, so rename using a temporary intermediate
+      var temporaryName = @this.FullName + "$";
+      while (IO.Directory.Exists(temporaryName) || IO.File.Exists(temporaryName))
+        temporaryName += "$";
+
+      @this.MoveTo(temporaryName);
+      @this.MoveTo(Path.Combine(@this.Parent.FullName, newName));
+    }
+
+    /// <summary>
     /// Deletes all files and directories in this DirectoryInfo.
     /// </summary>
     /// <param name="this">This DirectoryInfo.</param>
@@ -212,65 +240,61 @@ namespace System.IO {
     /// <exception cref="System.NotSupportedException">RecursionMode</exception>
     public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo This, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
       switch (mode) {
-        case RecursionMode.ToplevelOnly:
-        {
+        case RecursionMode.ToplevelOnly: {
 #if NETFX_4
-          foreach (var result in This.EnumerateFileSystemInfos())
+            foreach (var result in This.EnumerateFileSystemInfos())
 #else
             foreach (var result in This.GetFileSystemInfos())
 #endif
-            yield return (result);
+              yield return (result);
 
-          break;
-        }
-        case RecursionMode.ShortestPathFirst:
-        {
-          var results = new Queue<DirectoryInfo>();
-          results.Enqueue(This);
-          while (results.Any()) {
-            var result = results.Dequeue();
+            break;
+          }
+        case RecursionMode.ShortestPathFirst: {
+            var results = new Queue<DirectoryInfo>();
+            results.Enqueue(This);
+            while (results.Any()) {
+              var result = results.Dequeue();
 #if NETFX_4
-            foreach (var fsi in result.EnumerateFileSystemInfos()) {
+              foreach (var fsi in result.EnumerateFileSystemInfos()) {
 #else
               foreach (var fsi in result.GetFileSystemInfos()) {
 #endif
-              yield return (fsi);
-              var di = fsi as DirectoryInfo;
-              if (di == null)
-                continue;
+                yield return (fsi);
+                var di = fsi as DirectoryInfo;
+                if (di == null)
+                  continue;
 
-              if (recursionFilter == null || recursionFilter(di))
-                results.Enqueue(di);
+                if (recursionFilter == null || recursionFilter(di))
+                  results.Enqueue(di);
+              }
             }
+            break;
           }
-          break;
-        }
-        case RecursionMode.DeepestPathFirst:
-        {
-          var results = new Stack<DirectoryInfo>();
-          results.Push(This);
-          while (results.Any()) {
-            var result = results.Pop();
+        case RecursionMode.DeepestPathFirst: {
+            var results = new Stack<DirectoryInfo>();
+            results.Push(This);
+            while (results.Any()) {
+              var result = results.Pop();
 #if NETFX_4
-            foreach (var fsi in result.EnumerateFileSystemInfos()) {
+              foreach (var fsi in result.EnumerateFileSystemInfos()) {
 #else
               foreach (var fsi in result.GetFileSystemInfos()) {
 #endif
-              yield return (fsi);
-              var di = fsi as DirectoryInfo;
-              if (di == null)
-                continue;
+                yield return (fsi);
+                var di = fsi as DirectoryInfo;
+                if (di == null)
+                  continue;
 
-              if (recursionFilter == null || recursionFilter(di))
-                results.Push(di);
+                if (recursionFilter == null || recursionFilter(di))
+                  results.Push(di);
+              }
             }
+            break;
           }
-          break;
-        }
-        default:
-        {
-          throw new NotSupportedException(nameof(RecursionMode));
-        }
+        default: {
+            throw new NotSupportedException(nameof(RecursionMode));
+          }
       }
     }
 
@@ -352,26 +376,34 @@ namespace System.IO {
       }
     }
 
+    public static bool TryCreate(this DirectoryInfo @this) => TryCreate(@this, false);
+
     /// <summary>
     /// Tries to create the given directory.
     /// </summary>
     /// <param name="this">This DirectoryInfo.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryCreate(this DirectoryInfo @this) {
+    /// <param name="recursive">if set to <c>true</c> recursively tries to create all subdirectories.</param>
+    /// <returns>
+    ///   <c>true</c> on success; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool TryCreate(this DirectoryInfo @this, bool recursive) {
 #if NETFX_4
       Contract.Requires(@this != null);
 #endif
       if (@this.Exists)
-        return (true);
+        return true;
 
       try {
-        @this.Create();
-        return (true);
+        if (recursive) {
+          IO.Directory.CreateDirectory(@this.FullName);
+          @this.Refresh();
+        } else
+          @this.Create();
+        return true;
       } catch (Exception) {
         @this.Refresh();
-        return (@this.Exists);
+        return @this.Exists;
       }
-
     }
 
     /// <summary>

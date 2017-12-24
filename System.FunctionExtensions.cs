@@ -20,6 +20,7 @@
 #endregion
 
 #if NETFX_4
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 #endif
 
@@ -32,27 +33,68 @@ namespace System {
     /// <summary>
     /// Tries to invoke the given delegate.
     /// </summary>
-    /// <param name="This">This Action.</param>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="this">This Action.</param>
+    /// <param name="result">The result.</param>
     /// <param name="repeatCount">The repeat count, until execution is aborted.</param>
     /// <returns>
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
-    public static bool TryInvoke<TResult>(this Func<TResult> This, out TResult result, int repeatCount = 1) {
+    public static bool TryInvoke<TResult>(this Func<TResult> @this, out TResult result, int repeatCount = 1) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(repeatCount > 0);
 #endif
 
       while (repeatCount-- > 0) {
         try {
-          result = This();
-          return (true);
+          result = @this();
+          return true;
         } catch (Exception) {
-
+          ;
         }
       }
       result = default(TResult);
-      return (false);
+      return false;
+    }
+
+    /// <summary>
+    /// Encapsulates the method so it only returns a result every n timeslices.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="this">This Function.</param>
+    /// <param name="span">The duration for which the result is valid.</param>
+    /// <param name="prolongOnAccess">if set to <c>true</c> prolongs the values lifetime on every access; defaults to <c>false</c>.</param>
+    /// <returns></returns>
+    public static Func<TResult> OnlyOnceFor<TResult>(this Func<TResult> @this, TimeSpan span, bool prolongOnAccess = false) {
+      var lastResult = default(TResult);
+      var resultValidUntil = 0L;
+
+      Func<TResult> wrapper;
+      if (prolongOnAccess) {
+        wrapper = () => {
+          var now = Stopwatch.GetTimestamp();
+
+          // result no longer valid, generate a new one
+          if (now > resultValidUntil)
+            lastResult = @this();
+
+          resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
+          return lastResult;
+        };
+      } else {
+        wrapper = () => {
+          var now = Stopwatch.GetTimestamp();
+          if (now <= resultValidUntil)
+            return lastResult;
+
+          // result no longer valid, generate a new one
+          lastResult = @this();
+          resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
+          return lastResult;
+        };
+      }
+      return wrapper;
     }
 
   }

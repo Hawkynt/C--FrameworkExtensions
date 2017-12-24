@@ -85,7 +85,7 @@ namespace System {
     /// Gets value stored earlier.
     /// </summary>
     /// <returns></returns>
-    private TValue _GetValue() => (this._value);
+    private TValue _GetValue() => this._value;
 
     /// <summary>
     /// Gets the value.

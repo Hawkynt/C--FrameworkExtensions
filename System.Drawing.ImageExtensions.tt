@@ -84,18 +84,25 @@ namespace System.Drawing {
     /// <summary>
     /// Saves an image into a png file.
     /// </summary>
-    /// <param name="This">This image.</param>
+    /// <param name="this">This image.</param>
+    /// <param name="file">The file where it should be saved.</param>
+    public static void SaveToPng(this Image @this, FileInfo file) => SaveToPng(@this, file.FullName);
+    
+    /// <summary>
+    /// Saves an image into a png file.
+    /// </summary>
+    /// <param name="this">This image.</param>
     /// <param name="fileName">The file where it should be saved.</param>
-    public static void SaveToPng(this Image This, string fileName) {
+    public static void SaveToPng(this Image @this, string fileName) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(fileName != null);
 #endif
       var encoder = GetEncoder(ImageFormat.Png);
       if (encoder == null)
         throw new NotSupportedException("Png encoder not available");
 
-      This.Save(fileName, ImageFormat.Png);
+      @this.Save(fileName, ImageFormat.Png);
     }
 
     /// <summary>

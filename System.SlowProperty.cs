@@ -44,10 +44,16 @@ namespace System {
     private readonly Action<SlowProperty<TValue, TIntermediateValue>> _valueGeneratedCallback;
     private readonly Func<TValue, TIntermediateValue> _valueConverter;
     private ManualResetEventSlim _valueWaiter = new ManualResetEventSlim();
+    private readonly SynchronizationContext _context;
+
     #endregion
 
     #region ctor
-    public SlowProperty(Func<SlowProperty<TValue, TIntermediateValue>, TValue> valueGetter, TIntermediateValue intermediateValue = default(TIntermediateValue), Action<SlowProperty<TValue, TIntermediateValue>> valueGeneratedCallback = null) {
+
+    public SlowProperty(Func<SlowProperty<TValue, TIntermediateValue>, TValue> valueGetter, TIntermediateValue intermediateValue = default(TIntermediateValue), Action<SlowProperty<TValue, TIntermediateValue>> valueGeneratedCallback = null, bool captureSynchronizationContext = false) :
+      this(captureSynchronizationContext ? SynchronizationContext.Current : null, valueGetter, intermediateValue, valueGeneratedCallback) { }
+
+    public SlowProperty(SynchronizationContext context, Func<SlowProperty<TValue, TIntermediateValue>, TValue> valueGetter, TIntermediateValue intermediateValue = default(TIntermediateValue), Action<SlowProperty<TValue, TIntermediateValue>> valueGeneratedCallback = null) {
       Contract.Requires(valueGetter != null);
       Contract.Requires(typeof(TIntermediateValue).IsAssignableFrom(typeof(TValue)));
       this._valueGetter = valueGetter;
@@ -61,6 +67,8 @@ namespace System {
         ? new Func<TValue, TIntermediateValue>(v => (TIntermediateValue)(object)v)
         : new Func<TValue, TIntermediateValue>(v => (TIntermediateValue)Convert.ChangeType(v, itype))
         ;
+
+      this._context = context;
     }
     #endregion
 
@@ -125,11 +133,12 @@ namespace System {
     private void _GenerateValue() {
       try {
         this._value = this._valueGetter(this);
-        this._valueWaiter.Set(); ;
-
-        var callback = this._valueGeneratedCallback;
-        if (callback != null)
-          callback(this);
+        this._valueWaiter.Set();
+        ;
+        if (this._context == null)
+          this._valueGeneratedCallback?.Invoke(this);
+        else
+          this._context.Send(_ => this._valueGeneratedCallback?.Invoke(this), null);
 
       } finally {
         Interlocked.CompareExchange(ref this._isGeneratingValue, _FALSE, _TRUE);
@@ -137,15 +146,11 @@ namespace System {
     }
     #endregion
 
-    public static implicit operator TIntermediateValue(SlowProperty<TValue, TIntermediateValue> This) {
-      return (This.Value);
-    }
+    public static implicit operator TIntermediateValue(SlowProperty<TValue, TIntermediateValue> This) => This.Value;
 
     #region Overrides of Object
 
-    public override string ToString() {
-      return string.Format("{0}", this.Value);
-    }
+    public override string ToString() => string.Format("{0}", this.Value);
 
     #endregion
   }
@@ -156,11 +161,20 @@ namespace System {
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
   internal class SlowProperty<TValue> : SlowProperty<TValue, TValue> {
-    public SlowProperty(Func<SlowProperty<TValue>, TValue> valueGetter, TValue intermediateValue = default(TValue), Action<SlowProperty<TValue>> valueGeneratedCallback = null)
+    public SlowProperty(Func<SlowProperty<TValue>, TValue> valueGetter, TValue intermediateValue = default(TValue), Action<SlowProperty<TValue>> valueGeneratedCallback = null, bool captureSynchronizationContext = false)
       : base(
         This => valueGetter((SlowProperty<TValue>)This),
         intermediateValue,
-        valueGeneratedCallback == null ? (Action<SlowProperty<TValue, TValue>>)null : This => valueGeneratedCallback((SlowProperty<TValue>)This)
+        valueGeneratedCallback == null ? (Action<SlowProperty<TValue, TValue>>)null : This => valueGeneratedCallback((SlowProperty<TValue>)This),
+        captureSynchronizationContext
         ) { }
+
+    public SlowProperty(SynchronizationContext context, Func<SlowProperty<TValue>, TValue> valueGetter, TValue intermediateValue = default(TValue), Action<SlowProperty<TValue>> valueGeneratedCallback = null)
+      : base(
+        context,
+          This => valueGetter((SlowProperty<TValue>)This),
+        intermediateValue,
+        valueGeneratedCallback == null ? (Action<SlowProperty<TValue, TValue>>)null : This => valueGeneratedCallback((SlowProperty<TValue>)This)
+      ) { }
   }
 }

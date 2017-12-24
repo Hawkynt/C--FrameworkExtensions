@@ -141,7 +141,8 @@ namespace System.Windows.Forms {
     /// <param name="this">The this.</param>
     /// <returns></returns>
     public static ISuspendedLayoutToken PauseLayout(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -156,8 +157,10 @@ namespace System.Windows.Forms {
     /// <param name="dueTime">The time to wait until execution.</param>
     /// <param name="action">The action.</param>
     public static void SetTimeout<TControl>(this TControl @this, TimeSpan dueTime, Action<TControl> action) where TControl : Control {
-      if (@this == null) throw new NullReferenceException();
-      if (action == null) throw new ArgumentNullException(nameof(action));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -174,7 +177,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This Control.</param>
     /// <returns>The position of it relative to it's form.</returns>
     public static Drawing.Point GetLocationOnForm(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -192,7 +196,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This Control.</param>
     /// <returns>The position of it relative to it's screen.</returns>
     public static Drawing.Point GetLocationOnScreen(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -201,7 +206,8 @@ namespace System.Windows.Forms {
     }
 
     public static Drawing.Point GetLocationOnClient(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -225,8 +231,10 @@ namespace System.Windows.Forms {
     /// </returns>
     /// <exception cref="System.ObjectDisposedException">Control already disposed.</exception>
     public static bool SafelyInvoke(this Control @this, Action task, bool async = true) {
-      if (@this == null) throw new NullReferenceException();
-      if (task == null) throw new ArgumentNullException(nameof(task));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (task == null)
+        throw new ArgumentNullException(nameof(task));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -243,8 +251,10 @@ namespace System.Windows.Forms {
     /// <param name="function">The function.</param>
     /// <returns>Whatever the method returned.</returns>
     public static TResult SafelyInvoke<TResult>(this Control @this, Func<TResult> function) {
-      if (@this == null) throw new NullReferenceException();
-      if (function == null) throw new ArgumentNullException(nameof(function));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (function == null)
+        throw new ArgumentNullException(nameof(function));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -263,8 +273,10 @@ namespace System.Windows.Forms {
     /// Whatever the method returned.
     /// </returns>
     public static TResult SafelyInvoke<TControl, TResult>(this TControl @this, Func<TControl, TResult> function) where TControl : Control {
-      if (@this == null) throw new NullReferenceException();
-      if (function == null) throw new ArgumentNullException(nameof(function));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (function == null)
+        throw new ArgumentNullException(nameof(function));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -273,7 +285,7 @@ namespace System.Windows.Forms {
         throw new ObjectDisposedException(nameof(@this));
 
       if (@this.IsHandleCreated)
-        return @this.InvokeRequired ? (TResult)@this.Invoke(function) : function(@this);
+        return @this.InvokeRequired ? (TResult)@this.Invoke(function, @this) : function(@this);
 
       var context = SynchronizationContext.Current;
       if (context != null) {
@@ -302,8 +314,10 @@ namespace System.Windows.Forms {
     ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
     /// </returns>
     public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool async = true) where TControl : Control {
-      if (@this == null) throw new NullReferenceException();
-      if (task == null) throw new ArgumentNullException(nameof(task));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (task == null)
+        throw new ArgumentNullException(nameof(task));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -361,8 +375,10 @@ namespace System.Windows.Forms {
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
     public static bool Async(this Control @this, Action task) {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-      if (@this == null) throw new NullReferenceException();
-      if (task == null) throw new ArgumentNullException(nameof(task));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (task == null)
+        throw new ArgumentNullException(nameof(task));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -385,8 +401,10 @@ namespace System.Windows.Forms {
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
     public static bool Async<TControl>(this TControl @this, Action<TControl> task) where TControl : Control {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-      if (@this == null) throw new NullReferenceException();
-      if (task == null) throw new ArgumentNullException(nameof(task));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (task == null)
+        throw new ArgumentNullException(nameof(task));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -411,9 +429,12 @@ namespace System.Windows.Forms {
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
     public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task, Action<TControl> syncPostAction = null) where TControl : Control {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-      if (@this == null) throw new NullReferenceException();
-      if (syncPreAction == null) throw new ArgumentNullException(nameof(syncPreAction));
-      if (task == null) throw new ArgumentNullException(nameof(task));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (syncPreAction == null)
+        throw new ArgumentNullException(nameof(syncPreAction));
+      if (task == null)
+        throw new ArgumentNullException(nameof(task));
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -435,7 +456,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This control.</param>
     /// <returns>A string with text or <c>null</c>.</returns>
     public static string GetTextProperty(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -486,7 +508,8 @@ namespace System.Windows.Forms {
     /// <param name="this">This Control.</param>
     /// <returns>An enumeration of child controls.</returns>
     public static IEnumerable<Control> AllControls(this Control @this) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
@@ -512,7 +535,8 @@ namespace System.Windows.Forms {
     /// <param name="newName">The name for the new control; defaults to auto-name.</param>
     /// <returns>A new control with the same properties as the given one.</returns>
     public static Control Duplicate(this Control @this, string newName = null) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 #if NETFX_4
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif

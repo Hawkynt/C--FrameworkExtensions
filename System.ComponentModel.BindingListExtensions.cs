@@ -39,14 +39,14 @@ namespace System.ComponentModel {
     /// Copies the content of the BindingList to an array.
     /// </summary>
     /// <typeparam name="TItem">The type of items.</typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <returns>A copy of the list.</returns>
-    public static TItem[] ToArray<TItem>(this BindingList<TItem> This) {
+    public static TItem[] ToArray<TItem>(this BindingList<TItem> @this) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var result = new TItem[This.Count];
-      This.CopyTo(result, 0);
+      var result = new TItem[@this.Count];
+      @this.CopyTo(result, 0);
       return (result);
     }
 
@@ -54,38 +54,38 @@ namespace System.ComponentModel {
     /// Adds the given elements.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
-    public static void AddRange<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+    public static void AddRange<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
       foreach (var item in items)
-        This.Add(item);
+        @this.Add(item);
     }
 
     /// <summary>
     /// Moves the given items to the front of the list.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
-    public static void MoveToFront<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+    public static void MoveToFront<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var raiseEvents = This.RaiseListChangedEvents;
+      var raiseEvents = @this.RaiseListChangedEvents;
       try {
-        This.RaiseListChangedEvents = false;
+        @this.RaiseListChangedEvents = false;
         foreach (var item in items.Reverse()) {
-          This.Remove(item);
-          This.Insert(0, item);
+          @this.Remove(item);
+          @this.Insert(0, item);
         }
       } finally {
-        This.RaiseListChangedEvents = raiseEvents;
-        This.ResetBindings();
+        @this.RaiseListChangedEvents = raiseEvents;
+        @this.ResetBindings();
       }
     }
 
@@ -93,23 +93,23 @@ namespace System.ComponentModel {
     /// Moves the given items to the back of the list.
     /// </summary>
     /// <typeparam name="TItem">The type of the items</typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
-    public static void MoveToBack<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items) {
+    public static void MoveToBack<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var raiseEvents = This.RaiseListChangedEvents;
+      var raiseEvents = @this.RaiseListChangedEvents;
       try {
-        This.RaiseListChangedEvents = false;
+        @this.RaiseListChangedEvents = false;
         foreach (var item in items) {
-          This.Remove(item);
-          This.Add(item);
+          @this.Remove(item);
+          @this.Add(item);
         }
       } finally {
-        This.RaiseListChangedEvents = raiseEvents;
-        This.ResetBindings();
+        @this.RaiseListChangedEvents = raiseEvents;
+        @this.ResetBindings();
       }
     }
 
@@ -117,57 +117,57 @@ namespace System.ComponentModel {
     /// Moves the given items relative.
     /// </summary>
     /// <typeparam name="TItem">The type of the items</typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
     /// <param name="delta">The delta.</param>
-    public static void MoveRelative<TItem>(this BindingList<TItem> This, IEnumerable<TItem> items, int delta) {
+    public static void MoveRelative<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items, int delta) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
       if (delta == 0)
         return;
 
-      var raiseEvents = This.RaiseListChangedEvents;
+      var raiseEvents = @this.RaiseListChangedEvents;
       try {
-        This.RaiseListChangedEvents = false;
+        @this.RaiseListChangedEvents = false;
 
-        var count = This.Count - 1;
+        var count = @this.Count - 1;
 
         if (delta < 0) {
           var start = 0;
           foreach (var item in items) {
-            var index = This.IndexOf(item);
+            var index = @this.IndexOf(item);
             if (index < 0)
               continue;
 
-            This.RemoveAt(index);
+            @this.RemoveAt(index);
             var newIndex = index + delta;
-            This.Insert(newIndex < 0 ? start++ : newIndex, item);
+            @this.Insert(newIndex < 0 ? start++ : newIndex, item);
           }
         } else {
           var end = count;
           foreach (var item in items.Reverse()) {
-            var index = This.IndexOf(item);
+            var index = @this.IndexOf(item);
             if (index < 0)
               continue;
 
-            This.RemoveAt(index);
+            @this.RemoveAt(index);
             var newIndex = index + delta;
             if (newIndex > end) {
 #if NETFX_4
               Contract.Assume(end >= 0);
 #endif
-              This.Insert(end--, item);
+              @this.Insert(end--, item);
             } else
-              This.Insert(newIndex, item);
+              @this.Insert(newIndex, item);
           }
         }
 
 
       } finally {
-        This.RaiseListChangedEvents = raiseEvents;
-        This.ResetBindings();
+        @this.RaiseListChangedEvents = raiseEvents;
+        @this.ResetBindings();
       }
     }
 
@@ -175,23 +175,64 @@ namespace System.ComponentModel {
     /// Replaces all elements.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="This">This BindingList.</param>
+    /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
-    public static void ReplaceAll<T>(this BindingList<T> This, IEnumerable<T> items) {
+    public static void ReplaceAll<T>(this BindingList<T> @this, IEnumerable<T> items) {
 #if NETFX_4
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var oldState = This.RaiseListChangedEvents;
+      var oldState = @this.RaiseListChangedEvents;
       try {
-        This.RaiseListChangedEvents = false;
-        This.Clear();
+        @this.RaiseListChangedEvents = false;
+        @this.Clear();
         foreach (var item in items)
-          This.Add(item);
+          @this.Add(item);
       } finally {
-        This.RaiseListChangedEvents = oldState;
+        @this.RaiseListChangedEvents = oldState;
         if (oldState)
-          This.ResetBindings();
+          @this.ResetBindings();
+      }
+    }
+
+    /// <summary>
+    /// Refreshes all items int list.
+    /// </summary>
+    /// <typeparam name="T">The type of the items</typeparam>
+    /// <param name="this">This BindingList.</param>
+    /// <param name="items">The updated item list.</param>
+    /// <param name="keyGetter">The key getter to compare what items are added/removed/updated.</param>
+    /// <param name="itemUpdateMethod">The item update method; takes the old and new item reference and returns the updated item.</param>
+    public static void RefreshAll<T>(this BindingList<T> @this, IEnumerable<T> items, Func<T, string> keyGetter, Func<T, T, T> itemUpdateMethod) {
+      var oldState = @this.RaiseListChangedEvents;
+      try {
+        @this.RaiseListChangedEvents = false;
+        var oldKeys = @this.ToDictionary(keyGetter);
+        var newKeys = items.ToDictionary(keyGetter);
+
+        // remove not longer needed items
+        foreach (var key in oldKeys.Keys.Where(k => !newKeys.ContainsKey(k)))
+          @this.Remove(oldKeys[key]);
+
+        foreach (var key in newKeys.Keys) {
+
+          // add new items
+          if (!oldKeys.ContainsKey(key)) {
+            @this.Add(newKeys[key]);
+            continue;
+          }
+
+          // update items
+          var oldItem = oldKeys[key];
+          var newItem = itemUpdateMethod(oldItem, newKeys[key]);
+          if (!ReferenceEquals(oldItem, newItem))
+            @this[@this.IndexOf(oldItem)] = newItem;
+        }
+
+      } finally {
+        @this.RaiseListChangedEvents = oldState;
+        if (oldState)
+          @this.ResetBindings();
       }
     }
 

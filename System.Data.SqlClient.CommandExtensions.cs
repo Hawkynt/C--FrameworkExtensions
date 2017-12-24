@@ -55,7 +55,7 @@ namespace System.Data.SqlClient {
       return (1);
 #else
       This.CommandText = commandText;
-      return (This.ExecuteNonQuery());
+      return This.ExecuteNonQuery();
 #endif
     }
 
@@ -73,7 +73,7 @@ namespace System.Data.SqlClient {
       return (null);
 #else
       This.CommandText = commandText;
-      return (This.ExecuteScalar());
+      return This.ExecuteScalar();
 #endif
     }
 
@@ -90,7 +90,7 @@ namespace System.Data.SqlClient {
       return (null);
 #else
       This.CommandText = commandText;
-      return (This.ExecuteReader());
+      return This.ExecuteReader();
 #endif
     }
 
@@ -155,7 +155,7 @@ namespace System.Data.SqlClient {
     /// <returns>The value of the identity column or the number of affected rows.</returns>
     public static long ExecuteSingleInsert(this SqlCommand This, string tableName, bool tableContainsId = false, params IEnumerable<KeyValuePair<string, object>>[] values) {
       var allValues = values.Where(v => v != null).ConcatAll();
-      return (This.ExecuteSingleInsert(tableName, allValues, tableContainsId));
+      return This.ExecuteSingleInsert(tableName, allValues, tableContainsId);
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ namespace System.Data.SqlClient {
           if (i.Value == null)
             This.Parameters[name].IsNullable = true;
 
-          return (name);
+          return name;
         })), sqlCommandTextWithParameters);
 #endif
         _AppendToBuilders(")", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
@@ -221,7 +221,7 @@ namespace System.Data.SqlClient {
         This.Parameters.Clear();
 #endif
 
-        return (numberOfAffectedRows);
+        return numberOfAffectedRows;
       }
 
       // return scope if any
@@ -237,7 +237,7 @@ namespace System.Data.SqlClient {
 #endif
 
       var identityResult = (long)(decimal)result;
-      return (identityResult);
+      return identityResult;
     }
 
     private static void _AppendToBuilders(string text, StringBuilder sb1, StringBuilder sb2 = null) {
@@ -276,7 +276,7 @@ namespace System.Data.SqlClient {
     /// <param name="name">The name.</param>
     /// <returns></returns>
     private static string _ConvertParameterName(string name) {
-      return (new Regex("[^a-z0-9]+", RegexOptions.IgnoreCase).Replace(name, string.Empty));
+      return new Regex("[^a-z0-9]+", RegexOptions.IgnoreCase).Replace(name, string.Empty);
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ namespace System.Data.SqlClient {
       This.Parameters.Clear();
 #endif
 
-      return ((int)(result ?? 0) > 0);
+      return (int)(result ?? 0) > 0;
     }
 
     /// <summary>
@@ -371,7 +371,7 @@ namespace System.Data.SqlClient {
         } else {
           sql.Append("(" + charLength + ")");
         }
-      } else if ((decimalDigits != 0 || totalDigits != 0) && (dbType == SqlDbType.Decimal))
+      } else if ((decimalDigits != 0 || totalDigits != 0) && dbType == SqlDbType.Decimal)
         sql.Append("(" + totalDigits + "," + decimalDigits + ")");
 
       if (isNotNull)

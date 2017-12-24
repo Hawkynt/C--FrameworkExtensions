@@ -504,8 +504,10 @@ namespace System {
     /// <param name="passFieldFormatToGetter">if set to <c>true</c> passes the field format to getter.</param>
     /// <returns>A formatted string.</returns>
     public static string FormatWithEx(this string @this, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
-      if (@this == null) throw new NullReferenceException();
-      if (fieldGetter == null) throw new ArgumentNullException(nameof(fieldGetter));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (fieldGetter == null)
+        throw new ArgumentNullException(nameof(fieldGetter));
 
       var length = @this.Length;
 
@@ -566,7 +568,7 @@ namespace System {
               // field start found, switch mode
               isInField = true;
             }
-          } else if (current == '}' && (next != null) && next == "}") {
+          } else if (current == '}' && next != null && next == "}") {
 
             // copy what we've already got
             var textContent = @this.Substring(lastStartPos, fieldContentLength);
@@ -1445,7 +1447,8 @@ namespace System {
 #endif
 
     public static string DefaultIfNullOrWhiteSpace(this string @this, Func<string> defaultValue) {
-      if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
+      if (defaultValue == null)
+        throw new ArgumentNullException(nameof(defaultValue));
 
       return @this.IsNullOrWhiteSpace() ? defaultValue() : @this;
     }

@@ -25,38 +25,29 @@ namespace System.Threading {
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
   public class Future<TValue> {
-    private Exception _exception;
     private readonly ManualResetEventSlim _HasValueAlready = new ManualResetEventSlim(false);
+    private Exception _exception;
     private TValue _value;
+    private Func<TValue> _getter;
+
     #region ctor
-    public Future(Func<TValue> function, Func<TValue, TValue> converter, Action<TValue> callback = null)
-      : this(function, callback, converter) {
-    }
-    public Future(Func<TValue> function, Action<TValue> callback = null, Func<TValue, TValue> converter = null) {
+
+    public Future(Func<TValue> function, Action<TValue> callback = null) {
+      this._getter = this._WaitForValueCreation;
       function.BeginInvoke(asyncResult => {
         try {
           this._value = function.EndInvoke(asyncResult);
-          if (converter != null)
-            this._value = converter(this._value);
+          callback?.Invoke(this._value);
+          Interlocked.Exchange(ref this._getter, this._GetRawValue);
         } catch (Exception exception) {
           this._exception = exception;
+          Interlocked.Exchange(ref this._getter, this._ThrowException);
         } finally {
           ((ManualResetEventSlim)asyncResult.AsyncState).Set();
-
-          // check if there is a callback
-          if (callback != null) {
-            try {
-              callback(this.Value);
-            } catch (Exception exception) {
-              Diagnostics.Trace.WriteLine("Error executing callback in future:" + exception.Message);
-#if DEBUG
-              throw;
-#endif
-            }
-          }
         }
       }, this._HasValueAlready);
     }
+
     #endregion
     /// <summary>
     /// Gets a value indicating whether this instance has value.
@@ -64,7 +55,7 @@ namespace System.Threading {
     /// <value>
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
-    public bool HasValue => this._HasValueAlready.IsSet;
+    public bool HasValue => Interlocked.CompareExchange(ref this._getter, this._GetRawValue, this._GetRawValue) == this._GetRawValue;
 
     /// <summary>
     /// Gets a value indicating whether this instance is completed.
@@ -72,21 +63,25 @@ namespace System.Threading {
     /// <value>
     /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
     /// </value>
-    public bool IsCompleted => this.HasValue;
+    public bool IsCompleted => this._HasValueAlready.IsSet;
 
     /// <summary>
     /// Gets the value.
     /// </summary>
-    public TValue Value {
-      get {
-        if (!this.HasValue)
-          this._HasValueAlready.Wait();
+    public TValue Value => this._getter();
 
-        if (this._exception != null)
-          throw (this._exception);
-        return (this._value);
-      }
+    private TValue _GetRawValue() => this._value;
+
+    private TValue _ThrowException() {
+      throw this._exception;
     }
+
+    private TValue _WaitForValueCreation() {
+      this._HasValueAlready.Wait();
+      return this.Value;
+    }
+
+
     /// <summary>
     /// Performs an implicit conversion from <see cref="System.Threading.Future&lt;TValue&gt;"/> to <see cref="TValue"/>.
     /// </summary>

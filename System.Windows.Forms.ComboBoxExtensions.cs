@@ -26,6 +26,21 @@ using System.Linq;
 
 namespace System.Windows.Forms {
   internal static partial class ComboBoxExtensions {
+
+    /// <summary>
+    /// Automatically adjusts the width according to items.
+    /// </summary>
+    /// <param name="this">This ComboBox.</param>
+    public static void AutoAdjustWidth(this ComboBox @this) {
+      var font = @this.Font;
+      @this.Width = @this
+          .Items
+          .Cast<object>()
+          .Select(i => TextRenderer.MeasureText(@this.GetItemText(i), font).Width)
+          .Max()
+        ;
+    }
+
     /// <summary>
     /// Sets the datasource.
     /// </summary>

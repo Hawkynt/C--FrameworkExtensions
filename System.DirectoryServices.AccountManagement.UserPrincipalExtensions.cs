@@ -23,6 +23,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net.Mail;
+using System.Text;
 using System.Threading;
 
 namespace System.DirectoryServices.AccountManagement {
@@ -44,6 +46,18 @@ namespace System.DirectoryServices.AccountManagement {
         ? new[] { @this.Surname, new[] { @this.GivenName, @this.MiddleName }.Join(" ", true) }.Join(", ", true)
         : new[] { @this.GivenName, @this.MiddleName, @this.Surname }.Join(" ", true)
         ;
+    }
+
+    public static MailAddress GetEmailAddress(this UserPrincipal @this) => new MailAddress(@this.EmailAddress, GetFullName(@this), Encoding.UTF8);
+
+
+    private static readonly ConcurrentDictionary<string, UserPrincipal> _DOMAIN_USER_CACHE = new ConcurrentDictionary<string, UserPrincipal>(StringComparer.OrdinalIgnoreCase);
+    public static UserPrincipal FindDomainUserBySamAccountName(string samAccoutName) => FindDomainUserBySamAccountName(samAccoutName, false);
+    public static UserPrincipal FindDomainUserBySamAccountName(string samAccoutName, bool allowCached) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(samAccoutName, _FindDomainUserBySamAccountName) : _FindDomainUserBySamAccountName(samAccoutName);
+
+    private static UserPrincipal _FindDomainUserBySamAccountName(string samAccoutName) {
+      using (var context = new PrincipalContext(ContextType.Domain))
+        return UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccoutName);
     }
 
     #region LDAP stuff 
@@ -76,14 +90,14 @@ namespace System.DirectoryServices.AccountManagement {
           // if the item wasn't accessed in the last second, dispose immediately
           var directoryEntry = this.item;
           if (this.Age.TotalSeconds > 1) {
-            directoryEntry.Dispose();
+            directoryEntry?.Dispose();
             return;
           }
 
           // otherwise schedule disposal in 1sec.
           Action action = () => {
             Thread.Sleep(1000);
-            directoryEntry.Dispose();
+            directoryEntry?.Dispose();
           };
           action.BeginInvoke(action.EndInvoke, null);
         }

@@ -37,6 +37,128 @@ using System.Text;
 namespace System.Collections.Generic {
   internal static partial class EnumerableExtensions {
 
+    #region nested types
+
+    internal enum ChangeType {
+      Equal = 0,
+      Changed = 1,
+      Added = 2,
+      Removed = 3,
+    }
+
+    internal interface IChangeSet<out TItem> {
+      ChangeType Type { get; }
+      int CurrentIndex { get; }
+      TItem Current { get; }
+      int OtherIndex { get; }
+      TItem Other { get; }
+    }
+
+    private class ChangeSet<TItem> : IChangeSet<TItem> {
+      public ChangeSet(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other) {
+        this.Type = type;
+        this.CurrentIndex = currentIndex;
+        this.Current = current;
+        this.OtherIndex = otherIndex;
+        this.Other = other;
+      }
+
+      #region Implementation of IChangeSet<TValue>
+
+      public ChangeType Type { get; }
+      public int CurrentIndex { get; }
+      public TItem Current { get; }
+      public int OtherIndex { get; }
+      public TItem Other { get; }
+
+      #endregion
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Compares two arrays against each other.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="other">The other Array.</param>
+    /// <param name="comparer">The value comparer; optional: uses default.</param>
+    /// <returns></returns>
+    [DebuggerStepThrough]
+    public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> other, IEqualityComparer<TItem> comparer = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (other == null)
+        throw new ArgumentNullException(nameof(other));
+
+#if NETFX_4
+      Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
+
+      if (comparer == null)
+        comparer = EqualityComparer<TItem>.Default;
+
+      var target = other.ToArray();
+      var targetIndex = 0;
+      var currentSourceBuffer = new Queue<Tuple<int, TItem>>();
+
+      var i = -1;
+      foreach (var item in @this) {
+        ++i;
+        var foundAt = _IndexOf(target, item, targetIndex, comparer);
+        if (foundAt < 0) {
+          // does not exist in target
+          currentSourceBuffer.Enqueue(Tuple.Create(i, item));
+          continue;
+        }
+
+        // found
+        while (targetIndex <= foundAt) {
+          if (targetIndex == foundAt) {
+            // last iteration
+            while (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
+            }
+
+            yield return new ChangeSet<TItem>(ChangeType.Equal, i, item, targetIndex, target[targetIndex]);
+          } else {
+            if (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex, target[targetIndex]);
+            } else
+              yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, target[targetIndex]);
+          }
+          ++targetIndex;
+        }
+      }
+
+      var targetLen = target.Length;
+      while (currentSourceBuffer.Count > 0) {
+        if (targetIndex < targetLen) {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex, target[targetIndex]);
+          ++targetIndex;
+        } else {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
+        }
+      }
+
+      while (targetIndex < targetLen) {
+        yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, target[targetIndex]);
+        ++targetIndex;
+      }
+    }
+
+    private static int _IndexOf<TValue>(TValue[] values, TValue item, int startIndex, IEqualityComparer<TValue> comparer) {
+      for (var i = startIndex; i < values.Length; ++i)
+        if (ReferenceEquals(values[i], item) || comparer.Equals(values[i], item))
+          return i;
+
+      return -1;
+    }
+
     /// <summary>
     /// Returns the enumeration or <c>null</c> if it is empty.
     /// </summary>
@@ -96,8 +218,10 @@ namespace System.Collections.Generic {
     /// </returns>
     [DebuggerStepThrough]
     public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, int initialCapacity) {
-      if (@this == null) throw new NullReferenceException();
-      if (initialCapacity < 0) throw new ArgumentOutOfRangeException(nameof(initialCapacity), initialCapacity, "Must be positive");
+      if (@this == null)
+        throw new NullReferenceException();
+      if (initialCapacity < 0)
+        throw new ArgumentOutOfRangeException(nameof(initialCapacity), initialCapacity, "Must be positive");
 
       var items = new List<TItem>(initialCapacity);
       items.AddRange(@this);
@@ -176,7 +300,8 @@ namespace System.Collections.Generic {
     /// <returns>A shuffled enumeration.</returns>
     [DebuggerStepThrough]
     public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> @this, Random random = null) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       if (random == null)
         random = new Random();
@@ -220,7 +345,8 @@ namespace System.Collections.Generic {
     /// </returns>
     [DebuggerStepThrough]
     public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 
       if (@this == null)
         return true;
@@ -303,8 +429,10 @@ namespace System.Collections.Generic {
 
 #if NETFX_4
     public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-      if (@this == null) throw new NullReferenceException();
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 
       var groups = @this.GroupBy(predicate).ToArray();
       var result = Tuple.Create(
@@ -358,8 +486,10 @@ namespace System.Collections.Generic {
     ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> list, IEqualityComparer<TItem> equalityComparer = null) {
-      if (@this == null) throw new NullReferenceException();
-      if (list == null) throw new ArgumentNullException(nameof(list));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (list == null)
+        throw new ArgumentNullException(nameof(list));
 
       // we'll cache all visited values from the list, so we don't have to enumerate more than once
       var itemCache = new List<TItem>();
@@ -416,8 +546,10 @@ namespace System.Collections.Generic {
     /// <param name="action">The action.</param>
     [DebuggerStepThrough]
     public static void ForEach<TItem>(this IEnumerable<TItem> @this, Action<TItem> action) {
-      if (@this == null) throw new NullReferenceException();
-      if (action == null) throw new ArgumentNullException(nameof(action));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 
       foreach (var item in @this)
         action(item);
@@ -432,8 +564,10 @@ namespace System.Collections.Generic {
     /// <param name="action">The call to execute.</param>
     [DebuggerStepThrough]
     public static void ForEach<TItem>(this IEnumerable<TItem> @this, Action<TItem, int> action) {
-      if (@this == null) throw new NullReferenceException();
-      if (action == null) throw new ArgumentNullException(nameof(action));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 
       var index = 0;
       foreach (var item in @this)
@@ -462,8 +596,10 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn, int> action) {
-      if (@this == null) throw new NullReferenceException();
-      if (action == null) throw new ArgumentNullException(nameof(action));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (action == null)
+        throw new ArgumentNullException(nameof(action));
 
 #pragma warning disable CC0031 // Check for null before calling a delegate
       @this.Select((v, i) => new Action(() => action(v, i))).ParallelForEach(i => i());
@@ -515,8 +651,10 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<double> progressCallback, bool delayed = false) {
-      if (@this == null) throw new NullReferenceException();
-      if (progressCallback == null) throw new ArgumentNullException(nameof(progressCallback));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (progressCallback == null)
+        throw new ArgumentNullException(nameof(progressCallback));
 
       var collection = @this as ICollection<TIn> ?? @this.ToList();
       return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
@@ -533,8 +671,10 @@ namespace System.Collections.Generic {
     /// A new enumeration which automatically calls the progress callback when items are pulled.
     /// </returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<long, long> progressCallback, bool delayed = false) {
-      if (@this == null) throw new NullReferenceException();
-      if (progressCallback == null) throw new ArgumentNullException(nameof(progressCallback));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (progressCallback == null)
+        throw new ArgumentNullException(nameof(progressCallback));
 
       var collection = @this as ICollection<TIn> ?? @this.ToList();
       return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
@@ -550,8 +690,10 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<double> progressCallback, bool delayed = false) {
-      if (@this == null) throw new NullReferenceException();
-      if (progressCallback == null) throw new ArgumentNullException(nameof(progressCallback));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (progressCallback == null)
+        throw new ArgumentNullException(nameof(progressCallback));
 
       return AsProgressReporting(@this, length, (i, c) => progressCallback(i == c ? 1 : (double)i / c), delayed);
     }
@@ -566,8 +708,10 @@ namespace System.Collections.Generic {
     /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
     /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
     public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<long, long> progressCallback, bool delayed = false) {
-      if (@this == null) throw new NullReferenceException();
-      if (progressCallback == null) throw new ArgumentNullException(nameof(progressCallback));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (progressCallback == null)
+        throw new ArgumentNullException(nameof(progressCallback));
 
       if (length == 0)
         progressCallback(0, 0);
@@ -599,8 +743,10 @@ namespace System.Collections.Generic {
     /// <param name="condition">The condition.</param>
     /// <returns></returns>
     public static bool All<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> condition) {
-      if (@this == null) throw new NullReferenceException();
-      if (condition == null) throw new ArgumentNullException(nameof(condition));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (condition == null)
+        throw new ArgumentNullException(nameof(condition));
 
       // original but slower implementation
       //return (!This.Where((o, i) => !condition(o, i)).Any());
@@ -624,8 +770,10 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>An enumeration with distinct elements.</returns>
     public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> @this, Func<TIn, TCompare> selector) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 
       var list = (
         from i in @this
@@ -664,7 +812,8 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter.</param>
     /// <returns>The joines string.</returns>
     public static string Join<TIn>(this IEnumerable<TIn> @this, string join = ", ", bool skipDefaults = false, Func<TIn, string> converter = null) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       var result = new StringBuilder();
       var gotElements = false;
@@ -698,8 +847,10 @@ namespace System.Collections.Generic {
     /// <returns>The index of the matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, int defaultValue = -1) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 
       var result = 0;
       foreach (var item in @this)
@@ -721,9 +872,12 @@ namespace System.Collections.Generic {
     /// <returns>The index of the matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<int> defaultValue) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
-      if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
+      if (defaultValue == null)
+        throw new ArgumentNullException(nameof(defaultValue));
 
       var result = 0;
       foreach (var item in @this)
@@ -745,9 +899,12 @@ namespace System.Collections.Generic {
     /// <returns>The index of the matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, int> defaultValue) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
-      if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
+      if (defaultValue == null)
+        throw new ArgumentNullException(nameof(defaultValue));
 
       var result = 0;
       // ReSharper disable once PossibleMultipleEnumeration
@@ -783,7 +940,8 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue) {
-      if (@this == null) throw new NullReferenceException();
+      if (@this == null)
+        throw new NullReferenceException();
 
       foreach (var item in @this)
         return item;
@@ -800,8 +958,10 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory) {
-      if (@this == null) throw new NullReferenceException();
-      if (defaultValueFactory == null) throw new ArgumentNullException(nameof(defaultValueFactory));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (defaultValueFactory == null)
+        throw new ArgumentNullException(nameof(defaultValueFactory));
 
       foreach (var item in @this)
         return item;
@@ -818,8 +978,10 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
-      if (@this == null) throw new NullReferenceException();
-      if (defaultValueFactory == null) throw new ArgumentNullException(nameof(defaultValueFactory));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (defaultValueFactory == null)
+        throw new ArgumentNullException(nameof(defaultValueFactory));
 
       // ReSharper disable once PossibleMultipleEnumeration
       foreach (var item in @this)
@@ -860,8 +1022,10 @@ namespace System.Collections.Generic {
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
 
       foreach (var item in @this)
         if (selector(item))
@@ -880,9 +1044,12 @@ namespace System.Collections.Generic {
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
-      if (defaultValueFactory == null) throw new ArgumentNullException(nameof(defaultValueFactory));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
+      if (defaultValueFactory == null)
+        throw new ArgumentNullException(nameof(defaultValueFactory));
 
       foreach (var item in @this)
         if (selector(item))
@@ -901,9 +1068,12 @@ namespace System.Collections.Generic {
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
     public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
-      if (@this == null) throw new NullReferenceException();
-      if (selector == null) throw new ArgumentNullException(nameof(selector));
-      if (defaultValueFactory == null) throw new ArgumentNullException(nameof(defaultValueFactory));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
+      if (defaultValueFactory == null)
+        throw new ArgumentNullException(nameof(defaultValueFactory));
 
       // ReSharper disable once PossibleMultipleEnumeration
       foreach (var item in @this)
@@ -1065,8 +1235,10 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static IEnumerable<TItem> TakeUntil<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-      if (@this == null) throw new NullReferenceException();
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 
       return @this.TakeWhile(i => !predicate(i));
     }
@@ -1080,8 +1252,10 @@ namespace System.Collections.Generic {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static IEnumerable<TItem> SkipUntil<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-      if (@this == null) throw new NullReferenceException();
-      if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
 
       return @this.SkipWhile(i => !predicate(i));
     }

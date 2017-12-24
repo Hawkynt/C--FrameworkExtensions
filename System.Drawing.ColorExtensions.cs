@@ -30,6 +30,27 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Drawing {
   internal static partial class ColorExtensions {
+
+    public static Color BlendWith(this Color @this, Color other, float current, float max) {
+      var f = current / max;
+      var a = @this.A + (other.A - @this.A) * f;
+      var r = @this.R + (other.R - @this.R) * f;
+      var g = @this.G + (other.G - @this.G) * f;
+      var b = @this.B + (other.B - @this.B) * f;
+
+      return Color.FromArgb((int)a, (int)r, (int)g, (int)b);
+    }
+
+    public static Color InterpolateWith(this Color @this, Color other, float factor = 1) {
+      var f = 1 + factor;
+      var a = (@this.A + factor * other.A) / f;
+      var r = (@this.R + factor * other.R) / f;
+      var g = (@this.G + factor * other.G) / f;
+      var b = (@this.B + factor * other.B) / f;
+
+      return Color.FromArgb((int)a, (int)r, (int)g, (int)b);
+    }
+
     /// <summary>
     /// Lightens the given color.
     /// </summary>

@@ -464,7 +464,7 @@ namespace System.Collections.Generic {
     /// </returns>
     /// <exception cref="System.NullReferenceException"></exception>
     [DebuggerStepThrough]
-    public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
+    public static TValue GetOrAddDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
 #if NETFX_4
@@ -501,6 +501,32 @@ namespace System.Collections.Generic {
       TValue result;
       if (!@this.TryGetValue(key, out result))
         @this.Add(key, result = defaultValue);
+
+      return result;
+    }
+
+
+    /// <summary>
+    /// Gets the key's value from a dictionary or adds the key with the default value.
+    /// </summary>
+    /// <typeparam name="TKey">Type of the keys.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="key">The key to lookup/add.</param>
+    /// <returns>
+    /// The key's value or the default value.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
+      if (@this == null)
+        throw new NullReferenceException();
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      TKey result;
+      if (!@this.TryGetValue(key, out result))
+        @this.Add(key, result = key);
 
       return result;
     }
@@ -747,6 +773,24 @@ namespace System.Collections.Generic {
     [DebuggerStepThrough]
     public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) => !@this.ContainsKey(key);
 
+    /// <summary>
+    /// Compares two dictionaries against each other.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="other">The other Dictionary.</param>
+    /// <param name="valueComparer">The value comparer; optional: uses default.</param>
+    /// <param name="keyComparer">The key comparer; optional uses source comparer or TKey default.</param>
+    /// <returns>
+    /// A changeset.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public static IEnumerable<IChangeSet<TKey, TValue>> CompareTo<TKey, TValue>(this Dictionary<TKey, TValue> @this, Dictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer = null, IEqualityComparer<TKey> keyComparer = null)
+      => CompareTo((IDictionary<TKey, TValue>)@this, other, valueComparer, keyComparer)
+      ;
 
     /// <summary>
     /// Compares two dictionaries against each other.
@@ -756,13 +800,14 @@ namespace System.Collections.Generic {
     /// <param name="this">This Dictionary.</param>
     /// <param name="other">The other Dictionary.</param>
     /// <param name="valueComparer">The value comparer; optional: uses default.</param>
+    /// <param name="keyComparer">The key comparer; optional uses source comparer or TKey default.</param>
     /// <returns>
     /// A changeset.
     /// </returns>
     /// <exception cref="System.NullReferenceException"></exception>
     /// <exception cref="System.ArgumentNullException"></exception>
     [DebuggerStepThrough]
-    public static IEnumerable<IChangeSet<TKey, TValue>> CompareTo<TKey, TValue>(this Dictionary<TKey, TValue> @this, Dictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer = null) {
+    public static IEnumerable<IChangeSet<TKey, TValue>> CompareTo<TKey, TValue>(this IDictionary<TKey, TValue> @this, IDictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer = null, IEqualityComparer<TKey> keyComparer = null) {
       if (@this == null)
         throw new NullReferenceException();
       if (other == null)
@@ -775,7 +820,7 @@ namespace System.Collections.Generic {
       if (valueComparer == null)
         valueComparer = EqualityComparer<TValue>.Default;
 
-      var keys = @this.Keys.Concat(other.Keys).Distinct(@this.Comparer);
+      var keys = @this.Keys.Concat(other.Keys).Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
       foreach (var key in keys) {
         TValue otherValue;
         if (!other.TryGetValue(key, out otherValue)) {
@@ -797,6 +842,57 @@ namespace System.Collections.Generic {
         yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
       }
     }
+
+#if NETFX_45
+    /// <summary>
+    /// Compares two dictionaries against each other.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="other">The other Dictionary.</param>
+    /// <param name="valueComparer">The value comparer; optional: uses default.</param>
+    /// <param name="keyComparer">The key comparer; optional uses source comparer or TKey default.</param>
+    /// <returns>
+    /// A changeset.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public static IEnumerable<IChangeSet<TKey, TValue>> CompareTo<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, IReadOnlyDictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer = null, IEqualityComparer<TKey> keyComparer = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (other == null)
+        throw new ArgumentNullException(nameof(other));
+
+      Contract.EndContractBlock();
+
+      if (valueComparer == null)
+        valueComparer = EqualityComparer<TValue>.Default;
+
+      var keys = @this.Keys.Concat(other.Keys).Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
+      foreach (var key in keys) {
+        TValue otherValue;
+        if (!other.TryGetValue(key, out otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Added, key, @this[key], default(TValue));
+          continue;
+        }
+
+        TValue thisValue;
+        if (!@this.TryGetValue(key, out thisValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Removed, key, default(TValue), other[key]);
+          continue;
+        }
+
+        if (ReferenceEquals(thisValue, otherValue) || valueComparer.Equals(thisValue, otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Equal, key, thisValue, otherValue);
+          continue;
+        }
+
+        yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
+      }
+    }
+#endif
 
   }
 }

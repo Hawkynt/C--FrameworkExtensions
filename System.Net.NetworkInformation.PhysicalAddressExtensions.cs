@@ -13,7 +13,7 @@ namespace System.Net.NetworkInformation {
     /// <returns>The mac adress string, delimited with ":"</returns>
     public static string MacAdress(this PhysicalAddress This) {
       Contract.Requires(This != null);
-      return (string.Join(":", This.GetAddressBytes().Select(b => string.Format("{0:X2}", b))));
+      return string.Join(":", This.GetAddressBytes().Select(b => string.Format("{0:X2}", b)));
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace System.Net.NetworkInformation {
         where ip.Item1.Equals(This)
         select ip.Item2
         ;
-      return (result);
+      return result;
     }
 
     private static class NativeMethods {
@@ -120,7 +120,7 @@ namespace System.Net.NetworkInformation {
 
           // Call PtrToStructure, getting the structure information.
           var row = (NativeMethods.MIB_IPNETROW)Marshal.PtrToStructure(
-            new IntPtr(currentBuffer.ToInt64() + (index * Marshal.SizeOf(typeof(NativeMethods.MIB_IPNETROW)))),
+            new IntPtr(currentBuffer.ToInt64() + index * Marshal.SizeOf(typeof(NativeMethods.MIB_IPNETROW))),
             typeof(NativeMethods.MIB_IPNETROW)
           );
 
