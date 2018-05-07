@@ -339,12 +339,12 @@ namespace System.IO {
     #endregion
 
     #region methods
-    private static string _InternalGetHardLinkTarget(FileInfo This){
-      return(_InternalGetHardLinkTargets(This).FirstOrDefault());
+    private static string _InternalGetHardLinkTarget(FileInfo @this){
+      return _InternalGetHardLinkTargets(@this).FirstOrDefault();
     }
         
-    public static IEnumerable<FileInfo> GetHardLinkTargets(this FileInfo This){
-      return(_InternalGetHardLinkTargets(This).Select(f=>new FileInfo(f)));
+    public static IEnumerable<FileInfo> GetHardLinkTargets(this FileInfo @this){
+      return _InternalGetHardLinkTargets(@this).Select(f=>new FileInfo(f)).Where(f=>f.FullName!=@this.FullName);
     }
 
     /// <summary>
