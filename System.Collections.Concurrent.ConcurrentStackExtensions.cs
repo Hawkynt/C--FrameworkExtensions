@@ -18,7 +18,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-using System.Diagnostics.Contracts;
+
+using System.Collections.Generic;
 using System.Threading;
 
 namespace System.Collections.Concurrent {
@@ -27,13 +28,29 @@ namespace System.Collections.Concurrent {
     /// Pops an item from the stack.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="This">This ConcurrentStack.</param>
+    /// <param name="this">This ConcurrentStack.</param>
     /// <returns>The item that was popped.</returns>
-    public static TItem Pop<TItem>(this ConcurrentStack<TItem> This) {
-      Contract.Requires(This != null);
+    public static TItem Pop<TItem>(this ConcurrentStack<TItem> @this) {
+      if (ReferenceEquals(null, @this))
+        throw new NullReferenceException();
+
       TItem result;
-      while (!This.TryPop(out result)) { Thread.Sleep(0); }
+      while (!@this.TryPop(out result)) { Thread.Sleep(0); }
       return (result);
+    }
+
+    /// <summary>
+    /// Pushes the all given items to the stack.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This ConcurrentStack.</param>
+    /// <param name="items">The items.</param>
+    public static void PushRange<TItem>(this ConcurrentStack<TItem> @this, IEnumerable<TItem> items) {
+      if (ReferenceEquals(null, @this))
+        throw new NullReferenceException();
+
+      foreach (var item in items)
+        @this.Push(item);
     }
   }
 }

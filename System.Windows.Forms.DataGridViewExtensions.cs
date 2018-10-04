@@ -331,6 +331,13 @@ namespace System.Windows.Forms {
   }
 
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewCheckboxColumnAttribute : Attribute {
+    public DataGridViewCheckboxColumnAttribute() {
+
+    }
+  }
+
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewImageColumnAttribute : DataGridViewClickableAttribute {
     public DataGridViewImageColumnAttribute(string imageListPropertyName = null, string onClickMethodName = null, string onDoubleClickMethodName = null, string toolTipTextPropertyName = null) : base(onClickMethodName, onDoubleClickMethodName) {
       this.ImageListPropertyName = imageListPropertyName;
@@ -567,6 +574,7 @@ namespace System.Windows.Forms {
       @this.EnabledChanged -= _EnabledChanged;
       @this.Disposed -= _RemoveDisabledState;
       @this.CellFormatting -= _CellFormatting;
+      @this.CellMouseUp -= _CellMouseUp;
 
       // subscribe to events
       @this.CellPainting += _CellPainting;
@@ -578,6 +586,26 @@ namespace System.Windows.Forms {
       @this.EnabledChanged += _EnabledChanged;
       @this.Disposed += _RemoveDisabledState;
       @this.CellFormatting += _CellFormatting;
+      @this.CellMouseUp += _CellMouseUp;
+    }
+
+    /// <summary>
+    /// Allows single clicking checkbox columns.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellMouseEventArgs" /> instance containing the event data.</param>
+    private static void _CellMouseUp(object sender, DataGridViewCellMouseEventArgs e) {
+      var dgv = sender as DataGridView;
+
+      if (dgv == null)
+        return;
+
+      if (e.RowIndex < 0 || e.ColumnIndex < 0)
+        return;
+
+      var column = dgv.Columns[e.ColumnIndex];
+      if (column is DataGridViewCheckBoxColumn)
+        dgv.EndEdit();
     }
 
     /// <summary>
@@ -707,6 +735,15 @@ namespace System.Windows.Forms {
           column = newColumn;
         }
 
+        // if needed replace DataGridViewColumns with DataGridViewCheckboxColumn
+        var checkboxColumnAttribute = (DataGridViewCheckboxColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewCheckboxColumnAttribute), true).FirstOrDefault();
+        if (checkboxColumnAttribute != null) {
+          var newColumn = _ConstructCheckboxColumn(column, propType == typeof(bool?));
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
       }
@@ -770,6 +807,31 @@ namespace System.Windows.Forms {
         ContextMenuStrip = column.ContextMenuStrip,
         Visible = column.Visible,
         DefaultCellStyle = { NullValue = null }
+      };
+    }
+
+    /// <summary>
+    /// Constructs a checkbox column.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="supportThreeState">if set to <c>true</c> supports three state.</param>
+    /// <returns></returns>
+    private static DataGridViewCheckBoxColumn _ConstructCheckboxColumn(DataGridViewColumn column, bool supportThreeState) {
+      return new DataGridViewCheckBoxColumn {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+        DefaultCellStyle = { NullValue = null },
+        ThreeState = supportThreeState,
+        TrueValue = true,
+        FalseValue = false,
+        IndeterminateValue = null
       };
     }
 
