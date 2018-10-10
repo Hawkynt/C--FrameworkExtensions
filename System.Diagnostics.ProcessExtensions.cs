@@ -81,7 +81,9 @@ namespace System.Diagnostics {
     /// Gets the parent process of the current process.      
     /// </summary>        
     /// <returns>An instance of the Process class.</returns>    
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
 
     /// <summary>       
@@ -89,7 +91,9 @@ namespace System.Diagnostics {
     /// </summary>    
     /// <param name="id">The process id.</param>   
     /// <returns>An instance of the Process class.</returns>   
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
 
     /// <summary>   

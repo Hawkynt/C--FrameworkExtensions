@@ -1558,7 +1558,11 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
+#if NETFX_4
           currentPart.Clear();
+#else
+          currentPart.Length = 0;
+#endif
           pos += delimiter.Length - 1;
         } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
@@ -1632,7 +1636,11 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
+#if NETFX_4
           currentPart.Clear();
+#else
+          currentPart.Length = 0;
+#endif
         } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
         } else if (/*currentPart.Length == 0 &&*/ chr == '"') {

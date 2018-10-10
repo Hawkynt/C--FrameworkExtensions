@@ -22,6 +22,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -133,6 +134,31 @@ namespace System.Windows.Forms {
       public void Dispose() => this._Dispose(true);
     }
 
+    public interface ISuspendedRedrawToken : IDisposable { }
+
+    private class SuspendedRedrawToken : ISuspendedRedrawToken {
+      private readonly IntPtr _targetControl;
+      [DllImport("user32.dll")]
+      private static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+      private const int WM_SETREDRAW = 11;
+
+      public SuspendedRedrawToken(Control targetControl) {
+        SendMessage(this._targetControl = targetControl.Handle, WM_SETREDRAW, false, 0);
+      }
+
+      ~SuspendedRedrawToken() {
+        this._Dispose(false);
+      }
+
+      private void _Dispose(bool isManagedDisposal) {
+        SendMessage(this._targetControl, WM_SETREDRAW, true, 0);
+        if (isManagedDisposal)
+          GC.SuppressFinalize(this);
+      }
+
+      public void Dispose() => this._Dispose(true);
+    }
+
     #endregion
 
     /// <summary>
@@ -148,6 +174,16 @@ namespace System.Windows.Forms {
 #endif
 
       return new SuspendedLayoutToken(@this);
+    }
+
+    public static ISuspendedRedrawToken PauseRedraw(this Control @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+#if NETFX_4
+      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#endif
+
+      return new SuspendedRedrawToken(@this);
     }
 
     /// <summary>

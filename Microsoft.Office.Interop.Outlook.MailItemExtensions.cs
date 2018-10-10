@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Office.Interop.Outlook {
 
   internal static partial class MailItemExtensions {
 
     public static void AddMailToRecipients(this MailItem @this, string[] mailTo) {
-      Contract.Requires(@this != null && mailTo != null && mailTo.Length > 0);
+      if (mailTo == null || mailTo.Length == 0)
+        throw new ArgumentNullException(nameof(mailTo));
+
       var recipients = @this.Recipients;
-      mailTo.ForEach(addr => recipients.Add($"{addr}"));
+      mailTo.Where(addr => !string.IsNullOrWhiteSpace(addr)).ForEach(addr => recipients.Add(addr));
       recipients.ResolveAll();
     }
 

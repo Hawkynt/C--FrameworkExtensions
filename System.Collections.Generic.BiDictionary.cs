@@ -29,7 +29,12 @@ using System.Runtime.Serialization;
 namespace System.Collections.Generic {
   [Serializable]
   [DebuggerDisplay("Count = {Count}"), DebuggerTypeProxy(typeof(DictionaryDebugView<,>))]
-  public class BiDictionary<TFirst, TSecond> : IDictionary<TFirst, TSecond>, IReadOnlyDictionary<TFirst, TSecond>, IDictionary {
+  public class BiDictionary<TFirst, TSecond> :
+    IDictionary<TFirst, TSecond>,
+#if NETFX_45
+    IReadOnlyDictionary<TFirst, TSecond>,
+#endif
+    IDictionary {
     private readonly IDictionary<TFirst, TSecond> _firstToSecond = new Dictionary<TFirst, TSecond>();
     [NonSerialized]
     private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
@@ -88,9 +93,12 @@ namespace System.Collections.Generic {
       => ((IDictionary)this._firstToSecond).Keys
       ;
 
+#if NETFX_45
+
     IEnumerable<TFirst> IReadOnlyDictionary<TFirst, TSecond>.Keys
       => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Keys
       ;
+#endif
 
     public ICollection<TSecond> Values
       => this._firstToSecond.Values
@@ -100,9 +108,11 @@ namespace System.Collections.Generic {
       => ((IDictionary)this._firstToSecond).Values
       ;
 
+#if NETFX_45
     IEnumerable<TSecond> IReadOnlyDictionary<TFirst, TSecond>.Values
       => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Values
       ;
+#endif
 
     public IEnumerator<KeyValuePair<TFirst, TSecond>> GetEnumerator()
       => this._firstToSecond.GetEnumerator()
@@ -199,7 +209,12 @@ namespace System.Collections.Generic {
         this._secondToFirst.Add(item.Value, item.Key);
     }
 
-    private class ReverseDictionary : IDictionary<TSecond, TFirst>, IReadOnlyDictionary<TSecond, TFirst>, IDictionary {
+    private class ReverseDictionary :
+      IDictionary<TSecond, TFirst>,
+#if NETFX_45
+      IReadOnlyDictionary<TSecond, TFirst>, 
+#endif
+      IDictionary {
       private readonly BiDictionary<TFirst, TSecond> _owner;
 
       public ReverseDictionary(BiDictionary<TFirst, TSecond> owner) {
@@ -250,9 +265,11 @@ namespace System.Collections.Generic {
         => ((IDictionary)this._owner._secondToFirst).Keys
         ;
 
+#if NETFX_45
       IEnumerable<TSecond> IReadOnlyDictionary<TSecond, TFirst>.Keys
         => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Keys
         ;
+#endif
 
       public ICollection<TFirst> Values
         => this._owner._secondToFirst.Values
@@ -262,9 +279,11 @@ namespace System.Collections.Generic {
         => ((IDictionary)this._owner._secondToFirst).Values
         ;
 
+#if NETFX_45
       IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values
         => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Values
         ;
+#endif
 
       public IEnumerator<KeyValuePair<TSecond, TFirst>> GetEnumerator()
         => this._owner._secondToFirst.GetEnumerator()

@@ -320,14 +320,14 @@ namespace System {
     /// <summary>
     /// Holds parameters and their type information for ctor calls.
     /// </summary>
-    private class CtorParameter {
-      public CtorParameter(Type type, object value) {
+    private struct TypeWithValue {
+      public TypeWithValue(Type type, object value) {
         this.Type = type;
         this.Value = value;
       }
 
-      public Type Type { get; }
-      public object Value { get; }
+      public readonly Type Type;
+      public readonly object Value;
     }
     #endregion
 
@@ -589,7 +589,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified this is signed; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsSigned(this Type @this) => (@this == TypeSByte) || (@this == TypeShort) || (@this == TypeInt) || (@this == TypeLong) || (@this == TypeFloat) || (@this == TypeDouble) || (@this == TypeDecimal);
+    public static bool IsSigned(this Type @this) => (@this == TypeSByte) || (@this == TypeShort) || (@this == TypeInt) || (@this == TypeLong) || (@this == TypeFloat) || (@this == TypeDouble) || (@this == TypeDecimal) || (@this.IsNullable() && IsSigned(@this.GetGenericArguments()[0]));
 
     /// <summary>
     /// Determines whether the specified this is unsigned.
@@ -807,7 +807,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if both arrays are equal; otherwise, <c>false</c>.
     /// </returns>
-    private static bool _TypeArrayEquals(Type[] array1, ParameterInfo[] array2, bool allowImplicitConversion = false) {
+    private static bool _TypeArrayEquals(TypeWithValue[] array1, ParameterInfo[] array2, bool allowImplicitConversion) {
 
       // if only one of the arrays is null, return false
       if ((array1 == null || array2 == null) && !(array1 == null && array2 == null))
@@ -822,10 +822,17 @@ namespace System {
         return (false);
 
       // compare elements
-      if (allowImplicitConversion)
-        return (array1.Select((t, i) => new { t, i }).All(t => array2[t.i].ParameterType.IsAssignableFrom(t.t)));
+      if (allowImplicitConversion) {
+        for(var i=0;i<array1.Length;++i)
+          if(!array2[i].ParameterType.IsAssignableFrom(array1[i].Type))
+            return false;
+      } else {
+        for(var i=0;i<array1.Length;++i)
+          if(array1[i].Type!=array2[i].ParameterType)
+            return false;
+      }
 
-      return (array1.Select((t, i) => new { t, i }).All(t => array2[t.i].ParameterType == t.t));
+      return true;
     }
 
     /// <summary>
@@ -837,18 +844,11 @@ namespace System {
     /// <returns>
     /// Anew types' instance.
     /// </returns>
-    private static TType _FromConstructor<TType>(Type type, IEnumerable<CtorParameter> parameters) {
+    private static TType _FromConstructor<TType>(Type type, params TypeWithValue[] parameters) {
 #if NETFX_4
       Contract.Requires(type != null && typeof(TType).IsAssignableFrom(type));
-      Contract.Requires(parameters != null);
 #endif
-      var pars = parameters.ToArray();
-
-      var typeOfParams = (
-        from i in pars
-        select i.Type
-        ).ToArray();
-
+      
       var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
       var matchingCtor = (
@@ -856,23 +856,21 @@ namespace System {
         // try to find an exact matching ctor first
         from i in ctors
         let par = i.GetParameters()
-        where par != null && par.Length == typeOfParams.Length && _TypeArrayEquals(typeOfParams, par)
+        where _TypeArrayEquals(parameters, par, false)
         select i
       ).FirstOrDefault() ?? (
 
         // if none found, try to get a ctor that could be filled by implicit parameter conversions
         from i in ctors
         let par = i.GetParameters()
-        where par != null && par.Length == typeOfParams.Length && _TypeArrayEquals(typeOfParams, par, true)
+        where _TypeArrayEquals(parameters, par, true)
         select i
         ).FirstOrDefault();
 
       if (matchingCtor == null)
         throw new NotSupportedException("No matching ctor found");
 
-      return (TType)matchingCtor.Invoke((from i in pars
-                                         select i.Value).ToArray());
-
+      return (TType)matchingCtor.Invoke(parameters.Select(i=>i.Value).ToArray());
     }
 
     <#for(var i=0;i<10;++i){#>
@@ -889,11 +887,11 @@ namespace System {
     <#}#>
 
     /// <returns>The instance of the given type.</returns>
-    public static TType FromConstructor<TType<#=string.Join(string.Empty,Enumerable.Range(0,i+1).Select(j=>", TParam"+j))#>>(this Type @this<#=string.Join(string.Empty,Enumerable.Range(0,i+1).Select(j=>", TParam"+j+" param"+j))#>) => _FromConstructor<TType>(@this, new[] {
-      <#for(var j=0;j<=i;++j){#>new CtorParameter(typeof(TParam<#=j#>), param<#=j#>), 
+    public static TType FromConstructor<TType<#=string.Join(string.Empty,Enumerable.Range(0,i+1).Select(j=>", TParam"+j))#>>(this Type @this<#=string.Join(string.Empty,Enumerable.Range(0,i+1).Select(j=>", TParam"+j+" param"+j))#>) => _FromConstructor<TType>(@this,
+      <#for(var j=0;j<=i;++j){#>new TypeWithValue(typeof(TParam<#=j#>), param<#=j#>)<#=(j<i?",":string.Empty)#>
       <#}#>
 
-    });
+    );
     <#}#>
 
     /// <summary>

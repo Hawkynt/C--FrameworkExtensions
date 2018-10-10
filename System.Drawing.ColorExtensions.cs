@@ -57,8 +57,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of lightning to add.</param>
     /// <returns>A new color.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color Lighten(this Color This, byte amount) => This.Add(amount);
+#if NETFX_45
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Color Lighten(this Color This, byte amount) => This.Add(amount);
 
     /// <summary>
     /// Darkens the given color.
@@ -66,8 +68,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of darkness to add.</param>
     /// <returns>A new color.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color Darken(this Color This, byte amount) => This.Add(-amount);
+#endif
+  public static Color Darken(this Color This, byte amount) => This.Add(-amount);
 
     /// <summary>
     /// Adds a value to the RGB components of a given color.
@@ -75,8 +79,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to add.</param>
     /// <returns>A new color.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color Add(this Color This, int value) => This.Add(value, value, value);
+#endif
+  public static Color Add(this Color This, int value) => This.Add(value, value, value);
 
     /// <summary>
     /// Multiplies the RGB components of a given color by a given value.
@@ -84,8 +90,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to multiply with.</param>
     /// <returns>A new color.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
+#endif
+  public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
 
     /// <summary>
     /// Adds values to the RGB components of a given color.
@@ -124,8 +132,10 @@ namespace System.Drawing {
     /// </summary>
     /// <param name="This">This Color.</param>
     /// <returns>A new color.</returns>
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
+#endif
+  public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
 
     /// <summary>
     /// Cache
@@ -169,14 +179,18 @@ namespace System.Drawing {
       return (table.TryGetValue(This.ToArgb(), out color) ? color.Name : null);
     }
 
-    #region private methods
+#region private methods
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+#endif
     private static byte _ClipToByte(int value) => (byte)(Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value)));
 
+#if NETFX_45
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+#endif
     private static byte _ClipToByte(double value) => _ClipToByte((int)value);
 
-    #endregion
+#endregion
 
   }
 }

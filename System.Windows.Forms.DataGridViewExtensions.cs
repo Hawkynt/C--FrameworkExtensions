@@ -303,20 +303,23 @@ namespace System.Windows.Forms {
     public string OnDoubleClickMethodName { get; }
 
     private static readonly ConcurrentDictionary<object, ThreadTimer> _clickTimers = new ConcurrentDictionary<object, ThreadTimer>();
+
+    private void _HandleClick(object row) {
+      ThreadTimer __;
+      _clickTimers.TryRemove(row, out __);
+      DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
+    }
+
     public void OnClick(object row) {
       if (this.OnDoubleClickMethodName == null)
         DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
 
-      var newTimer = new ThreadTimer(_ => {
-        ThreadTimer __;
-        _clickTimers.TryRemove(row, out __);
-        DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
-      }, null, SystemInformation.DoubleClickTime, int.MaxValue);
-
+      var newTimer = new ThreadTimer(this._HandleClick, row, SystemInformation.DoubleClickTime, int.MaxValue);
       do {
         ThreadTimer timer;
         if (_clickTimers.TryRemove(row, out timer))
           timer.Dispose();
+
       } while (!_clickTimers.TryAdd(row, newTimer));
     }
 
@@ -349,6 +352,7 @@ namespace System.Windows.Forms {
     public Image GetImage(object row, object value) {
       if (ReferenceEquals(value, null))
         return null;
+
       var imageList = DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(row, this.ImageListPropertyName, null, null, null, null);
       if (imageList == null)
         return value as Image;
@@ -890,9 +894,7 @@ namespace System.Windows.Forms {
         return;
 
       var columnPropertyName = column.DataPropertyName;
-
       var rowIndex = e.RowIndex;
-
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
@@ -919,36 +921,29 @@ namespace System.Windows.Forms {
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellPaintingEventArgs" /> instance containing the event data.</param>
     private static void _CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {
       var dgv = sender as DataGridView;
-
       if (dgv == null)
         return;
 
       var columnIndex = e.ColumnIndex;
-
       if (columnIndex < 0 || columnIndex >= dgv.ColumnCount)
         return;
 
       var column = dgv.Columns[e.ColumnIndex];
-
       if (!column.IsDataBound)
         return;
 
       var columnPropertyName = column.DataPropertyName;
-
       var rowIndex = e.RowIndex;
-
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
       var row = dgv.Rows[rowIndex].DataBoundItem;
       var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
-
       if (type == null)
         return;
 
       // apply cell style
       var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
-
       if (attributes != null)
         foreach (var attribute in attributes)
           if (attribute.IsEnabled(row))
@@ -963,12 +958,10 @@ namespace System.Windows.Forms {
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewRowPrePaintEventArgs" /> instance containing the event data.</param>
     private static void _RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e) {
       var dgv = sender as DataGridView;
-
       if (dgv == null)
         return;
 
       var rowIndex = e.RowIndex;
-
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
@@ -989,18 +982,15 @@ namespace System.Windows.Forms {
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewRowPostPaintEventArgs" /> instance containing the event data.</param>
     private static void _RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e) {
       var dgv = sender as DataGridView;
-
       if (dgv == null)
         return;
 
       var rowIndex = e.RowIndex;
-
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
 
       var value = dgv.Rows[rowIndex].DataBoundItem;
       var type = value?.GetType() ?? FindItemType(dgv);
-
       if (type == null)
         return;
 
@@ -1187,6 +1177,18 @@ namespace System.Windows.Forms {
 
     #endregion
 
+    public static void EnableDoubleBuffering(this DataGridView @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      if (SystemInformation.TerminalServerSession)
+        return;
+
+      var dgvType = @this.GetType();
+      var pi = dgvType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+      pi.SetValue(@this, true, null);
+    }
+
     /// <summary>
     /// Finds the type of the items in a bound DataGridView.
     /// </summary>
@@ -1197,14 +1199,13 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
 
       var source = @this.DataSource;
-
       if (source == null)
         return null;
 
       var type = source.GetType();
-
       if (type.HasElementType)
         return type.GetElementType(); /* only handle arrays ... */
+
       if (type.IsGenericType)
         return type.GetGenericArguments()[0]; /* and IEnumerable<T>, etc. */
 
@@ -1220,7 +1221,6 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
 
       var rowCount = @this.RowCount;
-
       if (rowCount <= 0)
         return;
 
@@ -1239,13 +1239,22 @@ namespace System.Windows.Forms {
     public static void CloneColumns(this DataGridView @this, DataGridView target) {
       if (@this == null)
         throw new NullReferenceException();
+
       if (target == null)
         throw new ArgumentNullException(nameof(target));
+
       if (ReferenceEquals(@this, target))
         throw new ArgumentException("Source and target are equal.", nameof(target));
 
-      target.Columns.AddRange((from i in @this.Columns.Cast<DataGridViewColumn>() select (DataGridViewColumn)i.Clone()).ToArray());
+      target.Columns.AddRange(@this.Columns.Cast<DataGridViewColumn>().Select(_CloneColumn).ToArray());
     }
+
+    /// <summary>
+    /// Clones the given column.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <returns></returns>
+    private static DataGridViewColumn _CloneColumn(DataGridViewColumn column) => (DataGridViewColumn)column.Clone();
 
     /// <summary>
     /// Finds the columns that match a certain condition.
@@ -1253,13 +1262,13 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>An enumeration of columns.</returns>
-    public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView @this, Predicate<DataGridViewColumn> predicate) {
+    public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView @this, Func<DataGridViewColumn, bool> predicate) {
       if (@this == null)
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
 
-      return (from i in @this.Columns.Cast<DataGridViewColumn>() where predicate(i) select i);
+      return @this.Columns.Cast<DataGridViewColumn>().Where(predicate);
     }
 
     /// <summary>
@@ -1268,7 +1277,7 @@ namespace System.Windows.Forms {
     /// <param name="this">This DataGridView.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns>The first matching column or <c>null</c>.</returns>
-    public static DataGridViewColumn FindFirstColumn(this DataGridView @this, Predicate<DataGridViewColumn> predicate) {
+    public static DataGridViewColumn FindFirstColumn(this DataGridView @this, Func<DataGridViewColumn, bool> predicate) {
       if (@this == null)
         throw new NullReferenceException();
 
@@ -1307,7 +1316,7 @@ namespace System.Windows.Forms {
       if (@this == null)
         throw new NullReferenceException();
 
-      return (@this.GetSelectedItems().Cast<TItem>());
+      return @this.GetSelectedItems().Cast<TItem>();
     }
 
     /// <summary>
@@ -1331,11 +1340,11 @@ namespace System.Windows.Forms {
     public static void SelectItems<TItem>(this DataGridView @this, IEnumerable<TItem> items) {
       if (@this == null)
         throw new NullReferenceException();
+
       if (items == null)
         throw new ArgumentNullException(nameof(items));
 
       var bucket = new HashSet<TItem>(items);
-
       foreach (var row in @this.Rows.Cast<DataGridViewRow>())
         if (row.DataBoundItem is TItem && bucket.Contains((TItem)row.DataBoundItem))
           row.Selected = true;
@@ -1366,6 +1375,7 @@ namespace System.Windows.Forms {
     public static void RefreshDataSource<TItem, TKey>(this DataGridView @this, IList<TItem> source, Func<TItem, TKey> keyGetter, Action preAction = null, Action postAction = null) {
       if (@this == null)
         throw new NullReferenceException();
+
       if (keyGetter == null)
         throw new ArgumentNullException(nameof(keyGetter));
 
@@ -1430,15 +1440,16 @@ namespace System.Windows.Forms {
     private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType) where TAttribute : Attribute {
       // find all attributes, even in inherited interfaces
 
-      var results = _TYPE_ATTRIBUTE_CACHE.GetOrAdd(baseType, type => {
-        return type
-          .GetCustomAttributes(true)
-          .Concat(baseType.GetInterfaces().SelectMany(p => p.GetCustomAttributes(true)))
-          .ToArray();
-      });
+      var results = _TYPE_ATTRIBUTE_CACHE.GetOrAdd(baseType, type => type
+        .GetCustomAttributes(true)
+        .Concat(baseType.GetInterfaces().SelectMany(_GetInheritedCustomAttributes))
+        .ToArray()
+      );
 
       return results.OfType<TAttribute>();
     }
+
+    private static object[] _GetInheritedCustomAttributes(ICustomAttributeProvider property) => property.GetCustomAttributes(true);
 
     private static readonly ConcurrentDictionary<string, object[]> _PROPERTY_ATTRIBUTE_CACHE = new ConcurrentDictionary<string, object[]>();
 
@@ -1451,27 +1462,35 @@ namespace System.Windows.Forms {
     /// <returns>An enumeration of all matching attributes or <c>null</c>.</returns>
     private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType, string propertyName) where TAttribute : Attribute {
 
-      var results = _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(baseType.FullName + "\0" + propertyName, _ => {
-        var property = baseType.GetProperty(propertyName);
+      var key = baseType.FullName + "\0" + propertyName;
+      object[] results;
+      if (!_PROPERTY_ATTRIBUTE_CACHE.TryGetValue(key, out results)) {
 
-        // ignore missing properties
-        var declaringType = property?.DeclaringType;
+        // only allocate lambda class if key not existing to keep GC pressure small
+        results = _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(
+          key,
+          _ => {
+            var property = baseType.GetProperty(propertyName);
 
-        if (declaringType == null)
-          return null;
+            // ignore missing properties
+            var declaringType = property?.DeclaringType;
 
-        // find all attributes, even in inherited interfaces
-        return property
-            .GetCustomAttributes(true)
-            .Concat(
-              declaringType.GetInterfaces()
-                .Select(intf => intf.GetProperty(propertyName))
-                .Where(p => p != null)
-                .SelectMany(p => p.GetCustomAttributes(true))
-            )
-            .ToArray()
-          ;
-      });
+            if (declaringType == null)
+              return null;
+
+            // find all attributes, even in inherited interfaces
+            return property
+              .GetCustomAttributes(true)
+              .Concat(
+                declaringType.GetInterfaces()
+                  .Select(intf => intf.GetProperty(propertyName))
+                  .Where(p => p != null)
+                  .SelectMany(_GetInheritedCustomAttributes)
+              )
+              .ToArray()
+              ;
+          });
+      }
 
       return results?.OfType<TAttribute>();
     }
@@ -1500,10 +1519,16 @@ namespace System.Windows.Forms {
 
       // find property and ask for bool values
       var type = value.GetType();
-      var property = _PROPERTY_GETTER_CACHE.GetOrAdd(type + "\0" + propertyName, (string _) => {
-        var prop = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
-      });
+      var key = type + "\0" + propertyName;
+
+      Func<object, object> property;
+      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out property))
+
+        // only allocate lambda class if key not existing to keep GC pressure small
+        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, (string _) => {
+          var prop = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+          return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
+        });
 
       // property not found, return default
       if (property == null)

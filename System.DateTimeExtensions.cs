@@ -30,7 +30,10 @@ namespace System {
     /// <param name="this">This DateTime.</param>
     /// <returns>An instance pointing to the last moment of the given day.</returns>
     public static DateTime EndOfDay(this DateTime @this)
-          => @this.AddDays(1).Subtract(@this.TimeOfDay).AddTicks(-1)
+          =>
+            @this.DayOfYear == DateTime.MinValue.DayOfYear && @this.Year == DateTime.MinValue.Year
+            ? @this.AddDays(1).Subtract(@this.TimeOfDay).AddTicks(-1)
+            : @this.Subtract(@this.TimeOfDay).AddTicks(-1).AddDays(1)
           ;
 
     /// <summary>

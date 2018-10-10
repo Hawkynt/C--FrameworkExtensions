@@ -47,6 +47,7 @@
 #>
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 #if NETFX_4
 using System.Diagnostics.Contracts;
 #endif
@@ -808,30 +809,34 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepLastLines(this FileInfo This, int count, Encoding encoding) {
-#if NETFX_4
-      Contract.Requires(This != null);
-      Contract.Requires(encoding != null);
-#endif
+      Debug.Assert(This != null);
+      Debug.Assert(encoding != null);
 
       // TODO: this is not optimal because it reads the whole file in, first
+      
+      const int MINIMUM_ITEMS_BEFORE_SHRINK=65536;
+      const int MINIMUM_FACTOR_BEFORE_SHRINK=2;
+
       FileInfo tempFile = null;
       try {
         tempFile = new FileInfo(Path.GetTempFileName());
 
-        var lineBuffer = new Queue<string>();
+        var lineBuffer = new List<string>();
 
         using (var inputFile = This.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
         using (var inputReader = new StreamReader(inputFile, encoding))
           while (!inputReader.EndOfStream) {
-            lineBuffer.Enqueue(inputReader.ReadLine());
-            if (lineBuffer.Count > count)
-              lineBuffer.Dequeue();
+            lineBuffer.Add(inputReader.ReadLine());
+            if (lineBuffer.Count > count * MINIMUM_FACTOR_BEFORE_SHRINK && lineBuffer.Count > MINIMUM_ITEMS_BEFORE_SHRINK)
+              lineBuffer.RemoveRange(0, lineBuffer.Count - count);
+
           }
 
+        var startIndex=Math.Max(0,lineBuffer.Count-count);
         using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
         using (var outputWriter = new StreamWriter(outputFile, encoding))
-          while (lineBuffer.Count > 0)
-            outputWriter.WriteLine(lineBuffer.Dequeue());
+          while (startIndex<lineBuffer.Count)
+            outputWriter.WriteLine(lineBuffer[startIndex++]);
 
         tempFile.Attributes = This.Attributes;
         tempFile.MoveTo(This.FullName, true);

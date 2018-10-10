@@ -28,6 +28,7 @@
 using System.Runtime.CompilerServices;
 #if !NETFX_45
 using System.Diagnostics;
+using System.Linq;
 #endif
 
 // ReSharper disable UnusedParameter.Global
@@ -185,7 +186,7 @@ namespace System.ComponentModel {
         return (false);
 
       backingField = value;
-<#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
+<#if(!CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
 #if !NETFX_45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
