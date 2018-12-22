@@ -21,6 +21,7 @@
 
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Linq;
 #if NETFX_45
 using System.Runtime.CompilerServices;
 #endif
@@ -76,6 +77,45 @@ namespace System {
 #endif
     [Pure]
     public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
+
+    /// <summary>
+    /// Determines whether the specified char is upper case.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified char is upper case; otherwise, <c>false</c>.
+    /// </returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsUpper(this char @this) => char.IsUpper(@this);
+
+    /// <summary>
+    /// Determines whether the specified char is lower case.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified char is lower case; otherwise, <c>false</c>.
+    /// </returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsLower(this char @this) => char.IsLower(@this);
+
+    /// <summary>
+    /// Determines whether the specified char is a letter.
+    /// </summary>
+    /// <param name="this">This Char.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified char is a letter; otherwise, <c>false</c>.
+    /// </returns>
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [Pure]
+    public static bool IsLetter(this char @this) => char.IsLetter(@this);
 
     /// <summary>
     /// converts the given character to uppercase.

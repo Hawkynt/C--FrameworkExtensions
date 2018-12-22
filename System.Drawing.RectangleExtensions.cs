@@ -41,5 +41,27 @@ namespace System.Drawing {
     public static Rectangle MultiplyBy(this Rectangle This, int xfactor, int yfactor) {
       return (new Rectangle(This.X * xfactor, This.Y * yfactor, This.Width * xfactor, This.Height * yfactor));
     }
+
+    public static bool CollidesWith(this Rectangle @this, Rectangle other) {
+      var top = other.Top;
+      var bottom = other.Bottom;
+      var left = other.Left;
+      var right = other.Right;
+      return @this.CollidesWith(left, top) || @this.CollidesWith(left, bottom) || @this.CollidesWith(right, top) || @this.CollidesWith(right, bottom);
+    }
+
+    public static bool CollidesWith(this Rectangle @this, RectangleF other) {
+      var top = other.Top;
+      var bottom = other.Bottom;
+      var left = other.Left;
+      var right = other.Right;
+      return @this.CollidesWith(left, top) || @this.CollidesWith(left, bottom) || @this.CollidesWith(right, top) || @this.CollidesWith(right, bottom);
+    }
+
+    public static bool CollidesWith(this Rectangle @this, Point other) => CollidesWith(@this, other.X, other.Y);
+    public static bool CollidesWith(this Rectangle @this, int x, int y) => x >= @this.Left && x <= @this.Right && y >= @this.Top && y <= @this.Bottom;
+    public static bool CollidesWith(this Rectangle @this, PointF other) => CollidesWith(@this, other.X, other.Y);
+    public static bool CollidesWith(this Rectangle @this, float x, float y) => x >= @this.Left && x <= @this.Right && y >= @this.Top && y <= @this.Bottom;
+
   }
 }

@@ -523,34 +523,50 @@ namespace System.Windows.Forms {
   [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
   internal sealed class DataGridViewRowStyleAttribute : Attribute {
 
-    public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null) {
+    public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, bool isUnderline = false) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
       this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
       this.ConditionalPropertyName = conditionalPropertyName;
       this.Format = format;
       this.ForeColorPropertyName = foreColorPropertyName;
       this.BackColorPropertyName = backColorPropertyName;
+      var fontStyle = FontStyle.Regular;
+      if (isBold)
+        fontStyle |= FontStyle.Bold;
+      if (isItalic)
+        fontStyle |= FontStyle.Italic;
+      if (isStrikeout)
+        fontStyle |= FontStyle.Strikeout;
+      if (isUnderline)
+        fontStyle |= FontStyle.Underline;
+      this.FontStyle = fontStyle;
     }
 
     public string ConditionalPropertyName { get; }
     public Color? ForeColor { get; }
     public Color? BackColor { get; }
     public string Format { get; }
+    public FontStyle FontStyle { get; }
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
 
-    public void ApplyTo(DataGridViewCellStyle style, object row) {
+    public void ApplyTo(DataGridViewRow row, object rowData) {
+      var style = row.DefaultCellStyle;
 
-      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(rowData, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
       if (color != null)
         style.ForeColor = color.Value;
 
-      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(rowData, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
       if (color != null)
         style.BackColor = color.Value;
 
       if (this.Format != null)
         style.Format = this.Format;
+
+      if (this.FontStyle != FontStyle.Regular)
+        style.Font = new Font(style.Font ?? row.InheritedStyle.Font, this.FontStyle);
+
     }
 
     public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
@@ -571,7 +587,6 @@ namespace System.Windows.Forms {
       // unsubscribe first to avoid duplicate subscriptions
       @this.DataSourceChanged -= _DataSourceChanged;
       @this.CellPainting -= _CellPainting;
-      @this.RowPostPaint -= _RowPostPaint;
       @this.RowPrePaint -= _RowPrePaint;
       @this.CellContentClick -= _CellClick;
       @this.CellContentDoubleClick -= _CellDoubleClick;
@@ -583,7 +598,6 @@ namespace System.Windows.Forms {
       // subscribe to events
       @this.CellPainting += _CellPainting;
       @this.DataSourceChanged += _DataSourceChanged;
-      @this.RowPostPaint += _RowPostPaint;
       @this.RowPrePaint += _RowPrePaint;
       @this.CellContentClick += _CellClick;
       @this.CellContentDoubleClick += _CellDoubleClick;
@@ -893,7 +907,6 @@ namespace System.Windows.Forms {
       if (!column.IsDataBound)
         return;
 
-      var columnPropertyName = column.DataPropertyName;
       var rowIndex = e.RowIndex;
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
@@ -903,6 +916,8 @@ namespace System.Windows.Forms {
 
       if (type == null)
         return;
+
+      var columnPropertyName = column.DataPropertyName;
 
       // find image columns
       var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName).FirstOrDefault();
@@ -932,7 +947,6 @@ namespace System.Windows.Forms {
       if (!column.IsDataBound)
         return;
 
-      var columnPropertyName = column.DataPropertyName;
       var rowIndex = e.RowIndex;
       if (rowIndex < 0 || rowIndex >= dgv.RowCount)
         return;
@@ -941,6 +955,8 @@ namespace System.Windows.Forms {
       var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
       if (type == null)
         return;
+
+      var columnPropertyName = column.DataPropertyName;
 
       // apply cell style
       var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
@@ -968,35 +984,14 @@ namespace System.Windows.Forms {
       var value = dgv.Rows[rowIndex].DataBoundItem;
       var type = value?.GetType() ?? FindItemType(dgv);
 
-      var attributes = _QueryPropertyAttribute<DataGridViewRowStyleAttribute>(type);
-      if (attributes != null)
-        foreach (var attribute in attributes)
+      var rowStyleAttributes = _QueryPropertyAttribute<DataGridViewRowStyleAttribute>(type);
+      if (rowStyleAttributes != null)
+        foreach (var attribute in rowStyleAttributes)
           if (attribute.IsEnabled(value))
-            attribute.ApplyTo(dgv.Rows[rowIndex].DefaultCellStyle, value);
-    }
-
-    /// <summary>
-    /// Fixes column where some cells could be read-only depending on bound object type.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewRowPostPaintEventArgs" /> instance containing the event data.</param>
-    private static void _RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e) {
-      var dgv = sender as DataGridView;
-      if (dgv == null)
-        return;
-
-      var rowIndex = e.RowIndex;
-      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
-        return;
-
-      var value = dgv.Rows[rowIndex].DataBoundItem;
-      var type = value?.GetType() ?? FindItemType(dgv);
-      if (type == null)
-        return;
-
-      var cells = dgv.Rows[rowIndex].Cells;
+            attribute.ApplyTo(dgv.Rows[rowIndex], value);
 
       // repair cell styles (eg readonly cells, disabled button cells)
+      var cells = dgv.Rows[rowIndex].Cells;
       foreach (DataGridViewColumn column in dgv.Columns) {
 
         if (column.DataPropertyName == null)
@@ -1004,11 +999,11 @@ namespace System.Windows.Forms {
 
         var cell = cells[column.Index];
         if (!dgv.ReadOnly)
-          _FixReadOnlyCellStyle(type, column, cell, value);
+          _FixReadOnlyCellStyle(type, column, cell, value, rowStyleAttributes != null);
 
         _FixDisabledButtonCellStyle(type, column, cell, value);
-
       }
+
     }
 
     /// <summary>
@@ -1025,13 +1020,13 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Fxies the cell style for read-only cells in (normally) non-read-only columns.
+    /// Fixes the cell style for read-only cells in (normally) non-read-only columns.
     /// </summary>
     /// <param name="type">The type of the bound item.</param>
     /// <param name="column">The column.</param>
     /// <param name="cell">The cell.</param>
     /// <param name="value">The value.</param>
-    private static void _FixReadOnlyCellStyle(Type type, DataGridViewColumn column, DataGridViewCell cell, object value) {
+    private static void _FixReadOnlyCellStyle(Type type, DataGridViewColumn column, DataGridViewCell cell, object value, bool alreadyStyled) {
       var readOnlyAttribute = _QueryPropertyAttribute<ReadOnlyAttribute>(type, column.DataPropertyName)?.FirstOrDefault();
       if (readOnlyAttribute != null)
         cell.ReadOnly = readOnlyAttribute.IsReadOnly;
@@ -1041,6 +1036,13 @@ namespace System.Windows.Forms {
         cell.ReadOnly = dgvReadOnlyAttribute.IsReadOnly(value);
 
       if (!cell.ReadOnly)
+        return;
+
+      // do not fix style if whole dgv is read-only
+      if (column.DataGridView.ReadOnly)
+        return;
+
+      if (alreadyStyled)
         return;
 
       cell.Style.BackColor = SystemColors.Control;

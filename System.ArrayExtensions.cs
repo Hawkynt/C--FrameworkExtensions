@@ -975,6 +975,45 @@ namespace System {
       return -1;
     }
 
+    /// <summary>
+    /// Rotates all elements in the array one index down.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the array elements</typeparam>
+    /// <param name="this">This array</param>
+    public static void RotateTowardsZero<TItem>(this TItem[] @this) {
+      var first = @this[0];
+      for (var i = 1; i < @this.Length; ++i)
+        @this[i - 1] = @this[i];
+
+      @this[@this.Length - 1] = first;
+    }
+
+    /// <summary>
+    /// Initializes a jagged array with default values.
+    /// </summary>
+    /// <typeparam name="TArray">The type of the array</typeparam>
+    /// <param name="lengths">The lengths in all dimensions</param>
+    /// <returns>The resulting array</returns>
+    public static TArray CreatedJaggedArray<TArray>(params int[] lengths)
+      => (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths)
+    ;
+
+    private static object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
+
+      // create array in current dimension
+      var result = Array.CreateInstance(arrayType, lengths[index]);
+      var elementType = arrayType.GetElementType();
+      if (elementType == null)
+        return result;
+
+      // set next sub-dimension
+      var nextIndex = index + 1;
+      for (var i = 0; i < lengths[index]; ++i)
+        result.SetValue(_InitializeJaggedArray(elementType, nextIndex, lengths), i);
+
+      return result;
+    }
+
     #region high performance linq for arrays
 
 #if NETFX_45
@@ -1676,8 +1715,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] ^= operand[i];
 #if NETFX_4
           return;
         }
@@ -1705,8 +1744,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] ^= operand[i];
 
 #if NETFX_4
           return;
@@ -1736,8 +1775,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] ^= operand[i];
 #if NETFX_4
           return;
         }
@@ -1925,8 +1964,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -1954,8 +1993,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -1984,8 +2023,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -2173,8 +2212,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2202,8 +2241,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2232,8 +2271,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2421,8 +2460,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= 0xffff;
+        for (var i = 0; i < source.Length; i++)
+          source[i] ^= 0xffff;
 #if NETFX_4
           return;
         }
@@ -2450,8 +2489,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] = ~source[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] = ~source[i];
 #if NETFX_4
           return;
         }
@@ -2480,8 +2519,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] = ~source[i];
+        for (var i = 0; i < source.Length; i++)
+          source[i] = ~source[i];
 #if NETFX_4
           return;
         }

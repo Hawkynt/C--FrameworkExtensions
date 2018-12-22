@@ -43,8 +43,8 @@ namespace System.DirectoryServices.AccountManagement {
     public static string GetFullName(this UserPrincipal @this, bool surnameFirst = false) {
       Contract.Requires(@this != null);
       return surnameFirst
-        ? new[] { @this.Surname, new[] { @this.GivenName, @this.MiddleName }.Join(" ", true) }.Join(", ", true)
-        : new[] { @this.GivenName, @this.MiddleName, @this.Surname }.Join(" ", true)
+          ? string.Join(", ", new[] { @this.Surname, string.Join(" ", new[] { @this.GivenName, @this.MiddleName }.Where(t => !string.IsNullOrWhiteSpace(t))) }.Where(t => !string.IsNullOrWhiteSpace(t)))
+          : string.Join(" ", new[] { @this.GivenName, @this.MiddleName, @this.Surname }.Where(t => !string.IsNullOrWhiteSpace(t)))
         ;
     }
 
@@ -54,10 +54,20 @@ namespace System.DirectoryServices.AccountManagement {
     private static readonly ConcurrentDictionary<string, UserPrincipal> _DOMAIN_USER_CACHE = new ConcurrentDictionary<string, UserPrincipal>(StringComparer.OrdinalIgnoreCase);
     public static UserPrincipal FindDomainUserBySamAccountName(string samAccoutName) => FindDomainUserBySamAccountName(samAccoutName, false);
     public static UserPrincipal FindDomainUserBySamAccountName(string samAccoutName, bool allowCached) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(samAccoutName, _FindDomainUserBySamAccountName) : _FindDomainUserBySamAccountName(samAccoutName);
-
+    public static UserPrincipal FindFirstDomainUserByDisplayName(string fullName, bool allowCached = false) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(fullName, _FindDomainUserByDisplayName) : _FindDomainUserByDisplayName(fullName);
     private static UserPrincipal _FindDomainUserBySamAccountName(string samAccoutName) {
       using (var context = new PrincipalContext(ContextType.Domain))
         return UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccoutName);
+
+    }
+    private static UserPrincipal _FindDomainUserByDisplayName(string fullName) {
+      using (var context = new PrincipalContext(ContextType.Domain))
+      using (var searcher = new PrincipalSearcher()) {
+        var user = new UserPrincipal(context) { DisplayName = fullName.Split(',').Select(s => s.Trim()).Join(" ") };
+        searcher.QueryFilter = user;
+        return (UserPrincipal)searcher.FindOne();
+      }
+
     }
 
     #region LDAP stuff 
