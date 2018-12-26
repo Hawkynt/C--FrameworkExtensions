@@ -61,6 +61,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 <# if(this.IsTransactionsReferenced) {#>
 using System.Transactions;
 <#}#>
@@ -1122,9 +1123,195 @@ namespace System.IO {
       return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
+    /// <summary>
+    /// Compares two files for content equality.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="other">The other FileInfo.</param>
+    /// <param name="bufferSize">The number of bytes to compare in each step (Beware of the 85KB-LOH limit).</param>
+    /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
+    public static bool IsContentEqualTo(this FileInfo @this,FileInfo other,int bufferSize=65536){
+      if(@this==null)
+        throw new NullReferenceException();
+      if(other==null)
+        throw new ArgumentNullException(nameof(other));
+      
+      if(@this.FullName==other.FullName)
+        return true;
+
+      var myLength=@this.Length;
+      if(myLength!=other.Length)
+        return false;
+
+      if(myLength==0)
+        return true;
+
+      using (var sourceStream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+      using (var comparisonStream = new FileStream(other.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+
+        // NOTE: we're going to compare buffers (A, A') while reading the next blocks (B, B') in already
+        var sourceBufferA = new byte[bufferSize];
+        var comparisonBufferA = new byte[bufferSize];
+
+        var sourceBufferB = new byte[bufferSize];
+        var comparisonBufferB = new byte[bufferSize];
+
+        long lastBlockSize;
+        var blockCount = Math.DivRem(myLength, bufferSize, out lastBlockSize);
+
+        // if there are bytes left in a partly filled last block - we need one block more
+        if (lastBlockSize != 0)
+          ++blockCount;
+
+        using (var enumerator = _BlockIndexShuffler(blockCount).GetEnumerator()) {
+
+          // NOTE: should never land here, because only 0-byte files would get us an empty enumerator
+          if (!enumerator.MoveNext())
+            return false;
+
+          var blockIndex = enumerator.Current;
+
+          // start reading buffers into A and A'
+          var sourceAsync = _ReadBlockFromStream(sourceStream, blockIndex, sourceBufferA);
+          var comparisonAsync = _ReadBlockFromStream(comparisonStream, blockIndex, comparisonBufferA);
+          int sourceBytes;
+          int comparisonBytes;
+
+          while (enumerator.MoveNext()) {
+            sourceBytes = sourceAsync.Result;
+            comparisonBytes = comparisonAsync.Result;
+
+            // start reading next buffers into B and B'
+            blockIndex = enumerator.Current;
+            sourceAsync = _ReadBlockFromStream(sourceStream, blockIndex, sourceBufferB);
+            comparisonAsync = _ReadBlockFromStream(comparisonStream, blockIndex, comparisonBufferB);
+
+            // compare A and A' and return false upon difference
+            if (sourceBytes!=comparisonBytes || !_AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes))
+              return false;
+
+            // switch A and B and A' and B'
+            _Swap(ref sourceBufferA, ref sourceBufferB);
+            _Swap(ref comparisonBufferA, ref comparisonBufferB);
+          }
+
+          // compare A and A'
+          sourceBytes = sourceAsync.Result;
+          comparisonBytes = comparisonAsync.Result;
+          return sourceBytes==comparisonBytes && _AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes);
+        }
+      }
+    }
+    
+    /// <summary>
+    /// Swaps the content of two byte array pointers.
+    /// </summary>
+    /// <param name="bufferA">The A buffer.</param>
+    /// <param name="bufferB">The B buffer.</param>
+    private static void _Swap(ref byte[] bufferA, ref byte[] bufferB) {
+      var temp = bufferA;
+      bufferA = bufferB;
+      bufferB = temp;
+    }
+
+    /// <summary>
+    /// Starts filling a block from a stream with a given index.
+    /// </summary>
+    /// <param name="stream">The stream.</param>
+    /// <param name="blockIndex">Index of the block.</param>
+    /// <param name="buffer">The buffer to store data at.</param>
+    /// <returns>A Task to wait on</returns>
+    private static Task<int> _ReadBlockFromStream(Stream stream, long blockIndex, byte[] buffer) {
+      var blockSize=buffer.Length;
+      stream.Seek(blockIndex * blockSize, SeekOrigin.Begin);
+      return stream.ReadAsync(buffer, 0, blockSize);
+    }
+
+    /// <summary>
+    /// Creates a stream of block indexes, which are not simply following each other the get better chances to detect differences early.
+    /// NOTE: In our case we alternate between a block from the beginning and a block from the ending of a file.
+    /// </summary>
+    /// <param name="blockCount">The block count.</param>
+    /// <returns>Block indices</returns>
+    private static IEnumerable<long> _BlockIndexShuffler(long blockCount) {
+      var lowerBlockIndex = 0;
+      var upperBlockIndex = blockCount - 1;
+
+      while (lowerBlockIndex < upperBlockIndex) {
+        yield return lowerBlockIndex++;
+        yield return upperBlockIndex--;
+      }
+
+      // if odd number of elements, return the last element (which is in the middle)
+      if ((blockCount & 1) == 1)
+        yield return lowerBlockIndex;
+
+    }
+
+    /// <summary>
+    /// Compares two byte arrays for equality ... hopefully fast.
+    /// </summary>
+    /// <param name="source">The byte array.</param>
+    /// <param name="comparand">The comparand byte array.</param>
+    /// <param name="length">The number of bytes to compare.</param>
+    /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
+<#if(this.IsUnsafeCompile==true){#>
+    private static unsafe bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
+      if(ReferenceEquals(source,comparand))
+        return true;
+
+      if(source==null||comparand==null)
+        return false;
+
+      if(source.Length!=comparand.Length)
+        return false;
+
+      fixed (byte* sourcePin = source, comparisonPin = comparand){
+        var sourcePointer = (long*)sourcePin;
+        var comparisonPointer = (long*)comparisonPin;
+        while (length >= 8) {
+          if (*sourcePointer != *comparisonPointer)
+            return false;
+
+          ++sourcePointer;
+          ++comparisonPointer;
+          length -= 8;
+        }
+
+        var byteSourcePointer = (byte*)sourcePointer;
+        var byteComparisonPointer = (byte*)comparisonPointer;
+        while (length > 0) {
+          if (*byteSourcePointer != *byteComparisonPointer)
+            return false;
+
+          ++byteSourcePointer;
+          ++byteComparisonPointer;
+          --length;
+        }
+      }
+
+      return true;
+    }
+<#}else{#>
+    private static bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
+      if(ReferenceEquals(source,comparand))
+        return true;
+
+      if(source==null||comparand==null)
+        return false;
+
+      if(source.Length!=comparand.Length)
+        return false;
+
+      for(var i=0;i<length;++i)
+        if(source[i]!=comparand[i])
+          return false;
+
+      return true;
+    }
+<#}#>
   }
 }
-
 
 <#+
   IEnumerable<Reference> References{
@@ -1145,7 +1332,7 @@ namespace System.IO {
       if(project==null)
         yield break;
 
-      var vsProject = project.Object as VSProject;
+      var vsProject = project.Object as VSLangProj.VSProject;
       if(vsProject==null)
         yield break;
 
@@ -1172,6 +1359,44 @@ namespace System.IO {
   bool IsDrawingReferenced{
     get {
       return this.IsReferenced("System.Drawing");
+    }
+  }
+
+  bool? IsUnsafeCompile{
+    get{
+      var serviceProvider = (IServiceProvider)this.Host;
+      if(serviceProvider==null)
+        return null;
+
+      var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
+      if(dte==null)
+        return null;
+
+      var document = dte.Solution.FindProjectItem(this.Host.TemplateFile);
+      if(document==null)
+        return null;
+
+      var project = document.ContainingProject;
+      if(project==null)
+        return null;
+      
+      var configManager = project.ConfigurationManager;
+      if(configManager==null)
+        return null;
+
+      var configuration=configManager.ActiveConfiguration;
+      if(configuration==null)
+        return null;
+
+      var props = configuration.Properties;  
+      foreach (EnvDTE.Property prop in props){
+        if(prop.Name!="AllowUnsafeBlocks")
+          continue;
+        
+        return (bool)prop.Value;
+      }
+
+      return null;
     }
   }
 #>
