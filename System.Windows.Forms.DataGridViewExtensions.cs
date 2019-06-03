@@ -578,21 +578,25 @@ namespace System.Windows.Forms {
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
   internal sealed class DataGridViewCellStyleAttribute : Attribute {
 
-    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null) {
+    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, string wrapModePropertyName = null) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
       this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
       this.ConditionalPropertyName = conditionalPropertyName;
       this.Format = format;
+      this.WrapMode = wrapMode;
       this.ForeColorPropertyName = foreColorPropertyName;
       this.BackColorPropertyName = backColorPropertyName;
+      this.WrapModePropertyName = wrapModePropertyName;
     }
 
     public string ConditionalPropertyName { get; }
     public Color? ForeColor { get; }
     public Color? BackColor { get; }
     public string Format { get; }
+    public DataGridViewTriState WrapMode { get; }
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
+    public string WrapModePropertyName { get; }
 
     public void ApplyTo(DataGridViewCellStyle style, object row) {
       var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
@@ -602,6 +606,9 @@ namespace System.Windows.Forms {
       color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
       if (color != null)
         style.BackColor = color.Value;
+
+      var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(row, this.WrapModePropertyName, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet);
+      style.WrapMode = this.WrapMode != DataGridViewTriState.NotSet ? this.WrapMode : wrapMode;
 
       if (this.Format != null)
         style.Format = this.Format;
