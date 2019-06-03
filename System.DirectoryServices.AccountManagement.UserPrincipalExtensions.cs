@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -63,7 +63,7 @@ namespace System.DirectoryServices.AccountManagement {
     private static UserPrincipal _FindDomainUserByDisplayName(string fullName) {
       using (var context = new PrincipalContext(ContextType.Domain))
       using (var searcher = new PrincipalSearcher()) {
-        var user = new UserPrincipal(context) { DisplayName = fullName.Split(',').Select(s => s.Trim()).Join(" ") };
+        var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim())) };
         searcher.QueryFilter = user;
         return (UserPrincipal)searcher.FindOne();
       }
