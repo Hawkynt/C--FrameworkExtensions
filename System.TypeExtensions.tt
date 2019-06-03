@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -495,15 +495,21 @@ namespace System {
     /// Simples the name.
     /// </summary>
     /// <param name="this">This Type.</param>
+    /// <param name="useLanguageTypes">Whether to use language type names like eg int for Int32; defaults to <c>false</c>.</param>
     /// <returns></returns>
-    public static string SimpleName(this Type @this) {
+    public static string SimpleName(this Type @this, bool useLanguageTypes = false) {
 #if NETFX_4
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
 #endif
       var name = @this.FullName;
-      return (name == null ? null : name.Contains(".") ? name.Substring(name.LastIndexOf('.') + 1) : name);
+      if(name == null)
+        return null;
+
+      name = name.Trim();
+      var index = name.LastIndexOf('.');
+      return index < 0 ? name : name.Substring(index + 1);
     }
 
     /// <summary>
@@ -526,7 +532,7 @@ namespace System {
     /// Gets the minimum value of an int type.
     /// </summary>
     /// <param name="this">This Type.</param>
-    /// <returns>The minium value supported for this type.</returns>
+    /// <returns>The minimum value supported for this type.</returns>
     public static decimal GetMinValueForIntType(this Type @this) {
 #if NETFX_4
       Contract.Requires(@this != null);
@@ -556,7 +562,7 @@ namespace System {
     /// Gets the maximum value of an int type.
     /// </summary>
     /// <param name="this">This Type.</param>
-    /// <returns>The maxium value supported for this type.</returns>
+    /// <returns>The maximum value supported for this type.</returns>
     public static decimal GetMaxValueForIntType(this Type @this) {
 #if NETFX_4
       Contract.Requires(@this != null);
@@ -725,27 +731,7 @@ namespace System {
 #endif
       return @this.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
     }
-
-    /// <summary>
-    /// Gets the short name of the type.
-    /// </summary>
-    /// <param name="this">This Type.</param>
-    /// <returns>The part behind the last dot (.).</returns>
-    public static string GetShortTypeName(this Type @this) {
-#if NETFX_4
-      Contract.Requires(@this != null);
-#endif
-      var fullName = @this.FullName;
-#if NETFX_4
-      if (string.IsNullOrWhiteSpace(fullName))
-#else
-      if (fullName == null || fullName.Trim().Length < 1)
-#endif
-        return (fullName);
-
-      return (fullName.Split('.').LastOrDefault());
-    }
-
+        
     /// <summary>
     /// Gets the implemented types of the given interface/base type.
     /// </summary>
