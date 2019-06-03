@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -30,6 +30,38 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Drawing {
   internal static partial class ColorExtensions {
+
+    public static byte GetLuminance(this Color @this) => _CalculateLuminance(@this);
+    public static byte GetChrominanceU(this Color @this) => _CalculateChrominanceU(@this);
+    public static byte GetChrominanceV(this Color @this) => _CalculateChrominanceV(@this);
+
+    public static bool IsLike(this Color @this, Color other, byte luminanceDelta = 48, byte chromaUDelta = 7, byte chromaVDelta = 6) {
+      if (@this == other)
+        return true;
+
+      if (Math.Abs(@this.GetLuminance() - other.GetLuminance()) > luminanceDelta)
+        return false;
+
+      if (Math.Abs(@this.GetChrominanceU() - other.GetChrominanceU()) > chromaUDelta)
+        return false;
+
+      return Math.Abs(@this.GetChrominanceV() - other.GetChrominanceV()) <= chromaVDelta;
+    }
+
+    private static byte _CalculateLuminance(Color @this)
+      => _TopClamp((@this.R * 299 + @this.G * 587 + @this.B * 114) / 1000)
+    ;
+
+    private static byte _CalculateChrominanceU(Color @this)
+      => _FullClamp((127500000 + @this.R * 500000 - @this.G * 418688 - @this.B * 081312) / 1000000)
+    ;
+
+    private static byte _CalculateChrominanceV(Color @this)
+      => _FullClamp((127500000 - @this.R * 168736 - @this.G * 331264 + @this.B * 500000) / 1000000)
+    ;
+
+    private static byte _FullClamp(int value) => value > byte.MaxValue ? byte.MaxValue : value < byte.MinValue ? byte.MinValue : (byte)value;
+    private static byte _TopClamp(int value) => value > byte.MaxValue ? byte.MaxValue : (byte)value;
 
     public static Color BlendWith(this Color @this, Color other, float current, float max) {
       var f = current / max;
