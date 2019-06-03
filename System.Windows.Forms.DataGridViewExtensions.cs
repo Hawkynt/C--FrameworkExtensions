@@ -680,7 +680,6 @@ namespace System.Windows.Forms {
 
       // unsubscribe first to avoid duplicate subscriptions
       @this.DataSourceChanged -= _DataSourceChanged;
-      @this.CellPainting -= _CellPainting;
       @this.RowPrePaint -= _RowPrePaint;
       @this.CellContentClick -= _CellClick;
       @this.CellContentDoubleClick -= _CellDoubleClick;
@@ -690,7 +689,6 @@ namespace System.Windows.Forms {
       @this.CellMouseUp -= _CellMouseUp;
 
       // subscribe to events
-      @this.CellPainting += _CellPainting;
       @this.DataSourceChanged += _DataSourceChanged;
       @this.RowPrePaint += _RowPrePaint;
       @this.CellContentClick += _CellClick;
@@ -1001,39 +999,14 @@ namespace System.Windows.Forms {
         row.Cells[column.Index].ToolTipText = textColumnAttribute.ToolTipText(rowData) ?? string.Empty;
       }
 
-    }
-
-    /// <summary>
-    /// Adjusts styles according to property attributes.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellPaintingEventArgs" /> instance containing the event data.</param>
-    private static void _CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {
-      if (!(sender is DataGridView dgv))
-        return;
-
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
-        return;
-
-      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
-        return;
-
-      if (!row.TryGetRowType(out var type))
-        return;
-
-      var columnPropertyName = column.DataPropertyName;
-
       // apply cell style
       var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
-      if (attributes == null)
-        return;
-
-      var value = row.DataBoundItem;
-      foreach (var attribute in attributes)
-        if (attribute.IsEnabled(value))
-          attribute.ApplyTo(e.CellStyle, row);
+      if (attributes != null)
+        foreach (var attribute in attributes)
+          if (attribute.IsEnabled(row))
+            attribute.ApplyTo(e.CellStyle, row);
     }
-
+    
     /// <summary>
     /// Fixes row styles.
     /// </summary>
