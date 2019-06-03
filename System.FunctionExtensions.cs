@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,6 +22,8 @@
 #if NETFX_4
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Threading;
+
 #endif
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -30,6 +32,36 @@ using System.Diagnostics.Contracts;
 
 namespace System {
   internal static partial class FunctionExtensions {
+
+    /// <summary>
+    /// Tries to invoke the given delegate, retrying on exceptions.
+    /// </summary>
+    /// <param name="this">This Action.</param>
+    /// <param name="repeatCount">The repeat count, until execution is aborted.</param>
+    /// <param name="dueTime">The time to wait between executions; if any.</param>
+    [DebuggerStepThrough]
+    public static TResult RetryOnException<TResult>(this Func<TResult> @this, int repeatCount, TimeSpan? dueTime = null) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (repeatCount <= 0)
+        throw new ArgumentException("Must be > 0", nameof(repeatCount));
+
+      while (--repeatCount >= 0) {
+        try {
+          return @this();
+        } catch (Exception) {
+          if (repeatCount > 0) {
+            if (dueTime != null)
+              Thread.Sleep(dueTime.Value);
+          } else
+            throw;
+        }
+      }
+
+      // INFO: heuristically unreachable
+      return default(TResult);
+    }
+
     /// <summary>
     /// Tries to invoke the given delegate.
     /// </summary>
