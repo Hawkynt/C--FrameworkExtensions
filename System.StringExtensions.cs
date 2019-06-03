@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,6 +19,7 @@
 */
 #endregion
 
+using System.Collections;
 using System.Collections.Generic;
 #if NETFX_4
 using System.Diagnostics.Contracts;
@@ -185,15 +186,27 @@ namespace System {
       string result;
       var length = @this.Length;
       if (length > 0) {
+
+        // allow specifying start from back of the string when negative
         if (start < 0)
           start += length;
+
         if (start < 0)
           start = 0;
+
+        // allow specifying end from back of the string when negative
         if (end <= 0)
           end += length;
+
         var len = end - start;
+
         if (len > length)
           len = length - start;
+
+        // when reading too less chars -> returns empty string
+        if (len <= 0)
+          return string.Empty;
+
 #if NETFX_4
         Contract.Assume(len >= 0);
         Contract.Assume(start + len <= @this.Length);
@@ -452,7 +465,7 @@ namespace System {
       Contract.Requires(fields != null);
 #endif
       var fieldCache = fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, comparer);
-      return @this.FormatWithEx(f => fieldCache.ContainsKey(f) ? fieldCache[f] : null);
+      return FormatWithEx(@this, f => fieldCache.ContainsKey(f) ? fieldCache[f] : null);
     }
 
     /// <summary>
@@ -473,7 +486,7 @@ namespace System {
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
-      return @this.FormatWithEx(fields, comparer);
+      return FormatWithEx(@this, fields, comparer);
     }
 
     /// <summary>
@@ -493,7 +506,47 @@ namespace System {
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
-      return @this.FormatWithEx(fields, null);
+      return FormatWithEx(@this, fields, null);
+    }
+
+    /// <summary>
+    /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <param name="fields">The fields.</param>
+    /// <returns></returns>
+#if NETFX_4
+    [Pure]
+#endif
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string FormatWithEx(this string @this, IDictionary<string, string> fields) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(fields != null);
+#endif
+      return FormatWithEx(@this, f => fields[f]);
+    }
+
+    /// <summary>
+    /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <param name="fields">The fields.</param>
+    /// <returns></returns>
+#if NETFX_4
+    [Pure]
+#endif
+#if NETFX_45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string FormatWithEx(this string @this, Hashtable fields) {
+#if NETFX_4
+      Contract.Requires(@this != null);
+      Contract.Requires(fields != null);
+#endif
+      return FormatWithEx(@this, f => fields[f]);
     }
 
     /// <summary>
