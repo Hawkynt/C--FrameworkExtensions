@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -421,6 +421,7 @@ namespace System.IO {
 
       try {
         @this.Delete(recursive);
+        @this.Refresh();
         return (true);
       } catch (Exception) {
         @this.Refresh();
