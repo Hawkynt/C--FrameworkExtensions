@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -42,7 +42,7 @@ namespace System.Windows.Forms {
 
   #region custom datagridviewcolumns
 
-  public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
+  internal class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
 
     public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
       public DataGridViewProgressBarCell() {
@@ -76,14 +76,14 @@ namespace System.Windows.Forms {
       ) {
 
         var intValue = 0d;
-        if (value is int)
-          intValue = (int)value;
-        if (value is float)
-          intValue = (float)value;
-        if (value is double)
-          intValue = (double)value;
-        if (value is decimal)
-          intValue = (double)(decimal)value;
+        if (value is int i)
+          intValue = i;
+        if (value is float f)
+          intValue = f;
+        if (value is double d)
+          intValue = d;
+        if (value is decimal dec)
+          intValue = (double)dec;
 
         if (intValue < this.Minimum)
           intValue = this.Minimum;
@@ -155,12 +155,10 @@ namespace System.Windows.Forms {
       }
     }
 
-    public DataGridViewProgressBarColumn() {
-      this.CellTemplate = new DataGridViewProgressBarCell();
-    }
+    public DataGridViewProgressBarColumn() => this.CellTemplate = new DataGridViewProgressBarCell();
 
     public override DataGridViewCell CellTemplate {
-      get { return base.CellTemplate; }
+      get => base.CellTemplate;
       set {
         if (value is DataGridViewProgressBarCell)
           base.CellTemplate = value;
@@ -170,7 +168,7 @@ namespace System.Windows.Forms {
     }
 
     public double Maximum {
-      get { return ((DataGridViewProgressBarCell)this.CellTemplate).Maximum; }
+      get => ((DataGridViewProgressBarCell)this.CellTemplate).Maximum;
       set {
         if (this.Maximum == value)
           return;
@@ -189,7 +187,7 @@ namespace System.Windows.Forms {
     }
 
     public double Minimum {
-      get { return ((DataGridViewProgressBarCell)this.CellTemplate).Minimum; }
+      get => ((DataGridViewProgressBarCell)this.CellTemplate).Minimum;
       set {
         if (this.Minimum == value)
           return;
@@ -431,7 +429,7 @@ namespace System.Windows.Forms {
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewColumnWidthAttribute : Attribute {
     public DataGridViewColumnWidthAttribute(char characters) {
-      this.Characters = new string('@', (int)characters);
+      this.Characters = new string('@', characters);
       this.Width = -1;
       this.Mode = DataGridViewAutoSizeColumnMode.None;
     }
@@ -613,16 +611,13 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellMouseEventArgs" /> instance containing the event data.</param>
     private static void _CellMouseUp(object sender, DataGridViewCellMouseEventArgs e) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      if (e.RowIndex < 0 || e.ColumnIndex < 0)
+      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      var column = dgv.Columns[e.ColumnIndex];
-      if (column is DataGridViewCheckBoxColumn)
+      if (column is DataGridViewCheckBoxColumn && e.RowIndex>=0)
         dgv.EndEdit();
     }
 
@@ -632,24 +627,19 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
     private static void _CellDoubleClick(object sender, DataGridViewCellEventArgs e) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      if (e.RowIndex < 0 || e.ColumnIndex < 0)
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
         return;
 
-      var type = FindItemType(dgv);
-
-      if (type == null)
+      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      var column = dgv.Columns[e.ColumnIndex];
-      if (column == null)
+      if (!row.TryGetRowType(out var type))
         return;
 
-      var item = dgv.Rows[e.RowIndex].DataBoundItem;
+      var item = row.DataBoundItem;
       _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnDoubleClick(item);
     }
 
@@ -659,25 +649,19 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
     private static void _CellClick(object sender, DataGridViewCellEventArgs e) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      if (e.RowIndex < 0 || e.ColumnIndex < 0)
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
         return;
 
-      var type = FindItemType(dgv);
-
-      if (type == null)
+      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      var column = dgv.Columns[e.ColumnIndex];
-      if (column == null)
+      if (!row.TryGetRowType(out var type))
         return;
 
-      var item = dgv.Rows[e.RowIndex].DataBoundItem;
-
+      var item = row.DataBoundItem;
       if (column is DataGridViewButtonColumn)
         _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnClick(item);
 
@@ -690,9 +674,7 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="_">The <see cref="System.EventArgs" /> instance containing the event data.</param>
     private static void _DataSourceChanged(object sender, EventArgs _) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
       var type = FindItemType(dgv);
@@ -892,39 +874,27 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellFormattingEventArgs" /> instance containing the event data.</param>
     private static void _CellFormatting(object sender, DataGridViewCellFormattingEventArgs e) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      var columnIndex = e.ColumnIndex;
-
-      if (columnIndex < 0 || columnIndex >= dgv.ColumnCount)
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
         return;
 
-      var column = dgv.Columns[e.ColumnIndex];
-
-      if (!column.IsDataBound)
+      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      var rowIndex = e.RowIndex;
-      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
+      if (!row.TryGetRowType(out var type))
         return;
 
-      var row = dgv.Rows[rowIndex].DataBoundItem;
-      var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
-
-      if (type == null)
-        return;
-
+      var rowData = row.DataBoundItem;
       var columnPropertyName = column.DataPropertyName;
 
       // find image columns
       var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName).FirstOrDefault();
       if (imageColumnAttribute != null) {
-        e.Value = imageColumnAttribute.GetImage(row, e.Value);
+        e.Value = imageColumnAttribute.GetImage(rowData, e.Value);
         e.FormattingApplied = true;
-        dgv.Rows[rowIndex].Cells[columnIndex].ToolTipText = imageColumnAttribute.ToolTipText(row);
+        row.Cells[column.Index].ToolTipText = imageColumnAttribute.ToolTipText(rowData);
       }
 
     }
@@ -935,36 +905,29 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellPaintingEventArgs" /> instance containing the event data.</param>
     private static void _CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {
-      var dgv = sender as DataGridView;
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      var columnIndex = e.ColumnIndex;
-      if (columnIndex < 0 || columnIndex >= dgv.ColumnCount)
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
         return;
 
-      var column = dgv.Columns[e.ColumnIndex];
-      if (!column.IsDataBound)
+      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      var rowIndex = e.RowIndex;
-      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
-        return;
-
-      var row = dgv.Rows[rowIndex].DataBoundItem;
-      var type = rowIndex < 0 ? FindItemType(dgv) : row?.GetType() ?? FindItemType(dgv);
-      if (type == null)
+      if (!row.TryGetRowType(out var type))
         return;
 
       var columnPropertyName = column.DataPropertyName;
 
       // apply cell style
       var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
-      if (attributes != null)
-        foreach (var attribute in attributes)
-          if (attribute.IsEnabled(row))
-            attribute.ApplyTo(e.CellStyle, row);
+      if (attributes == null)
+        return;
 
+      var value = row.DataBoundItem;
+      foreach (var attribute in attributes)
+        if (attribute.IsEnabled(value))
+          attribute.ApplyTo(e.CellStyle, row);
     }
 
     /// <summary>
@@ -973,25 +936,25 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewRowPrePaintEventArgs" /> instance containing the event data.</param>
     private static void _RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e) {
-      var dgv = sender as DataGridView;
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
-      var rowIndex = e.RowIndex;
-      if (rowIndex < 0 || rowIndex >= dgv.RowCount)
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
+        return;
+      
+      if (!row.TryGetRowType(out var type))
         return;
 
-      var value = dgv.Rows[rowIndex].DataBoundItem;
-      var type = value?.GetType() ?? FindItemType(dgv);
+      var value = row.DataBoundItem;
 
       var rowStyleAttributes = _QueryPropertyAttribute<DataGridViewRowStyleAttribute>(type);
       if (rowStyleAttributes != null)
         foreach (var attribute in rowStyleAttributes)
           if (attribute.IsEnabled(value))
-            attribute.ApplyTo(dgv.Rows[rowIndex], value);
+            attribute.ApplyTo(row, value);
 
       // repair cell styles (eg readonly cells, disabled button cells)
-      var cells = dgv.Rows[rowIndex].Cells;
+      var cells = row.Cells;
       foreach (DataGridViewColumn column in dgv.Columns) {
 
         if (column.DataPropertyName == null)
@@ -1047,6 +1010,31 @@ namespace System.Windows.Forms {
 
       cell.Style.BackColor = SystemColors.Control;
       cell.Style.ForeColor = SystemColors.GrayText;
+    }
+
+    private static bool TryGetRow(this DataGridView @this, int rowIndex, out DataGridViewRow row) {
+      if (rowIndex < 0 || rowIndex >= @this.RowCount) {
+        row = null;
+        return false;
+      }
+
+      row = @this.Rows[rowIndex];
+      return true;
+    }
+
+    private static bool TryGetColumn(this DataGridView @this, int columnIndex, out DataGridViewColumn column) {
+      if (columnIndex < 0 || columnIndex >= @this.ColumnCount) {
+        column = null;
+        return false;
+      }
+
+      column = @this.Columns[columnIndex];
+      return column.IsDataBound;
+    }
+
+    private static bool TryGetRowType(this DataGridViewRow @this, out Type rowDataType) {
+      rowDataType = @this.DataBoundItem?.GetType() ?? FindItemType(@this.DataGridView);
+      return rowDataType != null;
     }
 
     #endregion
@@ -1465,8 +1453,7 @@ namespace System.Windows.Forms {
     private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType, string propertyName) where TAttribute : Attribute {
 
       var key = baseType.FullName + "\0" + propertyName;
-      object[] results;
-      if (!_PROPERTY_ATTRIBUTE_CACHE.TryGetValue(key, out results)) {
+      if (!_PROPERTY_ATTRIBUTE_CACHE.TryGetValue(key, out var results)) {
 
         // only allocate lambda class if key not existing to keep GC pressure small
         results = _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(
@@ -1523,11 +1510,10 @@ namespace System.Windows.Forms {
       var type = value.GetType();
       var key = type + "\0" + propertyName;
 
-      Func<object, object> property;
-      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out property))
+      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out var property))
 
         // only allocate lambda class if key not existing to keep GC pressure small
-        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, (string _) => {
+        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, _ => {
           var prop = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
           return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
         });
