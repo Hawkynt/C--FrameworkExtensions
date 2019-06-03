@@ -363,6 +363,29 @@ namespace System.Windows.Forms {
 
   }
 
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewColumnDisplayTextAttribute : Attribute {
+    private string PropertyName { get; }
+    private string ToolTipPropertyName { get; }
+
+    public DataGridViewColumnDisplayTextAttribute(string propertyName, string toolTipPropertyName) {
+      this.PropertyName = propertyName;
+      this.ToolTipPropertyName = toolTipPropertyName;
+    }
+
+    public DataGridViewColumnDisplayTextAttribute(string propertyName) {
+      this.PropertyName = propertyName;
+    }
+
+    public string GetDisplayText(object row) =>
+      DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
+    ;
+
+    public string ToolTipText(object row) =>
+      DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ToolTipPropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
+    ;
+  }
+
   /// <summary>
   /// Allows specifying certain properties as read-only depending on the underlying object instance.
   /// </summary>
@@ -968,6 +991,14 @@ namespace System.Windows.Forms {
         e.Value = imageColumnAttribute.GetImage(rowData, e.Value);
         e.FormattingApplied = true;
         row.Cells[column.Index].ToolTipText = imageColumnAttribute.ToolTipText(rowData);
+      }
+
+      //find columns with DisplayTextAttribute
+      var textColumnAttribute = _QueryPropertyAttribute<DataGridViewColumnDisplayTextAttribute>(type, columnPropertyName).FirstOrDefault();
+      if (textColumnAttribute != null) {
+        e.Value = textColumnAttribute.GetDisplayText(rowData);
+        e.FormattingApplied = true;
+        row.Cells[column.Index].ToolTipText = textColumnAttribute.ToolTipText(rowData) ?? string.Empty;
       }
 
     }
