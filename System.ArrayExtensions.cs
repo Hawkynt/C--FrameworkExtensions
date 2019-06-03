@@ -235,6 +235,7 @@ namespace System {
 
     #endregion
 
+    private const int _INDEX_WHEN_NOT_FOUND = -1;
 
     /// <summary>
     /// Compares two arrays against each other.
@@ -276,7 +277,7 @@ namespace System {
             // last iteration
             while (currentSourceBuffer.Count > 0) {
               var index = currentSourceBuffer.Dequeue();
-              yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], -1, default(TItem));
+              yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default(TItem));
             }
 
             yield return new ChangeSet<TItem>(ChangeType.Equal, i, @this[i], targetIndex, other[targetIndex]);
@@ -285,7 +286,7 @@ namespace System {
               var index = currentSourceBuffer.Dequeue();
               yield return new ChangeSet<TItem>(ChangeType.Changed, index, @this[index], targetIndex, other[targetIndex]);
             } else
-              yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, other[targetIndex]);
+              yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default(TItem), targetIndex, other[targetIndex]);
           }
           ++targetIndex;
         }
@@ -299,12 +300,12 @@ namespace System {
           ++targetIndex;
         } else {
           var index = currentSourceBuffer.Dequeue();
-          yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], -1, default(TItem));
+          yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default(TItem));
         }
       }
 
       while (targetIndex < targetLen) {
-        yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, other[targetIndex]);
+        yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default(TItem), targetIndex, other[targetIndex]);
         ++targetIndex;
       }
     }
@@ -314,7 +315,7 @@ namespace System {
         if (ReferenceEquals(values[i], item) || comparer.Equals(values[i], item))
           return i;
 
-      return -1;
+      return _INDEX_WHEN_NOT_FOUND;
     }
 
     /// <summary>
@@ -907,7 +908,19 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-    public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+    public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) => IndexOfOrDefault<TItem>(@this, predicate, _INDEX_WHEN_NOT_FOUND);
+
+    /// <summary>
+    /// Gets the index of the first item matching the predicate, if any or the given default value.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="predicate">The predicate.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    /// The index of the item in the array or the default value.
+    /// </returns>
+    public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, int defaultValue) {
       if (@this == null)
         throw new NullReferenceException();
       if (predicate == null)
@@ -920,7 +933,59 @@ namespace System {
         if (predicate(@this[i]))
           return i;
 
-      return -1;
+      return defaultValue;
+    }
+
+    /// <summary>
+    /// Gets the index of the first item matching the predicate, if any or the given default value.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="predicate">The predicate.</param>
+    /// <param name="defaultValueFactory">The function that generates the default value.</param>
+    /// <returns>
+    /// The index of the item in the array or the default value.
+    /// </returns>
+    public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<int> defaultValueFactory) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      for (var i = 0; i < @this.Length; ++i)
+        if (predicate(@this[i]))
+          return i;
+
+      return defaultValueFactory();
+    }
+
+    /// <summary>
+    /// Gets the index of the first item matching the predicate, if any or the given default value.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This Array.</param>
+    /// <param name="predicate">The predicate.</param>
+    /// <param name="defaultValueFactory">The function that generates the default value.</param>
+    /// <returns>
+    /// The index of the item in the array or the default value.
+    /// </returns>
+    public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<TItem[], int> defaultValueFactory) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (predicate == null)
+        throw new ArgumentNullException(nameof(predicate));
+#if NETFX_4
+      Contract.EndContractBlock();
+#endif
+
+      for (var i = 0; i < @this.Length; ++i)
+        if (predicate(@this[i]))
+          return i;
+
+      return defaultValueFactory(@this);
     }
 
     /// <summary>
@@ -950,7 +1015,7 @@ namespace System {
         if (comparer.Equals(value, @this[i]))
           return i;
 
-      return -1;
+      return _INDEX_WHEN_NOT_FOUND;
     }
 
     /// <summary>
@@ -972,7 +1037,7 @@ namespace System {
         if (predicate(@this.GetValue(i)))
           return i;
 
-      return -1;
+      return _INDEX_WHEN_NOT_FOUND;
     }
 
     /// <summary>
@@ -1278,8 +1343,8 @@ namespace System {
 
       for (var i = 0; i < @this.LongLength; ++i) {
         var item = @this.GetValue(i);
-        if (item is TResult)
-          yield return (TResult)item;
+        if (item is TResult result)
+          yield return result;
       }
     }
 
@@ -1715,8 +1780,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] ^= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
 #if NETFX_4
           return;
         }
@@ -1744,8 +1809,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] ^= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
 
 #if NETFX_4
           return;
@@ -1775,8 +1840,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] ^= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= operand[i];
 #if NETFX_4
           return;
         }
@@ -1964,8 +2029,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] &= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -1993,8 +2058,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] &= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -2023,8 +2088,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] &= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] &= operand[i];
 #if NETFX_4
           return;
         }
@@ -2212,8 +2277,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] |= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2241,8 +2306,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] |= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2271,8 +2336,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] |= operand[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] |= operand[i];
 #if NETFX_4
           return;
         }
@@ -2460,8 +2525,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] ^= 0xffff;
+          for (var i = 0; i < source.Length; i++)
+            source[i] ^= 0xffff;
 #if NETFX_4
           return;
         }
@@ -2489,8 +2554,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] = ~source[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] = ~source[i];
 #if NETFX_4
           return;
         }
@@ -2519,8 +2584,8 @@ namespace System {
 #if NETFX_4
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
-        for (var i = 0; i < source.Length; i++)
-          source[i] = ~source[i];
+          for (var i = 0; i < source.Length; i++)
+            source[i] = ~source[i];
 #if NETFX_4
           return;
         }
