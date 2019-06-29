@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,6 +19,7 @@
 */
 #endregion
 
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -181,5 +182,8 @@ namespace System.Diagnostics
             value.Dispose();
             return result;
         }
+
+        public static FileInfo File(this ProcessStartInfo @this)=>string.IsNullOrWhiteSpace(@this.FileName)?null: new FileInfo(@this.FileName);
+
     }
 }
