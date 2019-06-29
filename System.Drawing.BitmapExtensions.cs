@@ -1,5 +1,5 @@
 
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -27,9 +27,10 @@ namespace System.Drawing {
 
     public interface IBitmapLocker : IDisposable {
       BitmapData BitmapData { get; }
+      Color this[int x, int y] { get; set; }
+      void DrawRectangle(Rectangle rect, Color c);
     }
-
-
+    
     private class BitmapLocker : IBitmapLocker {
       public BitmapData BitmapData { get; }
       private readonly Bitmap _bitmap;
@@ -53,6 +54,43 @@ namespace System.Drawing {
         if (this._bitmap != null && this.BitmapData != null)
           this._bitmap.UnlockBits(this.BitmapData);
       }
+
+      public unsafe Color this[int x, int y] {
+        get {
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          var stride = data.Stride;
+          var offset = stride * y + x * 4;
+          var r = ((byte*)pointer)[offset++];
+          var g = ((byte*)pointer)[offset++];
+          var b = ((byte*)pointer)[offset++];
+          var a = ((byte*)pointer)[offset++];
+          return Color.FromArgb(a, r, g, b);
+        }
+        set {
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          var stride = data.Stride;
+          var offset = stride * y + x * 4;
+          ((byte*)pointer)[offset++]=value.R;
+          ((byte*)pointer)[offset++] = value.G;
+          ((byte*)pointer)[offset++] = value.B;
+          ((byte*)pointer)[offset++] = value.A;
+        }
+      }
+
+      public void DrawRectangle(Rectangle rect, Color c) {
+        for (var x = rect.Left; x <= rect.Right; ++x) {
+          this[x, rect.Top] = c;
+          this[x, rect.Bottom] = c;
+        }
+
+        for (var y = rect.Top+1; y <= rect.Bottom-1; ++y) {
+          this[rect.Left,y] = c;
+          this[rect.Right,y] = c;
+        }
+      }
+
     }
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
@@ -86,6 +124,14 @@ namespace System.Drawing {
     public static IBitmapLocker Lock(this Bitmap @this, ImageLockMode flags, PixelFormat format)
       => Lock(@this, new Rectangle(Point.Empty, @this.Size), flags, format)
     ;
+
+    public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
+      var result = new Bitmap(@this.Width, @this.Height, format);
+      using (var g = Graphics.FromImage(result))
+        g.DrawImage(@this, Point.Empty);
+
+      return result;
+    }
 
   }
 }
