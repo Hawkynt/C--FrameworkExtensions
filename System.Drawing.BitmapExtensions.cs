@@ -20,6 +20,7 @@
 */
 #endregion
 
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace System.Drawing {
@@ -129,6 +130,20 @@ namespace System.Drawing {
       var result = new Bitmap(@this.Width, @this.Height, format);
       using (var g = Graphics.FromImage(result))
         g.DrawImage(@this, Point.Empty);
+
+      return result;
+    }
+
+    public static Bitmap Crop(this Bitmap @this, Rectangle rect, PixelFormat format = PixelFormat.DontCare) {
+      rect=Rectangle.FromLTRB(rect.Left,rect.Top,Math.Min(rect.Right,@this.Width),Math.Min(rect.Bottom,@this.Height));
+      
+      var result = new Bitmap(rect.Width, rect.Height, format==PixelFormat.DontCare?@this.PixelFormat:format);
+      using (var g = Graphics.FromImage(result)) {
+        g.CompositingMode = CompositingMode.SourceCopy;
+        g.CompositingQuality = CompositingQuality.HighSpeed;
+        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+        g.DrawImage(@this, new Rectangle(Point.Empty, new Size(rect.Width, rect.Height)), rect, GraphicsUnit.Pixel);
+      }
 
       return result;
     }
