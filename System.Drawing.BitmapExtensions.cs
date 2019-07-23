@@ -22,9 +22,24 @@
 
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace System.Drawing {
   internal static partial class BitmapExtensions {
+
+
+#if UNSAFE
+    private static partial class NativeMethods {
+
+      [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl)]
+      private static extern unsafe byte* memcpy(byte* dst, byte* src, int count);
+
+      public static unsafe void MemoryCopy(IntPtr source, IntPtr target, int count)
+        => memcpy((byte*) source, (byte*) target, count)
+      ;
+
+    }
+#endif
 
     public interface IBitmapLocker : IDisposable {
       BitmapData BitmapData { get; }
@@ -127,9 +142,85 @@ namespace System.Drawing {
     ;
 
     public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
+      if (@this == null)
+        throw new ArgumentNullException(nameof(@this));
+      
+      if (@this.PixelFormat == format)
+        return (Bitmap) @this.Clone();
+
       var result = new Bitmap(@this.Width, @this.Height, format);
-      using (var g = Graphics.FromImage(result))
+      var sourceFormat = @this.PixelFormat;
+#if UNSAFE
+      if (sourceFormat == PixelFormat.Format24bppRgb && format == PixelFormat.Format32bppArgb) {
+        var rect = new Rectangle(0, 0, @this.Width, @this.Height);
+        using (var sourceData = Lock(@this, rect, ImageLockMode.ReadOnly, sourceFormat))
+        using (var targetData = Lock(result, rect, ImageLockMode.WriteOnly, format))
+          unsafe {
+            var source = (byte*) sourceData.BitmapData.Scan0;
+            var target = (byte*) targetData.BitmapData.Scan0;
+            var sourceStride = sourceData.BitmapData.Stride;
+            var targetStride = targetData.BitmapData.Stride;
+            for (var y = @this.Height; y > 0; --y) {
+              var sourceRow = source;
+              var targetRow = target;
+              for (var x = @this.Width; x > 0; --x) {
+                var b = sourceRow[0];
+                var g = sourceRow[1];
+                var r = sourceRow[2];
+                targetRow[0] = b;
+                targetRow[1] = g;
+                targetRow[2] = r;
+                targetRow[3] = 0xff;
+
+                sourceRow += 3;
+                targetRow += 4;
+              }
+
+              source += sourceStride;
+              target += targetStride;
+            }
+          }
+
+        return result;
+      }
+      if (sourceFormat == PixelFormat.Format32bppArgb && format == PixelFormat.Format24bppRgb) {
+        var rect = new Rectangle(0, 0, @this.Width, @this.Height);
+        using (var sourceData = Lock(@this, rect, ImageLockMode.ReadOnly, sourceFormat))
+        using (var targetData = Lock(result, rect, ImageLockMode.WriteOnly, format))
+          unsafe {
+            var source = (byte*)sourceData.BitmapData.Scan0;
+            var target = (byte*)targetData.BitmapData.Scan0;
+            var sourceStride = sourceData.BitmapData.Stride;
+            var targetStride = targetData.BitmapData.Stride;
+            for (var y = @this.Height; y > 0; --y) {
+              var sourceRow = source;
+              var targetRow = target;
+              for (var x = @this.Width; x > 0; --x) {
+                var b = sourceRow[0];
+                var g = sourceRow[1];
+                var r = sourceRow[2];
+                targetRow[0] = b;
+                targetRow[1] = g;
+                targetRow[2] = r;
+
+                sourceRow += 4;
+                targetRow += 3;
+              }
+
+              source += sourceStride;
+              target += targetStride;
+            }
+          }
+
+        return result;
+      }
+#endif
+
+      using (var g = Graphics.FromImage(result)) {
+        g.CompositingMode = CompositingMode.SourceCopy;
+        g.InterpolationMode = InterpolationMode.NearestNeighbor;
         g.DrawImage(@this, Point.Empty);
+      }
 
       return result;
     }
