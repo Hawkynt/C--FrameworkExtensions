@@ -29,13 +29,14 @@ namespace System.Drawing {
 
 
 #if UNSAFE
+    // ReSharper disable once PartialTypeWithSinglePart
     private static partial class NativeMethods {
 
       [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl)]
       private static extern unsafe byte* memcpy(byte* dst, byte* src, int count);
 
       public static unsafe void MemoryCopy(IntPtr source, IntPtr target, int count)
-        => memcpy((byte*) source, (byte*) target, count)
+        => memcpy((byte*) target, (byte*) source, count)
       ;
 
     }
@@ -183,6 +184,7 @@ namespace System.Drawing {
 
         return result;
       }
+
       if (sourceFormat == PixelFormat.Format32bppArgb && format == PixelFormat.Format24bppRgb) {
         var rect = new Rectangle(0, 0, @this.Width, @this.Height);
         using (var sourceData = Lock(@this, rect, ImageLockMode.ReadOnly, sourceFormat))
