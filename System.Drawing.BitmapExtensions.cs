@@ -165,11 +165,11 @@ namespace System.Drawing {
               var sourceRow = source;
               var targetRow = target;
               for (var x = @this.Width; x > 0; --x) {
-                var b = sourceRow[0];
-                var g = sourceRow[1];
+
+                var bg = *((short*) sourceRow);
                 var r = sourceRow[2];
-                targetRow[0] = b;
-                targetRow[1] = g;
+
+                *((short*) targetRow) = bg;
                 targetRow[2] = r;
                 targetRow[3] = 0xff;
 
@@ -198,11 +198,10 @@ namespace System.Drawing {
               var sourceRow = source;
               var targetRow = target;
               for (var x = @this.Width; x > 0; --x) {
-                var b = sourceRow[0];
-                var g = sourceRow[1];
+                var bg = *((short*)sourceRow);
                 var r = sourceRow[2];
-                targetRow[0] = b;
-                targetRow[1] = g;
+
+                *((short*)targetRow) = bg;
                 targetRow[2] = r;
 
                 sourceRow += 4;
