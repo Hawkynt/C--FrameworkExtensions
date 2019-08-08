@@ -713,24 +713,31 @@ namespace System {
       if (string.IsNullOrEmpty(This) || replacements == null)
         return This;
 
-      var mask = This.Replace("{", "{{").Replace("}", "}}");
-      var parameters = new List<object>();
+      var list = replacements.OrderByDescending(kvp => kvp.Key.Length).ToArray();
+      var length = This.Length;
+      var result=new StringBuilder(length);
+      for (var i = 0; i < length; ++i) {
+        var found = false;
+        foreach (var kvp in list) {
+          var keyLength = kvp.Key.Length;
+          if (i + keyLength > length)
+            continue;
 
-      // order by length desc to avoid conflicts
-      foreach (var keyValuePair in replacements.OrderByDescending(p => p.Key.Length)) {
-        if (string.IsNullOrEmpty(keyValuePair.Key))
-          continue;
-        var index = parameters.Count;
-        var oldValue = keyValuePair.Key.Replace("{", "{{").Replace("}", "}}");
-#if NETFX_4
-        Contract.Assume(mask.Length > 0);
-        Contract.Assume(oldValue.Length > 0);
-#endif
-        mask = mask.Replace(oldValue, "{" + index + "}");
-        parameters.Add(keyValuePair.Value);
+          var part = This.Substring(i, keyLength);
+          if (kvp.Key != part)
+            continue;
+
+          result.Append(kvp.Value);
+          found = true;
+          break;
+        }
+
+        if (!found)
+          result.Append(This[i]);
+
       }
-      var result = string.Format(mask, parameters.ToArray());
-      return result;
+
+      return result.ToString();
     }
 
     /// <summary>
