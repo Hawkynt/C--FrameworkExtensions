@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,17 +22,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.IO.Compression;
+#if NET45
 using System.Runtime.CompilerServices;
+#endif
 using System.Security.Cryptography;
 using System.Text;
-#if NETFX_4
+#if NET40
 using System.Threading.Tasks;
 #endif
+using System.Runtime.InteropServices;
+#if !UNSAFE
+using System.Security.Permissions;
+#endif
+using Block2 = System.UInt16;
+using Block4 = System.UInt32;
+using SBlock4 = System.Int32;
+using Block8 = System.UInt64;
+using SBlock8 = System.Int64;
 
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -79,7 +90,6 @@ namespace System {
       #endregion
     }
 
-
     [DebuggerDisplay("{" + nameof(ToString) + "()}")]
     internal class ReadOnlyArraySlice<TItem> : IEnumerable<TItem> {
 
@@ -87,7 +97,7 @@ namespace System {
       protected readonly int _start;
 
       public ReadOnlyArraySlice(TItem[] source, int start, int length) {
-#if NETFX_4
+#if NET40
         Contract.Requires(source != null);
 #endif
         if (start + length > source.Length)
@@ -116,7 +126,7 @@ namespace System {
       /// <returns>The item at the given index.</returns>
       public TItem this[int index] {
         get {
-#if NETFX_4
+#if NET40
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
@@ -187,7 +197,7 @@ namespace System {
     internal class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
       public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
-#if NETFX_4
+#if NET40
         Contract.Requires(source != null);
 #endif
       }
@@ -202,13 +212,13 @@ namespace System {
       /// <returns>The item at the given index</returns>
       public new TItem this[int index] {
         get {
-#if NETFX_4
+#if NET40
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
         }
         set {
-#if NETFX_4
+#if NET40
           Contract.Requires(index < this.Length);
 #endif
           this._source[index + this._start] = value;
@@ -233,6 +243,106 @@ namespace System {
       }
     }
 
+#if UNSAFE
+
+    [StructLayout(LayoutKind.Sequential, Size = 32)]
+    private struct Block32 {
+      public Block4 a;
+      public Block4 b;
+      public Block4 c;
+      public Block4 d;
+      public Block4 e;
+      public Block4 f;
+      public Block4 g;
+      public Block4 h;
+
+      public Block32(Block4 u) {
+        this.a = u;
+        this.b = u;
+        this.c = u;
+        this.d = u;
+        this.e = u;
+        this.f = u;
+        this.g = u;
+        this.h = u;
+      }
+
+      public Block32(Block2 u) : this((Block4)u << 16 | u) { }
+      public Block32(byte u) : this((Block4)u << 24 | (Block4)u << 16 | (Block4)u << 8 | u) { }
+
+    }
+
+    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    private struct Block64 {
+      public Block8 a;
+      public Block8 b;
+      public Block8 c;
+      public Block8 d;
+      public Block8 e;
+      public Block8 f;
+      public Block8 g;
+      public Block8 h;
+
+      public Block64(Block8 u) {
+        this.a = u;
+        this.b = u;
+        this.c = u;
+        this.d = u;
+        this.e = u;
+        this.f = u;
+        this.g = u;
+        this.h = u;
+      }
+
+      public Block64(Block4 u) : this(((Block8)u << 32) | u) { }
+      public Block64(Block2 u) : this(((Block8)u << 48) | ((Block8)u << 32) | ((Block8)u << 16) | u) { }
+      public Block64(byte u) : this(((Block8)u << 56) | ((Block8)u << 48) | ((Block8)u << 40) | ((Block8)u << 32) | ((Block8)u << 24) | ((Block8)u << 16) | ((Block8)u << 8) | u) { }
+    }
+
+#else
+
+    [SecurityPermission(SecurityAction.InheritanceDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
+    private sealed class DisposableGCHandle<TValue> : IDisposable where TValue : class {
+      private GCHandle handle;
+
+      public DisposableGCHandle(TValue value, GCHandleType type) => this.handle = GCHandle.Alloc(value, type);
+      public IntPtr AddrOfPinnedObject() => this.handle.AddrOfPinnedObject();
+      private void _Free() => this.handle.Free();
+
+      #region Properties
+
+      public TValue Target {
+        get => (TValue)this.handle.Target;
+        set => this.handle.Target = value;
+      }
+
+      private bool _IsAllocated => this.handle.IsAllocated;
+
+      #endregion
+
+      #region DisposePattern
+
+      private void Dispose(bool disposing) {
+        if (disposing && this._IsAllocated)
+          this._Free();
+
+        GC.SuppressFinalize(this);
+      }
+
+      public void Dispose() => this.Dispose(true);
+      ~DisposableGCHandle() => this.Dispose(false);
+
+      #endregion
+
+    }
+
+    private static class DisposableGCHandle {
+      public static DisposableGCHandle<TValue> Pin<TValue>(TValue value) where TValue : class => new DisposableGCHandle<TValue>(value, GCHandleType.Pinned);
+
+    }
+
+#endif
+
     #endregion
 
     private const int _INDEX_WHEN_NOT_FOUND = -1;
@@ -252,7 +362,7 @@ namespace System {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -324,7 +434,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This Enumeration.</param>
     /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -338,7 +448,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -359,7 +469,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -376,7 +486,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -395,7 +505,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -420,7 +530,7 @@ namespace System {
       if (@this.Length == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -438,7 +548,7 @@ namespace System {
     /// <param name="this">This Array.</param>
     /// <param name="index">The index.</param>
     /// <returns></returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -452,7 +562,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -466,7 +576,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -480,7 +590,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -518,7 +628,7 @@ namespace System {
     public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -553,7 +663,7 @@ namespace System {
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
     public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(startIndex + count <= @this.Length);
       Contract.Requires(startIndex >= 0);
@@ -570,7 +680,7 @@ namespace System {
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
     public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var value = @this[firstElementIndex];
@@ -583,7 +693,7 @@ namespace System {
     /// <typeparam name="TItem">Type of elements in the array.</typeparam>
     /// <param name="this">This array.</param>
     public static void Shuffle<TItem>(this TItem[] @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var index = @this.Length;
@@ -598,7 +708,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <returns>A sorted array copy.</returns>
     public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var result = new TItem[@this.Length];
@@ -612,7 +722,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements.</typeparam>
     /// <param name="this">This array.</param>
     public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       if (@this.Length > 0)
@@ -652,7 +762,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -667,7 +777,7 @@ namespace System {
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
     public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(converter != null);
 #endif
@@ -683,20 +793,20 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) => Array.ForEach(@this, action);
 
-#if NETFX_4
+#if NET40
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -715,7 +825,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -733,7 +843,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -751,7 +861,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -769,7 +879,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -787,7 +897,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -801,7 +911,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) => Array.Exists(@this, predicate);
@@ -812,13 +922,13 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <returns>An array where all values are inverted.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static TItem[] Reverse<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -839,10 +949,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Contains<TItem>(this TItem[] @this, TItem value) => @this.IndexOf(value) >= 0;
@@ -855,13 +965,13 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static bool Contains(this Array @this, object value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -878,7 +988,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Array.</param>
     /// <returns>An array of objects holding the contents.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static object[] ToArray(this Array @this) {
@@ -886,7 +996,7 @@ namespace System {
         throw new NullReferenceException();
       if (@this.Rank < 1)
         throw new ArgumentException("Rank must be > 0", nameof(@this));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -925,7 +1035,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -951,7 +1061,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -977,7 +1087,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -998,13 +1108,13 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1030,7 +1140,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
@@ -1081,7 +1191,7 @@ namespace System {
 
     #region high performance linq for arrays
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1093,7 +1203,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1107,7 +1217,7 @@ namespace System {
     public static TItem First<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1121,7 +1231,7 @@ namespace System {
     public static TItem Last<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1138,7 +1248,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1156,7 +1266,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1168,7 +1278,7 @@ namespace System {
       throw new InvalidOperationException("No Elements!");
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1178,7 +1288,7 @@ namespace System {
     public static TItem LastOrDefault<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1192,7 +1302,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1210,7 +1320,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1231,7 +1341,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1251,7 +1361,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1262,13 +1372,13 @@ namespace System {
       return result;
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static int Count<TItem>(this TItem[] @this) => @this.Length;
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1280,7 +1390,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1301,7 +1411,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1320,7 +1430,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1337,7 +1447,7 @@ namespace System {
     public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1354,7 +1464,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1369,7 +1479,7 @@ namespace System {
     public static IEnumerable<object> Reverse(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1383,7 +1493,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1398,7 +1508,7 @@ namespace System {
     public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1414,7 +1524,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1429,7 +1539,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1444,7 +1554,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1459,7 +1569,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1474,7 +1584,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1492,7 +1602,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1510,7 +1620,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1526,34 +1636,502 @@ namespace System {
 
     #region byte-array specials
 
+    #region comparison
+
+#if UNSAFE
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceUnsafe(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
+      fixed (byte* sourceFixedPointer = &source[sourceOffset])
+      fixed (byte* targetFixedPointer = &target[targetOffset]) {
+        var sourcePointer = sourceFixedPointer;
+        var targetPointer = targetFixedPointer;
+
+        const int THRESHOLD = 4;
+
+        { // try 2048-Bit
+          var localCount = count >> 8;
+          if (localCount >= THRESHOLD) {
+            var result = _SequenceEqual256Bytewise(ref sourcePointer, ref targetPointer, localCount);
+            if (!result)
+              return false;
+
+            count &= 0b11111111;
+            if (count == 0)
+              return true;
+          }
+        }
+
+#if !PLATFORM_X86
+        { // try 512-Bit
+          var localCount = count >> 6;
+          if (localCount >= THRESHOLD) {
+            var result = _SequenceEqual64Bytewise(ref sourcePointer, ref targetPointer, localCount);
+            if (!result)
+              return false;
+
+            count &= 0b111111;
+            if (count == 0)
+              return true;
+          }
+        }
+#endif
+
+        { // try 256-Bit
+          var localCount = count >> 5;
+          if (localCount >= THRESHOLD) {
+            var result = _SequenceEqual32Bytewise(ref sourcePointer, ref targetPointer, localCount);
+            if (!result)
+              return false;
+
+            count &= 0b11111;
+            if (count == 0)
+              return true;
+          }
+        }
+
+#if !PLATFORM_X86
+        { // try 64-Bit
+          var localCount = count >> 3;
+          if (localCount >= THRESHOLD) {
+            var result = _SequenceEqual8Bytewise(ref sourcePointer, ref targetPointer, localCount);
+            if (!result)
+              return false;
+
+            count &= 0b111;
+            if (count == 0)
+              return true;
+          }
+        }
+#endif
+
+        { // try 32-Bit
+          var localCount = count >> 2;
+          if (localCount >= THRESHOLD) {
+            var result = _SequenceEqual4Bytewise(ref sourcePointer, ref targetPointer, localCount);
+            if (!result)
+              return false;
+
+            count &= 0b11;
+            if (count == 0)
+              return true;
+          }
+        }
+
+        if (count > 0)
+          return _SequenceEqualBytewise(ref sourcePointer, ref targetPointer, count);
+
+        return true;
+      }
+    }
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqualBytewise(ref byte* source, ref byte* target, int count) {
+      while (count > 0) {
+        if (*source != *target)
+          return false;
+
+        ++source;
+        ++target;
+        --count;
+      }
+
+      return true;
+    }
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual4Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block4*)s;
+      var target = (Block4*)t;
+      while (count > 0) {
+        if (*source != *target)
+          return false;
+
+        ++source;
+        ++target;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#if !PLATFORM_X86
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual8Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block8*)s;
+      var target = (Block8*)t;
+
+      while (count > 0) {
+        if (*source != *target)
+          return false;
+
+        ++source;
+        ++target;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#endif
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual32Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block32*)s;
+      var target = (Block32*)t;
+
+      while (count > 0) {
+        if (
+          (*source).a != (*target).a
+          || (*source).b != (*target).b
+          || (*source).c != (*target).c
+          || (*source).d != (*target).d
+          || (*source).e != (*target).e
+          || (*source).f != (*target).f
+          || (*source).g != (*target).g
+          || (*source).h != (*target).h
+        )
+          return false;
+
+        ++source;
+        ++target;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#if !PLATFORM_X86
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual64Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block64*)s;
+      var target = (Block64*)t;
+
+      while (count > 0) {
+        if (
+          (*source).a != (*target).a
+          || (*source).b != (*target).b
+          || (*source).c != (*target).c
+          || (*source).d != (*target).d
+          || (*source).e != (*target).e
+          || (*source).f != (*target).f
+          || (*source).g != (*target).g
+          || (*source).h != (*target).h
+        )
+          return false;
+
+        ++source;
+        ++target;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block64*)s;
+      var target = (Block64*)t;
+
+      while (count > 0) {
+        if (
+          (*source).a != (*target).a
+          || (*source).b != (*target).b
+          || (*source).c != (*target).c
+          || (*source).d != (*target).d
+          || (*source).e != (*target).e
+          || (*source).f != (*target).f
+          || (*source).g != (*target).g
+          || (*source).h != (*target).h
+
+          || source[1].a != target[1].a
+          || source[1].b != target[1].b
+          || source[1].c != target[1].c
+          || source[1].d != target[1].d
+          || source[1].e != target[1].e
+          || source[1].f != target[1].f
+          || source[1].g != target[1].g
+          || source[1].h != target[1].h
+
+          || source[2].a != target[2].a
+          || source[2].b != target[2].b
+          || source[2].c != target[2].c
+          || source[2].d != target[2].d
+          || source[2].e != target[2].e
+          || source[2].f != target[2].f
+          || source[2].g != target[2].g
+          || source[2].h != target[2].h
+
+          || source[3].a != target[3].a
+          || source[3].b != target[3].b
+          || source[3].c != target[3].c
+          || source[3].d != target[3].d
+          || source[3].e != target[3].e
+          || source[3].f != target[3].f
+          || source[3].g != target[3].g
+          || source[3].h != target[3].h
+
+        )
+          return false;
+
+        source += 4;
+        target += 4;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#else
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
+      var source = (Block32*)s;
+      var target = (Block32*)t;
+
+      while (count > 0) {
+        if (
+          (*source).A != (*target).A
+          || (*source).B != (*target).B
+          || (*source).C != (*target).C
+          || (*source).D != (*target).D
+          || (*source).E != (*target).E
+          || (*source).F != (*target).F
+          || (*source).G != (*target).G
+          || (*source).H != (*target).H
+
+          || source[1].A != target[1].A
+          || source[1].B != target[1].B
+          || source[1].C != target[1].C
+          || source[1].D != target[1].D
+          || source[1].E != target[1].E
+          || source[1].F != target[1].F
+          || source[1].G != target[1].G
+          || source[1].H != target[1].H
+
+          || source[2].A != target[2].A
+          || source[2].B != target[2].B
+          || source[2].C != target[2].C
+          || source[2].D != target[2].D
+          || source[2].E != target[2].E
+          || source[2].F != target[2].F
+          || source[2].G != target[2].G
+          || source[2].H != target[2].H
+
+          || source[3].A != target[3].A
+          || source[3].B != target[3].B
+          || source[3].C != target[3].C
+          || source[3].D != target[3].D
+          || source[3].E != target[3].E
+          || source[3].F != target[3].F
+          || source[3].G != target[3].G
+          || source[3].H != target[3].H
+
+          || source[4].A != target[4].A
+          || source[4].B != target[4].B
+          || source[4].C != target[4].C
+          || source[4].D != target[4].D
+          || source[4].E != target[4].E
+          || source[4].F != target[4].F
+          || source[4].G != target[4].G
+          || source[4].H != target[4].H
+
+          || source[5].A != target[5].A
+          || source[5].B != target[5].B
+          || source[5].C != target[5].C
+          || source[5].D != target[5].D
+          || source[5].E != target[5].E
+          || source[5].F != target[5].F
+          || source[5].G != target[5].G
+          || source[5].H != target[5].H
+
+          || source[6].A != target[6].A
+          || source[6].B != target[6].B
+          || source[6].C != target[6].C
+          || source[6].D != target[6].D
+          || source[6].E != target[6].E
+          || source[6].F != target[6].F
+          || source[6].G != target[6].G
+          || source[6].H != target[6].H
+
+          || source[7].A != target[7].A
+          || source[7].B != target[7].B
+          || source[7].C != target[7].C
+          || source[7].D != target[7].D
+          || source[7].E != target[7].E
+          || source[7].F != target[7].F
+          || source[7].G != target[7].G
+          || source[7].H != target[7].H
+
+        )
+          return false;
+
+        source += 8;
+        target += 8;
+        --count;
+      }
+
+      s = (byte*)source;
+      t = (byte*)target;
+      return true;
+    }
+
+#endif
+
+#else
+
+#if DEBUG && !PLATFORM_X86
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static bool _SequenceEqualManagedPointers(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+      using (var targetFixedPointer = DisposableGCHandle.Pin(target)) {
+        var sourcePointer = sourceFixedPointer.AddrOfPinnedObject();
+        var targetPointer = targetFixedPointer.AddrOfPinnedObject();
+        while (count >= 8) {
+          if (Marshal.ReadInt64(sourcePointer, sourceOffset) != Marshal.ReadInt64(targetPointer, targetOffset))
+            return false;
+
+          sourceOffset += 8;
+          targetOffset += 8;
+          count -= 8;
+        }
+
+        while (count > 0) {
+          if (Marshal.ReadByte(sourcePointer, sourceOffset) != Marshal.ReadByte(targetPointer, targetOffset))
+            return false;
+
+          ++sourceOffset;
+          ++targetOffset;
+          --count;
+        }
+      }
+
+      return true;
+    }
+
+#endif
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static bool _SequenceEqualNaive(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
+      while (count > 0) {
+        if (source[sourceOffset] != target[targetOffset])
+          return false;
+
+        ++sourceOffset;
+        ++targetOffset;
+        --count;
+      }
+
+      return true;
+    }
+
+#endif
+
+    private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
+#if UNSAFE
+      return _SequenceUnsafe(source, sourceOffset, target, targetOffset, count);
+#else
+#if DEBUG && !PLATFORM_X86
+      return _SequenceEqualManagedPointers(source, sourceOffset, target, targetOffset, count);
+#else
+      return _SequenceEqualNaive(source, sourceOffset, target, targetOffset, count);
+#endif
+#endif
+    }
+
+    public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
+      if (ReferenceEquals(source, target) && sourceOffset == targetOffset)
+        return true;
+      if (source == null || target == null)
+        return false;
+
+      var sourceLeft = source.Length - sourceOffset;
+      var targetLeft = target.Length - targetOffset;
+      if (sourceLeft < count)
+        throw new ArgumentOutOfRangeException("Source has too few bytes left");
+
+      if (targetLeft < count)
+        throw new ArgumentOutOfRangeException("Target has too few bytes left");
+
+      return _SequenceEqual(source, sourceOffset, target, targetOffset, sourceLeft);
+    }
+
+    public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset) {
+      if (ReferenceEquals(source, target) && sourceOffset == targetOffset)
+        return true;
+      if (source == null || target == null)
+        return false;
+
+      var sourceLeft = source.Length - sourceOffset;
+      var targetLeft = target.Length - targetOffset;
+      if (sourceLeft != targetLeft)
+        return false;
+
+      return _SequenceEqual(source, sourceOffset, target, targetOffset, sourceLeft);
+    }
+
+    public static bool SequenceEqual(this byte[] source, byte[] target) {
+      if (ReferenceEquals(source, target))
+        return true;
+      if (source == null || target == null)
+        return false;
+
+      var sourceLeft = source.Length;
+      var targetLeft = target.Length;
+      if (sourceLeft != targetLeft)
+        return false;
+
+      if (sourceLeft == 0)
+        return true;
+
+      return _SequenceEqual(source, 0, target, 0, sourceLeft);
+    }
+
+    #endregion
+
     /// <summary>
     /// Creates random data in the given buffer; thus effectively overwriting it in-place.
     /// </summary>
     /// <param name="this">This buffer.</param>
     /// <returns>The given buffer</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void RandomizeBuffer(this byte[] @this) => new RNGCryptoServiceProvider().GetBytes(@this);
-
-    /// <summary>
-    /// Copies the given buffer.
-    /// </summary>
-    /// <param name="this">This byte[].</param>
-    /// <returns>A copy of the original array.</returns>
-    [DebuggerStepThrough]
-    public static byte[] Copy(this byte[] @this) {
-      if (@this == null)
-        return null;
-
-      var length = @this.Length;
-      var result = new byte[length];
-      if (length > 0)
-        Buffer.BlockCopy(@this, 0, result, 0, length);
-
-      return result;
-    }
 
     /// <summary>
     /// Gets a small portion of a byte array.
@@ -1566,11 +2144,12 @@ namespace System {
     public static byte[] Range(this byte[] @this, int offset, int count) {
       if (@this == null)
         throw new NullReferenceException();
+
       if (offset < 0)
         throw new ArgumentOutOfRangeException(nameof(offset), offset, "Must be > 0");
       if (count < 1)
         throw new ArgumentOutOfRangeException(nameof(count), count, "Must be > 0");
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1596,7 +2175,7 @@ namespace System {
         throw new NullReferenceException();
       if (length < 1)
         throw new ArgumentOutOfRangeException(nameof(length), length, "Must be > 0");
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1614,6 +2193,8 @@ namespace System {
       return result;
     }
 
+    #region compression
+
     /// <summary>
     /// GZips the given bytes.
     /// </summary>
@@ -1623,7 +2204,7 @@ namespace System {
     public static byte[] GZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1644,7 +2225,7 @@ namespace System {
     public static byte[] UnGZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1665,6 +2246,717 @@ namespace System {
       }
     }
 
+    #endregion
+
+    #region Byte Array IndexOf
+
+    private static int _GetInvalidIndex(byte[] _, byte[] __) => _INDEX_WHEN_NOT_FOUND;
+
+    public static int IndexOfOrMinusOne(this byte[] @this, byte[] searchString, int offset = 0)
+      => IndexOfOrDefault(@this, searchString, offset, _GetInvalidIndex)
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int defaultValue)
+      => IndexOfOrDefault(@this, searchString, 0, (_, __) => defaultValue)
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, Func<int> defaultValueFunc)
+      => IndexOfOrDefault(@this, searchString, 0, (_, __) => defaultValueFunc())
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, Func<byte[], int> defaultValueFunc)
+      => IndexOfOrDefault(@this, searchString, 0, (t, _) => defaultValueFunc(t))
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, Func<byte[], byte[], int> defaultValueFunc)
+      => IndexOfOrDefault(@this, searchString, 0, defaultValueFunc)
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, int defaultValue)
+      => IndexOfOrDefault(@this, searchString, offset, (_, __) => defaultValue)
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<int> defaultValueFunc)
+      => IndexOfOrDefault(@this, searchString, offset, (_, __) => defaultValueFunc())
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<byte[], int> defaultValueFunc)
+      => IndexOfOrDefault(@this, searchString, offset, (t, _) => defaultValueFunc(t))
+    ;
+
+    public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<byte[], byte[], int> defaultValueFunc) {
+      if (@this == null || searchString == null)
+        throw new ArgumentNullException();
+
+      if (ReferenceEquals(@this, searchString))
+        return 0;
+
+      var searchStringLength = searchString.Length;
+      var dataStringLength = @this.Length;
+
+      if ((dataStringLength + offset) < searchStringLength)
+        return _INDEX_WHEN_NOT_FOUND;
+
+
+      // ReSharper disable once JoinDeclarationAndInitializer
+      int index;
+#if UNSAFE
+#if PLATFORM_X86
+      // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+      if (searchStringLength <= 32)
+        index = _ContainsBNDM(@this, searchString, offset);
+#else
+      // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+      if (searchStringLength <= 64)
+        index = _ContainsBNDM(@this, searchString, offset);
+#endif
+      else
+#endif
+      index = _ContainsBoyerMoore(@this, searchString, offset);
+
+      return (index < 0 && defaultValueFunc != null) ? defaultValueFunc(@this, searchString) : index;
+    }
+
+    internal static int _ContainsNaïve(byte[] haystack, byte[] needle, int offset) {
+      var searchStringLength = needle.Length;
+      var dataStringLength = haystack.Length;
+
+      for (var i = 0; i < dataStringLength; ++i) {
+        var found = true;
+        for (var j = 0; j < searchStringLength; ++j) {
+          if (haystack[i + j] == needle[j])
+            continue;
+
+          found = false;
+          break;
+        }
+        if (found)
+          return i;
+      }
+      return _INDEX_WHEN_NOT_FOUND;
+    }
+
+#if UNSAFE
+    // maximum Length allowed for @this and searchByteArray = 32/64
+    // ReSharper disable once SuggestBaseTypeForParameter
+    internal static unsafe int _ContainsBNDM(byte[] haystack, byte[] needle, int offset) {
+      var searchStringLength = needle.Length;
+      var dataStringLength = haystack.Length;
+
+#if PLATFORM_X86
+      var matchArray = stackalloc uint[256];
+#else
+      var matchArray = stackalloc ulong[256];
+#endif
+
+      int i;
+      /* Pre-processing */
+#if PLATFORM_X86
+      var s = 1U;
+#else
+      var s = 1UL;
+#endif
+      for (i = searchStringLength - 1; i >= 0; --i) {
+        matchArray[needle[i]] |= s;
+        s <<= 1;
+      }
+
+      /* Searching phase */
+      var j = offset;
+      while (j <= dataStringLength - searchStringLength) {
+        i = searchStringLength - 1;
+        var last = searchStringLength;
+#if PLATFORM_X86
+        s = ~0U;
+#else
+        s = ~0UL;
+#endif
+        while (i >= 0 && s != 0) {
+          s &= matchArray[haystack[j + i]];
+          --i;
+          if (s != 0) {
+            if (i >= 0)
+              last = i + 1;
+            else
+              return j;
+          }
+          s <<= 1;
+        }
+        j += last;
+      }
+      return _INDEX_WHEN_NOT_FOUND;
+    }
+#endif
+
+    internal static int _ContainsBoyerMoore(byte[] haystack, byte[] needle, int offset) {
+      var searchStringLength = needle.Length;
+      var dataStringLength = haystack.Length;
+
+      var dictComparisonBytes = new Dictionary<byte, int>();
+      for (var j = 0; j < searchStringLength; ++j) {
+        var value = searchStringLength - j - 1;
+        if (dictComparisonBytes.ContainsKey(needle[j]))
+          dictComparisonBytes[needle[j]] = value;
+        else
+          dictComparisonBytes.Add(needle[j], value);
+      }
+
+      var i = offset; // First index to check.
+
+      // Loop while there's still room for search term
+      while (i <= (dataStringLength - searchStringLength)) {
+        // Look if we have a match at this position
+        var j = searchStringLength - 1;
+        while (j >= 0 && needle[j] == haystack[i + j])
+          --j;
+
+        // Match found
+        if (j < 0)
+          return i;
+
+        // Advance to next comparision
+        var k = 1 + j;
+        i += dictComparisonBytes.TryGetValue(haystack[i + j], out var x) ? Math.Max(x - searchStringLength + k, 1) : k;
+      }
+      // No Match found
+      return _INDEX_WHEN_NOT_FOUND;
+    }
+
+    #endregion
+
+    #region Array Clear
+
+    public static void Clear(this byte[] @this) => _FillWithBytes(@this, 0, @this.Length, 0);
+
+    public static void Clear(this ushort[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (ushort* pointer = &@this[0])
+          _FillWords(pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this short[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (short* pointer = &@this[0])
+          _FillWords((ushort*)pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this uint[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (uint* pointer = &@this[0])
+          _FillDWords(pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillDWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this int[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (int* pointer = &@this[0])
+          _FillDWords((uint*)pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillDWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this float[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (float* pointer = &@this[0])
+          _FillDWords((uint*)pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillDWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this ulong[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (ulong* pointer = &@this[0])
+          _FillQWords(pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillQWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this long[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (long* pointer = &@this[0])
+          _FillQWords((ulong*)pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillQWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    public static void Clear(this double[] @this) {
+#if UNSAFE
+      unsafe {
+        fixed (double* pointer = &@this[0])
+          _FillQWords((ulong*)pointer, @this.Length, 0);
+      }
+#else
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
+        var pointer = sourceFixedPointer.AddrOfPinnedObject();
+        _FillQWordPointer(pointer, 0, @this.Length, 0);
+      }
+#endif
+    }
+
+    #endregion
+
+    #region Byte Array Fill
+
+    public static void Fill(this byte[] @this, byte value) => _FillWithBytes(@this, 0, @this.Length, value);
+    public static void Fill(this byte[] @this, byte value, int offset) {
+      if (offset < 0 || offset > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithBytes(@this, offset, @this.Length - offset, value);
+    }
+    public static void Fill(this byte[] @this, byte value, int offset, int count) {
+      if (offset < 0 || count < 0 || offset + count > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithBytes(@this, offset, count, value);
+    }
+
+    public static void Fill(this byte[] @this, Block2 value, int count) {
+      if (count < 0 || count << 1 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithWords(@this, 0, count, value);
+    }
+    public static void Fill(this byte[] @this, Block2 value, int offset, int count) {
+      if (offset < 0 || count < 0 || (offset + count) << 1 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithWords(@this, offset, count, value);
+    }
+
+    public static void Fill(this byte[] @this, Block4 value, int count) {
+      if (count < 0 || count << 2 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithDWords(@this, 0, count, value);
+    }
+    public static void Fill(this byte[] @this, Block4 value, int offset, int count) {
+      if (offset < 0 || count < 0 || (offset + count) << 2 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithDWords(@this, offset, count, value);
+    }
+
+    public static void Fill(this byte[] @this, Block8 value, int count) {
+      if (count < 0 || count << 3 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithQWords(@this, 0, count, value);
+    }
+    public static void Fill(this byte[] @this, Block8 value, int offset, int count) {
+      if (offset < 0 || count < 0 || (offset + count) << 3 > @this.Length)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWithQWords(@this, offset, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, byte value, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillBytePointer(@this, 0, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, byte value, int offset, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillBytePointer(@this, offset, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, Block2 value, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWordPointer(@this, 0, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, Block2 value, int offset, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillWordPointer(@this, offset, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, Block4 value, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillDWordPointer(@this, 0, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, Block4 value, int offset, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillDWordPointer(@this, offset, count, value);
+    }
+
+    public static void Fill(this IntPtr @this, Block8 value, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillQWordPointer(@this, 0, count, value);
+    }
+
+
+    public static void Fill(this IntPtr @this, Block8 value, int offset, int count) {
+      if (count < 0)
+        throw new ArgumentOutOfRangeException();
+
+      _FillQWordPointer(@this, offset, count, value);
+    }
+
+
+#if UNSAFE
+
+    private static unsafe void _FillWithBytes(byte[] source, int offset, int count, byte value) {
+      fixed (byte* pointer = &source[offset])
+        _FillBytes(pointer, count, value);
+    }
+
+    private static unsafe void _FillWithWords(byte[] source, int offset, int count, Block2 value) {
+      fixed (byte* pointer = &source[offset << 1])
+        _FillWords((Block2*)pointer, count, value);
+    }
+
+    private static unsafe void _FillWithDWords(byte[] source, int offset, int count, Block4 value) {
+      fixed (byte* pointer = &source[offset << 2])
+        _FillDWords((Block4*)pointer, count, value);
+    }
+
+    private static unsafe void _FillWithQWords(byte[] source, int offset, int count, Block8 value) {
+      fixed (byte* pointer = &source[offset << 3])
+        _FillQWords((Block8*)pointer, count, value);
+    }
+
+    private static unsafe void _FillBytePointer(IntPtr source, int offset, int count, byte value) => _FillBytes((byte*)source.ToPointer() + offset, count, value);
+    private static unsafe void _FillWordPointer(IntPtr source, int offset, int count, Block2 value) => _FillWords((Block2*)source.ToPointer() + offset, count, value);
+    private static unsafe void _FillDWordPointer(IntPtr source, int offset, int count, Block4 value) => _FillDWords((Block4*)source.ToPointer() + offset, count, value);
+    private static unsafe void _FillQWordPointer(IntPtr source, int offset, int count, Block8 value) => _FillQWords((Block8*)source.ToPointer() + offset, count, value);
+
+    private static unsafe void _FillBytes(byte* source, int count, byte value) {
+      if (count >= 64) {
+        var localCount = count >> 6;
+        var localSource = (Block64*)source;
+
+        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+        count &= 0b111111;
+        source = (byte*)localSource;
+      }
+
+      while (count >= 8) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source += 8;
+        count -= 8;
+      }
+
+      while (--count >= 0)
+        *source++ = value;
+    }
+
+    private static unsafe void _FillWords(Block2* source, int count, Block2 value) {
+      if (count >= 64) {
+        var localCount = count >> 5;
+        var localSource = (Block64*)source;
+        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+        count &= 0b11111;
+        source = (Block2*)localSource;
+      }
+
+      while (count >= 8) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source += 8;
+        count -= 8;
+      }
+
+      while (--count >= 0)
+        *source++ = value;
+    }
+
+    private static unsafe void _FillDWords(Block4* source, int count, Block4 value) {
+      if (count >= 64) {
+        var localCount = count >> 4;
+        var localSource = (Block64*)source;
+        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+        count &= 0b1111;
+        source = (Block4*)localSource;
+      }
+
+      while (count >= 8) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source += 8;
+        count -= 8;
+      }
+
+      while (--count >= 0)
+        *source++ = value;
+    }
+
+    private static unsafe void _FillQWords(Block8* source, int count, Block8 value) {
+      if (count >= 64) {
+        var localCount = count >> 3;
+        var localSource = (Block64*)source;
+        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+        count &= 0b111;
+        source = (Block8*)localSource;
+      }
+
+      while (count >= 8) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source += 8;
+        count -= 8;
+      }
+
+      while (--count >= 0)
+        *source++ = value;
+    }
+
+    private static unsafe void _Fill64ByteBlocks(ref Block64* source, int count, Block64 value) {
+      while (count >= 16) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source[8] = value;
+        source[9] = value;
+        source[10] = value;
+        source[11] = value;
+        source[12] = value;
+        source[13] = value;
+        source[14] = value;
+        source[15] = value;
+        source += 16;
+        count -= 16;
+      }
+
+      if (count >= 8) {
+        *source = value;
+        source[1] = value;
+        source[2] = value;
+        source[3] = value;
+        source[4] = value;
+        source[5] = value;
+        source[6] = value;
+        source[7] = value;
+        source += 8;
+        count -= 8;
+      }
+
+      while (--count >= 0)
+        *source++ = value;
+    }
+
+#else // Managed stuff
+
+    private static void _FillWithBytes(byte[] source, int offset, int count, byte value) {
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+        _FillBytePointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+    }
+
+    private static void _FillWithWords(byte[] source, int offset, int count, Block2 value) {
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+        _FillWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+    }
+
+    private static void _FillWithDWords(byte[] source, int offset, int count, Block4 value) {
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+        _FillDWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+    }
+
+    private static void _FillWithQWords(byte[] source, int offset, int count, Block8 value) {
+      offset <<= 3;
+      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+        _FillWithQWords(sourceFixedPointer.AddrOfPinnedObject(), ref offset, count, value);
+    }
+
+    private static void _FillBytePointer(IntPtr source, int offset, int count, byte value) {
+      if (count >= 8) {
+        var localCount = count >> 3;
+        _FillWithQWords(source, ref offset, localCount, (Block8)value << 56 | (Block8)value << 48 | (Block8)value << 40 | (Block8)value << 32 | (Block8)value << 24 | (Block8)value << 16 | (Block8)value << 8 | value);
+        count &= 0b111;
+      }
+
+      while (--count >= 0)
+        Marshal.WriteByte(source, offset++, value);
+    }
+
+    private static void _FillWordPointer(IntPtr source, int offset, int count, Block2 value) {
+      offset = offset << 1;
+
+      if (count >= 4) {
+        var localCount = count >> 2;
+        _FillWithQWords(source, ref offset, localCount, (Block8)value << 32 | (Block8)value << 24 | (Block8)value << 16 | value);
+        count &= 0b11;
+      }
+
+      while (--count >= 0) {
+        Marshal.WriteInt16(source, offset, (short)value);
+        offset += 2;
+      }
+    }
+
+    private static void _FillDWordPointer(IntPtr source, int offset, int count, Block4 value) {
+      offset = offset << 2;
+
+      if (count >= 2) {
+        var localCount = count >> 1;
+        _FillWithQWords(source, ref offset, localCount, (Block8)value << 32 | value);
+        count &= 0b1;
+      }
+
+      while (--count >= 0) {
+        Marshal.WriteInt32(source, offset, (int)value);
+        offset += 4;
+      }
+    }
+
+    private static void _FillQWordPointer(IntPtr source, int offset, int count, Block8 value) {
+      offset <<= 3;
+      _FillWithQWords(source, ref offset, count, value);
+    }
+
+#if !MONO
+    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
+    private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
+#endif
+
+    private static void _FillWithQWords(IntPtr source, ref int offset, int count, Block8 value) {
+      var v = (long)value;
+      source += offset;
+      offset += count << 3;
+
+#if !MONO
+      if (count >= 64) {
+        Marshal.WriteInt64(source, 0, v);
+        Marshal.WriteInt64(source, 8, v);
+        Marshal.WriteInt64(source, 16, v);
+        Marshal.WriteInt64(source, 24, v);
+        Marshal.WriteInt64(source, 32, v);
+        Marshal.WriteInt64(source, 40, v);
+        Marshal.WriteInt64(source, 48, v);
+        Marshal.WriteInt64(source, 56, v);
+
+        var sizeInBytes = 64;
+        var start = source;
+        source += sizeInBytes;
+        count -= 8;
+
+        var countInBytes = count << 3;
+        while (countInBytes > sizeInBytes) {
+          _MemoryCopy(source, start, sizeInBytes);
+          source += sizeInBytes;
+          countInBytes -= sizeInBytes;
+          sizeInBytes <<= 1;
+        }
+        _MemoryCopy(source, start, countInBytes);
+        return;
+      }
+#endif
+
+      while (count >= 8) {
+        Marshal.WriteInt64(source, 0, v);
+        Marshal.WriteInt64(source, 8, v);
+        Marshal.WriteInt64(source, 16, v);
+        Marshal.WriteInt64(source, 24, v);
+        Marshal.WriteInt64(source, 32, v);
+        Marshal.WriteInt64(source, 40, v);
+        Marshal.WriteInt64(source, 48, v);
+        Marshal.WriteInt64(source, 56, v);
+        source += 64;
+        count -= 8;
+      }
+
+      while (count > 0) {
+        Marshal.WriteInt64(source, 0, v);
+        source += 8;
+        --count;
+      }
+    }
+
+#endif
+
+    #endregion
+
     #region hash computation
 
     /// <summary>
@@ -1673,14 +2965,14 @@ namespace System {
     /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The result of the hash algorithm</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
       if (@this == null)
         throw new NullReferenceException();
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -1693,7 +2985,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1704,7 +2996,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1715,7 +3007,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1726,7 +3018,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1737,7 +3029,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1777,12 +3069,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -1806,13 +3098,13 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
 
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -1837,12 +3129,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2026,12 +3318,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2055,12 +3347,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2085,12 +3377,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2274,12 +3566,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2303,12 +3595,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2333,12 +3625,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2522,12 +3814,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= 0xffff;
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2551,12 +3843,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source) {
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2581,12 +3873,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source) {
 
-#if NETFX_4
+#if NET40
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-#if NETFX_4
+#if NET40
           return;
         }
 
@@ -2749,7 +4041,9 @@ namespace System {
     }
     #endregion
 
-#if NETFX_45
+    #region bitwise operations
+
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2761,7 +4055,7 @@ namespace System {
 #endif
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2775,13 +4069,13 @@ namespace System {
 #endif
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void AndBytewise(this byte[] @this, byte[] operand) => FastAnd.ProcessBytewise(@this, operand);
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2793,13 +4087,13 @@ namespace System {
 #endif
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void OrBytewise(this byte[] @this, byte[] operand) => FastOr.ProcessBytewise(@this, operand);
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2811,11 +4105,13 @@ namespace System {
 #endif
     }
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void NotBytewise(this byte[] @this) => FastNot.ProcessBytewise(@this);
+
+    #endregion
 
     #endregion
 
