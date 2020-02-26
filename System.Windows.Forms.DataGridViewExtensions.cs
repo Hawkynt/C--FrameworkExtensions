@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,12 +26,16 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-#if NETFX_4
+using System.Reflection.Emit;
+#if NET40
 using System.Runtime.CompilerServices;
 #endif
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using ThreadTimer = System.Threading.Timer;
+using DrawingSystemColors = System.Drawing.SystemColors;
+using DrawingSize = System.Drawing.Size;
+using DrawingFontStyle = System.Drawing.FontStyle;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -99,14 +103,14 @@ namespace System.Windows.Forms {
         var borderRect = this.BorderWidths(advancedBorderStyle);
         var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
 
-        var isSelected = (cellState & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
+        var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
         var bkColor =
-            isSelected && (paintParts & DataGridViewPaintParts.SelectionBackground) == DataGridViewPaintParts.SelectionBackground
+            isSelected && (paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground))
               ? cellStyle.SelectionBackColor
               : cellStyle.BackColor
           ;
 
-        if ((paintParts & DataGridViewPaintParts.Background) == DataGridViewPaintParts.Background)
+        if (paintParts.HasFlag(DataGridViewPaintParts.Background))
           using (var backBrush = new SolidBrush(bkColor))
             graphics.FillRectangle(backBrush, paintRect);
 
@@ -114,7 +118,7 @@ namespace System.Windows.Forms {
         paintRect.Width -= cellStyle.Padding.Horizontal;
         paintRect.Height -= cellStyle.Padding.Vertical;
 
-        if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
+        if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
           if (ProgressBarRenderer.IsSupported) {
             ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
             var barBounds = new Rectangle(paintRect.Left + 3, paintRect.Top + 3, paintRect.Width - 4, paintRect.Height - 6);
@@ -129,13 +133,13 @@ namespace System.Windows.Forms {
           }
         }
 
-        if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && (paintParts & DataGridViewPaintParts.Focus) == DataGridViewPaintParts.Focus && this.DataGridView.Focused) {
+        if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && paintParts.HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
           var focusRect = paintRect;
           focusRect.Inflate(-3, -3);
           ControlPaint.DrawFocusRectangle(graphics, focusRect);
         }
 
-        if ((paintParts & DataGridViewPaintParts.ContentForeground) == DataGridViewPaintParts.ContentForeground) {
+        if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
           var txt = $"{Math.Round(rate * 100)}%";
           const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
           var fColor = cellStyle.ForeColor;
@@ -143,10 +147,7 @@ namespace System.Windows.Forms {
           TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
         }
 
-        if (
-          (paintParts & DataGridViewPaintParts.ErrorIcon) != DataGridViewPaintParts.ErrorIcon
-          || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText)
-        )
+        if (!paintParts.HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText))
           return;
 
         var iconBounds = this.GetErrorIconBounds(graphics, cellStyle, rowIndex);
@@ -155,7 +156,9 @@ namespace System.Windows.Forms {
       }
     }
 
-    public DataGridViewProgressBarColumn() => this.CellTemplate = new DataGridViewProgressBarCell();
+    public DataGridViewProgressBarColumn() {
+      this.CellTemplate = new DataGridViewProgressBarCell();
+    }
 
     public override DataGridViewCell CellTemplate {
       get => base.CellTemplate;
@@ -277,12 +280,475 @@ namespace System.Windows.Forms {
 
         // Draw the disabled button text.
         if (this.FormattedValue is string)
-          TextRenderer.DrawText(graphics, (string)this.FormattedValue, this.DataGridView.Font, buttonArea, SystemColors.GrayText);
+          TextRenderer.DrawText(graphics, (string)this.FormattedValue, this.DataGridView.Font, buttonArea, DrawingSystemColors.GrayText);
       }
     }
 
     public DataGridViewDisableButtonColumn() {
       this.CellTemplate = new DataGridViewDisableButtonCell();
+    }
+  }
+
+  internal class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
+    public event Action<object, int> OnImageItemSelected {
+      add => DataGridViewMultiImageCell.OnImageItemSelected += value;
+      remove => DataGridViewMultiImageCell.OnImageItemSelected -= value;
+    }
+
+    public Func<object, int, string> TooltipTextProvider {
+      set => DataGridViewMultiImageCell.TooltipTextProvider = value;
+    }
+
+    private readonly string _onClickMethodName;
+    private readonly string _toolTipTextProviderMethodName;
+
+    public DataGridViewMultiImageColumn(int imageSize, Padding padding, Padding margin, string onClickMethodName = null, string toolTipTextProviderMethodName = null) {
+      this._onClickMethodName = onClickMethodName;
+      this._toolTipTextProviderMethodName = toolTipTextProviderMethodName;
+
+      DataGridViewMultiImageCell.Padding = padding;
+      DataGridViewMultiImageCell.Margin = margin;
+
+      var cell = new DataGridViewMultiImageCell {
+        ImageSize = imageSize
+      };
+
+      // ReSharper disable once VirtualMemberCallInConstructor
+      this.CellTemplate = cell;
+    }
+
+    #region Overrides of DataGridViewBand
+
+    protected override void OnDataGridViewChanged() {
+      if (this.DataGridView == null)
+        return;
+
+      var itemType = this.DataGridView.FindItemType();
+
+      var method = GetMethodInfoOrDefault(itemType, this._onClickMethodName);
+      if (method != null)
+        DataGridViewMultiImageCell.OnImageItemSelected += _GenerateObjectInstanceActionDelegate<int>(method);
+
+      method = GetMethodInfoOrDefault(itemType, this._toolTipTextProviderMethodName);
+      if (method != null)
+        DataGridViewMultiImageCell.TooltipTextProvider = _GenerateObjectInstanceFunctionDelegate<int>(method);
+
+    }
+
+    private static MethodInfo GetMethodInfoOrDefault(Type itemType, string methodName) {
+      if (itemType == null)
+        return null;
+
+      return methodName == null
+        ? null
+        : itemType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+    }
+
+    private static Action<object, TParam0> _GenerateObjectInstanceActionDelegate<TParam0>(MethodInfo method) {
+      var dynamicMethod = GenerateIL<TParam0>(method, typeof(void));
+
+      return (Action<object, TParam0>)dynamicMethod.CreateDelegate(typeof(Action<object, TParam0>));
+    }
+
+    private static Func<object, TParam0, string> _GenerateObjectInstanceFunctionDelegate<TParam0>(MethodInfo method) {
+      var dynamicMethod = GenerateIL<TParam0>(method, typeof(string));
+
+      return (Func<object, TParam0, string>)dynamicMethod.CreateDelegate(typeof(Func<object, TParam0, string>));
+    }
+
+    private static DynamicMethod GenerateIL<TParam0>(MethodInfo method, Type returnType) {
+      if (method == null)
+        throw new ArgumentNullException(nameof(method));
+      if (method.GetParameters().Length != 1)
+        throw new ArgumentException("Method needs exactly one parameter", nameof(method));
+      if (method.IsStatic)
+        throw new ArgumentException("Method must be instance-method", nameof(method));
+
+      var dynamicMethod = new DynamicMethod(string.Empty, returnType, new[] { typeof(object), typeof(TParam0) }, true);
+      var generator = dynamicMethod.GetILGenerator();
+
+      generator.Emit(OpCodes.Ldarg_0);
+      generator.Emit(OpCodes.Castclass, method.DeclaringType);
+      generator.Emit(OpCodes.Ldarg_1);
+      generator.EmitCall(OpCodes.Call, method, null);
+      generator.Emit(OpCodes.Ret);
+
+      return dynamicMethod;
+    }
+
+    public override DataGridViewCell CellTemplate {
+      get => base.CellTemplate;
+      set {
+        // Ensure that the cell used for the template is a MultiImageCell.
+        if (value != null &&
+            !value.GetType().IsAssignableFrom(typeof(DataGridViewMultiImageCell))) {
+          throw new InvalidCastException(nameof(DataGridViewMultiImageCell));
+        }
+
+        base.CellTemplate = value;
+      }
+    }
+
+    #endregion
+
+    internal class DataGridViewMultiImageCell : DataGridViewTextBoxCell {
+      public static event Action<object, int> OnImageItemSelected;
+      public static Func<object, int, string> TooltipTextProvider { get; set; }
+
+      private readonly List<CellImage> _images = new List<CellImage>();
+      private DrawingSize? _oldCellBounds;
+
+      private static readonly ToolTip tooltip = new ToolTip { Active = true, ShowAlways = true };
+      private static bool ShowCellToolTipCacheValue;
+
+      public int ImageSize { get; set; }
+      public static Padding Margin { get; set; }
+      public static Padding Padding { get; set; }
+
+      #region Overrides of DataGridViewCell
+
+      protected override void OnMouseMove(DataGridViewCellMouseEventArgs e) {
+        var text = string.Empty;
+
+        for (var i = 0; i < this._images.Count; ++i) {
+          var image = this._images[i];
+
+          image.IsHovered = image.Bounds.Contains(e.Location);
+          this._images[i] = image;
+
+          if (!image.Bounds.Contains(e.Location))
+            continue;
+
+          text = TooltipTextProvider?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i) ?? string.Empty;
+        }
+
+        this.DataGridView.InvalidateCell(this);
+
+        ShowCellToolTipCacheValue = this.DataGridView.ShowCellToolTips;
+        this.DataGridView.ShowCellToolTips = false;
+
+        if (tooltip.Tag != null && (string)tooltip.Tag == text) {
+          this.DataGridView.ShowCellToolTips = ShowCellToolTipCacheValue;
+          return;
+        }
+
+        var cellBounds = this.DataGridView.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
+
+        tooltip.Tag = text;
+        tooltip.Show(text, this.DataGridView, e.Location.X + cellBounds.X + this.ImageSize, e.Location.Y + cellBounds.Y);
+
+        this.DataGridView.ShowCellToolTips = ShowCellToolTipCacheValue;
+      }
+
+      protected override void OnMouseLeave(int rowIndex) {
+        for (var i = 0; i < this._images.Count; ++i) {
+          var image = this._images[i];
+
+          image.IsHovered = false;
+          this._images[i] = image;
+        }
+
+        tooltip.Hide(this.DataGridView);
+        this.DataGridView.InvalidateCell(this);
+      }
+
+      protected override void OnMouseClick(DataGridViewCellMouseEventArgs e) {
+        tooltip.UseAnimation = false;
+        tooltip.Hide(this.DataGridView);
+        tooltip.UseAnimation = true;
+
+        for (var i = 0; i < this._images.Count; ++i) {
+          var image = this._images[i];
+
+          if (!image.Bounds.Contains(e.Location))
+            continue;
+
+          OnImageItemSelected?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i);
+        }
+      }
+
+      public override object Clone() {
+        var cell = (DataGridViewMultiImageCell)base.Clone();
+        cell.ImageSize = this.ImageSize;
+        return cell;
+      }
+
+      protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts) {
+        if (paintParts.HasFlag(DataGridViewPaintParts.Border))
+          this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
+
+        var borderRect = this.BorderWidths(advancedBorderStyle);
+        var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
+
+        var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
+        var bkColor = isSelected && (paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground))
+              ? cellStyle.SelectionBackColor
+              : cellStyle.BackColor
+          ;
+
+        if (paintParts.HasFlag(DataGridViewPaintParts.Background))
+          using (var backBrush = new SolidBrush(bkColor))
+            graphics.FillRectangle(backBrush, paintRect);
+
+        paintRect.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
+        paintRect.Width -= cellStyle.Padding.Horizontal;
+        paintRect.Height -= cellStyle.Padding.Vertical;
+
+        var images = value == null ? new Image[] { } : (Image[])value;
+        var count = images.Length;
+
+        if (!this._oldCellBounds.HasValue || !this._oldCellBounds.Equals(paintRect.Size) || this._images.Count != count) {
+          this._oldCellBounds = paintRect.Size;
+          this._RecreateDrawingPanel(paintRect, count);
+        }
+
+        for (var i = 0; i < this._images.Count; ++i) {
+          var imageRect = this._images[i];
+
+          if (imageRect.IsHovered)
+            using (var hoverBrush = new SolidBrush(isSelected ? cellStyle.BackColor : cellStyle.SelectionBackColor))
+              graphics.FillRectangle(hoverBrush, imageRect.Bounds.X + paintRect.X,
+                imageRect.Bounds.Y + paintRect.Y,
+                imageRect.Bounds.Size.Width,
+                imageRect.Bounds.Size.Height);
+
+          graphics.DrawImage(images[i],
+            imageRect.Bounds.X + paintRect.X + Padding.Left,
+            imageRect.Bounds.Y + paintRect.Y + Padding.Top,
+            imageRect.Bounds.Size.Width - (Padding.Left + Padding.Right),
+            imageRect.Bounds.Size.Height - (Padding.Top + Padding.Bottom));
+        }
+      }
+
+      #endregion
+
+      private void _RecreateDrawingPanel(Rectangle cellBounds, int imageCount) {
+        var size = this.ImageSize;
+        var maxImages = (cellBounds.Width / (size + (Margin.Left + Margin.Right))) * (cellBounds.Height / (size + (Margin.Top + Margin.Bottom)));
+
+        //resizing
+        while (maxImages < imageCount) {
+          size -= 8;
+
+          maxImages = (cellBounds.Width / (size + (Margin.Left + Margin.Right))) * (cellBounds.Height / (size + (Margin.Top + Margin.Bottom)));
+        }
+
+        this._images.Clear();
+
+        var x = Margin.Left;
+        var y = Margin.Top;
+
+        for (var i = 0; i < imageCount; ++i) {
+          if ((x + size + Margin.Right) > cellBounds.Width) {
+            x = Margin.Left;
+            y += size + Margin.Bottom;
+          }
+
+          this._images.Add(new CellImage(new Rectangle(x, y, size, size)));
+          x += size + Margin.Right;
+        }
+      }
+
+      private struct CellImage {
+        public CellImage(Rectangle bounds) {
+          this.Bounds = bounds;
+          this.IsHovered = false;
+        }
+
+        public Rectangle Bounds { get; }
+        public bool IsHovered { get; set; }
+      }
+    }
+  }
+
+  internal class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
+    private Image imageValue;
+
+    public DataGridViewImageAndTextColumn() {
+      this.CellTemplate = new DataGridViewTextAndImageCell();
+    }
+
+    public override object Clone() {
+      var c = base.Clone() as DataGridViewImageAndTextColumn;
+      c.imageValue = this.imageValue;
+      c.ImageSize = this.ImageSize;
+      return c;
+    }
+
+    public Image Image {
+      get => this.imageValue;
+      set {
+        if (this.Image == value)
+          return;
+
+        this.imageValue = value;
+        this.ImageSize = value.Size;
+
+        if (this.InheritedStyle == null)
+          return;
+
+        var inheritedPadding = this.InheritedStyle.Padding;
+        this.DefaultCellStyle.Padding = new Padding(this.ImageSize.Width,
+          inheritedPadding.Top, inheritedPadding.Right,
+          inheritedPadding.Bottom);
+      }
+    }
+
+    internal DrawingSize ImageSize { get; private set; }
+
+    public class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
+      private Image imageValue;
+      private DrawingSize imageSize;
+
+      public override object Clone() {
+        var c = base.Clone() as DataGridViewTextAndImageCell;
+        c.imageValue = this.imageValue;
+        c.imageSize = this.imageSize;
+        return c;
+      }
+
+      public Image Image {
+        get {
+          if (this.OwningColumn == null || this._OwningDataGridViewImageAndTextColumn == null)
+            return this.imageValue;
+
+          return this.imageValue ?? this._OwningDataGridViewImageAndTextColumn.Image;
+        }
+        set {
+          if (this.imageValue == value)
+            return;
+
+          this.imageValue = value;
+          this.imageSize = this.imageValue?.Size ?? DrawingSize.Empty;
+
+          var inheritedPadding = this.InheritedStyle.Padding;
+          this.Style.Padding = new Padding(this.imageSize.Width,
+            inheritedPadding.Top, inheritedPadding.Right,
+            inheritedPadding.Bottom);
+        }
+      }
+
+      protected override void Paint(
+        Graphics graphics,
+        Rectangle clipBounds,
+        Rectangle cellBounds,
+        int rowIndex,
+        DataGridViewElementStates cellState,
+        object value,
+        object formattedValue,
+        string errorText,
+        DataGridViewCellStyle cellStyle,
+        DataGridViewAdvancedBorderStyle advancedBorderStyle,
+        DataGridViewPaintParts paintParts) {
+        // Paint the base content
+        base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState,
+           value, formattedValue, errorText, cellStyle,
+           advancedBorderStyle, paintParts);
+
+        if (this.Image == null)
+          return;
+
+        // Draw the image clipped to the cell.
+        var container = graphics.BeginContainer();
+
+        graphics.SetClip(cellBounds);
+        graphics.DrawImageUnscaled(this.Image, cellBounds.Location);
+
+        graphics.EndContainer(container);
+      }
+
+      private DataGridViewImageAndTextColumn _OwningDataGridViewImageAndTextColumn => this.OwningColumn as DataGridViewImageAndTextColumn;
+    }
+  }
+
+  internal class DataGridViewDateTimePickerColumn : DataGridViewColumn {
+    public DataGridViewDateTimePickerColumn() : base(new DataGridViewDateTimePickerCell()) { }
+
+    public override DataGridViewCell CellTemplate {
+      get => base.CellTemplate;
+      set {
+        if (value != null &&
+            !value.GetType().IsAssignableFrom(typeof(DataGridViewDateTimePickerCell))) {
+          throw new InvalidCastException("Must be a DataGridViewDateTimePickerCell");
+        }
+        base.CellTemplate = value;
+      }
+    }
+
+    public class DataGridViewDateTimePickerCell : DataGridViewTextBoxCell {
+      public DataGridViewDateTimePickerCell() {
+        this.Style.Format = "d";
+      }
+
+      public override void InitializeEditingControl(int rowIndex, object initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle) {
+        base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
+
+        if (!(this.DataGridView.EditingControl is DateTimePickerEditingControl ctl))
+          return;
+
+        ctl.Value = (DateTime?)this.Value ?? (((DateTime?)this.DefaultNewRowValue) ?? DateTime.Now);
+      }
+
+      public override Type EditType => typeof(DateTimePickerEditingControl);
+
+      public override Type ValueType => typeof(DateTime);
+
+      public override object DefaultNewRowValue => DateTime.Now;
+    }
+
+    private class DateTimePickerEditingControl : DateTimePicker, IDataGridViewEditingControl {
+      public int EditingControlRowIndex { get; set; }
+      public DataGridView EditingControlDataGridView { get; set; }
+      public bool RepositionEditingControlOnValueChange => false;
+      public bool EditingControlValueChanged { get; set; }
+      public Cursor EditingPanelCursor => base.Cursor;
+
+      public DateTimePickerEditingControl() {
+        this.Format = DateTimePickerFormat.Short;
+      }
+
+      public object EditingControlFormattedValue {
+        get => this.Value.ToShortDateString();
+        set {
+          if (!(value is string))
+            return;
+
+          this.Value = DateTime.TryParse((string)value, out var parsedDate) ? parsedDate : DateTime.Now;
+        }
+      }
+
+      public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context) => this.EditingControlFormattedValue;
+
+      public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle) {
+        this.Font = dataGridViewCellStyle.Font;
+        this.CalendarForeColor = dataGridViewCellStyle.ForeColor;
+        this.CalendarMonthBackground = dataGridViewCellStyle.BackColor;
+      }
+
+      public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey) {
+        // Let the DateTimePicker handle the keys listed.
+        switch (key & Keys.KeyCode) {
+        case Keys.Left:
+        case Keys.Up:
+        case Keys.Down:
+        case Keys.Right:
+        case Keys.Home:
+        case Keys.End:
+        case Keys.PageDown:
+        case Keys.PageUp:
+          return true;
+        default:
+          return !dataGridViewWantsInputKey;
+        }
+      }
+
+      protected override void OnValueChanged(EventArgs eventArgs) {
+        this.EditingControlValueChanged = true;
+        this.EditingControlDataGridView.NotifyCurrentCellDirty(true);
+        base.OnValueChanged(eventArgs);
+      }
+
+      public void PrepareEditingControlForEdit(bool selectAll) { }
     }
   }
 
@@ -307,7 +773,6 @@ namespace System.Windows.Forms {
       _clickTimers.TryRemove(row, out __);
       DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
     }
-
     public void OnClick(object row) {
       if (this.OnDoubleClickMethodName == null)
         DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
@@ -331,11 +796,40 @@ namespace System.Windows.Forms {
 
   }
 
+  /// <summary>
+  /// allows to show an image next to the displayed text.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class SupportsConditionalImageAttribute : Attribute {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SupportsConditionalImageAttribute"/> class.
+    /// </summary>
+    /// <param name="imagePropertyName">The name of the property which returns the image to display</param>
+    /// <param name="conditionalPropertyName">The name of the property which defines, if the image is shown</param>
+    public SupportsConditionalImageAttribute(string imagePropertyName, string conditionalPropertyName = null) {
+      this.ImagePropertyName = imagePropertyName;
+      this.ConditionalPropertyName = conditionalPropertyName;
+    }
+    public string ImagePropertyName { get; }
+    public string ConditionalPropertyName { get; }
+
+    public Image GetImage(object row, object value) {
+      if (ReferenceEquals(value, null))
+        return null;
+
+      if (!DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ConditionalPropertyName, false, true, true, false))
+        return null;
+
+      var image = DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, this.ImagePropertyName, null, null, null, null);
+      return image;
+    }
+  }
+
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   internal sealed class DataGridViewCheckboxColumnAttribute : Attribute {
-    public DataGridViewCheckboxColumnAttribute() {
-
+    public DataGridViewCheckboxColumnAttribute(string conditionalVisiblePropertyName) {
     }
+
   }
 
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
@@ -444,6 +938,40 @@ namespace System.Windows.Forms {
 
     public bool IsEnabled(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsEnabledWhen, false, true, false, false);
 
+  }
+
+  /// <summary>
+  /// Allows specifying a value to be used as column with multiple images
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewMultiImageColumnAttribute : Attribute {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute"/> class.
+    /// </summary>
+    /// <param name="onClickMethodName">Name of a method within the data bound class, which should be called,
+    /// whenever a click on an image occurs (this method has to take one parameter of type int (index of the clicked image))</param>
+    /// <param name="toolTipProviderMethodName">Name of a method within the data bound class, which should be used,
+    /// to get the tooltip text for a specific image (this method has to take one parameter of type int (index of the image))</param>
+    /// <param name="maximumImageSize">the maximum size of every image displayed (width and height)</param>
+    /// <param name="padding">The padding within each image</param>
+    /// <param name="margin">The margin around each image</param>
+    public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null, int maximumImageSize = 24, int padding = 1, int margin = 5)
+      : this(onClickMethodName, toolTipProviderMethodName, maximumImageSize, padding, padding, padding, padding, margin, margin, margin, margin) {
+    }
+
+    public DataGridViewMultiImageColumnAttribute(string onClickMethodName, string toolTipProviderMethodName, int maximumImageSize, int paddingLeft, int paddingTop, int paddingRight, int paddingBottom, int marginLeft, int marginTop, int marginRight, int marginBottom) {
+      this.MaximumImageSize = maximumImageSize;
+      this.OnClickMethodName = onClickMethodName;
+      this.ToolTipProviderMethodName = toolTipProviderMethodName;
+      this.Padding = new Padding(paddingLeft, paddingTop, paddingRight, paddingBottom);
+      this.Margin = new Padding(marginLeft, marginTop, marginRight, marginBottom);
+    }
+
+    public int MaximumImageSize { get; }
+    public string OnClickMethodName { get; }
+    public string ToolTipProviderMethodName { get; }
+    public Padding Padding { get; }
+    public Padding Margin { get; }
   }
 
   /// <summary>
@@ -573,6 +1101,24 @@ namespace System.Windows.Forms {
   }
 
   /// <summary>
+  /// Allows an specific object to be represented as a full row header.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewFullMergedRowAttribute : Attribute {
+    public DataGridViewFullMergedRowAttribute(string headingTextPropertyName, string foreColor = null, float textSize = -1) {
+      this.HeadingTextPropertyName = headingTextPropertyName;
+      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
+      this.TextSize = textSize < 0 ? (float?)null : textSize;
+    }
+
+    public Color? ForeColor { get; }
+    public float? TextSize { get; }
+    public string HeadingTextPropertyName { get; }
+
+    public string GetHeadingText(object rowData) => DataGridViewExtensions.GetPropertyValueOrDefault(rowData, this.HeadingTextPropertyName, string.Empty, string.Empty, string.Empty, string.Empty);
+  }
+
+  /// <summary>
   /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
@@ -631,15 +1177,15 @@ namespace System.Windows.Forms {
       this.Format = format;
       this.ForeColorPropertyName = foreColorPropertyName;
       this.BackColorPropertyName = backColorPropertyName;
-      var fontStyle = FontStyle.Regular;
+      var fontStyle = DrawingFontStyle.Regular;
       if (isBold)
-        fontStyle |= FontStyle.Bold;
+        fontStyle |= DrawingFontStyle.Bold;
       if (isItalic)
-        fontStyle |= FontStyle.Italic;
+        fontStyle |= DrawingFontStyle.Italic;
       if (isStrikeout)
-        fontStyle |= FontStyle.Strikeout;
+        fontStyle |= DrawingFontStyle.Strikeout;
       if (isUnderline)
-        fontStyle |= FontStyle.Underline;
+        fontStyle |= DrawingFontStyle.Underline;
       this.FontStyle = fontStyle;
     }
 
@@ -647,7 +1193,7 @@ namespace System.Windows.Forms {
     public Color? ForeColor { get; }
     public Color? BackColor { get; }
     public string Format { get; }
-    public FontStyle FontStyle { get; }
+    public DrawingFontStyle FontStyle { get; }
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
 
@@ -665,7 +1211,7 @@ namespace System.Windows.Forms {
       if (this.Format != null)
         style.Format = this.Format;
 
-      if (this.FontStyle != FontStyle.Regular)
+      if (this.FontStyle != DrawingFontStyle.Regular)
         style.Font = new Font(style.Font ?? row.InheritedStyle.Font, this.FontStyle);
 
     }
@@ -673,7 +1219,6 @@ namespace System.Windows.Forms {
     public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
 
   }
-
 
   #endregion
 
@@ -694,6 +1239,7 @@ namespace System.Windows.Forms {
       @this.Disposed -= _RemoveDisabledState;
       @this.CellFormatting -= _CellFormatting;
       @this.CellMouseUp -= _CellMouseUp;
+      @this.RowPostPaint -= _RowPostPaint;
 
       // subscribe to events
       @this.DataSourceChanged += _DataSourceChanged;
@@ -704,6 +1250,7 @@ namespace System.Windows.Forms {
       @this.Disposed += _RemoveDisabledState;
       @this.CellFormatting += _CellFormatting;
       @this.CellMouseUp += _CellMouseUp;
+      @this.RowPostPaint += _RowPostPaint;
     }
 
     /// <summary>
@@ -718,7 +1265,7 @@ namespace System.Windows.Forms {
       if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      if (column is DataGridViewCheckBoxColumn && e.RowIndex>=0)
+      if (column is DataGridViewCheckBoxColumn && e.RowIndex >= 0)
         dgv.EndEdit();
     }
 
@@ -728,19 +1275,24 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
     private static void _CellDoubleClick(object sender, DataGridViewCellEventArgs e) {
-      if (!(sender is DataGridView dgv))
+      var dgv = sender as DataGridView;
+
+      if (dgv == null)
         return;
 
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
+      if (e.RowIndex < 0 || e.ColumnIndex < 0)
         return;
 
-      if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
+      var type = FindItemType(dgv);
+
+      if (type == null)
         return;
 
-      if (!row.TryGetRowType(out var type))
+      var column = dgv.Columns[e.ColumnIndex];
+      if (column == null)
         return;
 
-      var item = row.DataBoundItem;
+      var item = dgv.Rows[e.RowIndex].DataBoundItem;
       _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnDoubleClick(item);
     }
 
@@ -763,6 +1315,7 @@ namespace System.Windows.Forms {
         return;
 
       var item = row.DataBoundItem;
+
       if (column is DataGridViewButtonColumn)
         _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault()?.OnClick(item);
 
@@ -799,6 +1352,14 @@ namespace System.Windows.Forms {
         if (property == null)
           continue;
 
+        //if needed replace DataGridViewTextBoxColumns with DataGridViewDateTimePickerColumns
+        if (!column.ReadOnly && (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))) {
+          var newColumn = _ConstructDateTimePickerColumn(column);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
         // if needed replace DataGridViewTextBoxColumns with DataGridViewButtonColumn
         var buttonColumnAttribute = (DataGridViewButtonColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true).FirstOrDefault();
         if (buttonColumnAttribute != null) {
@@ -820,17 +1381,39 @@ namespace System.Windows.Forms {
         // if needed replace DataGridViewTextBoxColumns for Enums with DataGridViewComboboxColumn
         var propType = property.PropertyType;
 
-        if (propType.IsEnum && !column.ReadOnly) {
-          var newColumn = _ConstructEnumComboboxColumn(propType, column);
-          columns.RemoveAt(i);
-          columns.Insert(i, newColumn);
-          column = newColumn;
+        if (propType.IsEnum) {
+          if (column.ReadOnly) {
+            // TODO: show display text for enums
+          } else {
+            var newColumn = _ConstructEnumComboboxColumn(propType, column);
+            columns.RemoveAt(i);
+            columns.Insert(i, newColumn);
+            column = newColumn;
+          }
         }
 
         // if needed replace DataGridViewColumns with DataGridViewImageColumn
         var imageColumnAttribute = (DataGridViewImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewImageColumnAttribute), true).FirstOrDefault();
         if (imageColumnAttribute != null) {
           var newColumn = _ConstructImageColumn(column);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
+        // if needed replace DataGridViewColumns with DataGridViewMultiImageColumn
+        var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
+        if (multiImageColumnAttribute != null) {
+          var newColumn = _ConstructMultiImageColumn(column, multiImageColumnAttribute);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
+        // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
+        var conditionalImageColumnAttribute = (SupportsConditionalImageAttribute)property.GetCustomAttributes(typeof(SupportsConditionalImageAttribute), true).FirstOrDefault();
+        if (conditionalImageColumnAttribute != null) {
+          var newColumn = _ConstructImageAndTextColumn(column);
           columns.RemoveAt(i);
           columns.Insert(i, newColumn);
           column = newColumn;
@@ -845,8 +1428,44 @@ namespace System.Windows.Forms {
           column = newColumn;
         }
 
+        // apply visibility for column
+        var columnVisibilityAttribute = _QueryPropertyAttribute<EditorBrowsableAttribute>(type, propertyName).FirstOrDefault();
+        if (columnVisibilityAttribute != null) {
+          var newColumn = _ConstructVisibleColumn(column, columnVisibilityAttribute.State);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
+      }
+
+      //Query all properties which are assignable from IList and thus not auto generated
+      var listProperties = type.GetProperties();
+      var columnIndex = -1;
+
+      // if needed add DataGridViewColumns with DataGridViewMultiImageColumnAttribute
+      foreach (var property in listProperties) {
+        var browsableAttribute = (BrowsableAttribute)property.GetCustomAttributes(typeof(BrowsableAttribute), true).FirstOrDefault();
+        if (browsableAttribute != null && !browsableAttribute.Browsable)
+          continue;
+
+        if (dgv.Columns.Contains(property.Name))
+          continue;
+
+        ++columnIndex;
+
+        var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
+        if (multiImageColumnAttribute == null)
+          continue;
+
+        var displayText = (DisplayNameAttribute)property.GetCustomAttributes(typeof(DisplayNameAttribute), true).FirstOrDefault();
+        var newColumn = _ConstructMultiImageColumn(property.Name, displayText?.DisplayName, multiImageColumnAttribute);
+        columns.Insert(columnIndex, newColumn);
+
+        // apply column width
+        _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, property.Name)?.FirstOrDefault()?.ApplyTo(newColumn);
       }
     }
 
@@ -912,6 +1531,28 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Constructs a imageAndText column.
+    /// </summary>
+    /// <param name="column">the column, which will be the base for constructing this column</param>
+    /// <returns>a new instance of <see cref="DataGridViewImageAndTextColumn"/></returns>
+    private static DataGridViewImageAndTextColumn _ConstructImageAndTextColumn(DataGridViewColumn column) {
+      return new DataGridViewImageAndTextColumn {
+        HeaderText = column.HeaderText,
+        AutoSizeMode = column.AutoSizeMode,
+        DataPropertyName = column.DataPropertyName,
+        DefaultCellStyle = column.DefaultCellStyle,
+        Width = column.Width,
+        Visible = column.Visible,
+        ToolTipText = column.ToolTipText,
+        Selected = column.Selected,
+        ReadOnly = column.ReadOnly,
+        Name = column.Name,
+        HeaderCell = column.HeaderCell,
+        DefaultHeaderCellType = column.DefaultHeaderCellType,
+      };
+    }
+
+    /// <summary>
     /// Constructs a checkbox column.
     /// </summary>
     /// <param name="column">The column.</param>
@@ -933,6 +1574,68 @@ namespace System.Windows.Forms {
         TrueValue = true,
         FalseValue = false,
         IndeterminateValue = null
+      };
+    }
+
+    /// <summary>
+    /// Constructs a checkbox column.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="state">The Visibility State</param>
+    /// <returns></returns>
+    private static DataGridViewCheckBoxColumn _ConstructVisibleColumn(DataGridViewColumn column, EditorBrowsableState state) {
+      return new DataGridViewCheckBoxColumn {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = state == EditorBrowsableState.Always,
+        DefaultCellStyle = { NullValue = null },
+        TrueValue = true,
+        FalseValue = false,
+        IndeterminateValue = null
+      };
+    }
+
+    /// <summary>
+    /// Constructs a multi image column.
+    /// </summary>
+    /// <param name="propertyName">The name of the data bound property.</param>
+    /// <param name="headerText">The Text which should be displayed as header</param>
+    /// <param name="attribute">the MultiImageColumn attribute from the data bound property</param>
+    /// <returns>a new instance of <see cref="DataGridViewMultiImageColumn"/></returns>
+    private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(string propertyName, string headerText, DataGridViewMultiImageColumnAttribute attribute) {
+      return new DataGridViewMultiImageColumn(attribute.MaximumImageSize, attribute.Padding, attribute.Margin, attribute.OnClickMethodName, attribute.ToolTipProviderMethodName) {
+        Name = propertyName,
+        DataPropertyName = propertyName,
+        HeaderText = headerText ?? propertyName,
+        ReadOnly = true,
+        AutoSizeMode = DataGridViewAutoSizeColumnMode.NotSet,
+        Visible = true,
+      };
+    }
+
+    /// <summary>
+    /// Constructs a multi image column.
+    /// </summary>
+    /// <param name="column">The column which was originally created by the dataGridView</param>
+    /// <param name="attribute">the MultiImageColumn attribute from the data bound property</param>
+    /// <returns>a new instance of <see cref="DataGridViewMultiImageColumn"/></returns>
+    private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(DataGridViewColumn column, DataGridViewMultiImageColumnAttribute attribute) {
+      return new DataGridViewMultiImageColumn(attribute.MaximumImageSize, attribute.Padding, attribute.Margin, attribute.OnClickMethodName, attribute.ToolTipProviderMethodName) {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = true,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible
       };
     }
 
@@ -969,6 +1672,20 @@ namespace System.Windows.Forms {
       return newColumn;
     }
 
+    private static DataGridViewDateTimePickerColumn _ConstructDateTimePickerColumn(DataGridViewColumn originalColumn) {
+      return new DataGridViewDateTimePickerColumn {
+        Name = originalColumn.Name,
+        DataPropertyName = originalColumn.DataPropertyName,
+        HeaderText = originalColumn.HeaderText,
+        ReadOnly = originalColumn.ReadOnly,
+        DisplayIndex = originalColumn.DisplayIndex,
+        Width = originalColumn.Width,
+        AutoSizeMode = originalColumn.AutoSizeMode,
+        ContextMenuStrip = originalColumn.ContextMenuStrip,
+        Visible = originalColumn.Visible,
+      };
+    }
+
     /// <summary>
     /// Adjusts formatted values according to property attributes.
     /// </summary>
@@ -991,29 +1708,54 @@ namespace System.Windows.Forms {
       var columnPropertyName = column.DataPropertyName;
 
       // find image columns
-      var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName).FirstOrDefault();
+      var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName)?.FirstOrDefault();
       if (imageColumnAttribute != null) {
         e.Value = imageColumnAttribute.GetImage(rowData, e.Value);
         e.FormattingApplied = true;
         row.Cells[column.Index].ToolTipText = imageColumnAttribute.ToolTipText(rowData);
       }
 
+      // find conditional image columns
+      var ConditionalImageColumnAttribute = _QueryPropertyAttribute<SupportsConditionalImageAttribute>(type, columnPropertyName)?.FirstOrDefault();
+      if (ConditionalImageColumnAttribute != null && row.Cells[e.ColumnIndex] is DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell cell) {
+        cell.Image = ConditionalImageColumnAttribute?.GetImage(rowData, e.Value);
+        e.FormattingApplied = true;
+      }
+
       //find columns with DisplayTextAttribute
-      var textColumnAttribute = _QueryPropertyAttribute<DataGridViewColumnDisplayTextAttribute>(type, columnPropertyName).FirstOrDefault();
+      var textColumnAttribute = _QueryPropertyAttribute<DataGridViewColumnDisplayTextAttribute>(type, columnPropertyName)?.FirstOrDefault();
       if (textColumnAttribute != null) {
         e.Value = textColumnAttribute.GetDisplayText(rowData);
         e.FormattingApplied = true;
         row.Cells[column.Index].ToolTipText = textColumnAttribute.ToolTipText(rowData) ?? string.Empty;
       }
 
+      // find enum columns in read-only mode
+      if (column is DataGridViewTextBoxColumn) {
+        var property = rowData?.GetType().GetProperty(columnPropertyName);
+        if (property != null) {
+          var columnDataType = property.PropertyType;
+          var columnData = property.GetValue(rowData, null);
+          if (columnDataType.IsEnum) {
+            var displayText = _GetEnumDisplayName(columnData);
+            if (displayText != null) {
+              e.Value = displayText;
+              e.FormattingApplied = true;
+            }
+          }
+        }
+      }
+
       // apply cell style
       var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
-      if (attributes != null)
-        foreach (var attribute in attributes)
-          if (attribute.IsEnabled(row))
-            attribute.ApplyTo(e.CellStyle, row);
+      if (attributes == null)
+        return;
+
+      foreach (var attribute in attributes)
+        if (attribute.IsEnabled(rowData))
+          attribute.ApplyTo(e.CellStyle, rowData);
     }
-    
+
     /// <summary>
     /// Fixes row styles.
     /// </summary>
@@ -1025,7 +1767,7 @@ namespace System.Windows.Forms {
 
       if (!dgv.TryGetRow(e.RowIndex, out var row))
         return;
-      
+
       if (!row.TryGetRowType(out var type))
         return;
 
@@ -1052,6 +1794,57 @@ namespace System.Windows.Forms {
       }
 
       _QueryPropertyAttribute<DataGridViewRowHeightAttribute>(type).FirstOrDefault()?.ApplyTo(value, row);
+    }
+
+    private static void _RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+
+      if (!dgv.TryGetRow(e.RowIndex, out var row))
+        return;
+
+      if (!row.TryGetRowType(out var type))
+        return;
+
+      var value = row.DataBoundItem;
+
+      var rowHeaderAttribute = _QueryPropertyAttribute<DataGridViewFullMergedRowAttribute>(type).FirstOrDefault();
+      if (rowHeaderAttribute == null)
+        return;
+
+      using (var brush = rowHeaderAttribute.ForeColor != null
+        ? new SolidBrush(rowHeaderAttribute.ForeColor.Value)
+        : e.State.HasFlag(DataGridViewElementStates.Selected)
+            ? new SolidBrush(e.InheritedRowStyle.SelectionForeColor)
+            : new SolidBrush(e.InheritedRowStyle.ForeColor)) {
+
+        using (var boldFont = new Font(e.InheritedRowStyle.Font.FontFamily, rowHeaderAttribute.TextSize ?? e.InheritedRowStyle.Font.Size, FontStyle.Bold)) {
+          var drawFormat = new StringFormat {
+            LineAlignment = StringAlignment.Center,
+            Alignment = StringAlignment.Center
+          };
+
+          var borderWidthLeft = dgv.AdvancedCellBorderStyle.Left == DataGridViewAdvancedCellBorderStyle.InsetDouble
+                            || dgv.AdvancedCellBorderStyle.Left == DataGridViewAdvancedCellBorderStyle.OutsetDouble ? 2 : 1;
+          var borderWidthRight = dgv.AdvancedCellBorderStyle.Right == DataGridViewAdvancedCellBorderStyle.InsetDouble
+                                || dgv.AdvancedCellBorderStyle.Right == DataGridViewAdvancedCellBorderStyle.OutsetDouble ? 2 : 1;
+          var borderWidthBottom = dgv.AdvancedCellBorderStyle.Bottom == DataGridViewAdvancedCellBorderStyle.InsetDouble
+                                || dgv.AdvancedCellBorderStyle.Bottom == DataGridViewAdvancedCellBorderStyle.OutsetDouble ? 2 : 1;
+
+          var rowBoundsWithoutBorder = new Rectangle(
+            e.RowBounds.X + borderWidthLeft,
+            e.RowBounds.Y,
+            e.RowBounds.Width - borderWidthLeft - borderWidthRight,
+            e.RowBounds.Height - borderWidthBottom);
+
+          using (var backBrush = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
+              ? e.InheritedRowStyle.SelectionBackColor
+              : e.InheritedRowStyle.BackColor))
+            e.Graphics.FillRectangle(backBrush, rowBoundsWithoutBorder);
+
+          e.Graphics.DrawString(rowHeaderAttribute.GetHeadingText(value), boldFont, brush, e.RowBounds, drawFormat);
+        }
+      }
     }
 
     /// <summary>
@@ -1093,8 +1886,8 @@ namespace System.Windows.Forms {
       if (alreadyStyled)
         return;
 
-      cell.Style.BackColor = SystemColors.Control;
-      cell.Style.ForeColor = SystemColors.GrayText;
+      cell.Style.BackColor = DrawingSystemColors.Control;
+      cell.Style.ForeColor = DrawingSystemColors.GrayText;
     }
 
     private static bool TryGetRow(this DataGridView @this, int rowIndex, out DataGridViewRow row) {
@@ -1189,17 +1982,17 @@ namespace System.Windows.Forms {
         {
           dataGridView.ReadOnly = true;
           dataGridView.EnableHeadersVisualStyles = false;
-          dataGridView.DefaultCellStyle.ForeColor = SystemColors.GrayText;
-          dataGridView.DefaultCellStyle.BackColor = SystemColors.Control;
-          dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = SystemColors.GrayText;
-          dataGridView.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
-          dataGridView.BackgroundColor = SystemColors.Control;
+          dataGridView.DefaultCellStyle.ForeColor = DrawingSystemColors.GrayText;
+          dataGridView.DefaultCellStyle.BackColor = DrawingSystemColors.Control;
+          dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = DrawingSystemColors.GrayText;
+          dataGridView.ColumnHeadersDefaultCellStyle.BackColor = DrawingSystemColors.Control;
+          dataGridView.BackgroundColor = DrawingSystemColors.Control;
         }
         dataGridView.ResumeLayout(true);
       }
     }
 
-#if NETFX_4
+#if NET40
     private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new ConditionalWeakTable<DataGridView, DataGridViewState>();
 #else
     private static readonly Dictionary<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new Dictionary<DataGridView, DataGridViewState>();
@@ -1382,7 +2175,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Gets the selectedd items.
+    /// Gets the selected items.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="this">This DataGridView.</param>
@@ -1392,6 +2185,50 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
 
       return @this.GetSelectedItems().Cast<TItem>();
+    }
+
+    /// <summary>
+    /// Gets the first selected item in display order.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the item.</typeparam>
+    /// <param name="this">This DataGridView.</param>
+    /// <param name="item">out variable to store the first selected item in display order</param>
+    /// <returns>true, if an item is currently selected, false otherwise</returns>
+    public static bool TryGetFirstSelectedItem<TItem>(this DataGridView @this, out TItem item) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      using (var enumerator = @this.GetSelectedItems<TItem>().GetEnumerator()) {
+        var result = enumerator.MoveNext();
+        item = enumerator.Current;
+
+        return result;
+      }
+    }
+
+    /// <summary>
+    /// Gets the index of the first selected item in display order 
+    /// </summary>
+    /// <param name="this">This DataGridView</param>
+    /// <param name="index">the index of the first selected item in display order</param>
+    /// <returns>true if at least one item  was selected, false otherwise</returns>
+    private static bool _TryGetFirstSelectedItemIndex(this DataGridView @this, out int index) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      var result = @this
+        .SelectedCells
+        .Cast<DataGridViewCell>()
+        .Select(c => c.OwningRow)
+        .Concat(@this.SelectedRows.Cast<DataGridViewRow>())
+        .Distinct()
+        .OrderBy(i => i.Index)
+        .Select(i => i.Index)
+        .ToArray();
+
+      index = result.FirstOrDefault();
+
+      return result.Any();
     }
 
     /// <summary>
@@ -1458,28 +2295,64 @@ namespace System.Windows.Forms {
         @this.SuspendLayout();
 
         // save scroll position
-        var hscroll = @this.HorizontalScrollingOffset;
-        var vscroll = @this.FirstDisplayedScrollingRowIndex;
+        var hScroll = @this.HorizontalScrollingOffset;
+        var vScroll = @this.FirstDisplayedScrollingRowIndex;
 
         // save selected items
         var selected = new HashSet<TKey>(GetSelectedItems<TItem>(@this).Select(keyGetter));
+
+        var scrollOffset = 0;
+        if (@this._TryGetFirstSelectedItemIndex(out var firstSelectedIndex))
+          scrollOffset = firstSelectedIndex - vScroll;
 
         // reset data source
         preAction?.Invoke();
         @this.DataSource = source;
         postAction?.Invoke();
 
+        if (source == null)
+          return;
+
         // reselect
-        foreach (var row in @this.Rows.Cast<DataGridViewRow>())
-          row.Selected = selected.Contains(keyGetter((TItem)row.DataBoundItem));
+        if (@this.MultiSelect) {
+          if (selected.Count < 1)
+            return;
+          foreach (var row in @this.Rows.Cast<DataGridViewRow>())
+            row.Selected = selected.Contains(keyGetter((TItem)row.DataBoundItem));
+        } else {
+          foreach (var row in @this.Rows.Cast<DataGridViewRow>()) {
+            if (!selected.Contains(keyGetter((TItem)row.DataBoundItem)))
+              continue;
+
+            row.Selected = true;
+          }
+        }
+
+        if (@this._TryGetFirstSelectedItemIndex(out firstSelectedIndex))
+          vScroll = firstSelectedIndex - scrollOffset;
 
         //re-apply scrolling
-        if (vscroll >= 0 && vscroll < source.Count)
-          @this.FirstDisplayedScrollingRowIndex = vscroll;
+        if (vScroll >= 0 && vScroll < source.Count)
+          @this.FirstDisplayedScrollingRowIndex = vScroll;
 
-        @this.HorizontalScrollingOffset = hscroll;
+        @this.HorizontalScrollingOffset = hScroll;
       } finally {
         @this.ResumeLayout(true);
+      }
+    }
+
+    /// <summary>
+    /// Changes the visibility of one or more columns.
+    /// </summary>
+    /// <param name="this">The DataGridView</param>
+    /// <param name="visibilityState">the new visibility state</param>
+    /// <param name="propertyNames">collection of property names, which visibility should be changed</param>
+    public static void ChangeVisibleStateOfColumn(this DataGridView @this, bool visibilityState, params string[] propertyNames) {
+      foreach (var propertyName in propertyNames) {
+        DataGridViewColumn column;
+        if ((column = @this.Columns[propertyName]) != null) {
+          column.Visible = visibilityState;
+        }
       }
     }
 
@@ -1527,6 +2400,31 @@ namespace System.Windows.Forms {
     private static object[] _GetInheritedCustomAttributes(ICustomAttributeProvider property) => property.GetCustomAttributes(true);
 
     private static readonly ConcurrentDictionary<string, object[]> _PROPERTY_ATTRIBUTE_CACHE = new ConcurrentDictionary<string, object[]>();
+    private static readonly ConcurrentDictionary<string, string> _ENUM_DISPLAYNAME_CACHE = new ConcurrentDictionary<string, string>();
+
+    private static string _GetEnumDisplayName(object value) {
+      if (value == null)
+        return null;
+
+      var type = value.GetType();
+      if (!type.IsEnum)
+        return null;
+
+      var key = type.FullName + "\0" + value.ToString();
+      if (!_ENUM_DISPLAYNAME_CACHE.TryGetValue(key, out var result)) {
+        result = _ENUM_DISPLAYNAME_CACHE.GetOrAdd(key, _ => {
+          var displayText = (DisplayNameAttribute)
+              type
+                .GetField(value.ToString())?
+                .GetCustomAttributes(typeof(DisplayNameAttribute), false)
+                .FirstOrDefault()
+            ;
+          return displayText?.DisplayName;
+        });
+      }
+
+      return result;
+    }
 
     /// <summary>
     /// Queries for certain property attribute in given type and all inherited interfaces.
@@ -1655,6 +2553,8 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="instance">The instance to call the method from.</param>
     /// <param name="methodName">Name of the method.</param>
+    /// <param name="parameters">The parameters for the method</param>
+    /// <returns>An object representing the return value of the called method, or null if the methods return type is void</returns>
     [DebuggerStepThrough]
     internal static void CallLateBoundMethod(object instance, string methodName) {
       if (ReferenceEquals(null, instance))

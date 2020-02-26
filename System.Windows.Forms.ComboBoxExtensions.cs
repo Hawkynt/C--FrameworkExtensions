@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -32,12 +32,19 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="this">This ComboBox.</param>
     public static void AutoAdjustWidth(this ComboBox @this) {
+      var items = @this.Items;
+      var vertScrollBarWidth =
+              items.Count > @this.MaxDropDownItems // visible scrollbar?
+              ? SystemInformation.VerticalScrollBarWidth
+              : 0
+              ;
+
       var font = @this.Font;
-      @this.Width = @this
-          .Items
+      @this.Width = items
           .Cast<object>()
           .Select(i => TextRenderer.MeasureText(@this.GetItemText(i), font).Width)
           .Max()
+          + vertScrollBarWidth
         ;
     }
 
@@ -67,12 +74,14 @@ namespace System.Windows.Forms {
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="this">This ComboBox.</param>
     /// <param name="insertNull">Insert null-object (use as non-selected).</param>
-    public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false) where TEnum : struct {
+    /// <param name="ignoreValues">Values not to be used.</param>
+    public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct {
       Contract.Requires(typeof(TEnum).IsEnum);
 
       @this.DataSource(
         (insertNull ? new[] { new Tuple<object, string>(null, null) } : new Tuple<object, string>[0])
         .Concat(Enum.GetValues(typeof(TEnum)).Cast<object>()
+        .Where(i => ignoreValues == null || ignoreValues.Length == 0 || !ignoreValues.Contains((TEnum)i))
         .Select(
           i => {
             var fieldInfo = typeof(TEnum).GetField(i.ToString());
@@ -107,5 +116,132 @@ namespace System.Windows.Forms {
       var selectedItem = items == null ? default(TItem) : items.FirstOrDefault(predicate);
       @this.SelectedItem = selectedItem;
     }
+
+    /// <summary>
+    /// Sets the selected item and suppress given event.
+    /// </summary>
+    /// <param name="this">The tool strip ComboBox.</param>
+    /// <param name="selectedItem">The selected item.</param>
+    /// <param name="handler">The handler.</param>
+    public static void SetSelectedItemAndSuppressIndexChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
+      // no handler given? just set the given item as selected
+      if (handler == null) {
+        @this.SelectedItem = selectedItem;
+        return;
+      }
+
+      // prevent multiple event handler adding
+      var hasHandlerBeenDetached = false;
+      try {
+        @this.SelectedIndexChanged -= handler;
+        hasHandlerBeenDetached = true;
+
+        @this.SelectedItem = selectedItem;
+
+      } finally {
+        if (hasHandlerBeenDetached) {
+          @this.SelectedIndexChanged += handler;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Sets the selected item and suppress given event.
+    /// </summary>
+    /// <param name="this">The tool strip ComboBox.</param>
+    /// <param name="selectedValue">The selected value.</param>
+    /// <param name="handler">The handler.</param>
+    public static void SetSelectedValueAndSuppressIndexChangedEvent(this ComboBox @this, object selectedValue, EventHandler handler) {
+      // no handler given? just set the given value as selected
+      if (handler == null) {
+        @this.SelectedValue = selectedValue;
+        return;
+      }
+
+      // prevent multiple event handler adding
+      var hasHandlerBeenDetached = false;
+      try {
+        @this.SelectedIndexChanged -= handler;
+        hasHandlerBeenDetached = true;
+
+        @this.SelectedValue = selectedValue;
+
+      } finally {
+        if (hasHandlerBeenDetached) {
+          @this.SelectedIndexChanged += handler;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Sets the selected item and suppress given event.
+    /// </summary>
+    /// <param name="this">The ComboBox.</param>
+    /// <param name="selectedItem">The selected item.</param>
+    /// <param name="handler">The handler.</param>
+    public static void SetSelectedItemAndSuppressValueChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
+      // no handler given? just set the given value as selected
+      if (handler == null) {
+        @this.SelectedItem = selectedItem;
+        return;
+      }
+
+      // prevent multiple event handler adding
+      var hasHandlerBeenDetached = false;
+      try {
+        @this.SelectedValueChanged -= handler;
+        hasHandlerBeenDetached = true;
+
+        @this.SelectedItem = selectedItem;
+
+      } finally {
+        if (hasHandlerBeenDetached) {
+          @this.SelectedValueChanged += handler;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Tries to get the selected item in a combobox
+    /// </summary>
+    /// <typeparam name="TItem">The Type of the items of the combobox</typeparam>
+    /// <param name="this">The combobox</param>
+    /// <param name="item">ot parameter for the selected item</param>
+    /// <returns>true if there was a selection, false otherwise</returns>
+    public static bool TryGetSelectedItem<TItem>(this ComboBox @this, out TItem item) {
+      var selected = @this.SelectedItem;
+
+      if (!(selected is TItem)) {
+        item = default(TItem);
+        return false;
+      }
+
+      item = (TItem)selected;
+      return true;
+    }
+
+    /// <summary>
+    /// Tries to get the selected item in a combobox
+    /// </summary>
+    /// <typeparam name="TEnum">The Type of the enumeration which holds the items of the combobox</typeparam>
+    /// <param name="this">The combobox</param>
+    /// <param name="item">ot parameter for the selected item</param>
+    /// <returns>true if there was a selection, false otherwise</returns>
+    public static bool TryGetSelectedEnumItem<TEnum>(this ComboBox @this, out TEnum item) where TEnum : struct, IConvertible {
+      var success = @this.TryGetSelectedItem(out Tuple<object, string> enumValue);
+
+      item = success ? (TEnum)enumValue.Item1 : default(TEnum);
+      return success;
+    }
+
+    /// <summary>
+    /// Gets the selected item in a combobox
+    /// </summary>
+    /// <typeparam name="TItem">The Type of the items of the combobox</typeparam>
+    /// <param name="this">The combobox</param>
+    /// <returns>The selected item in the combobox if there is a selection, and default(TItem) otherwise</returns>
+    public static TItem GetSelectedItem<TItem>(this ComboBox @this) =>
+      !TryGetSelectedItem(@this, out TItem item) ? default(TItem) : item
+    ;
   }
 }
