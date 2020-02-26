@@ -21,6 +21,7 @@
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
+
 namespace System {
   internal static partial class DateTimeExtensions {
 
@@ -44,5 +45,68 @@ namespace System {
     public static DateTime StartOfDay(this DateTime @this)
       => @this.Subtract(@this.TimeOfDay)
       ;
+
+    /// <summary>
+    /// Adds the specific amount of weeks to the current DateTime
+    /// </summary>
+    /// <param name="this">The current DateTime object</param>
+    /// <param name="count">The amount of weeks to be added</param>
+    /// <returns>The new DateTime</returns>
+    public static DateTime AddWeeks(this DateTime @this, int count) => @this.AddDays(7 * count);
+
+    /// <summary>
+    /// Calculates the DateTime of a specified DayOfWeek for the week of the given date
+    /// </summary>
+    /// <param name="this">The current DateTime object</param>
+    /// <param name="weekDay">The DayOfWeek which should be returned</param>
+    /// <returns>The DateTime of the week of day of the week of the given date</returns>
+    public static DateTime DateOfDayOfCurrentWeek(this DateTime @this, DayOfWeek weekDay) {
+      var weekStart = @this.AddDays(-(int)@this.DayOfWeek);
+
+      return weekStart.AddDays((int)weekDay).EndOfDay();
+    }
+
+    /// <summary>
+    /// Gets the last day of the current month of the given date
+    /// </summary>
+    /// <param name="this">The DateTime</param>
+    /// <returns>The DateTime representing the last day of the current month of the given date</returns>
+    public static DateTime LastDayOfMonth(this DateTime @this) {
+      var monthDays = DateTime.DaysInMonth(@this.Year, @this.Month);
+
+      return new DateTime(@this.Year, @this.Month, monthDays);
+    }
+
+    /// <summary>
+    /// Gets the Monday of the current week 
+    /// </summary>
+    /// <param name="this">This DateTime</param>
+    /// <param name="startDayOfWeek">The start day of the week; default to DayOfWeek.Monday</param>
+    /// <returns>The first day of the week</returns>
+    public static DateTime StartOfWeek(this DateTime @this, DayOfWeek startDayOfWeek = DayOfWeek.Monday) {
+      if (startDayOfWeek == @this.DayOfWeek)
+        return @this;
+
+      var daysToAdjust = (@this.DayOfWeek - startDayOfWeek + 7) % 7;
+      var result = @this.AddDays(-daysToAdjust);
+      return result;
+    }
+
+    /// <summary>
+    /// Get the given day in the current week.
+    /// </summary>
+    /// <param name="this">This DateTime</param>
+    /// <param name="dayOfWeek">The day of week to get the date for</param>
+    /// <param name="startDayOfWeek">The day that is considered the start of week.</param>
+    /// <returns></returns>
+    public static DateTime DayInCurrentWeek(this DateTime @this, DayOfWeek dayOfWeek, DayOfWeek startDayOfWeek = DayOfWeek.Monday) {
+      if (dayOfWeek == @this.DayOfWeek)
+        return @this;
+
+      var start = StartOfWeek(@this, startDayOfWeek);
+      var daysToAdjust = (dayOfWeek - startDayOfWeek + 7) % 7;
+      var result = start.AddDays(daysToAdjust);
+      return result;
+    }
   }
 }
