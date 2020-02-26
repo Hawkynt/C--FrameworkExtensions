@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   @this file is part of Hawkynt's .NET Framework extensions.
 
@@ -23,7 +23,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
@@ -48,7 +48,7 @@ namespace System {
     /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
     /// <returns>A collection of KeyValuePairs.</returns>
     public static Dictionary<string, object> GetProperties(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var result = new Dictionary<string, object>();
@@ -91,7 +91,7 @@ namespace System {
     /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
     /// <returns>A collection of KeyValuePairs.</returns>
     public static Dictionary<string, object> GetFields(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
 
@@ -128,7 +128,7 @@ namespace System {
     /// <param name="this">This Object.</param>
     /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
     public static void ResetDefaultValues(this object @this, bool flattenHierarchy = true) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
 
@@ -165,7 +165,7 @@ namespace System {
     ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
     /// </returns>
     public static bool TypeIsAnyOf(this object @this, params Type[] types) {
-#if NETFX_4
+#if NET40
       Contract.Requires(types != null);
 #endif
       if (@this == null)
@@ -327,7 +327,7 @@ namespace System {
         if (visitedRefs.Contains(fieldValue))
           sum += pointerSize;
         else {
-          sum += _GetMemorySize(fieldValue, field.FieldType.IsValueType, visitedRefs);
+        sum += _GetMemorySize(fieldValue, field.FieldType.IsValueType, visitedRefs);
           visitedRefs.Add(fieldValue);
         }
       }

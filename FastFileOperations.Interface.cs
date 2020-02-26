@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -63,7 +63,7 @@ namespace System.IO {
       AbortOperation,
     }
 
-    public interface IFileSystemReport {
+    public partial interface IFileSystemReport {
       ReportType ReportType { get; }
       IFileSystemOperation Operation { get; }
       int StreamIndex { get; }
@@ -76,10 +76,10 @@ namespace System.IO {
       ContinuationType ContinuationType { get; set; }
     }
 
-    public interface IFileReport : IFileSystemReport { }
-    public interface IDirectoryReport : IFileSystemReport { }
+    public partial interface IFileReport : IFileSystemReport { }
+    public partial interface IDirectoryReport : IFileSystemReport { }
 
-    public interface IFileSystemOperation {
+    public partial interface IFileSystemOperation {
       FileSystemInfo Source { get; }
       FileSystemInfo Target { get; }
       long TotalSize { get; }
@@ -95,12 +95,12 @@ namespace System.IO {
       bool WaitTillDone(TimeSpan timeout);
     }
 
-    public interface IFileOperation : IFileSystemOperation { }
+    public partial interface IFileOperation : IFileSystemOperation { }
 
-    public interface IDirectoryOperation : IFileSystemOperation {
+    public partial interface IDirectoryOperation : IFileSystemOperation {
       int CrawlerCount { get; set; }
     }
 
-    public interface IFileComparer : IEqualityComparer<FileInfo> { }
+    public partial interface IFileComparer : IEqualityComparer<FileInfo> { }
   }
 }

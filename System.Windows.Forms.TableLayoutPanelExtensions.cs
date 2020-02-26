@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,6 +22,8 @@
 using System.Collections.Generic;
 #if !NET35
 using System.Diagnostics.Contracts;
+#else 
+using Debug = System.Diagnostics.Debug;
 #endif
 using System.Linq;
 
@@ -34,7 +36,7 @@ namespace System.Windows.Forms {
     /// <param name="row">The row.</param>
     public static void RemoveRow(this TableLayoutPanel This, int row) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -44,19 +46,21 @@ namespace System.Windows.Forms {
       var columnCount = This.ColumnCount;
 
       // delete all controls of the given row
-      for (var i = columnCount; i > 0; ) {
+      for (var i = columnCount; i > 0;) {
         --i;
         var control = This.GetControlFromPosition(i, row);
-        if (control == null) continue;
+        if (control == null)
+          continue;
         This.Controls.Remove(control);
       }
 
       // order all controls one up
       for (var i = row + 1; i < rowCount; ++i) {
-        for (var j = columnCount; j > 0; ) {
+        for (var j = columnCount; j > 0;) {
           --j;
           var control = This.GetControlFromPosition(j, i);
-          if (control == null) continue;
+          if (control == null)
+            continue;
           This.SetRow(control, i - 1);
         }
       }
@@ -76,11 +80,12 @@ namespace System.Windows.Forms {
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, int, Control, Control> controlCallback = null, bool allowSuspendingLayout = true) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
-      if (allowSuspendingLayout) This.SuspendLayout();
+      if (allowSuspendingLayout)
+        This.SuspendLayout();
 
       var lastRow = This.RowCount - 1;
 
@@ -93,7 +98,7 @@ namespace System.Windows.Forms {
 
       // copy controls
       var alreadyVisitedControls = new Dictionary<Control, bool>();
-      for (var i = This.ColumnCount; i > 0; ) {
+      for (var i = This.ColumnCount; i > 0;) {
         --i;
 
         var control = This.GetControlFromPositionFixed(i, lastRow);
@@ -109,7 +114,8 @@ namespace System.Windows.Forms {
         This.SetColumnSpan(newControl, This.GetColumnSpan(control));
       }
 
-      if (allowSuspendingLayout) This.ResumeLayout(true);
+      if (allowSuspendingLayout)
+        This.ResumeLayout(true);
     }
     /// <summary>
     /// Copies the last row of a This and all controls in it.
@@ -119,7 +125,7 @@ namespace System.Windows.Forms {
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<Control> controlCallback, bool allowSuspendingLayout = true) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -133,7 +139,7 @@ namespace System.Windows.Forms {
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, Control> controlCallback, bool allowSuspendingLayout = true) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -152,7 +158,7 @@ namespace System.Windows.Forms {
     /// <returns>The value that was found.</returns>
     public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel This, uint row, int columnIndex, Func<TControl, TType> reader) where TControl : Control {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -175,7 +181,7 @@ namespace System.Windows.Forms {
     /// <param name="writer">The writer delegate which sets a value of the control.</param>
     public static void SetColumnValue<TControl>(this TableLayoutPanel This, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -202,7 +208,7 @@ namespace System.Windows.Forms {
     /// </returns>
     public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel This, int column, int row) where TControl : Control {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -219,7 +225,7 @@ namespace System.Windows.Forms {
     /// <returns>The control or <c>null</c>.</returns>
     public static Control GetControlFromPositionFixed(this TableLayoutPanel This, int column, int row) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null); 
+      Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif

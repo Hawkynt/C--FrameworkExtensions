@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,9 +21,13 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+#if NET45
+using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -34,13 +38,14 @@ namespace System.Diagnostics {
     /// A utility class to determine a process parent.     
     /// </summary>     
     [StructLayout(LayoutKind.Sequential)]
+    [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
     private struct ProcessBasicInformation {
       // These members must match PROCESS_BASIC_INFORMATION         
-      internal IntPtr Reserved1;
-      internal IntPtr PebBaseAddress;
-      internal IntPtr Reserved2_0;
-      internal IntPtr Reserved2_1;
-      internal IntPtr UniqueProcessId;
+      private IntPtr Reserved1;
+      private IntPtr PebBaseAddress;
+      private IntPtr Reserved2_0;
+      private IntPtr Reserved2_1;
+      private IntPtr UniqueProcessId;
       internal IntPtr InheritedFromUniqueProcessId;
     }
 
@@ -81,7 +86,7 @@ namespace System.Diagnostics {
     /// Gets the parent process of the current process.      
     /// </summary>        
     /// <returns>An instance of the Process class.</returns>    
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
@@ -91,7 +96,7 @@ namespace System.Diagnostics {
     /// </summary>    
     /// <param name="id">The process id.</param>   
     /// <returns>An instance of the Process class.</returns>   
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);

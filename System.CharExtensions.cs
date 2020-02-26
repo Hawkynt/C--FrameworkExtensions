@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,7 +22,7 @@
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
-#if NETFX_45
+#if NET45
 using System.Runtime.CompilerServices;
 #endif
 
@@ -37,10 +37,12 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
 
     /// <summary>
@@ -48,10 +50,12 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
 
     /// <summary>
@@ -59,10 +63,12 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
 
     /// <summary>
@@ -72,10 +78,12 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
 
     /// <summary>
@@ -85,10 +93,12 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is upper case; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsUpper(this char @this) => char.IsUpper(@this);
 
     /// <summary>
@@ -98,10 +108,12 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is lower case; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsLower(this char @this) => char.IsLower(@this);
 
     /// <summary>
@@ -111,10 +123,12 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a letter; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsLetter(this char @this) => char.IsLetter(@this);
 
     /// <summary>
@@ -122,10 +136,12 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The upper-case char.</returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static char ToUpper(this char @this) => char.ToUpper(@this);
 
     /// <summary>
@@ -134,10 +150,12 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The upper-case char.</returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
 
     /// <summary>
@@ -145,10 +163,12 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The lower-case char.</returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static char ToLower(this char @this) => char.ToLower(@this);
 
     /// <summary>
@@ -157,10 +177,12 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The lower-case char.</returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
 
     /// <summary>
@@ -171,10 +193,12 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
 
     /// <summary>
@@ -183,10 +207,12 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="count">The count.</param>
     /// <returns>A new string containing the given character the specified times.</returns>
-#if NETFX_45
+#if NET40
+    [Pure]
+#endif
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [Pure]
     public static string Repeat(this char @this, int count) => new string(@this, count);
   }
 }

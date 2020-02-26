@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,14 +21,14 @@
 
 using System.Collections;
 using System.Collections.Generic;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-#if NETFX_45
+#if NET45
 using System.Runtime.CompilerServices;
 #endif
 using System.Text;
@@ -151,10 +151,10 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="count">The number of characters to remove.</param>
     /// <returns>The new string</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string RemoveLast(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(0, @this.Length - count);
@@ -165,10 +165,10 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="count">The number of characters to remove.</param>
     /// <returns>The new string</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string RemoveFirst(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(count);
@@ -207,7 +207,7 @@ namespace System {
         if (len <= 0)
           return string.Empty;
 
-#if NETFX_4
+#if NET40
         Contract.Assume(len >= 0);
         Contract.Assume(start + len <= @this.Length);
 #endif
@@ -223,14 +223,14 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="length">The number of chars to get.</param>
     /// <returns>A string with the first n chars.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Left(this string @this, int length) {
-#if NETFX_4
+#if NET40
       Contract.Requires(length >= 0);
 #endif
       return @this?.Substring(0, Math.Min(length, @this.Length));
@@ -242,14 +242,14 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="length">The number of chars to get.</param>
     /// <returns>A string with the last n chars.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Right(this string @this, int length) {
-#if NETFX_4
+#if NET40
       Contract.Requires(length >= 0);
 #endif
       // ReSharper disable once UseNullPropagation
@@ -320,14 +320,14 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="pattern">The pattern to apply.</param>
     /// <returns><c>true</c> if the string matches the file pattern; otherwise, <c>false</c>.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool MatchesFilePattern(this string @this, string pattern) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(pattern != null);
 #endif
@@ -342,10 +342,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if it matches; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsMatch(this string This, Regex regex) => This != null && regex.IsMatch(This);
@@ -358,10 +358,10 @@ namespace System {
     /// <returns>
     ///   <c>false</c> if it matches; otherwise, <c>true</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotMatch(this string This, Regex regex) => !IsMatch(This, regex);
@@ -373,10 +373,10 @@ namespace System {
     /// <param name="regex">The regex.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => This != null && This.IsMatch(new Regex(regex, regexOptions));
@@ -388,10 +388,10 @@ namespace System {
     /// <param name="regex">The regex.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns><c>false</c> if it matches; otherwise, <c>true</c>.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => !IsMatch(This, regex, regexOptions);
@@ -403,11 +403,11 @@ namespace System {
     /// <param name="This">The data.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns>A <see cref="MatchCollection"/> containing the matches.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static MatchCollection Matches(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
@@ -423,11 +423,11 @@ namespace System {
     /// <returns>
     /// A <see cref="GroupCollection"/> containing the found groups.
     /// </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static GroupCollection MatchGroups(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
@@ -440,12 +440,12 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="parameters">The parameters to use for formatting.</param>
     /// <returns>A formatted string.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 
     public static string FormatWith(this string This, params object[] parameters) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(parameters != null);
 #endif
@@ -460,7 +460,7 @@ namespace System {
     /// <param name="comparer">The comparer.</param>
     /// <returns></returns>
     public static string FormatWithEx(this string @this, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
@@ -475,14 +475,14 @@ namespace System {
     /// <param name="comparer">The comparer.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
@@ -495,14 +495,14 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, params KeyValuePair<string, object>[] fields) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
@@ -515,14 +515,14 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, IDictionary<string, string> fields) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
@@ -535,14 +535,14 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="fields">The fields.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, Hashtable fields) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fields != null);
 #endif
@@ -578,7 +578,7 @@ namespace System {
         var next = i < length ? @this[i].ToString() : null;
 
         var fieldContentLength = i - lastStartPos - 1;
-#if NETFX_4
+#if NET40
         Contract.Assume(fieldContentLength >= 0 && fieldContentLength < @this.Length);
 #endif
 
@@ -643,10 +643,10 @@ namespace System {
     /// </summary>
     /// <param name="This">This String.</param>
     /// <returns>An new instance of RegularExpression.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Regex AsRegularExpression(this string This) => This == null ? null : new Regex(This);
@@ -659,10 +659,10 @@ namespace System {
     /// <returns>
     /// An new instance of RegularExpression.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Regex AsRegularExpression(this string This, RegexOptions options) => This == null ? null : new Regex(This, options);
@@ -673,10 +673,10 @@ namespace System {
     /// <param name="This">This string.</param>
     /// <param name="replacements">The replacements.</param>
     /// <returns>A new string containing all parts replaced.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MultipleReplace(this string This, params KeyValuePair<string, object>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, object>>)replacements);
@@ -687,10 +687,10 @@ namespace System {
     /// <param name="This">This string.</param>
     /// <param name="replacements">The replacements.</param>
     /// <returns>A new string containing all parts replaced.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MultipleReplace(this string This, params KeyValuePair<string, string>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, string>>)replacements);
@@ -748,14 +748,14 @@ namespace System {
     /// <param name="newValue">The replacement.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns>A string with the replacements.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ReplaceRegex(this string This, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
-#if NETFX_4
+#if NET40
       Contract.Requires(regex != null);
 #endif
       return This == null ? null : new Regex(regex, regexOptions).Replace(This, newValue ?? string.Empty);
@@ -769,14 +769,14 @@ namespace System {
     /// <returns>
     /// A string with the replacements.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Replace(this string This, Regex regex, string newValue) {
-#if NETFX_4
+#if NET40
       Contract.Requires(regex != null);
       Contract.Requires(newValue != null);
 #endif
@@ -792,11 +792,11 @@ namespace System {
     /// <param name="count">The number of times this gets replaced.</param>
     /// <param name="comparison">The comparison mode; defaults to CurrentCulture.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string Replace(this string This, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(Enum.IsDefined(typeof(StringComparison), comparison));
 #endif
       if (This == null || oldValue == null || count < 1)
@@ -811,19 +811,19 @@ namespace System {
       var pos = 0;
       for (var i = count; i > 0;) {
         --i;
-#if NETFX_4
+#if NET40
         Contract.Assume(pos < result.Length);
 #endif
         var n = result.IndexOf(oldValue, pos, comparison);
         if (n < 0)
           break;
         if (n == 0) {
-#if NETFX_4
+#if NET40
           Contract.Assume(removedLength <= result.Length);
 #endif
           result = newValue + result.Substring(removedLength);
         } else {
-#if NETFX_4
+#if NET40
           Contract.Assume(n + removedLength <= result.Length);
 #endif
           result = result.Substring(0, n) + newValue + result.Substring(n + removedLength);
@@ -840,10 +840,10 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string UpperFirst(this string This) => This == null ? null : This.Length == 1 ? This.ToUpper() : This.Substring(0, 1).ToUpper() + This.Substring(1);
@@ -855,10 +855,10 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string UpperFirstInvariant(this string This) => This == null ? null : This.Length == 1 ? This.ToUpperInvariant() : This.Substring(0, 1).ToUpperInvariant() + This.Substring(1);
@@ -871,10 +871,10 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string LowerFirst(this string This, CultureInfo culture = null) => This == null ? null : This.Length == 1 ? (culture == null ? This.ToLower() : This.ToLower(culture)) : (culture == null ? This.Substring(0, 1).ToLower() : This.Substring(0, 1).ToLower(culture)) + This.Substring(1);
@@ -886,10 +886,10 @@ namespace System {
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string LowerFirstInvariant(this string This) => This == null ? null : This.Length == 1 ? This.ToLowerInvariant() : This.Substring(0, 1).ToLowerInvariant() + This.Substring(1);
@@ -901,10 +901,10 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, char splitter, int max = 0) => This.Split(splitter.ToString(), (ulong)max).ToArray();
@@ -916,10 +916,10 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<string> Split(this string This, char splitter, ulong max = 0) => This.Split(splitter.ToString(), max);
@@ -931,11 +931,11 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
     /// <returns>The parts.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static IEnumerable<string> Split(this string This, string splitter, ulong max = 0) {
-#if NETFX_4
+#if NET40
       Contract.Requires(!string.IsNullOrEmpty(splitter));
 #endif
       if (This == null)
@@ -948,7 +948,7 @@ namespace System {
 
       var currentStartIndex = 0;
 
-#if NETFX_4
+#if NET40
       Contract.Assume(currentStartIndex <= This.Length);
 #endif
       while (max-- > 0 && (startIndex = This.IndexOf(splitter, currentStartIndex, StringComparison.Ordinal)) >= 0) {
@@ -956,7 +956,7 @@ namespace System {
         currentStartIndex = startIndex + splitterLength;
       }
 
-#if NETFX_4
+#if NET40
       Contract.Assume(currentStartIndex <= This.Length);
 #endif
       yield return This.Substring(currentStartIndex);
@@ -968,14 +968,14 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="regex">The regex to use.</param>
     /// <returns>The parts.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, Regex regex) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(regex != null);
 #endif
@@ -989,14 +989,14 @@ namespace System {
     /// <param name="splitter">The splitter.</param>
     /// <param name="options">The options.</param>
     /// <returns>The parts</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, string splitter, StringSplitOptions options) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       return This.Split(new[] { splitter }, options);
@@ -1008,7 +1008,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="culture">The culture to use; defaults to current culture.</param>
     /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string ToCamelCase(this string This, CultureInfo culture = null) {
@@ -1048,10 +1048,10 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="culture">The culture to use; defaults to current culture.</param>
     /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToPascalCase(this string This, CultureInfo culture = null) => This.ToCamelCase().LowerFirst(culture);
@@ -1061,14 +1061,14 @@ namespace System {
     /// </summary>
     /// <param name="This">This ConnectionString.</param>
     /// <returns>The transformed result.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToLinq2SqlConnectionString(this string This) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       var regex = new Regex(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
@@ -1080,10 +1080,10 @@ namespace System {
     /// </summary>
     /// <param name="This">This String.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MsSqlDataEscape(this object This) => This == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", This).Replace("'", "''") + "'";
@@ -1093,14 +1093,14 @@ namespace System {
     /// </summary>
     /// <param name="This">This String.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MsSqlIdentifierEscape(this string This) {
-#if NETFX_4
+#if NET40
       Contract.Requires(!This.IsNullOrWhiteSpace());
 #endif
       return "[" + This.Replace("]", "]]") + "]";
@@ -1133,7 +1133,7 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
     public static bool EqualsAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(values != null);
 #endif
       return values.Any(s => string.Equals(@this, s, stringComparison));
@@ -1164,7 +1164,7 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
     public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(values != null);
 #endif
@@ -1196,7 +1196,7 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
     public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(values != null);
 #endif
@@ -1212,14 +1212,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string starts with the given character; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool StartsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       return This.Length > 0 && string.Equals(This[0] + string.Empty, value + string.Empty, stringComparison);
@@ -1234,14 +1234,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string ends with the given character; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool EndsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       return This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison);
@@ -1254,10 +1254,10 @@ namespace System {
     /// <param name="value">The value.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool StartsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.StartsWith(value, stringComparison);
@@ -1269,10 +1269,10 @@ namespace System {
     /// <param name="value">The value.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool EndsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.EndsWith(value, stringComparison);
@@ -1286,14 +1286,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsSurroundedWith(this string This, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(text != null);
 #endif
@@ -1310,14 +1310,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsSurroundedWith(this string This, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(prefix != null);
       Contract.Requires(postfix != null);
@@ -1333,7 +1333,7 @@ namespace System {
     /// <param name="replacement">The replacement.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string ReplaceAtStart(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1352,7 +1352,7 @@ namespace System {
     /// <param name="replacement">The replacement.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string ReplaceAtEnd(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1370,10 +1370,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNullOrEmpty(this string This) => string.IsNullOrEmpty(This);
@@ -1385,10 +1385,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotNullOrEmpty(this string This) => !string.IsNullOrEmpty(This);
@@ -1400,10 +1400,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if NETFX_4
+#if NET40
     [Pure]
     public static bool IsNullOrWhiteSpace(this string This) => string.IsNullOrWhiteSpace(This);
 #else
@@ -1417,10 +1417,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if NETFX_4
+#if NET40
     [Pure]
     public static bool IsNotNullOrWhiteSpace(this string This) => !string.IsNullOrWhiteSpace(This);
 #else
@@ -1436,14 +1436,14 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the other string is part of the given string; otherwise, <c>false</c>.
     /// </returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Contains(this string This, string other, StringComparison comparisonType) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(other != null);
 #endif
@@ -1472,7 +1472,7 @@ namespace System {
     ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
     /// </returns>
     public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(other != null);
 #endif
@@ -1485,10 +1485,10 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string DefaultIfNullOrEmpty(this string This, string defaultValue = null) => This.IsNullOrEmpty() ? defaultValue : This;
@@ -1499,10 +1499,10 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 
@@ -1519,10 +1519,10 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The given string or the given default value.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
@@ -1535,7 +1535,7 @@ namespace System {
     /// <param name="count">The maximum number of lines to support, 0 means unlimited.</param>
     /// <param name="options">The options.</param>
     /// <returns>The lines which where identified.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string[] Lines(this string This, string delimiter = null, int count = 0, StringSplitOptions options = StringSplitOptions.None) {
@@ -1618,7 +1618,7 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
-#if NETFX_4
+#if NET40
           currentPart.Clear();
 #else
           currentPart.Length = 0;
@@ -1696,7 +1696,7 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
-#if NETFX_4
+#if NET40
           currentPart.Clear();
 #else
           currentPart.Length = 0;
@@ -1746,7 +1746,7 @@ namespace System {
     /// </summary>
     /// <param name="This">This String, e.g. 172.17.4.3:http .</param>
     /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static HostEndPoint ParseHostAndPort(this string This) {
@@ -1773,11 +1773,11 @@ namespace System {
     /// <param name="chars">The chars to replace.</param>
     /// <param name="replacement">The replacement.</param>
     /// <returns>The new string with replacements done.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
     public static string ReplaceAnyOf(this string This, string chars, string replacement) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(chars != null);
 #endif
@@ -1810,7 +1810,7 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <returns>The number of lines.</returns>
     public static long LineCount(this string @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var crlf = @this.Split(new[] { "\r\n" }, StringSplitOptions.None);

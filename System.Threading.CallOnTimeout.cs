@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 
@@ -41,7 +41,7 @@ namespace System.Threading {
 
     #region ctor,dtor
     public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
-#if NETFX_4
+#if NET40
       Contract.Requires(timeoutAction!=null);
 #endif
       this.Timeout = timeout;

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -25,8 +25,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace System.IO {
-  partial class FastFileOperations {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
+  internal partial class FastFileOperations {
 
+    // ReSharper disable once PartialTypeWithSinglePart
+    partial interface IFileComparer { }
+
+    // ReSharper disable once PartialTypeWithSinglePart
     private static partial class NativeMethods {
       [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
       public static extern int memcmp(byte[] b1, byte[] b2, long count);
@@ -61,8 +67,8 @@ namespace System.IO {
         if (chunks > 2)
           scanFirstChunks.Add((chunks >> 1) * __COMPARE_BUFFER_LENGTH);
 
-        using (var xStream = x.Open(FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH))
-        using (var yStream = y.Open(FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH)) {
+        using (var xStream = new FileStream(x.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH))
+        using (var yStream = new FileStream(y.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH)) {
 
           // first direct scan
           if (scanFirstChunks.Any(offset => _ReadAndCompareTrueWhenDifferent(xStream, yStream, offset, bufferX, bufferY, __COMPARE_BUFFER_LENGTH)))

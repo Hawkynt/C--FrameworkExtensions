@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,9 +19,10 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
-
+// ReSharper disable UnusedMember.Global
 namespace System.Windows.Controls.Primitives {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
   internal static partial class SelectorExtensions {
     /// <summary>
     /// Tries to cast the selected value into the given type.
@@ -31,12 +32,14 @@ namespace System.Windows.Controls.Primitives {
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryCastSelectedValue<TType>(this Selector This, ref TType value) {
-      Contract.Requires(This != null);
+      if (This == null)
+        throw new NullReferenceException();
+
       try {
         value = (TType)This.SelectedValue;
-        return (true);
+        return true;
       } catch (InvalidCastException) {
-        return (false);
+        return false;
       }
     }
   }

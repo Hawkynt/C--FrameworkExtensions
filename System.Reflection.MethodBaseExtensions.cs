@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -65,65 +65,65 @@ namespace System.Reflection {
           result += " ";
           switch (this.code.OperandType) {
             case OperandType.InlineField: {
-              var fOperand = ((FieldInfo)this.operand);
-              result += fOperand.FieldType + " " + fOperand.ReflectedType + "::" + fOperand.Name + "";
-              break;
-            }
-            case OperandType.InlineMethod: {
-              var mOperand = this.operand as MethodInfo;
-              if (mOperand != null) {
-                if (!mOperand.IsStatic)
-                  result += "instance ";
-
-                result += mOperand.ReturnType + " " + mOperand.ReflectedType + "::" + mOperand.Name + "()";
-              } else {
-                var cOperand = (ConstructorInfo)this.operand;
-                result += " ";
-                if (!cOperand.IsStatic)
-                  result += "instance ";
-                result += "void " + cOperand.ReflectedType + "::" + cOperand.Name + "()";
+                var fOperand = ((FieldInfo)this.operand);
+                result += fOperand.FieldType + " " + fOperand.ReflectedType + "::" + fOperand.Name + "";
+                break;
               }
-              break;
-            }
+            case OperandType.InlineMethod: {
+                var mOperand = this.operand as MethodInfo;
+                if (mOperand != null) {
+                  if (!mOperand.IsStatic)
+                    result += "instance ";
+
+                  result += mOperand.ReturnType + " " + mOperand.ReflectedType + "::" + mOperand.Name + "()";
+                } else {
+                  var cOperand = (ConstructorInfo)this.operand;
+                  result += " ";
+                  if (!cOperand.IsStatic)
+                    result += "instance ";
+                  result += "void " + cOperand.ReflectedType + "::" + cOperand.Name + "()";
+                }
+                break;
+              }
             case OperandType.ShortInlineBrTarget:
             case OperandType.InlineBrTarget: {
-              result += this.GetExpandedOffset((int)this.operand);
-              break;
-            }
+                result += this.GetExpandedOffset((int)this.operand);
+                break;
+              }
             case OperandType.InlineType: {
-              result += this.operand;
-              break;
-            }
+                result += this.operand;
+                break;
+              }
             case OperandType.InlineString: {
-              if (this.operand.ToString() == "\r\n")
-                result += "\"\\r\\n\"";
-              else
-                result += "\"" + this.operand + "\"";
-              break;
-            }
+                if (this.operand.ToString() == "\r\n")
+                  result += "\"\\r\\n\"";
+                else
+                  result += "\"" + this.operand + "\"";
+                break;
+              }
             case OperandType.ShortInlineVar: {
-              result += this.operand.ToString();
-              break;
-            }
+                result += this.operand.ToString();
+                break;
+              }
             case OperandType.InlineI:
             case OperandType.InlineI8:
             case OperandType.InlineR:
             case OperandType.ShortInlineI:
             case OperandType.ShortInlineR: {
-              result += this.operand.ToString();
-              break;
-            }
+                result += this.operand.ToString();
+                break;
+              }
             case OperandType.InlineTok: {
-              if (this.operand is Type)
-                result += ((Type)this.operand).FullName;
-              else
-                result += "not supported";
-              break;
-            }
+                if (this.operand is Type)
+                  result += ((Type)this.operand).FullName;
+                else
+                  result += "not supported";
+                break;
+              }
             default: {
-              result += "not supported";
-              break;
-            }
+                result += "not supported";
+                break;
+              }
           }
         }
         return result;
@@ -227,7 +227,6 @@ namespace System.Reflection {
         }
         instruction.Code = code;
         instruction.Offset = position - 1;
-        var metadataToken = 0;
 
         // get the operand of the current operation
         position = _ReadOperand(This, code, position, il, module, instruction);
@@ -240,107 +239,107 @@ namespace System.Reflection {
       int metadataToken;
       switch (code.OperandType) {
         case OperandType.InlineBrTarget: {
-          metadataToken = ReadInt32(il, ref position);
-          metadataToken += position;
-          instruction.Operand = metadataToken;
-          break;
-        }
-        case OperandType.InlineField: {
-          metadataToken = ReadInt32(il, ref position);
-          instruction.Operand = module.ResolveField(metadataToken);
-          break;
-        }
-        case OperandType.InlineMethod: {
-          metadataToken = ReadInt32(il, ref position);
-          try {
-            instruction.Operand = module.ResolveMethod(metadataToken);
-          } catch {
-            instruction.Operand = module.ResolveMember(metadataToken);
+            metadataToken = ReadInt32(il, ref position);
+            metadataToken += position;
+            instruction.Operand = metadataToken;
+            break;
           }
-          break;
-        }
+        case OperandType.InlineField: {
+            metadataToken = ReadInt32(il, ref position);
+            instruction.Operand = module.ResolveField(metadataToken);
+            break;
+          }
+        case OperandType.InlineMethod: {
+            metadataToken = ReadInt32(il, ref position);
+            try {
+              instruction.Operand = module.ResolveMethod(metadataToken);
+            } catch {
+              instruction.Operand = module.ResolveMember(metadataToken);
+            }
+            break;
+          }
         case OperandType.InlineSig: {
-          metadataToken = ReadInt32(il, ref position);
-          instruction.Operand = module.ResolveSignature(metadataToken);
-          break;
-        }
+            metadataToken = ReadInt32(il, ref position);
+            instruction.Operand = module.ResolveSignature(metadataToken);
+            break;
+          }
         case OperandType.InlineTok: {
-          metadataToken = ReadInt32(il, ref position);
-          try {
-            instruction.Operand = module.ResolveType(metadataToken);
-          } catch { }
-          // SSS : see what to do here
-          break;
-        }
+            metadataToken = ReadInt32(il, ref position);
+            try {
+              instruction.Operand = module.ResolveType(metadataToken);
+            } catch { }
+            // SSS : see what to do here
+            break;
+          }
         case OperandType.InlineType: {
-          metadataToken = ReadInt32(il, ref position);
-          // now we call the ResolveType always using the generic attributes type in order
-          // to support decompilation of generic methods and classes
+            metadataToken = ReadInt32(il, ref position);
+            // now we call the ResolveType always using the generic attributes type in order
+            // to support decompilation of generic methods and classes
 
-          // thanks to the guys from code project who commented on this missing feature
+            // thanks to the guys from code project who commented on this missing feature
 
-          instruction.Operand = module.ResolveType(metadataToken, This.DeclaringType.GetGenericArguments(), This.GetGenericArguments());
-          break;
-        }
+            instruction.Operand = module.ResolveType(metadataToken, This.DeclaringType.GetGenericArguments(), This.GetGenericArguments());
+            break;
+          }
         case OperandType.InlineI: {
-          instruction.Operand = ReadInt32(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadInt32(il, ref position);
+            break;
+          }
         case OperandType.InlineI8: {
-          instruction.Operand = ReadInt64(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadInt64(il, ref position);
+            break;
+          }
         case OperandType.InlineNone: {
-          instruction.Operand = null;
-          break;
-        }
+            instruction.Operand = null;
+            break;
+          }
         case OperandType.InlineR: {
-          instruction.Operand = ReadDouble(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadDouble(il, ref position);
+            break;
+          }
         case OperandType.InlineString: {
-          metadataToken = ReadInt32(il, ref position);
-          instruction.Operand = module.ResolveString(metadataToken);
-          break;
-        }
+            metadataToken = ReadInt32(il, ref position);
+            instruction.Operand = module.ResolveString(metadataToken);
+            break;
+          }
         case OperandType.InlineSwitch: {
-          var count = ReadInt32(il, ref position);
-          var casesAddresses = new int[count];
-          for (var i = 0; i < count; i++)
-            casesAddresses[i] = ReadInt32(il, ref position);
+            var count = ReadInt32(il, ref position);
+            var casesAddresses = new int[count];
+            for (var i = 0; i < count; i++)
+              casesAddresses[i] = ReadInt32(il, ref position);
 
-          var cases = new int[count];
-          for (var i = 0; i < count; i++)
-            cases[i] = position + casesAddresses[i];
+            var cases = new int[count];
+            for (var i = 0; i < count; i++)
+              cases[i] = position + casesAddresses[i];
 
-          break;
-        }
+            break;
+          }
         case OperandType.InlineVar: {
-          instruction.Operand = ReadUInt16(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadUInt16(il, ref position);
+            break;
+          }
         case OperandType.ShortInlineBrTarget: {
-          instruction.Operand = ReadSByte(il, ref position) + position;
-          break;
-        }
+            instruction.Operand = ReadSByte(il, ref position) + position;
+            break;
+          }
         case OperandType.ShortInlineI: {
-          if (instruction.Code == OpCodes.Ldc_I4_S)
-            instruction.Operand = ReadSByte(il, ref position);
-          else
-            instruction.Operand = ReadByte(il, ref position);
-          break;
-        }
+            if (instruction.Code == OpCodes.Ldc_I4_S)
+              instruction.Operand = ReadSByte(il, ref position);
+            else
+              instruction.Operand = ReadByte(il, ref position);
+            break;
+          }
         case OperandType.ShortInlineR: {
-          instruction.Operand = ReadSingle(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadSingle(il, ref position);
+            break;
+          }
         case OperandType.ShortInlineVar: {
-          instruction.Operand = ReadByte(il, ref position);
-          break;
-        }
+            instruction.Operand = ReadByte(il, ref position);
+            break;
+          }
         default: {
-          throw new Exception("Unknown operand type.");
-        }
+            throw new Exception("Unknown operand type.");
+          }
       }
       return position;
     }

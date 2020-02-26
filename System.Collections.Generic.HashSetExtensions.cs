@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,10 +21,10 @@
 
 using System.Diagnostics;
 using System.Linq;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
-#if NETFX_45
+#if NET45
 using System.Runtime.CompilerServices;
 #endif
 
@@ -80,7 +80,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -108,10 +108,10 @@ namespace System.Collections.Generic {
     /// <param name="this">This HashSet.</param>
     /// <param name="item">The item.</param>
     /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
-#if NETFX_4
+#if NET40
     [Pure]
 #endif
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -130,7 +130,7 @@ namespace System.Collections.Generic {
       if (@this == null)
         throw new NullReferenceException();
 
-#if NETFX_4
+#if NET40
       Contract.EndContractBlock();
 #endif
 
@@ -141,7 +141,7 @@ namespace System.Collections.Generic {
       return true;
     }
 
-#if NETFX_45
+#if NET45
     /// <summary>
     /// Tries to remove the given item.
     /// </summary>

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,6 +21,7 @@
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using DrawingSize = System.Drawing.Size;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -200,7 +201,7 @@ namespace System.Windows.Forms {
       return result;
     }
 
-    public static Bitmap DrawToBitmap(this RichTextBox @this, Size size) => DrawToBitmap(@this, size.Width, size.Height);
+    public static Bitmap DrawToBitmap(this RichTextBox @this, DrawingSize size) => DrawToBitmap(@this, size.Width, size.Height);
     public static void DrawToBitmap(this RichTextBox @this, Bitmap target) => _DrawToBitmap(@this, target);
 
     /// <summary>

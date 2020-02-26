@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 

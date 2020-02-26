@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -36,7 +36,16 @@ namespace System.IO {
   /// <summary>
   /// The fastest copy/move/delete/sync ops for files and directories.
   /// </summary>
-  partial class FastFileOperations {
+  static partial class FastFileOperations {
+    partial interface IFileSystemOperation { }
+    partial interface IDirectoryOperation { }
+    partial interface IDirectoryReport { }
+    partial interface IFileSystemReport { }
+    partial interface IFileComparer { }
+    partial class FileLengthComparer : IFileComparer { }
+    partial class FileLastWriteTimeComparer : IFileComparer { }
+    partial class FileSimpleAttributesComparer : IFileComparer { }
+    partial class FileCreationTimeComparer : IFileComparer { }
 
     private class DirectoryCopyOperation : IDirectoryOperation {
       #region nested types
@@ -58,19 +67,19 @@ namespace System.IO {
         #endregion
 
         #region Implementation of IDirectoryReport
-        public ReportType ReportType { get { return (this._reportType); } }
-        public IFileSystemOperation Operation { get { return (this._operation); } }
-        public int StreamIndex { get { return this._streamIndex; } }
-        public long StreamOffset { get { return this._streamOffset; } }
-        public long ChunkOffset { get { return this._chunkOffset; } }
-        public long ChunkSize { get { return this._chunkSize; } }
-        public long StreamSize { get { return this._streamSize; } }
-        public FileSystemInfo Source { get { return this._source; } }
-        public FileSystemInfo Target { get { return this._target; } }
+        public ReportType ReportType => this._reportType;
+        public IFileSystemOperation Operation => this._operation;
+        public int StreamIndex => this._streamIndex;
+        public long StreamOffset => this._streamOffset;
+        public long ChunkOffset => this._chunkOffset;
+        public long ChunkSize => this._chunkSize;
+        public long StreamSize => this._streamSize;
+        public FileSystemInfo Source => this._source;
+        public FileSystemInfo Target => this._target;
 
         public ContinuationType ContinuationType {
-          get { return this._continuationType; }
-          set { this._continuationType = value; }
+          get => this._continuationType;
+          set => this._continuationType = value;
         }
 
         #endregion
@@ -94,10 +103,10 @@ namespace System.IO {
       #region fields
 
       private readonly IFileComparer[] _comparers =  {
-        new FileLengthComparer(), 
-        new FileLastWriteTimeComparer(), 
-        new FileSimpleAttributesComparer(), 
-        new FileCreationTimeComparer(), 
+        new FileLengthComparer(),
+        new FileLastWriteTimeComparer(),
+        new FileSimpleAttributesComparer(),
+        new FileCreationTimeComparer(),
       };
 
       private readonly DirectoryInfo _source;
@@ -130,7 +139,8 @@ namespace System.IO {
       #endregion
 
       #region props
-      private bool IsSuccessfulEndConditionReached { get { return (Interlocked.Read(ref this._bytesTransferred) == Interlocked.Read(ref this._bytesToTransfer) && !this._filesToCopy.Any() && !this._directoriesToParse.Any()); } }
+      private bool IsSuccessfulEndConditionReached => Interlocked.Read(ref this._bytesTransferred) == Interlocked.Read(ref this._bytesToTransfer) && !this._filesToCopy.Any() && !this._directoriesToParse.Any();
+
       #endregion
 
       #region ctor,dtor
@@ -142,8 +152,8 @@ namespace System.IO {
         this._allowHardLinks = allowHardLinks;
         this._allowIntegrate = allowIntegrate;
         this._dontResolveSymbolicLinks = dontResolveSymbolicLinks;
-        this._filter = filter ?? (_ => true);
-        this._callback = callback ?? (_ => { });
+        this._filter = filter ?? _ => true;
+        this._callback = callback ?? _ => { };
       }
 
       private void _Dispose() {
@@ -153,15 +163,15 @@ namespace System.IO {
       #endregion
 
       #region Implementation of IDirectoryOperation
-      public FileSystemInfo Source { get { return this._source; } }
-      public FileSystemInfo Target { get { return this._target; } }
-      public long TotalSize { get { return (Interlocked.Read(ref this._totalSize)); } }
-      public long BytesToTransfer { get { return (Interlocked.Read(ref this._bytesToTransfer)); } }
-      public long BytesRead { get { return (Interlocked.Read(ref this._bytesRead)); } }
-      public long BytesTransferred { get { return (Interlocked.Read(ref this._bytesTransferred)); } }
+      public FileSystemInfo Source => this._source;
+      public FileSystemInfo Target => this._target;
+      public long TotalSize => Interlocked.Read(ref this._totalSize);
+      public long BytesToTransfer => Interlocked.Read(ref this._bytesToTransfer);
+      public long BytesRead => Interlocked.Read(ref this._bytesRead);
+      public long BytesTransferred => Interlocked.Read(ref this._bytesTransferred);
 
       public int StreamCount {
-        get { return (this._streamCount); }
+        get => this._streamCount;
         set {
           this._streamCount = Math.Max(1, value);
           Thread.MemoryBarrier();
@@ -170,7 +180,7 @@ namespace System.IO {
       }
 
       public int CrawlerCount {
-        get { return (this._crawlerCount); }
+        get => this._crawlerCount;
         set {
           this._crawlerCount = Math.Max(1, value);
           Thread.MemoryBarrier();
@@ -178,9 +188,9 @@ namespace System.IO {
         }
       }
 
-      public Exception Exception { get { return (this._exception); } }
-      public bool IsDone { get { return (this._finishEvent.IsSet); } }
-      public bool ThrewException { get { return (this._exception != null); } }
+      public Exception Exception => this._exception;
+      public bool IsDone => this._finishEvent.IsSet;
+      public bool ThrewException => this._exception != null;
 
       public void Abort() {
         this.AbortOperation(new OperationCanceledException(_EX_USER_ABORT));
@@ -191,7 +201,7 @@ namespace System.IO {
       }
 
       public bool WaitTillDone(TimeSpan timeout) {
-        return (this._finishEvent.Wait(timeout));
+        return this._finishEvent.Wait(timeout);
       }
       #endregion
 
@@ -215,7 +225,7 @@ namespace System.IO {
       }
 
       private long _AddBytesProcessing(long count) {
-        return (Interlocked.Add(ref this._bytesProcessing, count) - count);
+        return Interlocked.Add(ref this._bytesProcessing, count) - count;
       }
       #endregion
 
@@ -226,7 +236,7 @@ namespace System.IO {
       /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
       private bool _MatchesFilter(FileSystemInfo info) {
         Contract.Requires(info != null);
-        return (this._filter(info));
+        return this._filter(info);
       }
 
       /// <summary>
@@ -238,16 +248,16 @@ namespace System.IO {
       private bool _FileNeedsSync(FileInfo sourceFile, FileInfo targetFile) {
         Contract.Requires(sourceFile != null);
         Contract.Requires(targetFile != null);
-        if (sourceFile.NotExists())
-          return (false);
+        if (!sourceFile.Exists)
+          return false;
 
-        if (targetFile.NotExists())
-          return (true);
+        if (!targetFile.Exists)
+          return true;
 
         if (!this._allowOverwrite)
-          return (false);
+          return false;
 
-        return (!this._comparers.All(c => c.Equals(sourceFile, targetFile)));
+        return !this._comparers.All(c => c.Equals(sourceFile, targetFile));
       }
 
       #region threads
@@ -269,10 +279,10 @@ namespace System.IO {
         var result = Interlocked.Increment(ref this._lastCrawlerIndex) - 1;
         if (result >= this._crawlerCount) {
           Interlocked.Decrement(ref this._lastCrawlerIndex);
-          return (-1);
+          return -1;
         }
 
-        return (result);
+        return result;
       }
 
       /// <summary>
@@ -297,10 +307,10 @@ namespace System.IO {
         var result = Interlocked.Increment(ref this._lastStreamIndex) - 1;
         if (result >= this._streamCount) {
           Interlocked.Decrement(ref this._lastStreamIndex);
-          return (-1);
+          return -1;
         }
 
-        return (result);
+        return result;
       }
 
       /// <summary>
@@ -324,14 +334,14 @@ namespace System.IO {
       private Thread _TryStartCrawlerThread() {
         var index = this._CreateCrawlerIndex();
         if (index < 0)
-          return (null);
+          return null;
 
         var result = new Thread(this._CrawlerThread) {
           IsBackground = true,
           Name = "Crawler #" + index
         };
         result.Start(index);
-        return (result);
+        return result;
       }
 
       /// <summary>
@@ -341,14 +351,14 @@ namespace System.IO {
       private Thread _TryStartStreamThread() {
         var index = this._CreateStreamIndex();
         if (index < 0)
-          return (null);
+          return null;
 
         var result = new Thread(this._StreamThread) {
           IsBackground = true,
           Name = "Stream #" + index
         };
         result.Start(index);
-        return (result);
+        return result;
       }
 
 
@@ -378,8 +388,8 @@ namespace System.IO {
             try {
               Interlocked.Increment(ref this._workingCrawlers);
 
-              var sourceDirectory = this._source.Directory(directoryName);
-              var targetDirectory = this._target.Directory(directoryName);
+              var sourceDirectory = new DirectoryInfo(Path.Combine(this._source.FullName, directoryName));
+              var targetDirectory = new DirectoryInfo(Path.Combine(this._target.FullName, directoryName));
 
               if (targetDirectory.Exists && !this._allowIntegrate)
                 if (this.AbortOperation(new IOException(string.Format(_EX_TARGET_DIRECTORY_ALREADY_EXISTS, targetDirectory.FullName))).ContinuationType == ContinuationType.AbortOperation)
@@ -440,7 +450,7 @@ namespace System.IO {
       /// <returns></returns>
       private bool _TrySynchronizeTargetDirectory(DirectoryInfo targetDirectory, HashSet<string> dirs, HashSet<string> files) {
         if (!this._allowDelete)
-          return (true);
+          return true;
 
         foreach (var item in targetDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter)) {
 
@@ -451,7 +461,7 @@ namespace System.IO {
                 directoryInfo.Delete(true);
               } catch (Exception e) {
                 if (this.AbortOperation(e).ContinuationType == ContinuationType.AbortOperation)
-                  return (false);
+                  return false;
               }
             }
 
@@ -464,13 +474,13 @@ namespace System.IO {
                 item.Delete();
               } catch (Exception e) {
                 if (this.AbortOperation(e).ContinuationType == ContinuationType.AbortOperation)
-                  return (false);
+                  return false;
               }
             }
           }
         }
 
-        return (true);
+        return true;
       }
 
       /// <summary>
@@ -489,8 +499,8 @@ namespace System.IO {
 
             try {
               Interlocked.Increment(ref this._workingStreams);
-              var sourceFile = this._source.File(fileName);
-              var targetFile = this._target.File(fileName);
+              var sourceFile = new FileInfo(Path.Combine(this._source.FullName, fileName));
+              var targetFile = new FileInfo(Path.Combine(this._target.FullName, fileName));
               var baseOffset = this._AddBytesProcessing(sourceFile.Length);
 
               var token = sourceFile.CopyToAsync(targetFile, this._allowOverwrite, this._allowHardLinks, this._dontResolveSymbolicLinks, t => this._HandleFileOperationCallback(t, baseOffset, index));
@@ -519,36 +529,36 @@ namespace System.IO {
         switch (fileSystemReport.ReportType) {
           case ReportType.StartRead:
           case ReportType.StartWrite: {
-            this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            break;
-          }
+              this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              break;
+            }
           case ReportType.FinishedRead: {
-            this._AddBytesRead(fileSystemReport.ChunkSize);
-            this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            break;
-          }
+              this._AddBytesRead(fileSystemReport.ChunkSize);
+              this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              break;
+            }
           case ReportType.FinishedWrite: {
-            this._AddBytesTransferred(fileSystemReport.ChunkSize);
-            this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            break;
-          }
+              this._AddBytesTransferred(fileSystemReport.ChunkSize);
+              this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              break;
+            }
           case ReportType.FinishedOperation: {
-            if (this.IsSuccessfulEndConditionReached)
-              this.FinishOperation();
+              if (this.IsSuccessfulEndConditionReached)
+                this.FinishOperation();
 
-            this._CreateReport(ReportType.FinishedWrite, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            break;
-          }
+              this._CreateReport(ReportType.FinishedWrite, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              break;
+            }
           case ReportType.CreatedLink: {
-            this._AddBytesTransferred(fileSystemReport.StreamSize);
-            this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            break;
-          }
+              this._AddBytesTransferred(fileSystemReport.StreamSize);
+              this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              break;
+            }
           case ReportType.AbortedOperation: {
-            var result = this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
-            fileSystemReport.ContinuationType = result.ContinuationType;
-            break;
-          }
+              var result = this._CreateReport(fileSystemReport.ReportType, fileSystemReport.Source, fileSystemReport.Target, streamIndex, streamOffset, fileSystemReport.ChunkOffset, fileSystemReport.ChunkSize);
+              fileSystemReport.ContinuationType = result.ContinuationType;
+              break;
+            }
         }
       }
       #endregion
@@ -558,7 +568,7 @@ namespace System.IO {
       private DirectoryCopyReport _CreateReport(ReportType reportType, FileSystemInfo source, FileSystemInfo target, int streamIndex, long streamOffset, long offset, long size) {
         var result = new DirectoryCopyReport(reportType, this, source, target, streamIndex, streamOffset, offset, size);
         this._callback(result);
-        return (result);
+        return result;
       }
 
       private DirectoryCopyReport AbortOperation(Exception exception) {
@@ -568,7 +578,7 @@ namespace System.IO {
           this._Dispose();
           this._finishEvent.Set();
         }
-        return (result);
+        return result;
       }
 
 
@@ -576,13 +586,13 @@ namespace System.IO {
         this._directoriesToParse.Enqueue(".");
         this._StartCrawlerThreads();
         this._StartStreamThreads();
-        return (this._CreateReport(ReportType.StartOperation, this._source, this._target, -1, 0, 0, 0));
+        return this._CreateReport(ReportType.StartOperation, this._source, this._target, -1, 0, 0, 0);
       }
 
       private DirectoryCopyReport FinishOperation() {
         this._Dispose();
         this._finishEvent.Set();
-        return (this._CreateReport(ReportType.FinishedOperation, this._source, this._target, -1, 0, 0, this.TotalSize));
+        return this._CreateReport(ReportType.FinishedOperation, this._source, this._target, -1, 0, 0, this.TotalSize);
       }
       #endregion
 
@@ -623,7 +633,7 @@ namespace System.IO {
       if (!Directory.Exists(target.FullName))
         target.Create();
 
-      return (operation.StartOperation());
+      return operation.StartOperation();
     }
 
     /// <summary>
@@ -647,7 +657,7 @@ namespace System.IO {
       var token = CopyToAsync(This, target, overwrite, allowHardLinks, dontResolveSymbolicLinks, allowIntegrate, synchronizeTarget, predicate, callback, crawlerThreads, streamThreads);
       token.Operation.WaitTillDone();
       if (token.Operation.ThrewException)
-        throw (token.Operation.Exception);
+        throw token.Operation.Exception;
     }
     #endregion
   }

@@ -19,7 +19,7 @@
 */
 #endregion
 
-#undef SUPPORTTHREADTIMERS
+#define SUPPORTTHREADTIMERS
 
 using System.Collections.Concurrent;
 using System.Diagnostics.Contracts;
@@ -179,8 +179,8 @@ namespace System.Threading.Tasks {
 #if SUPPORTTHREADTIMERS
       if (this._allowThreadSleep) {
 #endif
-      Action<object> action = this._OnTimeIsUp;
-      action.BeginInvoke(sleepTime, action.EndInvoke, null);
+        Action<object> action = this._OnTimeIsUp;
+        action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
       } else {
         this._timer.Change(sleepTime, Timeout.Infinite);
@@ -304,8 +304,8 @@ namespace System.Threading.Tasks {
 #if SUPPORTTHREADTIMERS
       if (this._allowThreadSleep) {
 #endif
-      Action<object> action = this._OnTimeIsUp;
-      action.BeginInvoke(sleepTime, action.EndInvoke, null);
+        Action<object> action = this._OnTimeIsUp;
+        action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
       } else {
         this._timer.Change(sleepTime, Timeout.Infinite);
@@ -460,8 +460,8 @@ namespace System.Threading.Tasks {
 #if SUPPORTTHREADTIMERS
       if (this._allowThreadSleep) {
 #endif
-      Action<object> action = this._OnTimeIsUp;
-      action.BeginInvoke(sleepTime, action.EndInvoke, null);
+        Action<object> action = this._OnTimeIsUp;
+        action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
       } else {
         this._timer.Change(sleepTime, Timeout.Infinite);

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,6 +24,8 @@ using System.Diagnostics.Contracts;
 #endif
 
 namespace System.Windows.Forms {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
   internal static partial class NumericUpDownExtensions {
     /// <summary>
     /// Sets the min,max & step values.
@@ -34,7 +36,7 @@ namespace System.Windows.Forms {
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, decimal min, decimal max, decimal step) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -51,7 +53,7 @@ namespace System.Windows.Forms {
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, double min, double max, double step) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -66,7 +68,7 @@ namespace System.Windows.Forms {
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, int min, int max, int step) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -79,7 +81,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, decimal value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -92,7 +94,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, double value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -105,7 +107,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, int value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -118,7 +120,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, uint value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -131,7 +133,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, long value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif
@@ -144,7 +146,7 @@ namespace System.Windows.Forms {
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, ulong value) {
 #if NET35
-      Diagnostics.Debug.Assert(This!=null);
+      System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
 #endif

@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,11 +19,11 @@
 */
 #endregion
 
-#if NETFX_4
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Threading;
 
+#if NET40
+using System.Diagnostics.Contracts;
 #endif
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -73,7 +73,7 @@ namespace System {
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryInvoke<TResult>(this Func<TResult> @this, out TResult result, int repeatCount = 1) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(repeatCount > 0);
 #endif

@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -139,10 +139,10 @@ namespace System.Threading {
         var ilGenerator = dynamicMethod.GetILGenerator();
         
         ilGenerator.Emit(OpCodes.Ldarg_1); /* 2nd argument for ceq */               /* Stack: arg1 */
-        ilGenerator.Emit(OpCodes.Ldarg_1); /* 2nd argument for and */               /* Stack: arg1, arg1 */
+        ilGenerator.Emit(OpCodes.Dup);     /* 2nd argument for and */               /* Stack: arg1, arg1 */
         ilGenerator.Emit(OpCodes.Ldarg_0);                                          /* Stack: arg1, arg1, arg0 */
         ilGenerator.Emit(OpCodes.Ldc_I4_0);                                         /* Stack: arg1, arg1, arg0, 0 */
-        ilGenerator.Emit(OpCodes.Ldc_I4_0);                                         /* Stack: arg1, arg1, arg0, 0, 0 */
+        ilGenerator.Emit(OpCodes.Dup);                                              /* Stack: arg1, arg1, arg0, 0, 0 */
         ilGenerator.Emit(OpCodes.Call, _usedMethodForCompareExchange);              /* Stack: arg1, arg1, value */
         ilGenerator.Emit(OpCodes.And);                                              /* Stack: arg1, and */
         ilGenerator.Emit(OpCodes.Ceq);                                              /* Stack: result */
@@ -166,7 +166,7 @@ namespace System.Threading {
         
         ilGenerator.Emit(OpCodes.Ldarg_0);                                          /* Stack: arg0, arg1, arg0 */
         ilGenerator.Emit(OpCodes.Ldc_I4_0);                                         /* Stack: arg0, arg1, arg0, 0 */
-        ilGenerator.Emit(OpCodes.Ldc_I4_0);                                         /* Stack: arg0, arg1, arg0, 0, 0 */
+        ilGenerator.Emit(OpCodes.Dup);                                              /* Stack: arg0, arg1, arg0, 0, 0 */
         ilGenerator.Emit(OpCodes.Call, _usedMethodForCompareExchange);              /* Stack: arg0, arg1, oldValue */
         
         // write value to variable
@@ -216,7 +216,7 @@ namespace System.Threading {
         // read value
         ilGenerator.Emit(OpCodes.Ldarg_0);
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
-        ilGenerator.Emit(OpCodes.Ldc_I4_0);
+        ilGenerator.Emit(OpCodes.Dup);
         ilGenerator.Emit(OpCodes.Call, _usedMethodForCompareExchange);
         
         // write value to variable
@@ -258,7 +258,7 @@ namespace System.Threading {
         // read value
         ilGenerator.Emit(OpCodes.Ldarg_0);
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
-        ilGenerator.Emit(OpCodes.Ldc_I4_0);
+        ilGenerator.Emit(OpCodes.Dup);
         ilGenerator.Emit(OpCodes.Call, _usedMethodForCompareExchange);
         
         // write value to variable
@@ -401,7 +401,7 @@ namespace System.Threading {
     }
 <#}#>
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -411,7 +411,7 @@ namespace System.Threading {
     public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => Interlocked.CompareExchange(ref source, value, comparand);
 <#}#>
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -422,7 +422,7 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeExchange){#>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -432,25 +432,25 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeIncrementDecrement){#>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Increment(ref <#=type#> source) => Interlocked.Increment(ref source);
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Decrement(ref <#=type#> source) => Interlocked.Decrement(ref source);
 <#}else{#>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Increment(ref <#=type#> source) => Add(ref source, 1);
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -458,13 +458,13 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeAdd){#>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Add(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, value);
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]

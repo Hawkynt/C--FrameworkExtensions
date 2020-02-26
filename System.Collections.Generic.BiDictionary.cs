@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,7 +20,7 @@
 #endregion
 
 using System.Diagnostics;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.Runtime.Serialization;
@@ -31,7 +31,7 @@ namespace System.Collections.Generic {
   [DebuggerDisplay("Count = {Count}"), DebuggerTypeProxy(typeof(DictionaryDebugView<,>))]
   public class BiDictionary<TFirst, TSecond> :
     IDictionary<TFirst, TSecond>,
-#if NETFX_45
+#if NET45
     IReadOnlyDictionary<TFirst, TSecond>,
 #endif
     IDictionary {
@@ -93,7 +93,7 @@ namespace System.Collections.Generic {
       => ((IDictionary)this._firstToSecond).Keys
       ;
 
-#if NETFX_45
+#if NET45
 
     IEnumerable<TFirst> IReadOnlyDictionary<TFirst, TSecond>.Keys
       => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Keys
@@ -108,7 +108,7 @@ namespace System.Collections.Generic {
       => ((IDictionary)this._firstToSecond).Values
       ;
 
-#if NETFX_45
+#if NET45
     IEnumerable<TSecond> IReadOnlyDictionary<TFirst, TSecond>.Values
       => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Values
       ;
@@ -211,7 +211,7 @@ namespace System.Collections.Generic {
 
     private class ReverseDictionary :
       IDictionary<TSecond, TFirst>,
-#if NETFX_45
+#if NET45
       IReadOnlyDictionary<TSecond, TFirst>, 
 #endif
       IDictionary {
@@ -265,7 +265,7 @@ namespace System.Collections.Generic {
         => ((IDictionary)this._owner._secondToFirst).Keys
         ;
 
-#if NETFX_45
+#if NET45
       IEnumerable<TSecond> IReadOnlyDictionary<TSecond, TFirst>.Keys
         => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Keys
         ;
@@ -279,7 +279,7 @@ namespace System.Collections.Generic {
         => ((IDictionary)this._owner._secondToFirst).Values
         ;
 
-#if NETFX_45
+#if NET45
       IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values
         => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Values
         ;
@@ -396,7 +396,7 @@ namespace System.Collections.Generic {
 
   static partial class EnumerableExtensions {
     public static BiDictionary<TKey, TValue> ToBiDictionary<TItem, TKey, TValue>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, Func<TItem, TValue> valueSelector) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(keySelector != null);
       Contract.Requires(valueSelector != null);

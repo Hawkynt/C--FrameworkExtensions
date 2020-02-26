@@ -1,6 +1,6 @@
 <#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ output extension=".cs" #>
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,7 +26,7 @@
 <#var CALLER_MEMBER_NAME_NATIVELY_SUPPORTED=true;#>
 
 using System.Runtime.CompilerServices;
-#if !NETFX_45
+#if !NET45
 using System.Diagnostics;
 #endif
 
@@ -59,7 +59,7 @@ namespace System.ComponentModel {
     /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #else
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -73,7 +73,7 @@ namespace System.ComponentModel {
 <#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
       [CallerMemberName]string propertyName = null
 <#}else{#>
-#if NETFX_45
+#if NET45
       [CallerMemberName]string propertyName = null
 #else
       string propertyName = null
@@ -87,7 +87,7 @@ namespace System.ComponentModel {
         return (false);
 
 <#if(!CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
-#if !NETFX_45
+#if !NET45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
@@ -131,7 +131,7 @@ namespace System.ComponentModel {
     /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #else
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -145,7 +145,7 @@ namespace System.ComponentModel {
 <#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
       [CallerMemberName]string propertyName = null
 <#}else{#>
-#if NETFX_45
+#if NET45
       [CallerMemberName]string propertyName = null
 #else
       string propertyName = null
@@ -156,7 +156,7 @@ namespace System.ComponentModel {
         return (false);
 
 <#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
-#if !NETFX_45
+#if !NET45
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;

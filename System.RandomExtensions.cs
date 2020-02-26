@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,7 +20,9 @@
 #endregion
 
 using System.Diagnostics.Contracts;
+#if NET45
 using System.Runtime.CompilerServices;
+#endif
 using System.Text;
 using qword = System.UInt64;
 
@@ -36,7 +38,7 @@ namespace System {
     /// <param name="minValue">The min value.</param>
     /// <param name="maxValue">The max value.</param>
     /// <returns>A value between the given boundaries</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double NextDouble(this Random This, double minValue, double maxValue) => This.NextDouble() * (maxValue - minValue) + minValue;

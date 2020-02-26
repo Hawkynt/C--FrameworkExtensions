@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 
@@ -36,7 +36,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This ToolStripProgressBar.</param>
     /// <param name="percentage">The percentage to set.</param>
     public static void SetPercent(this ToolStripProgressBar This, double percentage) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       This.SetNormalizedValue(percentage * 0.01d);
@@ -48,7 +48,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This ToolStripProgressBar.</param>
     /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
     public static void SetNormalizedValue(this ToolStripProgressBar This, float value) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
@@ -60,7 +60,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This ToolStripProgressBar.</param>
     /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
     public static void SetNormalizedValue(this ToolStripProgressBar This, double value) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
@@ -73,7 +73,7 @@ namespace System.Windows.Forms {
     /// <param name="current">The current value.</param>
     /// <param name="max">The maximum value to assume.</param>
     public static void SetValue(this ToolStripProgressBar This, double current, double max) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       This.SetNormalizedValue(max == 0 ? 0 : current / max);
@@ -87,7 +87,7 @@ namespace System.Windows.Forms {
     /// <param name="min">The minimum value to assume.</param>
     /// <param name="max">The maximum value to assume.</param>
     public static void SetValue(this ToolStripProgressBar This, double current, double min, double max) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       var newMax = max - min;

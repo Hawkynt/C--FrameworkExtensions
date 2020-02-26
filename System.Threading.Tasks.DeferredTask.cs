@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,7 +21,7 @@
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 
@@ -59,7 +59,7 @@ namespace System.Threading.Tasks {
     private Thread _currentThread;
 
     public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
-#if NETFX_4
+#if NET40
       Contract.Requires(action != null);
 #endif
       this._action = action;

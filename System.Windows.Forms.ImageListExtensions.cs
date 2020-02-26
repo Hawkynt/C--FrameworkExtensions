@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,7 +21,7 @@
 
 using System.Linq;
 using System.IO;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 
@@ -32,7 +32,7 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Forms {
   internal static partial class ImageListExtensions {
     public static void SaveToDirectory(this ImageList @this, string directoryName) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var images = @this.Images;

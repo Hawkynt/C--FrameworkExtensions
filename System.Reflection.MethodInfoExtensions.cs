@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,7 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -56,7 +56,7 @@ namespace System.Reflection {
     /// <param name="type">The type.</param>
     /// <returns>A tidied version of the type name.</returns>
     private static string _tidyTypeName(Type type) {
-#if NETFX_4
+#if NET40
       Contract.Requires(type != null);
 #endif
 
@@ -132,7 +132,7 @@ namespace System.Reflection {
     /// <param name="This">This MethodInfo.</param>
     /// <returns>The full signature of the method.</returns>
     public static string GetFullSignature(this MethodInfo This) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
       var sb = new StringBuilder();

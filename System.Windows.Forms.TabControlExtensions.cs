@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,53 +20,65 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using DrawingSize = System.Drawing.Size;
+// ReSharper disable UnusedMember.Global
+
+#if NET40
+using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Windows.Forms {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
   internal static partial class TabControlExtensions {
 
     public static void AddImageToImageList(this TabControl @this, Image image, string key) {
+#if NET40
       Contract.Requires(image != null);
       Contract.Requires(!string.IsNullOrEmpty(key));
+#endif
 
       var imageList = @this.ImageList;
+#if NET40
       Contract.Assert(imageList != null, "Can only work on TabControls with assigned ImageList.");
+#endif
 
       imageList.Images.Add(key, image);
       if (!ImageAnimator.CanAnimate(image))
         return;
 
       var uniquePart = new Random().Next(); // NOTE: we shuffle the key to prevent users accidentially using the generated images
-      Func<string, int, string> keyGenerator = (@base, index) => @base + "\0" + uniquePart + "\0" + index;
+      string KeyGenerator(string @base, int index) => @base + "\0" + uniquePart + "\0" + index;
 
       var numImages = image.GetFrameCount(FrameDimension.Time);
       var createdImages = new Dictionary<string, Image>();
       for (var i = numImages - 1; i >= 0; --i) {
         image.SelectActiveFrame(FrameDimension.Time, i);
         var image2 = (Image)image.Clone();
-        var subKey = keyGenerator(key, i);
+        var subKey = KeyGenerator(key, i);
         createdImages.Add(subKey, image2);
         imageList.Images.Add(subKey, image2);
       }
 
       var currentlyShownImageIndex = 0;
-      EventHandler onFrameChangedHandler = (_, __) => {
+
+      void OnFrameChangedHandler(object _, EventArgs __) {
         currentlyShownImageIndex = (currentlyShownImageIndex + 1) % numImages;
-        var currentKey = keyGenerator(key, currentlyShownImageIndex);
+        var currentKey = KeyGenerator(key, currentlyShownImageIndex);
 
         // refresh all tabpages using this image
         @this.SafelyInvoke(() => @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0")).ForEach(tp => tp.ImageKey = currentKey));
-      };
+      }
 
       // start animating
-      ImageAnimator.Animate(image, onFrameChangedHandler);
+      ImageAnimator.Animate(image, OnFrameChangedHandler);
 
       // remove handler and dispose image on destruction of tabcontrol
       @this.Disposed += (_, __) => {
-        ImageAnimator.StopAnimate(image, onFrameChangedHandler);
+        ImageAnimator.StopAnimate(image, OnFrameChangedHandler);
         foreach (var kvp in createdImages) {
           imageList.Images.RemoveByKey(kvp.Key);
           kvp.Value.Dispose();
@@ -85,10 +97,11 @@ namespace System.Windows.Forms {
     /// <param name="page">The page.</param>
     /// <param name="color">The color.</param>
     public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(page != null);
-      Dictionary<TabPage, Color> managedTabs;
-      if (!_MANAGED_TABCONTROLS.TryGetValue(@this, out managedTabs)) {
+#endif
+      if (!_MANAGED_TABCONTROLS.TryGetValue(@this, out var managedTabs)) {
         _MANAGED_TABCONTROLS.Add(@this, managedTabs = new Dictionary<TabPage, Color>());
 
         // register handler
@@ -126,33 +139,28 @@ namespace System.Windows.Forms {
     /// <param name="sender">The sending tabcontrol</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DrawItemEventArgs"/> instance containing the event data.</param>
     private static void _HeaderPainter(object sender, DrawItemEventArgs e) {
-      var tabControl = sender as TabControl;
-      if (tabControl == null)
+      if (!(sender is TabControl tabControl))
         return;
 
       var page = tabControl.TabPages[e.Index];
-
-      var textcolor = tabControl.ForeColor;
-
+      var textColor = tabControl.ForeColor;
       var isSelected = e.State == DrawItemState.Selected;
 
       // check if we manage this control
-      Dictionary<TabPage, Color> colors;
-      if (_MANAGED_TABCONTROLS.TryGetValue(tabControl, out colors)) {
+      if (_MANAGED_TABCONTROLS.TryGetValue(tabControl, out var colors)) {
 
         // paint the default background
         using (var brush = new SolidBrush(tabControl.BackColor))
-          e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new Size(e.Bounds.Width, e.Bounds.Height + 2)));
+          e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new DrawingSize(e.Bounds.Width, e.Bounds.Height + 2)));
 
         // check if we know this tab's color and it's not selected
-        Color color;
-        if (!isSelected && colors.TryGetValue(page, out color)) {
+        if (!isSelected && colors.TryGetValue(page, out var color)) {
           // tint the tab header
           using (var brush = new SolidBrush(color))
-            e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new Size(e.Bounds.Width, e.Bounds.Height + 2)));
+            e.Graphics.FillRectangle(brush, new Rectangle(e.Bounds.Location, new DrawingSize(e.Bounds.Width, e.Bounds.Height + 2)));
 
           // decide on new textcolor
-          textcolor = (color.R + color.B + color.G) / 3 > 127 ? Color.Black : Color.White;
+          textColor = (color.R + color.B + color.G) / 3 > 127 ? Color.Black : Color.White;
         }
       }
 
@@ -166,7 +174,7 @@ namespace System.Windows.Forms {
 
         // this is how we draw without an image
         paddedBounds.Offset(1, isSelected ? -2 : 1);
-        TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textcolor);
+        TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textColor);
       } else {
 
         // this is how we draw when an image is present
@@ -174,7 +182,7 @@ namespace System.Windows.Forms {
         var imgy = paddedBounds.Top + (isSelected ? 3 : 2);
         e.Graphics.DrawImage(image, imgx, imgy);
         paddedBounds = new Rectangle(imgx + list.ImageSize.Width, imgy, paddedBounds.Width + paddedBounds.Left - imgx - list.ImageSize.Width, list.ImageSize.Height);
-        TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textcolor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+        TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
 
       }
     }

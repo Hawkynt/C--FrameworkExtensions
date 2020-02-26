@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 using System.Text;
@@ -139,7 +139,7 @@ namespace System.IO {
 
       var path = baseDirectory ?? Path.GetTempPath();
       name = Path.GetFileName(name);
-#if NETFX_4
+#if NET40
       Contract.Assert(name != null, "Filename went <null>");
 #endif
       var fullName = Path.Combine(path, name);
@@ -165,7 +165,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateFile(string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if NETFX_4
+#if NET40
       Contract.Requires(fileName != null);
 #endif
       if (File.Exists(fileName))
@@ -222,7 +222,7 @@ namespace System.IO {
 
           tempName.Append(SUFFIX);
           result = Path.Combine(path, tempName.ToString());
-#if NETFX_4
+#if NET40
           Contract.Assume(!string.IsNullOrEmpty(result));
 #endif
         } while (!TryCreateDirectory(result));
@@ -232,13 +232,13 @@ namespace System.IO {
 
       // a name is given, so try to accommodate this
       name = Path.GetFileName(name);
-#if NETFX_4
+#if NET40
       Contract.Assert(name != null, "DirectoryName went <null>");
 #endif
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name, return it
-#if NETFX_4
+#if NET40
       Contract.Assume(!string.IsNullOrEmpty(fullName));
 #endif
       if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
@@ -259,7 +259,7 @@ namespace System.IO {
     ///   <c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
-#if NETFX_4
+#if NET40
       Contract.Requires(!string.IsNullOrEmpty(pathName));
 #endif
       if (Directory.Exists(pathName))
@@ -292,30 +292,30 @@ namespace System.IO {
       private string _uncPath;
 
       public string Username {
-        get { return (this._username); }
+        get => this._username;
         set { this._username = value; this._InvalidateUnc(); }
       }
       public string Password {
-        get { return (this._password); }
+        get => this._password;
         set { this._password = value; this._InvalidateUnc(); }
       }
 
       public string Server {
-        get { return (this._server); }
+        get => this._server;
         set { this._server = value; this._InvalidateFullPath(); }
       }
 
       public string Share {
-        get { return (this._share); }
+        get => this._share;
         set { this._share = value; this._InvalidateFullPath(); }
       }
 
       public string DirectoryAndOrFileName {
-        get { return (this._directory); }
+        get => this._directory;
         set { this._directory = value; this._InvalidateFullPath(); }
       }
       public string FullPath {
-        get { return (this._fullPath); }
+        get => this._fullPath;
         set {
           this._fullPath = value;
           this._SplitPath();
@@ -323,7 +323,7 @@ namespace System.IO {
         }
       }
       public string UncPath {
-        get { return (this._uncPath); }
+        get => this._uncPath;
         set {
           this._uncPath = value;
           this._SplitUnc();
@@ -339,7 +339,7 @@ namespace System.IO {
         var value = this._fullPath;
         // extract server
         if (value != null && value.StartsWith(_pathSeparator + string.Empty + _pathSeparator)) {
-#if NETFX_4
+#if NET40
           Contract.Assume(value.Length > 2);
 #endif
           var idx = value.IndexOf(_pathSeparator, 2);
@@ -356,7 +356,7 @@ namespace System.IO {
 
         // extract share
         if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
-#if NETFX_4
+#if NET40
           Contract.Assume(value.Length > 1);
 #endif
           var idx = value.IndexOf(_pathSeparator, 1);
@@ -399,9 +399,10 @@ namespace System.IO {
       }
 
       private void _InvalidateFullPath() {
-        var result = (this._server == null ? string.Empty : _pathSeparator + _pathSeparator + this._server);
+        var result = this._server == null ? string.Empty : _pathSeparator + _pathSeparator + this._server;
         if (this._share != null)
           result += _pathSeparator + this._share;
+
         this._fullPath = result + (this._directory == null ? string.Empty : _pathSeparator + this._directory);
         this._InvalidateUnc();
       }

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -23,7 +23,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-#if NETFX_45
+#if NET45
 using System.Runtime.CompilerServices;
 #endif
 
@@ -37,7 +37,7 @@ namespace System.Xml {
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The value of that attribute or the given default value.</returns>
     /// <remarks></remarks>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string GetValueOrDefault(this XmlAttributeCollection This, string key, string defaultValue = null) => This[key] == null ? defaultValue : This[key].Value;

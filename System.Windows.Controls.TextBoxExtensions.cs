@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,8 +24,16 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using DrawingPoint = System.Drawing.Point;
+using DrawingTextBox = System.Windows.Forms.TextBox;
+
+#if NET40
+using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Windows.Controls {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
   internal static partial class TextBoxExtensions {
 
     #region nested types
@@ -40,11 +48,11 @@ namespace System.Windows.Controls {
       /// <value>
       /// The position.
       /// </value>
-      Point Position { get; }
+      DrawingPoint Position { get; }
     }
 
     private class CaretPositionToken : ICaretPositionToken {
-      private readonly Point _point;
+      private readonly DrawingPoint _point;
 
       public CaretPositionToken() {
         NativeMethods._GetCaretPos(out this._point);
@@ -59,12 +67,12 @@ namespace System.Windows.Controls {
         this.Dispose();
       }
 
-      public Point Position { get { return (this._point); } }
+      public DrawingPoint Position { get { return this._point; } }
     }
 
     private static partial class NativeMethods {
       [DllImport("user32", EntryPoint = "GetCaretPos", SetLastError = true)]
-      public extern static int _GetCaretPos(out Point p);
+      public extern static int _GetCaretPos(out DrawingPoint p);
       [DllImport("user32", EntryPoint = "SetCaretPos", SetLastError = true)]
       public extern static int _SetCaretPos(int x, int y);
     }
@@ -75,14 +83,14 @@ namespace System.Windows.Controls {
     /// </summary>
     /// <returns></returns>
     public static ICaretPositionToken SaveCaretPosition() {
-      return (new CaretPositionToken());
+      return new CaretPositionToken();
     }
 
     /// <summary>
     /// Sets the caret position.
     /// </summary>
     /// <param name="p">The point on screen.</param>
-    public static void SetCaretPosition(Point p) {
+    public static void SetCaretPosition(DrawingPoint p) {
       NativeMethods._SetCaretPos(p.X, p.Y);
     }
 
@@ -90,18 +98,20 @@ namespace System.Windows.Controls {
     /// Gets the caret position.
     /// </summary>
     /// <returns></returns>
-    public static Point GetCaretPosition() {
-      Point result;
+    public static DrawingPoint GetCaretPosition() {
+      DrawingPoint result;
       NativeMethods._GetCaretPos(out result);
-      return (result);
+      return result;
     }
 
     /// <summary>
     /// Moves the cursor to end of the text.
     /// </summary>
     /// <param name="This">This TextBox.</param>
-    public static void MoveCursorToEnd(this TextBox This) {
+    public static void MoveCursorToEnd(this DrawingTextBox This) {
+#if NET40
       Contract.Requires(This != null);
+#endif
       This.SelectionStart = This.TextLength;
       This.SelectionLength = 0;
     }
@@ -112,16 +122,19 @@ namespace System.Windows.Controls {
     /// <param name="This">This TextBox.</param>
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryParseInt(this TextBox This, ref int value) {
+    public static bool TryParseInt(this DrawingTextBox This, ref int value) {
+#if NET40
       Contract.Requires(This != null);
+#endif
       var text = This.Text;
       if (string.IsNullOrWhiteSpace(text))
-        return (false);
-      int temp;
-      if (!int.TryParse(text, out temp))
-        return (false);
+        return false;
+
+      if (!int.TryParse(text, out var temp))
+        return false;
+
       value = temp;
-      return (true);
+      return true;
     }
 
     /// <summary>
@@ -134,16 +147,16 @@ namespace System.Windows.Controls {
     /// <returns>
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
-    public static bool TryParseInt(this TextBox This, NumberStyles style, IFormatProvider provider, ref int value) {
+    public static bool TryParseInt(this DrawingTextBox This, NumberStyles style, IFormatProvider provider, ref int value) {
       Contract.Requires(This != null);
       var text = This.Text;
       if (string.IsNullOrWhiteSpace(text))
-        return (false);
+        return false;
       int temp;
       if (!int.TryParse(text, style, provider, out temp))
-        return (false);
+        return false;
       value = temp;
-      return (true);
+      return true;
     }
   }
 }

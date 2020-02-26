@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -32,7 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Microsoft.Win32;
 using System.Diagnostics;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 using System.Collections.Concurrent;
 #endif
@@ -148,7 +148,7 @@ namespace System {
       #region value getter
       public object GetValue(object instance = null) {
         var propertyInfo = this.Info;
-#if NETFX_4
+#if NET40
         Contract.Assume(propertyInfo != null);
 #endif
         return (propertyInfo.GetValue(instance, null));
@@ -224,21 +224,21 @@ namespace System {
       #region value setter
       public void SetValue(object value) {
         var propertyInfo = this.Info;
-#if NETFX_4
+#if NET40
         Contract.Assume(propertyInfo != null);
 #endif
         propertyInfo.SetValue(null, value, null);
       }
       public void SetValue(object instance, object value) {
         var propertyInfo = this.Info;
-#if NETFX_4
+#if NET40
         Contract.Assume(propertyInfo != null);
 #endif
         propertyInfo.SetValue(instance, value, null);
       }
       public bool TrySetValue(object value) {
         var propertyInfo = this.Info;
-#if NETFX_4
+#if NET40
         Contract.Assume(propertyInfo != null);
 #endif
         try {
@@ -251,7 +251,7 @@ namespace System {
       }
       public bool TrySetValue(object instance, object value) {
         var propertyInfo = this.Info;
-#if NETFX_4
+#if NET40
         Contract.Assume(propertyInfo != null);
 #endif
         try {
@@ -310,7 +310,7 @@ namespace System {
 
       public PropertyDesignerDetails(PropertyInfo info)
         : this() {
-#if NETFX_4
+#if NET40
         Contract.Requires(info != null);
 #endif
         this.Info = info;
@@ -375,7 +375,7 @@ namespace System {
     ///   <c>true</c> if the given type can be casted to the target; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCastableTo(this Type @this, Type target) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(target != null);
 
@@ -389,7 +389,7 @@ namespace System {
 
       // check cache
       if (_IMPLICIT_CONVERSIONS.ContainsKey(target)) {
-#if NETFX_4
+#if NET40
         Contract.Assume(_IMPLICIT_CONVERSIONS[target] != null);
 #endif
         if (_IMPLICIT_CONVERSIONS[target].Contains(@this))
@@ -414,7 +414,7 @@ namespace System {
     ///   <c>true</c> if this Type can be casted from the source; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCastableFrom(this Type @this, Type source) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(source != null);
 
@@ -431,7 +431,7 @@ namespace System {
     /// <summary>
     /// Cache
     /// </summary>
-#if NETFX_4
+#if NET40
     private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>> _typeCache = new ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>>();
 #endif
 
@@ -442,7 +442,7 @@ namespace System {
     /// <param name="bindingFlags">The bindingflags to use, defaults to Public and Instance.</param>
     /// <returns>An array of PropertyDesignerDetails.</returns>
     public static PropertyDesignerDetails[] GetDesignerProperties(this Type @this, BindingFlags? bindingFlags = null) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -451,7 +451,7 @@ namespace System {
       // ReSharper disable once JoinDeclarationAndInitializer
       PropertyDesignerDetails[] result;
 
-#if NETFX_4
+#if NET40
       if (bindingFlags == null)
         bindingFlags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -465,7 +465,7 @@ namespace System {
       var props = @this.GetProperties(bindingFlags.Value);
       result = Array.ConvertAll(props, i => new PropertyDesignerDetails(i));
 
-#if NETFX_4
+#if NET40
       // try to add to cache
       inner = _typeCache.GetOrAdd(@this, i => new ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>());
       inner.TryAdd(bindingFlags.Value, result);
@@ -483,7 +483,7 @@ namespace System {
     /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
     /// <returns>The given attribute instance.</returns>
     public static TAttribute GetAssemblyAttribute<TAttribute>(this Type @this, bool inherit = false, int index = 0) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -498,7 +498,7 @@ namespace System {
     /// <param name="useLanguageTypes">Whether to use language type names like eg int for Int32; defaults to <c>false</c>.</param>
     /// <returns></returns>
     public static string SimpleName(this Type @this, bool useLanguageTypes = false) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -520,7 +520,7 @@ namespace System {
     ///   <c>true</c> if the specified type is integer; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsIntegerType(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -534,7 +534,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>The minimum value supported for this type.</returns>
     public static decimal GetMinValueForIntType(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -564,7 +564,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>The maximum value supported for this type.</returns>
     public static decimal GetMaxValueForIntType(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -686,7 +686,7 @@ namespace System {
     /// <param name="getter">The getter.</param>
     /// <returns></returns>
     public static TValue GetFieldOrPropertyAttributeValue<TAttributeType, TValue>(this Type @this, string fieldName, Func<TAttributeType, TValue> getter) where TAttributeType : Attribute {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(fieldName != null);
       Contract.Requires(getter != null);
@@ -714,7 +714,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>The value of the displayname attribute if any</returns>
     public static string GetDisplayName(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       return @this.GetCustomAttributes(false).OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
@@ -726,7 +726,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>The value of the description attribute if any.</returns>
     public static string GetDescription(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       return @this.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
@@ -738,7 +738,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>Every type in the current app domain, which implements the given type.</returns>
     public static IEnumerable<Type> GetImplementedTypes(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       return (
@@ -760,7 +760,7 @@ namespace System {
     /// <param name="this">This Type.</param>
     /// <returns>An instance of the given type.</returns>
     public static TType CreateInstance<TType>(this Type @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(typeof(TType).IsAssignableFrom(@this));
 #endif
@@ -777,7 +777,7 @@ namespace System {
     /// An instance of the given type.
     /// </returns>
     public static TType CreateInstance<TType>(this Type @this, object[] parameters) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
       Contract.Requires(typeof(TType).IsAssignableFrom(@this));
 #endif
@@ -831,7 +831,7 @@ namespace System {
     /// Anew types' instance.
     /// </returns>
     private static TType _FromConstructor<TType>(Type type, params TypeWithValue[] parameters) {
-#if NETFX_4
+#if NET40
       Contract.Requires(type != null && typeof(TType).IsAssignableFrom(type));
 #endif
       
@@ -913,7 +913,7 @@ namespace System {
     /// <returns>The value of the static property</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
     public static TType GetStaticPropertyValue<TType>(this Type @this, string name) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var prop = @this.GetProperty(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
@@ -930,7 +930,7 @@ namespace System {
     /// <returns>The value of the static field</returns>
     /// <exception cref="System.ArgumentException">Property not found;name</exception>
     public static TType GetStaticFieldValue<TType>(this Type @this, string name) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       var prop = @this.GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
@@ -938,7 +938,7 @@ namespace System {
       return ((TType)prop.GetValue(null));
     }
 
-#if NETFX_4
+#if NET40
 
     <#for(var i=0;i<10;++i){#>
     <#  var pList=i<1?"T":string.Join(", ",Enumerable.Range(1,i+1).Select(j=>"T"+j));#>
@@ -950,7 +950,7 @@ namespace System {
     /// <param name="name">The name of the method.</param>
     /// <param name="flags">The BindingFlags if not simply public.</param>
     /// <returns>A method pointer or <c>null</c></returns>
-#if NETFX_45
+#if NET45
     public static Action<<#=pList#>> GetStaticMethod<<#=pList#>>(this Type @this, string name, BindingFlags flags = BindingFlags.Public) => (Action<<#=pList#>>)@this.GetMethod(name, BindingFlags.Static | flags)?.CreateDelegate(typeof(Action<<#=pList#>>));
 #else
     public static Action<<#=pList#>> GetStaticMethod<<#=pList#>>(this Type @this, string name, BindingFlags flags = BindingFlags.Public) {

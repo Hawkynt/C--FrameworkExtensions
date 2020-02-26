@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -253,7 +253,7 @@ namespace System.Windows.Forms {
 
         var nodeImage = treeNode.GetImage();
 
-        imageList.ImageSize = new Size(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)), Math.Min(256, treeNode.Bounds.Height));
+        imageList.ImageSize = new Drawing.Size(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)), Math.Min(256, treeNode.Bounds.Height));
 
         // Create new bitmap
         // This bitmap will contain the tree node image to be dragged

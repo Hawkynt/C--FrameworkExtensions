@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -30,7 +30,7 @@
 // ReSharper disable RedundantAttributeUsageProperty
 namespace System.Runtime.CompilerServices {
 
-#if !NETFX_45
+#if !NET45
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
   public sealed class CallerMemberNameAttribute : Attribute { }
 
@@ -41,7 +41,7 @@ namespace System.Runtime.CompilerServices {
   public sealed class CallerLineNumberAttribute : Attribute { }
 #endif
 
-#if !NETFX_3
+#if !NET35
   [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
   public sealed class ExtensionAttribute : Attribute { }
 #endif
