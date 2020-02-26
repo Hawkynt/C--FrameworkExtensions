@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,10 +20,14 @@
 #endregion
 
 using System.Collections.Generic;
+#if NET40
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Reflection;
+#if NET45
 using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -35,7 +39,7 @@ namespace System.Drawing {
     public static byte GetChrominanceU(this Color @this) => _CalculateChrominanceU(@this);
     public static byte GetChrominanceV(this Color @this) => _CalculateChrominanceV(@this);
 
-    public static bool IsLike(this Color @this, Color other, byte luminanceDelta = 48, byte chromaUDelta = 7, byte chromaVDelta = 6) {
+    public static bool IsLike(this Color @this, Color other, byte luminanceDelta = 24, byte chromaUDelta = 7, byte chromaVDelta = 6) {
       if (@this == other)
         return true;
 
@@ -46,6 +50,22 @@ namespace System.Drawing {
         return false;
 
       return Math.Abs(@this.GetChrominanceV() - other.GetChrominanceV()) <= chromaVDelta;
+    }
+
+    public static bool IsLikeNaive(this Color @this, Color other, int tolerance = 2) {
+      if (@this == other)
+        return true;
+
+      var thisColor = @this.ToArgb();
+      var otherColor = other.ToArgb();
+
+      if (Math.Abs(@this.R - other.R) > tolerance)
+        return false;
+
+      if (Math.Abs(@this.B - other.B) > tolerance)
+        return false;
+
+      return Math.Abs(@this.G - other.G) > tolerance;
     }
 
     private static byte _CalculateLuminance(Color @this)
@@ -89,10 +109,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of lightning to add.</param>
     /// <returns>A new color.</returns>
-#if NETFX_45
+#if NET45
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Color Lighten(this Color This, byte amount) => This.Add(amount);
+    public static Color Lighten(this Color This, byte amount) => This.Add(amount);
 
     /// <summary>
     /// Darkens the given color.
@@ -100,10 +120,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of darkness to add.</param>
     /// <returns>A new color.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Color Darken(this Color This, byte amount) => This.Add(-amount);
+    public static Color Darken(this Color This, byte amount) => This.Add(-amount);
 
     /// <summary>
     /// Adds a value to the RGB components of a given color.
@@ -111,10 +131,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to add.</param>
     /// <returns>A new color.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Color Add(this Color This, int value) => This.Add(value, value, value);
+    public static Color Add(this Color This, int value) => This.Add(value, value, value);
 
     /// <summary>
     /// Multiplies the RGB components of a given color by a given value.
@@ -122,10 +142,10 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to multiply with.</param>
     /// <returns>A new color.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
+    public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
 
     /// <summary>
     /// Adds values to the RGB components of a given color.
@@ -140,7 +160,7 @@ namespace System.Drawing {
       g += This.G;
       b += This.B;
 
-      return (Color.FromArgb(This.A, _ClipToByte(r), _ClipToByte(g), _ClipToByte(b)));
+      return Color.FromArgb(This.A, _ClipToByte(r), _ClipToByte(g), _ClipToByte(b));
     }
 
     /// <summary>
@@ -156,7 +176,7 @@ namespace System.Drawing {
       g *= This.G;
       b *= This.B;
 
-      return (Color.FromArgb(This.A, _ClipToByte(r), _ClipToByte(g), _ClipToByte(b)));
+      return Color.FromArgb(This.A, _ClipToByte(r), _ClipToByte(g), _ClipToByte(b));
     }
 
     /// <summary>
@@ -164,10 +184,10 @@ namespace System.Drawing {
     /// </summary>
     /// <param name="This">This Color.</param>
     /// <returns>A new color.</returns>
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
+    public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
 
     /// <summary>
     /// Cache
@@ -180,7 +200,7 @@ namespace System.Drawing {
     private static Dictionary<int, Color> _ColorLookupTable {
       get {
         if (_colorLookupTable != null)
-          return (_colorLookupTable);
+          return _colorLookupTable;
 
         var result = typeof(Color)
                .GetProperties(BindingFlags.Public | BindingFlags.Static)
@@ -188,7 +208,7 @@ namespace System.Drawing {
                .Where(c => c.IsNamedColor)
                .ToDictionary(c => c.ToArgb(), c => c);
 
-        return (_colorLookupTable = result);
+        return _colorLookupTable = result;
       }
     }
 
@@ -196,33 +216,30 @@ namespace System.Drawing {
     /// Gets the colors name.
     /// Note: Fixes the issue with colors that were generated instead of chosen directly by looking up the ARGB value.
     /// </summary>
-    /// <param name="This">This Color.</param>
+    /// <param name="this">This Color.</param>
     /// <returns>The name of the color or <c>null</c>.</returns>
-    public static string GetName(this Color This) {
-      if (!string.IsNullOrWhiteSpace(This.Name))
-        return (This.Name);
+    public static string GetName(this Color @this) {
+      if (!string.IsNullOrEmpty(@this.Name) && @this.Name.Trim().Length != 0)
+        return @this.Name;
 
-      if (!This.IsNamedColor)
-        return (null);
+      if (!@this.IsNamedColor)
+        return null;
 
-      var table = _ColorLookupTable;
-
-      Color color;
-      return (table.TryGetValue(This.ToArgb(), out color) ? color.Name : null);
+      return _ColorLookupTable.TryGetValue(@this.ToArgb(), out var color) ? color.Name : null;
     }
 
-#region private methods
-#if NETFX_45
+    #region private methods
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
 #endif
-    private static byte _ClipToByte(int value) => (byte)(Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value)));
+    private static byte _ClipToByte(int value) => (byte)Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value));
 
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
 #endif
     private static byte _ClipToByte(double value) => _ClipToByte((int)value);
 
-#endregion
+    #endregion
 
   }
 }

@@ -42,6 +42,17 @@ namespace System.Drawing {
       return (new RectangleF(This.X * xfactor, This.Y * yfactor, This.Width * xfactor, This.Height * yfactor));
     }
 
+    /// <summary>
+    /// Returns the center point of a rectangle.
+    /// </summary>
+    /// <param name="this">The rectangle</param>
+    /// <returns>The center point</returns>
+    public static PointF Center(this RectangleF @this) {
+      var x = @this.X + @this.Width / 2;
+      var y = @this.Y + @this.Height / 2;
+      return new PointF(x, y);
+    }
+
     public static bool CollidesWith(this RectangleF @this, Rectangle other) {
       var top = other.Top;
       var bottom = other.Bottom;
