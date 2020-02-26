@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -21,13 +21,13 @@
 
 
 using System.Diagnostics;
-#if NETFX_4
+using System.Linq;
+#if NET45
+using System.Runtime.CompilerServices;
+#endif
+#if NET40
 using System.Threading.Tasks;
 #endif
-#if NETFX_35
-using System.Linq;
-#endif
-using System.Runtime.CompilerServices;
 using System.Text;
 
 // ReSharper disable UnusedMember.Global
@@ -74,6 +74,22 @@ namespace System.Collections.Generic {
       #endregion
     }
 
+    /// <summary>
+    /// An IEnumerable of Disposables whose elements can also be accessed by an indexer
+    /// </summary>
+    /// <typeparam name="T">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
+    internal interface IDisposableCollection<out T> : IEnumerable<T>, IDisposable where T : IDisposable {
+      T this[int i] { get; }
+    }
+
+    private class DisposableCollection<T> : List<T>, IDisposableCollection<T> where T : IDisposable {
+      public DisposableCollection(IEnumerable<T> collection) : base(collection) { }
+
+      public void Dispose() {
+        this.ForEach(i => i.Dispose());
+      }
+    }
+
     #endregion
 
     /// <summary>
@@ -91,7 +107,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NETFX_4
+#if NET40
       Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -167,17 +183,19 @@ namespace System.Collections.Generic {
     /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
     [DebuggerStepThrough]
     public static IEnumerable<TItem> ToNullIfEmpty<TItem>(this IEnumerable<TItem> @this) {
-      if (@this == null)
-        return null;
-
-      var collection = @this as ICollection<TItem>;
-      if (collection != null)
-        return collection.Count < 1 ? null : @this;
-
-      // ReSharper disable PossibleMultipleEnumeration
-      using (var enumerator = @this.GetEnumerator())
-        return enumerator.MoveNext() ? @this : null;
-      // ReSharper restore PossibleMultipleEnumeration
+      switch (@this) {
+        case null:
+          return null;
+        case TItem[] array:
+          return array.Length < 1 ? null : @this;
+        case ICollection<TItem> collection:
+          return collection.Count < 1 ? null : @this;
+        default:
+          // ReSharper disable PossibleMultipleEnumeration
+          using (var enumerator = @this.GetEnumerator())
+            return enumerator.MoveNext() ? @this : null;
+          // ReSharper restore PossibleMultipleEnumeration
+      }
     }
 
     /// <summary>
@@ -187,7 +205,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <returns>A hashset</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) => new HashSet<TItem>(@this);
@@ -202,7 +220,7 @@ namespace System.Collections.Generic {
     /// A hashset
     /// </returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) => new HashSet<TItem>(@this, comparer);
@@ -240,7 +258,7 @@ namespace System.Collections.Generic {
     /// A hashset
     /// </returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, IEqualityComparer<TResult> comparer = null) => comparer == null ? new HashSet<TResult>(@this.Select(selector)) : new HashSet<TResult>(@this.Select(selector), comparer);
@@ -261,9 +279,7 @@ namespace System.Collections.Generic {
       if (@this == null || other == null)
         return false;
 
-      var thisCollection = @this as ICollection<TItem>;
-      var otherCollection = other as ICollection<TItem>;
-      if (thisCollection != null && otherCollection != null && thisCollection.Count != otherCollection.Count)
+      if (@this is ICollection<TItem> thisCollection && other is ICollection<TItem> otherCollection && thisCollection.Count != otherCollection.Count)
         return false;
 
       if (comparer == null)
@@ -314,6 +330,9 @@ namespace System.Collections.Generic {
         ;
     }
 
+    [DebuggerStepThrough]
+    public static bool IsNotNullOrEmpty<TItem>(this IEnumerable<TItem> @this) => !IsNullOrEmpty(@this);
+
     /// <summary>
     /// Determines whether the enumeration is <c>null</c> or empty.
     /// </summary>
@@ -323,16 +342,21 @@ namespace System.Collections.Generic {
     /// </returns>
     [DebuggerStepThrough]
     public static bool IsNullOrEmpty<TItem>(this IEnumerable<TItem> @this) {
-      if (@this == null)
-        return true;
-
-      var collection = @this as ICollection<TItem>;
-      if (collection != null)
-        return collection.Count == 0;
-
-      using (var enumerator = @this.GetEnumerator())
-        return !enumerator.MoveNext();
+      switch (@this) {
+        case null:
+          return true;
+        case TItem[] array:
+          return array.Length == 0;
+        case ICollection<TItem> collection:
+          return collection.Count == 0;
+        default:
+          using (var enumerator = @this.GetEnumerator())
+            return !enumerator.MoveNext();
+      }
     }
+
+    [DebuggerStepThrough]
+    public static bool IsNotNullOrEmpty<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) => !IsNullOrEmpty(@this, predicate);
 
     /// <summary>
     /// Determines whether the enumeration is <c>null</c> or empty.
@@ -348,30 +372,37 @@ namespace System.Collections.Generic {
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
 
-      if (@this == null)
-        return true;
+      switch (@this) {
+        case null:
+          return true;
+        case TItem[] array:
+          // ReSharper disable once LoopCanBeConvertedToQuery
+          foreach (var item in array)
+            if (predicate(item))
+              return true;
 
-      var list = @this as IList<TItem>;
-      if (list != null) {
-        // ReSharper disable once LoopCanBeConvertedToQuery
-        // ReSharper disable once ForCanBeConvertedToForeach
-        for (var i = 0; i < list.Count; ++i)
-          if (predicate(list[i]))
-            return true;
+          return false;
+        case IList<TItem> list: {
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            // ReSharper disable once ForCanBeConvertedToForeach
+            for (var i = 0; i < list.Count; ++i)
+              if (predicate(list[i]))
+                return true;
 
-        return false;
+            return false;
+          }
+        default:
+          using (var enumerator = @this.GetEnumerator())
+            while (enumerator.MoveNext())
+              if (predicate(enumerator.Current))
+                return true;
+
+          return false;
       }
-
-      using (var enumerator = @this.GetEnumerator())
-        while (enumerator.MoveNext())
-          if (predicate(enumerator.Current))
-            return true;
-
-      return false;
     }
 
     /// <summary>
-    /// Concats all byte arrays into one.
+    /// Concat all byte arrays into one.
     /// </summary>
     /// <param name="this">This Enumerable of byte[].</param>
     /// <returns>A block of bytes with all parts joined.</returns>
@@ -382,8 +413,7 @@ namespace System.Collections.Generic {
 
       List<byte[]> chunks;
       var totalSize = 0;
-      var list = @this as IList<byte[]>;
-      if (list != null) {
+      if (@this is IList<byte[]> list) {
         chunks = new List<byte[]>(list.Count);
         // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < list.Count; i++) {
@@ -395,8 +425,7 @@ namespace System.Collections.Generic {
           chunks.Add(chunk);
         }
       } else {
-        var collection = @this as ICollection<byte[]>;
-        chunks = collection == null ? new List<byte[]>() : new List<byte[]>(collection.Count);
+        chunks = !(@this is ICollection<byte[]> collection) ? new List<byte[]>() : new List<byte[]>(collection.Count);
         foreach (var chunk in @this) {
           if (chunk == null || chunk.Length < 1)
             continue;
@@ -416,18 +445,18 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>
-    /// Concats all enumerations into one.
+    /// Concat all enumerations into one.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <param name="this">The this.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> @this) => @this.SelectMany(c => c as TItem[] ?? c.ToArray());
 
-#if NETFX_4
+#if NET40
     public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
       if (@this == null)
         throw new NullReferenceException();
@@ -452,7 +481,7 @@ namespace System.Collections.Generic {
     /// <param name="comparer">The comparer; if any.</param>
     /// <returns><c>true</c> if the enumeration does not contain the listed value; otherwise, <c>false</c>.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool ContainsNot<TItem>(this IEnumerable<TItem> @this, TItem item, IEqualityComparer<TItem> comparer = null)
@@ -468,7 +497,7 @@ namespace System.Collections.Generic {
     /// <param name="comparer">The comparer; if any.</param>
     /// <returns><c>true</c> if the enumeration does not contain the listed values; otherwise, <c>false</c>.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool ContainsNotAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items, IEqualityComparer<TItem> comparer = null)
@@ -574,7 +603,7 @@ namespace System.Collections.Generic {
         action(item, index++);
     }
 
-#if NETFX_4
+#if NET40
     /// <summary>
     /// Executes a callback for each item in parallel.
     /// </summary>
@@ -582,7 +611,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn> action)
@@ -617,7 +646,7 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, TOut> converter)
@@ -633,7 +662,7 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, int, TOut> converter)
@@ -718,10 +747,11 @@ namespace System.Collections.Generic {
       else {
         progressCallback(0, length);
 
-        Action<int> action = i => progressCallback(i, length);
-        Action<int> nullAction = _ => { };
-        var preAction = delayed ? action : nullAction;
-        var postAction = delayed ? nullAction : action;
+        void ProgressAction(int i) => progressCallback(i, length);
+        void NullAction(int _) { }
+
+        var preAction = delayed ? (Action<int>)ProgressAction : NullAction;
+        var postAction = delayed ? NullAction : (Action<int>)ProgressAction;
 
         var currentIndex = 0;
         foreach (var item in @this) {
@@ -762,9 +792,9 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>
-    /// Distincts the specified enumeration by the specified selector.
+    /// Distinct the specified enumeration by the specified selector.
     /// </summary>
-    /// <typeparam name="TIn">The type of the inpute elements.</typeparam>
+    /// <typeparam name="TIn">The type of the input elements.</typeparam>
     /// <typeparam name="TCompare">The type of the comparison elements.</typeparam>
     /// <param name="this">This enumeration.</param>
     /// <param name="selector">The selector.</param>
@@ -795,7 +825,7 @@ namespace System.Collections.Generic {
     /// <param name="this">The source.</param>
     /// <returns>A list of items.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> @this)
@@ -810,7 +840,7 @@ namespace System.Collections.Generic {
     /// <param name="join">The delimiter.</param>
     /// <param name="skipDefaults">if set to <c>true</c> all default values will be skipped.</param>
     /// <param name="converter">The converter.</param>
-    /// <returns>The joines string.</returns>
+    /// <returns>The joined string.</returns>
     public static string Join<TIn>(this IEnumerable<TIn> @this, string join = ", ", bool skipDefaults = false, Func<TIn, string> converter = null) {
       if (@this == null)
         throw new NullReferenceException();
@@ -821,10 +851,10 @@ namespace System.Collections.Generic {
 
       // if no converter was given, use the default toString if not null
       if (converter == null)
-        converter = i => ReferenceEquals(i, null) ? null : i.ToString();
+        converter = i => i?.ToString();
 
 
-      foreach (var item in (skipDefaults ? @this.Where(item => !EqualityComparer<TIn>.Default.Equals(item, defaultValue)) : @this)) {
+      foreach (var item in skipDefaults ? @this.Where(item => !EqualityComparer<TIn>.Default.Equals(item, defaultValue)) : @this) {
         if (gotElements)
           result.Append(join);
         else
@@ -912,7 +942,7 @@ namespace System.Collections.Generic {
         if (selector(item))
           return result;
         else
-          result++;
+          ++result;
 
       // ReSharper disable once PossibleMultipleEnumeration
       return defaultValue(@this);
@@ -926,7 +956,7 @@ namespace System.Collections.Generic {
     /// <param name="item">The item.</param>
     /// <returns>The position of the item in the enumeration or -1</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static int IndexOf<TIn>(this IEnumerable<TIn> @this, TIn item) => IndexOrDefault(@this, a => Equals(a, item), -1);
@@ -991,7 +1021,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
-#if !NETFX_35
+#if !NET35
     /// <summary>
     /// Gets the first item matching the condition or the given default value.
     /// </summary>
@@ -1084,7 +1114,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
-#if !NETFX_35
+#if !NET35
     /// <summary>
     /// Gets the last item matching the condition or the given default value.
     /// </summary>
@@ -1093,7 +1123,7 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector)
@@ -1110,7 +1140,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue)
@@ -1126,7 +1156,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory)
@@ -1142,7 +1172,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
@@ -1157,7 +1187,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue)
@@ -1172,7 +1202,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory)
@@ -1187,7 +1217,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
@@ -1201,7 +1231,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NETFX_45
+#if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> @this) => @this.OrderBy(i => i);
@@ -1259,5 +1289,15 @@ namespace System.Collections.Generic {
 
       return @this.SkipWhile(i => !predicate(i));
     }
+
+    /// <summary>
+    /// wraps this collection of Disposables in an <see cref="IDisposableCollection{T}"/> which can be used within an using statement
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
+    /// <param name="this">This IEnumerable</param>
+    /// <returns>An <see cref="IDisposableCollection{T}"/> containing the elements of this IEnumerable</returns>
+    public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable =>
+      new DisposableCollection<TItem>(@this)
+    ;
   }
 }

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,11 +19,15 @@
 */
 #endregion
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+// ReSharper disable UnusedMember.Global
 
 namespace System.ComponentModel {
+  // ReSharper disable once PartialTypeWithSinglePart
+  // ReSharper disable once UnusedMember.Global
   internal static partial class DefaultValueAttributeExtensions {
     /// <summary>
     /// Sets the properties of an instance to their default values.
@@ -35,11 +39,12 @@ namespace System.ComponentModel {
     public static void SetPropertiesToDefaultValues<TType>(this TType This, bool alsoNonPublic = false, bool flattenHierarchies = true) {
       var type = ReferenceEquals(This, null) ? typeof(TType) : This.GetType();
       var properties = type.GetProperties(BindingFlags.Instance | (alsoNonPublic ? BindingFlags.NonPublic : 0) | BindingFlags.Public | (flattenHierarchies ? BindingFlags.FlattenHierarchy : 0));
-      var writeableProperties = properties.Where(p => p.CanWrite);
-      foreach (var prop in writeableProperties) {
+      var writableProperties = properties.Where(p => p.CanWrite);
+      foreach (var prop in writableProperties) {
         var defaultValueAttributes = prop.GetCustomAttributes(typeof(DefaultValueAttribute), false).OfType<DefaultValueAttribute>();
         var attr = defaultValueAttributes.FirstOrDefault();
-        if (attr == null) continue;
+        if (attr == null)
+          continue;
         var value = attr.Value;
         try {
           var targetValue = _TryChangeType(prop.PropertyType, value);
@@ -50,16 +55,54 @@ namespace System.ComponentModel {
       }
     }
 
+    private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new Dictionary<Type, Type[]> {
+      { typeof(decimal), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
+      { typeof(double), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char) , typeof(float)  } },
+      { typeof(float), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
+      { typeof(ulong), new [] { typeof(byte), typeof(ushort), typeof(uint), typeof(char)  } },
+      { typeof(long), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)  } },
+      { typeof(uint), new [] { typeof(byte), typeof(ushort), typeof(char)  } },
+      { typeof(int), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(char)  } },
+      { typeof(ushort), new [] { typeof(byte), typeof(char) } },
+      { typeof(short), new []{ typeof(byte) } }
+    };
+
     private static object _TryChangeType(Type targetType, object value) {
-      if (ReferenceEquals(value, null))
-        return (null);
+      if (value == null)
+        return null;
+
       var sourceType = value.GetType();
       if (sourceType == targetType)
-        return (value);
-      if (sourceType.IsCastableTo(targetType))
-        return (Convert.ChangeType(value, targetType));
-      if (targetType.IsIntegerType() && sourceType.IsIntegerType() && sourceType.IsSigned() && !targetType.IsSigned() && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
-        return (Convert.ChangeType(value, targetType));
+        return value;
+
+      bool IsCastableTo(Type @this, Type target) {
+        // check inheritance
+        if (target.IsAssignableFrom(@this))
+          return true;
+
+        // check cache
+        if (_IMPLICIT_CONVERSIONS.ContainsKey(target)) {
+          if (_IMPLICIT_CONVERSIONS[target].Contains(@this))
+            return true;
+        }
+        return @this.GetMethods(BindingFlags.Public | BindingFlags.Static)
+          .Any(
+            m => m.ReturnType == target &&
+                 m.Name == "op_Implicit" ||
+                 m.Name == "op_Explicit"
+          );
+      }
+
+      if (IsCastableTo(sourceType, targetType))
+        return Convert.ChangeType(value, targetType);
+
+      bool IsNullable(Type @this) => @this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Nullable<>);
+      bool IsIntegerType(Type @this) => @this == typeof(byte) || @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(ushort) || @this == typeof(int) || @this == typeof(uint) || @this == typeof(long) || @this == typeof(ulong);
+      bool IsSigned(Type @this) => @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(int) || @this == typeof(long) || @this == typeof(float) || @this == typeof(double) || @this == typeof(decimal) || IsNullable(@this) && IsSigned(@this.GetGenericArguments()[0]);
+
+      if (IsIntegerType(targetType) && IsIntegerType(sourceType) && IsSigned(sourceType) && !IsSigned(targetType) && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
+        return Convert.ChangeType(value, targetType);
+
       throw new InvalidOperationException($"Can not convert from {sourceType.FullName} to {targetType.FullName}");
     }
   }

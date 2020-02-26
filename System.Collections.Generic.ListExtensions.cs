@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,11 +19,14 @@
 */
 #endregion
 
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+
 namespace System.Collections.Generic {
   internal static partial class ListExtensions {
 
@@ -34,7 +37,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumerable.</param>
     /// <param name="items">The items.</param>
     public static void RemoveAll<TItem>(this IList<TItem> This, IEnumerable<TItem> items) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(items != null);
 #endif
@@ -45,48 +48,49 @@ namespace System.Collections.Generic {
 
     }
 
-    // return part of array
-    public static T[] Splice<T>(this IList<T> arrData, int intStart, int intCount) {
-      T[] arrRet = new T[intCount];
-      for (int intI = intCount - 1; intI >= 0; intI--)
-        arrRet[intI] = arrData[intI + intStart];
-      return (arrRet);
-    }
-    // swap two array elements
-    public static void Swap<T>(this IList<T> arrData, int intI, int intJ) {
-      T objTmp = arrData[intI];
-      arrData[intI] = arrData[intJ];
-      arrData[intJ] = objTmp;
-      objTmp = default(T);
-    }
-    // shuffle array
-    public static void Shuffle<T>(this IList<T> arrData) {
-      int intI = arrData.Count;
-      Random objRandom = new Random();
-      while (intI > 1) {
-        intI--;
-        arrData.Swap(objRandom.Next(intI + 1), intI);
-      }
+    // return part 
+    public static T[] Splice<T>(this IList<T> @this, int start, int count) {
+      var result = new T[count];
+      for (var i = count - 1; i >= 0; i--)
+        result[i] = @this[i + start];
+
+      return result;
     }
 
-    public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> arrThis, Converter<TInput, TOutput> ptrConverter) {
-      return (Array.ConvertAll(arrThis.ToArray(), ptrConverter));
+    // swap two elements
+    public static void Swap<T>(this IList<T> @this, int i, int j) {
+      var tmp = @this[i];
+      @this[i] = @this[j];
+      @this[j] = tmp;
     }
 
-    public static void ForEach<TInput>(this IList<TInput> arrThis, Action<TInput> ptrCall) {
-      Array.ForEach(arrThis.ToArray(), ptrCall);
+    // fisher-yates shuffle array
+    public static void Shuffle<T>(this IList<T> @this) {
+      var i = @this.Count;
+      var random = new Random();
+      while (i-- > 1)
+        @this.Swap(random.Next(i + 1), i);
+
+    }
+
+    public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter)
+      => Array.ConvertAll(@this.ToArray(), converter)
+    ;
+
+    public static void ForEach<TInput>(this IList<TInput> @this, Action<TInput> action) {
+      Array.ForEach(@this.ToArray(), action);
     }
 
     /// <summary>
     /// Removes items at the given position.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="start">The start.</param>
     /// <param name="count">The count.</param>
-    public static void RemoveRange<TInput>(this IList<TInput> This, int start, int count) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void RemoveRange<TInput>(this IList<TInput> @this, int start, int count) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
 
       // special case I - return when nothing to remove
@@ -95,43 +99,43 @@ namespace System.Collections.Generic {
 
       // special case II - only one item removed
       if (count == 1) {
-        This.RemoveAt(start);
+        @this.RemoveAt(start);
         return;
       }
 
       // special case, given a real List<T>
-      var realList = This as List<TInput>;
+      var realList = @this as List<TInput>;
       if (realList != null) {
         realList.RemoveRange(start, count);
         return;
       }
 
       // remove every single item, starting backwards to avoid broken indexes
-      for (var i = Math.Min(This.Count - 1, start + count - 1); i >= start; --i)
-        This.RemoveAt(i);
+      for (var i = Math.Min(@this.Count - 1, start + count - 1); i >= start; --i)
+        @this.RemoveAt(i);
     }
 
     /// <summary>
     /// Adds the items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="items">The items.</param>
-    public static void AddRange<TInput>(this IList<TInput> This, IEnumerable<TInput> items) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
+#if NET40
+      Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
 
       // special case, given a real List<T>
-      var realList = This as List<TInput>;
+      var realList = @this as List<TInput>;
       if (realList != null) {
         realList.AddRange(items);
         return;
       }
 
       foreach (var item in items)
-        This.Add(item);
+        @this.Add(item);
     }
 
     /// <summary>
@@ -141,7 +145,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="item">The item.</param>
     public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
 
@@ -153,29 +157,29 @@ namespace System.Collections.Generic {
     /// Keeps the first n items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
-    public static void KeepFirst<TInput>(this IList<TInput> This, int count) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void KeepFirst<TInput>(this IList<TInput> @this, int count) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
 
       // special case: keep nothing
       if (count < 1) {
-        This.Clear();
+        @this.Clear();
         return;
       }
 
       // special case: keep the first element
       if (count == 1) {
-        var item = This[0];
-        This.Clear();
-        This.Add(item);
+        var item = @this[0];
+        @this.Clear();
+        @this.Add(item);
         return;
       }
 
       // special case: keep all elements
-      var len = This.Count;
+      var len = @this.Count;
       if (count >= len)
         return;
 
@@ -187,42 +191,42 @@ namespace System.Collections.Generic {
         // more to remove than to keep, copy the items and clear the list, then re-add
         var copy = new TInput[index];
         for (var i = 0; i < index; ++i)
-          copy[i] = This[i];
-        This.Clear();
-        This.AddRange(copy);
+          copy[i] = @this[i];
+        @this.Clear();
+        @this.AddRange(copy);
       } else
 
         // only few elements to remove
-        This.RemoveRange(index, count);
+        @this.RemoveRange(index, count);
     }
 
     /// <summary>
     /// Keeps the last n items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
-    public static void KeepLast<TInput>(this IList<TInput> This, int count) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void KeepLast<TInput>(this IList<TInput> @this, int count) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
 
       // special case: remove all items
       if (count < 1) {
-        This.Clear();
+        @this.Clear();
         return;
       }
 
       // special case: keep all elements
-      var len = This.Count;
+      var len = @this.Count;
       if (count > len)
         return;
 
       // special case: keep last item
       if (count == 1) {
-        var item = This[len - 1];
-        This.Clear();
-        This.Add(item);
+        var item = @this[len - 1];
+        @this.Clear();
+        @this.Add(item);
         return;
       }
 
@@ -232,62 +236,62 @@ namespace System.Collections.Generic {
         // more to remove than to keep
         var copy = new TInput[count];
         for (int i = count - 1, j = len - 1; i >= 0; --i, --j)
-          copy[i] = This[j];
-        This.Clear();
-        This.AddRange(copy);
+          copy[i] = @this[j];
+        @this.Clear();
+        @this.AddRange(copy);
       } else
 
         // only few elements to remove
-        This.RemoveRange(0, index);
+        @this.RemoveRange(0, index);
     }
 
     /// <summary>
     /// Removes the first n items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
-    public static void RemoveFirst<TInput>(this IList<TInput> This, int count) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
-      var remaining = This.Count - count;
-      This.KeepLast(remaining);
+      var remaining = @this.Count - count;
+      @this.KeepLast(remaining);
     }
 
     /// <summary>
     /// Removes the last n items.
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="This">This IList.</param>
+    /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
-    public static void RemoveLast<TInput>(this IList<TInput> This, int count) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
-      var remaining = This.Count - count;
-      This.KeepFirst(remaining);
+      var remaining = @this.Count - count;
+      @this.KeepFirst(remaining);
     }
 
     /// <summary>
     /// Returns all permutations of the specified items.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="This">The items.</param>
+    /// <param name="this">The items.</param>
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
-    public static IEnumerable<T[]> Permutate<T>(this IList<T> This, bool separateArrays = false) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
-      var length = This.Count;
+      var length = @this.Count;
       if (length < 1)
         yield break;
 
       var current = new T[length];
       var state = new int[length];
       for (var i = 0; i < length; ++i)
-        current[i] = This[state[i] = i];
+        current[i] = @this[state[i] = i];
 
       var lastIndex = length - 1;
       while (true) {
@@ -296,9 +300,9 @@ namespace System.Collections.Generic {
         if (separateArrays) {
           var result = new T[length];
           current.CopyTo(result, 0);
-          yield return (result);
+          yield return result;
         } else
-          yield return (current);
+          yield return current;
 
         // increment the 2nd last digit
         var index = lastIndex - 1;
@@ -323,7 +327,7 @@ namespace System.Collections.Generic {
         }
 
         // fill content by digit
-        current[index] = This[state[index]];
+        current[index] = @this[state[index]];
 
         // fill all slots after the incremented one
         for (var i = index + 1; i < length; ++i) {
@@ -333,7 +337,7 @@ namespace System.Collections.Generic {
           while (slotsBefore.Contains(state[i]))
             ++state[i];
 
-          current[i] = This[state[i]];
+          current[i] = @this[state[i]];
         }
 
       }
@@ -344,24 +348,24 @@ namespace System.Collections.Generic {
     /// Returns all permutations of the specified items.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="This">The items.</param>
+    /// <param name="this">The items.</param>
     /// <param name="length">The length of each permutation.</param>
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
-    public static IEnumerable<T[]> Permutate<T>(this IList<T> This, int length, bool separateArrays = false) {
-#if NETFX_4
-      Contract.Requires(This != null);
+    public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
+#if NET40
+      Contract.Requires(@this != null);
 #endif
       if (length < 1)
         yield break;
 
-      var itemLastIndex = This.Count - 1;
+      var itemLastIndex = @this.Count - 1;
       if (itemLastIndex < 0)
         yield break;
 
       var current = new T[length];
       for (var i = 0; i < length; ++i)
-        current[i] = This[0];
+        current[i] = @this[0];
 
       var states = new int[length];
       --length;
@@ -371,17 +375,17 @@ namespace System.Collections.Generic {
         while (true) {
           var result = new T[length + 1];
           current.CopyTo(result, 0);
-          yield return (result);
+          yield return result;
 
-          if (!_ArePermutationsLeft(This, length, states, itemLastIndex, current))
+          if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
             yield break;
         }
       }
 
       while (true) {
-        yield return (current);
+        yield return current;
 
-        if (!_ArePermutationsLeft(This, length, states, itemLastIndex, current))
+        if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
           yield break;
       }
 
@@ -408,14 +412,27 @@ namespace System.Collections.Generic {
 
         // all permutations done
         if (index < 0)
-          return (false);
+          return false;
       }
 
       // create next permutation
       current[index] = items[++states[index]];
 
-      return (true);
+      return true;
     }
+    
+    public static List<T> DeepClone<T>(this List<T> list) 
+    {
+      object objResult = null;
+      using (var  ms = new MemoryStream())
+      {
+        var  bf =   new BinaryFormatter();
+        bf.Serialize(ms, list);
 
+        ms.Position = 0;
+        objResult = bf.Deserialize(ms);
+      }
+      return (List<T>)objResult;
+    }
   }
 }
