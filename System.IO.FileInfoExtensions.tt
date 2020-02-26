@@ -48,7 +48,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if NETFX_4
+#if NET40
 using System.Diagnostics.Contracts;
 #endif
 <#if(this.IsDrawingReferenced){#>
@@ -219,7 +219,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="this">This FileInfo.</param>
     public static void EnableCompression(this FileInfo @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
 
@@ -254,7 +254,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
     public static bool TryEnableCompression(this FileInfo @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
 
@@ -295,7 +295,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The description shown in the windows explorer under filetype.</returns>
     public static string GetTypeDescription(this FileInfo This) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -313,7 +313,7 @@ namespace System.IO {
     /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
     /// <returns>The icon used by the windows explorer for this file.</returns>
     public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -371,7 +371,7 @@ namespace System.IO {
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
     public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -409,7 +409,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The result of the hash algorithm</returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -428,7 +428,7 @@ namespace System.IO {
     /// The result of the hash algorithm
     /// </returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -505,6 +505,31 @@ namespace System.IO {
     #endregion
 
     #region reading
+    
+    /// <summary>
+    /// Identifies the file's encoding.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <returns>The encoding or <c>null</c> when the file has zero bytes length.</returns>
+    public static Encoding GetEncoding(this FileInfo @this) {
+      // Read the BOM
+      var bom = new byte[4];
+      using (var file = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read))
+      {
+        var bytesRead = file.Read(bom, 0, 4);
+        if(bytesRead == 0)
+          return null;
+      }
+
+      // Analyze the BOM
+      if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
+      if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) return Encoding.UTF8;
+      if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
+      if (bom[0] == 0xfe && bom[1] == 0xff) return Encoding.BigEndianUnicode; //UTF-16BE
+      if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff) return Encoding.UTF32;
+      return Encoding.Default;
+    }
+    
     /// <summary>
     /// Reads all text.
     /// </summary>
@@ -617,11 +642,25 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-#if NETFX_4
-    public static IEnumerable<string> ReadLines(this FileInfo This) => File.ReadLines(This.FullName);
+#if NET40
+    public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadLines(@this.FullName);
 #else
-    public static IEnumerable<string> ReadLines(this FileInfo This) => File.ReadAllLines(This.FullName);
+    public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadAllLines(@this.FullName);
 #endif
+
+    public static IEnumerable<string> ReadLines(this FileInfo @this, FileShare share) {
+      using(var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, 4096, FileOptions.SequentialScan))
+      using(var reader = new StreamReader(stream))
+      {
+        while(true){
+          var line=reader.ReadLine();
+          if(line==null)
+            yield break;
+
+          yield return line;
+        }
+      }
+    }
 
     /// <summary>
     /// Reads the lines.
@@ -629,7 +668,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-#if NETFX_4
+#if NET40
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadLines(This.FullName, encoding);
 #else
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
@@ -680,7 +719,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NETFX_4
+#if NET40
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents.ToArray());
@@ -692,7 +731,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NETFX_4
+#if NET40
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents, encoding);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents.ToArray(), encoding);
@@ -721,7 +760,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NETFX_4
+#if NET40
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllLines(This.FullName, contents);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine);
@@ -733,7 +772,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NETFX_4
+#if NET40
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllLines(This.FullName, contents, encoding);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine, encoding);
@@ -771,7 +810,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -862,7 +901,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void RemoveFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -988,7 +1027,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryDelete(this FileInfo @this) {
-#if NETFX_4
+#if NET40
       Contract.Requires(@this != null);
 #endif
       try {
@@ -1012,7 +1051,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreate(this FileInfo This, FileAttributes attributes = FileAttributes.Normal) {
-#if NETFX_4
+#if NET40
       Contract.Requires(This != null);
 #endif
 
@@ -1123,6 +1162,8 @@ namespace System.IO {
       return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
+#if NET40
+
     /// <summary>
     /// Compares two files for content equality.
     /// </summary>
@@ -1202,6 +1243,8 @@ namespace System.IO {
         }
       }
     }
+
+#endif
     
     /// <summary>
     /// Swaps the content of two byte array pointers.
@@ -1213,6 +1256,8 @@ namespace System.IO {
       bufferA = bufferB;
       bufferB = temp;
     }
+
+#if NET40
 
     /// <summary>
     /// Starts filling a block from a stream with a given index.
@@ -1226,6 +1271,8 @@ namespace System.IO {
       stream.Seek(blockIndex * blockSize, SeekOrigin.Begin);
       return stream.ReadAsync(buffer, 0, blockSize);
     }
+
+#endif
 
     /// <summary>
     /// Creates a stream of block indexes, which are not simply following each other the get better chances to detect differences early.
@@ -1255,7 +1302,7 @@ namespace System.IO {
     /// <param name="comparand">The comparand byte array.</param>
     /// <param name="length">The number of bytes to compare.</param>
     /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
-<#if(this.IsUnsafeCompile==true){#>
+#if UNSAFE
     private static unsafe bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
       if(ReferenceEquals(source,comparand))
         return true;
@@ -1292,7 +1339,7 @@ namespace System.IO {
 
       return true;
     }
-<#}else{#>
+#else
     private static bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
       if(ReferenceEquals(source,comparand))
         return true;
@@ -1309,7 +1356,7 @@ namespace System.IO {
 
       return true;
     }
-<#}#>
+#endif
   }
 }
 
