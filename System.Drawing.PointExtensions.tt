@@ -107,4 +107,23 @@ for(var k=0;k<d.Length;++k){
     public static <#=i.Item2#> Amount(this <#=i.Item1#> @this) => Math.Abs(@this.X) + Math.Abs(@this.Y);
   }
 <# } #>
+
+  internal static partial class PointExtensions {
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static PointF ToFloat(this Point @this) => new PointF(@this.X, @this.Y);
+
+  }
+
+  internal static partial class PointFExtensions {
+  
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static Point ToInteger(this PointF @this) => new Point((int)@this.X, (int)@this.Y);
+
+  }
+
 }
