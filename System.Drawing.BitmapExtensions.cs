@@ -82,6 +82,7 @@ namespace System.Drawing {
       void FillRectangle(Rectangle rect, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a,Point b, Color color);
+      void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height);
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -720,6 +721,15 @@ namespace System.Drawing {
       }
 
       public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
+
+      public void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height) {
+        if (other == null)
+          throw new ArgumentNullException(nameof(other));
+        # TODO: this could be way faster when both have the same pixel format
+        for (var y = 0; y < height;++ys, ++yt, ++y)
+        for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+          this[xct, yt] = other[xcs, ys];
+      }
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
         var dx = x1 - x0;
