@@ -73,10 +73,15 @@ namespace System.Drawing {
     public interface IBitmapLocker : IDisposable {
       BitmapData BitmapData { get; }
       Color this[int x, int y] { get; set; }
+      Color this[Point p] { get; set; }
       void DrawRectangle(Rectangle rect, Color color);
-      void FillRectangle(Rectangle rect, Color color);
       void DrawHorizontalLine(int x, int y, int count, Color color);
+      void DrawHorizontalLine(Point p, int count, Color color);
       void DrawVerticalLine(int x, int y, int count, Color color);
+      void DrawVerticalLine(Point p, int count, Color color);
+      void FillRectangle(Rectangle rect, Color color);
+      void DrawLine(int x0, int y0, int x1, int y1, Color color);
+      void DrawLine(Point a,Point b, Color color);
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -670,19 +675,33 @@ namespace System.Drawing {
         set => this._pixelProcessor[x, y] = value;
       }
 
+      public Color this[Point p]
+      {
+        get => this[p.X,p.Y];
+        set => this[p.X,p.Y] = value;
+      }
+
       public void DrawHorizontalLine(int x, int y, int count, Color color) {
+        if (count == 0)
+          return;
         if (count < 0)
           this._pixelProcessor.DrawHorizontalLine(x - count, y, -count, color);
         else
           this._pixelProcessor.DrawHorizontalLine(x, y, count, color);
       }
 
+      public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
+
       public void DrawVerticalLine(int x, int y, int count, Color color) {
+        if (count == 0)
+          return;
         if (count < 0)
           this._pixelProcessor.DrawVerticalLine(x, y - count, -count, color);
         else
           this._pixelProcessor.DrawVerticalLine(x, y, count, color);
       }
+
+      public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
 
       public void DrawRectangle(Rectangle rect, Color color) {
         var count = rect.Width + 1;
@@ -699,6 +718,113 @@ namespace System.Drawing {
 
         this._pixelProcessor.FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, color);
       }
+
+      public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
+
+      public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
+        var dx = x1 - x0;
+        var dy = y1 - y0;
+        if (dx == 0) {
+          this.DrawVerticalLine(x0,y0,y1-y0,color);
+          return;
+        }
+
+        if (dy == 0) {
+          this.DrawHorizontalLine(x0,y0,x1-x0,color);
+          return;
+        }
+
+        this._DrawDiagonalLine(x0,y0,dx,dy,color);
+      }
+
+      private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color)
+      {
+        int incx, incy, pdx, pdy, ddx, ddy, deltaslowdirection, deltafastdirection;
+
+        
+        if (dx < 0) {
+          dx = -dx;
+          incx = -1;
+        } else
+          incx = 1;
+
+        if (dy < 0) {
+          dy = -dy;
+          incy = -1;
+        } else 
+          incy = 1;
+
+        if (dx > dy)
+        {
+          pdx = incx; 
+          pdy = 0;
+          ddx = incx; 
+          ddy = incy;
+          deltaslowdirection = dy; 
+          deltafastdirection = dx;
+        }
+        else
+        {
+          pdx = 0; 
+          pdy = incy;
+          ddx = incx;
+          ddy = incy;
+          deltaslowdirection = dx;
+          deltafastdirection = dy;
+        }
+
+        var x = x0;
+        var y = y0;
+        var err = deltafastdirection >>1;
+        this[x,y]=color;
+
+        for (var t = 0; t < deltafastdirection; ++t)
+        {
+          err -= deltaslowdirection;
+          if (err < 0)
+          {
+            err += deltafastdirection;
+            x += ddx;
+            y += ddy;
+          }
+          else
+          {
+            x += pdx;
+            y += pdy;
+          }
+          this[x, y] = color;
+        }
+      }
+      
+      private void _DrawDiagonalLine2(int x0,int y0,int dx,int dy, Color color) {
+        var xSign = Math.Sign(dx);
+        var ySign = Math.Sign(dy);
+        dx = Math.Abs(dx);
+        dy = Math.Abs(dy);
+
+        var x = x0;
+        var y = y0;
+        var runTo = Math.Max(dx, dy);
+        dy = -dy;
+        var epsilon = dx + dy;
+        for (var i = 0; i <= runTo; ++i)
+        {
+          this[x,y]=color;
+          var epsilon2 = epsilon << 1;
+          if (epsilon2 > dy)
+          {
+            epsilon += dy;
+            x += xSign;
+          }
+
+          if (epsilon2 < dx)
+          {
+            epsilon += dx;
+            y += ySign;
+          }
+        }
+      }
+
     }
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
