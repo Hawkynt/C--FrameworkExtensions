@@ -48,6 +48,9 @@ for(var k=0;k<d.Length;++k){
 
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, <#=i.Item1#> other) => Add(@this, other.X, other.Y);
 
+    public static <#=i.Item1#> Add(this <#=i.Item1#> @this, Size other) => Add(@this, other.Width, other.Height);
+    public static <#=i.Item1#> Add(this <#=i.Item1#> @this, SizeF other) => Add(@this, other.Width, other.Height);
+
 #if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -67,6 +70,9 @@ for(var k=0;k<d.Length;++k){
     public static <#=i.Item1#> Substract(this <#=i.Item1#> @this, <#=j.Item1#> other) => Add(@this, -other.X, -other.Y);
     public static <#=i.Item1#> Substract(this <#=i.Item1#> @this, <#=j.Item2#> x, <#=j.Item2#> y) => Add(@this, -x, -y);
     public static <#=i.Item1#> Substract(this <#=i.Item1#> @this, <#=j.Item2#> c) => Add(@this, -c, -c);
+    
+    public static <#=i.Item1#> Substract(this <#=i.Item1#> @this, Size other) => Substract(@this, other.Width, other.Height);
+    public static <#=i.Item1#> Substract(this <#=i.Item1#> @this, SizeF other) => Substract(@this, other.Width, other.Height);
     
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=i.Item1#> other) => MultiplyBy(@this, other.X, other.Y);
 
