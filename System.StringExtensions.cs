@@ -1445,8 +1445,10 @@ namespace System {
     public static bool Contains(this string This, string other, StringComparison comparisonType) {
 #if NET40
       Contract.Requires(This != null);
-      Contract.Requires(other != null);
 #endif
+      if (other == null)
+        return false;
+
       return This.IndexOf(other, comparisonType) >= 0;
     }
 

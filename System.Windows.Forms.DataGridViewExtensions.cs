@@ -341,7 +341,7 @@ namespace System.Windows.Forms {
 
       return methodName == null
         ? null
-        : itemType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        : itemType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
     }
 
     private static Action<object, TParam0> _GenerateObjectInstanceActionDelegate<TParam0>(MethodInfo method) {
@@ -361,14 +361,15 @@ namespace System.Windows.Forms {
         throw new ArgumentNullException(nameof(method));
       if (method.GetParameters().Length != 1)
         throw new ArgumentException("Method needs exactly one parameter", nameof(method));
-      if (method.IsStatic)
-        throw new ArgumentException("Method must be instance-method", nameof(method));
-
+      
       var dynamicMethod = new DynamicMethod(string.Empty, returnType, new[] { typeof(object), typeof(TParam0) }, true);
       var generator = dynamicMethod.GetILGenerator();
 
-      generator.Emit(OpCodes.Ldarg_0);
-      generator.Emit(OpCodes.Castclass, method.DeclaringType);
+      if (!method.IsStatic) {
+        generator.Emit(OpCodes.Ldarg_0);
+        generator.Emit(OpCodes.Castclass, method.DeclaringType);
+      }
+
       generator.Emit(OpCodes.Ldarg_1);
       generator.EmitCall(OpCodes.Call, method, null);
       generator.Emit(OpCodes.Ret);
@@ -955,7 +956,7 @@ namespace System.Windows.Forms {
     /// <param name="maximumImageSize">the maximum size of every image displayed (width and height)</param>
     /// <param name="padding">The padding within each image</param>
     /// <param name="margin">The margin around each image</param>
-    public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null, int maximumImageSize = 24, int padding = 1, int margin = 5)
+    public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null, int maximumImageSize = 24, int padding = 1, int margin = 1)
       : this(onClickMethodName, toolTipProviderMethodName, maximumImageSize, padding, padding, padding, padding, margin, margin, margin, margin) {
     }
 
@@ -1443,10 +1444,11 @@ namespace System.Windows.Forms {
 
       //Query all properties which are assignable from IList and thus not auto generated
       var listProperties = type.GetProperties();
-      var columnIndex = -1;
 
       // if needed add DataGridViewColumns with DataGridViewMultiImageColumnAttribute
-      foreach (var property in listProperties) {
+      for (var index = 0; index < listProperties.Length; index++) {
+        var property = listProperties[index];
+
         var browsableAttribute = (BrowsableAttribute)property.GetCustomAttributes(typeof(BrowsableAttribute), true).FirstOrDefault();
         if (browsableAttribute != null && !browsableAttribute.Browsable)
           continue;
@@ -1454,15 +1456,13 @@ namespace System.Windows.Forms {
         if (dgv.Columns.Contains(property.Name))
           continue;
 
-        ++columnIndex;
-
         var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
         if (multiImageColumnAttribute == null)
           continue;
 
         var displayText = (DisplayNameAttribute)property.GetCustomAttributes(typeof(DisplayNameAttribute), true).FirstOrDefault();
         var newColumn = _ConstructMultiImageColumn(property.Name, displayText?.DisplayName, multiImageColumnAttribute);
-        columns.Insert(columnIndex, newColumn);
+        columns.Insert(index, newColumn);
 
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, property.Name)?.FirstOrDefault()?.ApplyTo(newColumn);
@@ -2321,7 +2321,7 @@ namespace System.Windows.Forms {
             row.Selected = selected.Contains(keyGetter((TItem)row.DataBoundItem));
         } else {
           foreach (var row in @this.Rows.Cast<DataGridViewRow>()) {
-            if (!selected.Contains(keyGetter((TItem)row.DataBoundItem)))
+            if (row.DataBoundItem == null || !selected.Contains(keyGetter((TItem)row.DataBoundItem)))
               continue;
 
             row.Selected = true;

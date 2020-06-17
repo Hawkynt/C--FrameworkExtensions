@@ -30,10 +30,10 @@ using System.Diagnostics.Contracts;
 #else
 using System.Diagnostics;
 #endif
-
-
+// ReSharper disable UnusedMember.Global
 
 namespace System.Net {
+  // ReSharper disable once PartialTypeWithSinglePart
   internal static partial class IPAdressExtensions {
     /// <summary>
     /// Determines whether the specified IPAdress is loopback.
