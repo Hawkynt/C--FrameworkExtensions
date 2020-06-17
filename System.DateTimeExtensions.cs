@@ -24,17 +24,17 @@
 
 namespace System {
   internal static partial class DateTimeExtensions {
-
     /// <summary>
     /// Returns the end of the day of the given date.
     /// </summary>
     /// <param name="this">This DateTime.</param>
+    /// <param name="precisionInTicks">the amount of ticks to subtract</param>
     /// <returns>An instance pointing to the last moment of the given day.</returns>
-    public static DateTime EndOfDay(this DateTime @this)
+    public static DateTime EndOfDay(this DateTime @this, long precisionInTicks = 1)
           =>
             @this.DayOfYear == DateTime.MinValue.DayOfYear && @this.Year == DateTime.MinValue.Year
-            ? @this.AddDays(1).Subtract(@this.TimeOfDay).AddTicks(-1)
-            : @this.Subtract(@this.TimeOfDay).AddTicks(-1).AddDays(1)
+            ? @this.AddDays(1).Subtract(@this.TimeOfDay).AddTicks(-precisionInTicks)
+            : @this.Subtract(@this.TimeOfDay).AddTicks(-precisionInTicks).AddDays(1)
           ;
 
     /// <summary>
