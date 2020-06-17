@@ -845,45 +845,57 @@ namespace System.IO {
     /// <summary>
     /// Keeps the last lines of a text file.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
-    public static void KeepLastLines(this FileInfo This, int count, Encoding encoding) {
-      Debug.Assert(This != null);
+    public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding) {
+      Debug.Assert(@this != null);
       Debug.Assert(encoding != null);
 
-      // TODO: this is not optimal because it reads the whole file in, first
+      const int _LINE_FEED_CHAR = 10;
+      const int BUFFER_SIZE = 8192;
+
+      long GetFilePosition(Stream file) {
+        var buffer = new byte[BUFFER_SIZE];
+        var currentFilePosition = file.Length - 1;
+        while (currentFilePosition > 0) {
+          var bytesToRead = buffer.Length > currentFilePosition ? (int) currentFilePosition : buffer.Length;
+          currentFilePosition -= bytesToRead;
       
-      const int MINIMUM_ITEMS_BEFORE_SHRINK=65536;
-      const int MINIMUM_FACTOR_BEFORE_SHRINK=2;
+          file.Seek(currentFilePosition, SeekOrigin.Begin);
+          var bytesRead = file.Read(buffer, 0, bytesToRead);
 
-      FileInfo tempFile = null;
+          var j = bytesRead - 1;
+          for (; j > 0; --j)
+            if (buffer[j] == _LINE_FEED_CHAR)
+              if (--count <= 0)
+                return currentFilePosition + j;
+        }
+
+        return 0;
+      }
+
+      FileInfo tmpFile = null;
       try {
-        tempFile = new FileInfo(Path.GetTempFileName());
+        using (var inputReader = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read,BUFFER_SIZE)) {
+          var filePosition = GetFilePosition(inputReader);
+          if (filePosition <= 0)
+            return;
 
-        var lineBuffer = new List<string>();
-
-        using (var inputFile = This.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (var inputReader = new StreamReader(inputFile, encoding))
-          while (!inputReader.EndOfStream) {
-            lineBuffer.Add(inputReader.ReadLine());
-            if (lineBuffer.Count > count * MINIMUM_FACTOR_BEFORE_SHRINK && lineBuffer.Count > MINIMUM_ITEMS_BEFORE_SHRINK)
-              lineBuffer.RemoveRange(0, lineBuffer.Count - count);
-
+          inputReader.Seek(filePosition+1, SeekOrigin.Begin);
+          tmpFile = new FileInfo(Path.GetTempFileName());
+          using (var tmpFileReader = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
+            inputReader.CopyTo(tmpFileReader);
+            inputReader.Flush(true);
+          }
           }
 
-        var startIndex=Math.Max(0,lineBuffer.Count-count);
-        using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
-        using (var outputWriter = new StreamWriter(outputFile, encoding))
-          while (startIndex<lineBuffer.Count)
-            outputWriter.WriteLine(lineBuffer[startIndex++]);
-
-        tempFile.Attributes = This.Attributes;
-        tempFile.MoveTo(This.FullName, true);
+        tmpFile.Attributes = @this.Attributes;
+        tmpFile.MoveTo(@this.FullName, true);
 
       } finally {
-        if (tempFile != null && tempFile.Exists)
-          tempFile.Delete();
+        if (tmpFile != null && File.Exists(tmpFile.FullName))
+          tmpFile.Delete();
       }
     }
 
@@ -1162,7 +1174,7 @@ namespace System.IO {
       return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
-#if NET40
+#if NET45
 
     /// <summary>
     /// Compares two files for content equality.
@@ -1257,7 +1269,7 @@ namespace System.IO {
       bufferB = temp;
     }
 
-#if NET40
+#if NET45
 
     /// <summary>
     /// Starts filling a block from a stream with a given index.
