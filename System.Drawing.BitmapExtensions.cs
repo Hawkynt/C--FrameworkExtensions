@@ -725,7 +725,7 @@ namespace System.Drawing {
       public void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height) {
         if (other == null)
           throw new ArgumentNullException(nameof(other));
-        # TODO: this could be way faster when both have the same pixel format
+        // TODO: this could be way faster when both have the same pixel format
         for (var y = 0; y < height;++ys, ++yt, ++y)
         for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
           this[xct, yt] = other[xcs, ys];
