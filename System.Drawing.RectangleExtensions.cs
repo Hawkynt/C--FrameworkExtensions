@@ -62,6 +62,6 @@ namespace System.Drawing {
     public static bool CollidesWith(this Rectangle @this, int x, int y) => x >= @this.Left && x <= @this.Right && y >= @this.Top && y <= @this.Bottom;
     public static bool CollidesWith(this Rectangle @this, PointF other) => CollidesWith(@this, other.X, other.Y);
     public static bool CollidesWith(this Rectangle @this, float x, float y) => x >= @this.Left && x <= @this.Right && y >= @this.Top && y <= @this.Bottom;
-
+    public static Point Center(this Rectangle @this) => new Point(@this.X + (@this.Width >> 1), @this.Y + (@this.Height >> 1));
   }
 }
