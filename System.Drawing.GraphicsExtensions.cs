@@ -63,6 +63,23 @@ namespace System.Drawing {
       @this.DrawString(text, font, brush, x, y);
     }
 
+    public static void DrawCross(this Graphics @this, float x, float y, float size, Pen pen) {
+      @this.DrawLine(pen, x, y, x - size, y);
+      @this.DrawLine(pen, x, y, x + size, y);
+      @this.DrawLine(pen, x, y, x, y - size);
+      @this.DrawLine(pen, x, y, x, y + size);
+    }
+
+    public static void DrawCross(this Graphics @this, int x, int y, int size, Pen pen) {
+      @this.DrawLine(pen, x, y, x - size, y);
+      @this.DrawLine(pen, x, y, x + size, y);
+      @this.DrawLine(pen, x, y, x, y - size);
+      @this.DrawLine(pen, x, y, x, y + size);
+    }
+
+    public static void DrawCross(this Graphics @this, Point p, int size, Pen pen) => DrawCross(@this, p.X, p.Y, size, pen);
+    public static void DrawCross(this Graphics @this, PointF p, int size, Pen pen) => DrawCross(@this, p.X, p.Y, size, pen);
+
   }
 }
 
