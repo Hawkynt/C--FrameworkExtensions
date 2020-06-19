@@ -26,6 +26,9 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
+
 
 namespace System.Drawing {
   // ReSharper disable once PartialTypeWithSinglePart
@@ -92,11 +95,39 @@ namespace System.Drawing {
         void DrawHorizontalLine(int x, int y, int count, Color color);
         void DrawVerticalLine(int x, int y, int count, Color color);
         void FillRectangle(int x, int y, int width, int height, Color color);
+        void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height);
       }
 
       private abstract class PixelProcessorBase : IPixelProcessor {
         protected readonly BitmapData _bitmapData;
-        protected PixelProcessorBase(BitmapData bitmapData) => this._bitmapData = bitmapData;
+        protected readonly int _bytesPerPixel;
+
+        protected PixelProcessorBase(BitmapData bitmapData) {
+          this._bitmapData = bitmapData;
+          switch (bitmapData.PixelFormat) {
+            case PixelFormat.Format32bppArgb:
+            case PixelFormat.Format32bppRgb:
+            case PixelFormat.Format32bppPArgb:
+              this._bytesPerPixel = 4;
+              break;
+            case PixelFormat.Format24bppRgb:
+              this._bytesPerPixel = 3;
+              break;
+            case PixelFormat.Format48bppRgb:
+              this._bytesPerPixel = 6;
+              break;
+            case PixelFormat.Format64bppArgb:
+            case PixelFormat.Format64bppPArgb:
+              this._bytesPerPixel = 8;
+              break;
+            case PixelFormat.Format16bppArgb1555:
+            case PixelFormat.Format16bppGrayScale:
+            case PixelFormat.Format16bppRgb555:
+            case PixelFormat.Format16bppRgb565:
+              this._bytesPerPixel = 2;
+              break;
+          }
+        }
 
         public abstract Color this[int x, int y] { get; set; }
 
@@ -117,6 +148,35 @@ namespace System.Drawing {
           Debug.Assert(height > 0);
           for (var i = height; i > 0; ++y, --i)
             this.DrawHorizontalLine(x, y, width, color);
+        }
+
+        public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) {
+          // copy faster if both have the same pixel format
+          if (other is PixelProcessorBase ppb) {
+            var bitmapDataTarget = this._bitmapData;
+            var pixelFormat = bitmapDataTarget.PixelFormat;
+            var bitmapDataSource = ppb._bitmapData;
+            if (pixelFormat == bitmapDataSource.PixelFormat) {
+              var bytesPerPixel = this._bytesPerPixel;
+              if (bytesPerPixel > 0) {
+                var yOffsetTarget = bitmapDataTarget.Scan0+ (bitmapDataTarget.Stride * yt + bytesPerPixel * xt);
+                var yOffsetSource = bitmapDataSource.Scan0+ (bitmapDataSource.Stride * ys + bytesPerPixel * xs);
+                var byteCountPerLine = width * bytesPerPixel;
+                while (height > 0) {
+                  NativeMethods.MemoryCopy(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                  yOffsetSource += bitmapDataSource.Stride;
+                  yOffsetTarget += bitmapDataTarget.Stride;
+                  --height;
+                }
+
+                return;
+              }
+            }
+          }
+
+          for (var y = 0; y < height; ++ys, ++yt, ++y)
+          for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+            this[xct, yt] = other[xcs, ys];
         }
       }
 
@@ -141,6 +201,7 @@ namespace System.Drawing {
         public void DrawHorizontalLine(int x, int y, int count, Color color) => throw this._exception;
         public void DrawVerticalLine(int x, int y, int count, Color color) => throw this._exception;
         public void FillRectangle(int x, int y, int width, int height, Color color) => throw this._exception;
+        public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) =>throw this._exception;
 
       }
 
@@ -652,7 +713,7 @@ namespace System.Drawing {
 
       public BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) {
         this._bitmap = bitmap;
-        this.BitmapData = bitmap.LockBits(rect, flags, format);
+          this.BitmapData = bitmap.LockBits(rect, flags, format);
         this._pixelProcessor = _SUPPORTED_PIXEL_PROCESSORS.TryGetValue(format, out var factory)
           ? factory(this.BitmapData)
           : new Unsupported(format)
@@ -723,12 +784,21 @@ namespace System.Drawing {
       public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
 
       public void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height) {
-        if (other == null)
-          throw new ArgumentNullException(nameof(other));
-        // TODO: this could be way faster when both have the same pixel format
-        for (var y = 0; y < height;++ys, ++yt, ++y)
-        for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
-          this[xct, yt] = other[xcs, ys];
+        switch (other) {
+          case null:
+            throw new ArgumentNullException(nameof(other));
+          case BitmapLocker bl:
+            // directly use pixel processor if possible
+            this._pixelProcessor.CopyFrom(bl._pixelProcessor, xs, ys, xt, yt, width, height);
+            break;
+          default: {
+            // slow way
+            for (var y = 0; y < height; ++ys, ++yt, ++y)
+            for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+              this[xct, yt] = other[xcs, ys];
+            break;
+          }
+        }
       }
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
