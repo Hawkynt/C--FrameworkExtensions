@@ -1164,6 +1164,26 @@ namespace System {
     }
 
     /// <summary>
+    /// Allows processing an array in chunks
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="this">This Array</param>
+    /// <param name="chunkSize">The maximum chunk size to process</param>
+    /// <param name="processor">The action to execute on each chunk</param>
+    /// <param name="offset">Optional: an offset to start at</param>
+    public static void ProcessInChunks<TItem>(this TItem[] @this, int chunkSize, Action<TItem[], int, int> processor, int offset = 0) {
+      if(offset<0)
+        throw new ArgumentOutOfRangeException(nameof(offset),$"Offset must be >= 0, is {offset}");
+
+      var length = @this.Length;
+      while (offset < length) {
+        var size = Math.Min(length - offset, chunkSize);
+        processor(@this, offset, size);
+        offset += size;
+      }
+    }
+
+    /// <summary>
     /// Initializes a jagged array with default values.
     /// </summary>
     /// <typeparam name="TArray">The type of the array</typeparam>
