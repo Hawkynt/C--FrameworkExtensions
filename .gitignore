@@ -294,3 +294,4 @@ __pycache__/
 /System.StringExtensions.Parsers.cs
 /System.TimeSpanExtensions.cs
 /System.ArrayExtensions.FastBlocks.cs
+/System.Drawing.PointExtensions.cs
