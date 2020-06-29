@@ -26,6 +26,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 
@@ -37,7 +38,7 @@ namespace System.ComponentModel {
   /// A BindingList which is sortable in DataGridViews.
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
-  public class SortableBindingList<TValue> : BindingList<TValue> {
+  public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollectionChanged {
 
     #region nested types
 
@@ -218,12 +219,10 @@ namespace System.ComponentModel {
 
     public SortableBindingList() {
       base.ListChanged += (s, e) => {
-        if (this._blockEvents || this._listChanged == null)
+        if (this._blockEvents)
           return;
 
-#pragma warning disable CC0067 // Do not call overrideable methods in ctor.
-        this._listChanged(s, e);
-#pragma warning restore CC0067 // Do not call overrideable methods in ctor.
+        this._OnListChanged(e);
       };
     }
 
@@ -263,7 +262,7 @@ namespace System.ComponentModel {
       }
 
       this._ReApplySortIfNeeded();
-      this._listChanged?.Invoke(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+      this._OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 
     /// <summary>
@@ -294,7 +293,7 @@ namespace System.ComponentModel {
       }
 
       this._ReApplySortIfNeeded();
-      this._listChanged?.Invoke(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+      this._OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 
     protected override bool SupportsSortingCore => true;
@@ -351,6 +350,22 @@ namespace System.ComponentModel {
         this.ApplySortCore();
     }
 
+    #region Implementation of INotifyCollectionChanged
+
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+    #endregion
+
+    protected virtual void _OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+      => this.CollectionChanged?.Invoke(this, e)
+    ;
+
+    protected virtual void _OnListChanged(ListChangedEventArgs e) {
+      this._listChanged?.Invoke(this, e);
+
+      // TODO: only fire whats needed
+      this._OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+    }
   }
 
   // ReSharper disable once PartialTypeWithSinglePart
