@@ -86,6 +86,9 @@ namespace System.Drawing {
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a,Point b, Color color);
       void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height);
+      void CopyFrom(IBitmapLocker other, Point origin, Point target, Size size);
+      void CopyFrom(IBitmapLocker other, Rectangle sourceRegion,Point target);
+      void CopyFrom(IBitmapLocker other, Rectangle sourceRegion);
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -800,6 +803,18 @@ namespace System.Drawing {
           }
         }
       }
+
+      public void CopyFrom(IBitmapLocker other, Point origin, Point target, Size size) 
+        => this.CopyFrom(other,origin.X,origin.Y,target.X,target.Y,size.Width,size.Height)
+      ;
+
+      public void CopyFrom(IBitmapLocker other, Rectangle sourceRegion, Point target)
+        => this.CopyFrom(other, sourceRegion.X, sourceRegion.Y, target.X, target.Y, sourceRegion.Width, sourceRegion.Height)
+      ;
+
+      public void CopyFrom(IBitmapLocker other, Rectangle sourceRegion)
+        => this.CopyFrom(other, sourceRegion.X, sourceRegion.Y, 0,0, sourceRegion.Width, sourceRegion.Height)
+      ;
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
         var dx = x1 - x0;
