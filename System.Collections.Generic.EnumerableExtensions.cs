@@ -20,6 +20,7 @@
 #endregion
 
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 #if NET45
@@ -1299,5 +1300,24 @@ namespace System.Collections.Generic {
     public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable =>
       new DisposableCollection<TItem>(@this)
     ;
+
+    public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(this TItem[] @this,Func<TItem,TKey> keyGetter,Func<TItem,TValue> valueGetter,IEqualityComparer<TKey> equalityComparer=null ) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (keyGetter == null)
+        throw new ArgumentNullException(nameof(keyGetter));
+      if (valueGetter == null)
+        throw new ArgumentNullException(nameof(valueGetter));
+
+      var result=equalityComparer==null?new ConcurrentDictionary<TKey, TValue>(): new ConcurrentDictionary<TKey,TValue>(equalityComparer);
+      foreach (var item in @this)
+        result.TryAdd(keyGetter(item), valueGetter(item));
+
+      return result;
+    }
+
+
+
+
   }
 }
