@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 #if NET40
@@ -1170,17 +1171,31 @@ namespace System {
     /// <param name="this">This Array</param>
     /// <param name="chunkSize">The maximum chunk size to process</param>
     /// <param name="processor">The action to execute on each chunk</param>
-    /// <param name="offset">Optional: an offset to start at</param>
-    public static void ProcessInChunks<TItem>(this TItem[] @this, int chunkSize, Action<TItem[], int, int> processor, int offset = 0) {
-      if(offset<0)
-        throw new ArgumentOutOfRangeException(nameof(offset),$"Offset must be >= 0, is {offset}");
+    public static void ProcessInChunks<TItem>(this TItem[] @this, int chunkSize, Action<TItem[], int, int> processor)
+      => ProcessInChunks(@this, chunkSize, processor, @this.Length, 0)
+    ;
 
-      var length = @this.Length;
+    /// <summary>
+    /// Allows processing an array in chunks
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="this">This Array</param>
+    /// <param name="chunkSize">The maximum chunk size to process</param>
+    /// <param name="processor">The action to execute on each chunk</param>
+    /// <param name="length"></param>
+    /// <param name="offset">Optional: an offset to start at</param>
+    public static void ProcessInChunks<TItem>(this TItem[] @this, int chunkSize, Action<TItem[], int, int> processor, int length, int offset = 0) {
+      if (offset < 0)
+        throw new ArgumentOutOfRangeException(nameof(offset), $"Offset must be >= 0, is {offset}");
+      if (length <= 0)
+        throw new ArgumentOutOfRangeException(nameof(length));
+      
       while (offset < length) {
         var size = Math.Min(length - offset, chunkSize);
         processor(@this, offset, size);
         offset += size;
       }
+
     }
 
     /// <summary>
