@@ -26,6 +26,27 @@
 namespace System.Drawing {
   internal static partial class GraphicsExtensions {
 
+    public static void DrawRectangle(this Graphics @this, Color color, Rectangle rectangle) {
+      using (var pen = new Pen(color))
+        @this.DrawRectangle(pen,rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Color color, Rectangle rectangle) {
+      using (var brush = new SolidBrush(color))
+        @this.FillRectangle(brush, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Brush fill,Pen border, Rectangle rectangle) {
+      @this.FillRectangle(fill, rectangle);
+      @this.DrawRectangle(border, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Color fill, Color border, Rectangle rectangle) {
+      using (var pen = new Pen(border))
+      using (var brush = new SolidBrush(fill))
+        FillRectangle(@this,brush,pen,rectangle);
+    }
+
     public static void DrawString(this Graphics @this, float x, float y, string text, Font font, Brush brush, ContentAlignment anchor) {
       var size = @this.MeasureString(text, font);
 
