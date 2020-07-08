@@ -34,28 +34,11 @@ namespace System.Drawing {
   // ReSharper disable once PartialTypeWithSinglePart
   internal static partial class BitmapExtensions {
 
+    #region nested types
+    
     // ReSharper disable once PartialTypeWithSinglePart
     private static partial class NativeMethods {
-
-#if UNSAFE
-
-      [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
-      private static extern unsafe byte* _MemoryCopy(byte* dst, byte* src, int count);
-
-      [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
-      private static extern unsafe byte* _MemorySet(byte* dst, int value, int count);
-
-      public static unsafe void MemoryCopy(byte* source, byte* target, int count)
-        => _MemoryCopy(target, source, count)
-      ;
-
-      public static unsafe void MemorySet(byte* source, byte value, int count)
-        => _MemorySet(source, value, count)
-      ;
-
-
-#endif
-
+      
       [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
       private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
 
@@ -65,7 +48,7 @@ namespace System.Drawing {
       public static void MemoryCopy(IntPtr source, IntPtr target, int count)
         => _MemoryCopy(target, source, count)
       ;
-
+    
       public static void MemorySet(IntPtr source, byte value, int count)
         => _MemorySet(source, value, count)
       ;
@@ -85,10 +68,14 @@ namespace System.Drawing {
       void FillRectangle(Rectangle rect, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a,Point b, Color color);
-      void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height);
-      void CopyFrom(IBitmapLocker other, Point origin, Point target, Size size);
-      void CopyFrom(IBitmapLocker other, Rectangle sourceRegion,Point target);
-      void CopyFrom(IBitmapLocker other, Rectangle sourceRegion);
+      void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void CopyFrom(IBitmapLocker other, Point source, Size size);
+      void CopyFrom(IBitmapLocker other, Point source, Size size, Point target);
+      void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
+      void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
+      void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
+      void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
+      void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -154,6 +141,9 @@ namespace System.Drawing {
         }
 
         public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) {
+          if (width == 0 || height == 0)
+            return;
+
           // copy faster if both have the same pixel format
           if (other is PixelProcessorBase ppb) {
             var bitmapDataTarget = this._bitmapData;
@@ -162,21 +152,68 @@ namespace System.Drawing {
             if (pixelFormat == bitmapDataSource.PixelFormat) {
               var bytesPerPixel = this._bytesPerPixel;
               if (bytesPerPixel > 0) {
-                var yOffsetTarget = bitmapDataTarget.Scan0+ (bitmapDataTarget.Stride * yt + bytesPerPixel * xt);
-                var yOffsetSource = bitmapDataSource.Scan0+ (bitmapDataSource.Stride * ys + bytesPerPixel * xs);
+                var sourceStride = bitmapDataSource.Stride;
+                var targetStride = bitmapDataTarget.Stride;
+
+                var yOffsetTarget = bitmapDataTarget.Scan0 + (targetStride * yt + bytesPerPixel * xt);
+                var yOffsetSource = bitmapDataSource.Scan0 + (sourceStride * ys + bytesPerPixel * xs);
                 var byteCountPerLine = width * bytesPerPixel;
-                while (height > 0) {
-                  NativeMethods.MemoryCopy(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                  yOffsetSource += bitmapDataSource.Stride;
-                  yOffsetTarget += bitmapDataTarget.Stride;
-                  --height;
+                
+                // handle all cases less than 8 lines
+                switch (height) {
+                  case 7: _memoryCopyCall(yOffsetSource + sourceStride*6, yOffsetTarget + targetStride*6, byteCountPerLine); goto case 6;
+                  case 6: _memoryCopyCall(yOffsetSource + sourceStride*5, yOffsetTarget + targetStride*5, byteCountPerLine); goto case 5;
+                  case 5: _memoryCopyCall(yOffsetSource + (sourceStride<<2), yOffsetTarget + (targetStride<<2), byteCountPerLine); goto case 4;
+                  case 4: _memoryCopyCall(yOffsetSource + sourceStride*3, yOffsetTarget + targetStride*3, byteCountPerLine); goto case 3;
+                  case 3: _memoryCopyCall(yOffsetSource + (sourceStride<<1), yOffsetTarget + (targetStride<<1), byteCountPerLine); goto case 2;
+                  case 2: _memoryCopyCall(yOffsetSource + sourceStride, yOffsetTarget + targetStride, byteCountPerLine); goto case 1;
+                  case 1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); goto case 0;
+                  case 0: return;
                 }
 
-                return;
-              }
-            }
-          }
+                var heightOcts = height >> 3;
+                
+                // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
+                var sourceOffsets = new[] { sourceStride, sourceStride << 1, sourceStride * 3, sourceStride << 2, sourceStride * 5, sourceStride * 6, sourceStride * 7 };
+                var sourceIncrement = sourceStride << 3;
 
+                // HINT: we could re-use values and table if source and target stride are the same, but this would lead to bounds checks in the loop because of bad CLR-optimizations, so we don't do that
+                var targetOffsets = new[] {targetStride, targetStride << 1, targetStride * 3, targetStride << 2, targetStride * 5,targetStride * 6, targetStride * 7};
+                var targetIncrement = targetStride << 3;
+                
+                do {
+                  _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[0], yOffsetTarget + targetOffsets[0], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[1], yOffsetTarget + targetOffsets[1], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[2], yOffsetTarget + targetOffsets[2], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[3], yOffsetTarget + targetOffsets[3], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[4], yOffsetTarget + targetOffsets[4], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[5], yOffsetTarget + targetOffsets[5], byteCountPerLine);
+                  _memoryCopyCall(yOffsetSource + sourceOffsets[6], yOffsetTarget + targetOffsets[6], byteCountPerLine);
+
+                  yOffsetSource += sourceIncrement;
+                  yOffsetTarget += targetIncrement;
+                } while (--heightOcts > 0);
+                
+                // Duff's device eliminating all jumps and loops except one for the last up to 7 lines
+                switch (height & 7) {
+                  case 7: _memoryCopyCall(yOffsetSource + sourceOffsets[5], yOffsetTarget + targetOffsets[5], byteCountPerLine); goto case 6;
+                  case 6: _memoryCopyCall(yOffsetSource + sourceOffsets[4], yOffsetTarget + targetOffsets[4], byteCountPerLine); goto case 5;
+                  case 5: _memoryCopyCall(yOffsetSource + sourceOffsets[3], yOffsetTarget + targetOffsets[3], byteCountPerLine); goto case 4;
+                  case 4: _memoryCopyCall(yOffsetSource + sourceOffsets[2], yOffsetTarget + targetOffsets[2], byteCountPerLine); goto case 3;
+                  case 3: _memoryCopyCall(yOffsetSource + sourceOffsets[1], yOffsetTarget + targetOffsets[1], byteCountPerLine); goto case 2;
+                  case 2: _memoryCopyCall(yOffsetSource + sourceOffsets[0], yOffsetTarget + targetOffsets[0], byteCountPerLine); goto case 1;
+                  case 1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); goto case 0;
+                  case 0: return;
+                }
+                
+                // should never get here because of above switch
+                return;
+              } // end if bytes-per-pixel > 0
+            } // end if other has same pixel format
+          } // end if other is also PixelProcessorBase
+
+          // slow way of copying
           for (var y = 0; y < height; ++ys, ++yt, ++y)
           for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
             this[xct, yt] = other[xcs, ys];
@@ -412,7 +449,7 @@ namespace System.Drawing {
           pointer += offset;
           var nextPointer = pointer + stride;
           while (--height > 0) {
-            NativeMethods.MemoryCopy(pointer, nextPointer, stride);
+            _memoryCopyCall(pointer, nextPointer, stride);
             nextPointer += stride;
           }
         }
@@ -693,7 +730,7 @@ namespace System.Drawing {
           pointer += offset;
           var nextPointer = pointer + stride;
           while (--height > 0) {
-            NativeMethods.MemoryCopy(pointer, nextPointer, stride);
+            _memoryCopyCall(pointer, nextPointer, stride);
             nextPointer += stride;
           }
         }
@@ -786,7 +823,7 @@ namespace System.Drawing {
 
       public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
 
-      public void CopyFrom(IBitmapLocker other, int xs, int ys, int xt, int yt, int width, int height) {
+      public void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         switch (other) {
           case null:
             throw new ArgumentNullException(nameof(other));
@@ -804,16 +841,30 @@ namespace System.Drawing {
         }
       }
 
-      public void CopyFrom(IBitmapLocker other, Point origin, Point target, Size size) 
-        => this.CopyFrom(other,origin.X,origin.Y,target.X,target.Y,size.Width,size.Height)
+      public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
+
+      public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+      public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
+        var sourceX = column * (width + dx) + offsetX;
+        var sourceY = row * (height + dy) + offsetY;
+        this.CopyFrom(other, sourceX, sourceY, width, height, targetX, targetY);
+      }
+
+      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize)
+        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height)
       ;
 
-      public void CopyFrom(IBitmapLocker other, Rectangle sourceRegion, Point target)
-        => this.CopyFrom(other, sourceRegion.X, sourceRegion.Y, target.X, target.Y, sourceRegion.Width, sourceRegion.Height)
+      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance)
+        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height)
       ;
-
-      public void CopyFrom(IBitmapLocker other, Rectangle sourceRegion)
-        => this.CopyFrom(other, sourceRegion.X, sourceRegion.Y, 0,0, sourceRegion.Width, sourceRegion.Height)
+      
+      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset)
+        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height)
+      ;
+      
+      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) 
+        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
       ;
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
@@ -921,6 +972,31 @@ namespace System.Drawing {
       }
 
     }
+
+    #endregion
+    
+    #region methods
+
+    public delegate void MemoryCopyDelegate(IntPtr source, IntPtr target, int count);
+    public delegate void MemoryFillDelegate(IntPtr source, byte value, int count);
+
+    public static MemoryCopyDelegate _memoryCopyCall = NativeMethods.MemoryCopy;
+
+    public static MemoryCopyDelegate MemoryCopyCall
+    {
+      get => _memoryCopyCall;
+      set => _memoryCopyCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
+    }
+
+    public static MemoryFillDelegate _memoryFillCall = NativeMethods.MemorySet;
+
+    public static MemoryFillDelegate MemoryFillCall
+    {
+      get => _memoryFillCall;
+      set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
+    }
+
+    #endregion
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
       => new BitmapLocker(@this, rect, flags, format)
