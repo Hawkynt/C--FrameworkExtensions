@@ -158,57 +158,56 @@ namespace System.Drawing {
                 var yOffsetTarget = bitmapDataTarget.Scan0 + (targetStride * yt + bytesPerPixel * xt);
                 var yOffsetSource = bitmapDataSource.Scan0 + (sourceStride * ys + bytesPerPixel * xs);
                 var byteCountPerLine = width * bytesPerPixel;
-                
-                // handle all cases less than 8 lines
-                switch (height) {
-                  case 7: _memoryCopyCall(yOffsetSource + sourceStride*6, yOffsetTarget + targetStride*6, byteCountPerLine); goto case 6;
-                  case 6: _memoryCopyCall(yOffsetSource + sourceStride*5, yOffsetTarget + targetStride*5, byteCountPerLine); goto case 5;
-                  case 5: _memoryCopyCall(yOffsetSource + (sourceStride<<2), yOffsetTarget + (targetStride<<2), byteCountPerLine); goto case 4;
-                  case 4: _memoryCopyCall(yOffsetSource + sourceStride*3, yOffsetTarget + targetStride*3, byteCountPerLine); goto case 3;
-                  case 3: _memoryCopyCall(yOffsetSource + (sourceStride<<1), yOffsetTarget + (targetStride<<1), byteCountPerLine); goto case 2;
-                  case 2: _memoryCopyCall(yOffsetSource + sourceStride, yOffsetTarget + targetStride, byteCountPerLine); goto case 1;
-                  case 1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); goto case 0;
-                  case 0: return;
-                }
 
-                var heightOcts = height >> 3;
-                
-                // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
-                var sourceOffsets = new[] { sourceStride, sourceStride << 1, sourceStride * 3, sourceStride << 2, sourceStride * 5, sourceStride * 6, sourceStride * 7 };
-                var sourceIncrement = sourceStride << 3;
-
-                // HINT: we could re-use values and table if source and target stride are the same, but this would lead to bounds checks in the loop because of bad CLR-optimizations, so we don't do that
-                var targetOffsets = new[] {targetStride, targetStride << 1, targetStride * 3, targetStride << 2, targetStride * 5,targetStride * 6, targetStride * 7};
-                var targetIncrement = targetStride << 3;
-                
                 do {
-                  _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[0], yOffsetTarget + targetOffsets[0], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[1], yOffsetTarget + targetOffsets[1], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[2], yOffsetTarget + targetOffsets[2], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[3], yOffsetTarget + targetOffsets[3], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[4], yOffsetTarget + targetOffsets[4], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[5], yOffsetTarget + targetOffsets[5], byteCountPerLine);
-                  _memoryCopyCall(yOffsetSource + sourceOffsets[6], yOffsetTarget + targetOffsets[6], byteCountPerLine);
+                  // handle all cases less than 8 lines - usind a Duff's device eliminating all jumps and loops except one
+                  switch (height) {
+                    case 0: goto height0;
+                    case 1: goto height1;
+                    case 2: goto height2;
+                    case 3: goto height3;
+                    case 4: goto height4;
+                    case 5: goto height5;
+                    case 6: goto height6;
+                    case 7: goto height7;
+                    default: goto heightAbove7;
+                  }
 
-                  yOffsetSource += sourceIncrement;
-                  yOffsetTarget += targetIncrement;
-                } while (--heightOcts > 0);
-                
-                // Duff's device eliminating all jumps and loops except one for the last up to 7 lines
-                switch (height & 7) {
-                  case 7: _memoryCopyCall(yOffsetSource + sourceOffsets[5], yOffsetTarget + targetOffsets[5], byteCountPerLine); goto case 6;
-                  case 6: _memoryCopyCall(yOffsetSource + sourceOffsets[4], yOffsetTarget + targetOffsets[4], byteCountPerLine); goto case 5;
-                  case 5: _memoryCopyCall(yOffsetSource + sourceOffsets[3], yOffsetTarget + targetOffsets[3], byteCountPerLine); goto case 4;
-                  case 4: _memoryCopyCall(yOffsetSource + sourceOffsets[2], yOffsetTarget + targetOffsets[2], byteCountPerLine); goto case 3;
-                  case 3: _memoryCopyCall(yOffsetSource + sourceOffsets[1], yOffsetTarget + targetOffsets[1], byteCountPerLine); goto case 2;
-                  case 2: _memoryCopyCall(yOffsetSource + sourceOffsets[0], yOffsetTarget + targetOffsets[0], byteCountPerLine); goto case 1;
-                  case 1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); goto case 0;
-                  case 0: return;
-                }
-                
-                // should never get here because of above switch
-                return;
+                  height7: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height6: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height5: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height4: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height3: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height2: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+                  height1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                  height0: return;
+                  heightAbove7:
+
+                  var heightOcts = height >> 3;
+                  height &= 7;
+
+                  // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
+                  do {
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
+                  } while (--heightOcts > 0);
+
+                } while (true);
+
               } // end if bytes-per-pixel > 0
             } // end if other has same pixel format
           } // end if other is also PixelProcessorBase
