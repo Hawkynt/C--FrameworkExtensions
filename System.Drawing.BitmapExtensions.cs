@@ -76,6 +76,7 @@ namespace System.Drawing {
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
+      void BlendWith(IBitmapLocker other);
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -865,6 +866,36 @@ namespace System.Drawing {
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) 
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
       ;
+
+      public void BlendWith(IBitmapLocker other) {
+        if (other == null)
+          throw new ArgumentNullException(nameof(other));
+        if (other.BitmapData.Width != this.BitmapData.Width || other.BitmapData.Height != this.BitmapData.Height)
+          throw new ArgumentException($"Inconsistent resolutions, expecting {this.BitmapData.Width}x{this.BitmapData.Height}", nameof(other));
+
+        for (var y = 0; y < this.BitmapData.Height; ++y)
+        for (var x = 0; x < this.BitmapData.Width; ++x) {
+          var sourcePixel = this[x, y];
+          var otherPixel = other[x, y];
+          Color newPixel;
+          if (otherPixel.A == 255)
+            newPixel = otherPixel;
+          else if (otherPixel.A == 0)
+            newPixel = sourcePixel;
+          else {
+            var factor = 255 + otherPixel.A;
+            var r = sourcePixel.R * 255 + otherPixel.R* otherPixel.A;
+            var g = sourcePixel.G * 255 + otherPixel.G * otherPixel.A;
+            var b = sourcePixel.B * 255 + otherPixel.B * otherPixel.A;
+            r /= factor;
+            g /= factor;
+            b /= factor;
+            newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
+          }
+
+          this[x, y] = newPixel;
+        }
+      }
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
         var dx = x1 - x0;
