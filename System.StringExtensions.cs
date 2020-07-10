@@ -21,6 +21,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 #if NET40
 using System.Diagnostics.Contracts;
 #endif
@@ -1463,6 +1464,33 @@ namespace System {
       StringComparison comparisonType,
       params string[] other
       ) => ContainsAny(This, other, comparisonType);
+
+    /// <summary>
+    /// Checks whether the given string matches any of the provided
+    /// </summary>
+    /// <param name="this">This <see cref="String"/></param>
+    /// <param name="needles">String to compare to</param>
+    /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+    public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
+      if (needles == null)
+        throw new ArgumentNullException(nameof(needles));
+
+      return needles.Any(n => n == @this);
+    }
+
+    /// <summary>
+    /// Checks whether the given string matches any of the provided
+    /// </summary>
+    /// <param name="this">This <see cref="String"/></param>
+    /// <param name="needles">String to compare to</param>
+    /// <param name="comparison">The comparison mode</param>
+    /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+    public static bool IsAnyOf(this string @this, IEnumerable<string> needles,StringComparison comparison) {
+      if (needles == null)
+        throw new ArgumentNullException(nameof(needles));
+
+      return needles.Any(n => string.Equals(n, @this, comparison));
+    }
 
     /// <summary>
     /// Determines whether a given string contains one of others.
