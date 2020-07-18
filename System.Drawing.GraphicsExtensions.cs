@@ -44,7 +44,17 @@ namespace System.Drawing {
     public static void FillRectangle(this Graphics @this, Color fill, Color border, Rectangle rectangle) {
       using (var pen = new Pen(border))
       using (var brush = new SolidBrush(fill))
-        FillRectangle(@this,brush,pen,rectangle);
+        FillRectangle(@this, brush, pen, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Color fill, Pen pen, Rectangle rectangle) {
+      using (var brush = new SolidBrush(fill))
+        FillRectangle(@this, brush, pen, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Brush brush, Color border, Rectangle rectangle) {
+      using (var pen = new Pen(border))
+        FillRectangle(@this, brush, pen, rectangle);
     }
 
     public static void DrawString(this Graphics @this, float x, float y, string text, Font font, Brush brush, ContentAlignment anchor) {
