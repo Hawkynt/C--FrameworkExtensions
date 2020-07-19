@@ -63,5 +63,12 @@ namespace System.Drawing {
     public static bool CollidesWith(this Rectangle @this, PointF other) => CollidesWith(@this, other.X, other.Y);
     public static bool CollidesWith(this Rectangle @this, float x, float y) => x >= @this.Left && x <= @this.Right && y >= @this.Top && y <= @this.Bottom;
     public static Point Center(this Rectangle @this) => new Point(@this.X + (@this.Width >> 1), @this.Y + (@this.Height >> 1));
+
+    public static Rectangle SetLeft(this Rectangle @this,int left)=>Rectangle.FromLTRB(left,@this.Top,@this.Right,@this.Bottom);
+    public static Rectangle SetRight(this Rectangle @this, int right) => Rectangle.FromLTRB(@this.Left, @this.Top, right, @this.Bottom);
+    public static Rectangle SetTop(this Rectangle @this, int top) => Rectangle.FromLTRB(@this.Left, top, @this.Right, @this.Bottom);
+    public static Rectangle SetBottom(this Rectangle @this, int bottom) => Rectangle.FromLTRB(@this.Left, @this.Top, @this.Right, bottom);
+    
+
   }
 }
