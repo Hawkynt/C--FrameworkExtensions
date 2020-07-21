@@ -71,6 +71,8 @@ namespace System.Drawing {
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void CopyFrom(IBitmapLocker other, Point source, Size size);
       void CopyFrom(IBitmapLocker other, Point source, Size size, Point target);
+      void CopyFrom(IBitmapLocker other, Rectangle source);
+      void CopyFrom(IBitmapLocker other, Rectangle source, Point target);
       void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
@@ -846,8 +848,9 @@ namespace System.Drawing {
       }
 
       public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
-
       public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+      public void CopyFrom(IBitmapLocker other, Rectangle source) => this.CopyFrom(other,source.X,source.Y,source.Width,source.Height);
+      public void CopyFrom(IBitmapLocker other, Rectangle source, Point target) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height,target.X,target.Y);
 
       public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
         var sourceX = column * (width + dx) + offsetX;
