@@ -77,6 +77,10 @@ namespace System.Drawing {
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
       void BlendWith(IBitmapLocker other);
+      /// <summary>
+      /// <c>true</c> when all pixels have the same color; otherwise, <c>false</c>.
+      /// </summary>
+      bool IsFlatColor { get; }
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -894,6 +898,18 @@ namespace System.Drawing {
           }
 
           this[x, y] = newPixel;
+        }
+      }
+
+      public bool IsFlatColor {
+        get {
+          var firstColor = this[0, 0];
+          for (var y = 0; y < this.BitmapData.Height; ++y)
+          for (var x = 0; x < this.BitmapData.Width; ++x)
+            if (this[x, y] != firstColor)
+              return false;
+
+          return true;
         }
       }
 
