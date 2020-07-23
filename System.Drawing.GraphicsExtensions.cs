@@ -26,12 +26,26 @@
 namespace System.Drawing {
   internal static partial class GraphicsExtensions {
 
+    public static void DrawRectangle(this Graphics @this, Pen pen, RectangleF rectangle)
+      => @this.DrawRectangle(pen, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height)
+    ;
+
+    public static void DrawRectangle(this Graphics @this, Color color, RectangleF rectangle) {
+      using (var pen = new Pen(color))
+        @this.DrawRectangle(pen, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+    }
+
     public static void DrawRectangle(this Graphics @this, Color color, Rectangle rectangle) {
       using (var pen = new Pen(color))
-        @this.DrawRectangle(pen,rectangle);
+        @this.DrawRectangle(pen, rectangle);
     }
 
     public static void FillRectangle(this Graphics @this, Color color, Rectangle rectangle) {
+      using (var brush = new SolidBrush(color))
+        @this.FillRectangle(brush, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Color color, RectangleF rectangle) {
       using (var brush = new SolidBrush(color))
         @this.FillRectangle(brush, rectangle);
     }
@@ -41,7 +55,18 @@ namespace System.Drawing {
       @this.DrawRectangle(border, rectangle);
     }
 
+    public static void FillRectangle(this Graphics @this, Brush fill, Pen border, RectangleF rectangle) {
+      @this.FillRectangle(fill, rectangle);
+      @this.DrawRectangle(border, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+    }
+
     public static void FillRectangle(this Graphics @this, Color fill, Color border, Rectangle rectangle) {
+      using (var pen = new Pen(border))
+      using (var brush = new SolidBrush(fill))
+        FillRectangle(@this, brush, pen, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Color fill, Color border, RectangleF rectangle) {
       using (var pen = new Pen(border))
       using (var brush = new SolidBrush(fill))
         FillRectangle(@this, brush, pen, rectangle);
@@ -52,7 +77,17 @@ namespace System.Drawing {
         FillRectangle(@this, brush, pen, rectangle);
     }
 
+    public static void FillRectangle(this Graphics @this, Color fill, Pen pen, RectangleF rectangle) {
+      using (var brush = new SolidBrush(fill))
+        FillRectangle(@this, brush, pen, rectangle);
+    }
+
     public static void FillRectangle(this Graphics @this, Brush brush, Color border, Rectangle rectangle) {
+      using (var pen = new Pen(border))
+        FillRectangle(@this, brush, pen, rectangle);
+    }
+
+    public static void FillRectangle(this Graphics @this, Brush brush, Color border, RectangleF rectangle) {
       using (var pen = new Pen(border))
         FillRectangle(@this, brush, pen, rectangle);
     }
