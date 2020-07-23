@@ -21,15 +21,26 @@
 
 namespace System.Drawing {
   internal static partial class RectangleExtensions {
+
     /// <summary>
     /// Scales the given rectangle by a given factor.
     /// </summary>
     /// <param name="This">This Rectangle.</param>
     /// <param name="factor">The factor.</param>
     /// <returns>A new rectangle</returns>
-    public static RectangleF MultiplyBy(this RectangleF This, int factor) {
-      return (new RectangleF(This.X * factor, This.Y * factor, This.Width * factor, This.Height * factor));
-    }
+    public static RectangleF MultiplyBy(this RectangleF This, int factor)
+      => new RectangleF(This.X * factor, This.Y * factor, This.Width * factor, This.Height * factor)
+    ;
+
+    /// <summary>
+    /// Scales the given rectangle by a given factor.
+    /// </summary>
+    /// <param name="This">This Rectangle.</param>
+    /// <param name="factor">The factor.</param>
+    /// <returns>A new rectangle</returns>
+    public static RectangleF MultiplyBy(this RectangleF This, float factor)
+      => new RectangleF(This.X * factor, This.Y * factor, This.Width * factor, This.Height * factor)
+    ;
 
     /// <summary>
     /// Scales the given rectangle by a given factors.
@@ -38,9 +49,20 @@ namespace System.Drawing {
     /// <param name="xfactor">The x-factor.</param>
     /// <param name="yfactor">The y-factor.</param>
     /// <returns>A new rectangle</returns>
-    public static RectangleF MultiplyBy(this RectangleF This, int xfactor, int yfactor) {
-      return (new RectangleF(This.X * xfactor, This.Y * yfactor, This.Width * xfactor, This.Height * yfactor));
-    }
+    public static RectangleF MultiplyBy(this RectangleF This, int xfactor, int yfactor)
+      => new RectangleF(This.X * xfactor, This.Y * yfactor, This.Width * xfactor, This.Height * yfactor)
+    ;
+
+    /// <summary>
+    /// Scales the given rectangle by a given factors.
+    /// </summary>
+    /// <param name="This">The this.</param>
+    /// <param name="xfactor">The x-factor.</param>
+    /// <param name="yfactor">The y-factor.</param>
+    /// <returns>A new rectangle</returns>
+    public static RectangleF MultiplyBy(this RectangleF This, float xfactor, float yfactor)
+      => new RectangleF(This.X * xfactor, This.Y * yfactor, This.Width * xfactor, This.Height * yfactor)
+    ;
 
     /// <summary>
     /// Returns the center point of a rectangle.
