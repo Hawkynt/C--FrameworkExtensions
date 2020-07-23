@@ -883,7 +883,7 @@ namespace System {
     /// <summary>
     /// Lowers the first char in a string.
     /// </summary>
-    /// <param name="This">This string.</param>
+    /// <param name="this">This string.</param>
     /// <returns>
     /// A string where the first char was capitalized.
     /// </returns>
@@ -893,7 +893,23 @@ namespace System {
 #if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string LowerFirstInvariant(this string This) => This == null ? null : This.Length == 1 ? This.ToLowerInvariant() : This.Substring(0, 1).ToLowerInvariant() + This.Substring(1);
+    public static string LowerFirstInvariant(this string @this) => @this == null ? null : @this.Length == 1 ? @this.ToLowerInvariant() : @this.Substring(0, 1).ToLowerInvariant() + @this.Substring(1);
+
+    /// <summary>
+    /// Splits a string into equal length parts.
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <param name="length">The number of chars each part should have</param>
+    /// <returns>An enumeration of string parts</returns>
+    public static IEnumerable<string> Split(this string @this,int length) {
+      if (@this == null)
+        throw new ArgumentNullException(nameof(@this));
+      if (length <= 0)
+        throw new ArgumentOutOfRangeException(nameof(length));
+
+      for (var i = 0; i < @this.Length; i += length)
+        yield return @this.Substring(i, length);
+    }
 
     /// <summary>
     /// Splits the specified string by another one.
