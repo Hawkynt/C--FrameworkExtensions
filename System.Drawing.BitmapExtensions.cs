@@ -60,6 +60,8 @@ namespace System.Drawing {
       BitmapData BitmapData { get; }
       Color this[int x, int y] { get; set; }
       Color this[Point p] { get; set; }
+
+      void Clear(Color color);
       void DrawRectangle(Rectangle rect, Color color);
       void DrawHorizontalLine(int x, int y, int count, Color color);
       void DrawHorizontalLine(Point p, int count, Color color);
@@ -68,21 +70,35 @@ namespace System.Drawing {
       void FillRectangle(Rectangle rect, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a,Point b, Color color);
+
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void CopyFrom(IBitmapLocker other);
+      void CopyFrom(IBitmapLocker other, Point target);
       void CopyFrom(IBitmapLocker other, Point source, Size size);
       void CopyFrom(IBitmapLocker other, Point source, Size size, Point target);
       void CopyFrom(IBitmapLocker other, Rectangle source);
       void CopyFrom(IBitmapLocker other, Rectangle source, Point target);
+
+      void BlendWith(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void BlendWith(IBitmapLocker other);
+      void BlendWith(IBitmapLocker other, Point target);
+      void BlendWith(IBitmapLocker other, Point source, Size size);
+      void BlendWith(IBitmapLocker other, Point source, Size size, Point target);
+      void BlendWith(IBitmapLocker other, Rectangle source);
+      void BlendWith(IBitmapLocker other, Rectangle source, Point target);
+
       void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
-      void BlendWith(IBitmapLocker other);
+      
       /// <summary>
       /// <c>true</c> when all pixels have the same color; otherwise, <c>false</c>.
       /// </summary>
       bool IsFlatColor { get; }
+      int Width { get; }
+      int Height { get; }
     }
 
     private class BitmapLocker : IBitmapLocker {
@@ -830,6 +846,19 @@ namespace System.Drawing {
       public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
 
       public void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+        if (xs < 0 || xs>=other.Width)
+          throw new ArgumentOutOfRangeException(nameof(xs));
+        if (ys < 0 || ys>=other.Height)
+          throw new ArgumentOutOfRangeException(nameof(ys));
+        if (width < 1 || (xs+width)>other.Width)
+          throw new ArgumentOutOfRangeException(nameof(width));
+        if (height < 1|| (ys+height)>other.Height)
+          throw new ArgumentOutOfRangeException(nameof(height));
+        if (xt < 0||(xt+width)>this.Width)
+          throw new ArgumentOutOfRangeException(nameof(xt));
+        if (yt < 0||(yt+height)>this.Height)
+          throw new ArgumentOutOfRangeException(nameof(yt));
+
         switch (other) {
           case null:
             throw new ArgumentNullException(nameof(other));
@@ -847,6 +876,8 @@ namespace System.Drawing {
         }
       }
 
+      public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height, 0,0);
+      public void CopyFrom(IBitmapLocker other, Point target) => this.CopyFrom(other, 0, 0, other.Width, other.Height, target.X, target.Y);
       public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
       public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
       public void CopyFrom(IBitmapLocker other, Rectangle source) => this.CopyFrom(other,source.X,source.Y,source.Width,source.Height);
@@ -874,15 +905,32 @@ namespace System.Drawing {
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
       ;
 
-      public void BlendWith(IBitmapLocker other) {
+      public void BlendWith(IBitmapLocker other) => this.BlendWith(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other,Point target) => this.BlendWith(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+      public void BlendWith(IBitmapLocker other, Point source,Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other, Point source, Size size,Point target) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+      public void BlendWith(IBitmapLocker other, Rectangle source) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other, Rectangle source,Point target) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+      public void BlendWith(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         if (other == null)
           throw new ArgumentNullException(nameof(other));
-        if (other.BitmapData.Width != this.BitmapData.Width || other.BitmapData.Height != this.BitmapData.Height)
-          throw new ArgumentException($"Inconsistent resolutions, expecting {this.BitmapData.Width}x{this.BitmapData.Height}", nameof(other));
+        if (xs < 0 || xs >= other.Width)
+          throw new ArgumentOutOfRangeException(nameof(xs));
+        if (ys < 0 || ys >= other.Height)
+          throw new ArgumentOutOfRangeException(nameof(ys));
+        if (width < 1 || (xs + width) > other.Width)
+          throw new ArgumentOutOfRangeException(nameof(width));
+        if (height < 1 || (ys + height) > other.Height)
+          throw new ArgumentOutOfRangeException(nameof(height));
+        if (xt < 0 || (xt + width) > this.Width)
+          throw new ArgumentOutOfRangeException(nameof(xt));
+        if (yt < 0 || (yt + height) > this.Height)
+          throw new ArgumentOutOfRangeException(nameof(yt));
 
-        for (var y = 0; y < this.BitmapData.Height; ++y)
-        for (var x = 0; x < this.BitmapData.Width; ++x) {
-          var sourcePixel = this[x, y];
+        for (var y = ys; height > 0; ++y, ++yt, --height)
+        for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
+          var sourcePixel = this[xct, yt];
           var otherPixel = other[x, y];
           Color newPixel;
           if (otherPixel.A == 255)
@@ -891,7 +939,7 @@ namespace System.Drawing {
             newPixel = sourcePixel;
           else {
             var factor = 255 + otherPixel.A;
-            var r = sourcePixel.R * 255 + otherPixel.R* otherPixel.A;
+            var r = sourcePixel.R * 255 + otherPixel.R * otherPixel.A;
             var g = sourcePixel.G * 255 + otherPixel.G * otherPixel.A;
             var b = sourcePixel.B * 255 + otherPixel.B * otherPixel.A;
             r /= factor;
@@ -900,9 +948,15 @@ namespace System.Drawing {
             newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
           }
 
-          this[x, y] = newPixel;
+          this[xct, yt] = newPixel;
         }
       }
+
+      public void Clear(Color color) => this._pixelProcessor.FillRectangle(0, 0, this.Width, this.Height, color);
+
+      public int Width => this.BitmapData.Width;
+
+      public int Height => this.BitmapData.Height;
 
       public bool IsFlatColor {
         get {
