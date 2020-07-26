@@ -25,6 +25,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMemberInSuper.Global
@@ -62,15 +63,15 @@ namespace System.Drawing {
       Color this[Point p] { get; set; }
 
       void Clear(Color color);
-      void DrawRectangle(Rectangle rect, Color color);
       void DrawHorizontalLine(int x, int y, int count, Color color);
       void DrawHorizontalLine(Point p, int count, Color color);
       void DrawVerticalLine(int x, int y, int count, Color color);
       void DrawVerticalLine(Point p, int count, Color color);
-      void FillRectangle(Rectangle rect, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
-      void DrawLine(Point a,Point b, Color color);
-
+      void DrawLine(Point a, Point b, Color color);
+      void DrawRectangle(Rectangle rect, Color color);
+      void FillRectangle(Rectangle rect, Color color);
+      
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void CopyFrom(IBitmapLocker other);
       void CopyFrom(IBitmapLocker other, Point target);
@@ -78,6 +79,20 @@ namespace System.Drawing {
       void CopyFrom(IBitmapLocker other, Point source, Size size, Point target);
       void CopyFrom(IBitmapLocker other, Rectangle source);
       void CopyFrom(IBitmapLocker other, Rectangle source, Point target);
+      void CopyFromChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void CopyFromChecked(IBitmapLocker other);
+      void CopyFromChecked(IBitmapLocker other, Point target);
+      void CopyFromChecked(IBitmapLocker other, Point source, Size size);
+      void CopyFromChecked(IBitmapLocker other, Point source, Size size, Point target);
+      void CopyFromChecked(IBitmapLocker other, Rectangle source);
+      void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target);
+      void CopyFromUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void CopyFromUnchecked(IBitmapLocker other);
+      void CopyFromUnchecked(IBitmapLocker other, Point target);
+      void CopyFromUnchecked(IBitmapLocker other, Point source, Size size);
+      void CopyFromUnchecked(IBitmapLocker other, Point source, Size size, Point target);
+      void CopyFromUnchecked(IBitmapLocker other, Rectangle source);
+      void CopyFromUnchecked(IBitmapLocker other, Rectangle source, Point target);
 
       void BlendWith(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void BlendWith(IBitmapLocker other);
@@ -86,6 +101,20 @@ namespace System.Drawing {
       void BlendWith(IBitmapLocker other, Point source, Size size, Point target);
       void BlendWith(IBitmapLocker other, Rectangle source);
       void BlendWith(IBitmapLocker other, Rectangle source, Point target);
+      void BlendWithChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void BlendWithChecked(IBitmapLocker other);
+      void BlendWithChecked(IBitmapLocker other, Point target);
+      void BlendWithChecked(IBitmapLocker other, Point source, Size size);
+      void BlendWithChecked(IBitmapLocker other, Point source, Size size, Point target);
+      void BlendWithChecked(IBitmapLocker other, Rectangle source);
+      void BlendWithChecked(IBitmapLocker other, Rectangle source, Point target);
+      void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
+      void BlendWithUnchecked(IBitmapLocker other);
+      void BlendWithUnchecked(IBitmapLocker other, Point target);
+      void BlendWithUnchecked(IBitmapLocker other, Point source, Size size);
+      void BlendWithUnchecked(IBitmapLocker other, Point source, Size size, Point target);
+      void BlendWithUnchecked(IBitmapLocker other, Rectangle source);
+      void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target);
 
       void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
@@ -242,6 +271,8 @@ namespace System.Drawing {
         }
       }
 
+      #region optimized pixel formats
+
       private sealed class Unsupported : IPixelProcessor {
         private readonly NotSupportedException _exception;
         public Unsupported(PixelFormat format) => this._exception = new NotSupportedException(
@@ -266,7 +297,7 @@ namespace System.Drawing {
         public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) =>throw this._exception;
 
       }
-
+      
       private class RGB24 : PixelProcessorBase {
         public RGB24(BitmapData bitmapData) : base(bitmapData) { }
 
@@ -751,6 +782,7 @@ namespace System.Drawing {
           var offset = stride * y + (x << 2);
           pointer += offset;
           var nextPointer = pointer + stride;
+          // TODO: allow filling multiple strides if possible
           while (--height > 0) {
             _memoryCopyCall(pointer, nextPointer, stride);
             nextPointer += stride;
@@ -761,6 +793,8 @@ namespace System.Drawing {
 
       }
 
+      #endregion
+
       private static readonly Dictionary<PixelFormat, Func<BitmapData, IPixelProcessor>> _SUPPORTED_PIXEL_PROCESSORS = new Dictionary<PixelFormat, Func<BitmapData, IPixelProcessor>> {
         {PixelFormat.Format24bppRgb,l=>new RGB24(l)},
         {PixelFormat.Format32bppRgb,l=>new RGB32(l)},
@@ -768,7 +802,6 @@ namespace System.Drawing {
       };
 
       private readonly Bitmap _bitmap;
-      private bool _isDisposed;
       private readonly IPixelProcessor _pixelProcessor;
 
       public BitmapData BitmapData { get; }
@@ -782,6 +815,10 @@ namespace System.Drawing {
           ;
       }
 
+      #region Implementation of IDisposable
+
+      private bool _isDisposed;
+
       ~BitmapLocker() => this.Dispose();
 
       public void Dispose() {
@@ -794,6 +831,8 @@ namespace System.Drawing {
           this._bitmap.UnlockBits(this.BitmapData);
       }
 
+      #endregion
+
       public Color this[int x, int y] {
         get => this._pixelProcessor[x, y];
         set => this._pixelProcessor[x, y] = value;
@@ -805,27 +844,7 @@ namespace System.Drawing {
         set => this[p.X,p.Y] = value;
       }
 
-      public void DrawHorizontalLine(int x, int y, int count, Color color) {
-        if (count == 0)
-          return;
-        if (count < 0)
-          this._pixelProcessor.DrawHorizontalLine(x - count, y, -count, color);
-        else
-          this._pixelProcessor.DrawHorizontalLine(x, y, count, color);
-      }
-
-      public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
-
-      public void DrawVerticalLine(int x, int y, int count, Color color) {
-        if (count == 0)
-          return;
-        if (count < 0)
-          this._pixelProcessor.DrawVerticalLine(x, y - count, -count, color);
-        else
-          this._pixelProcessor.DrawVerticalLine(x, y, count, color);
-      }
-
-      public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
+      #region Rectangles
 
       public void DrawRectangle(Rectangle rect, Color color) {
         var count = rect.Width + 1;
@@ -843,91 +862,271 @@ namespace System.Drawing {
         this._pixelProcessor.FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, color);
       }
 
-      public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
+      #endregion
+
+      #region CopyFrom
 
       public void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
-        if (xs < 0 || xs>=other.Width)
-          throw new ArgumentOutOfRangeException(nameof(xs));
-        if (ys < 0 || ys>=other.Height)
-          throw new ArgumentOutOfRangeException(nameof(ys));
-        if (width < 1 || (xs+width)>other.Width)
-          throw new ArgumentOutOfRangeException(nameof(width));
-        if (height < 1|| (ys+height)>other.Height)
-          throw new ArgumentOutOfRangeException(nameof(height));
-        if (xt < 0||(xt+width)>this.Width)
-          throw new ArgumentOutOfRangeException(nameof(xt));
-        if (yt < 0||(yt+height)>this.Height)
-          throw new ArgumentOutOfRangeException(nameof(yt));
+        if (this._FixCopyParametersToBeInbounds(other, ref xs, ref ys, ref width, ref height, ref xt, ref yt))
+          this.CopyFromUnchecked(other, xs, ys, width, height, xt, yt);
+      }
+      
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height, 0, 0);
 
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other, Point target) => this.CopyFrom(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other, Rectangle source) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFrom(IBitmapLocker other, Rectangle source, Point target) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+
+      public void CopyFromChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+        this._CheckCopyParameters(other, xs, ys, width, height, xt, yt);
+        this.CopyFromUnchecked(other,xs,ys,width,height,xt,yt);
+      }
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height, 0,0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other, Point target) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other, Point source, Size size) => this.CopyFromChecked(other, source.X, source.Y, size.Width, size.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFromChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other, Rectangle source) => this.CopyFromChecked(other,source.X,source.Y,source.Width,source.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height,target.X,target.Y);
+
+      public void CopyFromUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         switch (other) {
-          case null:
-            throw new ArgumentNullException(nameof(other));
           case BitmapLocker bl:
             // directly use pixel processor if possible
             this._pixelProcessor.CopyFrom(bl._pixelProcessor, xs, ys, xt, yt, width, height);
             break;
           default: {
-            // slow way
-            for (var y = 0; y < height; ++ys, ++yt, ++y)
-            for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
-              this[xct, yt] = other[xcs, ys];
-            break;
-          }
+              // slow way
+              for (var y = 0; y < height; ++ys, ++yt, ++y)
+                for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+                  this[xct, yt] = other[xcs, ys];
+              break;
+            }
         }
       }
 
-      public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height, 0,0);
-      public void CopyFrom(IBitmapLocker other, Point target) => this.CopyFrom(other, 0, 0, other.Width, other.Height, target.X, target.Y);
-      public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
-      public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
-      public void CopyFrom(IBitmapLocker other, Rectangle source) => this.CopyFrom(other,source.X,source.Y,source.Width,source.Height);
-      public void CopyFrom(IBitmapLocker other, Rectangle source, Point target) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height,target.X,target.Y);
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other, Point target) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other, Point source, Size size) => this.CopyFromUnchecked(other, source.X, source.Y, size.Width, size.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFromUnchecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other, Rectangle source) => this.CopyFromUnchecked(other, source.X, source.Y, source.Width, source.Height);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void CopyFromUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+      #endregion
+
+      #region CopyFromGrid
 
       public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
         var sourceX = column * (width + dx) + offsetX;
         var sourceY = row * (height + dy) + offsetY;
-        this.CopyFrom(other, sourceX, sourceY, width, height, targetX, targetY);
+        this.CopyFromChecked(other, sourceX, sourceY, width, height, targetX, targetY);
       }
 
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height)
       ;
 
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height)
       ;
-      
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height)
       ;
-      
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) 
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
       ;
 
+      #endregion
+
+      #region BlendWith
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void BlendWith(IBitmapLocker other) => this.BlendWith(other, 0, 0, other.Width, other.Height, 0, 0);
-      public void BlendWith(IBitmapLocker other,Point target) => this.BlendWith(other, 0, 0, other.Width, other.Height, target.X, target.Y);
-      public void BlendWith(IBitmapLocker other, Point source,Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, 0, 0);
-      public void BlendWith(IBitmapLocker other, Point source, Size size,Point target) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWith(IBitmapLocker other, Point target) => this.BlendWith(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWith(IBitmapLocker other, Point source, Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWith(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
       public void BlendWith(IBitmapLocker other, Rectangle source) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, 0, 0);
-      public void BlendWith(IBitmapLocker other, Rectangle source,Point target) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWith(IBitmapLocker other, Rectangle source, Point target) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
 
       public void BlendWith(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
-        if (other == null)
-          throw new ArgumentNullException(nameof(other));
-        if (xs < 0 || xs >= other.Width)
-          throw new ArgumentOutOfRangeException(nameof(xs));
-        if (ys < 0 || ys >= other.Height)
-          throw new ArgumentOutOfRangeException(nameof(ys));
-        if (width < 1 || (xs + width) > other.Width)
-          throw new ArgumentOutOfRangeException(nameof(width));
-        if (height < 1 || (ys + height) > other.Height)
-          throw new ArgumentOutOfRangeException(nameof(height));
-        if (xt < 0 || (xt + width) > this.Width)
-          throw new ArgumentOutOfRangeException(nameof(xt));
-        if (yt < 0 || (yt + height) > this.Height)
-          throw new ArgumentOutOfRangeException(nameof(yt));
+        if (this._FixCopyParametersToBeInbounds(other, ref xs, ref ys, ref width, ref height, ref xt, ref yt))
+          this.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
+      }
+      
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, 0, 0);
 
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other,Point target) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other, Point source,Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other, Point source, Size size,Point target) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other, Rectangle source) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithChecked(IBitmapLocker other, Rectangle source,Point target) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+      public void BlendWithChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+        this._CheckCopyParameters(other, xs, ys, width, height, xt, yt);
+        this.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
+      }
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other, Point target) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other, Rectangle source) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      public void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+
+      // TODO: optimize me
+      public void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         for (var y = ys; height > 0; ++y, ++yt, --height)
         for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
           var sourcePixel = this[xct, yt];
@@ -952,12 +1151,85 @@ namespace System.Drawing {
         }
       }
 
+      #endregion
+
+      [DebuggerHidden]
+      private void _CheckCopyParameters(IBitmapLocker other, int xs, int ys, int width, int height, int xt, int yt) {
+        if (other == null)
+          throw new ArgumentNullException(nameof(other));
+        if (xs < 0 || xs >= other.Width)
+          throw new ArgumentOutOfRangeException(nameof(xs));
+        if (ys < 0 || ys >= other.Height)
+          throw new ArgumentOutOfRangeException(nameof(ys));
+        if (width < 1 || (xs + width) > other.Width)
+          throw new ArgumentOutOfRangeException(nameof(width));
+        if (height < 1 || (ys + height) > other.Height)
+          throw new ArgumentOutOfRangeException(nameof(height));
+        if (xt < 0 || (xt + width) > this.Width)
+          throw new ArgumentOutOfRangeException(nameof(xt));
+        if (yt < 0 || (yt + height) > this.Height)
+          throw new ArgumentOutOfRangeException(nameof(yt));
+      }
+
+      private bool _FixCopyParametersToBeInbounds(IBitmapLocker other, ref int xs, ref int ys, ref int width, ref int height, ref int xt, ref int yt) {
+        if (other == null)
+          throw new ArgumentNullException(nameof(other));
+
+        if (xs < 0) {
+          width += xs;
+          xs = 0;
+        }
+
+        if (ys < 0) {
+          height += ys;
+          ys = 0;
+        }
+
+        if (xs >= other.Width)
+          return false;
+
+        if (ys >= other.Height)
+          return false;
+
+        if (xs + width > other.Width)
+          width = other.Width - xs;
+
+        if (ys + height > other.Height)
+          height = other.Height - ys;
+
+        if (xt < 0) {
+          width += xt;
+          xt = 0;
+        }
+
+        if (yt < 0) {
+          height += yt;
+          yt = 0;
+        }
+
+        if (xt + width > this.Width)
+          width = this.Width - xt;
+
+        if (yt + height > this.Height)
+          height = this.Height - yt;
+
+        if (width < 1)
+          return false;
+
+        if (height < 1)
+          return false;
+
+        return true;
+      }
+
+      // TODO: optimize me
       public void Clear(Color color) => this._pixelProcessor.FillRectangle(0, 0, this.Width, this.Height, color);
 
       public int Width => this.BitmapData.Width;
 
       public int Height => this.BitmapData.Height;
 
+      // TODO: optimize me
       public bool IsFlatColor {
         get {
           var firstColor = this[0, 0];
@@ -969,6 +1241,32 @@ namespace System.Drawing {
           return true;
         }
       }
+
+      #region lines
+
+      public void DrawHorizontalLine(int x, int y, int count, Color color) {
+        if (count == 0)
+          return;
+        if (count < 0)
+          this._pixelProcessor.DrawHorizontalLine(x - count, y, -count, color);
+        else
+          this._pixelProcessor.DrawHorizontalLine(x, y, count, color);
+      }
+
+      public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
+
+      public void DrawVerticalLine(int x, int y, int count, Color color) {
+        if (count == 0)
+          return;
+        if (count < 0)
+          this._pixelProcessor.DrawVerticalLine(x, y - count, -count, color);
+        else
+          this._pixelProcessor.DrawVerticalLine(x, y, count, color);
+      }
+
+      public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
+
+      public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
 
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
         var dx = x1 - x0;
@@ -1074,11 +1372,13 @@ namespace System.Drawing {
         }
       }
 
+      #endregion
+
     }
 
     #endregion
     
-    #region methods
+    #region method delegates
 
     public delegate void MemoryCopyDelegate(IntPtr source, IntPtr target, int count);
     public delegate void MemoryFillDelegate(IntPtr source, byte value, int count);
@@ -1100,6 +1400,8 @@ namespace System.Drawing {
     }
 
     #endregion
+
+    #region Lock
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
       => new BitmapLocker(@this, rect, flags, format)
@@ -1132,6 +1434,8 @@ namespace System.Drawing {
     public static IBitmapLocker Lock(this Bitmap @this, ImageLockMode flags, PixelFormat format)
       => Lock(@this, new Rectangle(Point.Empty, @this.Size), flags, format)
     ;
+
+    #endregion
 
     public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
       if (@this == null)
