@@ -69,9 +69,13 @@ namespace System.Drawing {
       void DrawVerticalLine(Point p, int count, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a, Point b, Color color);
+
+      void DrawRectangle(int x,int y,int width,int height, Color color);
       void DrawRectangle(Rectangle rect, Color color);
+      void FillRectangle(int x, int y, int width, int height, Color color);
       void FillRectangle(Rectangle rect, Color color);
       
+
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void CopyFrom(IBitmapLocker other);
       void CopyFrom(IBitmapLocker other, Point target);
@@ -130,696 +134,21 @@ namespace System.Drawing {
       int Height { get; }
     }
 
-    private class BitmapLocker : IBitmapLocker {
-
-      private interface IPixelProcessor {
-        Color this[int x, int y] { get; set; }
-        void DrawHorizontalLine(int x, int y, int count, Color color);
-        void DrawVerticalLine(int x, int y, int count, Color color);
-        void FillRectangle(int x, int y, int width, int height, Color color);
-        void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height);
-      }
-
-      private abstract class PixelProcessorBase : IPixelProcessor {
-        protected readonly BitmapData _bitmapData;
-        protected readonly int _bytesPerPixel;
-
-        protected PixelProcessorBase(BitmapData bitmapData) {
-          this._bitmapData = bitmapData;
-          switch (bitmapData.PixelFormat) {
-            case PixelFormat.Format32bppArgb:
-            case PixelFormat.Format32bppRgb:
-            case PixelFormat.Format32bppPArgb:
-              this._bytesPerPixel = 4;
-              break;
-            case PixelFormat.Format24bppRgb:
-              this._bytesPerPixel = 3;
-              break;
-            case PixelFormat.Format48bppRgb:
-              this._bytesPerPixel = 6;
-              break;
-            case PixelFormat.Format64bppArgb:
-            case PixelFormat.Format64bppPArgb:
-              this._bytesPerPixel = 8;
-              break;
-            case PixelFormat.Format16bppArgb1555:
-            case PixelFormat.Format16bppGrayScale:
-            case PixelFormat.Format16bppRgb555:
-            case PixelFormat.Format16bppRgb565:
-              this._bytesPerPixel = 2;
-              break;
-          }
-        }
-
-        public abstract Color this[int x, int y] { get; set; }
-
-        public virtual void DrawHorizontalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          while (count-- > 0)
-            this[x++, y] = color;
-        }
-
-        public virtual void DrawVerticalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          while (count-- > 0)
-            this[x, y++] = color;
-        }
-
-        public virtual void FillRectangle(int x, int y, int width, int height, Color color) {
-          Debug.Assert(width > 0);
-          Debug.Assert(height > 0);
-          for (var i = height; i > 0; ++y, --i)
-            this.DrawHorizontalLine(x, y, width, color);
-        }
-
-        public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) {
-          if (width == 0 || height == 0)
-            return;
-
-          // copy faster if both have the same pixel format
-          if (other is PixelProcessorBase ppb) {
-            var bitmapDataTarget = this._bitmapData;
-            var pixelFormat = bitmapDataTarget.PixelFormat;
-            var bitmapDataSource = ppb._bitmapData;
-            if (pixelFormat == bitmapDataSource.PixelFormat) {
-              var bytesPerPixel = this._bytesPerPixel;
-              if (bytesPerPixel > 0) {
-                var sourceStride = bitmapDataSource.Stride;
-                var targetStride = bitmapDataTarget.Stride;
-
-                var yOffsetTarget = bitmapDataTarget.Scan0 + (targetStride * yt + bytesPerPixel * xt);
-                var yOffsetSource = bitmapDataSource.Scan0 + (sourceStride * ys + bytesPerPixel * xs);
-                var byteCountPerLine = width * bytesPerPixel;
-
-                do {
-                  // handle all cases less than 8 lines - usind a Duff's device eliminating all jumps and loops except one
-                  switch (height) {
-                    case 0: goto height0;
-                    case 1: goto height1;
-                    case 2: goto height2;
-                    case 3: goto height3;
-                    case 4: goto height4;
-                    case 5: goto height5;
-                    case 6: goto height6;
-                    case 7: goto height7;
-                    default: goto heightAbove7;
-                  }
-
-                  height7: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height6: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height5: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height4: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height3: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height2: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-                  height1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                  height0: return;
-                  heightAbove7:
-
-                  var heightOcts = height >> 3;
-                  height &= 7;
-
-                  // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
-                  do {
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                    _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
-                    yOffsetSource += sourceStride;yOffsetTarget += targetStride;
-                  } while (--heightOcts > 0);
-
-                } while (true);
-
-              } // end if bytes-per-pixel > 0
-            } // end if other has same pixel format
-          } // end if other is also PixelProcessorBase
-
-          // slow way of copying
-          for (var y = 0; y < height; ++ys, ++yt, ++y)
-          for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
-            this[xct, yt] = other[xcs, ys];
-        }
-      }
-
-      #region optimized pixel formats
-
-      private sealed class Unsupported : IPixelProcessor {
-        private readonly NotSupportedException _exception;
-        public Unsupported(PixelFormat format) => this._exception = new NotSupportedException(
-          // ReSharper disable once ArrangeRedundantParentheses
-          (_SUPPORTED_PIXEL_PROCESSORS.Count == 0
-            ? "No supported pixel formats"
-            : $"Wrong pixel format {format} (supported: {string.Join(",", _SUPPORTED_PIXEL_PROCESSORS.Keys.Select(i => i.ToString()))})"
-          )
-#if !UNSAFE
-          + " - try compile in unsafe mode to support more"
-#endif
-        );
-
-        public Color this[int x, int y] {
-          get => throw this._exception;
-          set => throw this._exception;
-        }
-
-        public void DrawHorizontalLine(int x, int y, int count, Color color) => throw this._exception;
-        public void DrawVerticalLine(int x, int y, int count, Color color) => throw this._exception;
-        public void FillRectangle(int x, int y, int width, int height, Color color) => throw this._exception;
-        public void CopyFrom(IPixelProcessor other, int xs, int ys, int xt, int yt, int width, int height) =>throw this._exception;
-
-      }
-      
-      private class RGB24 : PixelProcessorBase {
-        public RGB24(BitmapData bitmapData) : base(bitmapData) { }
-
-        public override Color this[int x, int y] {
-          get {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (byte*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride;
-              var offset = stride * y + x * 3;
-              pointer += offset;
-              var b = pointer[0];
-              var g = pointer[1];
-              var r = pointer[2];
-              return Color.FromArgb(r, g, b);
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + x * 3;
-            pointer += offset;
-            var b = Marshal.ReadByte(pointer, 0);
-            var g = Marshal.ReadByte(pointer, 1);
-            var r = Marshal.ReadByte(pointer, 2);
-            return Color.FromArgb(r, g, b);
-
-#endif
-
-          }
-          set {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (byte*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride;
-              var offset = stride * y + x * 3;
-              pointer += offset;
-              pointer[0] = value.B;
-              pointer[1] = value.G;
-              pointer[2] = value.R;
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + x * 3;
-            pointer += offset;
-            Marshal.WriteByte(pointer, 0, value.B);
-            Marshal.WriteByte(pointer, 1, value.G);
-            Marshal.WriteByte(pointer, 2, value.R);
-
-#endif
-
-          }
-        }
-
-#if UNSAFE
-
-        public override unsafe void DrawHorizontalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          var data = this._bitmapData;
-          var pointer = (byte*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + x * 3;
-          var blue = color.B;
-          var green = color.G;
-          var red = color.R;
-          pointer += offset;
-          var mask = (ushort)(green << 8 | blue);
-          if (count >= 4) {
-
-            // align offset for later access
-            var paddingBytes = (int)((long)pointer & 3);
-            if (paddingBytes > 0) {
-              // 1 --> 4
-              // 2 --> 5 --> 8
-              // 3 --> 6 --> 9 --> 12
-
-              // ReSharper disable once SwitchStatementMissingSomeCases
-              switch (paddingBytes) {
-                case 3:
-                  *(ushort*)pointer = mask;
-                  pointer[2] = red;
-                  pointer += 3;
-                  goto case 2;
-                case 2:
-                  *(ushort*)pointer = mask;
-                  pointer[2] = red;
-                  pointer += 3;
-                  goto case 1;
-                case 1:
-                  *(ushort*)pointer = mask;
-                  pointer[2] = red;
-                  pointer += 3;
-                  break;
-              }
-
-              count -= paddingBytes;
-            }
-
-            // prepare 4 pixel = 3 uint masks
-            var mask1 = (uint)(blue << 24 | red << 16 | green << 8 | blue);
-            var mask2 = (uint)(green << 24 | blue << 16 | red << 8 | green);
-            var mask3 = (uint)(red << 24 | green << 16 | blue << 8 | red);
-
-            // unrolled loop 3 times (saving 75% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
-            {
-              const int pixelsPerLoop = 12;
-              const int pointerIncreasePerLoop = 36;
-              while (count >= pixelsPerLoop) {
-                var i = (uint*)pointer;
-                i[0] = mask1;
-                i[1] = mask2;
-                i[2] = mask3;
-
-                i[3] = mask1;
-                i[4] = mask2;
-                i[5] = mask3;
-
-                i[6] = mask1;
-                i[7] = mask2;
-                i[8] = mask3;
-
-                pointer += pointerIncreasePerLoop;
-                count -= pixelsPerLoop;
-              }
-            }
-
-            {
-              const int pixelsPerLoop = 4;
-              const int pointerIncreasePerLoop = 12;
-              while (count >= 4) {
-                var i = (uint*)pointer;
-                i[0] = mask1;
-                i[1] = mask2;
-                i[2] = mask3;
-                pointer += pointerIncreasePerLoop;
-                count -= pixelsPerLoop;
-              }
-            }
-
-          }
-
-          // fill pixels left
-          while (count-- > 0) {
-            *(ushort*)pointer = mask;
-            pointer[2] = red;
-            pointer += 3;
-          }
-
-        }
-
-        public override unsafe void DrawVerticalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          var data = this._bitmapData;
-          var pointer = (byte*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + x * 3;
-          var blue = color.B;
-          var green = color.G;
-          var red = color.R;
-          var mask = (ushort)(green << 8 | blue);
-          pointer += offset;
-          while (count-- > 0) {
-            *(ushort*)pointer = mask;
-            pointer[2] = red;
-            pointer += stride;
-          }
-        }
-
-#endif
-
-        public override void FillRectangle(int x, int y, int width, int height, Color color) {
-          Debug.Assert(width > 0);
-          Debug.Assert(height > 0);
-
-          this.DrawHorizontalLine(x, y, width, color);
-          if (height <= 1)
-            return;
-
-          var data = this._bitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + x * 3;
-          pointer += offset;
-          var nextPointer = pointer + stride;
-          while (--height > 0) {
-            _memoryCopyCall(pointer, nextPointer, stride);
-            nextPointer += stride;
-          }
-        }
-
-      }
-
-      private class RGB32 : PixelProcessorBase {
-        public RGB32(BitmapData bitmapData) : base(bitmapData) { }
-
-        public override Color this[int x, int y] {
-          get {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (byte*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride;
-              var offset = stride * y + (x << 2);
-              pointer += offset;
-              var b = pointer[0];
-              var g = pointer[1];
-              var r = pointer[2];
-              return Color.FromArgb(r, g, b);
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + (x << 2);
-            pointer += offset;
-            var b = Marshal.ReadByte(pointer, 0);
-            var g = Marshal.ReadByte(pointer, 1);
-            var r = Marshal.ReadByte(pointer, 2);
-            return Color.FromArgb(r, g, b);
-
-#endif
-
-          }
-          set {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (byte*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride;
-              var offset = stride * y + (x << 2);
-              pointer += offset;
-              pointer[0] = value.B;
-              pointer[1] = value.G;
-              pointer[2] = value.R;
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + (x << 2);
-            pointer += offset;
-            Marshal.WriteByte(pointer, 0, value.B);
-            Marshal.WriteByte(pointer, 1, value.G);
-            Marshal.WriteByte(pointer, 2, value.R);
-
-#endif
-
-          }
-        }
-
-#if UNSAFE
-
-        public override unsafe void DrawHorizontalLine(int x, int y, int count, Color color) {
-          var data = this._bitmapData;
-          var pointer = (byte*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-          pointer += offset;
-          var red = color.R;
-          var green = color.G;
-          var blue = color.B;
-          var mask = (ushort)(green << 8 | blue);
-
-          // unrolled loop 2 times (saving 50% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
-          {
-            const int pixelsPerLoop = 2;
-            const int pointerIncreasePerLoop = 8;
-            while (count >= pixelsPerLoop) {
-
-              *(ushort*)pointer = mask;
-              pointer[2] = red;
-
-              ((ushort*)pointer)[2] = mask;
-              pointer[6] = red;
-
-              pointer += pointerIncreasePerLoop;
-              count -= pixelsPerLoop;
-            }
-          }
-
-          while (count-- > 0) {
-            *(ushort*)pointer = mask;
-            pointer[2] = red;
-            pointer += 4;
-          }
-        }
-
-        public override unsafe void DrawVerticalLine(int x, int y, int count, Color color) {
-          var data = this._bitmapData;
-          var pointer = (byte*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-          pointer += offset;
-          var red = color.R;
-          var green = color.G;
-          var blue = color.B;
-          var mask = (ushort)(green << 8 | blue);
-          while (count-- > 0) {
-            *(ushort*)pointer = mask;
-            pointer[2] = red;
-            pointer += stride;
-          }
-        }
-
-#endif
-
-      }
-
-      private class ARGB32 : PixelProcessorBase {
-        public ARGB32(BitmapData bitmapData) : base(bitmapData) { }
-
-        public override Color this[int x, int y] {
-          get {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (int*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride >> 2;
-              var offset = stride * y + x;
-              return Color.FromArgb(pointer[offset]);
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + (x << 2);
-            return Color.FromArgb(Marshal.ReadInt32(pointer, offset));
-
-#endif
-
-          }
-          set {
-
-#if UNSAFE
-
-            unsafe {
-              var data = this._bitmapData;
-              var pointer = (int*)data.Scan0;
-              Debug.Assert(pointer != null, nameof(pointer) + " != null");
-              var stride = data.Stride >> 2;
-              var offset = stride * y + x;
-              pointer[offset] = value.ToArgb();
-            }
-
-#else
-
-            var data = this._bitmapData;
-            var pointer = data.Scan0;
-            Debug.Assert(pointer != null, nameof(pointer) + " != null");
-            var stride = data.Stride;
-            var offset = stride * y + (x << 2);
-            Marshal.WriteInt32(pointer, offset, value.ToArgb());
-
-#endif
-
-          }
-        }
-
-#if UNSAFE
-
-        public override unsafe void DrawHorizontalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          var data = this._bitmapData;
-          var pointer = (int*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride >> 2;
-          var offset = stride * y + x;
-          pointer += offset;
-          var value = color.ToArgb();
-
-#if !PLATFORM_X86
-
-          // unrolled loop 8-times (saving 87.5% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
-          if (count >= 16) {
-            const int pixelsPerLoop = 16;
-            const int pointerIncreasePerLoop = 16;
-            var mask = ((ulong)value << 32) | (uint)value;
-            while (count >= pixelsPerLoop) {
-              var longPointer = (ulong*)pointer;
-              longPointer[0] = mask;
-              longPointer[1] = mask;
-              longPointer[2] = mask;
-              longPointer[3] = mask;
-              longPointer[4] = mask;
-              longPointer[5] = mask;
-              longPointer[6] = mask;
-              longPointer[7] = mask;
-              count -= pixelsPerLoop;
-              pointer += pointerIncreasePerLoop;
-            }
-          }
-#endif
-
-          // unrolled loop 8-times (saving 87.5% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
-          {
-            const int pixelsPerLoop = 8;
-            const int pointerIncreasePerLoop = 8;
-            while (count >= pixelsPerLoop) {
-              pointer[0] = value;
-              pointer[1] = value;
-              pointer[2] = value;
-              pointer[3] = value;
-              pointer[4] = value;
-              pointer[5] = value;
-              pointer[6] = value;
-              pointer[7] = value;
-              count -= pixelsPerLoop;
-              pointer += pointerIncreasePerLoop;
-            }
-          }
-
-          while (count-- > 0)
-            *pointer++ = value;
-        }
-
-        public override unsafe void DrawVerticalLine(int x, int y, int count, Color color) {
-          Debug.Assert(count > 0);
-          var data = this._bitmapData;
-          var pointer = (int*)data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride >> 2;
-          var offset = stride * y + x;
-          var value = color.ToArgb();
-          pointer += offset;
-          while (count-- > 0) {
-            *pointer = value;
-            pointer += stride;
-          }
-        }
-
-        public override void FillRectangle(int x, int y, int width, int height, Color color) {
-          Debug.Assert(width > 0);
-          Debug.Assert(height > 0);
-
-          this.DrawHorizontalLine(x, y, width, color);
-          if (height <= 1)
-            return;
-
-          var data = this._bitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-          pointer += offset;
-          var nextPointer = pointer + stride;
-          // TODO: allow filling multiple strides if possible
-          while (--height > 0) {
-            _memoryCopyCall(pointer, nextPointer, stride);
-            nextPointer += stride;
-          }
-        }
-
-#endif
-
-      }
-
-      #endregion
-
-      private static readonly Dictionary<PixelFormat, Func<BitmapData, IPixelProcessor>> _SUPPORTED_PIXEL_PROCESSORS = new Dictionary<PixelFormat, Func<BitmapData, IPixelProcessor>> {
-        {PixelFormat.Format24bppRgb,l=>new RGB24(l)},
-        {PixelFormat.Format32bppRgb,l=>new RGB32(l)},
-        {PixelFormat.Format32bppArgb,l=>new ARGB32(l)},
-      };
+    private abstract class BitmapLockerBase : IBitmapLocker {
 
       private readonly Bitmap _bitmap;
-      private readonly IPixelProcessor _pixelProcessor;
-
       public BitmapData BitmapData { get; }
 
-      public BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) {
+      protected BitmapLockerBase(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) {
         this._bitmap = bitmap;
-          this.BitmapData = bitmap.LockBits(rect, flags, format);
-        this._pixelProcessor = _SUPPORTED_PIXEL_PROCESSORS.TryGetValue(format, out var factory)
-          ? factory(this.BitmapData)
-          : new Unsupported(format)
-          ;
+        this.BitmapData = bitmap.LockBits(rect, flags, format);
       }
 
       #region Implementation of IDisposable
 
       private bool _isDisposed;
 
-      ~BitmapLocker() => this.Dispose();
+      ~BitmapLockerBase() => this.Dispose();
 
       public void Dispose() {
         if (this._isDisposed)
@@ -833,10 +162,50 @@ namespace System.Drawing {
 
       #endregion
 
-      public Color this[int x, int y] {
-        get => this._pixelProcessor[x, y];
-        set => this._pixelProcessor[x, y] = value;
+      protected virtual int _BytesPerPixel {
+        get {
+          switch (this.BitmapData.PixelFormat) {
+            case PixelFormat.Format32bppArgb:
+            case PixelFormat.Format32bppRgb:
+            case PixelFormat.Format32bppPArgb:
+              return 4;
+            case PixelFormat.Format24bppRgb:
+              return 3;
+            case PixelFormat.Format48bppRgb:
+              return 6;
+            case PixelFormat.Format64bppArgb:
+            case PixelFormat.Format64bppPArgb:
+              return 8;
+            case PixelFormat.Format16bppArgb1555:
+            case PixelFormat.Format16bppGrayScale:
+            case PixelFormat.Format16bppRgb555:
+            case PixelFormat.Format16bppRgb565:
+              return 2;
+            case PixelFormat.Format8bppIndexed:
+              return 1;
+            default:
+              return 0;
+          }
+        }
       }
+
+      public int Width => this.BitmapData.Width;
+      public int Height => this.BitmapData.Height;
+
+      // TODO: opt.me
+      public bool IsFlatColor {
+        get {
+          var firstColor = this[0, 0];
+          for (var y = 0; y < this.BitmapData.Height; ++y)
+          for (var x = 0; x < this.BitmapData.Width; ++x)
+            if (this[x, y] != firstColor)
+              return false;
+
+          return true;
+        }
+      }
+
+      public abstract Color this[int x, int y] { get; set; }
 
       public Color this[Point p]
       {
@@ -845,6 +214,16 @@ namespace System.Drawing {
       }
 
       #region Rectangles
+
+      public void Clear(Color color) => this.FillRectangle(0, 0, this.Width, this.Height, color);
+
+      public void DrawRectangle(int x, int y, int width,int height, Color color) {
+        this.DrawHorizontalLine(x, y, width, color);
+        this.DrawHorizontalLine(x, y + height - 1, width, color);
+        height -= 2;
+        this.DrawVerticalLine(x, y + 1, height, color);
+        this.DrawVerticalLine(x+width-1, y + 1, height, color);
+      }
 
       public void DrawRectangle(Rectangle rect, Color color) {
         var count = rect.Width + 1;
@@ -859,7 +238,114 @@ namespace System.Drawing {
         if (rect.Width < 1 || rect.Height < 1)
           return;
 
-        this._pixelProcessor.FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, color);
+        this.FillRectangle(rect.X,rect.Y,rect.Width,rect.Height,color);
+      }
+
+      private void _FillRectangleNaiive(int x, int y, int width, int height, Color color) {
+        do {
+
+          // Duff's device
+          switch (height) {
+            case 0: goto height0;
+            case 1: goto height1;
+            case 2: goto height2;
+            case 3: goto height3;
+            case 4: goto height4;
+            case 5: goto height5;
+            case 6: goto height6;
+            case 7: goto height7;
+            default: goto heightAbove7;
+          }
+
+          height7: this._DrawHorizontalLine(x, y++, width, color);
+          height6: this._DrawHorizontalLine(x, y++, width, color);
+          height5: this._DrawHorizontalLine(x, y++, width, color);
+          height4: this._DrawHorizontalLine(x, y++, width, color);
+          height3: this._DrawHorizontalLine(x, y++, width, color);
+          height2: this._DrawHorizontalLine(x, y++, width, color);
+          height1: this._DrawHorizontalLine(x, y, width, color);
+          height0: return;
+          heightAbove7:
+
+          // loop unrolled 8-times
+          var heightOcts = height >> 3;
+          height &= 7;
+
+          do {
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+            this._DrawHorizontalLine(x, y++, width, color);
+          } while (--heightOcts > 0);
+        } while (true);
+      }
+
+      private void _FillRectangleFast(int x, int y, int width, int height, Color color, int bytesPerPixel) {
+        var bitmapData = this.BitmapData;
+        var stride = bitmapData.Stride;
+        var byteCount = bytesPerPixel * width;
+        var startOffset = bitmapData.Scan0 + (y * stride + x * bytesPerPixel);
+        this._DrawHorizontalLine(x, y, width, color);
+        var offset = startOffset+stride;
+        --height;
+        do {
+
+          // Duff's device
+          switch (height) {
+            case 0: goto height0;
+            case 1: goto height1;
+            case 2: goto height2;
+            case 3: goto height3;
+            case 4: goto height4;
+            case 5: goto height5;
+            case 6: goto height6;
+            case 7: goto height7;
+            default: goto heightAbove7;
+          }
+
+          height7: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height6: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height5: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height4: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height3: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height2: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          height1: _memoryCopyCall(startOffset, offset, byteCount);
+          height0: return;
+          heightAbove7:
+
+          // loop unrolled 8-times
+          var heightOcts = height >> 3;
+          height &= 7;
+
+          do {
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+          } while (--heightOcts > 0);
+        } while (true);
+      }
+
+      public virtual void FillRectangle(int x,int y, int width,int height, Color color) {
+        Debug.Assert(width > 0);
+        Debug.Assert(height > 0);
+        
+        if (height > 1 && width>=8 && width * height >= 512) {
+          var bytesPerPixel = this._BytesPerPixel;
+          if (bytesPerPixel > 0) {
+            this._FillRectangleFast(x, y, width, height, color, bytesPerPixel);
+            return;
+          }
+        }
+        this._FillRectangleNaiive(x,y,width,height,color);
       }
 
       #endregion
@@ -874,7 +360,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -910,7 +396,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFromChecked(IBitmapLocker other) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height, 0,0);
+      public void CopyFromChecked(IBitmapLocker other) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -937,26 +423,82 @@ namespace System.Drawing {
 #endif
       public void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height,target.X,target.Y);
 
+      private void _CopyFromUncheckedNaiive(IBitmapLocker other, int xs, int ys, int width, int height, int xt, int yt) {
+        for (var y = 0; y < height; ++ys, ++yt, ++y)
+        for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+          this[xct, yt] = other[xcs, ys];
+      }
+
+      private static void _CopyFromUncheckedFast(int xs, int ys, int width, int height, int xt, int yt, BitmapData bitmapDataSource, BitmapData bitmapDataTarget, int bytesPerPixel) {
+        var sourceStride = bitmapDataSource.Stride;
+        var targetStride = bitmapDataTarget.Stride;
+
+        var yOffsetTarget = bitmapDataTarget.Scan0 + (targetStride * yt + bytesPerPixel * xt);
+        var yOffsetSource = bitmapDataSource.Scan0 + (sourceStride * ys + bytesPerPixel * xs);
+        var byteCountPerLine = width * bytesPerPixel;
+
+        do {
+          // handle all cases less than 8 lines - usind a Duff's device eliminating all jumps and loops except one
+          switch (height) {
+            case 0: goto height0;
+            case 1: goto height1;
+            case 2: goto height2;
+            case 3: goto height3;
+            case 4: goto height4;
+            case 5: goto height5;
+            case 6: goto height6;
+            case 7: goto height7;
+            default: goto heightAbove7;
+          }
+
+          height7: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height6: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height5: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height4: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height3: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height2: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          height1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); 
+          height0: return;
+          heightAbove7:
+
+          var heightOcts = height >> 3;
+          height &= 7;
+
+          // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
+          do {
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+          } while (--heightOcts > 0);
+        } while (true);
+      }
+
       public void CopyFromUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
-        switch (other) {
-          case BitmapLocker bl:
-            // directly use pixel processor if possible
-            this._pixelProcessor.CopyFrom(bl._pixelProcessor, xs, ys, xt, yt, width, height);
-            break;
-          default: {
-              // slow way
-              for (var y = 0; y < height; ++ys, ++yt, ++y)
-                for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
-                  this[xct, yt] = other[xcs, ys];
-              break;
+        if (other is BitmapLockerBase ppb) {
+          var bitmapDataTarget = this.BitmapData;
+          var pixelFormat = bitmapDataTarget.PixelFormat;
+          var bitmapDataSource = ppb.BitmapData;
+          if (pixelFormat == bitmapDataSource.PixelFormat) {
+            var bytesPerPixel = this._BytesPerPixel;
+            if (bytesPerPixel > 0) {
+              _CopyFromUncheckedFast(xs, ys, width, height, xt, yt, bitmapDataSource, bitmapDataTarget, bytesPerPixel);
+              return;
             }
+          }
         }
+
+        this._CopyFromUncheckedNaiive(other, xs, ys, width, height, xt, yt);
       }
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFromUnchecked(IBitmapLocker other) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void CopyFromUnchecked(IBitmapLocker other) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1028,7 +570,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWith(IBitmapLocker other) => this.BlendWith(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other) => this.BlendWith(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1038,7 +580,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWith(IBitmapLocker other, Point source, Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other, Point source, Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1048,7 +590,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWith(IBitmapLocker other, Rectangle source) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+      public void BlendWith(IBitmapLocker other, Rectangle source) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1063,7 +605,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void BlendWithChecked(IBitmapLocker other) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1073,7 +615,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other, Point source,Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+      public void BlendWithChecked(IBitmapLocker other, Point source,Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1083,7 +625,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other, Rectangle source) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+      public void BlendWithChecked(IBitmapLocker other, Rectangle source) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1098,7 +640,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithUnchecked(IBitmapLocker other) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height, 0, 0);
+      public void BlendWithUnchecked(IBitmapLocker other) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1108,7 +650,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height, 0, 0);
+      public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1118,7 +660,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithUnchecked(IBitmapLocker other, Rectangle source) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height, 0, 0);
+      public void BlendWithUnchecked(IBitmapLocker other, Rectangle source) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1132,15 +674,15 @@ namespace System.Drawing {
           var sourcePixel = this[xct, yt];
           var otherPixel = other[x, y];
           Color newPixel;
-          if (otherPixel.A == 255)
+          if (otherPixel.A == byte.MaxValue)
             newPixel = otherPixel;
-          else if (otherPixel.A == 0)
+          else if (otherPixel.A == byte.MinValue)
             newPixel = sourcePixel;
           else {
             var factor = 255 + otherPixel.A;
-            var r = sourcePixel.R * 255 + otherPixel.R * otherPixel.A;
-            var g = sourcePixel.G * 255 + otherPixel.G * otherPixel.A;
-            var b = sourcePixel.B * 255 + otherPixel.B * otherPixel.A;
+            var r = sourcePixel.R * byte.MaxValue + otherPixel.R * otherPixel.A;
+            var g = sourcePixel.G * byte.MaxValue + otherPixel.G * otherPixel.A;
+            var b = sourcePixel.B * byte.MaxValue + otherPixel.B * otherPixel.A;
             r /= factor;
             g /= factor;
             b /= factor;
@@ -1221,53 +763,110 @@ namespace System.Drawing {
 
         return true;
       }
-
-      // TODO: optimize me
-      public void Clear(Color color) => this._pixelProcessor.FillRectangle(0, 0, this.Width, this.Height, color);
-
-      public int Width => this.BitmapData.Width;
-
-      public int Height => this.BitmapData.Height;
-
-      // TODO: optimize me
-      public bool IsFlatColor {
-        get {
-          var firstColor = this[0, 0];
-          for (var y = 0; y < this.BitmapData.Height; ++y)
-          for (var x = 0; x < this.BitmapData.Width; ++x)
-            if (this[x, y] != firstColor)
-              return false;
-
-          return true;
-        }
+      
+      #region lines
+      
+      protected virtual void _DrawHorizontalLine(int x, int y, int count, Color color) {
+        do {
+          // Duff's device
+          switch (count) {
+            case 0: goto count0;
+            case 1: goto count1;
+            case 2: goto count2;
+            case 3: goto count3;
+            case 4: goto count4;
+            case 5: goto count5;
+            case 6: goto count6;
+            case 7: goto count7;
+            default: goto countAbove7;
+          }
+          count7: this[x++, y] = color;
+          count6: this[x++, y] = color;
+          count5: this[x++, y] = color;
+          count4: this[x++, y] = color;
+          count3: this[x++, y] = color;
+          count2: this[x++, y] = color;
+          count1: this[x, y] = color;
+          count0: return;
+          countAbove7:
+          
+          // loop unroll
+          var countOcts = count >> 3;
+          count &= 7;
+          
+          do {
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+            this[x++, y] = color;
+          } while (--countOcts > 0);
+        } while (true);
       }
 
-      #region lines
+      protected virtual void _DrawVerticalLine(int x, int y, int count, Color color) {
+        do {
+          // Duff's device
+          switch (count) {
+            case 0: goto count0;
+            case 1: goto count1;
+            case 2: goto count2;
+            case 3: goto count3;
+            case 4: goto count4;
+            case 5: goto count5;
+            case 6: goto count6;
+            case 7: goto count7;
+            default: goto countAbove7;
+          }
+          count7: this[x, y++] = color;
+          count6: this[x, y++] = color;
+          count5: this[x, y++] = color;
+          count4: this[x, y++] = color;
+          count3: this[x, y++] = color;
+          count2: this[x, y++] = color;
+          count1: this[x, y] = color;
+          count0: return;
+          countAbove7:
+          
+          // loop unroll
+          var countOcts = count >> 3;
+          count &= 7;
+          
+          do {
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+            this[x, y++] = color;
+          } while (--countOcts > 0);
+        } while (true);
+      }
+
 
       public void DrawHorizontalLine(int x, int y, int count, Color color) {
         if (count == 0)
           return;
         if (count < 0)
-          this._pixelProcessor.DrawHorizontalLine(x - count, y, -count, color);
+          this._DrawHorizontalLine(x - count, y, -count, color);
         else
-          this._pixelProcessor.DrawHorizontalLine(x, y, count, color);
+          this._DrawHorizontalLine(x, y, count, color);
       }
-
-      public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
 
       public void DrawVerticalLine(int x, int y, int count, Color color) {
         if (count == 0)
           return;
         if (count < 0)
-          this._pixelProcessor.DrawVerticalLine(x, y - count, -count, color);
+          this._DrawVerticalLine(x, y - count, -count, color);
         else
-          this._pixelProcessor.DrawVerticalLine(x, y, count, color);
+          this._DrawVerticalLine(x, y, count, color);
       }
-
-      public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
-
-      public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
-
+      
       public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
         var dx = x1 - x0;
         var dy = y1 - y0;
@@ -1372,9 +971,499 @@ namespace System.Drawing {
         }
       }
 
+      public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
+      public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
+      public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
+
       #endregion
 
     }
+
+    #region optimized pixel format handlers
+
+    private sealed class ARGB32BitmapLocker : BitmapLockerBase {
+      public ARGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
+      
+      protected override int _BytesPerPixel => 4;
+
+      public override Color this[int x, int y] {
+        get {
+
+#if UNSAFE
+
+            unsafe {
+              var data = this.BitmapData;
+              var pointer = (int*)data.Scan0;
+              Debug.Assert(pointer != null, nameof(pointer) + " != null");
+              var stride = data.Stride >> 2;
+              var offset = stride * y + x;
+              return Color.FromArgb(pointer[offset]);
+            }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + (x << 2);
+          return Color.FromArgb(Marshal.ReadInt32(pointer, offset));
+
+#endif
+
+        }
+        set {
+
+#if UNSAFE
+
+            unsafe {
+              var data = this.BitmapData;
+              var pointer = (int*)data.Scan0;
+              Debug.Assert(pointer != null, nameof(pointer) + " != null");
+              var stride = data.Stride >> 2;
+              var offset = stride * y + x;
+              pointer[offset] = value.ToArgb();
+            }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + (x << 2);
+          Marshal.WriteInt32(pointer, offset, value.ToArgb());
+
+#endif
+
+        }
+      }
+
+
+#if UNSAFE
+
+      protected override unsafe void _DrawHorizontalLine(int x, int y, int count, Color color) {
+          Debug.Assert(count > 0);
+          var data = this.BitmapData;
+          var pointer = (int*)data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride >> 2;
+          var offset = stride * y + x;
+          pointer += offset;
+          var value = color.ToArgb();
+
+#if !PLATFORM_X86
+
+          // unrolled loop 8-times (saving 87.5% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
+          if (count >= 16) {
+            const int pixelsPerLoop = 16;
+            const int pointerIncreasePerLoop = 16;
+            var mask = ((ulong)value << 32) | (uint)value;
+            while (count >= pixelsPerLoop) {
+              var longPointer = (ulong*)pointer;
+              longPointer[0] = mask;
+              longPointer[1] = mask;
+              longPointer[2] = mask;
+              longPointer[3] = mask;
+              longPointer[4] = mask;
+              longPointer[5] = mask;
+              longPointer[6] = mask;
+              longPointer[7] = mask;
+              count -= pixelsPerLoop;
+              pointer += pointerIncreasePerLoop;
+            }
+          }
+#endif
+
+          // unrolled loop 8-times (saving 87.5% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
+          {
+            const int pixelsPerLoop = 8;
+            const int pointerIncreasePerLoop = 8;
+            while (count >= pixelsPerLoop) {
+              pointer[0] = value;
+              pointer[1] = value;
+              pointer[2] = value;
+              pointer[3] = value;
+              pointer[4] = value;
+              pointer[5] = value;
+              pointer[6] = value;
+              pointer[7] = value;
+              count -= pixelsPerLoop;
+              pointer += pointerIncreasePerLoop;
+            }
+          }
+
+          while (count-- > 0)
+            *pointer++ = value;
+      }
+
+        protected override unsafe void _DrawVerticalLine(int x, int y, int count, Color color) {
+          Debug.Assert(count > 0);
+          var data = this.BitmapData;
+          var pointer = (int*)data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride >> 2;
+          var offset = stride * y + x;
+          var value = color.ToArgb();
+          pointer += offset;
+          while (count-- > 0) {
+            *pointer = value;
+            pointer += stride;
+          }
+        }
+      
+#endif
+
+    } // ARGB32BitmapLocker
+
+    private sealed class RGB32BitmapLocker : BitmapLockerBase {
+      public RGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
+
+      protected override int _BytesPerPixel => 4;
+
+      public override Color this[int x, int y] {
+        get {
+
+#if UNSAFE
+
+          unsafe {
+            var data = this.BitmapData;
+            var pointer = (byte*)data.Scan0;
+            Debug.Assert(pointer != null, nameof(pointer) + " != null");
+            var stride = data.Stride;
+            var offset = stride * y + (x << 2);
+            pointer += offset;
+            var b = pointer[0];
+            var g = pointer[1];
+            var r = pointer[2];
+            return Color.FromArgb(r, g, b);
+          }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + (x << 2);
+          pointer += offset;
+          var b = Marshal.ReadByte(pointer, 0);
+          var g = Marshal.ReadByte(pointer, 1);
+          var r = Marshal.ReadByte(pointer, 2);
+          return Color.FromArgb(r, g, b);
+
+#endif
+
+        }
+        set {
+
+#if UNSAFE
+
+          unsafe {
+            var data = this.BitmapData;
+            var pointer = (byte*)data.Scan0;
+            Debug.Assert(pointer != null, nameof(pointer) + " != null");
+            var stride = data.Stride;
+            var offset = stride * y + (x << 2);
+            pointer += offset;
+            pointer[0] = value.B;
+            pointer[1] = value.G;
+            pointer[2] = value.R;
+          }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + (x << 2);
+          pointer += offset;
+          Marshal.WriteByte(pointer, 0, value.B);
+          Marshal.WriteByte(pointer, 1, value.G);
+          Marshal.WriteByte(pointer, 2, value.R);
+
+#endif
+
+        }
+      }
+
+#if UNSAFE
+
+      protected override unsafe void _DrawHorizontalLine(int x, int y, int count, Color color) {
+        var data = this.BitmapData;
+        var pointer = (byte*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride;
+        var offset = stride * y + (x << 2);
+        pointer += offset;
+        var red = color.R;
+        var green = color.G;
+        var blue = color.B;
+        var mask = (ushort)(green << 8 | blue);
+
+        // unrolled loop 2 times (saving 50% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
+        {
+          const int pixelsPerLoop = 2;
+          const int pointerIncreasePerLoop = 8;
+          while (count >= pixelsPerLoop) {
+
+            *(ushort*)pointer = mask;
+            pointer[2] = red;
+
+            ((ushort*)pointer)[2] = mask;
+            pointer[6] = red;
+
+            pointer += pointerIncreasePerLoop;
+            count -= pixelsPerLoop;
+          }
+        }
+
+        while (count-- > 0) {
+          *(ushort*)pointer = mask;
+          pointer[2] = red;
+          pointer += 4;
+        }
+      }
+
+      protected override unsafe void _DrawVerticalLine(int x, int y, int count, Color color) {
+        var data = this.BitmapData;
+        var pointer = (byte*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride;
+        var offset = stride * y + (x << 2);
+        pointer += offset;
+        var red = color.R;
+        var green = color.G;
+        var blue = color.B;
+        var mask = (ushort)(green << 8 | blue);
+        while (count-- > 0) {
+          *(ushort*)pointer = mask;
+          pointer[2] = red;
+          pointer += stride;
+        }
+      }
+
+#endif
+
+    } // RGB32BitmapLocker
+
+    private sealed class RGB24BitmapLocker : BitmapLockerBase {
+      public RGB24BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
+
+      protected override int _BytesPerPixel => 3;
+
+      public override Color this[int x, int y] {
+        get {
+
+#if UNSAFE
+
+          unsafe {
+            var data = this.BitmapData;
+            var pointer = (byte*)data.Scan0;
+            Debug.Assert(pointer != null, nameof(pointer) + " != null");
+            var stride = data.Stride;
+            var offset = stride * y + x * 3;
+            pointer += offset;
+            var b = pointer[0];
+            var g = pointer[1];
+            var r = pointer[2];
+            return Color.FromArgb(r, g, b);
+          }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + x * 3;
+          pointer += offset;
+          var b = Marshal.ReadByte(pointer, 0);
+          var g = Marshal.ReadByte(pointer, 1);
+          var r = Marshal.ReadByte(pointer, 2);
+          return Color.FromArgb(r, g, b);
+
+#endif
+
+        }
+        set {
+
+#if UNSAFE
+
+          unsafe {
+            var data = this.BitmapData;
+            var pointer = (byte*)data.Scan0;
+            Debug.Assert(pointer != null, nameof(pointer) + " != null");
+            var stride = data.Stride;
+            var offset = stride * y + x * 3;
+            pointer += offset;
+            pointer[0] = value.B;
+            pointer[1] = value.G;
+            pointer[2] = value.R;
+          }
+
+#else
+
+          var data = this.BitmapData;
+          var pointer = data.Scan0;
+          Debug.Assert(pointer != null, nameof(pointer) + " != null");
+          var stride = data.Stride;
+          var offset = stride * y + x * 3;
+          pointer += offset;
+          Marshal.WriteByte(pointer, 0, value.B);
+          Marshal.WriteByte(pointer, 1, value.G);
+          Marshal.WriteByte(pointer, 2, value.R);
+
+#endif
+
+        }
+      }
+
+#if UNSAFE
+
+      protected override unsafe void _DrawHorizontalLine(int x, int y, int count, Color color) {
+        Debug.Assert(count > 0);
+        var data = this.BitmapData;
+        var pointer = (byte*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride;
+        var offset = stride * y + x * 3;
+        var blue = color.B;
+        var green = color.G;
+        var red = color.R;
+        pointer += offset;
+        var mask = (ushort)(green << 8 | blue);
+        if (count >= 4) {
+
+          // align offset for later access
+          var paddingBytes = (int)((long)pointer & 3);
+          if (paddingBytes > 0) {
+            // 1 --> 4
+            // 2 --> 5 --> 8
+            // 3 --> 6 --> 9 --> 12
+
+            // ReSharper disable once SwitchStatementMissingSomeCases
+            switch (paddingBytes) {
+              case 3:
+                *(ushort*)pointer = mask;
+                pointer[2] = red;
+                pointer += 3;
+                goto case 2;
+              case 2:
+                *(ushort*)pointer = mask;
+                pointer[2] = red;
+                pointer += 3;
+                goto case 1;
+              case 1:
+                *(ushort*)pointer = mask;
+                pointer[2] = red;
+                pointer += 3;
+                break;
+            }
+
+            count -= paddingBytes;
+          }
+
+          // prepare 4 pixel = 3 uint masks
+          var mask1 = (uint)(blue << 24 | red << 16 | green << 8 | blue);
+          var mask2 = (uint)(green << 24 | blue << 16 | red << 8 | green);
+          var mask3 = (uint)(red << 24 | green << 16 | blue << 8 | red);
+
+          // unrolled loop 3 times (saving 75% of comparisons, using the highest IL-constant opcode of 8 [ldc.i4.8])
+          {
+            const int pixelsPerLoop = 12;
+            const int pointerIncreasePerLoop = 36;
+            while (count >= pixelsPerLoop) {
+              var i = (uint*)pointer;
+              i[0] = mask1;
+              i[1] = mask2;
+              i[2] = mask3;
+
+              i[3] = mask1;
+              i[4] = mask2;
+              i[5] = mask3;
+
+              i[6] = mask1;
+              i[7] = mask2;
+              i[8] = mask3;
+
+              pointer += pointerIncreasePerLoop;
+              count -= pixelsPerLoop;
+            }
+          }
+
+          {
+            const int pixelsPerLoop = 4;
+            const int pointerIncreasePerLoop = 12;
+            while (count >= 4) {
+              var i = (uint*)pointer;
+              i[0] = mask1;
+              i[1] = mask2;
+              i[2] = mask3;
+              pointer += pointerIncreasePerLoop;
+              count -= pixelsPerLoop;
+            }
+          }
+
+        }
+
+        // fill pixels left
+        while (count-- > 0) {
+          *(ushort*)pointer = mask;
+          pointer[2] = red;
+          pointer += 3;
+        }
+
+      }
+
+      protected override unsafe void _DrawVerticalLine(int x, int y, int count, Color color) {
+        Debug.Assert(count > 0);
+        var data = this.BitmapData;
+        var pointer = (byte*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride;
+        var offset = stride * y + x * 3;
+        var blue = color.B;
+        var green = color.G;
+        var red = color.R;
+        var mask = (ushort)(green << 8 | blue);
+        pointer += offset;
+        while (count-- > 0) {
+          *(ushort*)pointer = mask;
+          pointer[2] = red;
+          pointer += stride;
+        }
+      }
+
+#endif
+      
+    } // RGB24BitmapLocker
+
+    private sealed class UnsupportedDrawingBitmapLocker : BitmapLockerBase {
+      public UnsupportedDrawingBitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) {
+        this._exception = new NotSupportedException(
+          $"Wrong pixel format {format} (supported: {string.Join(",", _LOCKER_TYPES.Keys.Select(i => i.ToString()))})"
+        );
+      }
+
+      private readonly NotSupportedException _exception;
+
+      public override Color this[int x, int y] {
+        get => throw this._exception;
+        set => throw this._exception;
+      }
+
+    } // UnsupportedDrawingBitmapLocker
+
+    #endregion
+
+    private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
+    private static readonly Dictionary<PixelFormat,LockerFactory> _LOCKER_TYPES=new Dictionary<PixelFormat, LockerFactory> {
+      {PixelFormat.Format32bppArgb,(b,r,f,f2)=>new ARGB32BitmapLocker(b,r,f,f2) },
+      {PixelFormat.Format32bppRgb,(b,r,f,f2)=>new RGB32BitmapLocker(b,r,f,f2) },
+      {PixelFormat.Format24bppRgb,(b,r,f,f2)=>new RGB24BitmapLocker(b,r,f,f2) },
+    };
 
     #endregion
     
@@ -1388,6 +1477,7 @@ namespace System.Drawing {
     public static MemoryCopyDelegate MemoryCopyCall
     {
       get => _memoryCopyCall;
+      // ReSharper disable once LocalizableElement
       set => _memoryCopyCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
     }
 
@@ -1396,6 +1486,7 @@ namespace System.Drawing {
     public static MemoryFillDelegate MemoryFillCall
     {
       get => _memoryFillCall;
+      // ReSharper disable once LocalizableElement
       set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
     }
 
@@ -1404,7 +1495,7 @@ namespace System.Drawing {
     #region Lock
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
-      => new BitmapLocker(@this, rect, flags, format)
+      => _LOCKER_TYPES.TryGetValue(format,out var factory)?factory(@this, rect, flags, format):new UnsupportedDrawingBitmapLocker(@this, rect, flags, format)
     ;
 
     public static IBitmapLocker Lock(this Bitmap @this)
@@ -1445,9 +1536,10 @@ namespace System.Drawing {
         return (Bitmap)@this.Clone();
 
       var result = new Bitmap(@this.Width, @this.Height, format);
-      var sourceFormat = @this.PixelFormat;
 
 #if UNSAFE
+
+      var sourceFormat = @this.PixelFormat;
 
       if (sourceFormat == PixelFormat.Format24bppRgb && format == PixelFormat.Format32bppArgb) {
         var rect = new Rectangle(0, 0, @this.Width, @this.Height);
@@ -1546,3 +1638,4 @@ namespace System.Drawing {
 
   }
 }
+ 
