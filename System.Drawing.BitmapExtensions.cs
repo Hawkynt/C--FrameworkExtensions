@@ -140,7 +140,7 @@ namespace System.Drawing {
       public BitmapData BitmapData { get; }
 
       protected BitmapLockerBase(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) {
-        this._bitmap = bitmap;
+        this._bitmap = bitmap ?? throw new ArgumentNullException(nameof(bitmap));
         this.BitmapData = bitmap.LockBits(rect, flags, format);
       }
 
@@ -155,9 +155,8 @@ namespace System.Drawing {
           return;
 
         this._isDisposed = true;
-
-        if (this._bitmap != null && this.BitmapData != null)
-          this._bitmap.UnlockBits(this.BitmapData);
+        this._bitmap.UnlockBits(this.BitmapData);
+        GC.SuppressFinalize(this);
       }
 
       #endregion
