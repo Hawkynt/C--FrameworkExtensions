@@ -288,7 +288,7 @@ namespace System.Drawing {
         var stride = bitmapData.Stride;
         var byteCount = bytesPerPixel * width;
         var startOffset = bitmapData.Scan0 + (y * stride + x * bytesPerPixel);
-        this._DrawHorizontalLine(x, y, width, color);
+        this._DrawHorizontalLine(x, y, width, color); // TODO: if line is long enough, draw part of it, than memory copy
         var offset = startOffset+stride;
         --height;
         do {
@@ -718,13 +718,25 @@ namespace System.Drawing {
 
         if (xs < 0) {
           width += xs;
-          xs = 0;
+          xs = -xs;
         }
 
         if (ys < 0) {
           height += ys;
-          ys = 0;
+          ys = -ys;
         }
+
+        if (xt < 0) {
+          width += xt;
+          xs = -xt;
+          xt = 0;
+        }
+
+        if (yt < 0) {
+          height += yt;
+          ys -= yt;
+          yt = 0;
+        }        
 
         if (xs >= other.Width)
           return false;
@@ -737,16 +749,6 @@ namespace System.Drawing {
 
         if (ys + height > other.Height)
           height = other.Height - ys;
-
-        if (xt < 0) {
-          width += xt;
-          xt = 0;
-        }
-
-        if (yt < 0) {
-          height += yt;
-          yt = 0;
-        }
 
         if (xt + width > this.Width)
           width = this.Width - xt;
