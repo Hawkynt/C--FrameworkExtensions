@@ -125,7 +125,12 @@ namespace System.Drawing {
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
-      
+      Bitmap CopyFromGrid(int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0);
+      Bitmap CopyFromGrid(Point tile, Size tileSize);
+      Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance);
+      Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset);
+      Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target);
+
       /// <summary>
       /// <c>true</c> when all pixels have the same color; otherwise, <c>false</c>.
       /// </summary>
@@ -192,6 +197,10 @@ namespace System.Drawing {
       public int Height => this.BitmapData.Height;
 
       // TODO: opt.me
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target) {
+        throw new NotImplementedException();
+      }
+
       public bool IsFlatColor {
         get {
           var firstColor = this[0, 0];
@@ -560,6 +569,26 @@ namespace System.Drawing {
 #endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) 
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
+      ;
+
+      public Bitmap CopyFromGrid(int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0) {
+        var result = new Bitmap(width, height);
+        using (var target = result.Lock(ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb))
+          target.CopyFromGrid(this,column,row,width,height,dx,dy,offsetX,offsetY,0,0);
+
+        return result;
+      }
+
+      public Bitmap CopyFromGrid(Point tile, Size tileSize) 
+        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height)
+      ;
+
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance) 
+        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height,distance.Width,distance.Height)
+      ;
+
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset) 
+        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height,distance.Width,distance.Height,offset.Width,offset.Height)
       ;
 
       #endregion
