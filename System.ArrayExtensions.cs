@@ -1199,6 +1199,28 @@ namespace System {
     }
 
     /// <summary>
+    /// Determines whether the given array is empty.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the elements</typeparam>
+    /// <param name="this">This <see cref="Array"/></param>
+    /// <returns><c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c></returns>
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNullEmpty<TItem>(this TItem[] @this)=>@this==null||@this.Length<=0;
+
+    /// <summary>
+    /// Determines whether the given array is not empty.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the elements</typeparam>
+    /// <param name="this">This <see cref="Array"/></param>
+    /// <returns><c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c></returns>
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNotNullEmpty<TItem>(this TItem[] @this) => @this != null && @this.Length > 0;
+
+    /// <summary>
     /// Initializes a jagged array with default values.
     /// </summary>
     /// <typeparam name="TArray">The type of the array</typeparam>
