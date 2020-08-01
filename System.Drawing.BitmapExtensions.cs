@@ -695,26 +695,32 @@ namespace System.Drawing {
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
 
-      // TODO: optimize me
-      public void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+      public virtual void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         for (var y = ys; height > 0; ++y, ++yt, --height)
         for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
           var sourcePixel = this[xct, yt];
           var otherPixel = other[x, y];
+          var alpha = otherPixel.A;
+
           Color newPixel;
-          if (otherPixel.A == byte.MaxValue)
-            newPixel = otherPixel;
-          else if (otherPixel.A == byte.MinValue)
-            newPixel = sourcePixel;
-          else {
-            var factor = 255 + otherPixel.A;
-            var r = sourcePixel.R * byte.MaxValue + otherPixel.R * otherPixel.A;
-            var g = sourcePixel.G * byte.MaxValue + otherPixel.G * otherPixel.A;
-            var b = sourcePixel.B * byte.MaxValue + otherPixel.B * otherPixel.A;
-            r /= factor;
-            g /= factor;
-            b /= factor;
-            newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
+          switch (alpha) {
+            case byte.MinValue:
+              newPixel = sourcePixel;
+              break;
+            case byte.MaxValue:
+              newPixel = otherPixel;
+              break;
+            default: {
+              var factor = 255 + alpha;
+              var r = sourcePixel.R * byte.MaxValue + otherPixel.R * alpha;
+              var g = sourcePixel.G * byte.MaxValue + otherPixel.G * alpha;
+              var b = sourcePixel.B * byte.MaxValue + otherPixel.B * alpha;
+              r /= factor;
+              g /= factor;
+              b /= factor;
+              newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
+              break;
+            }
           }
 
           this[xct, yt] = newPixel;
@@ -1143,6 +1149,62 @@ namespace System.Drawing {
         }
       
 #endif
+
+      // TODO: optimize me more
+      public override void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+        if (!(other is ARGB32BitmapLocker otherLocker)) {
+          base.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
+          return;
+        }
+
+        var thisStride = this.BitmapData.Stride;
+        var otherStride = otherLocker.BitmapData.Stride;
+        const int bpp = 4;
+
+        var thisOffset = this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
+        var otherOffset = otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
+
+        for (;height > 0;thisOffset+=thisStride,otherOffset+=otherStride,--height) {
+          var to = thisOffset;
+          var oo = otherOffset;
+          
+          for (var i = width; i > 0;to+=bpp,oo+=bpp, --i) {
+            var sourcePixel = (uint)Marshal.ReadInt32(to);
+            var otherPixel = (uint)Marshal.ReadInt32(oo);
+            
+            var alpha = otherPixel >> 24;
+
+            uint newPixel;
+            switch (alpha) {
+              case byte.MinValue:
+                newPixel = sourcePixel;
+                break;
+              case byte.MaxValue:
+                newPixel = otherPixel;
+                break;
+              default: {
+                var factor = 255 + alpha;
+                var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
+                var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
+                var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
+                r /= factor;
+                g /= factor;
+                b /= factor;
+                newPixel =
+                  (sourcePixel & 0xff000000)
+                  |((uint)(byte)r<<16)
+                  |((uint)(byte)g << 8)
+                  |(byte)b
+                  ;
+                break;
+              }
+            }
+
+            Marshal.WriteInt32(to,(int)newPixel);
+          } // x
+        } // y
+      }
+
 
     } // ARGB32BitmapLocker
 
