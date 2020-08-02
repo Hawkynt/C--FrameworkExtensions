@@ -1151,6 +1151,61 @@ namespace System.Drawing {
 #endif
 
       // TODO: optimize me more
+
+#if UNSAFE
+
+      public override unsafe void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
+        if (!(other is ARGB32BitmapLocker otherLocker)) {
+          base.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
+          return;
+        }
+
+        var thisStride = this.BitmapData.Stride;
+        var otherStride = otherLocker.BitmapData.Stride;
+        const int bpp = 4;
+
+        var thisOffset = (byte*)this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
+        var otherOffset = (byte*)otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
+
+        for (;height > 0;thisOffset+=thisStride,otherOffset+=otherStride,--height) {
+          var to = thisOffset;
+          var oo = otherOffset;
+          
+          for (var x = width; x > 0;to+=bpp,oo+=bpp, --x) {
+            var otherPixel = *((uint*)oo);
+            if(otherPixel<0x01000000)
+              continue;
+
+            if (otherPixel >= 0xff000000) {
+              *((uint*)to) = otherPixel;
+              continue;
+            }
+
+            var sourcePixel = *((uint*)to);
+            var alpha = otherPixel >> 24;
+            var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
+            var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
+            var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
+
+            var factor = 255 + alpha;
+            r /= factor;
+            g /= factor;
+            b /= factor;
+
+            var newPixel =
+              (sourcePixel & 0xff000000)
+              |((uint)(byte)r << 16)
+              |((uint)(byte)g <<  8)
+              |       (byte)b
+              ;
+
+            *((uint*)to) = newPixel;
+          } // x
+        } // y
+      }
+
+#else
+
       public override void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         if (!(other is ARGB32BitmapLocker otherLocker)) {
           base.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
@@ -1168,42 +1223,40 @@ namespace System.Drawing {
           var to = thisOffset;
           var oo = otherOffset;
           
-          for (var i = width; i > 0;to+=bpp,oo+=bpp, --i) {
-            var sourcePixel = (uint)Marshal.ReadInt32(to);
+          for (var x = width; x > 0;to+=bpp,oo+=bpp, --x) {
             var otherPixel = (uint)Marshal.ReadInt32(oo);
-            
-            var alpha = otherPixel >> 24;
+            if(otherPixel<0x01000000)
+              continue;
 
-            uint newPixel;
-            switch (alpha) {
-              case byte.MinValue:
-                newPixel = sourcePixel;
-                break;
-              case byte.MaxValue:
-                newPixel = otherPixel;
-                break;
-              default: {
-                var factor = 255 + alpha;
-                var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
-                var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
-                var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
-                r /= factor;
-                g /= factor;
-                b /= factor;
-                newPixel =
-                  (sourcePixel & 0xff000000)
-                  |((uint)(byte)r<<16)
-                  |((uint)(byte)g << 8)
-                  |(byte)b
-                  ;
-                break;
-              }
+            if (otherPixel >= 0xff000000) {
+              Marshal.WriteInt32(to, (int)otherPixel);
+              continue;
             }
+
+            var sourcePixel = (uint)Marshal.ReadInt32(to);
+            var alpha = otherPixel >> 24;
+            var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
+            var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
+            var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
+
+            var factor = 255 + alpha;
+            r /= factor;
+            g /= factor;
+            b /= factor;
+
+            var newPixel =
+              (sourcePixel & 0xff000000)
+              |((uint)(byte)r << 16)
+              |((uint)(byte)g <<  8)
+              |       (byte)b
+              ;
 
             Marshal.WriteInt32(to,(int)newPixel);
           } // x
         } // y
       }
+
+#endif
 
 
     } // ARGB32BitmapLocker
@@ -1548,7 +1601,7 @@ namespace System.Drawing {
 
     } // UnsupportedDrawingBitmapLocker
 
-    #endregion
+#endregion
 
     private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
     private static readonly Dictionary<PixelFormat,LockerFactory> _LOCKER_TYPES=new Dictionary<PixelFormat, LockerFactory> {
@@ -1557,9 +1610,9 @@ namespace System.Drawing {
       {PixelFormat.Format24bppRgb,(b,r,f,f2)=>new RGB24BitmapLocker(b,r,f,f2) },
     };
 
-    #endregion
+#endregion
     
-    #region method delegates
+#region method delegates
 
     public delegate void MemoryCopyDelegate(IntPtr source, IntPtr target, int count);
     public delegate void MemoryFillDelegate(IntPtr source, byte value, int count);
@@ -1582,9 +1635,9 @@ namespace System.Drawing {
       set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
     }
 
-    #endregion
+#endregion
 
-    #region Lock
+#region Lock
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
       => _LOCKER_TYPES.TryGetValue(format,out var factory)?factory(@this, rect, flags, format):new UnsupportedDrawingBitmapLocker(@this, rect, flags, format)
@@ -1618,7 +1671,7 @@ namespace System.Drawing {
       => Lock(@this, new Rectangle(Point.Empty, @this.Size), flags, format)
     ;
 
-    #endregion
+#endregion
 
     public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
       if (@this == null)
