@@ -1147,12 +1147,19 @@ namespace System.Drawing {
             pointer += stride;
           }
         }
-      
+
 #endif
 
-      // TODO: optimize me more
-
 #if UNSAFE
+
+      [StructLayout(LayoutKind.Explicit, Size = 4)]
+      private struct ARGBQuadlet {
+        [FieldOffset(3)] public readonly byte Alpha;
+        [FieldOffset(2)] public readonly byte Red;
+        [FieldOffset(1)] public readonly byte Green;
+        [FieldOffset(0)] public readonly byte Blue;
+        [FieldOffset(0)] public readonly uint Color;
+      }
 
       public override unsafe void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         if (!(other is ARGB32BitmapLocker otherLocker)) {
@@ -1167,39 +1174,42 @@ namespace System.Drawing {
         var thisOffset = (byte*)this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
         var otherOffset = (byte*)otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
 
-        for (;height > 0;thisOffset+=thisStride,otherOffset+=otherStride,--height) {
+        for (; height > 0; thisOffset += thisStride, otherOffset += otherStride, --height) {
           var to = thisOffset;
           var oo = otherOffset;
-          
-          for (var x = width; x > 0;to+=bpp,oo+=bpp, --x) {
-            var otherPixel = *((uint*)oo);
-            if(otherPixel<0x01000000)
+
+          for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
+            
+            // HACK: somehow this leads to using eax(uint) instead of rax(ARGBQuadlet) even though both have the same memory size, this is faster
+            var op = *((uint*)oo);
+            if (op < 0x01000000)
               continue;
 
-            if (otherPixel >= 0xff000000) {
-              *((uint*)to) = otherPixel;
+            if (op >= 0xff000000) {
+              *((uint*)to) = op;
               continue;
             }
 
-            var sourcePixel = *((uint*)to);
-            var alpha = otherPixel >> 24;
-            var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
-            var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
-            var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
+            var otherPixel = *(ARGBQuadlet*)&op;
+            var sourcePixel = *(ARGBQuadlet*)to;
 
+            var alpha = otherPixel.Alpha;
             var factor = 255 + alpha;
-            r /= factor;
-            g /= factor;
-            b /= factor;
 
+            var r = (sourcePixel.Red   * byte.MaxValue + otherPixel.Red   * alpha) / factor;
+            var g = (sourcePixel.Green * byte.MaxValue + otherPixel.Green * alpha) / factor;
+            var b = (sourcePixel.Blue  * byte.MaxValue + otherPixel.Blue  * alpha) / factor;
+            
+            // HACK: this is faster than using the struct because it avoids memory access
             var newPixel =
-              (sourcePixel & 0xff000000)
-              |((uint)(byte)r << 16)
-              |((uint)(byte)g <<  8)
-              |       (byte)b
+                (sourcePixel.Color & 0xff000000)
+                | ((uint)(byte)r << 16)
+                | ((uint)(byte)g << 8)
+                | (byte)b
               ;
 
             *((uint*)to) = newPixel;
+
           } // x
         } // y
       }
