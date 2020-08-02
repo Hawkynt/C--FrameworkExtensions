@@ -1181,7 +1181,7 @@ namespace System.Drawing {
           for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
             
             // HACK: somehow this leads to using eax(uint) instead of rax(ARGBQuadlet) even though both have the same memory size, this is faster
-            var op = *((uint*)oo);
+            var op = *(uint*)oo;
             if (op < 0x01000000)
               continue;
 
@@ -1203,12 +1203,12 @@ namespace System.Drawing {
             // HACK: this is faster than using the struct because it avoids memory access
             var newPixel =
                 (sourcePixel.Color & 0xff000000)
-                | ((uint)(byte)r << 16)
-                | ((uint)(byte)g << 8)
-                | (byte)b
+                | ((uint)r << 16)
+                | ((uint)g << 8)
+                | (uint)b
               ;
 
-            *((uint*)to) = newPixel;
+            *(uint*)to = newPixel;
 
           } // x
         } // y
