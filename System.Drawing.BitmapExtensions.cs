@@ -1244,21 +1244,20 @@ namespace System.Drawing {
             }
 
             var sourcePixel = (uint)Marshal.ReadInt32(to);
-            var alpha = otherPixel >> 24;
-            var r = (byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha;
-            var g = (byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha;
-            var b = (byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha;
 
-            var factor = 255 + alpha;
-            r /= factor;
-            g /= factor;
-            b /= factor;
+            var alpha = otherPixel >> 24;
+            var factor = 1d / (255 + alpha);
+
+            var r = (uint)(((byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha) * factor);
+            var g = (uint)(((byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha) * factor);
+            var b = (uint)(((byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha) * factor);
+
 
             var newPixel =
-              (sourcePixel & 0xff000000)
-              |((uint)(byte)r << 16)
-              |((uint)(byte)g <<  8)
-              |       (byte)b
+                (sourcePixel & 0xff000000)
+                | (r << 16)
+                | (g << 8)
+                | b
               ;
 
             Marshal.WriteInt32(to,(int)newPixel);
