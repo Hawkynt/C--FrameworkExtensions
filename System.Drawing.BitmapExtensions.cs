@@ -1194,18 +1194,18 @@ namespace System.Drawing {
             var sourcePixel = *(ARGBQuadlet*)to;
 
             var alpha = otherPixel.Alpha;
-            var factor = 255 + alpha;
+            var factor = 1d / (255 + alpha);
 
-            var r = (sourcePixel.Red   * byte.MaxValue + otherPixel.Red   * alpha) / factor;
-            var g = (sourcePixel.Green * byte.MaxValue + otherPixel.Green * alpha) / factor;
-            var b = (sourcePixel.Blue  * byte.MaxValue + otherPixel.Blue  * alpha) / factor;
-            
-            // HACK: this is faster than using the struct because it avoids memory access
+            var r = (uint)((sourcePixel.Red * byte.MaxValue + otherPixel.Red * alpha) * factor);
+            var g = (uint)((sourcePixel.Green * byte.MaxValue + otherPixel.Green * alpha) * factor);
+            var b = (uint)((sourcePixel.Blue * byte.MaxValue + otherPixel.Blue * alpha) * factor);
+
+            // HACK: this is faster than using the struct
             var newPixel =
                 (sourcePixel.Color & 0xff000000)
-                | ((uint)r << 16)
-                | ((uint)g << 8)
-                | (uint)b
+                | (r << 16)
+                | (g << 8)
+                | b
               ;
 
             *(uint*)to = newPixel;
