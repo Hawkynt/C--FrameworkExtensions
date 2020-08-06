@@ -1152,15 +1152,6 @@ namespace System.Drawing {
 
 #if UNSAFE
 
-      [StructLayout(LayoutKind.Explicit, Size = 4)]
-      private struct ARGBQuadlet {
-        [FieldOffset(3)] public readonly byte Alpha;
-        [FieldOffset(2)] public readonly byte Red;
-        [FieldOffset(1)] public readonly byte Green;
-        [FieldOffset(0)] public readonly byte Blue;
-        [FieldOffset(0)] public readonly uint Color;
-      }
-
       public override unsafe void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         if (!(other is ARGB32BitmapLocker otherLocker)) {
           base.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
@@ -1180,7 +1171,6 @@ namespace System.Drawing {
 
           for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
             
-            // HACK: somehow this leads to using eax(uint) instead of rax(ARGBQuadlet) even though both have the same memory size, this is faster
             var op = *(uint*)oo;
             if (op < 0x01000000)
               continue;
@@ -1190,22 +1180,41 @@ namespace System.Drawing {
               continue;
             }
 
-            var otherPixel = *(ARGBQuadlet*)&op;
-            var sourcePixel = *(ARGBQuadlet*)to;
+            var sourcePixel = *(uint*)to;
 
-            var alpha = otherPixel.Alpha;
+            uint b1 = (byte)op;
+            op >>= 8;
+            uint g1 = (byte)op;
+            op >>= 8;
+            uint r1 = (byte)op;
+            op >>= 8;
+            var alpha = op;
             var factor = 1d / (255 + alpha);
 
-            var r = (uint)((sourcePixel.Red * byte.MaxValue + otherPixel.Red * alpha) * factor);
-            var g = (uint)((sourcePixel.Green * byte.MaxValue + otherPixel.Green * alpha) * factor);
-            var b = (uint)((sourcePixel.Blue * byte.MaxValue + otherPixel.Blue * alpha) * factor);
+            var newPixel = sourcePixel & 0xff000000;
+            uint b = (byte)sourcePixel;
+            sourcePixel >>= 8;
+            uint g = (byte)sourcePixel;
+            sourcePixel >>= 8;
+            uint r = (byte)sourcePixel;
+            b *= byte.MaxValue;
+            g *= byte.MaxValue;
+            r *= byte.MaxValue;
+            b1 *= alpha;
+            g1 *= alpha;
+            r1 *= alpha;
+            b += b1;
+            g += g1;
+            r += r1;
 
-            // HACK: this is faster than using the struct
-            var newPixel =
-                (sourcePixel.Color & 0xff000000)
-                | (r << 16)
-                | (g << 8)
-                | b
+            b = (uint)(b * factor);
+            g = (uint)(g * factor);
+            r = (uint)(r * factor);
+
+            newPixel |=
+              b
+              | (g << 8)
+              | (r << 16)
               ;
 
             *(uint*)to = newPixel;
@@ -1248,16 +1257,15 @@ namespace System.Drawing {
             var alpha = otherPixel >> 24;
             var factor = 1d / (255 + alpha);
 
-            var r = (uint)(((byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha) * factor);
-            var g = (uint)(((byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha) * factor);
             var b = (uint)(((byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha) * factor);
-
-
+            var g = (uint)(((byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha) * factor);
+            var r = (uint)(((byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha) * factor);
+            
             var newPixel =
                 (sourcePixel & 0xff000000)
-                | (r << 16)
-                | (g << 8)
                 | b
+                | (g << 8)
+                | (r << 16)
               ;
 
             Marshal.WriteInt32(to,(int)newPixel);
