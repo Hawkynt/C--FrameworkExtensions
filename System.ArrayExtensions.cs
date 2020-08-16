@@ -248,14 +248,14 @@ namespace System {
 
     [StructLayout(LayoutKind.Sequential, Size = 32)]
     private struct Block32 {
-      public Block4 a;
-      public Block4 b;
-      public Block4 c;
-      public Block4 d;
-      public Block4 e;
-      public Block4 f;
-      public Block4 g;
-      public Block4 h;
+      public readonly Block4 a;
+      public readonly Block4 b;
+      public readonly Block4 c;
+      public readonly Block4 d;
+      public readonly Block4 e;
+      public readonly Block4 f;
+      public readonly Block4 g;
+      public readonly Block4 h;
 
       public Block32(Block4 u) {
         this.a = u;
@@ -268,21 +268,21 @@ namespace System {
         this.h = u;
       }
 
-      public Block32(Block2 u) : this((Block4)u << 16 | u) { }
-      public Block32(byte u) : this((Block4)u << 24 | (Block4)u << 16 | (Block4)u << 8 | u) { }
+      public Block32(Block2 u) : this(0x00010001U * u) { }
+      public Block32(byte u) : this(0x01010101U * u) { }
 
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 64)]
     private struct Block64 {
-      public Block8 a;
-      public Block8 b;
-      public Block8 c;
-      public Block8 d;
-      public Block8 e;
-      public Block8 f;
-      public Block8 g;
-      public Block8 h;
+      public readonly Block8 a;
+      public readonly Block8 b;
+      public readonly Block8 c;
+      public readonly Block8 d;
+      public readonly Block8 e;
+      public readonly Block8 f;
+      public readonly Block8 g;
+      public readonly Block8 h;
 
       public Block64(Block8 u) {
         this.a = u;
@@ -295,9 +295,9 @@ namespace System {
         this.h = u;
       }
 
-      public Block64(Block4 u) : this(((Block8)u << 32) | u) { }
-      public Block64(Block2 u) : this(((Block8)u << 48) | ((Block8)u << 32) | ((Block8)u << 16) | u) { }
-      public Block64(byte u) : this(((Block8)u << 56) | ((Block8)u << 48) | ((Block8)u << 40) | ((Block8)u << 32) | ((Block8)u << 24) | ((Block8)u << 16) | ((Block8)u << 8) | u) { }
+      public Block64(Block4 u) : this(0x0000000100000001UL * u) { }
+      public Block64(Block2 u) : this(0x0001000100010001UL * u) { }
+      public Block64(byte u) : this(0x0101010101010101UL * u) { }
     }
 
 #else
