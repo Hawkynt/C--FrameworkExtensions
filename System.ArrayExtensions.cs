@@ -23,6 +23,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 #if NET40
 using System.Diagnostics.Contracts;
 #endif
@@ -42,8 +43,10 @@ using System.Security.Permissions;
 #endif
 using Block2 = System.UInt16;
 using Block4 = System.UInt32;
-using SBlock4 = System.Int32;
 using Block8 = System.UInt64;
+
+using SBlock2 = System.Int16;
+using SBlock4 = System.Int32;
 using SBlock8 = System.Int64;
 
 // ReSharper disable UnusedMemberInSuper.Global
@@ -244,8 +247,8 @@ namespace System {
       }
     }
 
-#if UNSAFE
-
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [StructLayout(LayoutKind.Sequential, Size = 32)]
     private struct Block32 {
       public readonly Block4 a;
@@ -273,6 +276,8 @@ namespace System {
 
     }
 
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [StructLayout(LayoutKind.Sequential, Size = 64)]
     private struct Block64 {
       public readonly Block8 a;
@@ -300,7 +305,7 @@ namespace System {
       public Block64(byte u) : this(0x0101010101010101UL * u) { }
     }
 
-#else
+#if !UNSAFE
 
     [SecurityPermission(SecurityAction.InheritanceDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
     private sealed class DisposableGCHandle<TValue> : IDisposable where TValue : class {
@@ -344,7 +349,7 @@ namespace System {
 
 #endif
 
-    #endregion
+#endregion
 
     private const int _INDEX_WHEN_NOT_FOUND = -1;
 
