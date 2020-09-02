@@ -93,8 +93,8 @@ namespace System {
 
     #endregion
 
-    // TODO: Clear for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
-    // TODO: Fill for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
+    // TODO: Clear for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
+    // TODO: Fill for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
     // TODO: SequenceEquals for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
     // TODO: unchecked versions
 
@@ -560,9 +560,9 @@ qwordDuffOut:
 <#    }#>
                   default: {
                     do {
-                      *(Block8*) @this = value;
+                      *(Block8*) @this = block8;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                      ((Block8*) @this)[<#=i#>] = value;
+                      ((Block8*) @this)[<#=i#>] = block8;
 <#    }#>
                       @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
                       blocks -= <#=INDEX_LOOP_UNROLL#>;
@@ -613,17 +613,7 @@ qwordDuffOut:
 
 #else
 
-            // copy bigger and bigger chunks
-            var size = 64;
-            while (count > size) {
-              _MemoryCopy(target, start, size);
-              target += size;
-              count -= size;
-              size <<= 1;
-            }
-
-            // copy last half chunk if needed
-            _MemoryCopy(target, start, count);
+            _MemoryFill(@this, value, count);
             
 #endif
 
@@ -684,25 +674,7 @@ qwordDuffOut:
             } // medium-sized blocks
 
             // large blocks
-            var start = @this;
-            Marshal.WriteInt64(@this, block8);
-<#    for(var i = 1; i < MARSHALL_SWITCH_COUNT; ++i) {#>
-            Marshal.WriteInt64(@this, <#=(i * 8)#>, block8);
-<#    }#>
-            var size = <#=(MARSHALL_SWITCH_COUNT * 8)#>;
-            @this += <#=(MARSHALL_SWITCH_COUNT * 8)#>;
-            count -= <#=(MARSHALL_SWITCH_COUNT * 8)#>;
-
-              // copy bigger and bigger chunks
-            while (count > size) {
-              _MemoryCopy(@this, start, size);
-              @this += size;
-              count -= size;
-              size <<= 1;
-            }
-
-            // copy last part of chunk
-            _MemoryCopy(@this, start, count);
+            _MemoryFill(@this, value, count);
             return;
 #endif              
           } // single-byte default
@@ -713,6 +685,168 @@ qwordDuffOut:
 
     #endregion
 
+    #region Clear
+
+#if UNSAFE
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static unsafe void Clear(this IntPtr @this, int count)
+      => Clear((byte*)@this, count)
+    ;
+
+    public static unsafe void Clear(byte* @this, int count) {
+      <#=EmitCountTooSmallCheck()#>
+
+      for(;;)
+        switch (count) {
+          case 0: return;
+<#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
+          case <#=i#>:
+            <#=string.Join("\r\n            ",EmitSetBytes(i))#>
+            return;
+<#    }#>
+          default: {
+            var blocks = count >> 3;
+
+#if !PLATFORM_X86
+            const int MAX_MANAGED_BLOCKS = 16;
+#else
+            const int MAX_MANAGED_BLOCKS = 50;
+#endif
+            if (blocks < MAX_MANAGED_BLOCKS) {
+              count &= 0b111;
+              for (;;)
+                switch (blocks) {
+<#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
+                  case <#=i#>: goto blockCount<#=i#>;
+<#    }#>
+                  default: {
+                    do {
+                      *(Block8*) @this = 0;
+<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
+                      ((Block8*) @this)[<#=i#>] = 0;
+<#    }#>
+                      @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+                      blocks -= <#=INDEX_LOOP_UNROLL#>;
+                    } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
+
+                    continue; // next blocks
+                  }
+                }
+
+<#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
+              blockCount<#=i#>: *(Block8*) @this = 0;
+<#    }#>
+              @this += blocks << 3;
+              blockCount0:
+              continue; // copy single bytes left
+            } // medium-sized blocks
+
+            // large blocks
+            var start = @this;
+
+            *(Block8*)@this = 0;
+<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
+            ((Block8*)@this)[<#=i#>] = 0;
+<#    }#>
+            @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+            count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
+
+#if !PLATFORM_X86
+
+            var block64 = *(Block64*)start;
+<#    lastBlockCount = int.MaxValue;#>
+<#    foreach(var blockCount in new[]{16, 8, 1}){#>
+<#      var bytesPerLoop = 64 * blockCount;#>
+<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
+            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+<#      lastBlockCount = blockCount;#>
+              count -= <#=bytesPerLoop#>;
+              *(Block64*)@this = block64;
+<#      for(var i = 1; i < blockCount; ++i) {#>
+              ((Block64*)@this)[<#=i#>] = block64;
+<#      }#>
+              @this += <#=bytesPerLoop#>;
+            }
+<#    }#>
+            
+            if (count != 0)
+              continue;
+
+#else
+
+            _MemoryFill(@this, 0, count);
+            
+#endif
+
+            return;
+
+            } // single-byte default
+        } // single-byte switch
+    }
+
+#else
+
+    public static void Clear(this IntPtr @this, int count) {
+      <#=EmitCountTooSmallCheck()#>
+      
+      for (;;)
+        switch (count) {
+          case 0: return;
+<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+          case <#=i#>: 
+            <#=string.Join("\r\n            ", EmitMarshalSetBytes(i))#>
+            return;
+<#    }#>
+          default: {
+            var blocks = count >> 3;
+            
+#if !MONO
+            const int MAX_MANAGED_BLOCKS = 50;
+
+            if (blocks < MAX_MANAGED_BLOCKS) {
+#endif
+              count &= 0b111;
+              for (;;)
+                switch (blocks) {
+<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+                  case <#=i#>: goto blockCount<#=i#>;
+<#    }#>
+                  default: {
+                    var block64=(object)new Block64();
+
+                    do {
+                      Marshal.StructureToPtr(block64, @this, false);
+                      @this += 64;
+                      blocks -= 8;
+                    } while (blocks >= 8);
+
+                    continue; // next blocks
+                  }
+                }
+              
+<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
+              blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
+<#    }#>
+              blockCount1: Marshal.WriteInt64(@this, 0);
+              @this += blocks << 3;
+              blockCount0: continue; // copy single bytes left
+#if !MONO
+            } // medium-sized blocks
+
+            // large blocks
+            _MemoryFill(@this, 0, count);
+            return;
+#endif              
+          } // single-byte default
+        } // single-byte switch
+    }
+
+#endif
+
+    #endregion
   }
 }
 
@@ -887,19 +1021,19 @@ IEnumerable<string> EmitMarshalSetBytes(int count, string value) {
 
 string EmitSetByte(int offset) => EmitSetByte(offset, null);
 string EmitSetByte(string value) => EmitSetByte(0, value);
-string EmitSetByte(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*@this" : "@this[" + offset + "]", value);
+string EmitSetByte(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*@this" : "@this[" + offset + "]", value ?? "0");
 
 string EmitSetWord(int offset) => EmitSetWord(offset, null);
 string EmitSetWord(string value) => EmitSetWord(0, value);
-string EmitSetWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block2*)@this" : "*(Block2*)(@this + " + offset + ")", value);
+string EmitSetWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block2*)@this" : "*(Block2*)(@this + " + offset + ")", value ?? "0");
 
 string EmitSetDWord(int offset) => EmitSetDWord(offset, null);
 string EmitSetDWord(string value) => EmitSetDWord(0, value);
-string EmitSetDWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block4*)@this" : "*(Block4*)(@this + " + offset + ")", value);
+string EmitSetDWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block4*)@this" : "*(Block4*)(@this + " + offset + ")", value ?? "0");
 
 string EmitSetQWord(int offset) => EmitSetQWord(offset, null);
 string EmitSetQWord(string value) => EmitSetQWord(0, value);
-string EmitSetQWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block8*)@this" : "*(Block8*)(@this + " + offset + ")", value);
+string EmitSetQWord(int offset, string value) => string.Format("{0} = {1};", offset == 0 ? "*(Block8*)@this" : "*(Block8*)(@this + " + offset + ")", value ?? "0");
 
 IEnumerable<string> EmitSetBytes(int count) => EmitSetBytes(count, null);
 IEnumerable<string> EmitSetBytes(int count, string value) {
