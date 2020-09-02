@@ -1798,6 +1798,16 @@ namespace System.Drawing {
       return result;
     }
 
+    public static Bitmap Resize(this Bitmap @this, int width, int height,InterpolationMode mode=InterpolationMode.Bicubic) {
+      var result = new Bitmap(width, height,@this.PixelFormat);
+      using (var graphics = Graphics.FromImage(result)) {
+        graphics.CompositingMode = CompositingMode.SourceCopy;
+        graphics.InterpolationMode = mode;
+        graphics.DrawImage(@this,new Rectangle(Point.Empty,result.Size), new Rectangle(Point.Empty,@this.Size),GraphicsUnit.Pixel);
+      }
+      return result;
+    }
+
   }
 }
  
