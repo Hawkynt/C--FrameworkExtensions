@@ -245,18 +245,16 @@ namespace System.Drawing {
       }
 
       public void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth) {
-        var i = 0;
-        
-        for (;i < lineWidth; ++i)
-          this.DrawHorizontalLine(x, y + i, width, color);
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
 
-        for (; i < y + height - lineWidth; ++i) {
-          this.DrawHorizontalLine(x, y + i, lineWidth, color);
-          this.DrawHorizontalLine(x + width - lineWidth, y + i, lineWidth, color);
+        for (var i = 0; i < height - 2 * lineWidth; ++i, ++y) {
+          this.DrawHorizontalLine(x, y, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y, lineWidth, color);
         }
 
-        for (; i < lineWidth; ++i)
-          this.DrawHorizontalLine(x, y + i, width, color);
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
       }
 
       public void DrawRectangle(Rectangle rect, Color color, int lineWidth) {
