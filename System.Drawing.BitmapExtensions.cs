@@ -74,9 +74,11 @@ namespace System.Drawing {
       void DrawRectangle(Rectangle rect, Color color);
       void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth);
       void DrawRectangle(Rectangle rect, Color color, int lineWidth);
+
       void FillRectangle(int x, int y, int width, int height, Color color);
+      void FillRectangle(Point p, Size size, Color color);
       void FillRectangle(Rectangle rect, Color color);
-      
+      // TODO: FillRectangleChecked, FillRectangleUnchecked
 
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void CopyFrom(IBitmapLocker other);
@@ -275,12 +277,8 @@ namespace System.Drawing {
           this.DrawHorizontalLine(x, y++, width, color);
       }
 
-      public void FillRectangle(Rectangle rect, Color color) {
-        if (rect.Width < 1 || rect.Height < 1)
-          return;
-
-        this.FillRectangle(rect.X,rect.Y,rect.Width,rect.Height,color);
-      }
+      public void FillRectangle(Rectangle rect, Color color) => this.FillRectangle(rect.X,rect.Y,rect.Width,rect.Height,color);
+      public void FillRectangle(Point p, Size size, Color color) => this.FillRectangle(p.X, p.Y, size.Width, size.Height, color);
 
       private void _FillRectangleNaiive(int x, int y, int width, int height, Color color) {
         do {
@@ -376,9 +374,9 @@ namespace System.Drawing {
       }
 
       public virtual void FillRectangle(int x,int y, int width,int height, Color color) {
-        Debug.Assert(width > 0);
-        Debug.Assert(height > 0);
-        
+        if(!this._FixRectangleParametersToBeInbounds(ref x, ref y, ref width, ref height))
+          return;
+
         if (height > 1 && width>=8 && width * height >= 512) {
           var bytesPerPixel = this._BytesPerPixel;
           if (bytesPerPixel > 0) {
@@ -832,9 +830,35 @@ namespace System.Drawing {
 
         return true;
       }
-      
+
+      private bool _FixRectangleParametersToBeInbounds(ref int xs, ref int ys, ref int width, ref int height) {
+        if (xs < 0) {
+          width += xs;
+          xs = -xs;
+        }
+
+        if (ys < 0) {
+          height += ys;
+          ys = -ys;
+        }
+
+        if (xs + width > this.Width)
+          width = this.Width - xs;
+
+        if (ys + height > this.Height)
+          height = this.Height - ys;
+
+        if (width < 1)
+          return false;
+
+        if (height < 1)
+          return false;
+
+        return true;
+      }
+
       #region lines
-      
+
       protected virtual void _DrawHorizontalLine(int x, int y, int count, Color color) {
         do {
           // Duff's device
