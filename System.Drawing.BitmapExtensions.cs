@@ -72,6 +72,8 @@ namespace System.Drawing {
 
       void DrawRectangle(int x,int y,int width,int height, Color color);
       void DrawRectangle(Rectangle rect, Color color);
+      void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth);
+      void DrawRectangle(Rectangle rect, Color color, int lineWidth);
       void FillRectangle(int x, int y, int width, int height, Color color);
       void FillRectangle(Rectangle rect, Color color);
       
@@ -240,6 +242,39 @@ namespace System.Drawing {
         count = rect.Bottom - rect.Top - 2;
         this.DrawVerticalLine(rect.Left, rect.Top + 1, count, color);
         this.DrawVerticalLine(rect.Right, rect.Top + 1, count, color);
+      }
+
+      public void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth) {
+        var i = 0;
+        
+        for (;i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y + i, width, color);
+
+        for (; i < y + height - lineWidth; ++i) {
+          this.DrawHorizontalLine(x, y + i, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y + i, lineWidth, color);
+        }
+
+        for (; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y + i, width, color);
+      }
+
+      public void DrawRectangle(Rectangle rect, Color color, int lineWidth) {
+        var x = rect.X;
+        var y = rect.Y;
+        var width = rect.Width;
+        var height = rect.Height;
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+
+        for (var i = 0; i < height - 2 * lineWidth; ++i, ++y) {
+          this.DrawHorizontalLine(x, y, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y, lineWidth, color);
+        }
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
       }
 
       public void FillRectangle(Rectangle rect, Color color) {
