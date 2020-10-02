@@ -2960,6 +2960,10 @@ namespace System {
 #if !MONO
     [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
     private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
+
+    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
+    private static extern void __MemoryFill(IntPtr dst, int value, int count);
+    private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
 #endif
 
     private static void _FillWithQWords(IntPtr source, ref int offset, int count, Block8 value) {

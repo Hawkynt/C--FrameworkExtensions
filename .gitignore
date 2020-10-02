@@ -296,3 +296,5 @@ __pycache__/
 /System.TimeSpanExtensions.cs
 /System.ArrayExtensions.FastBlocks.cs
 /System.Drawing.PointExtensions.cs
+System.Drawing.PointExtensions1.cs
+System.ActionExtensions.cs
