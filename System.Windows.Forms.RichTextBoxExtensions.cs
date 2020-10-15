@@ -20,6 +20,7 @@
 #endregion
 using System.Diagnostics.Contracts;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using DrawingSize = System.Drawing.Size;
 
@@ -103,10 +104,27 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="this">This TextBox.</param>
     /// <param name="text">The text.</param>
-    public static void AppendTextAndScroll(this RichTextBox @this, string text) {
+    /// <param name="color">The text color</param>
+    public static void AppendTextAndScroll(this RichTextBox @this, string text, Color? color = null) {
       Contract.Requires(@this != null);
-      @this.AppendText(text ?? string.Empty);
+
+      if (text.IsNullOrEmpty())
+        return;
+
+      AppendText(@this, text, color);
+
+      //TODO: race condition, crashes sometimes
       @this.ScrollToEnd();
+    }
+
+    public static void AppendText(this RichTextBox @this, string text, Color? color = null) {
+      @this.SelectionStart = @this.TextLength;
+      @this.SelectionLength = 0;
+
+      @this.SelectionColor = color ?? @this.ForeColor;
+
+      @this.AppendText(text);
+      @this.SelectionColor = @this.ForeColor;
     }
 
     /// <summary>
@@ -123,7 +141,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Changes the graphicals props of a certain RTB section.
+    /// Changes the graphic props of a certain RTB section.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     /// <param name="start">The start.</param>
@@ -141,7 +159,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Resets the graphicals props of a certain RTB section.
+    /// Resets the graphic props of a certain RTB section.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     /// <param name="start">The start.</param>
@@ -149,13 +167,13 @@ namespace System.Windows.Forms {
     public static void ResetSectionStyle(this RichTextBox @this, int start, int length) => @this.ChangeSectionStyle(start, length, @this.ForeColor, @this.BackColor, @this.Font);
 
     /// <summary>
-    /// Resets the graphicals props of the whole RTB.
+    /// Resets the graphic props of the whole RTB.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     public static void ResetStyle(this RichTextBox @this) => @this.ChangeSectionStyle(0, @this.TextLength, @this.ForeColor, @this.BackColor, @this.Font);
 
     /// <summary>
-    /// Changes the graphicals props of a certain RTB section.
+    /// Changes the graphic props of a certain RTB section.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     /// <param name="start">The start.</param>
@@ -167,7 +185,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Changes the graphicals props of a certain RTB section.
+    /// Changes the graphic props of a certain RTB section.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     /// <param name="start">The start.</param>
@@ -179,7 +197,7 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Changes the graphicals props of a certain RTB section.
+    /// Changes the graphic props of a certain RTB section.
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     /// <param name="start">The start.</param>
@@ -255,6 +273,20 @@ namespace System.Windows.Forms {
             graphics.ReleaseHdc();
         }
       }
+    }
+
+    public static void KeepLastLines(this RichTextBox @this, int count) {
+      var lines = @this.Lines;
+      var linesLength = lines.Length - 1;
+      var firstLineStillStanding = linesLength - count;
+      if (firstLineStillStanding <= 0)
+        return;
+
+      var position = lines.Take(firstLineStillStanding).Sum(l => l.Length + 2);
+      @this.Select(0,position - 1);
+      @this.SelectedText = string.Empty;
+      @this.SelectionStart = @this.TextLength;
+      @this.SelectionLength = 0;
     }
 
   }
