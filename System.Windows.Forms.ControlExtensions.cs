@@ -565,6 +565,25 @@ namespace System.Windows.Forms {
     public static bool IsNullOrDisposed(this Control @this) => @this == null || @this.IsDisposed;
 
     /// <summary>
+    /// enables double buffering on the given control.
+    /// </summary>
+    /// <param name="this">The control</param>
+    public static void EnableDoubleBuffering(this Control @this) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      if (SystemInformation.TerminalServerSession)
+        return;
+
+      var controlType = @this.GetType();
+      var pi = controlType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+      if (pi == null)
+        return;
+
+      pi.SetValue(@this, true, null);
+    }
+
+    /// <summary>
     /// Tries to duplicate the given control.
     /// </summary>
     /// <param name="this">This Control.</param>
@@ -838,5 +857,106 @@ namespace System.Windows.Forms {
       throw new NotSupportedException();
 
     }
+
+    private static void _AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType)
+      where TControl : Control {
+
+      const string excMessage = "Must be an expression like :\r\n"
+        + "(control, source) => control.propertyName == source.dataMember\r\n"
+        + "(control, source) => control.propertyName == (type)source.dataMember\r\n"
+        + "(control, source) => control.propertyName == source.dataMember.ToString()\r\n";
+
+      if (!(expression.Body is BinaryExpression body) || body.NodeType != ExpressionType.Equal)
+        throw new ArgumentException(excMessage);
+
+      string propertyName;
+      switch (body.Left) {
+        case MemberExpression m: {
+            if (!(m.Expression is ParameterExpression p) || p.Type != controlType)
+              throw new ArgumentException(excMessage);
+
+            propertyName = m.Member.Name;
+            break;
+          }
+
+        case UnaryExpression convert: {
+            if (
+              convert.NodeType != ExpressionType.Convert
+              || !(convert.Operand is MemberExpression m)
+              || !(m.Expression is ParameterExpression p)
+              || p.Type != controlType
+            )
+              throw new ArgumentException(excMessage);
+
+            propertyName = m.Member.Name;
+            break;
+          }
+        default:
+          throw new ArgumentException(excMessage);
+      }
+
+      string dataMember;
+      switch (body.Right) {
+        case MemberExpression m: {
+          if (!(m.Expression is ParameterExpression p) || p.Type != sourceType)
+            throw new ArgumentException(excMessage);
+
+          dataMember = m.Member.Name;
+          break;
+        }
+
+        case UnaryExpression convert when convert.NodeType==ExpressionType.Convert: {
+          if (
+            !(convert.Operand is MemberExpression m)
+            || !(m.Expression is ParameterExpression p)
+            || p.Type != sourceType
+          )
+            throw new ArgumentException(excMessage);
+
+          dataMember = m.Member.Name;
+          break;
+        }
+
+        case MethodCallExpression c when c.Method.Name == "ToString" && c.Arguments.Count==0: {
+          if (
+            !(c.Object is MemberExpression m) 
+            || !(m.Expression is ParameterExpression p) 
+            || p.Type != sourceType
+          )
+            throw new ArgumentException(excMessage);
+          
+          dataMember = m.Member.Name;
+          break;
+        }
+
+        default:
+          throw new ArgumentException(excMessage);
+      }
+      @this.DataBindings.Add(new Binding(propertyName, source, dataMember, true) { DataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged });
+    }
+
+    public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression) where TControl : Control
+      => _AddBinding(@this, source, expression, @this.GetType(), source.GetType())
+    ;
+
+    public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression) where TControl : Control
+      => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource))
+    ;
+
+    #region to make life easier
+
+    public static void AddBinding<TSource>(this Label @this, object source, Expression<Func<Label, TSource, bool>> expression) => AddBinding<Label, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this CheckBox @this, object source, Expression<Func<CheckBox, TSource, bool>> expression) => AddBinding<CheckBox, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this TextBox @this, object source, Expression<Func<TextBox, TSource, bool>> expression) => AddBinding<TextBox, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this NumericUpDown @this, object source, Expression<Func<NumericUpDown, TSource, bool>> expression) => AddBinding<NumericUpDown, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this RadioButton @this, object source, Expression<Func<RadioButton, TSource, bool>> expression) => AddBinding<RadioButton, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this Button @this, object source, Expression<Func<Button, TSource, bool>> expression) => AddBinding<Button, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this GroupBox @this, object source, Expression<Func<GroupBox, TSource, bool>> expression) => AddBinding<GroupBox, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this ComboBox @this, object source, Expression<Func<ComboBox, TSource, bool>> expression) => AddBinding<ComboBox, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this DateTimePicker @this, object source, Expression<Func<DateTimePicker, TSource, bool>> expression) => AddBinding<DateTimePicker, TSource>(@this, source, expression);
+
+    #endregion
+
+
   }
 }
