@@ -315,7 +315,7 @@ namespace System {
       public IntPtr AddrOfPinnedObject() => this.handle.AddrOfPinnedObject();
       private void _Free() => this.handle.Free();
 
-    #region Properties
+      #region Properties
 
       public TValue Target {
         get => (TValue)this.handle.Target;
@@ -324,9 +324,9 @@ namespace System {
 
       private bool _IsAllocated => this.handle.IsAllocated;
 
-    #endregion
+      #endregion
 
-    #region DisposePattern
+      #region DisposePattern
 
       private void Dispose(bool disposing) {
         if (disposing && this._IsAllocated)
@@ -338,7 +338,7 @@ namespace System {
       public void Dispose() => this.Dispose(true);
       ~DisposableGCHandle() => this.Dispose(false);
 
-    #endregion
+      #endregion
 
     }
 
@@ -349,16 +349,7 @@ namespace System {
 
 #endif
 
-    #endregion
-
-#if !MONO
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
-    private static extern void _MemoryCopy(IntPtr dst, IntPtr src, int count);
-
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
-    private static extern void __MemoryFill(IntPtr dst, int value, int count);
-    private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
-#endif
+#endregion
 
     private const int _INDEX_WHEN_NOT_FOUND = -1;
 
@@ -2965,6 +2956,15 @@ namespace System {
       offset <<= 3;
       _FillWithQWords(source, ref offset, count, value);
     }
+
+#if !MONO
+    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
+    private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
+
+    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
+    private static extern void __MemoryFill(IntPtr dst, int value, int count);
+    private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
+#endif
 
     private static void _FillWithQWords(IntPtr source, ref int offset, int count, Block8 value) {
       var v = (long)value;
