@@ -29,7 +29,7 @@ using System.Runtime.Serialization;
 namespace System.Collections.Generic {
   [Serializable]
   [DebuggerDisplay("Count = {Count}"), DebuggerTypeProxy(typeof(DictionaryDebugView<,>))]
-  public class BiDictionary<TFirst, TSecond> :
+  internal class BiDictionary<TFirst, TSecond> :
     IDictionary<TFirst, TSecond>,
 #if NET45
     IReadOnlyDictionary<TFirst, TSecond>,
