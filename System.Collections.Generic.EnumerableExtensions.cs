@@ -30,6 +30,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 #endif
 using System.Text;
+using System.Threading;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
@@ -92,6 +93,35 @@ namespace System.Collections.Generic {
     }
 
     #endregion
+
+    /// <summary>
+    /// Modifies the resultset to include filtering based on the given query string.
+    /// Multiple filters may be present, split by whitespaces, combined with AND.
+    /// </summary>
+    /// <typeparam name="TRow">The type of rows</typeparam>
+    /// <param name="this">This IEnumerable</param>
+    /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white")</param>
+    /// <param name="selector">Which column of the record to filter</param>
+    public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> @this, Func<TRow, string> selector, string query) {
+      if (@this == null)
+        throw new ArgumentNullException(nameof(@this));
+      if (selector == null)
+        throw new ArgumentNullException(nameof(selector));
+
+      if (string.IsNullOrWhiteSpace(query))
+        return @this;
+
+      var results = @this;
+      // ReSharper disable once LoopCanBeConvertedToQuery
+      foreach (var filter in query.Trim().Split(' ')) {
+        if (string.IsNullOrWhiteSpace(filter))
+          continue;
+
+        results = results.Where(i => selector(i)?.Contains(filter) ?? false);
+      }
+
+      return results;
+    }
 
     /// <summary>
     /// Compares two arrays against each other.
@@ -1316,8 +1346,21 @@ namespace System.Collections.Generic {
       return result;
     }
 
-
-
+#if NET45
+    /// <summary>
+    /// Iterates through the given enumeration in a separate thread and executes an action for every item
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items in the IEnumerable</typeparam>
+    /// <param name="this">This IEnumerable</param>
+    /// <param name="action">the action performed for each element in the IEnumerable</param>
+    /// <returns>A awaitable task representing this action</returns>
+    public static async Task DoForEveryItemAsync<TItem>(this IEnumerable<TItem> @this, Action<TItem> action) {
+      await Task.Run(() => {
+        foreach (var item in @this)
+          action.Invoke(item);
+      });
+    }
+#endif
 
   }
 }
