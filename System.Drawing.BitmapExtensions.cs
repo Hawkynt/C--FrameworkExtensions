@@ -71,10 +71,23 @@ namespace System.Drawing {
       void DrawLine(Point a, Point b, Color color);
 
       void DrawRectangle(int x,int y,int width,int height, Color color);
+      void DrawRectangle(Point p, Size size, Color color);
       void DrawRectangle(Rectangle rect, Color color);
+      void DrawRectangleChecked(int x, int y, int width, int height, Color color);
+      void DrawRectangleChecked(Point p, Size size, Color color);
+      void DrawRectangleChecked(Rectangle rect, Color color);
+      void DrawRectangleUnchecked(int x, int y, int width, int height, Color color);
+      void DrawRectangleUnchecked(Point p, Size size, Color color);
+      void DrawRectangleUnchecked(Rectangle rect, Color color);
       void FillRectangle(int x, int y, int width, int height, Color color);
+      void FillRectangle(Point p, Size size, Color color);
       void FillRectangle(Rectangle rect, Color color);
-      
+      void FillRectangleChecked(int x, int y, int width, int height, Color color);
+      void FillRectangleChecked(Point p, Size size, Color color);
+      void FillRectangleChecked(Rectangle rect, Color color);
+      void FillRectangleUnchecked(int x, int y, int width, int height, Color color);
+      void FillRectangleUnchecked(Point p, Size size, Color color);
+      void FillRectangleUnchecked(Rectangle rect, Color color);
 
       void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0);
       void CopyFrom(IBitmapLocker other);
@@ -215,8 +228,7 @@ namespace System.Drawing {
 
       public abstract Color this[int x, int y] { get; set; }
 
-      public Color this[Point p]
-      {
+      public Color this[Point p] {
         get => this[p.X,p.Y];
         set => this[p.X,p.Y] = value;
       }
@@ -226,6 +238,36 @@ namespace System.Drawing {
       public void Clear(Color color) => this.FillRectangle(0, 0, this.Width, this.Height, color);
 
       public void DrawRectangle(int x, int y, int width,int height, Color color) {
+        if (!this._FixRectangleParameters(ref x, ref y, ref width, ref height))
+          return;
+
+        this.DrawRectangleUnchecked(x, y, width, height, color);
+      }
+
+      public void DrawRectangle(Point p, Size size, Color color)
+        => this.DrawRectangle(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void DrawRectangle(Rectangle rect, Color color) {
+        // TODO: fix params
+        this.DrawRectangleUnchecked(rect, color);
+      }
+
+      public void DrawRectangleChecked(int x, int y, int width, int height, Color color) {
+        this._CheckRectangleParameters(x, y, width, height);
+        this.DrawRectangleUnchecked(x, y, width, height, color);
+      }
+
+      public void DrawRectangleChecked(Point p, Size size, Color color)
+        => this.DrawRectangleChecked(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void DrawRectangleChecked(Rectangle rect, Color color) {
+        this._CheckRectangleParameters(rect.X, rect.Y, rect.Width, rect.Height);
+        this.DrawRectangleUnchecked(rect, color);
+      }
+
+      public void DrawRectangleUnchecked(int x, int y, int width, int height, Color color) {
         this.DrawHorizontalLine(x, y, width, color);
         this.DrawHorizontalLine(x, y + height - 1, width, color);
         height -= 2;
@@ -233,7 +275,12 @@ namespace System.Drawing {
         this.DrawVerticalLine(x+width-1, y + 1, height, color);
       }
 
-      public void DrawRectangle(Rectangle rect, Color color) {
+      public void DrawRectangleUnchecked(Point p, Size size, Color color)
+        => this.DrawRectangleUnchecked(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void DrawRectangleUnchecked(Rectangle rect, Color color) {
+        // TODO: why not use DrawRectangleUnchecked(int x, int y, int width, int height, Color color) for this?
         var count = rect.Width + 1;
         this.DrawHorizontalLine(rect.Left, rect.Top, count, color);
         this.DrawHorizontalLine(rect.Left, rect.Bottom, count, color);
@@ -242,42 +289,103 @@ namespace System.Drawing {
         this.DrawVerticalLine(rect.Right, rect.Top + 1, count, color);
       }
 
-      public void FillRectangle(Rectangle rect, Color color) {
-        if (rect.Width < 1 || rect.Height < 1)
+      public void FillRectangle(int x, int y, int width, int height, Color color) {
+        if (!this._FixRectangleParameters(ref x, ref y, ref width, ref height))
           return;
 
-        this.FillRectangle(rect.X,rect.Y,rect.Width,rect.Height,color);
+        this.FillRectangleUnchecked(x, y, width, height, color);
       }
+
+      public void FillRectangle(Point p, Size size, Color color)
+        => this.FillRectangle(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void FillRectangle(Rectangle rect, Color color)
+        => this.FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, color)
+      ;
+
+      public void FillRectangleChecked(int x, int y, int width, int height, Color color) {
+        this._CheckRectangleParameters(x, y, width, height);
+        this.FillRectangleUnchecked(x, y, width, height, color);
+      }
+
+      public void FillRectangleChecked(Point p, Size size, Color color)
+        => this.FillRectangleChecked(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void FillRectangleChecked(Rectangle rect, Color color)
+        => this.FillRectangleChecked(rect.X, rect.Y, rect.Width, rect.Height, color)
+      ;
+
+      public void FillRectangleUnchecked(int x, int y, int width, int height, Color color) {
+        if (height > 1 && width >= 8 && width * height >= 512) {
+          var bytesPerPixel = this._BytesPerPixel;
+          if (bytesPerPixel > 0) {
+            this._FillRectangleFast(x, y, width, height, color, bytesPerPixel);
+            return;
+          }
+        }
+        this._FillRectangleNaiive(x, y, width, height, color);
+      }
+
+      public void FillRectangleUnchecked(Point p, Size size, Color color)
+        => this.FillRectangleUnchecked(p.X, p.Y, size.Width, size.Height, color)
+      ;
+
+      public void FillRectangleUnchecked(Rectangle rect, Color color)
+        => this.FillRectangleUnchecked(rect.X, rect.Y, rect.Width, rect.Height, color)
+      ;
 
       private void _FillRectangleNaiive(int x, int y, int width, int height, Color color) {
         do {
 
           // Duff's device
           switch (height) {
-            case 0: goto height0;
-            case 1: goto height1;
-            case 2: goto height2;
-            case 3: goto height3;
-            case 4: goto height4;
-            case 5: goto height5;
-            case 6: goto height6;
-            case 7: goto height7;
-            default: goto heightAbove7;
+            case 0:
+              goto height0;
+            case 1:
+              goto height1;
+            case 2:
+              goto height2;
+            case 3:
+              goto height3;
+            case 4:
+              goto height4;
+            case 5:
+              goto height5;
+            case 6:
+              goto height6;
+            case 7:
+              goto height7;
+            case 8:
+              goto height8;
+            default:
+              goto heightAbove8;
           }
 
-          height7: this._DrawHorizontalLine(x, y++, width, color);
-          height6: this._DrawHorizontalLine(x, y++, width, color);
-          height5: this._DrawHorizontalLine(x, y++, width, color);
-          height4: this._DrawHorizontalLine(x, y++, width, color);
-          height3: this._DrawHorizontalLine(x, y++, width, color);
-          height2: this._DrawHorizontalLine(x, y++, width, color);
-          height1: this._DrawHorizontalLine(x, y, width, color);
-          height0: return;
-          heightAbove7:
+          height8:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height7:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height6:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height5:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height4:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height3:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height2:
+          this._DrawHorizontalLine(x, y++, width, color);
+          height1:
+          this._DrawHorizontalLine(x, y, width, color);
+          height0:
+          return;
+          heightAbove8:
 
           // loop unrolled 8-times
           var heightOcts = height >> 3;
-          height &= 7;
+          height &= 0b111;
 
           do {
             this._DrawHorizontalLine(x, y++, width, color);
@@ -304,56 +412,113 @@ namespace System.Drawing {
 
           // Duff's device
           switch (height) {
-            case 0: goto height0;
-            case 1: goto height1;
-            case 2: goto height2;
-            case 3: goto height3;
-            case 4: goto height4;
-            case 5: goto height5;
-            case 6: goto height6;
-            case 7: goto height7;
-            default: goto heightAbove7;
+            case 0:
+              goto height0;
+            case 1:
+              goto height1;
+            case 2:
+              goto height2;
+            case 3:
+              goto height3;
+            case 4:
+              goto height4;
+            case 5:
+              goto height5;
+            case 6:
+              goto height6;
+            case 7:
+              goto height7;
+            case 8:
+              goto height8;
+            case 9:
+              goto height9;
+            case 10:
+              goto height10;
+            case 11:
+              goto height11;
+            case 12:
+              goto height12;
+            case 13:
+              goto height13;
+            case 14:
+              goto height14;
+            case 15:
+              goto height15;
+            default:
+              goto heightAbove15;
           }
 
-          height7: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height6: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height5: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height4: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height3: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height2: _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-          height1: _memoryCopyCall(startOffset, offset, byteCount);
-          height0: return;
-          heightAbove7:
+          height15:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height14:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height13:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height12:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height11:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height10:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height9:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height8:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height7:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height6:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height5:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height4:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height3:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height2:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          offset += stride;
+          height1:
+          _memoryCopyCall(startOffset, offset, byteCount);
+          height0:
+          return;
+          heightAbove15:
 
           // loop unrolled 8-times
           var heightOcts = height >> 3;
-          height &= 7;
+          height &= 0b111;
 
           do {
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
-            _memoryCopyCall(startOffset, offset, byteCount); offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
+            _memoryCopyCall(startOffset, offset, byteCount);
+            offset += stride;
           } while (--heightOcts > 0);
         } while (true);
-      }
-
-      public virtual void FillRectangle(int x,int y, int width,int height, Color color) {
-        Debug.Assert(width > 0);
-        Debug.Assert(height > 0);
-        
-        if (height > 1 && width>=8 && width * height >= 512) {
-          var bytesPerPixel = this._BytesPerPixel;
-          if (bytesPerPixel > 0) {
-            this._FillRectangleFast(x, y, width, height, color, bytesPerPixel);
-            return;
-          }
-        }
-        this._FillRectangleNaiive(x,y,width,height,color);
       }
 
       #endregion
@@ -448,25 +613,54 @@ namespace System.Drawing {
         do {
           // handle all cases less than 8 lines - usind a Duff's device eliminating all jumps and loops except one
           switch (height) {
-            case 0: goto height0;
-            case 1: goto height1;
-            case 2: goto height2;
-            case 3: goto height3;
-            case 4: goto height4;
-            case 5: goto height5;
-            case 6: goto height6;
-            case 7: goto height7;
-            default: goto heightAbove7;
+            case 0:
+              goto height0;
+            case 1:
+              goto height1;
+            case 2:
+              goto height2;
+            case 3:
+              goto height3;
+            case 4:
+              goto height4;
+            case 5:
+              goto height5;
+            case 6:
+              goto height6;
+            case 7:
+              goto height7;
+            default:
+              goto heightAbove7;
           }
 
-          height7: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height6: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height5: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height4: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height3: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height2: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-          height1: _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); 
-          height0: return;
+          height7:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height6:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height5:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height4:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height3:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height2:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          yOffsetSource += sourceStride;
+          yOffsetTarget += targetStride;
+          height1:
+          _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+          height0:
+          return;
           heightAbove7:
 
           var heightOcts = height >> 3;
@@ -474,14 +668,30 @@ namespace System.Drawing {
 
           // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
           do {
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
-            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine); yOffsetSource += sourceStride; yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
+            _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+            yOffsetSource += sourceStride;
+            yOffsetTarget += targetStride;
           } while (--heightOcts > 0);
         } while (true);
       }
@@ -590,6 +800,10 @@ namespace System.Drawing {
       public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset) 
         => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height,distance.Width,distance.Height,offset.Width,offset.Height)
       ;
+
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target) {
+        throw new NotImplementedException();
+      }
 
       #endregion
 
@@ -730,6 +944,44 @@ namespace System.Drawing {
       #endregion
 
       [DebuggerHidden]
+      private void _CheckRectangleParameters(int x, int y, int width, int height) {
+        if (x < 0 || x >= this.Width)
+          throw new ArgumentOutOfRangeException(nameof(x));
+        if (y < 0 || y >= this.Height)
+          throw new ArgumentOutOfRangeException(nameof(y));
+        if (width < 0 || (x + width) > this.Width)
+          throw new ArgumentOutOfRangeException(nameof(width));
+        if (height < 0 || (y + height) > this.Height)
+          throw new ArgumentOutOfRangeException(nameof(height));
+      }
+
+      private bool _FixRectangleParameters(ref int x, ref int y, ref int width, ref int height) {
+        if (x < 0) {
+          width += x;
+          x = 0;
+        }
+
+        if (y < 0) {
+          height += y;
+          y = 0;
+        }
+
+        if (x >= this.Width)
+          return false;
+
+        if (y >= this.Height)
+          return false;
+
+        if (x + width > this.Width)
+          width = this.Width - x;
+
+        if (y + height > this.Height)
+          height = this.Height - y;
+
+        return width > 0 && height > 0;
+      }
+
+      [DebuggerHidden]
       private void _CheckCopyParameters(IBitmapLocker other, int xs, int ys, int width, int height, int xt, int yt) {
         if (other == null)
           throw new ArgumentNullException(nameof(other));
@@ -806,24 +1058,41 @@ namespace System.Drawing {
         do {
           // Duff's device
           switch (count) {
-            case 0: goto count0;
-            case 1: goto count1;
-            case 2: goto count2;
-            case 3: goto count3;
-            case 4: goto count4;
-            case 5: goto count5;
-            case 6: goto count6;
-            case 7: goto count7;
-            default: goto countAbove7;
+            case 0:
+              goto count0;
+            case 1:
+              goto count1;
+            case 2:
+              goto count2;
+            case 3:
+              goto count3;
+            case 4:
+              goto count4;
+            case 5:
+              goto count5;
+            case 6:
+              goto count6;
+            case 7:
+              goto count7;
+            default:
+              goto countAbove7;
           }
-          count7: this[x++, y] = color;
-          count6: this[x++, y] = color;
-          count5: this[x++, y] = color;
-          count4: this[x++, y] = color;
-          count3: this[x++, y] = color;
-          count2: this[x++, y] = color;
-          count1: this[x, y] = color;
-          count0: return;
+          count7:
+          this[x++, y] = color;
+          count6:
+          this[x++, y] = color;
+          count5:
+          this[x++, y] = color;
+          count4:
+          this[x++, y] = color;
+          count3:
+          this[x++, y] = color;
+          count2:
+          this[x++, y] = color;
+          count1:
+          this[x, y] = color;
+          count0:
+          return;
           countAbove7:
           
           // loop unroll
@@ -847,24 +1116,41 @@ namespace System.Drawing {
         do {
           // Duff's device
           switch (count) {
-            case 0: goto count0;
-            case 1: goto count1;
-            case 2: goto count2;
-            case 3: goto count3;
-            case 4: goto count4;
-            case 5: goto count5;
-            case 6: goto count6;
-            case 7: goto count7;
-            default: goto countAbove7;
+            case 0:
+              goto count0;
+            case 1:
+              goto count1;
+            case 2:
+              goto count2;
+            case 3:
+              goto count3;
+            case 4:
+              goto count4;
+            case 5:
+              goto count5;
+            case 6:
+              goto count6;
+            case 7:
+              goto count7;
+            default:
+              goto countAbove7;
           }
-          count7: this[x, y++] = color;
-          count6: this[x, y++] = color;
-          count5: this[x, y++] = color;
-          count4: this[x, y++] = color;
-          count3: this[x, y++] = color;
-          count2: this[x, y++] = color;
-          count1: this[x, y] = color;
-          count0: return;
+          count7:
+          this[x, y++] = color;
+          count6:
+          this[x, y++] = color;
+          count5:
+          this[x, y++] = color;
+          count4:
+          this[x, y++] = color;
+          count3:
+          this[x, y++] = color;
+          count2:
+          this[x, y++] = color;
+          count1:
+          this[x, y] = color;
+          count0:
+          return;
           countAbove7:
           
           // loop unroll
@@ -919,8 +1205,7 @@ namespace System.Drawing {
         this._DrawDiagonalLine(x0,y0,dx,dy,color);
       }
 
-      private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color)
-      {
+      private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color) {
         int incx, incy, pdx, pdy, ddx, ddy, deltaslowdirection, deltafastdirection;
 
         
@@ -936,17 +1221,14 @@ namespace System.Drawing {
         } else 
           incy = 1;
 
-        if (dx > dy)
-        {
+        if (dx > dy) {
           pdx = incx; 
           pdy = 0;
           ddx = incx; 
           ddy = incy;
           deltaslowdirection = dy; 
           deltafastdirection = dx;
-        }
-        else
-        {
+        } else {
           pdx = 0; 
           pdy = incy;
           ddx = incx;
@@ -960,17 +1242,13 @@ namespace System.Drawing {
         var err = deltafastdirection >>1;
         this[x,y]=color;
 
-        for (var t = 0; t < deltafastdirection; ++t)
-        {
+        for (var t = 0; t < deltafastdirection; ++t) {
           err -= deltaslowdirection;
-          if (err < 0)
-          {
+          if (err < 0) {
             err += deltafastdirection;
             x += ddx;
             y += ddy;
-          }
-          else
-          {
+          } else {
             x += pdx;
             y += pdy;
           }
@@ -989,18 +1267,15 @@ namespace System.Drawing {
         var runTo = Math.Max(dx, dy);
         dy = -dy;
         var epsilon = dx + dy;
-        for (var i = 0; i <= runTo; ++i)
-        {
+        for (var i = 0; i <= runTo; ++i) {
           this[x,y]=color;
           var epsilon2 = epsilon << 1;
-          if (epsilon2 > dy)
-          {
+          if (epsilon2 > dy) {
             epsilon += dy;
             x += xSign;
           }
 
-          if (epsilon2 < dx)
-          {
+          if (epsilon2 < dx) {
             epsilon += dx;
             y += ySign;
           }
@@ -1636,8 +1911,7 @@ namespace System.Drawing {
 
     public static MemoryCopyDelegate _memoryCopyCall = NativeMethods.MemoryCopy;
 
-    public static MemoryCopyDelegate MemoryCopyCall
-    {
+    public static MemoryCopyDelegate MemoryCopyCall {
       get => _memoryCopyCall;
       // ReSharper disable once LocalizableElement
       set => _memoryCopyCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
@@ -1645,8 +1919,7 @@ namespace System.Drawing {
 
     public static MemoryFillDelegate _memoryFillCall = NativeMethods.MemorySet;
 
-    public static MemoryFillDelegate MemoryFillCall
-    {
+    public static MemoryFillDelegate MemoryFillCall {
       get => _memoryFillCall;
       // ReSharper disable once LocalizableElement
       set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
