@@ -72,7 +72,6 @@ namespace System.Drawing {
 
       void DrawRectangle(int x, int y, int width, int height, Color color);
       void DrawRectangle(Point p, Size size, Color color);
-      void DrawRectangle(Rectangle rect, Color color, int lineWidth);
       void DrawRectangle(Rectangle rect, Color color);
       void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth);
       void DrawRectangleChecked(int x, int y, int width, int height, Color color);
