@@ -72,7 +72,7 @@ namespace System.Drawing {
 
       void DrawRectangle(int x, int y, int width, int height, Color color);
       void DrawRectangle(Point p, Size size, Color color);
-      void DrawRectangle(Rectangle rect, Color color, int lineWidth);
+      void DrawRectangleChecked(Rectangle rect, Color color, int lineWidth);
       void DrawRectangle(Rectangle rect, Color color);
       void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth);
       void DrawRectangleChecked(int x, int y, int width, int height, Color color);
@@ -304,7 +304,28 @@ namespace System.Drawing {
         this.DrawVerticalLine(rect.Right, rect.Top + 1, count, color);
       }
 
-      public void DrawRectangle(Rectangle rect, Color color, int lineWidth) {
+      public void DrawRectangleChecked(Rectangle rect, Color color, int lineWidth) {
+        var x = rect.X;
+        var y = rect.Y;
+        var width = rect.Width;
+        var height = rect.Height;
+
+        if (!this._FixRectangleParameters(ref x, ref y, ref width, ref height))
+          return;
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+
+        for (var i = 0; i < height - 2 * lineWidth; ++i, ++y) {
+          this.DrawHorizontalLine(x, y, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y, lineWidth, color);
+        }
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+      }
+
+      public void DrawRectangleUnChecked(Rectangle rect, Color color, int lineWidth) {
         var x = rect.X;
         var y = rect.Y;
         var width = rect.Width;
