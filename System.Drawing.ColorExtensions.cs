@@ -228,6 +228,15 @@ namespace System.Drawing {
       return _ColorLookupTable.TryGetValue(@this.ToArgb(), out var color) ? color.Name : null;
     }
 
+    /// <summary>
+    /// Converts this color to its corresponding hex-string.
+    /// </summary>
+    /// <param name="this">This Color.</param>
+    /// <returns>The hex-string.</returns>
+    public static string ToHex(this Color @this) =>
+      "#" + @this.R.ToString("X2") + @this.G.ToString("X2") + @this.B.ToString("X2")
+    ;
+
     #region private methods
 #if NET45
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
