@@ -22,7 +22,11 @@
 #if NET40
 using System.Diagnostics.Contracts;
 #endif
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
+
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -33,18 +37,162 @@ namespace System.IO {
 
     #region nested types
 
+    private class TemporaryTokenCleaner {
+
+      #region entries
+
+      [DebuggerDisplay("{" + nameof(_DebuggerDisplay) + "}")]
+      private class Entry {
+        private long _timeToKill;
+        public Entry(FileSystemInfo target) => this.Target = target;
+        public FileSystemInfo Target { get; }
+        public TimeSpan MinimumLifeTimeLeft {
+          get => TimeSpan.FromSeconds(this.TicksLeft / (double)Stopwatch.Frequency);
+          set => this._timeToKill = (long)(Stopwatch.GetTimestamp() + value.TotalSeconds * Stopwatch.Frequency);
+        }
+
+        public long TicksLeft => this._timeToKill == 0 ? 0L : Math.Max(0, this._timeToKill - Stopwatch.GetTimestamp());
+        public bool IsAlive { get; set; }
+
+        private string _DebuggerDisplay => $"{(this.Target is FileInfo ? "File" : this.Target is DirectoryInfo ? "Directory" : "???")} {this.Target.FullName} ({(this.IsAlive ? "alive" : "dead")}, {this.MinimumLifeTimeLeft:g} time left)";
+
+      }
+
+      private readonly ConcurrentDictionary<string, Entry> _entries = new ConcurrentDictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
+
+      #endregion
+
+      #region Singleton
+
+      private static readonly Lazy<TemporaryTokenCleaner> _instance;
+      public static TemporaryTokenCleaner Instance => _instance.Value;
+      static TemporaryTokenCleaner() => _instance = new Lazy<TemporaryTokenCleaner>(_Factory);
+      private static TemporaryTokenCleaner _Factory() => new TemporaryTokenCleaner();
+
+      #endregion
+
+      public TimeSpan GetTimeLeft(FileSystemInfo target) => this._entries.TryGetValue(target.FullName, out var result)
+        ? result.MinimumLifeTimeLeft
+        : TimeSpan.Zero
+      ;
+
+      public void SetTimeLeft(FileSystemInfo target, TimeSpan value) {
+        if (this._entries.TryGetValue(target.FullName, out var entry))
+          entry.MinimumLifeTimeLeft = value;
+      }
+
+      public void Add(FileSystemInfo target) => this._entries.GetOrAdd(target.FullName, _ => new Entry(target)).IsAlive = true;
+
+      public void Delete(FileSystemInfo target) {
+        if (!this._entries.TryGetValue(target.FullName, out var entry))
+          return;
+
+        entry.IsAlive = false;
+        this._ProcessEntry(entry);
+      }
+
+      private void _ProcessEntry(Entry entry) {
+        if (entry.TicksLeft > 0)
+          return;
+
+        var target = entry.Target;
+        try {
+          switch (target) {
+            case FileInfo file:
+              file.Refresh();
+              if (file.Exists) {
+                file.Delete();
+                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target.FullName} sucessfully deleted");
+              } else
+                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target.FullName} is already gone");
+              break;
+            case DirectoryInfo directory:
+              directory.Refresh();
+              if (directory.Exists) {
+                directory.Delete(true);
+                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target.FullName} sucessfully deleted");
+              } else
+                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target.FullName} is already gone");
+              break;
+            default:
+              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Unknown FileSystemInfo {target.FullName}");
+              return;
+          }
+
+          this._entries.TryRemove(target.FullName, out _);
+        } catch (Exception e) {
+          Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Unable to delete {target.FullName}, {e.Message} - registering handler for later deletion");
+          this._RegisterDeleteHandler();
+        }
+      }
+
+
+      #region make sure stuff gets deleted - even if it doesn't want to
+
+      private const int _STATE_YES = -1;
+      private const int _STATE_NO = 0;
+      private int _isRegistered = _STATE_NO;
+      private static readonly TimeSpan _CLEANER_TIMEOUT = TimeSpan.FromSeconds(30);
+      // ReSharper disable once NotAccessedField.Local
+      private Timer _cleaner;
+
+      private void _RegisterDeleteHandler() {
+        if (Interlocked.CompareExchange(ref this._isRegistered, _STATE_YES, _STATE_NO) != _STATE_NO) {
+          Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Handler already registered");
+          return;
+        }
+
+        // TODO: we need a way to ensure stuff is deleted even when a debugger kills our process - eg external batch or whatever
+        AppDomain.CurrentDomain.ProcessExit += this.CurrentDomain_ProcessExit;
+        var timer = this._cleaner = new Timer(this.Timer_Elapsed);
+        timer.Change(_CLEANER_TIMEOUT, _CLEANER_TIMEOUT);
+      }
+
+      private void Timer_Elapsed(object state) {
+        Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Timer elapsed - deleting what's needed to");
+        this._DeleteLoop(false);
+      }
+
+      private void CurrentDomain_ProcessExit(object _, EventArgs __) {
+        Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Shutdown detected - deleting what's still left");
+        this._DeleteLoop(true);
+      }
+
+      private void _DeleteLoop(bool ignoreAliveFlag) {
+        if (ignoreAliveFlag)
+          foreach (var item in this._entries.Values)
+            this._ProcessEntry(item);
+        else
+          foreach (var item in this._entries.Values)
+            if (!item.IsAlive)
+              this._ProcessEntry(item);
+      }
+
+      #endregion
+
+    }
+
     internal interface ITemporaryFileToken : IDisposable {
       FileInfo File { get; }
+      TimeSpan MinimumLifetimeLeft { get; set; }
     }
 
     internal interface ITemporaryDirectoryToken : IDisposable {
       DirectoryInfo Directory { get; }
+      TimeSpan MinimumLifetimeLeft { get; set; }
     }
 
     private class TemporaryFileToken : ITemporaryFileToken {
       private bool _isDisposed;
       public FileInfo File { get; }
+
+      public TimeSpan MinimumLifetimeLeft {
+        get => TemporaryTokenCleaner.Instance.GetTimeLeft(this.File);
+        set => TemporaryTokenCleaner.Instance.SetTimeLeft(this.File, value);
+      }
+
       public TemporaryFileToken(FileInfo file) {
+        TemporaryTokenCleaner.Instance.Add(file);
         this.File = file;
       }
 
@@ -53,15 +201,7 @@ namespace System.IO {
           return;
 
         this._isDisposed = true;
-        try {
-          var file = this.File;
-          file.Refresh();
-          if (file.Exists)
-            file.Delete();
-        } catch {
-          ;
-        }
-
+        TemporaryTokenCleaner.Instance.Delete(this.File);
         GC.SuppressFinalize(this);
       }
 
@@ -73,7 +213,14 @@ namespace System.IO {
     private class TemporaryDirectoryToken : ITemporaryDirectoryToken {
       private bool _isDisposed;
       public DirectoryInfo Directory { get; }
+
+      public TimeSpan MinimumLifetimeLeft {
+        get => TemporaryTokenCleaner.Instance.GetTimeLeft(this.Directory);
+        set => TemporaryTokenCleaner.Instance.SetTimeLeft(this.Directory, value);
+      }
+
       public TemporaryDirectoryToken(DirectoryInfo directory) {
+        TemporaryTokenCleaner.Instance.Add(directory);
         this.Directory = directory;
       }
 
@@ -82,15 +229,7 @@ namespace System.IO {
           return;
 
         this._isDisposed = true;
-        try {
-          var directory = this.Directory;
-          directory.Refresh();
-          if (directory.Exists)
-            directory.Delete(true);
-        } catch {
-          ;
-        }
-
+        TemporaryTokenCleaner.Instance.Delete(this.Directory);
         GC.SuppressFinalize(this);
       }
 
@@ -135,7 +274,7 @@ namespace System.IO {
 
       // use fully random name if none is given
       if (name == null)
-        return (Path.GetTempFileName());
+        return Path.GetTempFileName();
 
       var path = baseDirectory ?? Path.GetTempPath();
       name = Path.GetFileName(name);
@@ -145,15 +284,15 @@ namespace System.IO {
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name
-      if (TryCreateFile(fullName))
-        return (fullName);
+      if (TryCreateFile(fullName, FileAttributes.NotContentIndexed | FileAttributes.Temporary))
+        return fullName;
 
       // otherwise, count
       var i = 1;
       var fileName = Path.GetFileNameWithoutExtension(name);
       var ext = Path.GetExtension(name);
       while (!TryCreateFile(fullName = Path.Combine(path, $"{fileName}.{++i}{ext}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
-      return (fullName);
+      return fullName;
     }
 
     /// <summary>
@@ -169,21 +308,26 @@ namespace System.IO {
       Contract.Requires(fileName != null);
 #endif
       if (File.Exists(fileName))
-        return (false);
+        return false;
 
       try {
         var fileHandle = File.Open(fileName, FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
-        File.SetAttributes(fileName, attributes);
-        return (true);
+        try {
+          File.SetAttributes(fileName, attributes);
+        } catch {
+          ; // swallow exception when attributes couldn't be set
+        }
+
+        return true;
       } catch (UnauthorizedAccessException) {
 
         // in case multiple threads try to create the same file, this gets fired
-        return (false);
+        return false;
       } catch (IOException) {
 
         // file already exists
-        return (false);
+        return false;
       }
     }
 
