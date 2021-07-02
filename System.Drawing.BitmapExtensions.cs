@@ -36,10 +36,10 @@ namespace System.Drawing {
   internal static partial class BitmapExtensions {
 
     #region nested types
-    
+
     // ReSharper disable once PartialTypeWithSinglePart
     private static partial class NativeMethods {
-      
+
       [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
       private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
 
@@ -49,7 +49,7 @@ namespace System.Drawing {
       public static void MemoryCopy(IntPtr source, IntPtr target, int count)
         => _MemoryCopy(target, source, count)
       ;
-    
+
       public static void MemorySet(IntPtr source, byte value, int count)
         => _MemorySet(source, value, count)
       ;
@@ -70,8 +70,9 @@ namespace System.Drawing {
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a, Point b, Color color);
 
-      void DrawRectangle(int x,int y,int width,int height, Color color);
+      void DrawRectangle(int x, int y, int width, int height, Color color);
       void DrawRectangle(Point p, Size size, Color color);
+      void DrawRectangleChecked(Rectangle rect, Color color, int lineWidth);
       void DrawRectangle(Rectangle rect, Color color);
       void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth);
       void DrawRectangleChecked(int x, int y, int width, int height, Color color);
@@ -134,7 +135,7 @@ namespace System.Drawing {
       void BlendWithUnchecked(IBitmapLocker other, Rectangle source);
       void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target);
 
-      void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
+      void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
       void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
@@ -219,9 +220,9 @@ namespace System.Drawing {
         get {
           var firstColor = this[0, 0];
           for (var y = 0; y < this.BitmapData.Height; ++y)
-          for (var x = 0; x < this.BitmapData.Width; ++x)
-            if (this[x, y] != firstColor)
-              return false;
+            for (var x = 0; x < this.BitmapData.Width; ++x)
+              if (this[x, y] != firstColor)
+                return false;
 
           return true;
         }
@@ -230,15 +231,15 @@ namespace System.Drawing {
       public abstract Color this[int x, int y] { get; set; }
 
       public Color this[Point p] {
-        get => this[p.X,p.Y];
-        set => this[p.X,p.Y] = value;
+        get => this[p.X, p.Y];
+        set => this[p.X, p.Y] = value;
       }
 
       #region Rectangles
 
       public void Clear(Color color) => this.FillRectangle(0, 0, this.Width, this.Height, color);
 
-      public void DrawRectangle(int x, int y, int width,int height, Color color) {
+      public void DrawRectangle(int x, int y, int width, int height, Color color) {
         if (!this._FixRectangleParameters(ref x, ref y, ref width, ref height))
           return;
 
@@ -252,6 +253,19 @@ namespace System.Drawing {
       public void DrawRectangle(Rectangle rect, Color color) {
         // TODO: fix params
         this.DrawRectangleUnchecked(rect, color);
+      }
+
+      public void DrawRectangle(int x, int y, int width, int height, Color color, int lineWidth) {
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+
+        for (var i = 0; i < height - 2 * lineWidth; ++i, ++y) {
+          this.DrawHorizontalLine(x, y, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y, lineWidth, color);
+        }
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
       }
 
       public void DrawRectangleChecked(int x, int y, int width, int height, Color color) {
@@ -273,7 +287,7 @@ namespace System.Drawing {
         this.DrawHorizontalLine(x, y + height - 1, width, color);
         height -= 2;
         this.DrawVerticalLine(x, y + 1, height, color);
-        this.DrawVerticalLine(x+width-1, y + 1, height, color);
+        this.DrawVerticalLine(x + width - 1, y + 1, height, color);
       }
 
       public void DrawRectangleUnchecked(Point p, Size size, Color color)
@@ -290,7 +304,28 @@ namespace System.Drawing {
         this.DrawVerticalLine(rect.Right, rect.Top + 1, count, color);
       }
 
-      public void DrawRectangle(Rectangle rect, Color color, int lineWidth) {
+      public void DrawRectangleChecked(Rectangle rect, Color color, int lineWidth) {
+        var x = rect.X;
+        var y = rect.Y;
+        var width = rect.Width;
+        var height = rect.Height;
+
+        if (!this._FixRectangleParameters(ref x, ref y, ref width, ref height))
+          return;
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+
+        for (var i = 0; i < height - 2 * lineWidth; ++i, ++y) {
+          this.DrawHorizontalLine(x, y, lineWidth, color);
+          this.DrawHorizontalLine(x + width - lineWidth, y, lineWidth, color);
+        }
+
+        for (var i = 0; i < lineWidth; ++i)
+          this.DrawHorizontalLine(x, y++, width, color);
+      }
+
+      public void DrawRectangleUnChecked(Rectangle rect, Color color, int lineWidth) {
         var x = rect.X;
         var y = rect.Y;
         var width = rect.Width;
@@ -425,7 +460,7 @@ namespace System.Drawing {
         var byteCount = bytesPerPixel * width;
         var startOffset = bitmapData.Scan0 + (y * stride + x * bytesPerPixel);
         this._DrawHorizontalLine(x, y, width, color); // TODO: if line is long enough, draw part of it, than memory copy
-        var offset = startOffset+stride;
+        var offset = startOffset + stride;
         --height;
         do {
 
@@ -548,7 +583,7 @@ namespace System.Drawing {
         if (this._FixCopyParametersToBeInbounds(other, ref xs, ref ys, ref width, ref height, ref xt, ref yt))
           this.CopyFromUnchecked(other, xs, ys, width, height, xt, yt);
       }
-      
+
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -582,7 +617,7 @@ namespace System.Drawing {
 
       public void CopyFromChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         this._CheckCopyParameters(other, xs, ys, width, height, xt, yt);
-        this.CopyFromUnchecked(other,xs,ys,width,height,xt,yt);
+        this.CopyFromUnchecked(other, xs, ys, width, height, xt, yt);
       }
 
 #if NET45
@@ -608,17 +643,17 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFromChecked(IBitmapLocker other, Rectangle source) => this.CopyFromChecked(other,source.X,source.Y,source.Width,source.Height);
+      public void CopyFromChecked(IBitmapLocker other, Rectangle source) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height,target.X,target.Y);
+      public void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
 
       private void _CopyFromUncheckedNaiive(IBitmapLocker other, int xs, int ys, int width, int height, int xt, int yt) {
         for (var y = 0; y < height; ++ys, ++yt, ++y)
-        for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
-          this[xct, yt] = other[xcs, ys];
+          for (int x = 0, xcs = xs, xct = xt; x < width; ++xcs, ++xct, ++x)
+            this[xct, yt] = other[xcs, ys];
       }
 
       private static void _CopyFromUncheckedFast(int xs, int ys, int width, int height, int xt, int yt, BitmapData bitmapDataSource, BitmapData bitmapDataTarget, int bytesPerPixel) {
@@ -766,7 +801,7 @@ namespace System.Drawing {
 
       #region CopyFromGrid
 
-      public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0,int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
+      public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
         var sourceX = column * (width + dx) + offsetX;
         var sourceY = row * (height + dy) + offsetY;
         this.CopyFromChecked(other, sourceX, sourceY, width, height, targetX, targetY);
@@ -796,33 +831,29 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) 
-        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height,offset.Width, offset.Height, target.X, target.Y)
+      public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target)
+        => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height, target.X, target.Y)
       ;
 
       public Bitmap CopyFromGrid(int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0) {
         var result = new Bitmap(width, height);
         using (var target = result.Lock(ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb))
-          target.CopyFromGrid(this,column,row,width,height,dx,dy,offsetX,offsetY,0,0);
+          target.CopyFromGrid(this, column, row, width, height, dx, dy, offsetX, offsetY, 0, 0);
 
         return result;
       }
 
-      public Bitmap CopyFromGrid(Point tile, Size tileSize) 
+      public Bitmap CopyFromGrid(Point tile, Size tileSize)
         => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height)
       ;
 
-      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance) 
-        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height,distance.Width,distance.Height)
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance)
+        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height)
       ;
 
-      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset) 
-        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height,distance.Width,distance.Height,offset.Width,offset.Height)
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset)
+        => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height)
       ;
-
-      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target) {
-        throw new NotImplementedException();
-      }
 
       #endregion
 
@@ -862,7 +893,7 @@ namespace System.Drawing {
         if (this._FixCopyParametersToBeInbounds(other, ref xs, ref ys, ref width, ref height, ref xt, ref yt))
           this.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
       }
-      
+
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -871,17 +902,17 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other,Point target) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
+      public void BlendWithChecked(IBitmapLocker other, Point target) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other, Point source,Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height);
+      public void BlendWithChecked(IBitmapLocker other, Point source, Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other, Point source, Size size,Point target) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
+      public void BlendWithChecked(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -891,7 +922,7 @@ namespace System.Drawing {
 #if NET45
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      public void BlendWithChecked(IBitmapLocker other, Rectangle source,Point target) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
+      public void BlendWithChecked(IBitmapLocker other, Rectangle source, Point target) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
 
       public void BlendWithChecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         this._CheckCopyParameters(other, xs, ys, width, height, xt, yt);
@@ -930,34 +961,34 @@ namespace System.Drawing {
 
       public virtual void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         for (var y = ys; height > 0; ++y, ++yt, --height)
-        for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
-          var sourcePixel = this[xct, yt];
-          var otherPixel = other[x, y];
-          var alpha = otherPixel.A;
+          for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
+            var sourcePixel = this[xct, yt];
+            var otherPixel = other[x, y];
+            var alpha = otherPixel.A;
 
-          Color newPixel;
-          switch (alpha) {
-            case byte.MinValue:
-              newPixel = sourcePixel;
-              break;
-            case byte.MaxValue:
-              newPixel = otherPixel;
-              break;
-            default: {
-              var factor = 255 + alpha;
-              var r = sourcePixel.R * byte.MaxValue + otherPixel.R * alpha;
-              var g = sourcePixel.G * byte.MaxValue + otherPixel.G * alpha;
-              var b = sourcePixel.B * byte.MaxValue + otherPixel.B * alpha;
-              r /= factor;
-              g /= factor;
-              b /= factor;
-              newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
-              break;
+            Color newPixel;
+            switch (alpha) {
+              case byte.MinValue:
+                newPixel = sourcePixel;
+                break;
+              case byte.MaxValue:
+                newPixel = otherPixel;
+                break;
+              default: {
+                  var factor = 255 + alpha;
+                  var r = sourcePixel.R * byte.MaxValue + otherPixel.R * alpha;
+                  var g = sourcePixel.G * byte.MaxValue + otherPixel.G * alpha;
+                  var b = sourcePixel.B * byte.MaxValue + otherPixel.B * alpha;
+                  r /= factor;
+                  g /= factor;
+                  b /= factor;
+                  newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
+                  break;
+                }
             }
-          }
 
-          this[xct, yt] = newPixel;
-        }
+            this[xct, yt] = newPixel;
+          }
       }
 
       #endregion
@@ -1042,7 +1073,7 @@ namespace System.Drawing {
           height += yt;
           ys -= yt;
           yt = 0;
-        }        
+        }
 
         if (xs >= other.Width)
           return false;
@@ -1070,9 +1101,9 @@ namespace System.Drawing {
 
         return true;
       }
-      
+
       #region lines
-      
+
       protected virtual void _DrawHorizontalLine(int x, int y, int count, Color color) {
         do {
           // Duff's device
@@ -1113,11 +1144,11 @@ namespace System.Drawing {
           count0:
           return;
           countAbove7:
-          
+
           // loop unroll
           var countOcts = count >> 3;
           count &= 7;
-          
+
           do {
             this[x++, y] = color;
             this[x++, y] = color;
@@ -1171,11 +1202,11 @@ namespace System.Drawing {
           count0:
           return;
           countAbove7:
-          
+
           // loop unroll
           var countOcts = count >> 3;
           count &= 7;
-          
+
           do {
             this[x, y++] = color;
             this[x, y++] = color;
@@ -1207,27 +1238,27 @@ namespace System.Drawing {
         else
           this._DrawVerticalLine(x, y, count, color);
       }
-      
-      public void DrawLine(int x0,int y0,int x1,int y1, Color color) {
+
+      public void DrawLine(int x0, int y0, int x1, int y1, Color color) {
         var dx = x1 - x0;
         var dy = y1 - y0;
         if (dx == 0) {
-          this.DrawVerticalLine(x0,y0,y1-y0,color);
+          this.DrawVerticalLine(x0, y0, y1 - y0, color);
           return;
         }
 
         if (dy == 0) {
-          this.DrawHorizontalLine(x0,y0,x1-x0,color);
+          this.DrawHorizontalLine(x0, y0, x1 - x0, color);
           return;
         }
 
-        this._DrawDiagonalLine(x0,y0,dx,dy,color);
+        this._DrawDiagonalLine(x0, y0, dx, dy, color);
       }
 
       private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color) {
         int incx, incy, pdx, pdy, ddx, ddy, deltaslowdirection, deltafastdirection;
 
-        
+
         if (dx < 0) {
           dx = -dx;
           incx = -1;
@@ -1237,18 +1268,18 @@ namespace System.Drawing {
         if (dy < 0) {
           dy = -dy;
           incy = -1;
-        } else 
+        } else
           incy = 1;
 
         if (dx > dy) {
-          pdx = incx; 
+          pdx = incx;
           pdy = 0;
-          ddx = incx; 
+          ddx = incx;
           ddy = incy;
-          deltaslowdirection = dy; 
+          deltaslowdirection = dy;
           deltafastdirection = dx;
         } else {
-          pdx = 0; 
+          pdx = 0;
           pdy = incy;
           ddx = incx;
           ddy = incy;
@@ -1258,8 +1289,8 @@ namespace System.Drawing {
 
         var x = x0;
         var y = y0;
-        var err = deltafastdirection >>1;
-        this[x,y]=color;
+        var err = deltafastdirection >> 1;
+        this[x, y] = color;
 
         for (var t = 0; t < deltafastdirection; ++t) {
           err -= deltaslowdirection;
@@ -1274,8 +1305,8 @@ namespace System.Drawing {
           this[x, y] = color;
         }
       }
-      
-      private void _DrawDiagonalLine2(int x0,int y0,int dx,int dy, Color color) {
+
+      private void _DrawDiagonalLine2(int x0, int y0, int dx, int dy, Color color) {
         var xSign = Math.Sign(dx);
         var ySign = Math.Sign(dy);
         dx = Math.Abs(dx);
@@ -1287,7 +1318,7 @@ namespace System.Drawing {
         dy = -dy;
         var epsilon = dx + dy;
         for (var i = 0; i <= runTo; ++i) {
-          this[x,y]=color;
+          this[x, y] = color;
           var epsilon2 = epsilon << 1;
           if (epsilon2 > dy) {
             epsilon += dy;
@@ -1313,7 +1344,7 @@ namespace System.Drawing {
 
     private sealed class ARGB32BitmapLocker : BitmapLockerBase {
       public ARGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
-      
+
       protected override int _BytesPerPixel => 4;
 
       public override Color this[int x, int y] {
@@ -1532,13 +1563,13 @@ namespace System.Drawing {
         var thisOffset = this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
         var otherOffset = otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
 
-        for (;height > 0;thisOffset+=thisStride,otherOffset+=otherStride,--height) {
+        for (; height > 0; thisOffset += thisStride, otherOffset += otherStride, --height) {
           var to = thisOffset;
           var oo = otherOffset;
-          
-          for (var x = width; x > 0;to+=bpp,oo+=bpp, --x) {
+
+          for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
             var otherPixel = (uint)Marshal.ReadInt32(oo);
-            if(otherPixel<0x01000000)
+            if (otherPixel < 0x01000000)
               continue;
 
             if (otherPixel >= 0xff000000) {
@@ -1551,10 +1582,10 @@ namespace System.Drawing {
             var alpha = otherPixel >> 24;
             var factor = 1d / (255 + alpha);
 
-            var b = (uint)(((byte)(sourcePixel      ) * byte.MaxValue + (byte)(otherPixel      ) * alpha) * factor);
-            var g = (uint)(((byte)(sourcePixel >>  8) * byte.MaxValue + (byte)(otherPixel >>  8) * alpha) * factor);
+            var b = (uint)(((byte)(sourcePixel) * byte.MaxValue + (byte)(otherPixel) * alpha) * factor);
+            var g = (uint)(((byte)(sourcePixel >> 8) * byte.MaxValue + (byte)(otherPixel >> 8) * alpha) * factor);
             var r = (uint)(((byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha) * factor);
-            
+
             var newPixel =
                 (sourcePixel & 0xff000000)
                 | b
@@ -1562,7 +1593,7 @@ namespace System.Drawing {
                 | (r << 16)
               ;
 
-            Marshal.WriteInt32(to,(int)newPixel);
+            Marshal.WriteInt32(to, (int)newPixel);
           } // x
         } // y
       }
@@ -1893,7 +1924,7 @@ namespace System.Drawing {
       }
 
 #endif
-      
+
     } // RGB24BitmapLocker
 
     private sealed class UnsupportedDrawingBitmapLocker : BitmapLockerBase {
@@ -1912,18 +1943,18 @@ namespace System.Drawing {
 
     } // UnsupportedDrawingBitmapLocker
 
-#endregion
+    #endregion
 
     private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
-    private static readonly Dictionary<PixelFormat,LockerFactory> _LOCKER_TYPES=new Dictionary<PixelFormat, LockerFactory> {
+    private static readonly Dictionary<PixelFormat, LockerFactory> _LOCKER_TYPES = new Dictionary<PixelFormat, LockerFactory> {
       {PixelFormat.Format32bppArgb,(b,r,f,f2)=>new ARGB32BitmapLocker(b,r,f,f2) },
       {PixelFormat.Format32bppRgb,(b,r,f,f2)=>new RGB32BitmapLocker(b,r,f,f2) },
       {PixelFormat.Format24bppRgb,(b,r,f,f2)=>new RGB24BitmapLocker(b,r,f,f2) },
     };
 
-#endregion
-    
-#region method delegates
+    #endregion
+
+    #region method delegates
 
     public delegate void MemoryCopyDelegate(IntPtr source, IntPtr target, int count);
     public delegate void MemoryFillDelegate(IntPtr source, byte value, int count);
@@ -1944,12 +1975,12 @@ namespace System.Drawing {
       set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
     }
 
-#endregion
+    #endregion
 
-#region Lock
+    #region Lock
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
-      => _LOCKER_TYPES.TryGetValue(format,out var factory)?factory(@this, rect, flags, format):new UnsupportedDrawingBitmapLocker(@this, rect, flags, format)
+      => _LOCKER_TYPES.TryGetValue(format, out var factory) ? factory(@this, rect, flags, format) : new UnsupportedDrawingBitmapLocker(@this, rect, flags, format)
     ;
 
     public static IBitmapLocker Lock(this Bitmap @this)
@@ -1980,7 +2011,7 @@ namespace System.Drawing {
       => Lock(@this, new Rectangle(Point.Empty, @this.Size), flags, format)
     ;
 
-#endregion
+    #endregion
 
     public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
       if (@this == null)
@@ -2090,16 +2121,15 @@ namespace System.Drawing {
       return result;
     }
 
-    public static Bitmap Resize(this Bitmap @this, int width, int height,InterpolationMode mode=InterpolationMode.Bicubic) {
-      var result = new Bitmap(width, height,@this.PixelFormat);
+    public static Bitmap Resize(this Bitmap @this, int width, int height, InterpolationMode mode = InterpolationMode.Bicubic) {
+      var result = new Bitmap(width, height, @this.PixelFormat);
       using (var graphics = Graphics.FromImage(result)) {
         graphics.CompositingMode = CompositingMode.SourceCopy;
         graphics.InterpolationMode = mode;
-        graphics.DrawImage(@this,new Rectangle(Point.Empty,result.Size), new Rectangle(Point.Empty,@this.Size),GraphicsUnit.Pixel);
+        graphics.DrawImage(@this, new Rectangle(Point.Empty, result.Size), new Rectangle(Point.Empty, @this.Size), GraphicsUnit.Pixel);
       }
       return result;
     }
 
   }
 }
- 
