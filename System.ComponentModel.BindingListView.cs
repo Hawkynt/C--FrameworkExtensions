@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2021 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -22,7 +22,6 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace System.ComponentModel {
@@ -31,36 +30,25 @@ namespace System.ComponentModel {
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   public class BindingListView<TItem> : SortableBindingList<TItem> {
-    /// <summary>
-    ///   The underlying base list.
-    /// </summary>
-    private readonly BindingList<TItem> _baseList;
-
     private bool _isFiltering;
-    private Func<TItem, bool> _filterPredicate;
+    private Predicate<TItem> _filterPredicate;
     private bool _ignoreDataSourceEvents;
 
     public BindingListView(BindingList<TItem> baseList) {
-      Contract.Requires(baseList != null);
-      this._baseList = baseList;
+      this.DataSource = baseList ?? throw new ArgumentNullException(nameof(baseList));
       this._Hook(baseList);
     }
 
-    private void _Hook(BindingList<TItem> baseList) {
+    private void _Hook(IBindingList baseList) {
       baseList.ListChanged += (s, e) => {
         if (this._ignoreDataSourceEvents)
           return;
 
-        switch (e.ListChangedType) {
-          default:
-          {
-            this._ApplyFiltering();
-            break;
-          }
-        }
-
+        this._ApplyFiltering();
       };
     }
+
+    public new void Add(TItem item) => this.DataSource.Add(item);
 
     /// <summary>
     /// Adds the range.
@@ -68,8 +56,10 @@ namespace System.ComponentModel {
     /// <param name="items">The items.</param>
     public new void AddRange(IEnumerable<TItem> items) {
       this._ignoreDataSourceEvents = true;
+
       foreach (var item in items)
         this.DataSource.Add(item);
+
       this._ignoreDataSourceEvents = false;
       this._ApplyFiltering();
     }
@@ -77,7 +67,7 @@ namespace System.ComponentModel {
     /// <summary>
     ///   Gets the data source.
     /// </summary>
-    public BindingList<TItem> DataSource => this._baseList;
+    public BindingList<TItem> DataSource { get; }
 
     /// <summary>
     ///   Gets or sets a value indicating whether this instance is filtering.
@@ -86,7 +76,7 @@ namespace System.ComponentModel {
     ///   <c>true</c> if this instance is filtering; otherwise, <c>false</c>.
     /// </value>
     public bool IsFiltering {
-      get { return this._isFiltering; }
+      get => this._isFiltering;
       set {
         this._isFiltering = value;
         this._ApplyFiltering();
@@ -99,8 +89,8 @@ namespace System.ComponentModel {
     /// <value>
     ///   The filter predicate.
     /// </value>
-    public Func<TItem, bool> FilterPredicate {
-      get { return this._filterPredicate; }
+    public Predicate<TItem> FilterPredicate {
+      get => this._filterPredicate;
       set {
         this._filterPredicate = value;
         this._ApplyFiltering();
@@ -117,7 +107,8 @@ namespace System.ComponentModel {
       this.Clear();
       var isFiltering = this.IsFiltering;
       var filter = this.FilterPredicate;
-      var results = this._baseList.Where(item => !isFiltering || (filter == null) || filter(item));
+      var results = !isFiltering || filter == null ? this.DataSource : this.DataSource.Where(item => filter(item));
+
       // FIXME: calls this in a GUI thread
       base.AddRange(results);
 
