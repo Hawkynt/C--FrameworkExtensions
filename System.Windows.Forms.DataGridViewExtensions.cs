@@ -19,14 +19,19 @@
 */
 #endregion
 
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using System.Text;
 #if NET40
 using System.Runtime.CompilerServices;
 #endif
@@ -46,6 +51,152 @@ namespace System.Windows.Forms {
 
   #region custom datagridviewcolumns
 
+  internal class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
+
+    public string DataSourcePropertyName { get; }
+    public string EnabledWhenPropertyName { get; }
+    public string ValueMember { get; }
+    public string DisplayMember { get; }
+
+    public BoundDataGridViewComboBoxColumn(string dataSourcePropertyName, string enabledWhenPropertyName, string valueMember, string displayMember) {
+      var cell = new BoundDataGridViewComboBoxCell(dataSourcePropertyName, enabledWhenPropertyName, valueMember, displayMember);
+
+      this.DataSourcePropertyName = dataSourcePropertyName;
+      this.EnabledWhenPropertyName = enabledWhenPropertyName;
+      this.ValueMember = valueMember;
+      this.DisplayMember = displayMember;
+
+      // ReSharper disable once VirtualMemberCallInConstructor
+      this.CellTemplate = cell;
+    }
+
+    #region Overrides of DataGridViewColumn
+
+    public override object Clone() {
+      var result = new BoundDataGridViewComboBoxColumn(this.DataSourcePropertyName, this.EnabledWhenPropertyName, this.ValueMember, this.DisplayMember) {
+        Name = this.Name,
+        DisplayIndex = this.DisplayIndex,
+        HeaderText = this.HeaderText,
+        DataPropertyName = this.DataPropertyName,
+        AutoSizeMode = this.AutoSizeMode,
+        SortMode = this.SortMode,
+        FillWeight = this.FillWeight
+      };
+      return result;
+    }
+
+    #endregion
+
+    #region Overrides of DataGridViewBand
+
+    public override DataGridViewCell CellTemplate {
+      get => base.CellTemplate;
+      set {
+        // Ensure that the cell used for the template is a BoundDataGridViewComboBoxCell.
+        if (value != null && !value.GetType().IsAssignableFrom(typeof(BoundDataGridViewComboBoxCell)))
+          throw new InvalidCastException(nameof(BoundDataGridViewComboBoxCell));
+
+        base.CellTemplate = value;
+      }
+    }
+
+    #endregion
+
+    internal class DataGridViewComboBoxEditingControl : ComboBox, IDataGridViewEditingControl {
+      public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle) { }
+      public bool EditingControlWantsInputKey(Keys keyData, bool dataGridViewWantsInputKey) => false;
+      public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context) => this.SelectedValue;
+      public void PrepareEditingControlForEdit(bool selectAll) { }
+
+      public DataGridView EditingControlDataGridView { get; set; }
+
+      public object EditingControlFormattedValue {
+        get => this.GetEditingControlFormattedValue(DataGridViewDataErrorContexts.Formatting);
+        set => this.SelectedValue = value;
+      }
+
+      public int EditingControlRowIndex { get; set; }
+
+      public bool EditingControlValueChanged { get; set; }
+
+      public Cursor EditingPanelCursor => Cursors.Default;
+
+      public bool RepositionEditingControlOnValueChange => false;
+
+      protected override void OnSelectedValueChanged(EventArgs e) {
+        this.EditingControlDataGridView.NotifyCurrentCellDirty(true);
+
+        base.OnSelectedValueChanged(e);
+      }
+
+    }
+
+    internal class BoundDataGridViewComboBoxCell : DataGridViewTextBoxCell {
+      public string DataSourcePropertyName { get; set; }
+      public string EnabledWhenPropertyName { get; set; }
+      public string ValueMember { get; set; }
+      public string DisplayMember { get; set; }
+
+      public BoundDataGridViewComboBoxCell() { }
+
+      public BoundDataGridViewComboBoxCell(string dataSourcePropertyName, string enabledWhenPropertyName, string valueMember, string displayMember) {
+        this.DataSourcePropertyName = dataSourcePropertyName;
+        this.EnabledWhenPropertyName = enabledWhenPropertyName;
+        this.ValueMember = valueMember;
+        this.DisplayMember = displayMember;
+      }
+
+      public override Type EditType => typeof(DataGridViewComboBoxEditingControl);
+
+      public override Type ValueType { get; set; }
+
+      public override object ParseFormattedValue(object formattedValue, DataGridViewCellStyle cellStyle, TypeConverter formattedValueTypeConverter, TypeConverter valueTypeConverter) {
+        return Convert.ChangeType(formattedValue, this.ValueType);
+      }
+
+      public override void InitializeEditingControl(int rowIndex, object initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle) {
+        base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
+        if (!(this.DataGridView.EditingControl is ComboBox comboBox))
+          return;
+
+        var owningRowDataBoundItem = this.OwningRow.DataBoundItem;
+        var source = DataGridViewExtensions.GetPropertyValueOrDefault<IEnumerable>(owningRowDataBoundItem, this.DataSourcePropertyName, null, null, null, null);
+        comboBox.DataSource = source;
+
+
+        if (this.EnabledWhenPropertyName != null)
+          comboBox.Enabled = DataGridViewExtensions.GetPropertyValueOrDefault(owningRowDataBoundItem,
+            this.EnabledWhenPropertyName, true, true, true, true);
+
+        if (source == null)
+          return;
+
+        if (this.DisplayMember != null)
+          comboBox.DisplayMember = this.DisplayMember;
+
+        if (this.ValueMember != null)
+          comboBox.ValueMember = this.ValueMember;
+
+
+
+
+        comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        comboBox.SelectedIndex = 0;
+
+        this.ValueType = source.GetType().GetElementType();
+      }
+
+      public override object Clone() {
+        var cell = (BoundDataGridViewComboBoxCell)base.Clone();
+        cell.DataSourcePropertyName = this.DataSourcePropertyName;
+        cell.EnabledWhenPropertyName = this.EnabledWhenPropertyName;
+        cell.ValueMember = this.ValueMember;
+        cell.DisplayMember = this.DisplayMember;
+        return cell;
+      }
+
+    }
+  }
   internal class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
 
     public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
@@ -156,9 +307,7 @@ namespace System.Windows.Forms {
       }
     }
 
-    public DataGridViewProgressBarColumn() {
-      this.CellTemplate = new DataGridViewProgressBarCell();
-    }
+    public DataGridViewProgressBarColumn() => this.CellTemplate = new DataGridViewProgressBarCell();
 
     public override DataGridViewCell CellTemplate {
       get => base.CellTemplate;
@@ -250,17 +399,18 @@ namespace System.Windows.Forms {
         DataGridViewPaintParts paintParts) {
 
         // If button cell is enabled, let the base class draw everything.
-        if (this.Enabled) {
-          base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
-          return;
-        }
+        var isEnabled = this.Enabled;
 
         // The button cell is disabled, so paint the border,
         // background, and disabled button for the cell.
 
         // Draw the cell background, if specified.
+        var backColor = cellStyle.BackColor;
+        if (backColor == Color.Empty)
+          backColor = DrawingSystemColors.Control;
+
         if ((paintParts & DataGridViewPaintParts.Background) == DataGridViewPaintParts.Background)
-          using (var cellBackground = new SolidBrush(cellStyle.BackColor))
+          using (var cellBackground = new SolidBrush(backColor))
             graphics.FillRectangle(cellBackground, cellBounds);
 
         // Draw the cell borders, if specified.
@@ -275,47 +425,86 @@ namespace System.Windows.Forms {
         buttonArea.Height -= buttonAdjustment.Height;
         buttonArea.Width -= buttonAdjustment.Width;
 
-        // Draw the disabled button.
-        ButtonRenderer.DrawButton(graphics, buttonArea, PushButtonState.Disabled);
+        // Draw the button
+        if (isEnabled) {
 
-        // Draw the disabled button text.
-        if (this.FormattedValue is string)
-          TextRenderer.DrawText(graphics, (string)this.FormattedValue, this.DataGridView.Font, buttonArea, DrawingSystemColors.GrayText);
+          int _Clamp(int a) => a < byte.MinValue ? byte.MinValue : a > byte.MaxValue ? byte.MaxValue : a;
+          const int shadingAmount = 64;
+
+          var lighterColor = Color.FromArgb(backColor.A, _Clamp(backColor.R + shadingAmount), _Clamp(backColor.G + shadingAmount), _Clamp(backColor.B + shadingAmount));
+          var darkerColor = Color.FromArgb(backColor.A, _Clamp(backColor.R - shadingAmount), _Clamp(backColor.G - shadingAmount), _Clamp(backColor.B - shadingAmount));
+
+          var borderWidth = 3;
+          buttonArea.Inflate(-borderWidth / 2, -borderWidth / 2);
+
+          using (var pen = new Pen(lighterColor, borderWidth)) {
+            graphics.DrawLine(pen, buttonArea.Left, buttonArea.Top, buttonArea.Right, buttonArea.Top);
+            graphics.DrawLine(pen, buttonArea.Left, buttonArea.Top, buttonArea.Left, buttonArea.Bottom);
+          }
+
+          using (var pen = new Pen(darkerColor, borderWidth)) {
+            graphics.DrawLine(pen, buttonArea.Right, buttonArea.Bottom, buttonArea.Left, buttonArea.Bottom);
+            graphics.DrawLine(pen, buttonArea.Right, buttonArea.Bottom, buttonArea.Right, buttonArea.Top);
+          }
+
+        } else
+          ButtonRenderer.DrawButton(graphics, buttonArea, PushButtonState.Disabled);
+
+        // draw button text
+        var s = formattedValue?.ToString() ?? string.Empty;
+        Color foreColor;
+        if (isEnabled) {
+          foreColor = cellStyle.ForeColor;
+          if (foreColor == Color.Empty)
+            foreColor = DrawingSystemColors.ControlText;
+        } else
+          foreColor = DrawingSystemColors.GrayText;
+
+        TextRenderer.DrawText(graphics, s, this.DataGridView.Font, buttonArea, foreColor);
       }
     }
 
-    public DataGridViewDisableButtonColumn() {
-      this.CellTemplate = new DataGridViewDisableButtonCell();
-    }
+    public DataGridViewDisableButtonColumn() => this.CellTemplate = new DataGridViewDisableButtonCell();
   }
 
   internal class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
-    public event Action<object, int> OnImageItemSelected {
-      add => DataGridViewMultiImageCell.OnImageItemSelected += value;
-      remove => DataGridViewMultiImageCell.OnImageItemSelected -= value;
-    }
-
-    public Func<object, int, string> TooltipTextProvider {
-      set => DataGridViewMultiImageCell.TooltipTextProvider = value;
-    }
+    private Action<object, int> _onClickMethod;
+    private Func<object, int, string> _tooltipTextProvider;
 
     private readonly string _onClickMethodName;
     private readonly string _toolTipTextProviderMethodName;
 
-    public DataGridViewMultiImageColumn(int imageSize, Padding padding, Padding margin, string onClickMethodName = null, string toolTipTextProviderMethodName = null) {
+    public DataGridViewMultiImageColumn(int imageSize, Padding padding, Padding margin, string onClickMethodName, string toolTipTextProviderMethodName) {
       this._onClickMethodName = onClickMethodName;
       this._toolTipTextProviderMethodName = toolTipTextProviderMethodName;
 
-      DataGridViewMultiImageCell.Padding = padding;
-      DataGridViewMultiImageCell.Margin = margin;
-
       var cell = new DataGridViewMultiImageCell {
-        ImageSize = imageSize
+        ImageSize = imageSize,
+        Padding = padding,
+        Margin = margin,
       };
 
       // ReSharper disable once VirtualMemberCallInConstructor
       this.CellTemplate = cell;
     }
+
+    #region Overrides of DataGridViewColumn
+
+    public override object Clone() {
+      var cell = (DataGridViewMultiImageCell)this.CellTemplate;
+      var result = new DataGridViewMultiImageColumn(cell.ImageSize, cell.Padding, cell.Margin, this._onClickMethodName, this._toolTipTextProviderMethodName) {
+        Name = this.Name,
+        DisplayIndex = this.DisplayIndex,
+        HeaderText = this.HeaderText,
+        DataPropertyName = this.DataPropertyName,
+        AutoSizeMode = this.AutoSizeMode,
+        SortMode = this.SortMode,
+        FillWeight = this.FillWeight
+      };
+      return result;
+    }
+
+    #endregion
 
     #region Overrides of DataGridViewBand
 
@@ -327,12 +516,11 @@ namespace System.Windows.Forms {
 
       var method = GetMethodInfoOrDefault(itemType, this._onClickMethodName);
       if (method != null)
-        DataGridViewMultiImageCell.OnImageItemSelected += _GenerateObjectInstanceActionDelegate<int>(method);
+        this._onClickMethod = _GenerateObjectInstanceActionDelegate<int>(method);
 
       method = GetMethodInfoOrDefault(itemType, this._toolTipTextProviderMethodName);
       if (method != null)
-        DataGridViewMultiImageCell.TooltipTextProvider = _GenerateObjectInstanceFunctionDelegate<int>(method);
-
+        this._tooltipTextProvider = _GenerateObjectInstanceFunctionDelegate<int>(method);
     }
 
     private static MethodInfo GetMethodInfoOrDefault(Type itemType, string methodName) {
@@ -361,7 +549,7 @@ namespace System.Windows.Forms {
         throw new ArgumentNullException(nameof(method));
       if (method.GetParameters().Length != 1)
         throw new ArgumentException("Method needs exactly one parameter", nameof(method));
-      
+
       var dynamicMethod = new DynamicMethod(string.Empty, returnType, new[] { typeof(object), typeof(TParam0) }, true);
       var generator = dynamicMethod.GetILGenerator();
 
@@ -381,10 +569,8 @@ namespace System.Windows.Forms {
       get => base.CellTemplate;
       set {
         // Ensure that the cell used for the template is a MultiImageCell.
-        if (value != null &&
-            !value.GetType().IsAssignableFrom(typeof(DataGridViewMultiImageCell))) {
+        if (value != null && !value.GetType().IsAssignableFrom(typeof(DataGridViewMultiImageCell)))
           throw new InvalidCastException(nameof(DataGridViewMultiImageCell));
-        }
 
         base.CellTemplate = value;
       }
@@ -393,18 +579,15 @@ namespace System.Windows.Forms {
     #endregion
 
     internal class DataGridViewMultiImageCell : DataGridViewTextBoxCell {
-      public static event Action<object, int> OnImageItemSelected;
-      public static Func<object, int, string> TooltipTextProvider { get; set; }
-
       private readonly List<CellImage> _images = new List<CellImage>();
       private DrawingSize? _oldCellBounds;
 
       private static readonly ToolTip tooltip = new ToolTip { Active = true, ShowAlways = true };
-      private static bool ShowCellToolTipCacheValue;
+      private bool ShowCellToolTipCacheValue;
 
       public int ImageSize { get; set; }
-      public static Padding Margin { get; set; }
-      public static Padding Padding { get; set; }
+      public Padding Margin { get; set; }
+      public Padding Padding { get; set; }
 
       #region Overrides of DataGridViewCell
 
@@ -420,16 +603,16 @@ namespace System.Windows.Forms {
           if (!image.Bounds.Contains(e.Location))
             continue;
 
-          text = TooltipTextProvider?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i) ?? string.Empty;
+          text = ((DataGridViewMultiImageColumn)this.OwningColumn)._tooltipTextProvider?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i) ?? string.Empty;
         }
 
         this.DataGridView.InvalidateCell(this);
 
-        ShowCellToolTipCacheValue = this.DataGridView.ShowCellToolTips;
+        this.ShowCellToolTipCacheValue = this.DataGridView.ShowCellToolTips;
         this.DataGridView.ShowCellToolTips = false;
 
         if (tooltip.Tag != null && (string)tooltip.Tag == text) {
-          this.DataGridView.ShowCellToolTips = ShowCellToolTipCacheValue;
+          this.DataGridView.ShowCellToolTips = this.ShowCellToolTipCacheValue;
           return;
         }
 
@@ -438,7 +621,7 @@ namespace System.Windows.Forms {
         tooltip.Tag = text;
         tooltip.Show(text, this.DataGridView, e.Location.X + cellBounds.X + this.ImageSize, e.Location.Y + cellBounds.Y);
 
-        this.DataGridView.ShowCellToolTips = ShowCellToolTipCacheValue;
+        this.DataGridView.ShowCellToolTips = this.ShowCellToolTipCacheValue;
       }
 
       protected override void OnMouseLeave(int rowIndex) {
@@ -464,7 +647,7 @@ namespace System.Windows.Forms {
           if (!image.Bounds.Contains(e.Location))
             continue;
 
-          OnImageItemSelected?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i);
+          ((DataGridViewMultiImageColumn)this.OwningColumn)._onClickMethod?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i);
         }
       }
 
@@ -514,10 +697,10 @@ namespace System.Windows.Forms {
                 imageRect.Bounds.Size.Height);
 
           graphics.DrawImage(images[i],
-            imageRect.Bounds.X + paintRect.X + Padding.Left,
-            imageRect.Bounds.Y + paintRect.Y + Padding.Top,
-            imageRect.Bounds.Size.Width - (Padding.Left + Padding.Right),
-            imageRect.Bounds.Size.Height - (Padding.Top + Padding.Bottom));
+            imageRect.Bounds.X + paintRect.X + this.Padding.Left,
+            imageRect.Bounds.Y + paintRect.Y + this.Padding.Top,
+            imageRect.Bounds.Size.Width - (this.Padding.Left + this.Padding.Right),
+            imageRect.Bounds.Size.Height - (this.Padding.Top + this.Padding.Bottom));
         }
       }
 
@@ -525,28 +708,28 @@ namespace System.Windows.Forms {
 
       private void _RecreateDrawingPanel(Rectangle cellBounds, int imageCount) {
         var size = this.ImageSize;
-        var maxImages = (cellBounds.Width / (size + (Margin.Left + Margin.Right))) * (cellBounds.Height / (size + (Margin.Top + Margin.Bottom)));
+        var maxImages = (cellBounds.Width / (size + (this.Margin.Left + this.Margin.Right))) * (cellBounds.Height / (size + (this.Margin.Top + this.Margin.Bottom)));
 
         //resizing
         while (maxImages < imageCount) {
           size -= 8;
 
-          maxImages = (cellBounds.Width / (size + (Margin.Left + Margin.Right))) * (cellBounds.Height / (size + (Margin.Top + Margin.Bottom)));
+          maxImages = (cellBounds.Width / (size + (this.Margin.Left + this.Margin.Right))) * (cellBounds.Height / (size + (this.Margin.Top + this.Margin.Bottom)));
         }
 
         this._images.Clear();
 
-        var x = Margin.Left;
-        var y = Margin.Top;
+        var x = this.Margin.Left;
+        var y = this.Margin.Top;
 
         for (var i = 0; i < imageCount; ++i) {
-          if ((x + size + Margin.Right) > cellBounds.Width) {
-            x = Margin.Left;
-            y += size + Margin.Bottom;
+          if ((x + size + this.Margin.Right) > cellBounds.Width) {
+            x = this.Margin.Left;
+            y += size + this.Margin.Bottom;
           }
 
           this._images.Add(new CellImage(new Rectangle(x, y, size, size)));
-          x += size + Margin.Right;
+          x += size + this.Margin.Right;
         }
       }
 
@@ -560,14 +743,15 @@ namespace System.Windows.Forms {
         public bool IsHovered { get; set; }
       }
     }
+
+    protected virtual void OnOnImageItemSelected(object arg1, int arg2) => this._onClickMethod?.Invoke(arg1, arg2);
+
   }
 
   internal class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
     private Image imageValue;
 
-    public DataGridViewImageAndTextColumn() {
-      this.CellTemplate = new DataGridViewTextAndImageCell();
-    }
+    public DataGridViewImageAndTextColumn() => this.CellTemplate = new DataGridViewTextAndImageCell();
 
     public override object Clone() {
       var c = base.Clone() as DataGridViewImageAndTextColumn;
@@ -598,34 +782,86 @@ namespace System.Windows.Forms {
     internal DrawingSize ImageSize { get; private set; }
 
     public class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
-      private Image imageValue;
-      private DrawingSize imageSize;
+      private Image _imageValue;
+      private DrawingSize _imageSize;
+      private bool _needsResize;
+
+      public TextImageRelation TextImageRelation { get; set; }
+      public bool KeepAspectRatio { get; set; }
+      public uint FixedImageWidth { get; set; }
+      public uint FixedImageHeight { get; set; }
 
       public override object Clone() {
         var c = base.Clone() as DataGridViewTextAndImageCell;
-        c.imageValue = this.imageValue;
-        c.imageSize = this.imageSize;
+        c._imageValue = this._imageValue;
+        c._imageSize = this._imageSize;
         return c;
       }
 
       public Image Image {
         get {
           if (this.OwningColumn == null || this._OwningDataGridViewImageAndTextColumn == null)
-            return this.imageValue;
+            return this._imageValue;
 
-          return this.imageValue ?? this._OwningDataGridViewImageAndTextColumn.Image;
+          return this._imageValue ?? this._OwningDataGridViewImageAndTextColumn.Image;
         }
         set {
-          if (this.imageValue == value)
+          if (this._imageValue == value)
             return;
 
-          this.imageValue = value;
-          this.imageSize = this.imageValue?.Size ?? DrawingSize.Empty;
+          this._imageValue = value;
+          this._needsResize = false;
+          if (value == null)
+            this._imageSize = DrawingSize.Empty;
+          else {
+            var size = value.Size;
+            var fixedWidth = this.FixedImageWidth;
+            var fixedHeight = this.FixedImageHeight;
+            var keepAspectRatio = this.KeepAspectRatio;
+            var width = size.Width;
+            var height = size.Height;
+
+            if (fixedWidth > 0) {
+
+              if (keepAspectRatio)
+                height = (int)((float)height * fixedWidth / width);
+              else if (fixedHeight > 0)
+                height = (int)fixedHeight;
+
+              width = (int)fixedWidth;
+            } else if (fixedHeight > 0) {
+              if (keepAspectRatio)
+                width = (int)((float)width * fixedHeight / height);
+
+              height = (int)fixedHeight;
+            }
+
+            this._needsResize = width != size.Width || height != size.Height;
+            this._imageSize = new DrawingSize(width, height);
+          }
 
           var inheritedPadding = this.InheritedStyle.Padding;
-          this.Style.Padding = new Padding(this.imageSize.Width,
-            inheritedPadding.Top, inheritedPadding.Right,
-            inheritedPadding.Bottom);
+          Padding padding;
+          switch (this.TextImageRelation) {
+            case TextImageRelation.ImageBeforeText:
+              padding = new Padding(0 + this._imageSize.Width, inheritedPadding.Top, inheritedPadding.Right, inheritedPadding.Bottom);
+              break;
+            case TextImageRelation.TextBeforeImage:
+              padding = new Padding(inheritedPadding.Left, inheritedPadding.Top, 0 + this._imageSize.Width, inheritedPadding.Bottom);
+              break;
+            case TextImageRelation.ImageAboveText:
+              padding = new Padding(inheritedPadding.Left, 0 + this._imageSize.Width, inheritedPadding.Right, inheritedPadding.Bottom);
+              break;
+            case TextImageRelation.TextAboveImage:
+              padding = new Padding(inheritedPadding.Left, inheritedPadding.Top, inheritedPadding.Right, 0 + this._imageSize.Width);
+              break;
+            case TextImageRelation.Overlay:
+            default:
+              padding = inheritedPadding;
+              break;
+          }
+
+          this.Style.Padding = padding;
         }
       }
 
@@ -641,24 +877,63 @@ namespace System.Windows.Forms {
         DataGridViewCellStyle cellStyle,
         DataGridViewAdvancedBorderStyle advancedBorderStyle,
         DataGridViewPaintParts paintParts) {
+
         // Paint the base content
         base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState,
            value, formattedValue, errorText, cellStyle,
            advancedBorderStyle, paintParts);
 
-        if (this.Image == null)
+        var image = this.Image;
+        if (image == null)
           return;
 
         // Draw the image clipped to the cell.
         var container = graphics.BeginContainer();
 
         graphics.SetClip(cellBounds);
-        graphics.DrawImageUnscaled(this.Image, cellBounds.Location);
+
+        var imageSize = this._imageSize;
+        var imageWidth = imageSize.Width;
+        var imageHeight = imageSize.Height;
+
+        int x, y;
+        switch (this.TextImageRelation) {
+          case TextImageRelation.TextBeforeImage:
+            x = cellBounds.Width - imageWidth - 1;
+            y = (cellBounds.Height - imageHeight) / 2;
+            break;
+          case TextImageRelation.ImageBeforeText:
+            x = 0;
+            y = (cellBounds.Height - imageHeight) / 2;
+            break;
+          case TextImageRelation.ImageAboveText:
+            x = (cellBounds.Width - imageWidth) / 2;
+            y = 0;
+            break;
+          case TextImageRelation.TextAboveImage:
+            x = (cellBounds.Width - imageWidth) / 2;
+            y = cellBounds.Height - imageHeight - 1;
+            break;
+          case TextImageRelation.Overlay:
+          default:
+            x = (cellBounds.Width - imageWidth) / 2;
+            y = (cellBounds.Height - imageHeight) / 2;
+            break;
+        }
+
+        x += cellBounds.Location.X;
+        y += cellBounds.Location.Y;
+
+        if (this._needsResize)
+          graphics.DrawImage(image, new Rectangle(x, y, imageWidth, imageHeight), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+        else
+          graphics.DrawImageUnscaled(image, x, y);
 
         graphics.EndContainer(container);
       }
 
       private DataGridViewImageAndTextColumn _OwningDataGridViewImageAndTextColumn => this.OwningColumn as DataGridViewImageAndTextColumn;
+
     }
   }
 
@@ -729,17 +1004,17 @@ namespace System.Windows.Forms {
       public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey) {
         // Let the DateTimePicker handle the keys listed.
         switch (key & Keys.KeyCode) {
-        case Keys.Left:
-        case Keys.Up:
-        case Keys.Down:
-        case Keys.Right:
-        case Keys.Home:
-        case Keys.End:
-        case Keys.PageDown:
-        case Keys.PageUp:
-          return true;
-        default:
-          return !dataGridViewWantsInputKey;
+          case Keys.Left:
+          case Keys.Up:
+          case Keys.Down:
+          case Keys.Right:
+          case Keys.Home:
+          case Keys.End:
+          case Keys.PageDown:
+          case Keys.PageUp:
+            return true;
+          default:
+            return !dataGridViewWantsInputKey;
         }
       }
 
@@ -753,11 +1028,1119 @@ namespace System.Windows.Forms {
     }
   }
 
+  internal class DataGridViewNumericUpDownColumn : DataGridViewColumn {
+    /// <summary>
+    /// Constructor for the DataGridViewNumericUpDownColumn class.
+    /// </summary>
+    public DataGridViewNumericUpDownColumn() : base(new DataGridViewNumericUpDownCell()) { }
+
+    /// <summary>
+    /// Represents the implicit cell that gets cloned when adding rows to the grid.
+    /// </summary>
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public override DataGridViewCell CellTemplate {
+      get => base.CellTemplate;
+      set {
+        if (value != null && !(value is DataGridViewNumericUpDownCell))
+          throw new InvalidCastException("Value provided for CellTemplate must be of type DataGridViewNumericUpDownElements.DataGridViewNumericUpDownCell or derive from it.");
+
+        base.CellTemplate = value;
+      }
+    }
+
+    /// <summary>
+    /// Replicates the DecimalPlaces property of the DataGridViewNumericUpDownCell cell type.
+    /// </summary>
+    [Category("Appearance")]
+    [DefaultValue(DataGridViewNumericUpDownCell.DATAGRIDVIEWNUMERICUPDOWNCELL_defaultDecimalPlaces)]
+    [Description("Indicates the number of decimal places to display.")]
+    public int DecimalPlaces {
+      get {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        return this.NumericUpDownCellTemplate.DecimalPlaces;
+      }
+      set {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        // Update the template cell so that subsequent cloned cells use the new value.
+        this.NumericUpDownCellTemplate.DecimalPlaces = value;
+        var dataGridView = this.DataGridView;
+        if (dataGridView == null)
+          return;
+
+        // Update all the existing DataGridViewNumericUpDownCell cells in the column accordingly.
+        var dataGridViewRows = dataGridView.Rows;
+        Contract.Assume(dataGridViewRows != null);
+
+        var rowCount = dataGridViewRows.Count;
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+          // Be careful not to unshare rows unnecessarily. 
+          // This could have severe performance repercussions.
+          var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+          if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell) {
+            // Call the internal SetDecimalPlaces method instead of the property to avoid invalidation 
+            // of each cell. The whole column is invalidated later in a single operation for better performance.
+            dataGridViewCell.SetDecimalPlaces(rowIndex, value);
+          }
+        }
+
+        dataGridView.InvalidateColumn(this.Index);
+        // TODO: Call the grid's autosizing methods to autosize the column, rows, column headers / row headers as needed.
+      }
+    }
+
+    /// <summary>
+    /// Replicates the Increment property of the DataGridViewNumericUpDownCell cell type.
+    /// </summary>
+    [Category("Data")]
+    [Description("Indicates the amount to increment or decrement on each button click.")]
+    public decimal Increment {
+      get {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        return this.NumericUpDownCellTemplate.Increment;
+      }
+      set {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        this.NumericUpDownCellTemplate.Increment = value;
+        var dataGridView = this.DataGridView;
+        if (dataGridView == null)
+          return;
+
+        var dataGridViewRows = dataGridView.Rows;
+        var rowCount = dataGridViewRows.Count;
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+          var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+          if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell)
+            dataGridViewCell.SetIncrement(rowIndex, value);
+        }
+      }
+    }
+
+    /// Indicates whether the Increment property should be persisted.
+    private bool ShouldSerializeIncrement()
+      => !this.Increment.Equals(DataGridViewNumericUpDownCell.DATAGRIDVIEWNUMERICUPDOWNCELL_defaultIncrement)
+    ;
+
+    /// <summary>
+    /// Replicates the Maximum property of the DataGridViewNumericUpDownCell cell type.
+    /// </summary>
+    [Category("Data")]
+    [Description("Indicates the maximum value for the numeric up-down cells.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public decimal Maximum {
+      get {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        return this.NumericUpDownCellTemplate.Maximum;
+      }
+      set {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        this.NumericUpDownCellTemplate.Maximum = value;
+        var dataGridView = this.DataGridView;
+        if (dataGridView == null)
+          return;
+
+        var dataGridViewRows = dataGridView.Rows;
+        var rowCount = dataGridViewRows.Count;
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+          var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+          if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell)
+            dataGridViewCell.SetMaximum(rowIndex, value);
+        }
+
+        dataGridView.InvalidateColumn(this.Index);
+        // TODO: This column and/or grid rows may need to be autosized depending on their
+        //       autosize settings. Call the autosizing methods to autosize the column, rows, 
+        //       column headers / row headers as needed.
+      }
+    }
+
+    /// Indicates whether the Maximum property should be persisted.
+    private bool ShouldSerializeMaximum()
+      => !this.Maximum.Equals(DataGridViewNumericUpDownCell.DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMaximum)
+    ;
+
+    /// <summary>
+    /// Replicates the Minimum property of the DataGridViewNumericUpDownCell cell type.
+    /// </summary>
+    [Category("Data")]
+    [Description("Indicates the minimum value for the numeric up-down cells.")]
+    [RefreshProperties(RefreshProperties.All)]
+    public decimal Minimum {
+      get {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        return this.NumericUpDownCellTemplate.Minimum;
+      }
+      set {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        this.NumericUpDownCellTemplate.Minimum = value;
+        if (this.DataGridView == null)
+          return;
+
+        var dataGridViewRows = this.DataGridView.Rows;
+        var rowCount = dataGridViewRows.Count;
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+          var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+          if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell)
+            dataGridViewCell.SetMinimum(rowIndex, value);
+        }
+
+        this.DataGridView.InvalidateColumn(this.Index);
+        // TODO: This column and/or grid rows may need to be autosized depending on their
+        //       autosize settings. Call the autosizing methods to autosize the column, rows, 
+        //       column headers / row headers as needed.
+      }
+    }
+
+    /// Indicates whether the Maximum property should be persisted.
+    private bool ShouldSerializeMinimum()
+      => !this.Minimum.Equals(DataGridViewNumericUpDownCell.DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMinimum)
+    ;
+
+    /// <summary>
+    /// Replicates the ThousandsSeparator property of the DataGridViewNumericUpDownCell cell type.
+    /// </summary>
+    [Category("Data")]
+    [DefaultValue(DataGridViewNumericUpDownCell.DATAGRIDVIEWNUMERICUPDOWNCELL_defaultThousandsSeparator)]
+    [Description("Indicates whether the thousands separator will be inserted between every three decimal digits.")]
+    public bool ThousandsSeparator {
+      get {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        return this.NumericUpDownCellTemplate.ThousandsSeparator;
+      }
+      set {
+        if (this.NumericUpDownCellTemplate == null)
+          throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+
+        this.NumericUpDownCellTemplate.ThousandsSeparator = value;
+        if (this.DataGridView == null)
+          return;
+
+        var dataGridViewRows = this.DataGridView.Rows;
+        var rowCount = dataGridViewRows.Count;
+        for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+          var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+          if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell)
+            dataGridViewCell.SetThousandsSeparator(rowIndex, value);
+        }
+
+        this.DataGridView.InvalidateColumn(this.Index);
+        // TODO: This column and/or grid rows may need to be autosized depending on their
+        //       autosize settings. Call the autosizing methods to autosize the column, rows, 
+        //       column headers / row headers as needed.
+      }
+    }
+
+    /// <summary>
+    /// Small utility function that returns the template cell as a DataGridViewNumericUpDownCell
+    /// </summary>
+    private DataGridViewNumericUpDownCell NumericUpDownCellTemplate
+      => (DataGridViewNumericUpDownCell)this.CellTemplate
+    ;
+
+    /// <summary>
+    /// Returns a standard compact string representation of the column.
+    /// </summary>
+    public override string ToString() {
+      var sb = new StringBuilder(100);
+      sb.Append("DataGridViewNumericUpDownColumn { Name=");
+      sb.Append(this.Name);
+      sb.Append(", Index=");
+      sb.Append(this.Index.ToString(CultureInfo.CurrentCulture));
+      sb.Append(" }");
+      return sb.ToString();
+    }
+
+    internal class DataGridViewNumericUpDownEditingControl : NumericUpDown, IDataGridViewEditingControl {
+      // Needed to forward keyboard messages to the child TextBox control.
+      [DllImport("USER32.DLL", CharSet = CharSet.Auto)]
+      private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+      // The grid that owns this editing control
+      private DataGridView dataGridView;
+      // Stores whether the editing control's value has changed or not
+      private bool valueChanged;
+      // Stores the row index in which the editing control resides
+
+      /// <summary>
+      /// Constructor of the editing control class
+      /// </summary>
+      public DataGridViewNumericUpDownEditingControl() {
+        // The editing control must not be part of the tabbing loop
+        this.TabStop = false;
+      }
+
+      // Beginning of the IDataGridViewEditingControl interface implementation
+
+      /// <summary>
+      /// Property which caches the grid that uses this editing control
+      /// </summary>
+      public virtual DataGridView EditingControlDataGridView {
+        get => this.dataGridView;
+        set => this.dataGridView = value;
+      }
+
+      /// <summary>
+      /// Property which represents the current formatted value of the editing control
+      /// </summary>
+      public virtual object EditingControlFormattedValue {
+        get => this.GetEditingControlFormattedValue(DataGridViewDataErrorContexts.Formatting);
+        set => this.Text = (string)value;
+      }
+
+      /// <summary>
+      /// Property which represents the row in which the editing control resides
+      /// </summary>
+      public virtual int EditingControlRowIndex { get; set; }
+
+      /// <summary>
+      /// Property which indicates whether the value of the editing control has changed or not
+      /// </summary>
+      public virtual bool EditingControlValueChanged {
+        get => this.valueChanged;
+        set => this.valueChanged = value;
+      }
+
+      /// <summary>
+      /// Property which determines which cursor must be used for the editing panel,
+      /// i.e. the parent of the editing control.
+      /// </summary>
+      public virtual Cursor EditingPanelCursor => Cursors.Default;
+
+      /// <summary>
+      /// Property which indicates whether the editing control needs to be repositioned 
+      /// when its value changes.
+      /// </summary>
+      public virtual bool RepositionEditingControlOnValueChange => false;
+
+      /// <summary>
+      /// Method called by the grid before the editing control is shown so it can adapt to the 
+      /// provided cell style.
+      /// </summary>
+      public virtual void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle) {
+        this.Font = dataGridViewCellStyle.Font;
+        if (dataGridViewCellStyle.BackColor.A < 255) {
+          // The NumericUpDown control does not support transparent back colors
+          var opaqueBackColor = Color.FromArgb(255, dataGridViewCellStyle.BackColor);
+          this.BackColor = opaqueBackColor;
+          this.dataGridView.EditingPanel.BackColor = opaqueBackColor;
+        } else {
+          this.BackColor = dataGridViewCellStyle.BackColor;
+        }
+        this.ForeColor = dataGridViewCellStyle.ForeColor;
+        this.TextAlign = DataGridViewNumericUpDownCell.TranslateAlignment(dataGridViewCellStyle.Alignment);
+      }
+
+      /// <summary>
+      /// Method called by the grid on keystrokes to determine if the editing control is
+      /// interested in the key or not.
+      /// </summary>
+      public virtual bool EditingControlWantsInputKey(Keys keyData, bool dataGridViewWantsInputKey) {
+        switch (keyData & Keys.KeyCode) {
+          case Keys.Right: {
+              if (this.Controls[1] is TextBox textBox)
+                // If the end of the selection is at the end of the string,
+                // let the DataGridView treat the key message
+                if ((this.RightToLeft == RightToLeft.No &&
+                     !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)) ||
+                    (this.RightToLeft == RightToLeft.Yes &&
+                     !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)))
+                  return true;
+
+              break;
+            }
+
+          case Keys.Left: {
+              if (this.Controls[1] is TextBox textBox)
+                // If the end of the selection is at the begining of the string
+                // or if the entire text is selected and we did not start editing,
+                // send this character to the dataGridView, else process the key message
+                if ((this.RightToLeft == RightToLeft.No &&
+                     !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)) ||
+                    (this.RightToLeft == RightToLeft.Yes &&
+                     !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)))
+                  return true;
+
+              break;
+            }
+
+          case Keys.Down:
+            // If the current value hasn't reached its minimum yet, handle the key. Otherwise let
+            // the grid handle it.
+            if (this.Value > this.Minimum)
+              return true;
+
+            break;
+
+          case Keys.Up:
+            // If the current value hasn't reached its maximum yet, handle the key. Otherwise let
+            // the grid handle it.
+            if (this.Value < this.Maximum)
+              return true;
+
+            break;
+
+          case Keys.Home:
+          case Keys.End: {
+              // Let the grid handle the key if the entire text is selected.
+              if (this.Controls[1] is TextBox textBox)
+                if (textBox.SelectionLength != textBox.Text.Length)
+                  return true;
+
+              break;
+            }
+
+          case Keys.Delete: {
+              // Let the grid handle the key if the carret is at the end of the text.
+              if (this.Controls[1] is TextBox textBox)
+                if (textBox.SelectionLength > 0 ||
+                    textBox.SelectionStart < textBox.Text.Length)
+                  return true;
+
+              break;
+            }
+        }
+        return !dataGridViewWantsInputKey;
+      }
+
+      /// <summary>
+      /// Returns the current value of the editing control.
+      /// </summary>
+      public virtual object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context) {
+        var userEdit = this.UserEdit;
+        try {
+          // Prevent the Value from being set to Maximum or Minimum when the cell is being painted.
+          this.UserEdit = (context & DataGridViewDataErrorContexts.Display) == 0;
+          return this.Value.ToString((this.ThousandsSeparator ? "N" : "F") + this.DecimalPlaces);
+        } finally {
+          this.UserEdit = userEdit;
+        }
+      }
+
+      /// <summary>
+      /// Called by the grid to give the editing control a chance to prepare itself for
+      /// the editing session.
+      /// </summary>
+      public virtual void PrepareEditingControlForEdit(bool selectAll) {
+        if (!(this.Controls[1] is TextBox textBox))
+          return;
+
+        if (selectAll)
+          textBox.SelectAll();
+        else
+          // Do not select all the text, but
+          // position the caret at the end of the text
+          textBox.SelectionStart = textBox.Text.Length;
+      }
+
+      // End of the IDataGridViewEditingControl interface implementation
+
+      /// <summary>
+      /// Small utility function that updates the local dirty state and 
+      /// notifies the grid of the value change.
+      /// </summary>
+      private void NotifyDataGridViewOfValueChange() {
+        if (this.valueChanged)
+          return;
+
+        this.valueChanged = true;
+        this.dataGridView.NotifyCurrentCellDirty(true);
+      }
+
+      /// <summary>
+      /// Listen to the KeyPress notification to know when the value changed, and 
+      /// notify the grid of the change.
+      /// </summary>
+      protected override void OnKeyPress(KeyPressEventArgs e) {
+        base.OnKeyPress(e);
+
+        // The value changes when a digit, the decimal separator, the group separator or
+        // the negative sign is pressed.
+        var notifyValueChange = false;
+        if (char.IsDigit(e.KeyChar))
+          notifyValueChange = true;
+        else {
+          var numberFormatInfo = CultureInfo.CurrentCulture.NumberFormat;
+          var decimalSeparatorStr = numberFormatInfo.NumberDecimalSeparator;
+          var groupSeparatorStr = numberFormatInfo.NumberGroupSeparator;
+          var negativeSignStr = numberFormatInfo.NegativeSign;
+          if (!string.IsNullOrEmpty(decimalSeparatorStr) && decimalSeparatorStr.Length == 1)
+            notifyValueChange = decimalSeparatorStr[0] == e.KeyChar;
+
+          if (!notifyValueChange && !string.IsNullOrEmpty(groupSeparatorStr) && groupSeparatorStr.Length == 1)
+            notifyValueChange = groupSeparatorStr[0] == e.KeyChar;
+
+          if (!notifyValueChange && !string.IsNullOrEmpty(negativeSignStr) && negativeSignStr.Length == 1)
+            notifyValueChange = negativeSignStr[0] == e.KeyChar;
+
+        }
+
+        if (notifyValueChange)
+          // Let the DataGridView know about the value change
+          this.NotifyDataGridViewOfValueChange();
+      }
+
+      /// <summary>
+      /// Listen to the ValueChanged notification to forward the change to the grid.
+      /// </summary>
+      protected override void OnValueChanged(EventArgs e) {
+        base.OnValueChanged(e);
+        if (this.Focused)
+          // Let the DataGridView know about the value change
+          this.NotifyDataGridViewOfValueChange();
+      }
+
+      /// <summary>
+      /// A few keyboard messages need to be forwarded to the inner textbox of the
+      /// NumericUpDown control so that the first character pressed appears in it.
+      /// </summary>
+      protected override bool ProcessKeyEventArgs(ref Message m) {
+        if (!(this.Controls[1] is TextBox textBox))
+          return base.ProcessKeyEventArgs(ref m);
+
+        SendMessage(textBox.Handle, m.Msg, m.WParam, m.LParam);
+        return true;
+
+      }
+    }
+
+    internal class DataGridViewNumericUpDownCell : DataGridViewTextBoxCell {
+      // Used in KeyEntersEditMode function
+      [DllImport("USER32.DLL", CharSet = CharSet.Auto)]
+      private static extern short VkKeyScan(char key);
+
+      // Used in TranslateAlignment function
+      private static readonly DataGridViewContentAlignment anyRight = DataGridViewContentAlignment.TopRight | DataGridViewContentAlignment.MiddleRight | DataGridViewContentAlignment.BottomRight;
+
+      private static readonly DataGridViewContentAlignment anyCenter = DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.MiddleCenter | DataGridViewContentAlignment.BottomCenter;
+
+      // Default dimensions of the static rendering bitmap used for the painting of the non-edited cells
+      private const int DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapWidth = 100;
+      private const int DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapHeight = 22;
+
+      // Default value of the DecimalPlaces property
+      internal const int DATAGRIDVIEWNUMERICUPDOWNCELL_defaultDecimalPlaces = 0;
+      // Default value of the Increment property
+      internal const decimal DATAGRIDVIEWNUMERICUPDOWNCELL_defaultIncrement = decimal.One;
+      // Default value of the Maximum property
+      internal const decimal DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMaximum = (decimal)100.0;
+      // Default value of the Minimum property
+      internal const decimal DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMinimum = decimal.Zero;
+      // Default value of the ThousandsSeparator property
+      internal const bool DATAGRIDVIEWNUMERICUPDOWNCELL_defaultThousandsSeparator = false;
+
+      // Type of this cell's editing control
+      private static readonly Type defaultEditType = typeof(DataGridViewNumericUpDownEditingControl);
+      // Type of this cell's value. The formatted value type is string, the same as the base class DataGridViewTextBoxCell
+      private static readonly Type defaultValueType = typeof(decimal);
+
+      // The bitmap used to paint the non-edited cells via a call to NumericUpDown.DrawToBitmap
+      [ThreadStatic]
+      private static Bitmap renderingBitmap;
+
+      // The NumericUpDown control used to paint the non-edited cells via a call to NumericUpDown.DrawToBitmap
+      [ThreadStatic]
+      private static NumericUpDown paintingNumericUpDown;
+
+      private int decimalPlaces; // Caches the value of the DecimalPlaces property
+      private decimal increment; // Caches the value of the Increment property
+      private decimal minimum; // Caches the value of the Minimum property
+      private decimal maximum; // Caches the value of the Maximum property
+      private bool thousandsSeparator; // Caches the value of the ThousandsSeparator property
+
+      /// <summary>
+      /// Constructor for the DataGridViewNumericUpDownCell cell type
+      /// </summary>
+      public DataGridViewNumericUpDownCell() {
+        // GetSingleResult a thread specific bitmap used for the painting of the non-edited cells
+        if (renderingBitmap == null)
+          renderingBitmap = new Bitmap(DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapWidth, DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapHeight);
+
+        // GetSingleResult a thread specific NumericUpDown control used for the painting of the non-edited cells
+        if (paintingNumericUpDown == null) {
+          paintingNumericUpDown = new NumericUpDown {
+            BorderStyle = BorderStyle.None,
+            Maximum = decimal.MaxValue / 10,
+            Minimum = decimal.MinValue / 10
+          };
+          // Some properties only need to be set once for the lifetime of the control:
+        }
+
+        // Set the default values of the properties:
+        this.decimalPlaces = DATAGRIDVIEWNUMERICUPDOWNCELL_defaultDecimalPlaces;
+        this.increment = DATAGRIDVIEWNUMERICUPDOWNCELL_defaultIncrement;
+        this.minimum = DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMinimum;
+        this.maximum = DATAGRIDVIEWNUMERICUPDOWNCELL_defaultMaximum;
+        this.thousandsSeparator = DATAGRIDVIEWNUMERICUPDOWNCELL_defaultThousandsSeparator;
+      }
+
+      /// <summary>
+      /// The DecimalPlaces property replicates the one from the NumericUpDown control
+      /// </summary>
+      [DefaultValue(DATAGRIDVIEWNUMERICUPDOWNCELL_defaultDecimalPlaces)]
+      public int DecimalPlaces {
+        get => this.decimalPlaces;
+        set {
+          if (value < 0 || value > 99)
+            throw new ArgumentOutOfRangeException(nameof(value), "The DecimalPlaces property cannot be smaller than 0 or larger than 99.");
+
+          if (this.decimalPlaces == value)
+            return;
+
+          this.SetDecimalPlaces(this.RowIndex, value);
+          this.OnCommonChange(); // Assure that the cell or column gets repainted and autosized if needed
+        }
+      }
+
+      /// <summary>
+      /// Returns the current DataGridView EditingControl as a DataGridViewNumericUpDownEditingControl control
+      /// </summary>
+      private DataGridViewNumericUpDownEditingControl EditingNumericUpDown {
+        get {
+          var dataGridView = this.DataGridView;
+          Contract.Assume(dataGridView != null);
+          return dataGridView.EditingControl as DataGridViewNumericUpDownEditingControl;
+        }
+      }
+
+      /// <summary>
+      /// Define the type of the cell's editing control
+      /// </summary>
+      public override Type EditType => defaultEditType;
+
+      /// <summary>
+      /// The Increment property replicates the one from the NumericUpDown control
+      /// </summary>
+      public decimal Increment {
+        get => this.increment;
+        set {
+          if (value < 0m)
+            throw new ArgumentOutOfRangeException(nameof(value), "The Increment property cannot be smaller than 0.");
+
+          this.SetIncrement(this.RowIndex, value);
+          // No call to OnCommonChange is needed since the increment value does not affect the rendering of the cell.
+        }
+      }
+
+      /// <summary>
+      /// The Maximum property replicates the one from the NumericUpDown control
+      /// </summary>
+      public decimal Maximum {
+        get => this.maximum;
+        set {
+          if (this.maximum == value)
+            return;
+
+          this.SetMaximum(this.RowIndex, value);
+          this.OnCommonChange();
+        }
+      }
+
+      /// <summary>
+      /// The Minimum property replicates the one from the NumericUpDown control
+      /// </summary>
+      public decimal Minimum {
+        get => this.minimum;
+        set {
+          if (this.minimum == value)
+            return;
+
+          this.SetMinimum(this.RowIndex, value);
+          this.OnCommonChange();
+        }
+      }
+
+      /// <summary>
+      /// The ThousandsSeparator property replicates the one from the NumericUpDown control
+      /// </summary>
+      [DefaultValue(DATAGRIDVIEWNUMERICUPDOWNCELL_defaultThousandsSeparator)]
+      public bool ThousandsSeparator {
+        get => this.thousandsSeparator;
+        set {
+          if (this.thousandsSeparator == value)
+            return;
+
+          this.SetThousandsSeparator(this.RowIndex, value);
+          this.OnCommonChange();
+        }
+      }
+
+      /// <summary>
+      /// Returns the type of the cell's Value property
+      /// </summary>
+      public override Type ValueType {
+        get {
+          var valueType = base.ValueType;
+          return valueType != null ? valueType : defaultValueType;
+        }
+      }
+
+      /// <summary>
+      /// Clones a DataGridViewNumericUpDownCell cell, copies all the custom properties.
+      /// </summary>
+      public override object Clone() {
+        var result = base.Clone();
+        if (!(result is DataGridViewNumericUpDownCell dataGridViewCell))
+          return result;
+
+        dataGridViewCell.DecimalPlaces = this.DecimalPlaces;
+        dataGridViewCell.Increment = this.Increment;
+        dataGridViewCell.Maximum = this.Maximum;
+        dataGridViewCell.Minimum = this.Minimum;
+        dataGridViewCell.ThousandsSeparator = this.ThousandsSeparator;
+        return dataGridViewCell;
+      }
+
+      /// <summary>
+      /// Returns the provided value constrained to be within the min and max. 
+      /// </summary>
+      private decimal Constrain(decimal value) {
+        if (this.minimum > this.maximum)
+          Debug.Fail("min must be <= max");
+
+        if (value < this.minimum)
+          value = this.minimum;
+
+        if (value > this.maximum)
+          value = this.maximum;
+
+        return value;
+      }
+
+      /// <summary>
+      /// DetachEditingControl gets called by the DataGridView control when the editing session is ending
+      /// </summary>
+      [EditorBrowsable(EditorBrowsableState.Advanced)]
+      public override void DetachEditingControl() {
+        var dataGridView = this.DataGridView;
+        if (dataGridView?.EditingControl == null)
+          throw new InvalidOperationException("Cell is detached or its grid has no editing control.");
+
+        if (dataGridView.EditingControl is NumericUpDown numericUpDown) {
+          // Editing controls get recycled. Indeed, when a DataGridViewNumericUpDownCell cell gets edited
+          // after another DataGridViewNumericUpDownCell cell, the same editing control gets reused for 
+          // performance reasons (to avoid an unnecessary control destruction and creation). 
+          // Here the undo buffer of the TextBox inside the NumericUpDown control gets cleared to avoid
+          // interferences between the editing sessions.
+          Contract.Assume(numericUpDown.Controls.Count > 1);
+          if (numericUpDown.Controls[1] is TextBox textBox)
+            textBox.ClearUndo();
+        }
+
+        base.DetachEditingControl();
+      }
+
+      /// <summary>
+      /// Adjusts the location and size of the editing control given the alignment characteristics of the cell
+      /// </summary>
+      private Rectangle GetAdjustedEditingControlBounds(Rectangle editingControlBounds, DataGridViewCellStyle cellStyle) {
+        // Add a 1 pixel padding on the left and right of the editing control
+        editingControlBounds.X += 1;
+        editingControlBounds.Width = Math.Max(0, editingControlBounds.Width - 2);
+
+        // Adjust the vertical location of the editing control:
+        var preferredHeight = cellStyle.Font.Height + 3;
+        if (preferredHeight < editingControlBounds.Height) {
+          switch (cellStyle.Alignment) {
+            case DataGridViewContentAlignment.MiddleLeft:
+            case DataGridViewContentAlignment.MiddleCenter:
+            case DataGridViewContentAlignment.MiddleRight:
+              editingControlBounds.Y += (editingControlBounds.Height - preferredHeight) / 2;
+              break;
+            case DataGridViewContentAlignment.BottomLeft:
+            case DataGridViewContentAlignment.BottomCenter:
+            case DataGridViewContentAlignment.BottomRight:
+              editingControlBounds.Y += editingControlBounds.Height - preferredHeight;
+              break;
+          }
+        }
+
+        return editingControlBounds;
+      }
+
+      /// <summary>
+      /// Customized implementation of the GetErrorIconBounds function in order to draw the potential 
+      /// error icon next to the up/down buttons and not on top of them.
+      /// </summary>
+      protected override Rectangle GetErrorIconBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex) {
+        const int ButtonsWidth = 16;
+
+        var errorIconBounds = base.GetErrorIconBounds(graphics, cellStyle, rowIndex);
+        if (this.DataGridView.RightToLeft == RightToLeft.Yes)
+          errorIconBounds.X = errorIconBounds.Left + ButtonsWidth;
+        else
+          errorIconBounds.X = errorIconBounds.Left - ButtonsWidth;
+        return errorIconBounds;
+      }
+
+      /// <summary>
+      /// Customized implementation of the GetFormattedValue function in order to include the decimal and thousand separator
+      /// characters in the formatted representation of the cell value.
+      /// </summary>
+      protected override object GetFormattedValue(object value,
+        int rowIndex,
+        ref DataGridViewCellStyle cellStyle,
+        TypeConverter valueTypeConverter,
+        TypeConverter formattedValueTypeConverter,
+        DataGridViewDataErrorContexts context) {
+        // By default, the base implementation converts the Decimal 1234.5 into the string "1234.5"
+        var formattedValue = base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter, formattedValueTypeConverter, context);
+        var formattedNumber = formattedValue as string;
+        if (string.IsNullOrEmpty(formattedNumber) || value == null)
+          return formattedValue;
+
+        var unformattedDecimal = Convert.ToDecimal(value);
+        return unformattedDecimal.ToString((this.ThousandsSeparator ? "N" : "F") + this.DecimalPlaces.ToString());
+      }
+
+      /// <summary>
+      /// Custom implementation of the GetPreferredSize function. This implementation uses the preferred size of the base 
+      /// DataGridViewTextBoxCell cell and adds room for the up/down buttons.
+      /// </summary>
+      protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize) {
+        if (this.DataGridView == null)
+          return new Size(-1, -1);
+
+        var preferredSize = base.GetPreferredSize(graphics, cellStyle, rowIndex, constraintSize);
+        if (constraintSize.Width != 0)
+          return preferredSize;
+
+        const int ButtonsWidth = 16; // Account for the width of the up/down buttons.
+        const int ButtonMargin = 8; // Account for some blank pixels between the text and buttons.
+        preferredSize.Width += ButtonsWidth + ButtonMargin;
+        return preferredSize;
+      }
+
+      /// <summary>
+      /// Custom implementation of the InitializeEditingControl function. This function is called by the DataGridView control 
+      /// at the beginning of an editing session. It makes sure that the properties of the NumericUpDown editing control are 
+      /// set according to the cell properties.
+      /// </summary>
+      public override void InitializeEditingControl(int rowIndex, object initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle) {
+        base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
+        if (!(this.DataGridView.EditingControl is NumericUpDown numericUpDown))
+          return;
+
+        numericUpDown.BorderStyle = BorderStyle.None;
+        numericUpDown.DecimalPlaces = this.DecimalPlaces;
+        numericUpDown.Increment = this.Increment;
+        numericUpDown.Maximum = this.Maximum;
+        numericUpDown.Minimum = this.Minimum;
+        numericUpDown.ThousandsSeparator = this.ThousandsSeparator;
+        numericUpDown.Text = initialFormattedValue as string ?? string.Empty;
+      }
+
+      /// <summary>
+      /// Custom implementation of the KeyEntersEditMode function. This function is called by the DataGridView control
+      /// to decide whether a keystroke must start an editing session or not. In this case, a new session is started when
+      /// a digit or negative sign key is hit.
+      /// </summary>
+      public override bool KeyEntersEditMode(KeyEventArgs e) {
+        var numberFormatInfo = CultureInfo.CurrentCulture.NumberFormat;
+        var negativeSignKey = Keys.None;
+        var negativeSignStr = numberFormatInfo.NegativeSign;
+        if (!string.IsNullOrEmpty(negativeSignStr) && negativeSignStr.Length == 1)
+          negativeSignKey = (Keys)(VkKeyScan(negativeSignStr[0]));
+
+        return (
+                 char.IsDigit((char)e.KeyCode)
+                 || (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9)
+                 || negativeSignKey == e.KeyCode
+                 || Keys.Subtract == e.KeyCode
+               )
+               && !e.Shift
+               && !e.Alt
+               && !e.Control
+          ;
+      }
+
+      /// <summary>
+      /// Called when a cell characteristic that affects its rendering and/or preferred size has changed.
+      /// This implementation only takes care of repainting the cells. The DataGridView's autosizing methods
+      /// also need to be called in cases where some grid elements autosize.
+      /// </summary>
+      private void OnCommonChange() {
+        if (this.DataGridView == null || this.DataGridView.IsDisposed || this.DataGridView.Disposing)
+          return;
+
+        if (this.RowIndex == -1) {
+          // Invalidate and autosize column
+          this.DataGridView.InvalidateColumn(this.ColumnIndex);
+
+          // TODO: Add code to autosize the cell's column, the rows, the column headers 
+          // and the row headers depending on their autosize settings.
+          // The DataGridView control does not expose a public method that takes care of this.
+        } else {
+          // The DataGridView control exposes a public method called UpdateCellValue
+          // that invalidates the cell so that it gets repainted and also triggers all
+          // the necessary autosizing: the cell's column and/or row, the column headers
+          // and the row headers are autosized depending on their autosize settings.
+          this.DataGridView.UpdateCellValue(this.ColumnIndex, this.RowIndex);
+        }
+      }
+
+      /// <summary>
+      /// Determines whether this cell, at the given row index, shows the grid's editing control or not.
+      /// The row index needs to be provided as a parameter because this cell may be shared among multiple rows.
+      /// </summary>
+      private bool OwnsEditingNumericUpDown(int rowIndex) {
+        if (rowIndex == -1 || this.DataGridView == null)
+          return false;
+
+        return
+          this.DataGridView.EditingControl is DataGridViewNumericUpDownEditingControl numericUpDownEditingControl
+          && rowIndex == ((IDataGridViewEditingControl)numericUpDownEditingControl).EditingControlRowIndex
+          ;
+      }
+
+      /// <summary>
+      /// Custom paints the cell. The base implementation of the DataGridViewTextBoxCell type is called first,
+      /// dropping the icon error and content foreground parts. Those two parts are painted by this custom implementation.
+      /// In this sample, the non-edited NumericUpDown control is painted by using a call to Control.DrawToBitmap. This is
+      /// an easy solution for painting controls but it's not necessarily the most performant. An alternative would be to paint
+      /// the NumericUpDown control piece by piece (text and up/down buttons).
+      /// </summary>
+      protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState,
+        object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle,
+        DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts) {
+        if (this.DataGridView == null)
+          return;
+
+        // First paint the borders and background of the cell.
+        base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
+          paintParts & ~(DataGridViewPaintParts.ErrorIcon | DataGridViewPaintParts.ContentForeground));
+
+        var ptCurrentCell = this.DataGridView.CurrentCellAddress;
+        var cellCurrent = ptCurrentCell.X == this.ColumnIndex && ptCurrentCell.Y == rowIndex;
+        var cellEdited = cellCurrent && this.DataGridView.EditingControl != null;
+
+        // If the cell is in editing mode, there is nothing else to paint
+        if (cellEdited)
+          return;
+
+        if (PartPainted(paintParts, DataGridViewPaintParts.ContentForeground)) {
+          // Paint a NumericUpDown control
+          // Take the borders into account
+          var borderWidths = this.BorderWidths(advancedBorderStyle);
+          var valBounds = cellBounds;
+          valBounds.Offset(borderWidths.X, borderWidths.Y);
+          valBounds.Width -= borderWidths.Right;
+          valBounds.Height -= borderWidths.Bottom;
+          // Also take the padding into account
+          if (cellStyle.Padding != Padding.Empty) {
+            if (this.DataGridView.RightToLeft == RightToLeft.Yes)
+              valBounds.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
+            else
+              valBounds.Offset(cellStyle.Padding.Left, cellStyle.Padding.Top);
+            valBounds.Width -= cellStyle.Padding.Horizontal;
+            valBounds.Height -= cellStyle.Padding.Vertical;
+          }
+          // Determine the NumericUpDown control location
+          valBounds = this.GetAdjustedEditingControlBounds(valBounds, cellStyle);
+
+          var cellSelected = (cellState & DataGridViewElementStates.Selected) != 0;
+
+          if (renderingBitmap.Width < valBounds.Width ||
+              renderingBitmap.Height < valBounds.Height) {
+            // The static bitmap is too small, a bigger one needs to be allocated.
+            renderingBitmap.Dispose();
+            renderingBitmap = new Bitmap(valBounds.Width, valBounds.Height);
+          }
+          // Make sure the NumericUpDown control is parented to a visible control
+          if (paintingNumericUpDown.Parent == null || !paintingNumericUpDown.Parent.Visible)
+            paintingNumericUpDown.Parent = this.DataGridView;
+          // Set all the relevant properties
+          paintingNumericUpDown.TextAlign = TranslateAlignment(cellStyle.Alignment);
+          paintingNumericUpDown.DecimalPlaces = this.DecimalPlaces;
+          paintingNumericUpDown.ThousandsSeparator = this.ThousandsSeparator;
+          paintingNumericUpDown.Font = cellStyle.Font;
+          paintingNumericUpDown.Width = valBounds.Width;
+          paintingNumericUpDown.Height = valBounds.Height;
+          paintingNumericUpDown.RightToLeft = this.DataGridView.RightToLeft;
+          paintingNumericUpDown.Location = new Point(0, -paintingNumericUpDown.Height - 100);
+          paintingNumericUpDown.Text = formattedValue as string;
+
+          Color backColor;
+          if (PartPainted(paintParts, DataGridViewPaintParts.SelectionBackground) && cellSelected)
+            backColor = cellStyle.SelectionBackColor;
+          else
+            backColor = cellStyle.BackColor;
+          if (PartPainted(paintParts, DataGridViewPaintParts.Background)) {
+            if (backColor.A < 255) {
+              // The NumericUpDown control does not support transparent back colors
+              backColor = Color.FromArgb(255, backColor);
+            }
+            paintingNumericUpDown.BackColor = backColor;
+          }
+          // Finally paint the NumericUpDown control
+          var srcRect = new Rectangle(0, 0, valBounds.Width, valBounds.Height);
+          if (srcRect.Width > 0 && srcRect.Height > 0) {
+            paintingNumericUpDown.DrawToBitmap(renderingBitmap, srcRect);
+            graphics.DrawImage(renderingBitmap, new Rectangle(valBounds.Location, valBounds.Size),
+              srcRect, GraphicsUnit.Pixel);
+          }
+        }
+        if (PartPainted(paintParts, DataGridViewPaintParts.ErrorIcon)) {
+          // Paint the potential error icon on top of the NumericUpDown control
+          base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText,
+            cellStyle, advancedBorderStyle, DataGridViewPaintParts.ErrorIcon);
+        }
+      }
+
+      /// <summary>
+      /// Little utility function called by the Paint function to see if a particular part needs to be painted. 
+      /// </summary>
+      private static bool PartPainted(DataGridViewPaintParts paintParts, DataGridViewPaintParts paintPart)
+        => (paintParts & paintPart) != 0
+      ;
+
+      /// <summary>
+      /// Custom implementation of the PositionEditingControl method called by the DataGridView control when it
+      /// needs to relocate and/or resize the editing control.
+      /// </summary>
+      public override void PositionEditingControl(bool setLocation,
+        bool setSize,
+        Rectangle cellBounds,
+        Rectangle cellClip,
+        DataGridViewCellStyle cellStyle,
+        bool singleVerticalBorderAdded,
+        bool singleHorizontalBorderAdded,
+        bool isFirstDisplayedColumn,
+        bool isFirstDisplayedRow) {
+        var editingControlBounds = this.PositionEditingPanel(cellBounds,
+          cellClip,
+          cellStyle,
+          singleVerticalBorderAdded,
+          singleHorizontalBorderAdded,
+          isFirstDisplayedColumn,
+          isFirstDisplayedRow);
+        editingControlBounds = this.GetAdjustedEditingControlBounds(editingControlBounds, cellStyle);
+        this.DataGridView.EditingControl.Location = new Point(editingControlBounds.X, editingControlBounds.Y);
+        this.DataGridView.EditingControl.Size = new Size(editingControlBounds.Width, editingControlBounds.Height);
+      }
+
+      /// <summary>
+      /// Utility function that sets a new value for the DecimalPlaces property of the cell. This function is used by
+      /// the cell and column DecimalPlaces property. The column uses this method instead of the DecimalPlaces
+      /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
+      /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
+      /// this cell may be shared among multiple rows.
+      /// </summary>
+      internal void SetDecimalPlaces(int rowIndex, int value) {
+        Contract.Requires(value >= 0 && value <= 99);
+        this.decimalPlaces = value;
+        if (this.OwnsEditingNumericUpDown(rowIndex))
+          this.EditingNumericUpDown.DecimalPlaces = value;
+      }
+
+      /// Utility function that sets a new value for the Increment property of the cell. This function is used by
+      /// the cell and column Increment property. A row index needs to be provided as a parameter because
+      /// this cell may be shared among multiple rows.
+      internal void SetIncrement(int rowIndex, decimal value) {
+        Contract.Requires(value >= (decimal)0.0);
+        this.increment = value;
+        if (this.OwnsEditingNumericUpDown(rowIndex))
+          this.EditingNumericUpDown.Increment = value;
+      }
+
+      /// Utility function that sets a new value for the Maximum property of the cell. This function is used by
+      /// the cell and column Maximum property. The column uses this method instead of the Maximum
+      /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
+      /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
+      /// this cell may be shared among multiple rows.
+      internal void SetMaximum(int rowIndex, decimal value) {
+        this.maximum = value;
+        if (this.minimum > this.maximum)
+          this.minimum = this.maximum;
+        var cellValue = this.GetValue(rowIndex);
+        if (cellValue != null) {
+          var currentValue = Convert.ToDecimal(cellValue);
+          var constrainedValue = this.Constrain(currentValue);
+          if (constrainedValue != currentValue)
+            this.SetValue(rowIndex, constrainedValue);
+        }
+        if (this.OwnsEditingNumericUpDown(rowIndex))
+          this.EditingNumericUpDown.Maximum = value;
+      }
+
+      /// Utility function that sets a new value for the Minimum property of the cell. This function is used by
+      /// the cell and column Minimum property. The column uses this method instead of the Minimum
+      /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
+      /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
+      /// this cell may be shared among multiple rows.
+      internal void SetMinimum(int rowIndex, decimal value) {
+        this.minimum = value;
+        if (this.minimum > this.maximum)
+          this.maximum = value;
+        var cellValue = this.GetValue(rowIndex);
+        if (cellValue != null) {
+          var currentValue = Convert.ToDecimal(cellValue);
+          var constrainedValue = this.Constrain(currentValue);
+          if (constrainedValue != currentValue)
+            this.SetValue(rowIndex, constrainedValue);
+        }
+        if (this.OwnsEditingNumericUpDown(rowIndex))
+          this.EditingNumericUpDown.Minimum = value;
+      }
+
+      /// Utility function that sets a new value for the ThousandsSeparator property of the cell. This function is used by
+      /// the cell and column ThousandsSeparator property. The column uses this method instead of the ThousandsSeparator
+      /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
+      /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
+      /// this cell may be shared among multiple rows.
+      internal void SetThousandsSeparator(int rowIndex, bool value) {
+        this.thousandsSeparator = value;
+        if (this.OwnsEditingNumericUpDown(rowIndex))
+          this.EditingNumericUpDown.ThousandsSeparator = value;
+      }
+
+      /// <summary>
+      /// Returns a standard textual representation of the cell.
+      /// </summary>
+      public override string ToString()
+        => "DataGridViewNumericUpDownCell { ColumnIndex=" + this.ColumnIndex.ToString(CultureInfo.CurrentCulture) + ", RowIndex=" + this.RowIndex.ToString(CultureInfo.CurrentCulture) + " }"
+      ;
+
+      /// <summary>
+      /// Little utility function used by both the cell and column types to translate a DataGridViewContentAlignment value into
+      /// a HorizontalAlignment value.
+      /// </summary>
+      internal static HorizontalAlignment TranslateAlignment(DataGridViewContentAlignment align) {
+
+        if ((align & anyRight) != 0)
+          return HorizontalAlignment.Right;
+
+        if ((align & anyCenter) != 0)
+          return HorizontalAlignment.Center;
+
+        return HorizontalAlignment.Left;
+      }
+    }
+
+  }
+
   #endregion
 
   #region attributes for messing with auto-generated columns
 
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal class DataGridViewClickableAttribute : Attribute {
     public DataGridViewClickableAttribute(string onClickMethodName = null, string onDoubleClickMethodName = null) {
       this.OnClickMethodName = onClickMethodName;
@@ -770,26 +2153,23 @@ namespace System.Windows.Forms {
     private static readonly ConcurrentDictionary<object, ThreadTimer> _clickTimers = new ConcurrentDictionary<object, ThreadTimer>();
 
     private void _HandleClick(object row) {
-      ThreadTimer __;
-      _clickTimers.TryRemove(row, out __);
+      _clickTimers.TryRemove(row, out var __);
       DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
     }
+
     public void OnClick(object row) {
       if (this.OnDoubleClickMethodName == null)
         DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
 
       var newTimer = new ThreadTimer(this._HandleClick, row, SystemInformation.DoubleClickTime, int.MaxValue);
       do {
-        ThreadTimer timer;
-        if (_clickTimers.TryRemove(row, out timer))
+        if (_clickTimers.TryRemove(row, out var timer))
           timer.Dispose();
-
       } while (!_clickTimers.TryAdd(row, newTimer));
     }
 
     public void OnDoubleClick(object row) {
-      ThreadTimer timer;
-      if (_clickTimers.TryRemove(row, out timer))
+      if (_clickTimers.TryRemove(row, out var timer))
         timer.Dispose();
 
       DataGridViewExtensions.CallLateBoundMethod(row, this.OnDoubleClickMethodName);
@@ -798,9 +2178,76 @@ namespace System.Windows.Forms {
   }
 
   /// <summary>
-  /// allows to show an image next to the displayed text.
+  /// allows to show an image alongside to the displayed text.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  internal sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
+    public string ImageListPropertyName { get; }
+    public string ImageKeyPropertyName { get; }
+    public string ImagePropertyName { get; }
+    public TextImageRelation TextImageRelation { get; }
+    public uint FixedImageWidth { get; }
+    public uint FixedImageHeight { get; }
+    public bool KeepAspectRatio { get; }
+
+    public DataGridViewTextAndImageColumnAttribute(string imageListPropertyName, string imageKeyPropertyName, TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText, uint fixedImageWidth = 0, uint fixedImageHeight = 0, bool keepAspectRatio = true) {
+      this.ImageListPropertyName = imageListPropertyName;
+      this.ImageKeyPropertyName = imageKeyPropertyName;
+      this.TextImageRelation = textImageRelation;
+      this.FixedImageWidth = fixedImageWidth;
+      this.FixedImageHeight = fixedImageHeight;
+      this.KeepAspectRatio = keepAspectRatio;
+    }
+
+    public DataGridViewTextAndImageColumnAttribute(string imagePropertyName, TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText, uint fixedImageWidth = 0, uint fixedImageHeight = 0, bool keepAspectRatio = true) {
+      this.ImagePropertyName = imagePropertyName;
+      this.TextImageRelation = textImageRelation;
+      this.FixedImageWidth = fixedImageWidth;
+      this.FixedImageHeight = fixedImageHeight;
+      this.KeepAspectRatio = keepAspectRatio;
+    }
+
+    private Image _GetImage(object row, object value) {
+      if (value is null)
+        return null;
+
+      Image image = null;
+      var imagePropertyName = this.ImagePropertyName;
+      if (imagePropertyName != null)
+        image = DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, imagePropertyName, null, null, null, null);
+      else {
+        var imageList = DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(row, this.ImageListPropertyName, null, null, null, null);
+        if (imageList == null)
+          return null;
+
+        var imageKey = DataGridViewExtensions.GetPropertyValueOrDefault<object>(row, this.ImageKeyPropertyName, null, null, null, null);
+        if (imageKey != null)
+          image = imageKey is int index && !index.GetType().IsEnum
+            ? imageList.Images[index]
+            : imageList.Images[imageKey.ToString()]
+            ;
+      }
+
+      return image;
+    }
+
+    public static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      if (!(row.Cells[e.ColumnIndex] is DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell textAndImageCell))
+        return;
+
+      textAndImageCell.TextImageRelation = @this.TextImageRelation;
+      textAndImageCell.KeepAspectRatio = @this.KeepAspectRatio;
+      textAndImageCell.FixedImageWidth = @this.FixedImageWidth;
+      textAndImageCell.FixedImageHeight = @this.FixedImageHeight;
+      textAndImageCell.Image = @this._GetImage(data, e.Value);
+      e.FormattingApplied = true;
+    }
+
+  }
+
+  /// <summary>
+  /// allows to show an image next to the displayed text when a condition is met.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
   internal sealed class SupportsConditionalImageAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="SupportsConditionalImageAttribute"/> class.
@@ -811,11 +2258,12 @@ namespace System.Windows.Forms {
       this.ImagePropertyName = imagePropertyName;
       this.ConditionalPropertyName = conditionalPropertyName;
     }
+
     public string ImagePropertyName { get; }
     public string ConditionalPropertyName { get; }
 
     public Image GetImage(object row, object value) {
-      if (ReferenceEquals(value, null))
+      if (value is null)
         return null;
 
       if (!DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ConditionalPropertyName, false, true, true, false))
@@ -824,67 +2272,88 @@ namespace System.Windows.Forms {
       var image = DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, this.ImagePropertyName, null, null, null, null);
       return image;
     }
-  }
 
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-  internal sealed class DataGridViewCheckboxColumnAttribute : Attribute {
-    public DataGridViewCheckboxColumnAttribute(string conditionalVisiblePropertyName) {
+    public static void OnCellFormatting(IEnumerable<SupportsConditionalImageAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      if (!(row.Cells[e.ColumnIndex] is DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell cell))
+        return;
+
+      foreach (var attribute in @this) {
+        var image = attribute.GetImage(data, e.Value);
+        cell.Image = image;
+        if (image == null)
+          continue;
+
+        cell.TextImageRelation = TextImageRelation.ImageBeforeText;
+        cell.KeepAspectRatio = true;
+        cell.FixedImageWidth = 0;
+        cell.FixedImageHeight = 0;
+        e.FormattingApplied = true;
+        break;
+      }
+
     }
 
   }
 
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
+  internal sealed class DataGridViewCheckboxColumnAttribute : Attribute {
+
+  }
+
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewImageColumnAttribute : DataGridViewClickableAttribute {
+
     public DataGridViewImageColumnAttribute(string imageListPropertyName = null, string onClickMethodName = null, string onDoubleClickMethodName = null, string toolTipTextPropertyName = null) : base(onClickMethodName, onDoubleClickMethodName) {
       this.ImageListPropertyName = imageListPropertyName;
       this.ToolTipTextPropertyName = toolTipTextPropertyName;
     }
+
     public string ToolTipTextPropertyName { get; }
     public string ImageListPropertyName { get; }
 
-    public Image GetImage(object row, object value) {
-      if (ReferenceEquals(value, null))
-        return null;
-
+    private Image _GetImage(object row, object value) {
       var imageList = DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(row, this.ImageListPropertyName, null, null, null, null);
       if (imageList == null)
         return value as Image;
 
-      var result = value is int && !value.GetType().IsEnum ? imageList.Images[(int)value] : imageList.Images[value.ToString()];
+      var result = value is int index && !index.GetType().IsEnum ? imageList.Images[index] : imageList.Images[value.ToString()];
       return result;
     }
 
-    public string ToolTipText(object row) => DataGridViewExtensions.GetPropertyValueOrDefault<string>(row, this.ToolTipTextPropertyName, null, null, null, null);
+    private string _ToolTipText(object row) => DataGridViewExtensions.GetPropertyValueOrDefault<string>(row, this.ToolTipTextPropertyName, null, null, null, null);
+
+    public static void OnCellFormatting(DataGridViewImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      //should not be necessary but dgv throws format exception
+      if (e.DesiredType != typeof(Image))
+        return;
+
+      e.Value = @this._GetImage(data, e.Value);
+      e.FormattingApplied = true;
+      row.Cells[column.Index].ToolTipText = @this._ToolTipText(data);
+    }
 
   }
 
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-  internal sealed class DataGridViewColumnDisplayTextAttribute : Attribute {
+  [AttributeUsage(AttributeTargets.Property)]
+  internal sealed class DataGridViewCellDisplayTextAttribute : Attribute {
     private string PropertyName { get; }
-    private string ToolTipPropertyName { get; }
 
-    public DataGridViewColumnDisplayTextAttribute(string propertyName, string toolTipPropertyName) {
-      this.PropertyName = propertyName;
-      this.ToolTipPropertyName = toolTipPropertyName;
-    }
+    public DataGridViewCellDisplayTextAttribute(string propertyName) => this.PropertyName = propertyName;
 
-    public DataGridViewColumnDisplayTextAttribute(string propertyName) {
-      this.PropertyName = propertyName;
-    }
-
-    public string GetDisplayText(object row) =>
+    private string _GetDisplayText(object row) =>
       DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
     ;
 
-    public string ToolTipText(object row) =>
-      DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ToolTipPropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
-    ;
+    public static void OnCellFormatting(DataGridViewCellDisplayTextAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      e.Value = @this._GetDisplayText(data);
+      e.FormattingApplied = true;
+    }
   }
 
   /// <summary>
   /// Allows specifying certain properties as read-only depending on the underlying object instance.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewConditionalReadOnlyAttribute : Attribute {
     public DataGridViewConditionalReadOnlyAttribute(string isReadOnlyWhen) {
       this.IsReadOnlyWhen = isReadOnlyWhen;
@@ -897,7 +2366,7 @@ namespace System.Windows.Forms {
   /// <summary>
   /// Allows specifying a value to be used as a progressbar column.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewProgressBarColumnAttribute : Attribute {
     public DataGridViewProgressBarColumnAttribute() : this(0, 100) { }
 
@@ -913,7 +2382,7 @@ namespace System.Windows.Forms {
   /// <summary>
   /// Allows specifying a string or image property to be used as a button column.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewButtonColumnAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataGridViewButtonColumnAttribute"/> class.
@@ -942,9 +2411,28 @@ namespace System.Windows.Forms {
   }
 
   /// <summary>
+  /// Allows specifying a column to host a combobox contaning the elements specified by a property.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property)]
+  internal sealed class DataGridViewComboboxColumnAttribute : Attribute {
+    public string EnabledWhenPropertyName { get; }
+    public string ValueMember { get; }
+    public string DisplayMember { get; }
+    public string DataSourcePropertyName { get; }
+
+    public DataGridViewComboboxColumnAttribute(string dataSourcePropertyName, string enabledWhenPropertyName = null, string valueMember = null, string displayMember = null) {
+      this.EnabledWhenPropertyName = enabledWhenPropertyName;
+      this.ValueMember = valueMember;
+      this.DisplayMember = displayMember;
+      this.DataSourcePropertyName = dataSourcePropertyName;
+    }
+
+  }
+
+  /// <summary>
   /// Allows specifying a value to be used as column with multiple images
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewMultiImageColumnAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute"/> class.
@@ -956,7 +2444,7 @@ namespace System.Windows.Forms {
     /// <param name="maximumImageSize">the maximum size of every image displayed (width and height)</param>
     /// <param name="padding">The padding within each image</param>
     /// <param name="margin">The margin around each image</param>
-    public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null, int maximumImageSize = 24, int padding = 1, int margin = 1)
+    public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null, int maximumImageSize = 24, int padding = 0, int margin = 0)
       : this(onClickMethodName, toolTipProviderMethodName, maximumImageSize, padding, padding, padding, padding, margin, margin, margin, margin) {
     }
 
@@ -973,13 +2461,33 @@ namespace System.Windows.Forms {
     public string ToolTipProviderMethodName { get; }
     public Padding Padding { get; }
     public Padding Margin { get; }
+
+  }
+
+  /// <summary>
+  /// Allows specifying a value to be used as column with numeric up down control
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property)]
+  internal sealed class DataGridViewNumericUpDownColumnAttribute : Attribute {
+    public decimal Minimum { get; }
+    public decimal Maximum { get; }
+    public int DecimalPlaces { get; }
+    public decimal Increment { get; }
+
+    public DataGridViewNumericUpDownColumnAttribute(double minimum, double maximum, double increment = 1, int decimalPlaces = 2) {
+      this.Minimum = (decimal)minimum;
+      this.Maximum = (decimal)maximum;
+      this.Increment = (decimal)increment;
+      this.DecimalPlaces = decimalPlaces;
+    }
   }
 
   /// <summary>
   /// Allows setting an exact width in pixels for automatically generated columns.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property)]
   internal sealed class DataGridViewColumnWidthAttribute : Attribute {
+
     public DataGridViewColumnWidthAttribute(char characters) {
       this.Characters = new string('@', characters);
       this.Width = -1;
@@ -1029,9 +2537,26 @@ namespace System.Windows.Forms {
   }
 
   /// <summary>
+  /// Allows setting the sort mode for automatically generated columns.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property)]
+  internal sealed class DataGridViewColumnSortModeAttribute : Attribute {
+    public DataGridViewColumnSortMode SortMode { get; }
+
+    public DataGridViewColumnSortModeAttribute(DataGridViewColumnSortMode sortMode) {
+      this.SortMode = sortMode;
+    }
+
+    public void ApplyTo(DataGridViewColumn column) {
+      column.SortMode = this.SortMode;
+    }
+
+  }
+
+  /// <summary>
   /// Allows setting an exact height in pixels for automatically generated columns.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
   internal sealed class DataGridViewRowHeightAttribute : Attribute {
     public string RowHeightProperty { get; }
     public string CustomRowHeightEnabledProperty { get; }
@@ -1104,7 +2629,7 @@ namespace System.Windows.Forms {
   /// <summary>
   /// Allows an specific object to be represented as a full row header.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
   internal sealed class DataGridViewFullMergedRowAttribute : Attribute {
     public DataGridViewFullMergedRowAttribute(string headingTextPropertyName, string foreColor = null, float textSize = -1) {
       this.HeadingTextPropertyName = headingTextPropertyName;
@@ -1122,10 +2647,10 @@ namespace System.Windows.Forms {
   /// <summary>
   /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
   internal sealed class DataGridViewCellStyleAttribute : Attribute {
 
-    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, string wrapModePropertyName = null) {
+    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet, DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, string wrapModePropertyName = null) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
       this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
       this.ConditionalPropertyName = conditionalPropertyName;
@@ -1134,41 +2659,84 @@ namespace System.Windows.Forms {
       this.ForeColorPropertyName = foreColorPropertyName;
       this.BackColorPropertyName = backColorPropertyName;
       this.WrapModePropertyName = wrapModePropertyName;
+      this.Alignment = alignment;
     }
 
     public string ConditionalPropertyName { get; }
     public Color? ForeColor { get; }
     public Color? BackColor { get; }
     public string Format { get; }
+    public DataGridViewContentAlignment Alignment { get; }
     public DataGridViewTriState WrapMode { get; }
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
     public string WrapModePropertyName { get; }
 
-    public void ApplyTo(DataGridViewCellStyle style, object row) {
-      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
+    private void _ApplyTo(DataGridViewCellStyle style, object data) {
+      var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(data, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
       if (color != null)
         style.ForeColor = color.Value;
 
-      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(row, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
+      color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(data, this.BackColorPropertyName, null, null, null, null) ?? this.BackColor;
       if (color != null)
         style.BackColor = color.Value;
 
-      var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(row, this.WrapModePropertyName, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet);
+      var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(data, this.WrapModePropertyName, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet);
       style.WrapMode = this.WrapMode != DataGridViewTriState.NotSet ? this.WrapMode : wrapMode;
 
       if (this.Format != null)
         style.Format = this.Format;
+
+      style.Alignment = this.Alignment;
     }
 
-    public bool IsEnabled(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.ConditionalPropertyName, true, true, false, false);
+    private bool _IsEnabled(object data) => DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false);
+
+    public static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      foreach (var attribute in @this)
+        if (attribute._IsEnabled(data))
+          attribute._ApplyTo(e.CellStyle, data);
+    }
+
+  }
+
+  /// <summary>
+  /// Allows defining the cell tooltip in a DataGridView for automatically generated columns.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+  internal sealed class DataGridViewCellTooltipAttribute : Attribute {
+    public string ToolTipText { get; }
+    public string TooltipTextPropertyName { get; }
+    public string ConditionalPropertyName { get; }
+
+    public DataGridViewCellTooltipAttribute(string tooltipText = null, string tooltipTextPropertyName = null, string conditionalPropertyName = null) {
+      this.ToolTipText = tooltipText;
+      this.TooltipTextPropertyName = tooltipTextPropertyName;
+      this.ConditionalPropertyName = conditionalPropertyName;
+    }
+
+    private void _ApplyTo(DataGridViewCell cell, object data) {
+      var conditional = DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, false, true, false, false);
+      if (!conditional) {
+        cell.ToolTipText = string.Empty;
+        return;
+      }
+
+      var text = DataGridViewExtensions.GetPropertyValueOrDefault<string>(data, this.TooltipTextPropertyName, null, null, null, null) ?? this.ToolTipText;
+      cell.ToolTipText = text ?? string.Empty;
+    }
+
+    public static void OnCellFormatting(DataGridViewCellTooltipAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+      if (row.Cells[e.ColumnIndex] is DataGridViewCell dgvCell)
+        @this._ApplyTo(dgvCell, data);
+    }
 
   }
 
   /// <summary>
   /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
   /// </summary>
-  [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
+  [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
   internal sealed class DataGridViewRowStyleAttribute : Attribute {
 
     public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, bool isUnderline = false) {
@@ -1198,7 +2766,7 @@ namespace System.Windows.Forms {
     public string ForeColorPropertyName { get; }
     public string BackColorPropertyName { get; }
 
-    public void ApplyTo(DataGridViewRow row, object rowData) {
+    private void _ApplyTo(DataGridViewRow row, object rowData) {
       var style = row.DefaultCellStyle;
 
       var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(rowData, this.ForeColorPropertyName, null, null, null, null) ?? this.ForeColor;
@@ -1217,7 +2785,13 @@ namespace System.Windows.Forms {
 
     }
 
-    public bool IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+    private bool _IsEnabled(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+
+    public static void OnRowPrepaint(IEnumerable<DataGridViewRowStyleAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
+      foreach (var attribute in @this)
+        if (attribute._IsEnabled(data))
+          attribute._ApplyTo(row, data);
+    }
 
   }
 
@@ -1339,7 +2913,7 @@ namespace System.Windows.Forms {
 
       var columns = dgv.Columns;
 
-      for (var i = 0; i < columns.Count; i++) {
+      for (var i = 0; i < columns.Count; ++i) {
         var column = columns[i];
 
         // ignore unbound columns
@@ -1420,6 +2994,15 @@ namespace System.Windows.Forms {
           column = newColumn;
         }
 
+        // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
+        var imageAndTextColumnAttribute = (DataGridViewTextAndImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewTextAndImageColumnAttribute), true).FirstOrDefault();
+        if (imageAndTextColumnAttribute != null) {
+          var newColumn = _ConstructImageAndTextColumn(column);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
         // if needed replace DataGridViewColumns with DataGridViewCheckboxColumn
         var checkboxColumnAttribute = (DataGridViewCheckboxColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewCheckboxColumnAttribute), true).FirstOrDefault();
         if (checkboxColumnAttribute != null) {
@@ -1427,6 +3010,24 @@ namespace System.Windows.Forms {
           columns.RemoveAt(i);
           columns.Insert(i, newColumn);
           column = newColumn;
+        }
+
+        // if needed replace DataGridViewColumns with DataGridViewNumericUpDownColumn
+        var numericUpDownColumnAttribute = (DataGridViewNumericUpDownColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewNumericUpDownColumnAttribute), true).FirstOrDefault();
+        if (numericUpDownColumnAttribute != null) {
+          var newColumn = _ConstructNumericUpDownColumn(column, numericUpDownColumnAttribute);
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
+          column = newColumn;
+        }
+
+        // if needed replace DataGridViewColumns with DataGridViewDropDownColumn
+        var comboBoxColumnAttribute = (DataGridViewComboboxColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewComboboxColumnAttribute), true).FirstOrDefault();
+        if (comboBoxColumnAttribute != null) {
+          var newColumn = _ConstructComboBoxColumn(column, comboBoxColumnAttribute);
+          newColumn.DataPropertyName = property.Name;
+          columns.RemoveAt(i);
+          columns.Insert(i, newColumn);
         }
 
         // apply visibility for column
@@ -1440,13 +3041,16 @@ namespace System.Windows.Forms {
 
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
+
+        //apply column sort mode
+        _QueryPropertyAttribute<DataGridViewColumnSortModeAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
       }
 
       //Query all properties which are assignable from IList and thus not auto generated
       var listProperties = type.GetProperties();
 
       // if needed add DataGridViewColumns with DataGridViewMultiImageColumnAttribute
-      for (var index = 0; index < listProperties.Length; index++) {
+      for (var index = 0; index < listProperties.Length; ++index) {
         var property = listProperties[index];
 
         var browsableAttribute = (BrowsableAttribute)property.GetCustomAttributes(typeof(BrowsableAttribute), true).FirstOrDefault();
@@ -1456,17 +3060,35 @@ namespace System.Windows.Forms {
         if (dgv.Columns.Contains(property.Name))
           continue;
 
-        var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
-        if (multiImageColumnAttribute == null)
-          continue;
+        DataGridViewColumn newColumn = null;
 
-        var displayText = (DisplayNameAttribute)property.GetCustomAttributes(typeof(DisplayNameAttribute), true).FirstOrDefault();
-        var newColumn = _ConstructMultiImageColumn(property.Name, displayText?.DisplayName, multiImageColumnAttribute);
-        columns.Insert(index, newColumn);
+        var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property.GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
+        if (multiImageColumnAttribute != null) {
+          var displayText = (DisplayNameAttribute)property.GetCustomAttributes(typeof(DisplayNameAttribute), true).FirstOrDefault();
+          newColumn = _ConstructMultiImageColumn(property.Name, displayText?.DisplayName, multiImageColumnAttribute);
+          columns.Insert(index, newColumn);
+        }
+
+        if (newColumn == null)
+          continue;
 
         // apply column width
         _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, property.Name)?.FirstOrDefault()?.ApplyTo(newColumn);
       }
+    }
+
+    private static BoundDataGridViewComboBoxColumn _ConstructComboBoxColumn(DataGridViewColumn column, DataGridViewComboboxColumnAttribute attribute) {
+      return new BoundDataGridViewComboBoxColumn(attribute.DataSourcePropertyName, attribute.EnabledWhenPropertyName, attribute.ValueMember, attribute.DisplayMember) {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = column.ReadOnly,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+      };
     }
 
     /// <summary>
@@ -1640,6 +3262,30 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="column"></param>
+    /// <param name="attribute"></param>
+    /// <returns></returns>
+    private static DataGridViewColumn _ConstructNumericUpDownColumn(DataGridViewColumn column, DataGridViewNumericUpDownColumnAttribute attribute) {
+      return new DataGridViewNumericUpDownColumn {
+        Name = column.Name,
+        DataPropertyName = column.DataPropertyName,
+        HeaderText = column.HeaderText,
+        ReadOnly = column.ReadOnly,
+        DisplayIndex = column.DisplayIndex,
+        Width = column.Width,
+        AutoSizeMode = column.AutoSizeMode,
+        ContextMenuStrip = column.ContextMenuStrip,
+        Visible = column.Visible,
+        Minimum = attribute.Minimum,
+        Maximum = attribute.Maximum,
+        DecimalPlaces = attribute.DecimalPlaces,
+        Increment = attribute.Increment
+      };
+    }
+
+    /// <summary>
     /// Construct a DataGridViewComboboxColumn for enum types.
     /// </summary>
     /// <param name="enumType">Type of the enum.</param>
@@ -1707,53 +3353,46 @@ namespace System.Windows.Forms {
       var rowData = row.DataBoundItem;
       var columnPropertyName = column.DataPropertyName;
 
-      // find image columns
-      var imageColumnAttribute = _QueryPropertyAttribute<DataGridViewImageColumnAttribute>(type, columnPropertyName)?.FirstOrDefault();
-      if (imageColumnAttribute != null) {
-        e.Value = imageColumnAttribute.GetImage(rowData, e.Value);
-        e.FormattingApplied = true;
-        row.Cells[column.Index].ToolTipText = imageColumnAttribute.ToolTipText(rowData);
+      void TryHandle<TAttribute>(Action<TAttribute, DataGridViewRow, DataGridViewColumn, object, string, DataGridViewCellFormattingEventArgs> handler) where TAttribute : Attribute {
+        var attribute = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName)?.FirstOrDefault();
+        if (attribute != null)
+          handler(attribute, row, column, rowData, columnPropertyName, e);
       }
 
-      // find conditional image columns
-      var ConditionalImageColumnAttribute = _QueryPropertyAttribute<SupportsConditionalImageAttribute>(type, columnPropertyName)?.FirstOrDefault();
-      if (ConditionalImageColumnAttribute != null && row.Cells[e.ColumnIndex] is DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell cell) {
-        cell.Image = ConditionalImageColumnAttribute?.GetImage(rowData, e.Value);
-        e.FormattingApplied = true;
+      void TryHandle2<TAttribute>(Action<IEnumerable<TAttribute>, DataGridViewRow, DataGridViewColumn, object, string, DataGridViewCellFormattingEventArgs> handler) where TAttribute : Attribute {
+        var attributes = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName);
+        if (attributes != null)
+          handler(attributes, row, column, rowData, columnPropertyName, e);
       }
 
-      //find columns with DisplayTextAttribute
-      var textColumnAttribute = _QueryPropertyAttribute<DataGridViewColumnDisplayTextAttribute>(type, columnPropertyName)?.FirstOrDefault();
-      if (textColumnAttribute != null) {
-        e.Value = textColumnAttribute.GetDisplayText(rowData);
-        e.FormattingApplied = true;
-        row.Cells[column.Index].ToolTipText = textColumnAttribute.ToolTipText(rowData) ?? string.Empty;
-      }
+      TryHandle<DataGridViewImageColumnAttribute>(DataGridViewImageColumnAttribute.OnCellFormatting);
+      TryHandle<DataGridViewTextAndImageColumnAttribute>(DataGridViewTextAndImageColumnAttribute.OnCellFormatting);
+      TryHandle2<SupportsConditionalImageAttribute>(SupportsConditionalImageAttribute.OnCellFormatting);
+      TryHandle<DataGridViewCellDisplayTextAttribute>(DataGridViewCellDisplayTextAttribute.OnCellFormatting);
+      _FixDisplayTextForEnums(column, rowData, columnPropertyName, e);
+      TryHandle<DataGridViewCellTooltipAttribute>(DataGridViewCellTooltipAttribute.OnCellFormatting);
+      TryHandle2<DataGridViewCellStyleAttribute>(DataGridViewCellStyleAttribute.OnCellFormatting);
+    }
 
-      // find enum columns in read-only mode
-      if (column is DataGridViewTextBoxColumn) {
-        var property = rowData?.GetType().GetProperty(columnPropertyName);
-        if (property != null) {
-          var columnDataType = property.PropertyType;
-          var columnData = property.GetValue(rowData, null);
-          if (columnDataType.IsEnum) {
-            var displayText = _GetEnumDisplayName(columnData);
-            if (displayText != null) {
-              e.Value = displayText;
-              e.FormattingApplied = true;
-            }
-          }
-        }
-      }
-
-      // apply cell style
-      var attributes = _QueryPropertyAttribute<DataGridViewCellStyleAttribute>(type, columnPropertyName);
-      if (attributes == null)
+    private static void _FixDisplayTextForEnums(DataGridViewColumn column, object data, string columnPropertyName, DataGridViewCellFormattingEventArgs e) {
+      if (!(column is DataGridViewTextBoxColumn))
         return;
 
-      foreach (var attribute in attributes)
-        if (attribute.IsEnabled(rowData))
-          attribute.ApplyTo(e.CellStyle, rowData);
+      var property = data?.GetType().GetProperty(columnPropertyName);
+      if (property == null)
+        return;
+
+      var columnDataType = property.PropertyType;
+      var columnData = property.GetValue(data, null);
+      if (!columnDataType.IsEnum)
+        return;
+
+      var displayText = _GetEnumDisplayName(columnData);
+      if (displayText == null)
+        return;
+
+      e.Value = displayText;
+      e.FormattingApplied = true;
     }
 
     /// <summary>
@@ -1773,27 +3412,33 @@ namespace System.Windows.Forms {
 
       var value = row.DataBoundItem;
 
-      var rowStyleAttributes = _QueryPropertyAttribute<DataGridViewRowStyleAttribute>(type);
-      if (rowStyleAttributes != null)
-        foreach (var attribute in rowStyleAttributes)
-          if (attribute.IsEnabled(value))
-            attribute.ApplyTo(row, value);
+      bool TryHandle2<TAttribute>(Action<IEnumerable<TAttribute>, DataGridViewRow, object, DataGridViewRowPrePaintEventArgs> handler) where TAttribute : Attribute {
+        var attribute = _QueryPropertyAttribute<TAttribute>(type);
+        if (attribute == null)
+          return false;
 
-      // repair cell styles (eg readonly cells, disabled button cells)
+        handler(attribute, row, value, e);
+        return true;
+      }
+
+      var isAlreadyStyled = TryHandle2<DataGridViewRowStyleAttribute>(DataGridViewRowStyleAttribute.OnRowPrepaint);
+      _FixCellStyleForReadOnlyAndDisabled(dgv, row, type, value, isAlreadyStyled);
+      _QueryPropertyAttribute<DataGridViewRowHeightAttribute>(type).FirstOrDefault()?.ApplyTo(value, row);
+    }
+
+    private static void _FixCellStyleForReadOnlyAndDisabled(DataGridView dgv, DataGridViewRow row, Type type, object value,
+      bool isAlreadyStyled) {
       var cells = row.Cells;
       foreach (DataGridViewColumn column in dgv.Columns) {
-
         if (column.DataPropertyName == null)
           continue;
 
         var cell = cells[column.Index];
         if (!dgv.ReadOnly)
-          _FixReadOnlyCellStyle(type, column, cell, value, rowStyleAttributes != null);
+          _FixReadOnlyCellStyle(type, column, cell, value, isAlreadyStyled);
 
         _FixDisabledButtonCellStyle(type, column, cell, value);
       }
-
-      _QueryPropertyAttribute<DataGridViewRowHeightAttribute>(type).FirstOrDefault()?.ApplyTo(value, row);
     }
 
     private static void _RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e) {
@@ -1867,6 +3512,7 @@ namespace System.Windows.Forms {
     /// <param name="column">The column.</param>
     /// <param name="cell">The cell.</param>
     /// <param name="value">The value.</param>
+    /// <param name="alreadyStyled"><c>true</c> if the cell was already styled; otherwise, <c>false</c></param>
     private static void _FixReadOnlyCellStyle(Type type, DataGridViewColumn column, DataGridViewCell cell, object value, bool alreadyStyled) {
       var readOnlyAttribute = _QueryPropertyAttribute<ReadOnlyAttribute>(type, column.DataPropertyName)?.FirstOrDefault();
       if (readOnlyAttribute != null)
@@ -1898,16 +3544,6 @@ namespace System.Windows.Forms {
 
       row = @this.Rows[rowIndex];
       return true;
-    }
-
-    private static bool TryGetColumn(this DataGridView @this, int columnIndex, out DataGridViewColumn column) {
-      if (columnIndex < 0 || columnIndex >= @this.ColumnCount) {
-        column = null;
-        return false;
-      }
-
-      column = @this.Columns[columnIndex];
-      return column.IsDataBound;
     }
 
     private static bool TryGetRowType(this DataGridViewRow @this, out Type rowDataType) {
@@ -2004,8 +3640,7 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="_">The <see cref="System.EventArgs" /> instance containing the event data.</param>
     private static void _RemoveDisabledState(object sender, EventArgs _) {
-      var dgv = sender as DataGridView;
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
       _DGV_STATUS_BACKUPS.Remove(dgv);
@@ -2017,15 +3652,13 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="_">The <see cref="System.EventArgs" /> instance containing the event data.</param>
     private static void _EnabledChanged(object sender, EventArgs _) {
-      var dgv = sender as DataGridView;
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
       if (dgv.Enabled) {
 
         // if state was saved, restore it
-        DataGridViewState lastState;
-        if (!_DGV_STATUS_BACKUPS.TryGetValue(dgv, out lastState))
+        if (!_DGV_STATUS_BACKUPS.TryGetValue(dgv, out var lastState))
           return;
 
         _DGV_STATUS_BACKUPS.Remove(dgv);
@@ -2033,8 +3666,7 @@ namespace System.Windows.Forms {
       } else {
 
         // if state already saved, ignore
-        DataGridViewState lastState;
-        if (_DGV_STATUS_BACKUPS.TryGetValue(dgv, out lastState))
+        if (_DGV_STATUS_BACKUPS.TryGetValue(dgv, out var _))
           return;
 
         var state = DataGridViewState.FromDataGridView(dgv);
@@ -2044,7 +3676,6 @@ namespace System.Windows.Forms {
     }
 
     #endregion
-
     public static void EnableDoubleBuffering(this DataGridView @this) {
       if (@this == null)
         throw new NullReferenceException();
@@ -2054,7 +3685,8 @@ namespace System.Windows.Forms {
 
       var dgvType = @this.GetType();
       var pi = dgvType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
-      pi.SetValue(@this, true, null);
+      if (pi != null)
+        pi.SetValue(@this, true, null);
     }
 
     /// <summary>
@@ -2095,7 +3727,8 @@ namespace System.Windows.Forms {
       try {
         @this.FirstDisplayedScrollingRowIndex = rowCount - 1;
       } catch (Exception) {
-        ;
+        // ReSharper disable once EmptyStatement
+        ; // I can be a breakpoint if you want to know the exception thrown
       }
     }
 
@@ -2133,6 +3766,7 @@ namespace System.Windows.Forms {
     public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView @this, Func<DataGridViewColumn, bool> predicate) {
       if (@this == null)
         throw new NullReferenceException();
+
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
 
@@ -2152,6 +3786,30 @@ namespace System.Windows.Forms {
       var matches = FindColumns(@this, predicate);
       return matches?.FirstOrDefault();
     }
+
+    public static bool TryGetColumn(this DataGridView @this, int columnIndex, out DataGridViewColumn column) {
+      if (columnIndex < 0 || columnIndex >= @this.ColumnCount) {
+        column = null;
+        return false;
+      }
+
+      column = @this.Columns[columnIndex];
+      return column.IsDataBound;
+    }
+
+    public static bool TryGetColumn(this DataGridView @this, string columnName, out DataGridViewColumn column) {
+      if (!@this.Columns.Contains(columnName)) {
+        column = null;
+        return false;
+      }
+
+      column = @this.Columns[columnName];
+      return column?.IsDataBound ?? false;
+    }
+
+    public static DataGridViewColumn GetColumnByName(this DataGridView @this, string columnName) =>
+      !@this.Columns.Contains(columnName) ? null : @this.Columns[columnName]
+    ;
 
     /// <summary>
     /// Gets the selected items.
@@ -2258,7 +3916,7 @@ namespace System.Windows.Forms {
 
       var bucket = new HashSet<TItem>(items);
       foreach (var row in @this.Rows.Cast<DataGridViewRow>())
-        if (row.DataBoundItem is TItem && bucket.Contains((TItem)row.DataBoundItem))
+        if (row.DataBoundItem is TItem item && bucket.Contains(item))
           row.Selected = true;
     }
 
@@ -2272,6 +3930,24 @@ namespace System.Windows.Forms {
 
       foreach (DataGridViewRow row in @this.SelectedRows)
         row.Selected = false;
+    }
+
+    /// <summary>
+    /// Changes the datasource without throwing format errors.
+    /// </summary>
+    /// <param name="this">This DataGridView</param>
+    /// <param name="dataSource">The new data source.</param>
+    /// <returns>The old data source.</returns>
+    public static object ExchangeDataSource(this DataGridView @this, object dataSource) {
+      var result = @this.DataSource;
+      void OnThisOnDataError(object _, DataGridViewDataErrorEventArgs e) => e.ThrowException = false;
+      try {
+        @this.DataError += OnThisOnDataError;
+        @this.DataSource = dataSource;
+      } finally {
+        @this.DataError -= OnThisOnDataError;
+      }
+      return result;
     }
 
     /// <summary>
@@ -2307,7 +3983,7 @@ namespace System.Windows.Forms {
 
         // reset data source
         preAction?.Invoke();
-        @this.DataSource = source;
+        ExchangeDataSource(@this, source);
         postAction?.Invoke();
 
         if (source == null)
@@ -2410,7 +4086,7 @@ namespace System.Windows.Forms {
       if (!type.IsEnum)
         return null;
 
-      var key = type.FullName + "\0" + value.ToString();
+      var key = type.FullName + "\0" + value;
       if (!_ENUM_DISPLAYNAME_CACHE.TryGetValue(key, out var result)) {
         result = _ENUM_DISPLAYNAME_CACHE.GetOrAdd(key, _ => {
           var displayText = (DisplayNameAttribute)
@@ -2434,37 +4110,50 @@ namespace System.Windows.Forms {
     /// <param name="propertyName">Name of the property.</param>
     /// <returns>An enumeration of all matching attributes or <c>null</c>.</returns>
     private static IEnumerable<TAttribute> _QueryPropertyAttribute<TAttribute>(Type baseType, string propertyName) where TAttribute : Attribute {
+      var key = baseType.FullName + "\0" + propertyName + "\0" + typeof(TAttribute).Name;
+      return _PROPERTY_ATTRIBUTE_CACHE.TryGetValue(key, out var results)
+        ? results?.OfType<TAttribute>()
+        : _QueryPropertyAttributeAndCache<TAttribute>(key, baseType, propertyName)
+        ;
+    }
 
-      var key = baseType.FullName + "\0" + propertyName;
-      if (!_PROPERTY_ATTRIBUTE_CACHE.TryGetValue(key, out var results)) {
+    private static IEnumerable<TAttribute> _QueryPropertyAttributeAndCache<TAttribute>(string key, Type baseType, string propertyName) where TAttribute : Attribute {
+      TAttribute[] ValueFactory(string _) => _GetAttributesForProperty<TAttribute>(baseType, propertyName).ToArray();
+      return _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(key, ValueFactory)?.OfType<TAttribute>();
+    }
 
-        // only allocate lambda class if key not existing to keep GC pressure small
-        results = _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(
-          key,
-          _ => {
-            var property = baseType.GetProperty(propertyName);
+    private static IEnumerable<TAttribute> _GetAttributesForProperty<TAttribute>(Type type, string propertyName)
+      => _GetProperties(type, propertyName)
+        .SelectMany(p => p.GetCustomAttributes(typeof(TAttribute), false).OfType<TAttribute>())
+    ;
 
-            // ignore missing properties
-            var declaringType = property?.DeclaringType;
+    private static IEnumerable<PropertyInfo> _GetProperties(Type type, string propertyName) {
+      var list = new LinkedList<Type>();
+      list.AddFirst(type);
+      for (; ; ) {
+        var first = list.First;
+        if (first == null)
+          break;
 
-            if (declaringType == null)
-              return null;
+        list.RemoveFirst();
+        type = first.Value;
 
-            // find all attributes, even in inherited interfaces
-            return property
-              .GetCustomAttributes(true)
-              .Concat(
-                declaringType.GetInterfaces()
-                  .Select(intf => intf.GetProperty(propertyName))
-                  .Where(p => p != null)
-                  .SelectMany(_GetInheritedCustomAttributes)
-              )
-              .ToArray()
-              ;
-          });
+        var p = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        if (p != null)
+          yield return p;
+
+        // add base type for testing next
+        var baseType = type.BaseType;
+        if (baseType != null) {
+          first.Value = baseType; // re-using LinkedListNode to avoid GC
+          list.AddFirst(first);
+        }
+
+        // add interfaces to be tested after all base-types are done
+        foreach (var i in type.GetInterfaces())
+          list.AddLast(i);
+
       }
-
-      return results?.OfType<TAttribute>();
     }
 
     private static readonly ConcurrentDictionary<string, Func<object, object>> _PROPERTY_GETTER_CACHE = new ConcurrentDictionary<string, Func<object, object>>();
@@ -2482,7 +4171,7 @@ namespace System.Windows.Forms {
     /// <returns></returns>
     internal static TValue GetPropertyValueOrDefault<TValue>(object value, string propertyName, TValue defaultValueNullValue, TValue defaultValueNoProperty, TValue defaultValuePropertyNotFound, TValue defaultValuePropertyWrongType) {
       // null value, return default
-      if (ReferenceEquals(null, value))
+      if (value is null)
         return defaultValueNullValue;
 
       // if no property given, return default
@@ -2493,24 +4182,75 @@ namespace System.Windows.Forms {
       var type = value.GetType();
       var key = type + "\0" + propertyName;
 
-      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out var property))
+      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out var property)) {
 
         // only allocate lambda class if key not existing to keep GC pressure small
-        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, _ => {
-          var prop = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        Func<object, object> ValueFactory(string _) {
+          var prop = _GetProperties(type, propertyName).FirstOrDefault();
           return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
-        });
+        }
+
+        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, ValueFactory);
+      }
 
       // property not found, return default
       if (property == null)
         return defaultValuePropertyNotFound;
 
       var result = property(value);
-      if (result is TValue)
-        return (TValue)result;
+      if (result is TValue i)
+        return i;
 
       // not right type, return default
       return defaultValuePropertyWrongType;
+    }
+
+    /// <summary>
+    /// Gets the property value or default.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the property.</typeparam>
+    /// <param name="callerName">The caller attribute name</param>
+    /// <param name="value">The value.</param>
+    /// <param name="propertyName">Name of the property.</param>
+    /// <param name="defaultValueNullValue">The default value to return when value is <c>null</c>.</param>
+    /// <returns></returns>
+    internal static TValue GetPropertyValue<TValue>(string callerName, object value, string propertyName, TValue defaultValueNullValue) {
+      // null value, return default
+      if (value is null)
+        return defaultValueNullValue;
+
+      // if no property given, return default
+      if (propertyName == null)
+        throw new Exception($"{callerName}: No property name set");
+
+      // find property and ask for bool values
+      var type = value.GetType();
+      var key = type + "\0" + propertyName;
+
+      if (!_PROPERTY_GETTER_CACHE.TryGetValue(key, out var property)) {
+
+        // only allocate lambda class if key not existing to keep GC pressure small
+        Func<object, object> ValueFactory(string _) {
+          var prop = _GetProperties(type, propertyName).FirstOrDefault();
+          return prop == null ? null : _GetWeaklyTypedGetterDelegate(prop);
+        }
+
+        property = _PROPERTY_GETTER_CACHE.GetOrAdd(key, ValueFactory);
+      }
+
+      // property not found, return default
+      if (property == null)
+        throw new Exception($"{callerName}: Could not find {type.FullName}.{propertyName}");
+
+      var result = property(value);
+      switch (result) {
+        case TValue i:
+          return i;
+        case null when !typeof(TValue).IsValueType:
+          return default(TValue);
+        default:
+          throw new Exception($"{callerName}: Property {type.FullName}.{propertyName} has wrong type '{(result == null ? "null" : result.GetType().FullName)}', expected '{typeof(TValue).FullName}'");
+      }
     }
 
     /// <summary>
@@ -2525,8 +4265,14 @@ namespace System.Windows.Forms {
       if (method == null)
         return null;
 
+      if (property.GetMethod.IsStatic) {
+        var d = property.GetMethod.CreateDelegate(typeof(Func<object>));
+        return _ => d.DynamicInvoke(null);
+      }
+
       // use helper method to get weakly typed version
       var createWeaklyTypedDelegateMethod = typeof(DataGridViewExtensions).GetMethod(nameof(_CreateWeaklyTypedDelegate), BindingFlags.Static | BindingFlags.NonPublic);
+      Debug.Assert(createWeaklyTypedDelegateMethod != null);
       var constructor = createWeaklyTypedDelegateMethod.MakeGenericMethod(method.DeclaringType, method.ReturnType);
       return (Func<object, object>)constructor.Invoke(null, new object[] { method });
     }
@@ -2553,7 +4299,6 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="instance">The instance to call the method from.</param>
     /// <param name="methodName">Name of the method.</param>
-    /// <param name="parameters">The parameters for the method</param>
     /// <returns>An object representing the return value of the called method, or null if the methods return type is void</returns>
     [DebuggerStepThrough]
     internal static void CallLateBoundMethod(object instance, string methodName) {
@@ -2575,7 +4320,36 @@ namespace System.Windows.Forms {
 
     #region parsing colors
 
-    private static readonly Regex _COLOR_MATCH = new Regex(@"^(?:#(?<eightdigit>[0-9a-z]{8}))|(?:#(?<sixdigit>[0-9a-z]{6}))|(?:#(?<fourdigit>[0-9a-z]{4}))|(?:#(?<threedigit>[0-9a-z]{3}))|(?<knowncolor>[a-z]+)|(?:'(?<systemcolor>[a-z]+)')$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private const string _hexNum = "[0-9a-f]";
+    private const string _byteNum = "(?:0*?(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))";
+    private const string _floatNum = @"(?:0|0\.[0-9]+|1\.0)";
+    private const string _comma = @"\s*,\s*";
+    private const string _hex3 = _hexNum + _hexNum + _hexNum;
+    private const string _hex4 = _hexNum + _hex3;
+    private const string _hex6 = _hex3 + _hex3;
+    private const string _hex8 = _hex4 + _hex4;
+    private const string _byte3 = _byteNum + _comma + _byteNum + _comma + _byteNum;
+    private const string _byte4 = _byteNum + _comma + _byte3;
+    private const string _float3 = _floatNum + _comma + _floatNum + _comma + _floatNum;
+    private const string _float4 = _floatNum + _comma + _float3;
+    private const string _freeText = "[a-z]+";
+
+    private const string _pattern =
+      @"^\s*(?:" +
+      "|(?:#(?<eightdigit>" + _hex8 + "))" +
+      "|(?:#(?<sixdigit>" + _hex6 + "))" +
+      "|(?:#(?<fourdigit>" + _hex4 + "))" +
+      "|(?:#(?<threedigit>" + _hex3 + "))" +
+      "|(?:'(?<systemcolor>" + _freeText + "'))" +
+      "|(?<argbbytes>" + _byte4 + ")" +
+      "|(?<rgbbytes>" + _byte3 + ")" +
+      "|(?<argbfloats>" + _float4 + ")" +
+      "|(?<rgbfloats>" + _float3 + ")" +
+      "|(?<knowncolor>" + _freeText + ")" +
+      @")\s*$"
+      ;
+
+    private static readonly Regex _COLOR_MATCH = new Regex(_pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
       Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
@@ -2602,21 +4376,35 @@ namespace System.Windows.Forms {
       )),
       Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
       Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
+      Tuple.Create<string, Func<string, Color>>("argbbytes",v=> {
+        var parts = v.Split(',');
+        return Color.FromArgb(int.Parse(parts[0],CultureInfo.InvariantCulture),int.Parse(parts[1],CultureInfo.InvariantCulture),int.Parse(parts[2],CultureInfo.InvariantCulture),int.Parse(parts[3],CultureInfo.InvariantCulture));
+      }),
+      Tuple.Create<string, Func<string, Color>>("rgbbytes",v=> {
+        var parts = v.Split(',');
+        return Color.FromArgb(int.Parse(parts[0],CultureInfo.InvariantCulture),int.Parse(parts[1],CultureInfo.InvariantCulture),int.Parse(parts[2],CultureInfo.InvariantCulture));
+      }),
+      Tuple.Create<string, Func<string, Color>>("argbfloats",v=> {
+        var parts = v.Split(',');
+        return Color.FromArgb((int)(255*double.Parse(parts[0],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[1],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[2],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[3],CultureInfo.InvariantCulture)));
+      }),
+      Tuple.Create<string, Func<string, Color>>("rgbfloats",v=> {
+        var parts = v.Split(',');
+        return Color.FromArgb((int)(255*double.Parse(parts[0],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[1],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[2],CultureInfo.InvariantCulture)));
+      }),
     };
 
     internal static Color _ParseColor(string @this) {
       var match = _COLOR_MATCH.Match(@this);
-      if (!match.Success)
-        throw new ArgumentException("Unknown color", nameof(@this));
+      // ReSharper disable once InvertIf
+      if (match.Success)
+        foreach (var parser in _COLOR_PARSERS) {
+          var group = match.Groups[parser.Item1];
+          if (group.Success)
+            return parser.Item2(group.Value);
+        }
 
-      foreach (var parser in _COLOR_PARSERS) {
-        var group = match.Groups[parser.Item1];
-        if (group.Success)
-          return parser.Item2(group.Value);
-
-      }
-
-      throw new ArgumentException("Unknown color", nameof(@this));
+      throw new ArgumentException("Unknown color, expecting #AARRGGBB, #RRGGBB, #ARGB, #RGB, knowncolorname, r,g,b (0-255), a,r,g,b (0-255), rgb (0.0-1.0), argb (0.0-1.0) or 'systemcolorname'", nameof(@this));
     }
 
     #endregion
