@@ -22,6 +22,9 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
 
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
 namespace System {
   internal static partial class DateTimeExtensions {
     /// <summary>
@@ -107,6 +110,34 @@ namespace System {
       var daysToAdjust = (dayOfWeek - startDayOfWeek + 7) % 7;
       var result = start.AddDays(daysToAdjust);
       return result;
+    }
+
+    /// <summary>
+    /// Returns the one that is greater.
+    /// </summary>
+    /// <param name="this">This DateTime</param>
+    /// <param name="other">The comparand</param>
+    /// <returns>The other value if it is later; otherwise, this instance.</returns>
+    public static DateTime Max(this DateTime @this, DateTime other) => other > @this ? other : @this;
+
+    /// <summary>
+    /// Retuns the one that is less.
+    /// </summary>
+    /// <param name="this">This DateTime</param>
+    /// <param name="other">The comparand</param>
+    /// <returns>The other value if it is earlier; otherwise, this instance.</returns>
+    public static DateTime Min(this DateTime @this, DateTime other) => other < @this ? other : @this;
+
+
+    /// <summary>
+    /// Enumerates all days between this and an enddate.
+    /// </summary>
+    /// <param name="this">this DateTime</param>
+    /// <param name="endDate">The endDate to iterate to.</param>
+    /// <returns>The enumeration of days between.</returns>
+    public static IEnumerable<DateTime> DaysTill(this DateTime @this, DateTime endDate) {
+      for (var day = @this.Date; day.Date <= endDate.Date; day = day.AddDays(1))
+        yield return day;
     }
   }
 }
