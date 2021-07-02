@@ -156,5 +156,8 @@ namespace System.IO {
 
       return drive == otherdrive;
     }
+
+    public static TimeSpan Age(this FileSystemInfo @this) => DateTime.UtcNow - @this.LastWriteTimeUtc;
+
   }
 }
