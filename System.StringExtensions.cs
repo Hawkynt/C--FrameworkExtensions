@@ -554,6 +554,71 @@ namespace System {
     /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
     /// </summary>
     /// <param name="this">This string.</param>
+    /// <param name="object">The source to get the data from using properties of the same name.</param>
+    /// <returns>The string with values</returns>
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string FormatWithObject<T>(this string @this, T @object) {
+
+      if (@object == null)
+        return @this.FormatWithEx(_ => null);
+
+      var cache = new Dictionary<string, Func<object>>();
+      var type = @object.GetType();
+
+      object Getter(string field) {
+        if (cache.TryGetValue(field, out var call))
+          return call();
+
+        var method = type.GetProperty(field)?.GetGetMethod();
+        if (method == null || method.GetParameters().Length != 0) {
+          cache.Add(field, () => null);
+          return null;
+        }
+
+        var returnType = method.ReturnType;
+
+        // short-cut: non-generic return values
+        if (!returnType.IsGenericType) {
+          call = () => method.Invoke(@object, null);
+          cache.Add(field, call);
+          return call();
+        }
+
+        var genericType = returnType.GetGenericTypeDefinition();
+        if (genericType == typeof(Func<,>)) {
+
+          // support for Func<string,>
+          var genericArguments = returnType.GetGenericArguments();
+          if (genericArguments.Length == 2 && genericArguments[0] == typeof(string))
+            call = () => {
+              var func = (Delegate)method.Invoke(@object, null);
+              return func.DynamicInvoke(field);
+            };
+          else /* something else */
+            call = () => method.Invoke(@object, null);
+        } else if (genericType == typeof(Func<>))
+
+          // support for Func<>
+          call = () => {
+            var func = (Delegate)method.Invoke(@object, null);
+            return func.DynamicInvoke();
+          };
+        else /* non Func<,> / Func<> */
+          call = () => method.Invoke(@object, null);
+
+        cache.Add(field, call);
+        return call();
+      }
+
+      return @this.FormatWithEx(Getter);
+    }
+
+    /// <summary>
+    /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+    /// </summary>
+    /// <param name="this">This string.</param>
     /// <param name="fieldGetter">The field getter.</param>
     /// <param name="passFieldFormatToGetter">if set to <c>true</c> passes the field format to getter.</param>
     /// <returns>A formatted string.</returns>
@@ -682,6 +747,15 @@ namespace System {
 #endif
     public static string MultipleReplace(this string This, params KeyValuePair<string, object>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, object>>)replacements);
 
+
+#if NET40
+    [Pure]
+#endif
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string MultipleReplace(this string This, string replacement, params string[] toReplace) => MultipleReplace(This, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
+
     /// <summary>
     /// Replaces multiple contents.
     /// </summary>
@@ -730,6 +804,9 @@ namespace System {
 
           result.Append(kvp.Value);
           found = true;
+
+          //support for string replacements greater than 1 char
+          i += keyLength - 1;
           break;
         }
 
@@ -1380,6 +1457,141 @@ namespace System {
       return This.EndsWith(what, stringComparison) ? This.Substring(0, This.Length - what.Length) + replacement : This;
     }
 
+#if NET40
+    [Pure]
+#endif
+#if UNSAFE
+
+    public static unsafe string TrimEnd(this string @this, string what) {
+      if (@this == null || what == null)
+        return @this;
+
+      var count = what.Length;
+      var index = @this.Length - count;
+
+      // source shorter than search string, exit  
+      if (index < 0 || count == 0)
+        return @this;
+
+      fixed (char* srcFix = @this)
+      fixed (char* cmpFix = what) {
+        var srcPtr = srcFix + index;
+        var cmpPtr = cmpFix;
+        while (true) {
+          switch (count) {
+            case 0:
+              return @this.Substring(0, index);
+            case 1:
+              if (*srcPtr != *cmpPtr)
+                return @this;
+
+              goto case 0;
+            case 2:
+              if (*(int*)srcPtr != *(int*)cmpPtr)
+                return @this;
+
+              goto case 0;
+            case 3:
+              if (*(int*)srcPtr != *(int*)cmpPtr)
+                return @this;
+              if (srcPtr[2] != cmpPtr[2])
+                return @this;
+
+              goto case 0;
+            case 4:
+              if (*(long*)srcPtr != *(long*)cmpPtr)
+                return @this;
+
+              goto case 0;
+
+#if PLATFORM_X86
+            default:
+              const int stepSize = 4;
+              var cntSteps = count >> 2;
+              count &= 3;
+              do {
+                if (*(int*)srcPtr != *(int*)cmpPtr)
+                  return @this;
+                if (((int*)srcPtr)[1] != ((int*)cmpPtr)[1])
+                  return @this;
+
+                srcPtr += stepSize;
+                cmpPtr += stepSize;
+              } while (--cntSteps > 0);
+              break;
+#else
+            case 5:
+              if (*(long*)srcPtr != *(long*)cmpPtr)
+                return @this;
+              if (srcPtr[4] != cmpPtr[4])
+                return @this;
+
+              goto case 0;
+            case 6:
+              if (*(long*)srcPtr != *(long*)cmpPtr)
+                return @this;
+              if (((int*)srcPtr)[2] != ((int*)cmpPtr)[2])
+                return @this;
+
+              goto case 0;
+            case 7:
+              if (*(long*)srcPtr != *(long*)cmpPtr)
+                return @this;
+              if (((int*)srcPtr)[2] != ((int*)cmpPtr)[2])
+                return @this;
+              if (srcPtr[6] != cmpPtr[6])
+                return @this;
+
+              goto case 0;
+            case 8:
+              if (*(long*)srcPtr != *(long*)cmpPtr)
+                return @this;
+              if (((long*)srcPtr)[1] != ((long*)cmpPtr)[1])
+                return @this;
+
+              goto case 0;
+            default:
+              const int stepSize = 8;
+              var cntSteps = count >> 3;
+              count &= 7;
+              do {
+                if (*(long*)srcPtr != *(long*)cmpPtr)
+                  return @this;
+                if (((long*)srcPtr)[1] != ((long*)cmpPtr)[1])
+                  return @this;
+
+                srcPtr += stepSize;
+                cmpPtr += stepSize;
+              } while (--cntSteps > 0);
+              break;
+#endif
+          }
+        }
+
+      }
+    }
+
+#else
+
+    public static string TrimEnd(this string @this, string what) {
+      if (@this == null || what == null)
+        return @this;
+
+      var index = @this.Length - what.Length;
+
+      // source shorter than search string, exit  
+      if (index < 0)
+        return @this;
+
+      for (int j = index, i = 0; i < what.Length; ++j, ++i)
+        if (@this[j] != what[i])
+          return @this;
+
+      return @this.Substring(0, index);
+    }
+
+#endif
+
     /// <summary>
     /// Determines whether the string is <c>null</c> or empty.
     /// </summary>
@@ -1865,5 +2077,20 @@ namespace System {
       var lf = string.Join("\r", cr).Split(new[] { "\r" }, StringSplitOptions.None);
       return lf.Length;
     }
+
+    /// <summary>
+    /// Equivalent to SQL LIKE Statement.
+    /// </summary>
+    /// <param name="this">The text to search.</param>
+    /// <param name="toFind">The text to find.</param>
+    /// <returns>True if the LIKE matched.</returns>
+    public static bool Like(this string @this, string toFind)
+      => new Regex(@"\A" 
+                   + new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\")
+                     .Replace(toFind, ch => @"\" + ch)
+                     .Replace('_', '.')
+                     .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
+        .IsMatch(@this)
+    ;
   }
 }
