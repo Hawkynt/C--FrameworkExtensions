@@ -211,11 +211,6 @@ namespace System.Drawing {
       public int Width => this.BitmapData.Width;
       public int Height => this.BitmapData.Height;
 
-      // TODO: opt.me
-      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target) {
-        throw new NotImplementedException();
-      }
-
       public bool IsFlatColor {
         get {
           var firstColor = this[0, 0];
@@ -294,15 +289,9 @@ namespace System.Drawing {
         => this.DrawRectangleUnchecked(p.X, p.Y, size.Width, size.Height, color)
       ;
 
-      public void DrawRectangleUnchecked(Rectangle rect, Color color) {
-        // TODO: why not use DrawRectangleUnchecked(int x, int y, int width, int height, Color color) for this?
-        var count = rect.Width + 1;
-        this.DrawHorizontalLine(rect.Left, rect.Top, count, color);
-        this.DrawHorizontalLine(rect.Left, rect.Bottom, count, color);
-        count = rect.Bottom - rect.Top - 2;
-        this.DrawVerticalLine(rect.Left, rect.Top + 1, count, color);
-        this.DrawVerticalLine(rect.Right, rect.Top + 1, count, color);
-      }
+      public void DrawRectangleUnchecked(Rectangle rect, Color color)
+        => this.DrawRectangleUnchecked(rect.X, rect.Y, rect.Width, rect.Height, color)
+      ;
 
       public void DrawRectangleChecked(Rectangle rect, Color color, int lineWidth) {
         var x = rect.X;
@@ -325,7 +314,7 @@ namespace System.Drawing {
           this.DrawHorizontalLine(x, y++, width, color);
       }
 
-      public void DrawRectangleUnChecked(Rectangle rect, Color color, int lineWidth) {
+      public void DrawRectangleUnchecked(Rectangle rect, Color color, int lineWidth) {
         var x = rect.X;
         var y = rect.Y;
         var width = rect.Width;
@@ -372,6 +361,14 @@ namespace System.Drawing {
       ;
 
       public void FillRectangleUnchecked(int x, int y, int width, int height, Color color) {
+        if (color.A == byte.MinValue)
+          return;
+
+        if (color.A < byte.MaxValue) {
+          this._BlendRectangleNaiive(x, y, width, height, color);
+          return;
+        }
+
         if (height > 1 && width >= 8 && width * height >= 512) {
           var bytesPerPixel = this._BytesPerPixel;
           if (bytesPerPixel > 0) {
@@ -450,6 +447,70 @@ namespace System.Drawing {
             this._DrawHorizontalLine(x, y++, width, color);
             this._DrawHorizontalLine(x, y++, width, color);
             this._DrawHorizontalLine(x, y++, width, color);
+          } while (--heightOcts > 0);
+        } while (true);
+      }
+
+      private void _BlendRectangleNaiive(int x, int y, int width, int height, Color color) {
+        do {
+
+          // Duff's device
+          switch (height) {
+            case 0:
+              goto height0;
+            case 1:
+              goto height1;
+            case 2:
+              goto height2;
+            case 3:
+              goto height3;
+            case 4:
+              goto height4;
+            case 5:
+              goto height5;
+            case 6:
+              goto height6;
+            case 7:
+              goto height7;
+            case 8:
+              goto height8;
+            default:
+              goto heightAbove8;
+          }
+
+          height8:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height7:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height6:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height5:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height4:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height3:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height2:
+          this._BlendHorizontalLine(x, y++, width, color);
+          height1:
+          this._BlendHorizontalLine(x, y, width, color);
+          height0:
+          return;
+          heightAbove8:
+
+          // loop unrolled 8-times
+          var heightOcts = height >> 3;
+          height &= 0b111;
+
+          do {
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
+            this._BlendHorizontalLine(x, y++, width, color);
           } while (--heightOcts > 0);
         } while (true);
       }
@@ -855,6 +916,10 @@ namespace System.Drawing {
         => this.CopyFromGrid(tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height)
       ;
 
+      public Bitmap CopyFromGrid(Point tile, Size tileSize, Size distance, Size offset, Point target) {
+        throw new NotImplementedException();
+      }
+
       #endregion
 
       #region BlendWith
@@ -961,34 +1026,8 @@ namespace System.Drawing {
 
       public virtual void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         for (var y = ys; height > 0; ++y, ++yt, --height)
-          for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i) {
-            var sourcePixel = this[xct, yt];
-            var otherPixel = other[x, y];
-            var alpha = otherPixel.A;
-
-            Color newPixel;
-            switch (alpha) {
-              case byte.MinValue:
-                newPixel = sourcePixel;
-                break;
-              case byte.MaxValue:
-                newPixel = otherPixel;
-                break;
-              default: {
-                  var factor = 255 + alpha;
-                  var r = sourcePixel.R * byte.MaxValue + otherPixel.R * alpha;
-                  var g = sourcePixel.G * byte.MaxValue + otherPixel.G * alpha;
-                  var b = sourcePixel.B * byte.MaxValue + otherPixel.B * alpha;
-                  r /= factor;
-                  g /= factor;
-                  b /= factor;
-                  newPixel = Color.FromArgb(sourcePixel.A, r, g, b);
-                  break;
-                }
-            }
-
-            this[xct, yt] = newPixel;
-          }
+          for (int x = xs, xct = xt, i = width; i > 0; ++x, ++xct, --i)
+            this._SetBlendedPixel(xct, yt, other[x, y]);
       }
 
       #endregion
@@ -1104,6 +1143,90 @@ namespace System.Drawing {
 
       #region lines
 
+#if NET45
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      private void _SetBlendedPixel(int x, int y, Color color) {
+        var source = this[x, y];
+        var alpha = color.A;
+        switch (alpha) {
+          case byte.MinValue:
+            return;
+          case byte.MaxValue:
+            this[x, y] = color;
+            return;
+          default: {
+              var factor = 255 + alpha;
+              var r = source.R * byte.MaxValue + color.R * alpha;
+              var g = source.G * byte.MaxValue + color.G * alpha;
+              var b = source.B * byte.MaxValue + color.B * alpha;
+              r /= factor;
+              g /= factor;
+              b /= factor;
+              this[x, y] = Color.FromArgb(source.A, r, g, b);
+              return;
+            }
+        }
+      }
+
+      protected virtual void _BlendHorizontalLine(int x, int y, int count, Color color) {
+        do {
+          // Duff's device
+          switch (count) {
+            case 0:
+              goto count0;
+            case 1:
+              goto count1;
+            case 2:
+              goto count2;
+            case 3:
+              goto count3;
+            case 4:
+              goto count4;
+            case 5:
+              goto count5;
+            case 6:
+              goto count6;
+            case 7:
+              goto count7;
+            default:
+              goto countAbove7;
+          }
+          count7:
+          this._SetBlendedPixel(x++, y, color);
+          count6:
+          this._SetBlendedPixel(x++, y, color);
+          count5:
+          this._SetBlendedPixel(x++, y, color);
+          count4:
+          this._SetBlendedPixel(x++, y, color);
+          count3:
+          this._SetBlendedPixel(x++, y, color);
+          count2:
+          this._SetBlendedPixel(x++, y, color);
+          count1:
+          this._SetBlendedPixel(x, y, color);
+          count0:
+          return;
+          countAbove7:
+
+          // loop unroll
+          var countOcts = count >> 3;
+          count &= 7;
+
+          do {
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+            this._SetBlendedPixel(x++, y, color);
+          } while (--countOcts > 0);
+        } while (true);
+      }
+
       protected virtual void _DrawHorizontalLine(int x, int y, int count, Color color) {
         do {
           // Duff's device
@@ -1158,6 +1281,64 @@ namespace System.Drawing {
             this[x++, y] = color;
             this[x++, y] = color;
             this[x++, y] = color;
+          } while (--countOcts > 0);
+        } while (true);
+      }
+
+      protected virtual void _BlendVerticalLine(int x, int y, int count, Color color) {
+        do {
+          // Duff's device
+          switch (count) {
+            case 0:
+              goto count0;
+            case 1:
+              goto count1;
+            case 2:
+              goto count2;
+            case 3:
+              goto count3;
+            case 4:
+              goto count4;
+            case 5:
+              goto count5;
+            case 6:
+              goto count6;
+            case 7:
+              goto count7;
+            default:
+              goto countAbove7;
+          }
+          count7:
+          this._SetBlendedPixel(x, y++, color);
+          count6:
+          this._SetBlendedPixel(x, y++, color);
+          count5:
+          this._SetBlendedPixel(x, y++, color);
+          count4:
+          this._SetBlendedPixel(x, y++, color);
+          count3:
+          this._SetBlendedPixel(x, y++, color);
+          count2:
+          this._SetBlendedPixel(x, y++, color);
+          count1:
+          this._SetBlendedPixel(x, y, color);
+          count0:
+          return;
+          countAbove7:
+
+          // loop unroll
+          var countOcts = count >> 3;
+          count &= 7;
+
+          do {
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
+            this._SetBlendedPixel(x, y++, color);
           } while (--countOcts > 0);
         } while (true);
       }
@@ -1220,23 +1401,42 @@ namespace System.Drawing {
         } while (true);
       }
 
-
       public void DrawHorizontalLine(int x, int y, int count, Color color) {
-        if (count == 0)
+        if (color.A == byte.MinValue)
           return;
-        if (count < 0)
-          this._DrawHorizontalLine(x - count, y, -count, color);
+
+        if (color.A < byte.MaxValue)
+          _DrawHorizontalLine(x, y, count, color, this._BlendHorizontalLine);
         else
-          this._DrawHorizontalLine(x, y, count, color);
+          _DrawHorizontalLine(x, y, count, color, this._DrawHorizontalLine);
       }
 
       public void DrawVerticalLine(int x, int y, int count, Color color) {
+        if (color.A == byte.MinValue)
+          return;
+
+        if (color.A < byte.MaxValue)
+          _DrawVerticalLine(x, y, count, color, this._BlendVerticalLine);
+        else
+          _DrawVerticalLine(x, y, count, color, this._DrawVerticalLine);
+      }
+
+      private static void _DrawHorizontalLine(int x, int y, int count, Color color, Action<int, int, int, Color> call) {
         if (count == 0)
           return;
         if (count < 0)
-          this._DrawVerticalLine(x, y - count, -count, color);
+          call(x - count, y, -count, color);
         else
-          this._DrawVerticalLine(x, y, count, color);
+          call(x, y, count, color);
+      }
+
+      private static void _DrawVerticalLine(int x, int y, int count, Color color, Action<int, int, int, Color> call) {
+        if (count == 0)
+          return;
+        if (count < 0)
+          call(x, y - count, -count, color);
+        else
+          call(x, y, count, color);
       }
 
       public void DrawLine(int x0, int y0, int x1, int y1, Color color) {
@@ -1253,6 +1453,10 @@ namespace System.Drawing {
         }
 
         this._DrawDiagonalLine(x0, y0, dx, dy, color);
+      }
+
+      public void DrawLine(int x0, int y0, int x1, int y1, int thickness) {
+        throw new NotImplementedException();
       }
 
       private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color) {
