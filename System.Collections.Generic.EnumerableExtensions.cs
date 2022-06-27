@@ -95,6 +95,44 @@ namespace System.Collections.Generic {
     #endregion
 
     /// <summary>
+    /// Appends a single item to the beginning of the enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="this">This enumeration</param>
+    /// <param name="item">The item to prepend</param>
+    /// <returns>A new enumeration with the added item</returns>
+    /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
+    public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      yield return item;
+
+      foreach (var i in @this)
+        yield return i;
+    }
+
+#if !NET45
+    /// <summary>
+    /// Appends a single item to the end of the enumeration.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the items</typeparam>
+    /// <param name="this">This enumeration</param>
+    /// <param name="item">The item to append</param>
+    /// <returns>A new enumeration with the added item</returns>
+    /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
+    public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      foreach (var i in @this)
+        yield return i;
+
+      yield return item;
+    }
+#endif
+
+    /// <summary>
     /// Modifies the resultset to include filtering based on the given query string.
     /// Multiple filters may be present, split by whitespaces, combined with AND.
     /// </summary>
@@ -1331,6 +1369,7 @@ namespace System.Collections.Generic {
       new DisposableCollection<TItem>(@this)
     ;
 
+#if NET40
     public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(this TItem[] @this,Func<TItem,TKey> keyGetter,Func<TItem,TValue> valueGetter,IEqualityComparer<TKey> equalityComparer=null ) {
       if (@this == null)
         throw new NullReferenceException();
@@ -1345,6 +1384,7 @@ namespace System.Collections.Generic {
 
       return result;
     }
+#endif
 
 #if NET45
     /// <summary>
