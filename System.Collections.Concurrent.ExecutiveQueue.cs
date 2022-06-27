@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2030 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,15 +19,15 @@
 */
 #endregion
 
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Threading;
+
 namespace System.Collections.Concurrent {
   /// <summary>
   /// A thread-safe queue which executes a certain callback whenever an element is added
   /// </summary>
   /// <typeparam name="TItem">The type of items contained in this queue.</typeparam>
-  internal class ExecutiveQueue<TItem> : IQueue<TItem> {
+  internal class ExecutiveQueue<TItem>{
 
     #region consts
     private const int _IDLE = 0;
@@ -36,18 +36,19 @@ namespace System.Collections.Concurrent {
 
     #region fields
     private readonly Action<TItem> _callback;
-    private readonly ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
     private readonly Action<TItem, Exception> _exceptionCallback;
     private readonly bool _isAsync;
     private readonly int _maxItems;
-    private readonly TimeSpan _executionDelay;
+    private readonly TimeSpan? _executionDelay;
+    private readonly TimeSpan _dequeueThrottle;
+    private readonly TimeSpan _overflowThrottle;
     private int _processing = _IDLE;
     #endregion
 
     /// <summary>
     /// Gets the items.
     /// </summary>
-    private ConcurrentQueue<TItem> _Items { get { return (this._queue); } }
+    private ConcurrentQueue<TItem> _Items { get; } = new ConcurrentQueue<TItem>();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExecutiveQueue&lt;T&gt;" /> class.
@@ -57,14 +58,17 @@ namespace System.Collections.Concurrent {
     /// <param name="exceptionCallback">The exception callback.</param>
     /// <param name="maxItems">The max items; if more items are enqueued, the queue will be block.</param>
     /// <param name="executionDelay">The execution delay timespan</param>
-    public ExecutiveQueue(Action<TItem> callback, bool isAsync = true, Action<TItem, Exception> exceptionCallback = null, int maxItems = 1000000, TimeSpan executionDelay = default(TimeSpan)) {
-      Contract.Requires(callback != null);
-      Contract.Requires(maxItems > 0);
+    public ExecutiveQueue(Action<TItem> callback, bool isAsync = true, Action<TItem, Exception> exceptionCallback = null, int maxItems = int.MaxValue, TimeSpan? executionDelay = null,TimeSpan? dequeueThrottle=default,TimeSpan? overflowThrottle=default) {
+      Debug.Assert(callback != null);
+      Debug.Assert(maxItems > 0);
+
       this._isAsync = isAsync;
       this._callback = callback;
       this._exceptionCallback = exceptionCallback;
       this._maxItems = maxItems;
       this._executionDelay = executionDelay;
+      this._dequeueThrottle = dequeueThrottle ?? TimeSpan.FromMilliseconds(5);
+      this._overflowThrottle=overflowThrottle?? TimeSpan.FromMilliseconds(5);
     }
 
     #region iQueue<T> Member
@@ -72,8 +76,7 @@ namespace System.Collections.Concurrent {
     /// Clears this queue.
     /// </summary>
     public void Clear() {
-      TItem dummy;
-      while (this._queue.TryDequeue(out dummy))
+      while (this._Items.TryDequeue(out _))
         ;
     }
 
@@ -83,9 +86,10 @@ namespace System.Collections.Concurrent {
     /// <returns>the item</returns>
     public TItem Dequeue() {
       TItem result;
-      while (!this._queue.TryDequeue(out result))
-        ;
-      return (result);
+      while (!this._Items.TryDequeue(out result))
+        Thread.Sleep(this._dequeueThrottle);
+      
+      return result;
     }
 
     /// <summary>
@@ -94,7 +98,7 @@ namespace System.Collections.Concurrent {
     /// </summary>
     /// <param name="item">The item.</param>
     public void Enqueue(TItem item) {
-      var queue = this._queue;
+      var queue = this._Items;
       var callback = this._callback;
 
       if (!this._isAsync) {
@@ -104,6 +108,7 @@ namespace System.Collections.Concurrent {
           var exceptionCallback = this._exceptionCallback;
           if (exceptionCallback == null)
             throw;
+
           exceptionCallback(item, e);
         }
         return;
@@ -111,7 +116,8 @@ namespace System.Collections.Concurrent {
 
       //overflow protection
       while (queue.Count >= this._maxItems)
-        Thread.Sleep(5);
+        Thread.Sleep(_overflowThrottle);
+
       queue.Enqueue(item);
 
       // if already running just return
@@ -137,33 +143,47 @@ namespace System.Collections.Concurrent {
     /// <param name="executionDelay">The execution delay.</param>
     /// <param name="exceptionCallback">The exception callback, if any.</param>
     /// <param name="isRunning">The reference to the isRunning flag.</param>
-    private static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan executionDelay, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
-      Contract.Requires(queue != null);
-      Contract.Requires(callback != null);
+    private static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
+      Debug.Assert(queue != null);
+      Debug.Assert(callback != null);
 
-      // in case the value has alread changed
-      if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
-        return;
+      while(queue.Count>0){ // just be save in case of races
+        
+        // in case the value has alread changed
+        if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
+          return;
 
-      var useDelay = executionDelay != default(TimeSpan);
+        try {
+          _DeqeueAndExecute(queue, callback, executionDelay, exceptionCallback);
+        } finally {
 
-      try {
-        TItem current;
-        while (queue.TryDequeue(out current)) {
-          if(useDelay)
-            Thread.Sleep(executionDelay);
-          try {
-            callback(current);
-          } catch (Exception e) {
-            if (exceptionCallback == null)
-              throw;
-            exceptionCallback(current, e);
-          }
+          // reset flag when done
+          Interlocked.CompareExchange(ref isRunning, _IDLE, _PROCESSING);
         }
+      }
+    }
 
-      } finally {
-        // reset flag when done
-        Interlocked.CompareExchange(ref isRunning, _IDLE, _PROCESSING);
+    /// <summary>
+    /// Dequeues and executes items
+    /// </summary>
+    /// <param name="queue">Our queue</param>
+    /// <param name="callback">The item executor</param>
+    /// <param name="executionDelay">The delay to use when executing items</param>
+    /// <param name="exceptionCallback">Called on exceptions</param>
+    private static void _DeqeueAndExecute(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback) {
+      var useDelay = executionDelay != null;
+      
+      while (queue.TryDequeue(out var current)) {
+        if (useDelay)
+          Thread.Sleep(executionDelay.Value);
+
+        try {
+          callback(current);
+        } catch (Exception e) {
+          if (exceptionCallback == null)
+            throw;
+          exceptionCallback(current, e);
+        }
       }
     }
 
@@ -172,37 +192,25 @@ namespace System.Collections.Concurrent {
     /// </summary>
     /// <param name="item">The item.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public bool TryDequeue(out TItem item) {
-      return (this._queue.TryDequeue(out item));
-    }
+    public bool TryDequeue(out TItem item) => this._Items.TryDequeue(out item);
 
     /// <summary>
     /// Gets the number of contained items.
     /// </summary>
     /// <value>The number of items.</value>
-    public int Count {
-      get {
-        return (this._queue.Count);
-      }
-    }
+    public int Count => this._Items.Count;
 
     /// <summary>
     /// Gets a value indicating whether this instance is empty.
     /// </summary>
     /// <value><c>true</c> if this instance is empty; otherwise, <c>false</c>.</value>
-    public bool IsEmpty {
-      get {
-        return (this._queue.IsEmpty);
-      }
-    }
+    public bool IsEmpty => this._Items.IsEmpty;
 
     /// <summary>
     /// Gets the current queue content as an array.
     /// </summary>
     /// <returns>An array containig the queues elements.</returns>
-    public TItem[] ToArray() {
-      return (this._queue.ToArray());
-    }
+    public TItem[] ToArray() => this._Items.ToArray();
 
     #endregion
   }
