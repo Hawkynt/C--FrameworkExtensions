@@ -159,5 +159,20 @@ namespace System.IO {
 
     public static TimeSpan Age(this FileSystemInfo @this) => DateTime.UtcNow - @this.LastWriteTimeUtc;
 
+    /// <summary>
+    /// Checks whether a FileInfo or DirectoryInfo object is a directory, or intended to be a directory.
+    /// </summary>
+    /// <param name="fileSystemInfo">This object</param>
+    /// <returns>A bool indicating wether the given FileSystemInfo is a directory or not</returns>
+    public static bool IsDirectory(this FileSystemInfo fileSystemInfo) {
+      if (fileSystemInfo == null)
+        return false;
+
+      if ((int) fileSystemInfo.Attributes != -1)
+        return fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);
+
+      return fileSystemInfo is DirectoryInfo;
+    }
+
   }
 }
