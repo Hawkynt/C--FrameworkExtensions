@@ -203,6 +203,8 @@ namespace System.Threading.Tasks {
     private readonly Timer _timer;
 #endif
 
+    public ManualResetEventSlim WaitHandle { get; } = new ManualResetEventSlim(true);
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
     /// </summary>
@@ -290,6 +292,8 @@ namespace System.Threading.Tasks {
         // reset scheduler so more tasks can be scheduled
         if (this._waitUntilTaskReturnedBeforeNextSchedule)
           Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
+
+        this.WaitHandle.Set();
       }
     }
 
@@ -301,6 +305,9 @@ namespace System.Threading.Tasks {
       if (Interlocked.CompareExchange(ref this._taskIsRunning, 1, 0) != 0)
         // already running
         return;
+
+      this.WaitHandle.Reset();
+
 #if SUPPORTTHREADTIMERS
       if (this._allowThreadSleep) {
 #endif

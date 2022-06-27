@@ -57,6 +57,9 @@ namespace System.Threading.Tasks {
 
     private Item _currentValue;
     private Thread _currentThread;
+    private int _threadCount;
+
+    public ManualResetEventSlim WaitHandle { get; } = new ManualResetEventSlim(true);
 
     public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
 #if NET40
@@ -121,10 +124,13 @@ namespace System.Threading.Tasks {
         thread.Start(thread);
     }
 
-
     private void _thread(object state) {
       var thread = (Thread)state;
       try {
+        //if this is the first thread reset the WaitHandle
+        if(Interlocked.Increment(ref this._threadCount) == 1)
+          this.WaitHandle.Reset();
+
         while (true) {
           Item item;
 
@@ -158,6 +164,10 @@ namespace System.Threading.Tasks {
 
         // release this thread
         Interlocked.CompareExchange(ref this._currentThread, null, thread);
+
+        //only set the WaitHandle if no other threads are active
+        if (Interlocked.Decrement(ref this._threadCount) == 0)
+          this.WaitHandle.Set();
       }
     }
   }
