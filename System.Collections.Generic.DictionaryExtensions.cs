@@ -214,6 +214,47 @@ namespace System.Collections.Generic {
       return @this.TryGetValue(key, out var result) ? result : default(TValue);
     }
 
+#if NET45
+
+    /// <summary>
+    /// Gets the value or a default.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <returns>The value from the Dictionary or a default value</returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      Contract.EndContractBlock();
+      return @this.TryGetValue(key, out var result) ? result : default(TValue);
+    }
+
+    /// <summary>
+    /// Gets the value or a default.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <returns>The value from the Dictionary or a default value</returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      Contract.EndContractBlock();
+      return @this.TryGetValue(key, out var result) ? result : default(TValue);
+    }
+
+#endif
+
+
     /// <summary>
     /// Gets the value or a default.
     /// </summary>
@@ -236,6 +277,54 @@ namespace System.Collections.Generic {
 
       return @this.TryGetValue(key, out var result) ? result : defaultValue;
     }
+
+#if NET45
+
+    /// <summary>
+    /// Gets the value or a default.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    /// The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      Contract.EndContractBlock();
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValue;
+    }
+
+    /// <summary>
+    /// Gets the value or a default.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="this">This Dictionary.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    /// The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
+      if (@this == null)
+        throw new NullReferenceException();
+
+      Contract.EndContractBlock();
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValue;
+    }
+
+#endif
 
     /// <summary>
     /// Gets the value or generates a default.
