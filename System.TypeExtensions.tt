@@ -38,6 +38,7 @@ using System.Collections.Concurrent;
 #endif
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -753,6 +754,13 @@ namespace System {
       );
     }
 
+    private delegate object Constructor();
+    private static readonly Type _ctorType=typeof(Constructor);
+
+#if NET40
+    private static readonly ConcurrentDictionary<Type,Constructor> _ctorCache=new ConcurrentDictionary<Type,Constructor>();
+#endif
+
     /// <summary>
     /// Creates the instance.
     /// </summary>
@@ -764,7 +772,36 @@ namespace System {
       Contract.Requires(@this != null);
       Contract.Requires(typeof(TType).IsAssignableFrom(@this));
 #endif
+      
+#if MONO
       return (TType)Activator.CreateInstance(@this);
+#else
+#if NET40
+      return (TType)_ctorCache.GetOrAdd(@this,_=>_GetConstructorFactory(@this))();
+#else
+      return (TType)@this._GetConstructorFactory()();
+#endif
+#endif
+    }
+
+    /// <summary>
+    /// Creates a delegate to construct an object of the given type.
+    /// </summary>
+    /// <param name="this">The type of the instance.</param>
+    /// <returns>
+    /// A delegate to be called.
+    /// </returns>
+    private static Constructor _GetConstructorFactory(this Type @this) {
+      var parameterTypes = Type.EmptyTypes;
+      var ctor = @this.GetConstructor(parameterTypes);
+      if (ctor == null)
+        return () => Activator.CreateInstance(@this);
+
+      var method = new DynamicMethod("Ctor_" + @this.Name,@this,parameterTypes,@this);
+      var ilgen = method.GetILGenerator();
+      ilgen.Emit(OpCodes.Newobj,ctor);
+      ilgen.Emit(OpCodes.Ret);
+      return (Constructor)method.CreateDelegate(_ctorType);
     }
 
     /// <summary>
@@ -776,7 +813,7 @@ namespace System {
     /// <returns>
     /// An instance of the given type.
     /// </returns>
-    public static TType CreateInstance<TType>(this Type @this, object[] parameters) {
+    public static TType CreateInstance<TType>(this Type @this,params object[] parameters) {
 #if NET40
       Contract.Requires(@this != null);
       Contract.Requires(typeof(TType).IsAssignableFrom(@this));
