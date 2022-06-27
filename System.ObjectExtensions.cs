@@ -29,7 +29,12 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+#if NET45
+using System.Runtime.CompilerServices;
+#endif
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 
 // ReSharper disable UnusedMember.Global
@@ -38,6 +43,10 @@ using System.Xml.Serialization;
 
 namespace System {
   internal static partial class ObjectExtensions {
+
+    private static readonly Lazy<BinaryFormatter> _formatter = new Lazy<BinaryFormatter>(() => new BinaryFormatter());
+    public static BinaryFormatter Formatter => _formatter.Value;
+
     /// <summary>
     /// Gets the property values of the object.
     /// </summary>
@@ -363,5 +372,43 @@ namespace System {
     private static XmlSerializer _GetSerializerForType<TType>()
       => _CACHE.GetOrAdd(typeof(TType), t => new XmlSerializer(t))
       ;
+
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static T Apply<T>(this T @this, Action<T> action) where T : class {
+      action.Invoke(@this);
+
+      return @this;
+    }
+
+    public static void ToFile<T>(this T @this, FileInfo file, bool compress = false) {
+      using (var fs = file.OpenWrite()) {
+        if (!compress) {
+          Formatter.Serialize(fs, @this);
+          return;
+        }
+
+        using (var ds = new DeflateStream(fs, CompressionMode.Compress)) {
+          Formatter.Serialize(ds, @this);
+        }
+      }
+    }
+
+    public static T FromFile<T>(FileInfo file, bool compress = false) {
+      using (var stream = file.OpenRead()) {
+        if (!compress)
+          return (T) Formatter.Deserialize(stream);
+
+        using (var fs = file.OpenRead()) {
+            using (var ds = new DeflateStream(fs, CompressionMode.Decompress)) {
+              return (T)Formatter.Deserialize(ds);
+            }
+        }
+      }
+
+    }
+
   }
 }
