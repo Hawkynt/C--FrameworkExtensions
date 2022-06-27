@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -860,102 +861,118 @@ namespace System.Windows.Forms {
 
     }
 
-    private static void _AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType)
+    private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode)
       where TControl : Control {
 
-      const string excMessage = "Must be an expression like :\r\n"
-        + "(control, source) => control.propertyName == source.dataMember\r\n"
-        + "(control, source) => control.propertyName == (type)source.dataMember\r\n"
-        + "(control, source) => control.propertyName == source.dataMember.ToString()\r\n";
+      string _GetPropertyName(MemberExpression member) {
+        if (
+          member.Expression is ParameterExpression parameter
+          && parameter.Type == sourceType
+        )
+          return member.Member.Name;
+
+        if (!(member.Expression is MemberExpression parent))
+          return null;
+
+        // walk the expression
+        var propertyNameChain = new Stack<string>();
+        do {
+          propertyNameChain.Push(parent.Member.Name);
+          parent = parent.Expression as MemberExpression;
+        } while (parent != null);
+
+        // create sources for members
+        do {
+          var propName = propertyNameChain.Pop();
+          bindingSource = new BindingSource(bindingSource, propName);
+        } while (propertyNameChain.Count > 0);
+
+        return member.Member.Name;
+          }
+
+      string _GetBindingSourcePropertyName(Linq.Expressions.Expression e) {
+        switch (e) {
+          case MemberExpression member: // controlProperty = bs.PropertyName
+            return _GetPropertyName(member);
+
+          case UnaryExpression convert // controlProperty = (cast)bs.PropertyName
+            when convert.NodeType == ExpressionType.Convert
+                 && convert.Operand is MemberExpression member
+            :
+            return _GetPropertyName(member);
+
+          case MethodCallExpression call // controlProperty = bs.PropertyName.ToString()
+            when call.Method.Name == nameof(ToString)
+                 && call.Arguments.Count == 0
+                 && call.Object is MemberExpression member
+            :
+            return _GetPropertyName(member);
+          }
+
+        return null;
+      }
+
+      string _GetControlPropertyName(Linq.Expressions.Expression e) {
+        switch (e) {
+          case MemberExpression member
+            when member.Expression is ParameterExpression parameter
+                 && parameter.Type == controlType
+            :
+            return member.Member.Name;
+
+          case UnaryExpression convert
+            when convert.NodeType == ExpressionType.Convert
+                 && convert.Operand is MemberExpression member
+                 && member.Expression is ParameterExpression parameter
+                 && parameter.Type == controlType
+            :
+            return member.Member.Name;
+
+          default:
+            return null;
+        }
+        }
+
+      const string excMessage = @"Must be an expression like :
+(control, source) => control.propertyName == source.dataMember
+(control, source) => control.propertyName == (type)source.dataMember
+(control, source) => control.propertyName == source.dataMember.ToString()
+(control, source) => control.propertyName == source.subMember.dataMember
+(control, source) => control.propertyName == (type)source.subMember.dataMember
+(control, source) => control.propertyName == source.subMember.dataMember.ToString()
+(control, source) => control.propertyName == source.....dataMember
+(control, source) => control.propertyName == (type)source.....dataMember
+(control, source) => control.propertyName == source.....dataMember.ToString()
+";
 
       if (!(expression.Body is BinaryExpression body) || body.NodeType != ExpressionType.Equal)
-        throw new ArgumentException(excMessage);
-
-      string propertyName;
-      switch (body.Left) {
-        case MemberExpression m: {
-            if (!(m.Expression is ParameterExpression p) || p.Type != controlType)
-              throw new ArgumentException(excMessage);
-
-            propertyName = m.Member.Name;
-            break;
-          }
-
-        case UnaryExpression convert: {
-            if (
-              convert.NodeType != ExpressionType.Convert
-              || !(convert.Operand is MemberExpression m)
-              || !(m.Expression is ParameterExpression p)
-              || p.Type != controlType
-            )
-              throw new ArgumentException(excMessage);
-
-            propertyName = m.Member.Name;
-            break;
-          }
-        default:
-          throw new ArgumentException(excMessage);
-      }
-
-      string dataMember;
-      switch (body.Right) {
-        case MemberExpression m: {
-          if (!(m.Expression is ParameterExpression p) || p.Type != sourceType)
-            throw new ArgumentException(excMessage);
-
-          dataMember = m.Member.Name;
-          break;
-        }
-
-        case UnaryExpression convert when convert.NodeType==ExpressionType.Convert: {
-          if (
-            !(convert.Operand is MemberExpression m)
-            || !(m.Expression is ParameterExpression p)
-            || p.Type != sourceType
-          )
-            throw new ArgumentException(excMessage);
-
-          dataMember = m.Member.Name;
-          break;
-        }
-
-        case MethodCallExpression c when c.Method.Name == "ToString" && c.Arguments.Count==0: {
-          if (
-            !(c.Object is MemberExpression m) 
-            || !(m.Expression is ParameterExpression p) 
-            || p.Type != sourceType
-          )
             throw new ArgumentException(excMessage);
           
-          dataMember = m.Member.Name;
-          break;
-        }
+      var propertyName = _GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
+      var dataMember = _GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
 
-        default:
-          throw new ArgumentException(excMessage);
-      }
-      @this.DataBindings.Add(new Binding(propertyName, source, dataMember, true) { DataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged });
+      @this.DataBindings.Add(new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode });
     }
 
-    public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression) where TControl : Control
-      => _AddBinding(@this, source, expression, @this.GetType(), source.GetType())
+    public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) where TControl : Control
+      => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode)
     ;
 
-    public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression) where TControl : Control
-      => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource))
+    public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) where TControl : Control
+      => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode)
     ;
 
     #region to make life easier
 
-    public static void AddBinding<TSource>(this Label @this, object source, Expression<Func<Label, TSource, bool>> expression) => AddBinding<Label, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this CheckBox @this, object source, Expression<Func<CheckBox, TSource, bool>> expression) => AddBinding<CheckBox, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this TextBox @this, object source, Expression<Func<TextBox, TSource, bool>> expression) => AddBinding<TextBox, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this NumericUpDown @this, object source, Expression<Func<NumericUpDown, TSource, bool>> expression) => AddBinding<NumericUpDown, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this RadioButton @this, object source, Expression<Func<RadioButton, TSource, bool>> expression) => AddBinding<RadioButton, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this Button @this, object source, Expression<Func<Button, TSource, bool>> expression) => AddBinding<Button, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this GroupBox @this, object source, Expression<Func<GroupBox, TSource, bool>> expression) => AddBinding<GroupBox, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this ComboBox @this, object source, Expression<Func<ComboBox, TSource, bool>> expression) => AddBinding<ComboBox, TSource>(@this, source, expression);
-    public static void AddBinding<TSource>(this DateTimePicker @this, object source, Expression<Func<DateTimePicker, TSource, bool>> expression) => AddBinding<DateTimePicker, TSource>(@this, source, expression);
+    public static void AddBinding<TSource>(this Label @this, object source, Expression<Func<Label, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<Label, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this CheckBox @this, object source, Expression<Func<CheckBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<CheckBox, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this TextBox @this, object source, Expression<Func<TextBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<TextBox, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this NumericUpDown @this, object source, Expression<Func<NumericUpDown, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<NumericUpDown, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this RadioButton @this, object source, Expression<Func<RadioButton, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<RadioButton, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this Button @this, object source, Expression<Func<Button, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<Button, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this GroupBox @this, object source, Expression<Func<GroupBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<GroupBox, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this ComboBox @this, object source, Expression<Func<ComboBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<ComboBox, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this DateTimePicker @this, object source, Expression<Func<DateTimePicker, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<DateTimePicker, TSource>(@this, source, expression, mode);
 
     #endregion
 
