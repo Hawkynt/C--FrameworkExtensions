@@ -57,19 +57,30 @@ namespace System.Text.RegularExpressions {
     /// <returns></returns>
     private static string _GetPrivateTextFieldValue(this Match match) {
       Contract.Requires(match != null);
-      const string propName = "_text";
-
+      const string fieldName = "_text";
+      var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
       var type = typeof(Match);
       FieldInfo fieldInfo = null;
+
       while (fieldInfo == null && type != null) {
-        fieldInfo = type.GetField(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        fieldInfo = type.GetField(fieldName, bindingFlags);
         type = type.BaseType;
       }
 
-      if (fieldInfo == null)
-        throw new ArgumentOutOfRangeException("propName", $"Field {propName} was not found in Type {typeof(Match).FullName}");
+      if (fieldInfo != null)
+        return (string) fieldInfo.GetValue(match);
 
-      return (string)fieldInfo.GetValue(match);
+      const string propName = "Text";
+      type = typeof(Match);
+      PropertyInfo fieldProperty = null;
+
+      while (fieldProperty == null && type != null) {
+        fieldProperty = type.GetProperty(propName, bindingFlags);
+        type = type.BaseType;
+      }
+
+      return (string)fieldProperty?.GetValue(match,null)
+             ?? throw new ArgumentOutOfRangeException("propName", $"Neither field {fieldName} nor property {propName} was found in Type {typeof(Match).FullName}");
     }
   }
 }
