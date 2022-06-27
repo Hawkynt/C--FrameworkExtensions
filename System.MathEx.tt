@@ -165,7 +165,28 @@ namespace System {
 #if NET40
       Contract.Requires(digits >= 0 && digits <= <#=item.Item2#>);
 #endif
-      return (<#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits));
+      return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits);
+    }
+
+#if NET40
+    [Pure]
+#endif
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static <#=item.Item1#> Round(this <#=item.Item1#> @this, MidpointRounding method) => <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, method);
+
+#if NET40
+    [Pure]
+#endif
+#if NET45
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits, MidpointRounding method) {
+#if NET40
+      Contract.Requires(digits >= 0 && digits <= <#=item.Item2#>);
+#endif
+      return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits, method);
     }
 
   <#}#>
