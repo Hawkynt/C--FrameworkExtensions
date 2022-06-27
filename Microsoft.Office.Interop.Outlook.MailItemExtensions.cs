@@ -13,7 +13,9 @@ namespace Microsoft.Office.Interop.Outlook {
         throw new ArgumentNullException(nameof(mailTo));
 
       var recipients = @this.Recipients;
-      mailTo.Where(addr => !string.IsNullOrWhiteSpace(addr)).ForEach(addr => recipients.Add(addr));
+      foreach (var address in mailTo.Where(a => !string.IsNullOrWhiteSpace(a)))
+        recipients.Add(address);
+
       recipients.ResolveAll();
     }
 
