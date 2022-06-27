@@ -105,6 +105,15 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
+    /// Sets the selected item.
+    /// </summary>
+    /// <param name="this">This ComboBox.</param>
+    /// <param name="value">The value.</param>
+    public static void SetSelectedItem(this ComboBox @this, object value) {
+      SetSelectedItem<Tuple<object, string>>(@this, i => Equals(i.Item1, value));
+    }
+
+    /// <summary>
     /// Sets the selected item based on a predicate.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
