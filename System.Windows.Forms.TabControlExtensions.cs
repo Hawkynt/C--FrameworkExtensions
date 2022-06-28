@@ -70,7 +70,15 @@ namespace System.Windows.Forms {
         var currentKey = KeyGenerator(key, currentlyShownImageIndex);
 
         // refresh all tabpages using this image
-        @this.SafelyInvoke(() => @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0")).ForEach(tp => tp.ImageKey = currentKey));
+        var result = @this.BeginInvoke(new Action(() => {
+          var pages = @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0"));
+
+          foreach (var page in pages) {
+            page.ImageKey = currentKey;
+          }
+        }));
+
+        @this.EndInvoke(result);
       }
 
       // start animating
