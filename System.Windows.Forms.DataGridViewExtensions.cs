@@ -1682,15 +1682,11 @@ namespace System.Windows.Forms {
         }
       }
 
+      /// <inheritdoc />
       /// <summary>
       /// Returns the type of the cell's Value property
       /// </summary>
-      public override Type ValueType {
-        get {
-          var valueType = base.ValueType;
-          return valueType != null ? valueType : defaultValueType;
-        }
-      }
+      public override Type ValueType => base.ValueType ?? defaultValueType;
 
       /// <summary>
       /// Clones a DataGridViewNumericUpDownCell cell, copies all the custom properties.
@@ -2708,11 +2704,13 @@ namespace System.Windows.Forms {
     public string ToolTipText { get; }
     public string TooltipTextPropertyName { get; }
     public string ConditionalPropertyName { get; }
+    public string Format { get; }
 
-    public DataGridViewCellTooltipAttribute(string tooltipText = null, string tooltipTextPropertyName = null, string conditionalPropertyName = null) {
+    public DataGridViewCellTooltipAttribute(string tooltipText = null, string tooltipTextPropertyName = null, string conditionalPropertyName = null, string format = null) {
       this.ToolTipText = tooltipText;
       this.TooltipTextPropertyName = tooltipTextPropertyName;
       this.ConditionalPropertyName = conditionalPropertyName;
+      this.Format = format;
     }
 
     private void _ApplyTo(DataGridViewCell cell, object data) {
@@ -2722,8 +2720,8 @@ namespace System.Windows.Forms {
         return;
       }
 
-      var text = DataGridViewExtensions.GetPropertyValueOrDefault<string>(data, this.TooltipTextPropertyName, null, null, null, null) ?? this.ToolTipText;
-      cell.ToolTipText = text ?? string.Empty;
+      var text = DataGridViewExtensions.GetPropertyValueOrDefault<object>(data, this.TooltipTextPropertyName, null, null, null, null) ?? this.ToolTipText;
+      cell.ToolTipText = (this.Format != null && text is IFormattable f ? f.ToString(this.Format, null) : text?.ToString()) ?? string.Empty;
     }
 
     public static void OnCellFormatting(DataGridViewCellTooltipAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
@@ -2850,9 +2848,7 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="System.Windows.Forms.DataGridViewCellEventArgs" /> instance containing the event data.</param>
     private static void _CellDoubleClick(object sender, DataGridViewCellEventArgs e) {
-      var dgv = sender as DataGridView;
-
-      if (dgv == null)
+      if (!(sender is DataGridView dgv))
         return;
 
       if (e.RowIndex < 0 || e.ColumnIndex < 0)
@@ -2880,13 +2876,13 @@ namespace System.Windows.Forms {
       if (!(sender is DataGridView dgv))
         return;
 
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
+      if (!dgv._TryGetRow(e.RowIndex, out var row))
         return;
 
       if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      if (!row.TryGetRowType(out var type))
+      if (!row._TryGetRowType(out var type))
         return;
 
       var item = row.DataBoundItem;
@@ -2903,6 +2899,7 @@ namespace System.Windows.Forms {
     /// <param name="sender">The source of the event.</param>
     /// <param name="_">The <see cref="System.EventArgs" /> instance containing the event data.</param>
     private static void _DataSourceChanged(object sender, EventArgs _) {
+      _ResetRowCache();
       if (!(sender is DataGridView dgv))
         return;
 
@@ -3341,13 +3338,13 @@ namespace System.Windows.Forms {
       if (!(sender is DataGridView dgv))
         return;
 
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
+      if (!dgv._TryGetRow(e.RowIndex, out var row))
         return;
 
       if (!dgv.TryGetColumn(e.ColumnIndex, out var column))
         return;
 
-      if (!row.TryGetRowType(out var type))
+      if (!row._TryGetRowType(out var type))
         return;
 
       var rowData = row.DataBoundItem;
@@ -3404,10 +3401,10 @@ namespace System.Windows.Forms {
       if (!(sender is DataGridView dgv))
         return;
 
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
+      if (!dgv._TryGetRow(e.RowIndex, out var row))
         return;
 
-      if (!row.TryGetRowType(out var type))
+      if (!row._TryGetRowType(out var type))
         return;
 
       var value = row.DataBoundItem;
@@ -3442,13 +3439,14 @@ namespace System.Windows.Forms {
     }
 
     private static void _RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e) {
+      _ResetRowCache();
       if (!(sender is DataGridView dgv))
         return;
 
-      if (!dgv.TryGetRow(e.RowIndex, out var row))
+      if (!dgv._TryGetRow(e.RowIndex, out var row))
         return;
 
-      if (!row.TryGetRowType(out var type))
+      if (!row._TryGetRowType(out var type))
         return;
 
       var value = row.DataBoundItem;
@@ -3536,17 +3534,29 @@ namespace System.Windows.Forms {
       cell.Style.ForeColor = DrawingSystemColors.GrayText;
     }
 
-    private static bool TryGetRow(this DataGridView @this, int rowIndex, out DataGridViewRow row) {
+
+    private static DataGridViewRow _tryGetRowCache;
+    private static void _ResetRowCache() => _tryGetRowCache = null;
+
+    private static bool _TryGetRow(this DataGridView @this, int rowIndex, out DataGridViewRow row) {
+
+      var cache = _tryGetRowCache;
+      if (cache != null && cache.DataGridView == @this && cache.Index == rowIndex) {
+        row = cache;
+        return true;
+    }
+
       if (rowIndex < 0 || rowIndex >= @this.RowCount) {
-        row = null;
+        _tryGetRowCache = row = null;
         return false;
       }
 
       row = @this.Rows[rowIndex];
+      _tryGetRowCache = row;
       return true;
     }
 
-    private static bool TryGetRowType(this DataGridViewRow @this, out Type rowDataType) {
+    private static bool _TryGetRowType(this DataGridViewRow @this, out Type rowDataType) {
       rowDataType = @this.DataBoundItem?.GetType() ?? FindItemType(@this.DataGridView);
       return rowDataType != null;
     }
@@ -4051,6 +4061,161 @@ namespace System.Windows.Forms {
       @this.Height = headerHeight + rowHeight;
     }
 
+
+    /// <summary>
+    /// Enables multi cell editing on the given DataGridView
+    /// </summary>
+    /// <param name="this">The DataGridView</param>
+    public static void EnableMultiCellEditing(this DataGridView @this) {
+      @this.SelectionChanged += SelectionChanged;
+      @this.CellBeginEdit += CellBeginEdit;
+      @this.CellEndEdit += CellEndEdit;
+      @this.CellValidating += This_OnCellValidating;
+    }
+
+    /// <summary>
+    /// Enables Right Click Selection on DGV
+    /// </summary>
+    /// <param name="this">the dgv</param>
+    public static void EnableRightClickSelection(this DataGridView @this) => 
+      @this.CellMouseDown += CellMouseDownRightClickEvent
+    ;
+
+    /// <summary>
+    /// Disables Right Click Selection on DGV
+    /// </summary>
+    /// <param name="this">the dgv</param>
+    public static void DisableRightClickSelection(this DataGridView @this) => 
+      @this.CellMouseDown -= CellMouseDownRightClickEvent
+    ;
+
+    /// <summary>
+    /// The cell mouse event that enables the right click selection
+    /// </summary>
+    /// <param name="sender">the object (this dgv)</param>
+    /// <param name="e">the EventArgs given</param>
+    private static void CellMouseDownRightClickEvent(object sender, DataGridViewCellMouseEventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+
+      if (e.ColumnIndex == -1 || e.RowIndex == -1 || e.Button != MouseButtons.Right)
+        return;
+
+      var c = dgv[e.ColumnIndex, e.RowIndex];
+      if (c.Selected)
+        return;
+
+      c.DataGridView.ClearSelection();
+      c.DataGridView.CurrentCell = c;
+      c.Selected = true;
+    }
+
+    private sealed class _CellEditState {
+      private readonly Color _foreColor;
+      private readonly Color _backColor;
+      private _CellEditState(Color foreColor,Color backColor) {
+        this._foreColor = foreColor;
+        this._backColor = backColor;
+      }
+
+      public static _CellEditState FromCell(DataGridViewCell cell) {
+        var style = cell.Style;
+        return new _CellEditState(style.ForeColor, style.BackColor);
+      }
+
+      public void ToCell(DataGridViewCell cell) {
+        var style = cell.Style;
+        style.ForeColor = this._foreColor;
+        style.BackColor= this._backColor;
+      }
+    }
+
+    private static readonly ConditionalWeakTable<DataGridViewCell, _CellEditState> _cellEditStates = new ConditionalWeakTable<DataGridViewCell, _CellEditState>();
+
+    /// <summary>
+    /// Highlights Cells on Beginning of Edit
+    /// </summary>
+    /// <param name="sender">the object (this dgv)</param>
+    /// <param name="e">the EventArgs given</param>
+    private static void CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+
+      var cell = dgv[e.ColumnIndex, e.RowIndex];
+      var cellStyle = cell.Style;
+      if (dgv.SelectedCells.Count <= 1)
+        return;
+
+      _cellEditStates.Add(cell,_CellEditState.FromCell(cell));
+      cellStyle.ForeColor = DrawingSystemColors.HighlightText;
+      cellStyle.BackColor = DrawingSystemColors.Highlight;
+    }
+
+    /// <summary>
+    /// Highlights Cells on Ending of Edit
+    /// </summary>
+    /// <param name="sender">the object (this dgv)</param>
+    /// <param name="e">the EventArgs given</param>
+    private static void CellEndEdit(object sender, DataGridViewCellEventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+
+      var cell = dgv[e.ColumnIndex, e.RowIndex];
+      if (!_cellEditStates.TryGetValue(cell, out var state))
+        return;
+
+      state.ToCell(cell);
+      _cellEditStates.Remove(cell);
+    }
+
+    /// <summary>
+    /// Changes the last selected cell to new selected cells
+    /// </summary>
+    /// <param name="sender">the object (this dgv)</param>
+    /// <param name="e">the EventArgs given</param>
+    private static void SelectionChanged(object sender, EventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+
+      var selectedCells = dgv.SelectedCells.Cast<DataGridViewCell>().ToArray();
+
+      if (!selectedCells.Any())
+        return;
+
+      var lastSelected = selectedCells.Last();
+
+      for (var i = 0; i < selectedCells.Length - 1; ++i) {
+        var cell = selectedCells[i];
+        if (cell == lastSelected)
+          continue;
+
+        if (cell.ColumnIndex != lastSelected.ColumnIndex)
+          cell.Selected = false;
+      }
+    }
+    
+    private sealed class DataGridViewValidationState {
+      public bool HasStartedMultipleValueChange => true;
+    }
+
+    private static readonly ConditionalWeakTable<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new ConditionalWeakTable<DataGridView, DataGridViewValidationState>();
+
+    private static void This_OnCellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
+      if (!(sender is DataGridView dgv))
+        return;
+      
+      if (dgv.SelectedCells.Count <= 1 || (_dataGridViewValidationStates.TryGetValue(dgv,out var state) && state.HasStartedMultipleValueChange))
+        return;
+
+      _dataGridViewValidationStates.Add(dgv,new DataGridViewValidationState());
+
+      foreach (DataGridViewCell cell in dgv.SelectedCells)
+        if (cell.RowIndex != e.RowIndex && cell.ColumnIndex == e.ColumnIndex)
+          cell.Value = e.FormattedValue;
+
+      _dataGridViewValidationStates.Remove(dgv);
+    }
+
     #region various reflection caches
 
     private static readonly ConcurrentDictionary<Type, object[]> _TYPE_ATTRIBUTE_CACHE = new ConcurrentDictionary<Type, object[]>();
@@ -4265,8 +4430,8 @@ namespace System.Windows.Forms {
       if (method == null)
         return null;
 
-      if (property.GetMethod.IsStatic) {
-        var d = property.GetMethod.CreateDelegate(typeof(Func<object>));
+      if (method.IsStatic) {
+        var d = Delegate.CreateDelegate(typeof(Func<object>), method);
         return _ => d.DynamicInvoke(null);
       }
 
