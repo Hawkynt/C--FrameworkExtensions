@@ -20,7 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
-#if !NET35
+#if !NET35_OR_GREATER
 using System.Diagnostics.Contracts;
 #else 
 using Debug = System.Diagnostics.Debug;
@@ -35,7 +35,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This TableLayoutPanel.</param>
     /// <param name="row">The row.</param>
     public static void RemoveRow(this TableLayoutPanel This, int row) {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -79,7 +79,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback if any, passing targetRow,targetColumn,sourceControl,targetControl.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, int, Control, Control> controlCallback = null, bool allowSuspendingLayout = true) {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -124,7 +124,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback, passing the newly created control.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<Control> controlCallback, bool allowSuspendingLayout = true) {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -138,7 +138,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback, passing column and the newly created control.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, Control> controlCallback, bool allowSuspendingLayout = true) {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -157,7 +157,7 @@ namespace System.Windows.Forms {
     /// <param name="reader">The reader delegate which reads the actual value from the given control and returns it.</param>
     /// <returns>The value that was found.</returns>
     public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel This, uint row, int columnIndex, Func<TControl, TType> reader) where TControl : Control {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -180,7 +180,7 @@ namespace System.Windows.Forms {
     /// <param name="columnIndex">The column in which the control should be.</param>
     /// <param name="writer">The writer delegate which sets a value of the control.</param>
     public static void SetColumnValue<TControl>(this TableLayoutPanel This, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -207,7 +207,7 @@ namespace System.Windows.Forms {
     /// The control or <c>null</c>.
     /// </returns>
     public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel This, int column, int row) where TControl : Control {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -224,7 +224,7 @@ namespace System.Windows.Forms {
     /// <param name="row">The row.</param>
     /// <returns>The control or <c>null</c>.</returns>
     public static Control GetControlFromPositionFixed(this TableLayoutPanel This, int column, int row) {
-#if NET35
+#if NET35_OR_GREATER
       Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);

@@ -139,5 +139,15 @@ namespace System {
       for (var day = @this.Date; day.Date <= endDate.Date; day = day.AddDays(1))
         yield return day;
     }
+
+    public static DateTime SubstractTicks(this DateTime @this, long value) => @this.AddTicks(-value);
+    public static DateTime SubstractMilliseconds(this DateTime @this, double value) => @this.AddMilliseconds(-value);
+    public static DateTime SubstractSeconds(this DateTime @this, double value) => @this.AddSeconds(-value);
+    public static DateTime SubstractMinutes(this DateTime @this, double value) => @this.AddMinutes(-value);
+    public static DateTime SubstractHours(this DateTime @this, double value) => @this.AddHours(-value);
+    public static DateTime SubstractDays(this DateTime @this, double value) => @this.AddDays(-value);
+    public static DateTime SubstractWeeks(this DateTime @this, int weeks) => @this.AddWeeks(-weeks);
+    public static DateTime SubstractMonths(this DateTime @this, int months) => @this.AddMonths(-months);
+    public static DateTime SubstractYears(this DateTime @this, int value) => @this.AddYears(-value);
   }
 }

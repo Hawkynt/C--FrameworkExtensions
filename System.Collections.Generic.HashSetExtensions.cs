@@ -21,10 +21,10 @@
 
 using System.Diagnostics;
 using System.Linq;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -80,7 +80,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -108,10 +108,10 @@ namespace System.Collections.Generic {
     /// <param name="this">This HashSet.</param>
     /// <param name="item">The item.</param>
     /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -130,7 +130,7 @@ namespace System.Collections.Generic {
       if (@this == null)
         throw new NullReferenceException();
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -141,7 +141,7 @@ namespace System.Collections.Generic {
       return true;
     }
 
-#if NET45
+#if NET45_OR_GREATER
     /// <summary>
     /// Tries to remove the given item.
     /// </summary>

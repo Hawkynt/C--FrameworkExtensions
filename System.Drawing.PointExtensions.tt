@@ -30,7 +30,7 @@
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -51,14 +51,14 @@ for(var k=0;k<d.Length;++k){
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, Size other) => Add(@this, other.Width, other.Height);
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, SizeF other) => Add(@this, other.Width, other.Height);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, <#=i.Item2#> x, <#=i.Item2#> y) => new <#=i.Item1#>(@this.X + x, @this.Y + y);
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, <#=i.Item2#> c) => Add(@this, c, c);
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, <#=j.Item1#> other) => Add(@this, other.X, other.Y);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> Add(this <#=i.Item1#> @this, <#=j.Item2#> x, <#=j.Item2#> y) => new <#=i.Item1#>((<#=i.Item2#>)(@this.X + x), (<#=i.Item2#>)(@this.Y + y));
@@ -76,14 +76,14 @@ for(var k=0;k<d.Length;++k){
     
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=i.Item1#> other) => MultiplyBy(@this, other.X, other.Y);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=i.Item2#> x, <#=i.Item2#> y) => new <#=i.Item1#>(@this.X * x, @this.Y * y);
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=i.Item2#> c) => MultiplyBy(@this, c, c);
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=j.Item1#> other) => MultiplyBy(@this, other.X, other.Y);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> MultiplyBy(this <#=i.Item1#> @this, <#=j.Item2#> x, <#=j.Item2#> y) => new <#=i.Item1#>((<#=i.Item2#>)(@this.X * x), (<#=i.Item2#>)(@this.Y * y));
@@ -91,14 +91,14 @@ for(var k=0;k<d.Length;++k){
 
     public static <#=i.Item1#> DivideBy(this <#=i.Item1#> @this, <#=i.Item1#> other) => DivideBy(@this, other.X, other.Y);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> DivideBy(this <#=i.Item1#> @this, <#=i.Item2#> x, <#=i.Item2#> y) => new <#=i.Item1#>(@this.X / x, @this.Y / y);
     public static <#=i.Item1#> DivideBy(this <#=i.Item1#> @this, <#=i.Item2#> c) => DivideBy(@this, c, c);
     public static <#=i.Item1#> DivideBy(this <#=i.Item1#> @this, <#=j.Item1#> other) => DivideBy(@this, other.X, other.Y);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static <#=i.Item1#> DivideBy(this <#=i.Item1#> @this, <#=j.Item2#> x, <#=j.Item2#> y) => new <#=i.Item1#>((<#=i.Item2#>)(@this.X / x), (<#=i.Item2#>)(@this.Y / y));
@@ -110,7 +110,7 @@ for(var k=0;k<d.Length;++k){
 
   internal static partial class PointExtensions {
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static PointF ToFloat(this Point @this) => new PointF(@this.X, @this.Y);
@@ -119,7 +119,7 @@ for(var k=0;k<d.Length;++k){
 
   internal static partial class PointFExtensions {
   
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Point ToInteger(this PointF @this) => new Point((int)@this.X, (int)@this.Y);

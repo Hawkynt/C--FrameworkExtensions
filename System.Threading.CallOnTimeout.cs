@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -41,7 +41,7 @@ namespace System.Threading {
 
     #region ctor,dtor
     public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(timeoutAction!=null);
 #endif
       this.Timeout = timeout;

@@ -21,7 +21,7 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
-#if !NET35
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -383,7 +383,7 @@ namespace System.Net {
     /// <param name="rowProcessor">The row processor.</param>
     /// <returns>The connections from the table.</returns>
     private static Connection[] _GetTable<TRowtype>(Func<IntPtr, dword, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
-#if NET35
+#if !NET40_OR_GREATER
       Debug.Assert(call != null);
       Debug.Assert(rowProcessor != null);
 #else

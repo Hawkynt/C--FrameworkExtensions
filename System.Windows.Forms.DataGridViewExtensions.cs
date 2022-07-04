@@ -32,7 +32,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
-#if NET40
+#if NET40_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 using System.Text.RegularExpressions;
@@ -40,6 +40,7 @@ using System.Windows.Forms.VisualStyles;
 using ThreadTimer = System.Threading.Timer;
 using DrawingSystemColors = System.Drawing.SystemColors;
 using DrawingSize = System.Drawing.Size;
+using DrawingPoint = System.Drawing.Point;
 using DrawingFontStyle = System.Drawing.FontStyle;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -1810,9 +1811,9 @@ namespace System.Windows.Forms {
       /// Custom implementation of the GetPreferredSize function. This implementation uses the preferred size of the base 
       /// DataGridViewTextBoxCell cell and adds room for the up/down buttons.
       /// </summary>
-      protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize) {
+      protected override DrawingSize GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, DrawingSize constraintSize) {
         if (this.DataGridView == null)
-          return new Size(-1, -1);
+          return new DrawingSize(-1, -1);
 
         var preferredSize = base.GetPreferredSize(graphics, cellStyle, rowIndex, constraintSize);
         if (constraintSize.Width != 0)
@@ -1970,7 +1971,7 @@ namespace System.Windows.Forms {
           paintingNumericUpDown.Width = valBounds.Width;
           paintingNumericUpDown.Height = valBounds.Height;
           paintingNumericUpDown.RightToLeft = this.DataGridView.RightToLeft;
-          paintingNumericUpDown.Location = new Point(0, -paintingNumericUpDown.Height - 100);
+          paintingNumericUpDown.Location = new DrawingPoint(0, -paintingNumericUpDown.Height - 100);
           paintingNumericUpDown.Text = formattedValue as string;
 
           Color backColor;
@@ -2028,8 +2029,8 @@ namespace System.Windows.Forms {
           isFirstDisplayedColumn,
           isFirstDisplayedRow);
         editingControlBounds = this.GetAdjustedEditingControlBounds(editingControlBounds, cellStyle);
-        this.DataGridView.EditingControl.Location = new Point(editingControlBounds.X, editingControlBounds.Y);
-        this.DataGridView.EditingControl.Size = new Size(editingControlBounds.Width, editingControlBounds.Height);
+        this.DataGridView.EditingControl.Location = new DrawingPoint(editingControlBounds.X, editingControlBounds.Y);
+        this.DataGridView.EditingControl.Size = new DrawingSize(editingControlBounds.Width, editingControlBounds.Height);
       }
 
       /// <summary>
@@ -3461,7 +3462,7 @@ namespace System.Windows.Forms {
             ? new SolidBrush(e.InheritedRowStyle.SelectionForeColor)
             : new SolidBrush(e.InheritedRowStyle.ForeColor)) {
 
-        using (var boldFont = new Font(e.InheritedRowStyle.Font.FontFamily, rowHeaderAttribute.TextSize ?? e.InheritedRowStyle.Font.Size, FontStyle.Bold)) {
+        using (var boldFont = new Font(e.InheritedRowStyle.Font.FontFamily, rowHeaderAttribute.TextSize ?? e.InheritedRowStyle.Font.Size, DrawingFontStyle.Bold)) {
           var drawFormat = new StringFormat {
             LineAlignment = StringAlignment.Center,
             Alignment = StringAlignment.Center
@@ -3628,17 +3629,17 @@ namespace System.Windows.Forms {
         {
           dataGridView.ReadOnly = true;
           dataGridView.EnableHeadersVisualStyles = false;
-          dataGridView.DefaultCellStyle.ForeColor = DrawingSystemColors.GrayText;
-          dataGridView.DefaultCellStyle.BackColor = DrawingSystemColors.Control;
-          dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = DrawingSystemColors.GrayText;
-          dataGridView.ColumnHeadersDefaultCellStyle.BackColor = DrawingSystemColors.Control;
-          dataGridView.BackgroundColor = DrawingSystemColors.Control;
+          dataGridView.DefaultCellStyle.ForeColor = SystemColors.GrayText;
+          dataGridView.DefaultCellStyle.BackColor = SystemColors.Control;
+          dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = SystemColors.GrayText;
+          dataGridView.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
+          dataGridView.BackgroundColor = SystemColors.Control;
         }
         dataGridView.ResumeLayout(true);
       }
     }
 
-#if NET40
+#if NET40_OR_GREATER
     private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new ConditionalWeakTable<DataGridView, DataGridViewState>();
 #else
     private static readonly Dictionary<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new Dictionary<DataGridView, DataGridViewState>();

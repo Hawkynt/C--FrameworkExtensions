@@ -29,11 +29,11 @@
 
 using System.Diagnostics;
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -56,10 +56,10 @@ namespace System {
     /// <param name="this">This TimeSpan.</param>
     /// <param name="multiplier">The multiplier.</param>
     /// <returns>A multiple of the original timespan.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan MultipliedWith(this TimeSpan @this, <#=type#> multiplier) => TimeSpan.FromTicks((long)(@this.Ticks * <#=(type=="qword"?"(double)":"")#>multiplier));
@@ -70,10 +70,10 @@ namespace System {
     /// <param name="this">This TimeSpan.</param>
     /// <param name="divisor">The divisor.</param>
     /// <returns>A fraction of the original timespan.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan DividedBy(this TimeSpan @this, <#=type#> divisor) => TimeSpan.FromTicks((long)(@this.Ticks / (double)divisor));
@@ -83,10 +83,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of milliseconds.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Milliseconds(this <#=type#> @this) => TimeSpan.FromMilliseconds(<#=(type=="decimal"?"(double)":"")#>@this);
@@ -96,10 +96,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of seconds.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Seconds(this <#=type#> @this) => TimeSpan.FromSeconds(<#=(type=="decimal"?"(double)":"")#>@this);
@@ -109,10 +109,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of minutes.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Minutes(this <#=type#> @this) => TimeSpan.FromMinutes(<#=(type=="decimal"?"(double)":"")#>@this);
@@ -122,10 +122,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of hours.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Hours(this <#=type#> @this) => TimeSpan.FromHours(<#=(type=="decimal"?"(double)":"")#>@this);
@@ -135,10 +135,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of days.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Days(this <#=type#> @this) => TimeSpan.FromDays(<#=(type=="decimal"?"(double)":"")#>@this);
@@ -148,10 +148,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Number of weeks.</param>
     /// <returns>A TimeSpan instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TimeSpan Weeks(this <#=type#> @this) => TimeSpan.FromDays(7*<#=(type=="decimal"?"(double)":"")#>@this);
@@ -164,10 +164,10 @@ namespace System {
     /// <param name="this">This TimeSpan.</param>
     /// <param name="divisor">The divisor.</param>
     /// <returns>A fraction of the original timespan.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double DividedBy(this TimeSpan @this, TimeSpan divisor) => @this.Ticks / (double)divisor.Ticks;
@@ -177,10 +177,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This TimeSpan.</param>
     /// <returns>The resulting DateTime instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static DateTime FromNow(this TimeSpan @this) => DateTime.Now + @this;
@@ -190,10 +190,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This TimeSpan.</param>
     /// <returns>The resulting DateTime instance.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static DateTime FromUtcNow(this TimeSpan @this) => DateTime.UtcNow + @this;
@@ -203,10 +203,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This TimeSpan.</param>
     /// <returns>The resulting TimeStamp.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static long FromStopwatchTimeStamp(this TimeSpan @this) => (long)(Stopwatch.GetTimestamp() + @this.TotalSeconds * Stopwatch.Frequency);
@@ -216,10 +216,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This TimeSpan</param>
     /// <returns>The current iteration count</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double CurrenIteration(this TimeSpan @this) => Stopwatch.GetTimestamp()/(double)Stopwatch.Frequency / @this.TotalSeconds;
@@ -230,10 +230,10 @@ namespace System {
     /// <param name="this">This TimeSpan</param>
     /// <param name="maxIterations">The maximum number of iteration before wrap-around</param>
     /// <returns>The current iteration count</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double CurrenIteration(this TimeSpan @this,ulong maxIterations) => CurrenIteration(@this) % maxIterations;

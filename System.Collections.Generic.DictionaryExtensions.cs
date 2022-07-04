@@ -21,10 +21,10 @@
 
 using System.Linq;
 using System.Diagnostics;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -96,7 +96,7 @@ namespace System.Collections.Generic {
     public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> @this, params object[] keyValuePairs) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
       if (keyValuePairs == null)
@@ -128,7 +128,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (keyValuePairs == null)
         throw new ArgumentNullException(nameof(keyValuePairs));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -155,7 +155,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -184,7 +184,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -207,14 +207,14 @@ namespace System.Collections.Generic {
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
       return @this.TryGetValue(key, out var result) ? result : default(TValue);
     }
 
-#if NET45
+#if NET45_OR_GREATER
 
     /// <summary>
     /// Gets the value or a default.
@@ -229,8 +229,10 @@ namespace System.Collections.Generic {
     public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
-
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
+#endif
+
       return @this.TryGetValue(key, out var result) ? result : default(TValue);
     }
 
@@ -247,8 +249,10 @@ namespace System.Collections.Generic {
     public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
-
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
+#endif
+
       return @this.TryGetValue(key, out var result) ? result : default(TValue);
     }
 
@@ -271,14 +275,14 @@ namespace System.Collections.Generic {
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
       return @this.TryGetValue(key, out var result) ? result : defaultValue;
     }
 
-#if NET45
+#if NET45_OR_GREATER
 
     /// <summary>
     /// Gets the value or a default.
@@ -345,7 +349,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (defaultValueFactory == null)
         throw new ArgumentNullException(nameof(defaultValueFactory));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -371,7 +375,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (defaultValueFactory == null)
         throw new ArgumentNullException(nameof(defaultValueFactory));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -394,7 +398,7 @@ namespace System.Collections.Generic {
     public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, ClassForcingTag<TValue> _ = null) where TValue : class {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -417,7 +421,7 @@ namespace System.Collections.Generic {
     public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, StructForcingTag<TValue> _ = null) where TValue : struct {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -437,7 +441,7 @@ namespace System.Collections.Generic {
     public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -447,7 +451,7 @@ namespace System.Collections.Generic {
         @this.Add(key, value);
     }
 
-#if NET40
+#if NET40_OR_GREATER
 
     /// <summary>
     /// Adds values or updates existings.
@@ -505,7 +509,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (values == null)
         throw new ArgumentNullException(nameof(values));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -525,7 +529,7 @@ namespace System.Collections.Generic {
     public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, params KeyValuePair<TKey, TValue>[] values) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -548,7 +552,7 @@ namespace System.Collections.Generic {
     public static TValue GetOrAddDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -574,7 +578,7 @@ namespace System.Collections.Generic {
     public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -599,7 +603,7 @@ namespace System.Collections.Generic {
     public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -628,7 +632,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (defaultValueFactory == null)
         throw new ArgumentNullException(nameof(defaultValueFactory));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -657,7 +661,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (defaultValueFactory == null)
         throw new ArgumentNullException(nameof(defaultValueFactory));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -689,7 +693,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (generatorFunction == null)
         throw new ArgumentNullException(nameof(generatorFunction));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -723,7 +727,7 @@ namespace System.Collections.Generic {
         throw new NullReferenceException();
       if (keyEnumerator == null)
         throw new ArgumentNullException(nameof(keyEnumerator));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -752,7 +756,7 @@ namespace System.Collections.Generic {
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -779,7 +783,7 @@ namespace System.Collections.Generic {
     public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, out TValue value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -808,7 +812,7 @@ namespace System.Collections.Generic {
     public static bool TryUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue newValue, TValue comparisonValue, IEqualityComparer<TValue> comparer = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -828,7 +832,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
     /// <param name="this">This Dictionary.</param>
     /// <returns>A new dictionary with the casted values.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -842,7 +846,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This Dictionary.</param>
     /// <param name="key">The key.</param>
     /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -888,7 +892,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -916,7 +920,7 @@ namespace System.Collections.Generic {
       }
     }
 
-#if NET45
+#if NET45_OR_GREATER
     /// <summary>
     /// Compares two dictionaries against each other.
     /// </summary>

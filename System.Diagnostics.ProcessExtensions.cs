@@ -25,7 +25,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -86,7 +86,7 @@ namespace System.Diagnostics {
     /// Gets the parent process of the current process.      
     /// </summary>        
     /// <returns>An instance of the Process class.</returns>    
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
@@ -96,7 +96,7 @@ namespace System.Diagnostics {
     /// </summary>    
     /// <param name="id">The process id.</param>   
     /// <returns>An instance of the Process class.</returns>   
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);

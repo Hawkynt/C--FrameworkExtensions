@@ -1,7 +1,5 @@
 <#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ assembly name="System.Core" #>
-<#@ assembly name="EnvDTE" #>
-<#@ assembly name="VSLangProj" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -48,7 +46,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 <#if(this.IsDrawingReferenced){#>
@@ -219,7 +217,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="this">This FileInfo.</param>
     public static void EnableCompression(this FileInfo @this) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -254,7 +252,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
     public static bool TryEnableCompression(this FileInfo @this) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -295,7 +293,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The description shown in the windows explorer under filetype.</returns>
     public static string GetTypeDescription(this FileInfo This) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -313,7 +311,7 @@ namespace System.IO {
     /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
     /// <returns>The icon used by the windows explorer for this file.</returns>
     public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -371,7 +369,7 @@ namespace System.IO {
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
     public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -409,7 +407,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The result of the hash algorithm</returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -428,7 +426,7 @@ namespace System.IO {
     /// The result of the hash algorithm
     /// </returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -642,7 +640,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <returns></returns>
-#if NET40
+#if NET40_OR_GREATER
     public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadLines(@this.FullName);
 #else
     public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadAllLines(@this.FullName);
@@ -668,7 +666,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-#if NET40
+#if NET40_OR_GREATER
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadLines(This.FullName, encoding);
 #else
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
@@ -719,7 +717,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NET40
+#if NET40_OR_GREATER
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents.ToArray());
@@ -731,7 +729,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NET40
+#if NET40_OR_GREATER
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents, encoding);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents.ToArray(), encoding);
@@ -760,7 +758,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NET40
+#if NET40_OR_GREATER
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllLines(This.FullName, contents);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine);
@@ -772,7 +770,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NET40
+#if NET40_OR_GREATER
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllLines(This.FullName, contents, encoding);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine, encoding);
@@ -810,7 +808,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -913,7 +911,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void RemoveFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -981,6 +979,8 @@ namespace System.IO {
     /// <returns></returns>
     public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, bool useAsync) => new FileStream(This.FullName, mode, access, share, bufferSize, useAsync);
 
+#if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
+
     /// <summary>
     /// Opens the specified file.
     /// </summary>
@@ -1005,6 +1005,8 @@ namespace System.IO {
     /// <param name="security">The security.</param>
     /// <returns></returns>
     public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new FileStream(This.FullName, mode, rights, share, bufferSize, options, security);
+
+#endif
 
     #endregion
 
@@ -1039,7 +1041,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryDelete(this FileInfo @this) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       try {
@@ -1063,7 +1065,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreate(this FileInfo This, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
 
@@ -1174,7 +1176,7 @@ namespace System.IO {
       return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
-#if NET45
+#if NET45_OR_GREATER
 
     /// <summary>
     /// Compares two files for content equality.
@@ -1269,7 +1271,7 @@ namespace System.IO {
       bufferB = temp;
     }
 
-#if NET45
+#if NET45_OR_GREATER
 
     /// <summary>
     /// Starts filling a block from a stream with a given index.

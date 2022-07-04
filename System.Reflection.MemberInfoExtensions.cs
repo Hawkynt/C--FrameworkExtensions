@@ -22,7 +22,7 @@
 #endregion
 
 using System.ComponentModel;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -41,7 +41,7 @@ namespace System.Reflection {
     /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
     /// <returns>The attribute if present; otherwise, throws exception.</returns>
     public static TAttribute GetCustomAttribute<TAttribute>(this MemberInfo @this, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       TAttribute result;
@@ -64,7 +64,7 @@ namespace System.Reflection {
     /// The attribute's value if present; otherwise, throws exception.
     /// </returns>
     public static TValue GetCustomAttributeValue<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(valueGetter != null);
 #endif
@@ -80,7 +80,7 @@ namespace System.Reflection {
     /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
     /// <returns>The attribute if present; otherwise, the default value.</returns>
     public static TAttribute GetCustomAttributeOrDefault<TAttribute>(this MemberInfo @this, TAttribute defaultValue = default(TAttribute), bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       TAttribute result;
@@ -100,7 +100,7 @@ namespace System.Reflection {
     /// The attribute's value if present; otherwise, the default value.
     /// </returns>
     public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, TValue defaultValue = default(TValue), bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(valueGetter != null);
 #endif
@@ -117,7 +117,7 @@ namespace System.Reflection {
     /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
     /// <returns>The attribute if present; otherwise, the generated default value.</returns>
     public static TAttribute GetCustomAttributeOrDefault<TAttribute>(this MemberInfo @this, Func<TAttribute> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(defaultValueFactory != null);
 #endif
@@ -139,7 +139,7 @@ namespace System.Reflection {
     /// The attribute's value if present; otherwise, the default value.
     /// </returns>
     public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, Func<TValue> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(valueGetter != null);
       Contract.Requires(defaultValueFactory != null);
@@ -158,7 +158,7 @@ namespace System.Reflection {
     /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
     /// <returns><c>true</c> if the given attribute was present; otherwise, <c>false</c>.</returns>
     public static bool TryGetCustomAttribute<TAttribute>(this MemberInfo @this, out TAttribute result, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var results = GetCustomAttributes<TAttribute>(@this, inherit, inheritInterfaces);
@@ -182,7 +182,7 @@ namespace System.Reflection {
     /// The custom attributes of the given type.
     /// </returns>
     public static TAttribute[] GetCustomAttributes<TAttribute>(this MemberInfo @this, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       return (@this.GetCustomAttributes(typeof(TAttribute), inherit).Union(inheritInterfaces ? @this.DeclaringType.GetInterfaces().Select(i => i.GetMember(@this.Name).FirstOrDefault()).Where(i => i != null).SelectMany(m => m.GetCustomAttributes(typeof(TAttribute), inherit)) : new object[0]).Cast<TAttribute>().ToArray());

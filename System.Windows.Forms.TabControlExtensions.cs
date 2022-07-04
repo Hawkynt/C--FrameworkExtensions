@@ -26,7 +26,7 @@ using System.Linq;
 using DrawingSize = System.Drawing.Size;
 // ReSharper disable UnusedMember.Global
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -36,13 +36,13 @@ namespace System.Windows.Forms {
   internal static partial class TabControlExtensions {
 
     public static void AddImageToImageList(this TabControl @this, Image image, string key) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(image != null);
       Contract.Requires(!string.IsNullOrEmpty(key));
 #endif
 
       var imageList = @this.ImageList;
-#if NET40
+#if NET40_OR_GREATER
       Contract.Assert(imageList != null, "Can only work on TabControls with assigned ImageList.");
 #endif
 
@@ -105,7 +105,7 @@ namespace System.Windows.Forms {
     /// <param name="page">The page.</param>
     /// <param name="color">The color.</param>
     public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(page != null);
 #endif

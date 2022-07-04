@@ -26,7 +26,7 @@
 <#var CALLER_MEMBER_NAME_NATIVELY_SUPPORTED=false;#>
 
 using System.Runtime.CompilerServices;
-#if !NET45
+#if !NET45_OR_GREATER
 using System.Diagnostics;
 using System.Linq;
 #endif
@@ -93,7 +93,7 @@ namespace System.ComponentModel {
     /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #else
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -106,7 +106,7 @@ namespace System.ComponentModel {
 <#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
       [CallerMemberName]string propertyName = null
 <#}else{#>
-#if NET45
+#if NET45_OR_GREATER
       [CallerMemberName]string propertyName = null
 #else
       string propertyName = null
@@ -121,7 +121,7 @@ namespace System.ComponentModel {
 
       backingField = value;
 <#if(!CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
-#if !NET45
+#if !NET45_OR_GREATER
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;
@@ -162,7 +162,7 @@ namespace System.ComponentModel {
     /// <c>True</c> if the value was changed, <c>False</c> if the existing value matched the
     /// desired value.
     /// </returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #else
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -175,7 +175,7 @@ namespace System.ComponentModel {
 <#if(CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
       [CallerMemberName]string propertyName = null
 <#}else{#>
-#if NET45
+#if NET45_OR_GREATER
       [CallerMemberName]string propertyName = null
 #else
       string propertyName = null
@@ -187,7 +187,7 @@ namespace System.ComponentModel {
 
       backingField = value;
 <#if(!CALLER_MEMBER_NAME_NATIVELY_SUPPORTED){#>
-#if !NET45
+#if !NET45_OR_GREATER
       if(propertyName==null){
         var method=new StackTrace().GetFrame(1).GetMethod();
         var name = method.Name;

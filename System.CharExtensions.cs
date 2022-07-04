@@ -22,7 +22,7 @@
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -37,10 +37,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
@@ -50,10 +50,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
@@ -63,10 +63,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
@@ -78,10 +78,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
@@ -93,10 +93,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is upper case; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsUpper(this char @this) => char.IsUpper(@this);
@@ -108,10 +108,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is lower case; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsLower(this char @this) => char.IsLower(@this);
@@ -123,10 +123,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a letter; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsLetter(this char @this) => char.IsLetter(@this);
@@ -136,10 +136,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The upper-case char.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToUpper(this char @this) => char.ToUpper(@this);
@@ -150,10 +150,10 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The upper-case char.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
@@ -163,10 +163,10 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The lower-case char.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToLower(this char @this) => char.ToLower(@this);
@@ -177,10 +177,10 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The lower-case char.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
@@ -193,10 +193,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
@@ -207,10 +207,10 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="count">The count.</param>
     /// <returns>A new string containing the given character the specified times.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Repeat(this char @this, int count) => new string(@this, count);

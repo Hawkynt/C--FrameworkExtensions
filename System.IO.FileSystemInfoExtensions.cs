@@ -50,7 +50,7 @@ namespace System.IO {
     public static string RelativeTo(string tgtPath, string srcPath) {
       if (tgtPath == null) throw new ArgumentNullException(nameof(tgtPath));
       if (srcPath == null) throw new ArgumentNullException(nameof(srcPath));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -90,7 +90,7 @@ namespace System.IO {
     public static string RelativeTo(this FileSystemInfo @this, FileSystemInfo source) {
       if (@this == null) throw new NullReferenceException();
       if (source == null) throw new ArgumentNullException(nameof(source));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -108,7 +108,7 @@ namespace System.IO {
     public static bool IsOnSamePhysicalDrive(this FileSystemInfo @this, FileSystemInfo other) {
       if (@this == null) throw new NullReferenceException();
       if (other == null) throw new ArgumentNullException(nameof(other));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -127,7 +127,7 @@ namespace System.IO {
     public static bool IsOnSamePhysicalDrive(string path, string other) {
       if (path == null) throw new ArgumentNullException(nameof(path));
       if (other == null) throw new ArgumentNullException(nameof(other));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 

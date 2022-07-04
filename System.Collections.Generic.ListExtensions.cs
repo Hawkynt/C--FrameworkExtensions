@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -37,7 +37,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumerable.</param>
     /// <param name="items">The items.</param>
     public static void RemoveAll<TItem>(this IList<TItem> This, IEnumerable<TItem> items) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(items != null);
 #endif
@@ -89,7 +89,7 @@ namespace System.Collections.Generic {
     /// <param name="start">The start.</param>
     /// <param name="count">The count.</param>
     public static void RemoveRange<TInput>(this IList<TInput> @this, int start, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -122,7 +122,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -145,7 +145,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="item">The item.</param>
     public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -160,7 +160,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
     public static void KeepFirst<TInput>(this IList<TInput> @this, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -207,7 +207,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
     public static void KeepLast<TInput>(this IList<TInput> @this, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -252,7 +252,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
     public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var remaining = @this.Count - count;
@@ -266,7 +266,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This IList.</param>
     /// <param name="count">The count.</param>
     public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var remaining = @this.Count - count;
@@ -281,7 +281,7 @@ namespace System.Collections.Generic {
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
     public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var length = @this.Count;
@@ -353,7 +353,7 @@ namespace System.Collections.Generic {
     /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
     /// <returns></returns>
     public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       if (length < 1)

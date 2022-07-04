@@ -21,7 +21,7 @@
 
 using System.Linq;
 using System.IO;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -32,7 +32,7 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Forms {
   internal static partial class ImageListExtensions {
     public static void SaveToDirectory(this ImageList @this, string directoryName) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var images = @this.Images;

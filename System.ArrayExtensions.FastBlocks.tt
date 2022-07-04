@@ -57,7 +57,7 @@
 #>
 
 using System.Runtime.InteropServices;
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -261,7 +261,7 @@ namespace System {
 <#  foreach(var typeData in typeDatas.Where(i=>!i.hasHandcraftedCopyToMethod)) {#>
 <#    var typeName = typeData.name;#>
     
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
@@ -317,7 +317,7 @@ label:
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count)
@@ -329,14 +329,14 @@ label:
 
 #if UNSAFE
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
       => _CopyTo(source + srcIndex, target + tgtIndex, count)
     ;
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe void _CopyTo(byte* source, byte* target, int count) {
@@ -447,7 +447,7 @@ blockDuffOut:
     }
 #endif
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count) {
@@ -524,7 +524,7 @@ qwordDuffOut:
 
 #if UNSAFE
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static unsafe void Fill(this IntPtr @this, int count, byte value)
@@ -689,7 +689,7 @@ qwordDuffOut:
 
 #if UNSAFE
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static unsafe void Clear(this IntPtr @this, int count)

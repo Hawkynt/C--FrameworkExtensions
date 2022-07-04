@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 using System.Collections.Concurrent;
@@ -278,7 +278,7 @@ namespace System.IO {
 
       var path = baseDirectory ?? Path.GetTempPath();
       name = Path.GetFileName(name);
-#if NET40
+#if NET40_OR_GREATER
       Contract.Assert(name != null, "Filename went <null>");
 #endif
       var fullName = Path.Combine(path, name);
@@ -304,7 +304,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateFile(string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(fileName != null);
 #endif
       if (File.Exists(fileName))
@@ -366,7 +366,7 @@ namespace System.IO {
 
           tempName.Append(SUFFIX);
           result = Path.Combine(path, tempName.ToString());
-#if NET40
+#if NET40_OR_GREATER
           Contract.Assume(!string.IsNullOrEmpty(result));
 #endif
         } while (!TryCreateDirectory(result));
@@ -376,13 +376,13 @@ namespace System.IO {
 
       // a name is given, so try to accommodate this
       name = Path.GetFileName(name);
-#if NET40
+#if NET40_OR_GREATER
       Contract.Assert(name != null, "DirectoryName went <null>");
 #endif
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name, return it
-#if NET40
+#if NET40_OR_GREATER
       Contract.Assume(!string.IsNullOrEmpty(fullName));
 #endif
       if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
@@ -403,7 +403,7 @@ namespace System.IO {
     ///   <c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(!string.IsNullOrEmpty(pathName));
 #endif
       if (Directory.Exists(pathName))
@@ -483,7 +483,7 @@ namespace System.IO {
         var value = this._fullPath;
         // extract server
         if (value != null && value.StartsWith(_pathSeparator + string.Empty + _pathSeparator)) {
-#if NET40
+#if NET40_OR_GREATER
           Contract.Assume(value.Length > 2);
 #endif
           var idx = value.IndexOf(_pathSeparator, 2);
@@ -500,7 +500,7 @@ namespace System.IO {
 
         // extract share
         if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
-#if NET40
+#if NET40_OR_GREATER
           Contract.Assume(value.Length > 1);
 #endif
           var idx = value.IndexOf(_pathSeparator, 1);

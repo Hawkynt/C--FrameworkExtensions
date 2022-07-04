@@ -23,10 +23,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
-#if NET40
+#if NET40_OR_GREATER
 using System.Threading.Tasks;
 #endif
 using System.Text;
@@ -112,7 +112,7 @@ namespace System.Collections.Generic {
         yield return i;
     }
 
-#if !NET45
+#if !NET45_OR_GREATER
     /// <summary>
     /// Appends a single item to the end of the enumeration.
     /// </summary>
@@ -176,7 +176,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40
+#if NET40_OR_GREATER
       Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -274,7 +274,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <returns>A hashset</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) => new HashSet<TItem>(@this);
@@ -289,7 +289,7 @@ namespace System.Collections.Generic {
     /// A hashset
     /// </returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) => new HashSet<TItem>(@this, comparer);
@@ -327,7 +327,7 @@ namespace System.Collections.Generic {
     /// A hashset
     /// </returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, IEqualityComparer<TResult> comparer = null) => comparer == null ? new HashSet<TResult>(@this.Select(selector)) : new HashSet<TResult>(@this.Select(selector), comparer);
@@ -520,12 +520,12 @@ namespace System.Collections.Generic {
     /// <param name="this">The this.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> @this) => @this.SelectMany(c => c as TItem[] ?? c.ToArray());
 
-#if NET40
+#if NET40_OR_GREATER
     public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
       if (@this == null)
         throw new NullReferenceException();
@@ -550,7 +550,7 @@ namespace System.Collections.Generic {
     /// <param name="comparer">The comparer; if any.</param>
     /// <returns><c>true</c> if the enumeration does not contain the listed value; otherwise, <c>false</c>.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool ContainsNot<TItem>(this IEnumerable<TItem> @this, TItem item, IEqualityComparer<TItem> comparer = null)
@@ -566,7 +566,7 @@ namespace System.Collections.Generic {
     /// <param name="comparer">The comparer; if any.</param>
     /// <returns><c>true</c> if the enumeration does not contain the listed values; otherwise, <c>false</c>.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool ContainsNotAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items, IEqualityComparer<TItem> comparer = null)
@@ -672,7 +672,7 @@ namespace System.Collections.Generic {
         action(item, index++);
     }
 
-#if NET40
+#if NET40_OR_GREATER
     /// <summary>
     /// Executes a callback for each item in parallel.
     /// </summary>
@@ -680,7 +680,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <param name="action">The call to execute.</param>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn> action)
@@ -715,7 +715,7 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, TOut> converter)
@@ -731,7 +731,7 @@ namespace System.Collections.Generic {
     /// <param name="converter">The converter function.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, int, TOut> converter)
@@ -894,7 +894,7 @@ namespace System.Collections.Generic {
     /// <param name="this">The source.</param>
     /// <returns>A list of items.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> @this)
@@ -1025,7 +1025,7 @@ namespace System.Collections.Generic {
     /// <param name="item">The item.</param>
     /// <returns>The position of the item in the enumeration or -1</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static int IndexOf<TIn>(this IEnumerable<TIn> @this, TIn item) => IndexOrDefault(@this, a => Equals(a, item), -1);
@@ -1090,7 +1090,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
-#if !NET35
+#if !NETSTANDARD && !NETCOREAPP && !NET35_OR_GREATER
     /// <summary>
     /// Gets the first item matching the condition or the given default value.
     /// </summary>
@@ -1183,7 +1183,7 @@ namespace System.Collections.Generic {
       return defaultValueFactory(@this);
     }
 
-#if !NET35
+#if !NETSTANDARD && !NETCOREAPP && !NET35_OR_GREATER
     /// <summary>
     /// Gets the last item matching the condition or the given default value.
     /// </summary>
@@ -1192,7 +1192,7 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector)
@@ -1209,7 +1209,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue)
@@ -1225,7 +1225,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory)
@@ -1241,7 +1241,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns>The matched item or the given default value.</returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
@@ -1256,7 +1256,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue)
@@ -1271,7 +1271,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory)
@@ -1286,7 +1286,7 @@ namespace System.Collections.Generic {
     /// <param name="defaultValueFactory">The default value factory.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
@@ -1300,7 +1300,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This enumeration.</param>
     /// <returns></returns>
     [DebuggerStepThrough]
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> @this) => @this.OrderBy(i => i);
@@ -1369,7 +1369,7 @@ namespace System.Collections.Generic {
       new DisposableCollection<TItem>(@this)
     ;
 
-#if NET40
+#if NET40_OR_GREATER
     public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(this TItem[] @this,Func<TItem,TKey> keyGetter,Func<TItem,TValue> valueGetter,IEqualityComparer<TKey> equalityComparer=null ) {
       if (@this == null)
         throw new NullReferenceException();
@@ -1386,7 +1386,7 @@ namespace System.Collections.Generic {
     }
 #endif
 
-#if NET45
+#if NET45_OR_GREATER
     /// <summary>
     /// Iterates through the given enumeration in a separate thread and executes an action for every item
     /// </summary>

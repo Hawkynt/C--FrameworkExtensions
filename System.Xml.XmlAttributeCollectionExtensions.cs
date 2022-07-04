@@ -23,7 +23,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 
@@ -37,7 +37,7 @@ namespace System.Xml {
     /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
     /// <returns>The value of that attribute or the given default value.</returns>
     /// <remarks></remarks>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string GetValueOrDefault(this XmlAttributeCollection This, string key, string defaultValue = null) => This[key] == null ? defaultValue : This[key].Value;

@@ -172,7 +172,7 @@ namespace System.Windows.Forms {
     public static ISuspendedLayoutToken PauseLayout(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -182,7 +182,7 @@ namespace System.Windows.Forms {
     public static ISuspendedRedrawToken PauseRedraw(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -200,7 +200,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -218,7 +218,7 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnForm(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -237,7 +237,7 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnScreen(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -247,7 +247,7 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnClient(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -274,7 +274,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -294,7 +294,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (function == null)
         throw new ArgumentNullException(nameof(function));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -316,7 +316,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (function == null)
         throw new ArgumentNullException(nameof(function));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -357,7 +357,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -418,7 +418,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -444,7 +444,7 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -474,7 +474,7 @@ namespace System.Windows.Forms {
         throw new ArgumentNullException(nameof(syncPreAction));
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -497,7 +497,7 @@ namespace System.Windows.Forms {
     public static string GetTextProperty(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -517,7 +517,7 @@ namespace System.Windows.Forms {
     public static void ClearChildren(this Control @this, Predicate<Control> predicate = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -549,7 +549,7 @@ namespace System.Windows.Forms {
     public static IEnumerable<Control> AllControls(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 
@@ -595,7 +595,7 @@ namespace System.Windows.Forms {
     public static Control Duplicate(this Control @this, string newName = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       System.Diagnostics.Contracts.Contract.EndContractBlock();
 #endif
 

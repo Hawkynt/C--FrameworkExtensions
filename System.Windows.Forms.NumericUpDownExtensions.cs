@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if !NET35
+#if !NET35_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -35,7 +35,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, decimal min, decimal max, decimal step) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -52,7 +52,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, double min, double max, double step) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -67,7 +67,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, int min, int max, int step) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -80,7 +80,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, decimal value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -93,7 +93,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, double value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -106,7 +106,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, int value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -119,7 +119,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, uint value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -132,7 +132,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, long value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);
@@ -145,7 +145,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, ulong value) {
-#if NET35
+#if NET35_OR_GREATER
       System.Diagnostics.Debug.Assert(This != null);
 #else
       Contract.Requires(This != null);

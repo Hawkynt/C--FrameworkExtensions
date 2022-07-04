@@ -26,7 +26,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
-#if NET45
+#if NET45_OR_GREATER
 using System.Threading.Tasks;
 #endif
 
@@ -147,7 +147,7 @@ namespace System {
       #endregion
     }
 
-#if NET45
+#if NET45_OR_GREATER
     /// <summary>
     /// Reads all text.
     /// </summary>
@@ -263,7 +263,7 @@ namespace System {
       }
     }
 
-#if NET45
+#if NET45_OR_GREATER
     /// <summary>
     /// Reads all bytes.
     /// </summary>

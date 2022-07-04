@@ -106,7 +106,7 @@ namespace System.ComponentModel {
           }
 
           if (method.ReturnType.IsClass)
-#if NET45
+#if NET45_OR_GREATER
             this._call = (Func<TValue, object>)method.CreateDelegate(typeof(Func<TValue, object>));
 #else
             this._call = value => method.Invoke(value, null);
@@ -325,7 +325,7 @@ namespace System.ComponentModel {
           addRangeDelegate =
             mi == null
               ? null
-#if NET45
+#if NET45_OR_GREATER
               : (Action<IEnumerable<TValue>>)mi.CreateDelegate(typeof(Action<IEnumerable<TValue>>), listRef)
 #else
               : (Action<IEnumerable<TValue>>)(values => mi.Invoke(listRef, new object[] { values }))

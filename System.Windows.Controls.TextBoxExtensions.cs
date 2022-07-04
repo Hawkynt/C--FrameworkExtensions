@@ -27,7 +27,7 @@ using System.Windows.Forms;
 using DrawingPoint = System.Drawing.Point;
 using DrawingTextBox = System.Windows.Forms.TextBox;
 
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -109,7 +109,7 @@ namespace System.Windows.Controls {
     /// </summary>
     /// <param name="This">This TextBox.</param>
     public static void MoveCursorToEnd(this DrawingTextBox This) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
       This.SelectionStart = This.TextLength;
@@ -123,7 +123,7 @@ namespace System.Windows.Controls {
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryParseInt(this DrawingTextBox This, ref int value) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
 #endif
       var text = This.Text;

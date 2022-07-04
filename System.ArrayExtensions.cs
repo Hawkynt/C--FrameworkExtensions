@@ -24,17 +24,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.IO.Compression;
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 using System.Security.Cryptography;
 using System.Text;
-#if NET40
+#if NET40_OR_GREATER
 using System.Threading.Tasks;
 #endif
 using System.Runtime.InteropServices;
@@ -101,7 +101,7 @@ namespace System {
       protected readonly int _start;
 
       public ReadOnlyArraySlice(TItem[] source, int start, int length) {
-#if NET40
+#if NET40_OR_GREATER
         Contract.Requires(source != null);
 #endif
         if (start + length > source.Length)
@@ -130,7 +130,7 @@ namespace System {
       /// <returns>The item at the given index.</returns>
       public TItem this[int index] {
         get {
-#if NET40
+#if NET40_OR_GREATER
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
@@ -201,7 +201,7 @@ namespace System {
     internal class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
       public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
-#if NET40
+#if NET40_OR_GREATER
         Contract.Requires(source != null);
 #endif
       }
@@ -216,13 +216,13 @@ namespace System {
       /// <returns>The item at the given index</returns>
       public new TItem this[int index] {
         get {
-#if NET40
+#if NET40_OR_GREATER
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
         }
         set {
-#if NET40
+#if NET40_OR_GREATER
           Contract.Requires(index < this.Length);
 #endif
           this._source[index + this._start] = value;
@@ -368,7 +368,7 @@ namespace System {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -440,7 +440,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This Enumeration.</param>
     /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -454,7 +454,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -475,7 +475,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -492,7 +492,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -511,7 +511,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -536,7 +536,7 @@ namespace System {
       if (@this.Length == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -554,7 +554,7 @@ namespace System {
     /// <param name="this">This Array.</param>
     /// <param name="index">The index.</param>
     /// <returns></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -568,7 +568,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -582,7 +582,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -596,7 +596,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -634,7 +634,7 @@ namespace System {
     public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -669,7 +669,7 @@ namespace System {
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
     public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(startIndex + count <= @this.Length);
       Contract.Requires(startIndex >= 0);
@@ -686,7 +686,7 @@ namespace System {
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
     public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var value = @this[firstElementIndex];
@@ -699,7 +699,7 @@ namespace System {
     /// <typeparam name="TItem">Type of elements in the array.</typeparam>
     /// <param name="this">This array.</param>
     public static void Shuffle<TItem>(this TItem[] @this) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var index = @this.Length;
@@ -714,7 +714,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <returns>A sorted array copy.</returns>
     public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var result = new TItem[@this.Length];
@@ -728,7 +728,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements.</typeparam>
     /// <param name="this">This array.</param>
     public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       if (@this.Length > 0)
@@ -768,7 +768,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -783,7 +783,7 @@ namespace System {
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
     public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
       Contract.Requires(converter != null);
 #endif
@@ -799,20 +799,20 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) => Array.ForEach(@this, action);
 
-#if NET40
+#if NET40_OR_GREATER
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -831,7 +831,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -849,7 +849,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -867,7 +867,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -885,7 +885,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -903,7 +903,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -917,7 +917,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) => Array.Exists(@this, predicate);
@@ -928,13 +928,13 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <returns>An array where all values are inverted.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
     public static TItem[] Reverse<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -955,10 +955,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Contains<TItem>(this TItem[] @this, TItem value) => @this.IndexOf(value) >= 0;
@@ -971,13 +971,13 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
     public static bool Contains(this Array @this, object value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -994,7 +994,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Array.</param>
     /// <returns>An array of objects holding the contents.</returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
     public static object[] ToArray(this Array @this) {
@@ -1002,7 +1002,7 @@ namespace System {
         throw new NullReferenceException();
       if (@this.Rank < 1)
         throw new ArgumentException("Rank must be > 0", nameof(@this));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1041,7 +1041,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1067,7 +1067,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1093,7 +1093,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1114,13 +1114,13 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-#if NET40
+#if NET40_OR_GREATER
     [Pure]
 #endif
     public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1146,7 +1146,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
@@ -1209,7 +1209,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements</typeparam>
     /// <param name="this">This <see cref="Array"/></param>
     /// <returns><c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNullEmpty<TItem>(this TItem[] @this)=>@this==null||@this.Length<=0;
@@ -1220,7 +1220,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements</typeparam>
     /// <param name="this">This <see cref="Array"/></param>
     /// <returns><c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c></returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotNullEmpty<TItem>(this TItem[] @this) => @this != null && @this.Length > 0;
@@ -1253,7 +1253,7 @@ namespace System {
 
     #region high performance linq for arrays
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1265,7 +1265,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1279,7 +1279,7 @@ namespace System {
     public static TItem First<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1293,7 +1293,7 @@ namespace System {
     public static TItem Last<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1310,7 +1310,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1328,7 +1328,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1340,7 +1340,7 @@ namespace System {
       throw new InvalidOperationException("No Elements!");
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1350,7 +1350,7 @@ namespace System {
     public static TItem LastOrDefault<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1364,7 +1364,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1382,7 +1382,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1403,7 +1403,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1423,7 +1423,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1434,13 +1434,13 @@ namespace System {
       return result;
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static int Count<TItem>(this TItem[] @this) => @this.Length;
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1452,7 +1452,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1473,7 +1473,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1492,7 +1492,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1509,7 +1509,7 @@ namespace System {
     public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1526,7 +1526,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1541,7 +1541,7 @@ namespace System {
     public static IEnumerable<object> Reverse(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1555,7 +1555,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1570,7 +1570,7 @@ namespace System {
     public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1586,7 +1586,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1601,7 +1601,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1616,7 +1616,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1631,7 +1631,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1646,7 +1646,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1664,7 +1664,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1682,7 +1682,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -1702,7 +1702,7 @@ namespace System {
 
 #if UNSAFE
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceUnsafe(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
@@ -1789,7 +1789,7 @@ namespace System {
       }
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqualBytewise(ref byte* source, ref byte* target, int count) {
@@ -1805,7 +1805,7 @@ namespace System {
       return true;
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual4Bytewise(ref byte* s, ref byte* t, int count) {
@@ -1827,7 +1827,7 @@ namespace System {
 
 #if !PLATFORM_X86
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual8Bytewise(ref byte* s, ref byte* t, int count) {
@@ -1850,7 +1850,7 @@ namespace System {
 
 #endif
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual32Bytewise(ref byte* s, ref byte* t, int count) {
@@ -1882,7 +1882,7 @@ namespace System {
 
 #if !PLATFORM_X86
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual64Bytewise(ref byte* s, ref byte* t, int count) {
@@ -1912,7 +1912,7 @@ namespace System {
       return true;
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
@@ -1972,7 +1972,7 @@ namespace System {
 
 #else
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
@@ -2072,7 +2072,7 @@ namespace System {
 
 #if DEBUG && !PLATFORM_X86
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static bool _SequenceEqualManagedPointers(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
@@ -2104,7 +2104,7 @@ namespace System {
 
 #endif
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static bool _SequenceEqualNaive(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
@@ -2189,7 +2189,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This buffer.</param>
     /// <returns>The given buffer</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2211,7 +2211,7 @@ namespace System {
         throw new ArgumentOutOfRangeException(nameof(offset), offset, "Must be > 0");
       if (count < 1)
         throw new ArgumentOutOfRangeException(nameof(count), count, "Must be > 0");
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -2237,7 +2237,7 @@ namespace System {
         throw new NullReferenceException();
       if (length < 1)
         throw new ArgumentOutOfRangeException(nameof(length), length, "Must be > 0");
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -2266,7 +2266,7 @@ namespace System {
     public static byte[] GZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -2287,7 +2287,7 @@ namespace System {
     public static byte[] UnGZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -3031,14 +3031,14 @@ namespace System {
     /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The result of the hash algorithm</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40
+#if NET40_OR_GREATER
       Contract.EndContractBlock();
 #endif
 
@@ -3051,7 +3051,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3062,7 +3062,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3073,7 +3073,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3084,7 +3084,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3095,7 +3095,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3135,12 +3135,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3164,13 +3164,13 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
 
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3195,12 +3195,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3384,12 +3384,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3413,12 +3413,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3443,12 +3443,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] &= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3632,12 +3632,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3661,12 +3661,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3691,12 +3691,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source, ulong[] operand) {
 
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] |= operand[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3880,12 +3880,12 @@ namespace System {
       }
 
       private static void _DoWords(ushort[] source) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] ^= 0xffff;
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3909,12 +3909,12 @@ namespace System {
       }
 
       private static void _DoDWords(uint[] source) {
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -3939,12 +3939,12 @@ namespace System {
 
       private static void _DoQWords(ulong[] source) {
 
-#if NET40
+#if NET40_OR_GREATER
         if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
           for (var i = 0; i < source.Length; i++)
             source[i] = ~source[i];
-#if NET40
+#if NET40_OR_GREATER
           return;
         }
 
@@ -4109,7 +4109,7 @@ namespace System {
 
     #region bitwise operations
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4121,7 +4121,7 @@ namespace System {
 #endif
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4135,13 +4135,13 @@ namespace System {
 #endif
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void AndBytewise(this byte[] @this, byte[] operand) => FastAnd.ProcessBytewise(@this, operand);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4153,13 +4153,13 @@ namespace System {
 #endif
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void OrBytewise(this byte[] @this, byte[] operand) => FastOr.ProcessBytewise(@this, operand);
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4171,7 +4171,7 @@ namespace System {
 #endif
     }
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]

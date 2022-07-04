@@ -271,7 +271,7 @@ namespace System.IO {
       @this.Read(buffer, offset, count);
     }
 
-#if NET45
+#if NET45_OR_GREATER
 
     /// <summary>
     ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer

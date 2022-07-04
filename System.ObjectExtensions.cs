@@ -23,13 +23,13 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-#if NET40
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.Linq;
 using System.Reflection;
-#if NET45
+#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
 using System.Runtime.InteropServices;
@@ -57,7 +57,7 @@ namespace System {
     /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
     /// <returns>A collection of KeyValuePairs.</returns>
     public static Dictionary<string, object> GetProperties(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
       var result = new Dictionary<string, object>();
@@ -100,7 +100,7 @@ namespace System {
     /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
     /// <returns>A collection of KeyValuePairs.</returns>
     public static Dictionary<string, object> GetFields(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -137,7 +137,7 @@ namespace System {
     /// <param name="this">This Object.</param>
     /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
     public static void ResetDefaultValues(this object @this, bool flattenHierarchy = true) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
 #endif
 
@@ -174,7 +174,7 @@ namespace System {
     ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
     /// </returns>
     public static bool TypeIsAnyOf(this object @this, params Type[] types) {
-#if NET40
+#if NET40_OR_GREATER
       Contract.Requires(types != null);
 #endif
       if (@this == null)
@@ -373,7 +373,7 @@ namespace System {
       => _CACHE.GetOrAdd(typeof(TType), t => new XmlSerializer(t))
       ;
 
-#if NET45
+#if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
