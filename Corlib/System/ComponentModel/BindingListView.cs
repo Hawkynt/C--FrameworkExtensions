@@ -1,4 +1,4 @@
-﻿#region (c)2010-2021 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -29,7 +29,13 @@ namespace System.ComponentModel {
   ///   A list view for applying filtering and stuff.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
-  public class BindingListView<TItem> : SortableBindingList<TItem> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class BindingListView<TItem> : SortableBindingList<TItem> {
     private bool _isFiltering;
     private Predicate<TItem> _filterPredicate;
     private bool _ignoreDataSourceEvents;

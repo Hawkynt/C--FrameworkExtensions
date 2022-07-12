@@ -40,7 +40,13 @@ using System.Diagnostics;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Collections.Generic {
-  internal static partial class EnumerableExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EnumerableExtensions {
     #region Sum
     #region TimeSpan
     /// <summary>

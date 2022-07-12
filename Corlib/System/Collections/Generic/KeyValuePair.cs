@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,10 +19,16 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 
 namespace System.Collections.Generic {
-  internal static partial class KeyValuePairExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class KeyValuePairExtensions {
     /// <summary>
     /// Creates a dictionary from the given key/value pairs.
     /// Note: if more than one key/value pair exists with the same key name, only the last value gets stored in the dictionary.
@@ -35,8 +41,7 @@ namespace System.Collections.Generic {
     /// A new dictionary.
     /// </returns>
     public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> This, IEqualityComparer<TKey> comparer = null) {
-      Contract.Requires(This != null);
-      Contract.Ensures(Contract.Result<Dictionary<TKey, TValue>>() != null);
+      Debug.Assert(This != null);
 
       // if the enumeration is a collection, than initialize the dictionary with a known number of items.
       var collection = This as ICollection;

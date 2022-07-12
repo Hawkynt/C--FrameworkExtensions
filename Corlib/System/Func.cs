@@ -31,7 +31,13 @@ using System.Diagnostics.Contracts;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System {
-  internal static partial class FunctionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class FunctionExtensions {
 
     /// <summary>
     /// Tries to invoke the given delegate, retrying on exceptions.

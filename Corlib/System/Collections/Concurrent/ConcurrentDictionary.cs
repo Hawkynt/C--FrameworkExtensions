@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,12 +18,19 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
 
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
 namespace System.Collections.Concurrent {
-  internal static partial class ConcurrentDictionaryExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ConcurrentDictionaryExtensions {
     /// <summary>
     /// Adds the key to the dictionary or updates its value.
     /// </summary>
@@ -131,3 +138,4 @@ namespace System.Collections.Concurrent {
     public static TKey GetOrAdd<TKey>(this ConcurrentDictionary<TKey, TKey> @this, TKey key) => @this.GetOrAdd(key, key);
   }
 }
+#endif

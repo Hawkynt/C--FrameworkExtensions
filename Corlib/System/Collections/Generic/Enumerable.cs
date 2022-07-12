@@ -37,18 +37,24 @@ using System.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Collections.Generic {
-  internal static partial class EnumerableExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EnumerableExtensions {
 
     #region nested types
 
-    internal enum ChangeType {
+    public enum ChangeType {
       Equal = 0,
       Changed = 1,
       Added = 2,
       Removed = 3,
     }
 
-    internal interface IChangeSet<out TItem> {
+    public interface IChangeSet<out TItem> {
       ChangeType Type { get; }
       int CurrentIndex { get; }
       TItem Current { get; }
@@ -80,7 +86,7 @@ namespace System.Collections.Generic {
     /// An IEnumerable of Disposables whose elements can also be accessed by an indexer
     /// </summary>
     /// <typeparam name="T">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
-    internal interface IDisposableCollection<out T> : IEnumerable<T>, IDisposable where T : IDisposable {
+    public interface IDisposableCollection<out T> : IEnumerable<T>, IDisposable where T : IDisposable {
       T this[int i] { get; }
     }
 

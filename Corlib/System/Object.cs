@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 #if NET45_OR_GREATER
@@ -42,8 +43,13 @@ using System.Xml.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System {
-  internal static partial class ObjectExtensions {
 
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ObjectExtensions {
     private static readonly Lazy<BinaryFormatter> _formatter = new Lazy<BinaryFormatter>(() => new BinaryFormatter());
     public static BinaryFormatter Formatter => _formatter.Value;
 
@@ -358,6 +364,7 @@ namespace System {
     }
 
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _CACHE = new ConcurrentDictionary<Type, XmlSerializer>();
+
     /// <summary>
     /// Creates an item from a XML file.
     /// </summary>
@@ -372,6 +379,31 @@ namespace System {
     private static XmlSerializer _GetSerializerForType<TType>()
       => _CACHE.GetOrAdd(typeof(TType), t => new XmlSerializer(t))
       ;
+
+
+    public static T DeepClone<T>(this T objectToClone) where T : class {
+      object objResult = null;
+      using (var ms = new MemoryStream()) {
+        var bf = new BinaryFormatter();
+        bf.Serialize(ms, objectToClone);
+
+        ms.Position = 0;
+        objResult = bf.Deserialize(ms);
+      }
+      return objResult as T;
+    }
+
+    public static object DeepClone(this object objectToClone) {
+      object objResult = null;
+      using (var ms = new MemoryStream()) {
+        var bf = new BinaryFormatter();
+        bf.Serialize(ms, objectToClone);
+
+        ms.Position = 0;
+        objResult = bf.Deserialize(ms);
+      }
+      return objResult;
+    }
 
 #if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

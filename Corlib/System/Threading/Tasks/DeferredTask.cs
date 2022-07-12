@@ -30,7 +30,13 @@ namespace System.Threading.Tasks {
   /// This class allows us to defer actions by a certain time and possibly overwrite the passed values within that timespan.
   /// </summary>
   /// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
-  internal class DeferredTask<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DeferredTask<TValue> {
 
     /// <summary>
     /// Stores the scheduled values, alongside their storage date.

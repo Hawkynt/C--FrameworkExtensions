@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,10 +18,18 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.Generic {
-  internal static partial class QueueExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class QueueExtensions {
 
     /// <summary>
     /// Adds all given items to the queue.
@@ -30,8 +38,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Queue.</param>
     /// <param name="items">The items to enqeue.</param>
     public static void AddRange<TItem>(this Queue<TItem> This, IEnumerable<TItem> items) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       foreach (var item in items)
         This.Enqueue(item);
     }
@@ -60,7 +70,9 @@ namespace System.Collections.Generic {
     /// <param name="result">The result.</param>
     /// <returns><c>true</c> if an item could be dequeued; otherwise, <c>false</c>.</returns>
     public static bool TryDequeue<TItem>(this Queue<TItem> @this, out TItem result) {
+#if NET40_OR_GREATER
       Contract.Requires(@this != null);
+#endif
       if (@this.Count < 1) {
         result = default(TItem);
         return false;

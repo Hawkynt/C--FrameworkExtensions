@@ -34,7 +34,13 @@ using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic {
-  internal static partial class DictionaryExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DictionaryExtensions {
 
     #region nested types
 

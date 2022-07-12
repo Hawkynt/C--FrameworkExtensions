@@ -28,7 +28,13 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace System.Collections.Generic {
-  internal static partial class ListExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ListExtensions {
 
     /// <summary>
     /// Removes the given items from the list.

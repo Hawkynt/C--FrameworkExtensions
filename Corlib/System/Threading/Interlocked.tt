@@ -37,7 +37,12 @@ using System.Reflection.Emit;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System.Threading {
 
-  internal static partial class InterlockedEx {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class InterlockedEx {
 
     #region nested types
 

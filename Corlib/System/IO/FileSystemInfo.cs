@@ -22,7 +22,13 @@
 using System.Collections.Generic;
 
 namespace System.IO {
-  internal static partial class FileSystemInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class FileSystemInfoExtensions {
     /// <summary>
     /// Tests the RelativeTo routine.
     /// </summary>

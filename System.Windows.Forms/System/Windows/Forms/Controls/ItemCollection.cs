@@ -27,7 +27,13 @@ using System.Linq;
 namespace System.Windows.Controls {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal static partial class ItemCollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ItemCollectionExtensions {
     /// <summary>
     /// Gets the element in this collection by it's name tag.
     /// </summary>

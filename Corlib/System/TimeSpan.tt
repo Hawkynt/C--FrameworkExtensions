@@ -46,7 +46,13 @@ using qword = System.UInt64;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System {
-  internal static partial class TimeSpanExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TimeSpanExtensions {
     
   <#foreach(var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
     

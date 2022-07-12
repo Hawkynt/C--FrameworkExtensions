@@ -20,14 +20,22 @@
 #endregion
 
 using System.Collections.Generic;
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace System.IO {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal partial class FastFileOperations {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  partial class FastFileOperations {
 
     // ReSharper disable once PartialTypeWithSinglePart
     partial interface IFileComparer { }
@@ -46,7 +54,9 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
+#if NET40_OR_GREATER
         Contract.Requires(x != null && y != null);
+#endif
 
         // same file
         if (x.FullName == y.FullName)
@@ -121,7 +131,9 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
+#if NET40_OR_GREATER
         Contract.Requires(x != null && y != null);
+#endif
         return (x.Length == y.Length);
       }
 
@@ -139,7 +151,9 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
+#if NET40_OR_GREATER
         Contract.Requires(x != null && y != null);
+#endif
         const FileAttributes MASK = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.ReadOnly | FileAttributes.System;
         return ((x.Attributes & MASK) == (y.Attributes & MASK));
       }
@@ -158,7 +172,9 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
+#if NET40_OR_GREATER
         Contract.Requires(x != null && y != null);
+#endif
         return (x.CreationTimeUtc == y.CreationTimeUtc);
       }
 
@@ -176,7 +192,9 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
+#if NET40_OR_GREATER
         Contract.Requires(x != null && y != null);
+#endif
         return (x.LastWriteTimeUtc == y.LastWriteTimeUtc);
       }
 

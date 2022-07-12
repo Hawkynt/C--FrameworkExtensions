@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@ using System.ComponentModel;
 using System.Windows.Threading;
 
 namespace System.Collections.Specialized {
-  public class ObservableList<T> : IList<T>,IList, INotifyCollectionChanged where T : INotifyPropertyChanged {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ObservableList<T> : IList<T>,IList, INotifyCollectionChanged where T : INotifyPropertyChanged {
     private readonly Dispatcher _objDispatcher;
     public Dispatcher Dispatcher {
       get {

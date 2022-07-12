@@ -34,22 +34,28 @@ using System.Diagnostics;
 
 namespace System.Net {
   // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class IPAdressExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class IPAddressExtensions {
     /// <summary>
-    /// Determines whether the specified IPAdress is loopback.
+    /// Determines whether the specified IPAddress is loopback.
     /// </summary>
     /// <param name="this">The this.</param>
     /// <returns>
-    ///   <c>true</c> if the specified IPAdress is loopback; otherwise, <c>false</c>.
+    ///   <c>true</c> if the specified IPAddress is loopback; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsLoopback(this IPAddress @this)
       => IPAddress.IsLoopback(@this) || new[] { IPAddress.Any, IPAddress.IPv6Any, IPAddress.Loopback, IPAddress.IPv6Loopback }.Contains(@this)
       ;
 
     /// <summary>
-    /// Gets the host name for the given ip-adress.
+    /// Gets the host name for the given ip-Address.
     /// </summary>
-    /// <param name="this">This IPAdress.</param>
+    /// <param name="this">This IPAddress.</param>
     /// <returns>The host name or <c>null</c>.</returns>
     public static string GetHostName(this IPAddress @this) {
 #if NET40_OR_GREATER
@@ -67,12 +73,14 @@ namespace System.Net {
 
 #if NET45_OR_GREATER
     /// <summary>
-    /// Gets the host name for the given ip-adress.
+    /// Gets the host name for the given ip-Address.
     /// </summary>
-    /// <param name="This">This IPAdress.</param>
+    /// <param name="This">This IPAddress.</param>
     /// <returns>The host name or <c>null</c>.</returns>
     public static async Task<string> GetHostNameAsync(this IPAddress This) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       try {
         var hostEntry = await Dns.GetHostEntryAsync(This);
         return hostEntry.HostName;

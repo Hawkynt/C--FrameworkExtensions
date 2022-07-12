@@ -27,7 +27,12 @@ using System.Text;
 
 namespace System.Windows.Forms {
 
-  internal static partial class TreeViewExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TreeViewExtensions {
 
     /// <summary>
     /// Used to store subscriptions to the treeviews.

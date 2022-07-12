@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Collections.Generic {
-  internal static partial class EnumeratorExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EnumeratorExtensions {
 
     /// <summary>
     /// Takes the specified amount of elements.

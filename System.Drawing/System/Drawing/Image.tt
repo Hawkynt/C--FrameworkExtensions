@@ -52,7 +52,13 @@ using System.Windows.Media.Imaging;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.Drawing {
-  internal static partial class ImageExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ImageExtensions {
     /// <summary>
     /// Gets a single page of a multipage image.
     /// </summary>

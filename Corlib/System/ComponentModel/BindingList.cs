@@ -33,7 +33,13 @@ namespace System.ComponentModel {
   /// <summary>
   /// 
   /// </summary>
-  internal static partial class BindingListExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class BindingListExtensions {
 
     /// <summary>
     /// Copies the content of the BindingList to an array.

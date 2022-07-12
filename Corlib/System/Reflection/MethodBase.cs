@@ -22,12 +22,20 @@
 #endregion
 
 using System.Collections.Generic;
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection {
-  internal static class MethodBaseExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class MethodBaseExtensions {
     #region nested types
 
     public class ILInstruction {
@@ -200,7 +208,9 @@ namespace System.Reflection {
     /// <param name="This">This MethodBase.</param>
     /// <returns>A list of instructions.</returns>
     public static ILInstruction[] GetInstructions(this MethodBase This) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       var body = This.GetMethodBody();
       if (body == null)
         return (null);
@@ -394,7 +404,9 @@ namespace System.Reflection {
     ///   <c>true</c> if the given method was compiler generated; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCompilerGenerated(this MethodBase This) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       var customAttributes = This.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
       return (customAttributes.Length > 0);
     }
@@ -407,7 +419,9 @@ namespace System.Reflection {
     ///   <c>true</c> if this is a getter or setter; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsGetterOrSetter(this MethodBase This) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       var name = This.Name;
       return ((name.StartsWith("get_") || name.StartsWith("set_")) && (This.IsCompilerGenerated() || This.IsSpecialName));
     }

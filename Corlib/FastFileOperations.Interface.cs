@@ -22,7 +22,13 @@
 using System.Collections.Generic;
 
 namespace System.IO {
-  internal static partial class FastFileOperations {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class FastFileOperations {
     /// <summary>
     /// The type of reason a report is done.
     /// </summary>

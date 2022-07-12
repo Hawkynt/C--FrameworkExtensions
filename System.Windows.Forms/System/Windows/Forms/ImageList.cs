@@ -30,7 +30,13 @@ using System.Diagnostics.Contracts;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms {
-  internal static partial class ImageListExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ImageListExtensions {
     public static void SaveToDirectory(this ImageList @this, string directoryName) {
 #if NET40_OR_GREATER
       Contract.Requires(@this != null);

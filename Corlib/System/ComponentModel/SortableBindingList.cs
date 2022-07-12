@@ -38,7 +38,13 @@ namespace System.ComponentModel {
   /// A BindingList which is sortable in DataGridViews.
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
-  public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollectionChanged {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollectionChanged {
 
     #region nested types
 

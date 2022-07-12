@@ -40,7 +40,13 @@ using System.Text.RegularExpressions;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System {
-  internal static partial class StringExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class StringExtensions {
     #region consts
     /// <summary>
     /// This is a list of services which are registered to certain ports according to IANA.

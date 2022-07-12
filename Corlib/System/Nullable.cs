@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System {
-  internal static partial class NullableExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class NullableExtensions {
 
   }
 
@@ -32,7 +38,13 @@ namespace System {
   /// Extended Nullable type, that allows reference types to be wrapped.
   /// </summary>
   /// <typeparam name="TType">The type of the type.</typeparam>
-  internal struct NullableEx<TType> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  struct NullableEx<TType> {
     private readonly TType _value;
     private readonly bool _hasValue;
 

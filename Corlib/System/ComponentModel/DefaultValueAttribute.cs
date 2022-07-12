@@ -28,7 +28,13 @@ using System.Reflection;
 namespace System.ComponentModel {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal static partial class DefaultValueAttributeExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DefaultValueAttributeExtensions {
     /// <summary>
     /// Sets the properties of an instance to their default values.
     /// </summary>

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,10 +18,17 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
 using System.Diagnostics.Contracts;
 
 namespace System.Collections.Concurrent {
-  internal static partial class ConcurrentBagExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ConcurrentBagExtensions {
     /// <summary>
     /// Clears the specified Bag.
     /// </summary>
@@ -34,3 +41,5 @@ namespace System.Collections.Concurrent {
     }
   }
 }
+
+#endif

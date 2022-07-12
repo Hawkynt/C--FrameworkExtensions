@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -27,7 +27,13 @@ using System.IO;
 using System.Linq;
 
 namespace System.Reflection {
-  internal static class AssemblyExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class AssemblyExtensions {
     /// <summary>
     /// Gets the embedded resource file.
     /// </summary>

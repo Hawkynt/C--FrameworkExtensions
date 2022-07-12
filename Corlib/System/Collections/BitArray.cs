@@ -22,7 +22,13 @@
 using System.Collections.Generic;
 
 namespace System.Collections {
-  internal static partial class BitArrayExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class BitArrayExtensions {
 
     /// <summary>
     /// Get the set bit positions.

@@ -41,7 +41,13 @@ using qword = System.UInt64;
 // ReSharper disable RedundantCast
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System {
-  internal static class MathEx {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class MathEx {
   <# foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
 
 #if NET40_OR_GREATER

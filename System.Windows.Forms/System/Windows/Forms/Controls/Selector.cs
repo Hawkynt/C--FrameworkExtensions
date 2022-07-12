@@ -23,7 +23,13 @@
 namespace System.Windows.Controls.Primitives {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal static partial class SelectorExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class SelectorExtensions {
     /// <summary>
     /// Tries to cast the selected value into the given type.
     /// </summary>

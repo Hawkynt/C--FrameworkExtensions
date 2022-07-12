@@ -38,7 +38,13 @@ using System.Diagnostics;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.ComponentModel {
-  internal static partial class PropertyChangingExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class PropertyChangingExtensions {
 
   <#foreach(var type in new[]{"bool","byte","sbyte","char","short","ushort","int","uint","long","ulong","float","double","decimal","string"}){#>
 

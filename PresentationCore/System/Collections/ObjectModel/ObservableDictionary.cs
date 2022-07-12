@@ -29,7 +29,13 @@ using System.Windows.Threading;
 
 namespace System.Collections.ObjectModel {
   // ReSharper disable once UnusedMember.Global
-  internal class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged,
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged,
     INotifyPropertyChanged {
     private readonly IDictionary<TKey, TValue> _dictionary;
 

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,7 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 // as long as fake db is defined, this will not execute any statement on the sql server, instead it will print statement to the console and do not use sql parameters, so values can be seen
 #undef FAKE_DB
 
@@ -31,7 +31,7 @@
 
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,8 +48,8 @@ namespace System.Data.SqlClient {
     /// <param name="commandText">The command text.</param>
     /// <returns>The number of rows that where affected.</returns>
     public static int ExecuteNonQuery(this SqlCommand This, string commandText) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(commandText));
+      Debug.Assert(This != null);
+      Debug.Assert(!commandText.IsNullOrWhiteSpace());
 #if FAKE_DB
       Console.WriteLine(commandText);
       return (1);
@@ -66,8 +66,8 @@ namespace System.Data.SqlClient {
     /// <param name="commandText">The command text.</param>
     /// <returns>The single result.</returns>
     public static object ExecuteScalar(this SqlCommand This, string commandText) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(commandText));
+      Debug.Assert(This != null);
+      Debug.Assert(!commandText.IsNullOrWhiteSpace());
 #if FAKE_DB
       Console.WriteLine(commandText);
       return (null);
@@ -84,8 +84,8 @@ namespace System.Data.SqlClient {
     /// <param name="commandText">The command text.</param>
     /// <returns>The reader for reading the ResultSet.</returns>
     public static SqlDataReader ExecuteReader(this SqlCommand This, string commandText) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(commandText));
+      Debug.Assert(This != null);
+      Debug.Assert(!commandText.IsNullOrWhiteSpace());
 #if FAKE_DB
       return (null);
 #else
@@ -106,9 +106,9 @@ namespace System.Data.SqlClient {
     /// The number of updated rows.
     /// </returns>
     public static int ExecuteUpdate(this SqlCommand This, string tableName, IEnumerable<KeyValuePair<string, object>> values, string whereStatement = null, bool dontUseParameters = false) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
-      Contract.Requires(values != null);
+      Debug.Assert(This != null);
+      Debug.Assert(!tableName.IsNullOrWhiteSpace());
+      Debug.Assert(values != null);
 
       // TODO: conflicts with existing parameters
       var sqlCommand = new StringBuilder();
@@ -167,8 +167,8 @@ namespace System.Data.SqlClient {
     /// <param name="tableContainsId">if set to <c>true</c> the table contains an identity column which will be returned.</param>
     /// <returns>The value of the identity column or the number of affected rows.</returns>
     public static long ExecuteSingleInsert(this SqlCommand This, string tableName, IEnumerable<KeyValuePair<string, object>> values = null, bool tableContainsId = false) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
+      Debug.Assert(This != null);
+      Debug.Assert(!tableName.IsNullOrWhiteSpace());
 
       var sqlCommandTextWithParameters = new StringBuilder();
       var sqlCommandTextWithoutParameters = new StringBuilder();
@@ -253,7 +253,7 @@ namespace System.Data.SqlClient {
     /// <param name="whereStatement">The where statement.</param>
     /// <returns></returns>
     public static IEnumerable<Dictionary<string, object>> GetRecords(this SqlCommand This, string tableName, string whereStatement = null) {
-      Contract.Requires(!string.IsNullOrWhiteSpace(whereStatement));
+      Debug.Assert(!whereStatement.IsNullOrWhiteSpace());
       var sqlCommand = $"SELECT * FROM {tableName.MsSqlIdentifierEscape()}";
       sqlCommand += " WHERE " + whereStatement;
 
@@ -314,9 +314,9 @@ namespace System.Data.SqlClient {
     /// <param name="columnName">Name of the column.</param>
     /// <returns></returns>
     public static bool ColumnExists(this SqlCommand This, string tableName, string columnName) {
-      Contract.Requires(This != null);
-      Contract.Requires(tableName != null);
-      Contract.Requires(columnName != null);
+      Debug.Assert(This != null);
+      Debug.Assert(tableName != null);
+      Debug.Assert(columnName != null);
 #if DO_NOT_USE_PARAMETERS
       var result = This.ExecuteScalar("SELECT COUNT(0) FROM [sysobjects] AS [so] INNER JOIN [syscolumns] AS [sc] ON [sc].[id]=[so].[id] WHERE ([so].[xtype]='U' OR [so].[xtype]='V') AND ([so].[name] = " + tableName.MsSqlDataEscape() + ") AND ([sc].[name] = " + columnName.MsSqlDataEscape() + ")");
 #else
@@ -348,11 +348,11 @@ namespace System.Data.SqlClient {
     /// <param name="totalDigits">The total digits in a decimal datatype.</param>
     /// <param name="decimalDigits">The decimal digits in a decimal datatype.</param>
     public static void AddColumnToTable(this SqlCommand This, string tableName, string columnName, SqlDbType dbType, bool isNotNull = false, object defaultValue = null, bool useDefaultValueForExistingRecords = false, int charLength = 0, uint totalDigits = 0, uint decimalDigits = 0) {
-      Contract.Requires(This != null);
-      Contract.Requires(!string.IsNullOrWhiteSpace(tableName));
-      Contract.Requires(!string.IsNullOrWhiteSpace(columnName));
-      Contract.Requires(decimalDigits <= totalDigits);
-      Contract.Requires(!isNotNull || defaultValue != null);
+      Debug.Assert(This != null);
+      Debug.Assert(!tableName.IsNullOrWhiteSpace());
+      Debug.Assert(!columnName.IsNullOrWhiteSpace());
+      Debug.Assert(decimalDigits <= totalDigits);
+      Debug.Assert(!isNotNull || defaultValue != null);
       var sql = new StringBuilder();
       sql.Append("ALTER TABLE ");
       sql.Append(tableName.MsSqlIdentifierEscape());
@@ -388,3 +388,5 @@ namespace System.Data.SqlClient {
     }
   }
 }
+
+#endif

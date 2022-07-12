@@ -30,7 +30,13 @@ using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System {
-  internal static partial class CharExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class CharExtensions {
 
     /// <summary>
     /// Determines whether the given character is a whitespace.

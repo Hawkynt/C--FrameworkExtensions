@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,9 @@
 */
 #endregion
 
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.IO;
 using System.IO.Compression;
 using qword = System.UInt64;
@@ -27,7 +29,13 @@ namespace System.Runtime.Serialization.Formatters.Binary {
   /// <summary>
   /// Extensions for the BinaryFormatter.
   /// </summary>
-  internal static partial class BinaryFormatterExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class BinaryFormatterExtensions {
     /// <summary>
     /// Serializes the given object.
     /// </summary>
@@ -35,7 +43,9 @@ namespace System.Runtime.Serialization.Formatters.Binary {
     /// <param name="value">The value to serialize.</param>
     /// <returns>The bytes needed for deserializing the value.</returns>
     public static byte[] Serialize(this BinaryFormatter This, object value) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       using (var memStream = new MemoryStream()) {
         This.Serialize(memStream, value);
         return (memStream.ToArray());
@@ -49,7 +59,9 @@ namespace System.Runtime.Serialization.Formatters.Binary {
     /// <param name="value">The value to serialize.</param>
     /// <returns>The bytes needed for deserializing the value.</returns>
     public static byte[] SerializeWithGZip(this BinaryFormatter This, object value) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       var data = This.Serialize(value);
       return (data.GZip());
     }
@@ -61,8 +73,10 @@ namespace System.Runtime.Serialization.Formatters.Binary {
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized value from the byte block.</returns>
     public static object Deserialize(this BinaryFormatter This, byte[] data) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(data != null);
+#endif
       using (var memStream = new MemoryStream(data))
         return (This.Deserialize(memStream));
     }
@@ -74,8 +88,10 @@ namespace System.Runtime.Serialization.Formatters.Binary {
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized value from the byte block.</returns>
     public static object DeserializeWithGZip(this BinaryFormatter This, byte[] data) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(data != null);
+#endif
       return (This.Deserialize(data.UnGZip()));
     }
   }

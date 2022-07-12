@@ -1,4 +1,4 @@
-#region (c)2010-2030 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -27,7 +27,13 @@ namespace System.Collections.Concurrent {
   /// A thread-safe queue which executes a certain callback whenever an element is added
   /// </summary>
   /// <typeparam name="TItem">The type of items contained in this queue.</typeparam>
-  internal class ExecutiveQueue<TItem>{
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ExecutiveQueue<TItem>{
 
     #region consts
     private const int _IDLE = 0;

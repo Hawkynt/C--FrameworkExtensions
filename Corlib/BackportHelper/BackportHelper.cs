@@ -32,18 +32,42 @@ namespace System.Runtime.CompilerServices {
 
 #if !NET45_OR_GREATER
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-  public sealed class CallerMemberNameAttribute : Attribute { }
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class CallerMemberNameAttribute : Attribute { }
 
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-  public sealed class CallerFilePathAttribute : Attribute { }
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class CallerFilePathAttribute : Attribute { }
 
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-  public sealed class CallerLineNumberAttribute : Attribute { }
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class CallerLineNumberAttribute : Attribute { }
 #endif
 
 #if !NET35_OR_GREATER
   [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-  public sealed class ExtensionAttribute : Attribute { }
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class ExtensionAttribute : Attribute { }
 #endif
 
 }

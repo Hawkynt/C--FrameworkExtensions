@@ -18,7 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -32,7 +32,14 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 namespace System.Data.Linq {
-  internal static partial class DataContextExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DataContextExtensions {
+
 
     /// <summary>
     /// Gets the SQL statements for committing the current changeset.
@@ -130,6 +137,7 @@ namespace System.Data.Linq {
       }
     }
 
+#if NET45_OR_GREATER
     /// <summary>
     /// Try to load asynchronously data from the specified database
     /// </summary>
@@ -152,6 +160,7 @@ namespace System.Data.Linq {
         }
       });
     }
+#endif
 
     /// <summary>
     /// Try to load a single row from the specified database
@@ -179,3 +188,5 @@ namespace System.Data.Linq {
     }
   }
 }
+
+#endif

@@ -33,7 +33,13 @@ using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Drawing {
-  internal static partial class ColorExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ColorExtensions {
 
     public static byte GetLuminance(this Color @this) => _CalculateLuminance(@this);
     public static byte GetChrominanceU(this Color @this) => _CalculateChrominanceU(@this);

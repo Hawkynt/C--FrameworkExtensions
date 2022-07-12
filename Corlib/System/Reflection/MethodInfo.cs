@@ -29,7 +29,13 @@ using System.Text;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Reflection {
-  internal static partial class MethodInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class MethodInfoExtensions {
     #region specific type
     private static readonly Type _tpVoid = typeof(void);
 

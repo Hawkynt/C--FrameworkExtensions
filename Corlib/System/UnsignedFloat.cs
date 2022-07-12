@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,13 @@
 */
 #endregion
 namespace System {
-  public struct UnsignedFloat {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  struct UnsignedFloat {
     private const string _errExceptionText = @"Value needs to be positive";
     private readonly float _value;
 

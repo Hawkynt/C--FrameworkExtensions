@@ -24,7 +24,13 @@ using System.Linq.Expressions;
 // ReSharper disable UnusedMember.Global
 namespace System.Linq {
   // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class IQueryableExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class IQueryableExtensions {
     
     /// <summary>
     /// Modifies the resultset to include filtering based on the given query string.

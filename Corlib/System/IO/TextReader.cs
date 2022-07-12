@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,12 +20,18 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 namespace System.IO {
   /// <summary>
   /// Extensions for Streams.
   /// </summary>
-  internal static partial class TextReaderExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TextReaderExtensions {
 
     /// <summary>
     /// Reads the lines of a text reader.
@@ -33,7 +39,7 @@ namespace System.IO {
     /// <param name="This">This TextReader.</param>
     /// <returns>One line after the other until end of stream is reached.</returns>
     public static IEnumerable<string> ReadLines(this TextReader This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       while (true) {
         var line = This.ReadLine();
         if (line == null)

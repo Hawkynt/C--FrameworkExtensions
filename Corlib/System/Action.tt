@@ -2,7 +2,7 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -28,12 +28,20 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Threading;
 
 namespace System {
-  internal static partial class ActionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ActionExtensions {
     
     static ActionExtensions() {
       _InitHighResTimer();

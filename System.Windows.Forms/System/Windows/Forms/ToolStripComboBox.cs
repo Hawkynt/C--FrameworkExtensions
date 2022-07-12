@@ -1,4 +1,4 @@
-﻿#region (c)2010-2030 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@ namespace System.Windows.Forms {
     /// <summary>
     /// Extension class for <see cref="ToolStripComboBox"/> objects.
     /// </summary>
-    internal static partial class ToolStripComboBoxExtensions
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ToolStripComboBoxExtensions
     {
 
         /// <summary>

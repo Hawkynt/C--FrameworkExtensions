@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,10 +19,16 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 
 namespace System.Collections.Specialized {
-  internal static partial class StringDictionaryExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class StringDictionaryExtensions {
     /// <summary>
     /// Adds or updates the specified key.
     /// </summary>
@@ -30,8 +36,8 @@ namespace System.Collections.Specialized {
     /// <param name="key">The key.</param>
     /// <param name="value">The value.</param>
     public static void AddOrUpdate(this StringDictionary This, string key, string value) {
-      Contract.Requires(This != null);
-      Contract.Requires(key != null);
+      Debug.Assert(This != null);
+      Debug.Assert(key != null);
       if (This.ContainsKey(key))
         This[key] = value;
       else

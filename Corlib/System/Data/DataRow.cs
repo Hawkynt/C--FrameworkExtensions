@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,7 +22,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace System.Data {
-  internal static partial class DataRowExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DataRowExtensions {
     /// <summary>
     /// Converrs the datarow to a dictionary.
     /// </summary>

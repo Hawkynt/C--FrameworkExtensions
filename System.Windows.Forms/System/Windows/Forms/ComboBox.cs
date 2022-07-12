@@ -25,7 +25,13 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace System.Windows.Forms {
-  internal static partial class ComboBoxExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ComboBoxExtensions {
 
     /// <summary>
     /// Automatically adjusts the width according to items.

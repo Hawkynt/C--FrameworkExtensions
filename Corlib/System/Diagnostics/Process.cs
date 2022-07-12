@@ -22,7 +22,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Runtime.InteropServices;
 
 #if NET45_OR_GREATER
@@ -33,7 +35,13 @@ using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Diagnostics {
-  internal static partial class ProcessExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ProcessExtensions {
     /// <summary>     
     /// A utility class to determine a process parent.     
     /// </summary>     
@@ -58,7 +66,9 @@ namespace System.Diagnostics {
     /// <param name="This">This Process.</param>
     /// <returns>The parent process or <c>null</c>.</returns>
     public static Process Parent(this Process This) {
+#if NET40_OR_GREATER
       Contract.Requires(This != null);
+#endif
       try {
         return (GetParentProcess(This.Handle));
       } catch {

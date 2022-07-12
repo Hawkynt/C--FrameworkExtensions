@@ -24,7 +24,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+#if NET45_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -52,7 +54,12 @@ namespace System.Windows.Forms {
 
   #region custom datagridviewcolumns
 
-  internal class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
 
     public string DataSourcePropertyName { get; }
     public string EnabledWhenPropertyName { get; }
@@ -198,8 +205,13 @@ namespace System.Windows.Forms {
 
     }
   }
-  internal class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
 
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
     public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
       public DataGridViewProgressBarCell() {
         this.Maximum = 100;
@@ -359,7 +371,12 @@ namespace System.Windows.Forms {
     }
   }
 
-  internal class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
 
     /// <summary>
     /// The cell template to use for drawing the cells' content.
@@ -468,7 +485,12 @@ namespace System.Windows.Forms {
     public DataGridViewDisableButtonColumn() => this.CellTemplate = new DataGridViewDisableButtonCell();
   }
 
-  internal class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
     private Action<object, int> _onClickMethod;
     private Func<object, int, string> _tooltipTextProvider;
 
@@ -749,7 +771,12 @@ namespace System.Windows.Forms {
 
   }
 
-  internal class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
     private Image imageValue;
 
     public DataGridViewImageAndTextColumn() => this.CellTemplate = new DataGridViewTextAndImageCell();
@@ -938,7 +965,12 @@ namespace System.Windows.Forms {
     }
   }
 
-  internal class DataGridViewDateTimePickerColumn : DataGridViewColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewDateTimePickerColumn : DataGridViewColumn {
     public DataGridViewDateTimePickerColumn() : base(new DataGridViewDateTimePickerCell()) { }
 
     public override DataGridViewCell CellTemplate {
@@ -1029,7 +1061,12 @@ namespace System.Windows.Forms {
     }
   }
 
-  internal class DataGridViewNumericUpDownColumn : DataGridViewColumn {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     /// <summary>
     /// Constructor for the DataGridViewNumericUpDownColumn class.
     /// </summary>
@@ -1083,7 +1120,7 @@ namespace System.Windows.Forms {
           // This could have severe performance repercussions.
           var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
           if (dataGridViewRow.Cells[this.Index] is DataGridViewNumericUpDownCell dataGridViewCell) {
-            // Call the internal SetDecimalPlaces method instead of the property to avoid invalidation 
+            // Call the SetDecimalPlaces method instead of the property to avoid invalidation 
             // of each cell. The whole column is invalidated later in a single operation for better performance.
             dataGridViewCell.SetDecimalPlaces(rowIndex, value);
           }
@@ -2040,7 +2077,7 @@ namespace System.Windows.Forms {
       /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
       /// </summary>
-      internal void SetDecimalPlaces(int rowIndex, int value) {
+      public void SetDecimalPlaces(int rowIndex, int value) {
         Contract.Requires(value >= 0 && value <= 99);
         this.decimalPlaces = value;
         if (this.OwnsEditingNumericUpDown(rowIndex))
@@ -2050,7 +2087,7 @@ namespace System.Windows.Forms {
       /// Utility function that sets a new value for the Increment property of the cell. This function is used by
       /// the cell and column Increment property. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
-      internal void SetIncrement(int rowIndex, decimal value) {
+      public void SetIncrement(int rowIndex, decimal value) {
         Contract.Requires(value >= (decimal)0.0);
         this.increment = value;
         if (this.OwnsEditingNumericUpDown(rowIndex))
@@ -2062,7 +2099,7 @@ namespace System.Windows.Forms {
       /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
       /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
-      internal void SetMaximum(int rowIndex, decimal value) {
+      public void SetMaximum(int rowIndex, decimal value) {
         this.maximum = value;
         if (this.minimum > this.maximum)
           this.minimum = this.maximum;
@@ -2082,7 +2119,7 @@ namespace System.Windows.Forms {
       /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
       /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
-      internal void SetMinimum(int rowIndex, decimal value) {
+      public void SetMinimum(int rowIndex, decimal value) {
         this.minimum = value;
         if (this.minimum > this.maximum)
           this.maximum = value;
@@ -2102,7 +2139,7 @@ namespace System.Windows.Forms {
       /// property for performance reasons. This way the column can invalidate the entire column at once instead of 
       /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
-      internal void SetThousandsSeparator(int rowIndex, bool value) {
+      public void SetThousandsSeparator(int rowIndex, bool value) {
         this.thousandsSeparator = value;
         if (this.OwnsEditingNumericUpDown(rowIndex))
           this.EditingNumericUpDown.ThousandsSeparator = value;
@@ -2119,7 +2156,7 @@ namespace System.Windows.Forms {
       /// Little utility function used by both the cell and column types to translate a DataGridViewContentAlignment value into
       /// a HorizontalAlignment value.
       /// </summary>
-      internal static HorizontalAlignment TranslateAlignment(DataGridViewContentAlignment align) {
+      public static HorizontalAlignment TranslateAlignment(DataGridViewContentAlignment align) {
 
         if ((align & anyRight) != 0)
           return HorizontalAlignment.Right;
@@ -2138,7 +2175,13 @@ namespace System.Windows.Forms {
   #region attributes for messing with auto-generated columns
 
   [AttributeUsage(AttributeTargets.Property)]
-  internal class DataGridViewClickableAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class DataGridViewClickableAttribute : Attribute {
     public DataGridViewClickableAttribute(string onClickMethodName = null, string onDoubleClickMethodName = null) {
       this.OnClickMethodName = onClickMethodName;
       this.OnDoubleClickMethodName = onDoubleClickMethodName;
@@ -2177,7 +2220,13 @@ namespace System.Windows.Forms {
   /// <summary>
   /// allows to show an image alongside to the displayed text.
   /// </summary>
-  internal sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
     public string ImageListPropertyName { get; }
     public string ImageKeyPropertyName { get; }
     public string ImagePropertyName { get; }
@@ -2245,7 +2294,13 @@ namespace System.Windows.Forms {
   /// allows to show an image next to the displayed text when a condition is met.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-  internal sealed class SupportsConditionalImageAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class SupportsConditionalImageAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="SupportsConditionalImageAttribute"/> class.
     /// </summary>
@@ -2293,12 +2348,24 @@ namespace System.Windows.Forms {
   }
 
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewCheckboxColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewCheckboxColumnAttribute : Attribute {
 
   }
 
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewImageColumnAttribute : DataGridViewClickableAttribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewImageColumnAttribute : DataGridViewClickableAttribute {
 
     public DataGridViewImageColumnAttribute(string imageListPropertyName = null, string onClickMethodName = null, string onDoubleClickMethodName = null, string toolTipTextPropertyName = null) : base(onClickMethodName, onDoubleClickMethodName) {
       this.ImageListPropertyName = imageListPropertyName;
@@ -2332,7 +2399,13 @@ namespace System.Windows.Forms {
   }
 
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewCellDisplayTextAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewCellDisplayTextAttribute : Attribute {
     private string PropertyName { get; }
 
     public DataGridViewCellDisplayTextAttribute(string propertyName) => this.PropertyName = propertyName;
@@ -2351,7 +2424,13 @@ namespace System.Windows.Forms {
   /// Allows specifying certain properties as read-only depending on the underlying object instance.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewConditionalReadOnlyAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewConditionalReadOnlyAttribute : Attribute {
     public DataGridViewConditionalReadOnlyAttribute(string isReadOnlyWhen) {
       this.IsReadOnlyWhen = isReadOnlyWhen;
     }
@@ -2364,7 +2443,13 @@ namespace System.Windows.Forms {
   /// Allows specifying a value to be used as a progressbar column.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewProgressBarColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewProgressBarColumnAttribute : Attribute {
     public DataGridViewProgressBarColumnAttribute() : this(0, 100) { }
 
     public DataGridViewProgressBarColumnAttribute(double minimum, double maximum) {
@@ -2380,7 +2465,13 @@ namespace System.Windows.Forms {
   /// Allows specifying a string or image property to be used as a button column.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewButtonColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewButtonColumnAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataGridViewButtonColumnAttribute"/> class.
     /// </summary>
@@ -2411,7 +2502,13 @@ namespace System.Windows.Forms {
   /// Allows specifying a column to host a combobox contaning the elements specified by a property.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewComboboxColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewComboboxColumnAttribute : Attribute {
     public string EnabledWhenPropertyName { get; }
     public string ValueMember { get; }
     public string DisplayMember { get; }
@@ -2430,7 +2527,13 @@ namespace System.Windows.Forms {
   /// Allows specifying a value to be used as column with multiple images
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewMultiImageColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewMultiImageColumnAttribute : Attribute {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute"/> class.
     /// </summary>
@@ -2465,7 +2568,13 @@ namespace System.Windows.Forms {
   /// Allows specifying a value to be used as column with numeric up down control
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewNumericUpDownColumnAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewNumericUpDownColumnAttribute : Attribute {
     public decimal Minimum { get; }
     public decimal Maximum { get; }
     public int DecimalPlaces { get; }
@@ -2483,7 +2592,13 @@ namespace System.Windows.Forms {
   /// Allows setting an exact width in pixels for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewColumnWidthAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewColumnWidthAttribute : Attribute {
 
     public DataGridViewColumnWidthAttribute(char characters) {
       this.Characters = new string('@', characters);
@@ -2537,7 +2652,13 @@ namespace System.Windows.Forms {
   /// Allows setting the sort mode for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
-  internal sealed class DataGridViewColumnSortModeAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewColumnSortModeAttribute : Attribute {
     public DataGridViewColumnSortMode SortMode { get; }
 
     public DataGridViewColumnSortModeAttribute(DataGridViewColumnSortMode sortMode) {
@@ -2554,7 +2675,13 @@ namespace System.Windows.Forms {
   /// Allows setting an exact height in pixels for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
-  internal sealed class DataGridViewRowHeightAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewRowHeightAttribute : Attribute {
     public string RowHeightProperty { get; }
     public string CustomRowHeightEnabledProperty { get; }
     public string CustomRowHeightProperty { get; }
@@ -2627,7 +2754,13 @@ namespace System.Windows.Forms {
   /// Allows an specific object to be represented as a full row header.
   /// </summary>
   [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
-  internal sealed class DataGridViewFullMergedRowAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewFullMergedRowAttribute : Attribute {
     public DataGridViewFullMergedRowAttribute(string headingTextPropertyName, string foreColor = null, float textSize = -1) {
       this.HeadingTextPropertyName = headingTextPropertyName;
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
@@ -2645,7 +2778,13 @@ namespace System.Windows.Forms {
   /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-  internal sealed class DataGridViewCellStyleAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewCellStyleAttribute : Attribute {
 
     public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet, DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, string wrapModePropertyName = null) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
@@ -2701,7 +2840,13 @@ namespace System.Windows.Forms {
   /// Allows defining the cell tooltip in a DataGridView for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-  internal sealed class DataGridViewCellTooltipAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewCellTooltipAttribute : Attribute {
     public string ToolTipText { get; }
     public string TooltipTextPropertyName { get; }
     public string ConditionalPropertyName { get; }
@@ -2736,7 +2881,13 @@ namespace System.Windows.Forms {
   /// Allows adjusting the cell style in a DataGridView for automatically generated columns.
   /// </summary>
   [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-  internal sealed class DataGridViewRowStyleAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewRowStyleAttribute : Attribute {
 
     public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, bool isUnderline = false) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
@@ -2796,7 +2947,12 @@ namespace System.Windows.Forms {
 
   #endregion
 
-  internal static partial class DataGridViewExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DataGridViewExtensions {
 
     #region messing with auto-generated columns
 

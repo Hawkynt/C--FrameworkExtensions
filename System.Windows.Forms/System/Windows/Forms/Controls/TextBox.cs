@@ -34,7 +34,13 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Controls {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal static partial class TextBoxExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TextBoxExtensions {
 
     #region nested types
 

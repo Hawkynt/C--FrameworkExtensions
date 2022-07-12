@@ -18,7 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 #if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 
@@ -63,3 +63,5 @@ namespace System.Data.Linq {
 
   }
 }
+
+#endif

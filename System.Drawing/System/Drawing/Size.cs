@@ -21,7 +21,13 @@
 
 
 namespace System.Drawing {
-  internal static partial class SizeExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class SizeExtensions {
     public static Point Center(this Size @this) => new Point(@this.Width >> 1, @this.Height >> 1);
 
   }

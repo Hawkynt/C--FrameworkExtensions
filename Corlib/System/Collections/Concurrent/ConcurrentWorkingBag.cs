@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -28,7 +28,13 @@ namespace System.Collections.Concurrent {
   /// Order of inserted items is not guaranteed.
   /// </summary>
   /// <typeparam name="T">Type of items contained</typeparam>
-  public class ConcurrentWorkingBag<T> : IEnumerable<T> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ConcurrentWorkingBag<T> : IEnumerable<T> {
     private readonly List<T> _items = new List<T>();
     private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 

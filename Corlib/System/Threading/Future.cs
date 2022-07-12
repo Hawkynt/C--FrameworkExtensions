@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@ namespace System.Threading {
   /// A value that is calculated on an available pool thread or immediately on first access.
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
-  public class Future<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class Future<TValue> {
     private readonly ManualResetEventSlim _HasValueAlready = new ManualResetEventSlim(false);
     private Exception _exception;
     private TValue _value;
@@ -103,7 +109,13 @@ namespace System.Threading {
   /// <summary>
   /// An action that is executed on an available pool thread or immediately on first access.
   /// </summary>
-  public class Future {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class Future {
     private readonly Future<byte> _future;
     public Future(Action action, Action callback = null) {
       this._future = new Future<byte>(() => {

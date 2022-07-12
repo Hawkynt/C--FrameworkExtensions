@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,7 +22,13 @@
 using System.Reflection.Emit;
 using System.Collections.Concurrent;
 namespace System.Runtime {
-  internal static class DynamicObjectFactory {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class DynamicObjectFactory {
     /// <summary>
     /// Creates an instance of a class decided at runtime
     /// </summary>

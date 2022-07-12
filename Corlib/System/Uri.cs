@@ -33,7 +33,13 @@ using System.Threading.Tasks;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System {
-  internal static partial class UriExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class UriExtensions {
 
     private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new Dictionary<HttpRequestHeader, string> {
       {HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12"},

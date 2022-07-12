@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,18 +19,24 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Linq;
 
 namespace System.Collections {
-  internal static partial class CollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class CollectionExtensions {
     /// <summary>
     /// Executes an action on each item.
     /// </summary>
     /// <param name="This">The collection.</param>
     /// <param name="call">The call to execute.</param>
     public static void ForEach(this ICollection This, Action<object> call) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       foreach (var value in This)
         call(value);
     }
@@ -42,8 +48,8 @@ namespace System.Collections {
     /// <param name="converter">The converter.</param>
     /// <returns></returns>
     public static TOUT[] ConvertAll<TOUT>(this ICollection This, Converter<object, TOUT> converter) {
-      Contract.Requires(This != null);
-      Contract.Requires(converter != null);
+      Debug.Assert(This != null);
+      Debug.Assert(converter != null);
       return (
         from object data in This
         select converter(data)
@@ -56,7 +62,7 @@ namespace System.Collections {
     /// <param name="This">This ICollection.</param>
     /// <returns>An array containing all elements.</returns>
     public static object[] ToArray(this ICollection This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       var len = This.Count;
       var result = new object[len];
       This.CopyTo(result, 0);

@@ -38,7 +38,13 @@ namespace System.IO {
   /// <summary>
   /// Extensions for the DirectoryInfo type.
   /// </summary>
-  internal static partial class DirectoryInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DirectoryInfoExtensions {
 
     #region nested types
 

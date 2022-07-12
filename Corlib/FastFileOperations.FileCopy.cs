@@ -25,6 +25,12 @@ using System.Linq;
 using System.Threading;
 
 namespace System.IO {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
   partial class FastFileOperations {
 
     private class FileCopyOperation : IFileOperation {

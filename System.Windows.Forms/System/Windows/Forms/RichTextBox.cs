@@ -33,7 +33,13 @@ using DrawingSize = System.Drawing.Size;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Windows.Forms {
-  internal static partial class RichTextBoxExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class RichTextBoxExtensions {
 
     #region Native Methods
 
@@ -87,6 +93,7 @@ namespace System.Windows.Forms {
         => SendMessage(handle, _EM_FORMATRANGE, 1, formatRange)
         ;
     }
+
     #endregion
 
     /// <summary>

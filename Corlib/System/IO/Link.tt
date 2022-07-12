@@ -37,7 +37,13 @@ using Microsoft.Win32.SafeHandles;
 using dword = System.UInt32;
 
 namespace System.IO {
-  internal static partial class LinkExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class LinkExtensions {
   
     #region Nested types
     /// <summary>

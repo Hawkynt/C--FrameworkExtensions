@@ -30,7 +30,13 @@ using System.Linq;
 // ReSharper disable UnusedMember.Global
 
 namespace System.Reflection {
-  internal static class MemberInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class MemberInfoExtensions {
 
     /// <summary>
     /// Gets the custom attribute.

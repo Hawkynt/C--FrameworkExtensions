@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,7 +20,13 @@
 #endregion
 
 namespace System.Threading {
-  internal static partial class EventExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EventExtensions {
     /// <summary>
     /// Invoke all handlers in parallel.
     /// </summary>

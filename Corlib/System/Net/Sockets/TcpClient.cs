@@ -26,7 +26,13 @@ using System.Net.NetworkInformation;
 // ReSharper disable UnusedMember.Global
 
 namespace System.Net.Sockets {
-  internal static partial class TcpClientExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TcpClientExtensions {
 
     /// <summary>
     /// Gets the state of the tcp client connection

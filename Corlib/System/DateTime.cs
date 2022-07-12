@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,7 +26,13 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace System {
-  internal static partial class DateTimeExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DateTimeExtensions {
     /// <summary>
     /// Returns the end of the day of the given date.
     /// </summary>
@@ -53,9 +59,9 @@ namespace System {
     /// Adds the specific amount of weeks to the current DateTime
     /// </summary>
     /// <param name="this">The current DateTime object</param>
-    /// <param name="count">The amount of weeks to be added</param>
+    /// <param name="weeks">The amount of weeks to be added</param>
     /// <returns>The new DateTime</returns>
-    public static DateTime AddWeeks(this DateTime @this, int count) => @this.AddDays(7 * count);
+    public static DateTime AddWeeks(this DateTime @this, int weeks) => @this.AddDays(7 * weeks);
 
     /// <summary>
     /// Calculates the DateTime of a specified DayOfWeek for the week of the given date

@@ -7,7 +7,7 @@
 <#@ import namespace="VSLangProj" #>
 <#@ output extension=".cs" #>
 
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -69,7 +69,13 @@ using System.Transactions;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace System.IO {
-  internal static partial class FileInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class FileInfoExtensions {
 
     /// <summary>
     /// The native methods.
@@ -301,33 +307,6 @@ namespace System.IO {
       NativeMethods.SHGetFileInfo(This.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.ShellFileInfoFlags.Typename);
       return (shinfo.szTypeName.Trim());
     }
-
-<#if(this.IsDrawingReferenced){#>
-    /// <summary>
-    /// Gets the icon.
-    /// </summary>
-    /// <param name="This">This FileInfo.</param>
-    /// <param name="smallIcon">if set to <c>true</c> we'll return a 16x16 version; otherwise, it will be 32x32.</param>
-    /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
-    /// <returns>The icon used by the windows explorer for this file.</returns>
-    public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
-#if NET40_OR_GREATER
-      Contract.Requires(This != null);
-#endif
-
-      var flags = NativeMethods.ShellFileInfoFlags.Icon | NativeMethods.ShellFileInfoFlags.UseFileAttributes | (smallIcon ? NativeMethods.ShellFileInfoFlags.SmallIcon : NativeMethods.ShellFileInfoFlags.LargeIcon);
-      if (linkOverlay)
-        flags |= NativeMethods.ShellFileInfoFlags.LinkOverlay;
-
-      var shfi = new NativeMethods.SHFILEINFO();
-      NativeMethods.SHGetFileInfo(This.FullName, NativeMethods.FileAttribute.Normal, ref shfi, (uint)Marshal.SizeOf(shfi), flags);
-
-      var result = (Icon)Icon.FromHandle(shfi.hIcon).Clone();
-      NativeMethods.DestroyIcon(shfi.hIcon);
-
-      return (result);
-    }
-<#}#>
     #endregion
 
     #region file copy/move/rename
@@ -1459,5 +1438,6 @@ namespace System.IO {
 
       return null;
     }
+
   }
 #>

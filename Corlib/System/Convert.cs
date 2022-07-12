@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -27,7 +27,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System {
-  internal static partial class ConvertExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ConvertExtensions {
     private const string _QP_CHARS = @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<\>?@[]^_-{|}~""";
     private static readonly byte[] _QP_ENCODING_TABLE = new byte[256];
     private static readonly Dictionary<char, byte> _QP_DECODING_TABLE = new Dictionary<char, byte>();

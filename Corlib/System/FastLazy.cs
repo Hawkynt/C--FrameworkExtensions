@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,8 +18,9 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -29,7 +30,13 @@ namespace System {
   /// Creates a value that is only calculated on first access and then cached.
   /// </summary>
   /// <typeparam name="TValue">The type of the result.</typeparam>
-  internal class FastLazy<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class FastLazy<TValue> {
 
     private readonly Func<TValue> _factory;
     private Func<TValue> _getter;
@@ -40,7 +47,9 @@ namespace System {
     /// </summary>
     /// <param name="factory">The factory.</param>
     public FastLazy(Func<TValue> factory) {
+#if NET40_OR_GREATER
       Contract.Requires(factory != null);
+#endif
 
       this._factory = factory;
       this.Reset();

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -35,11 +35,23 @@ namespace System.Timers {
   //   e:
   //     An System.Timers.HighPrecisionTimerElapsedEventHandler object that contains
   //     the event data.
-  public delegate void HighPrecisionTimerElapsedEventHandler(object sender, HighPrecisionTimerElapsedEventArgs e);
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  delegate void HighPrecisionTimerElapsedEventHandler(object sender, HighPrecisionTimerElapsedEventArgs e);
 
   // Summary:
   //     Provides data for the System.Timers.Timer.Elapsed event.
-  public class HighPrecisionTimerElapsedEventArgs : EventArgs {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class HighPrecisionTimerElapsedEventArgs : EventArgs {
     // Summary:
     //     Gets the time the System.Timers.Multimedia.Elapsed event was 
     //     raised.
@@ -55,7 +67,13 @@ namespace System.Timers {
 
   // Summary:
   //     Generates recurring events in an application.
-  public class HighPrecisionTimer : IDisposable {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class HighPrecisionTimer : IDisposable {
     //Lib API declarations
     /// <summary>
     /// Times the set event.

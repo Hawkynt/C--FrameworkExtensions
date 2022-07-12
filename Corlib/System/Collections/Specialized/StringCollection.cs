@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,10 +19,16 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 
 namespace System.Collections.Specialized {
-  internal static partial class StringCollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class StringCollectionExtensions {
 
     /// <summary>
     /// Copies the content of this collection to an array.
@@ -30,7 +36,7 @@ namespace System.Collections.Specialized {
     /// <param name="This">The this.</param>
     /// <returns></returns>
     public static string[] ToArray(this StringCollection This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       var result = new string[This.Count];
       This.CopyTo(result, 0);
       return (result);

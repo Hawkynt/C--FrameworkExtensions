@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,17 +18,22 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-using System.Diagnostics.Contracts;
 
 namespace System.Collections.Generic {
-  internal static partial class StackExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class StackExtensions {
     /// <summary>
     /// Inverts the specified stack.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="This">The stack to invert.</param>
     public static void Invert<TItem>(this Stack<TItem> This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       var helpStack = new Queue<TItem>(This.Count);
       while (This.Count > 0)
         helpStack.Enqueue(This.Pop());
@@ -43,8 +48,8 @@ namespace System.Collections.Generic {
     /// <param name="This">This Stack.</param>
     /// <param name="items">The items to push on top of the stack.</param>
     public static void AddRange<TItem>(this Stack<TItem> This, IEnumerable<TItem> items) {
-      Contract.Requires(This != null);
-      Contract.Requires(items != null);
+      Debug.Assert(This != null);
+      Debug.Assert(items != null);
       foreach (var item in items)
         This.Push(item);
     }
@@ -56,7 +61,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This Stack.</param>
     /// <param name="item">The item to push on top of the stack.</param>
     public static void Add<TItem>(this Stack<TItem> This, TItem item) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       This.Push(item);
     }
 
@@ -67,7 +72,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This Stack.</param>
     /// <returns>The top-most item.</returns>
     public static TItem Fetch<TItem>(this Stack<TItem> This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       return (This.Pop());
     }
   }

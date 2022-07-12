@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,7 +22,13 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using word = System.UInt32;
 namespace System.Windows.Forms {
-  internal static partial class TextBoxExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TextBoxExtensions {
     /// <summary>
     /// Appends the text and scrolls.
     /// </summary>

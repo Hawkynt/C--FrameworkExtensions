@@ -44,7 +44,13 @@ using System.Reflection.Emit;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System {
-  internal static partial class TypeExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TypeExtensions {
     #region nested types
     /// <summary>
     /// Holds information about properties which are important for designer components.

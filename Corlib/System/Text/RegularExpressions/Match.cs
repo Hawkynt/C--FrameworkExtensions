@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@ using System.Linq;
 using System.Reflection;
 
 namespace System.Text.RegularExpressions {
-  internal static partial class MatchExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class MatchExtensions {
     /// <summary>
     /// Gets the linenumber of this match in the original text.
     /// </summary>

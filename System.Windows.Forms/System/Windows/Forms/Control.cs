@@ -33,7 +33,13 @@ using System.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms {
-  internal static partial class ControlExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ControlExtensions {
 
     #region nested types
 
@@ -861,7 +867,7 @@ namespace System.Windows.Forms {
 
     }
 
-    private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode)
+    private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null)
       where TControl : Control {
 
       string _GetPropertyName(MemberExpression member) {
@@ -951,28 +957,35 @@ namespace System.Windows.Forms {
       var propertyName = _GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
       var dataMember = _GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
 
-      @this.DataBindings.Add(new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode });
+      var binding = new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode };
+      if (customConversionHandler != null)
+        binding.Format += customConversionHandler;
+
+      if (bindingCompleteCallback != null)
+        binding.BindingComplete += bindingCompleteCallback;
+
+      @this.DataBindings.Add(binding);
     }
 
-    public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) where TControl : Control
-      => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode)
+    public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
+      => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler, bindingCompleteCallback)
     ;
 
-    public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) where TControl : Control
-      => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode)
+    public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
+      => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler, bindingCompleteCallback)
     ;
 
     #region to make life easier
 
-    public static void AddBinding<TSource>(this Label @this, object source, Expression<Func<Label, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<Label, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this CheckBox @this, object source, Expression<Func<CheckBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<CheckBox, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this TextBox @this, object source, Expression<Func<TextBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<TextBox, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this NumericUpDown @this, object source, Expression<Func<NumericUpDown, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<NumericUpDown, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this RadioButton @this, object source, Expression<Func<RadioButton, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<RadioButton, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this Button @this, object source, Expression<Func<Button, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<Button, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this GroupBox @this, object source, Expression<Func<GroupBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<GroupBox, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this ComboBox @this, object source, Expression<Func<ComboBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<ComboBox, TSource>(@this, source, expression, mode);
-    public static void AddBinding<TSource>(this DateTimePicker @this, object source, Expression<Func<DateTimePicker, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged) => AddBinding<DateTimePicker, TSource>(@this, source, expression, mode);
+    public static void AddBinding<TSource>(this Label @this, object source, Expression<Func<Label, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<Label, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this CheckBox @this, object source, Expression<Func<CheckBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<CheckBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this TextBox @this, object source, Expression<Func<TextBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<TextBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this NumericUpDown @this, object source, Expression<Func<NumericUpDown, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<NumericUpDown, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this RadioButton @this, object source, Expression<Func<RadioButton, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<RadioButton, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this Button @this, object source, Expression<Func<Button, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<Button, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this GroupBox @this, object source, Expression<Func<GroupBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<GroupBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this ComboBox @this, object source, Expression<Func<ComboBox, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<ComboBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
+    public static void AddBinding<TSource>(this DateTimePicker @this, object source, Expression<Func<DateTimePicker, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) => AddBinding<DateTimePicker, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
     #endregion
 

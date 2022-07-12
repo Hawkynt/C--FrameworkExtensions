@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,17 +19,23 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 
 namespace System.Globalization {
-  internal static partial class CultureInfoExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class CultureInfoExtensions {
     /// <summary>
     /// Gets the region info.
     /// </summary>
     /// <param name="This">This CultureInfo.</param>
     /// <returns>The RegionInfo for the given culture.</returns>
     public static RegionInfo GetRegionInfo(this CultureInfo This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       return (new RegionInfo(This.LCID));
     }
 
@@ -39,7 +45,7 @@ namespace System.Globalization {
     /// <param name="This">This CultureInfo.</param>
     /// <returns>The symbol name for the currency of the given culture, eg. EUR, GBP, USD.</returns>
     public static string GetISOCurrencySymbol(this CultureInfo This) {
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);
       return (This.GetRegionInfo().ISOCurrencySymbol);
     }
   }

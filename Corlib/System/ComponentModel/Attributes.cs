@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,7 +26,13 @@ namespace System.ComponentModel {
   /// Tells the propertygrid what the minimum value for this number is.
   /// </summary>
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-  public class MinValueAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class MinValueAttribute : Attribute {
     public decimal Value { get; }
 
     public MinValueAttribute(decimal value) {
@@ -40,7 +46,13 @@ namespace System.ComponentModel {
   /// Tells the propertygrid what the maximum value for this number is.
   /// </summary>
   [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-  public class MaxValueAttribute : Attribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class MaxValueAttribute : Attribute {
     public decimal Value { get; }
 
     public MaxValueAttribute(decimal value) {
@@ -54,7 +66,13 @@ namespace System.ComponentModel {
   /// Tells the propertygrid what the maximum value for this number is.
   /// </summary>
   [AttributeUsage(AttributeTargets.Field)]
-  public class EnumDisplayNameAttribute : DisplayNameAttribute {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class EnumDisplayNameAttribute : DisplayNameAttribute {
     public override string DisplayName { get; }
 
     public EnumDisplayNameAttribute(string displayName) {

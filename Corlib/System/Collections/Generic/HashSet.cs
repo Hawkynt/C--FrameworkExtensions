@@ -34,17 +34,23 @@ using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic {
-  internal static partial class HashSetExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class HashSetExtensions {
 
     #region nested types
 
-    internal enum ChangeType {
+    public enum ChangeType {
       Equal = 0,
       Added = 2,
       Removed = 3,
     }
 
-    internal interface IChangeSet<out TItem> {
+    public interface IChangeSet<out TItem> {
       ChangeType Type { get; }
       TItem Item { get; }
     }

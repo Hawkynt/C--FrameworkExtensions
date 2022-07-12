@@ -20,6 +20,12 @@
 #endregion
 
 namespace System.IO {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
   partial class FastFileOperations {
 
     private const long KB = 1024;

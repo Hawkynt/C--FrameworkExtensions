@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -29,7 +29,13 @@ namespace System {
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
   /// <typeparam name="TIntermediateValue">The type of the intermediate value.</typeparam>
-  internal class SlowProperty<TValue, TIntermediateValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class SlowProperty<TValue, TIntermediateValue> {
     private const int _TRUE = 1;
     private const int _FALSE = 0;
 
@@ -160,7 +166,13 @@ namespace System {
   /// Allows showing intermediate values while retrieving the values.
   /// </summary>
   /// <typeparam name="TValue">The type of the value.</typeparam>
-  internal class SlowProperty<TValue> : SlowProperty<TValue, TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class SlowProperty<TValue> : SlowProperty<TValue, TValue> {
     public SlowProperty(Func<SlowProperty<TValue>, TValue> valueGetter, TValue intermediateValue = default(TValue), Action<SlowProperty<TValue>> valueGeneratedCallback = null, bool captureSynchronizationContext = false)
       : base(
         This => valueGetter((SlowProperty<TValue>)This),

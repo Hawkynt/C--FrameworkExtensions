@@ -30,7 +30,13 @@ using qword = System.UInt64;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System {
-  internal static partial class RandomExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class RandomExtensions {
     /// <summary>
     /// Creates a random number between the given limits.
     /// </summary>

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -22,7 +22,13 @@ namespace System {
   /// <summary>
   /// This is for using colored output in the console window in a thread-safe way.
   /// </summary>
-  internal static partial class ConsoleExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ConsoleExtensions {
     /// <summary>
     /// Can be locked to make console color transactions like lines with different colored words.
     /// </summary>

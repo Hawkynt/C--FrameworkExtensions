@@ -33,7 +33,13 @@ using System.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.IO {
-  internal static partial class PathExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class PathExtensions {
 
     #region nested types
 
@@ -172,12 +178,12 @@ namespace System.IO {
 
     }
 
-    internal interface ITemporaryFileToken : IDisposable {
+    public interface ITemporaryFileToken : IDisposable {
       FileInfo File { get; }
       TimeSpan MinimumLifetimeLeft { get; set; }
     }
 
-    internal interface ITemporaryDirectoryToken : IDisposable {
+    public interface ITemporaryDirectoryToken : IDisposable {
       DirectoryInfo Directory { get; }
       TimeSpan MinimumLifetimeLeft { get; set; }
     }

@@ -24,7 +24,13 @@ namespace System.Collections.Generic {
   /// Interface for Queues
   /// </summary>
   /// <typeparam name="T">the type of items in the queue</typeparam>
-  public interface IQueue<T> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  interface IQueue<T> {
     /// <summary>
     /// Dequeues an item or blocks until there is one.
     /// </summary>

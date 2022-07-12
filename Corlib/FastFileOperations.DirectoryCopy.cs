@@ -29,6 +29,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+#if NET40_OR_GREATER
+using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Threading;
 
@@ -36,6 +39,12 @@ namespace System.IO {
   /// <summary>
   /// The fastest copy/move/delete/sync ops for files and directories.
   /// </summary>
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
   static partial class FastFileOperations {
     partial interface IFileSystemOperation { }
     partial interface IDirectoryOperation { }

@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,6 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+#if !NETSTANDARD && !NET5_0_OR_GREATER
 using System.ComponentModel;
 using System.Data.Common;
 
@@ -38,3 +39,5 @@ namespace System.Data {
     }
   }
 }
+
+#endif

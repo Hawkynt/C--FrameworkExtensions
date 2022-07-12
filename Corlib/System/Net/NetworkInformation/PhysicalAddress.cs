@@ -5,7 +5,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace System.Net.NetworkInformation {
-  internal static partial class PhysicalAddressExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class PhysicalAddressExtensions {
     /// <summary>
     /// Gets the MacAdress.
     /// </summary>

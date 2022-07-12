@@ -33,7 +33,13 @@ using System.Runtime.InteropServices;
 
 namespace System.Drawing {
   // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class BitmapExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class BitmapExtensions {
 
     #region nested types
 
@@ -69,6 +75,8 @@ namespace System.Drawing {
       void DrawVerticalLine(Point p, int count, Color color);
       void DrawLine(int x0, int y0, int x1, int y1, Color color);
       void DrawLine(Point a, Point b, Color color);
+      void DrawCross(Point a1, Point b1, Point a2, Point b2, int thickness, Color color);
+      void DrawCross(Rectangle rect, int thickness, Color color);
 
       void DrawRectangle(int x, int y, int width, int height, Color color);
       void DrawRectangle(Point p, Size size, Color color);
@@ -1539,6 +1547,26 @@ namespace System.Drawing {
       public void DrawHorizontalLine(Point p, int count, Color color) => this.DrawHorizontalLine(p.X, p.Y, count, color);
       public void DrawVerticalLine(Point p, int count, Color color) => this.DrawVerticalLine(p.X, p.Y, count, color);
       public void DrawLine(Point a, Point b, Color color) => this.DrawLine(a.X, a.Y, b.X, b.Y, color);
+
+      public void DrawCross(Point a1, Point b1, Point a2, Point b2, int thickness, Color color) {
+        var offset = (int)((float)thickness / 2);
+
+        for (var i = 0; i < thickness; ++i) {
+          this.DrawLine(a1.X, a1.Y - offset + i, b1.X, b1.Y - offset + i, color);
+          this.DrawLine(a2.X, a2.Y - offset + i, b2.X, b2.Y - offset + i, color);
+        }
+
+      }
+
+      public void DrawCross(Rectangle rect, int thickness, Color color) => 
+        this.DrawCross(
+          new Point(rect.Left, rect.Top), 
+          new Point(rect.Right, rect.Bottom), 
+          new Point(rect.Right, rect.Top), 
+          new Point(rect.Left, rect.Bottom), 
+          thickness, 
+          color)
+      ;
 
       #endregion
 

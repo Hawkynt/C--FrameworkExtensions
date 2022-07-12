@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -22,10 +22,14 @@
 #endregion
 
 using System.Diagnostics;
+#if NET45_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Runtime.InteropServices;
+#if !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
 using System.Runtime.Remoting.Messaging;
+#endif
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,9 +49,11 @@ namespace System.IO {
     /// <param name="This">This Stream.</param>
     /// <param name="data">The data to write.</param>
     public static void Write(this Stream This, byte[] data) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(data != null);
       Contract.Requires(This.CanWrite);
+#endif
       This.Write(data, 0, data.Length);
     }
 
@@ -58,9 +64,11 @@ namespace System.IO {
     /// <param name="result">The array where to store the results.</param>
     /// <returns>The number of bytes actually read.</returns>
     public static int Read(this Stream This, byte[] result) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(result != null);
       Contract.Requires(This.CanRead);
+#endif
       return This.Read(result, 0, result.Length);
     }
 
@@ -71,9 +79,11 @@ namespace System.IO {
     /// <param name="length">The number of bytes to read.</param>
     /// <returns>The number of bytes actually read.</returns>
     public static byte[] ReadBytes(this Stream This, int length) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(length >= 0);
       Contract.Requires(This.CanRead);
+#endif
       var result = new byte[length];
       var bytesGot = This.Read(result, 0, length);
       return bytesGot == length ? result : result.Take(bytesGot).ToArray();
@@ -89,8 +99,10 @@ namespace System.IO {
     ///   used (default).
     /// </param>
     public static void Write(this Stream This, int value, bool bigEndian = false) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(This.CanWrite);
+#endif
       if (bigEndian) {
         This.WriteByte((byte) (value >> 24));
         This.WriteByte((byte) (value >> 16));
@@ -114,8 +126,10 @@ namespace System.IO {
     /// </param>
     /// <returns>The int-value that was read.</returns>
     public static int ReadInt(this Stream This, bool bigEndian = false) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
       Contract.Requires(This.CanRead);
+#endif
       var bytes = new[] {
         This.ReadByte(),
         This.ReadByte(),
@@ -135,7 +149,9 @@ namespace System.IO {
     ///   <c>true</c> if the stream was read/written to its end; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsAtEndOfStream(this Stream This) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
+#endif
       return This.Position >= This.Length;
     }
 
@@ -145,7 +161,9 @@ namespace System.IO {
     /// <param name="This">This Stream.</param>
     /// <returns>The content of the stream.</returns>
     public static byte[] ToArray(this Stream This) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
+#endif
       using (var data = new MemoryStream()) {
         This.CopyTo(data);
         return data.ToArray();
@@ -159,7 +177,9 @@ namespace System.IO {
     /// <param name="encoding">The encoding.</param>
     /// <returns>The text from the stream.</returns>
     public static string ReadAllText(this Stream This, Encoding encoding = null) {
+#if NET45_OR_GREATER
       Contract.Requires(This != null);
+#endif
       if (encoding == null)
         encoding = Encoding.Default;
 
@@ -173,7 +193,9 @@ namespace System.IO {
     /// <param name="data">The data.</param>
     /// <param name="encoding">The encoding.</param>
     public static void WriteAllText(this Stream @this, string data, Encoding encoding = null) {
+#if NET45_OR_GREATER
       Contract.Requires(@this != null);
+#endif
       if (encoding == null)
         encoding = Encoding.Default;
 

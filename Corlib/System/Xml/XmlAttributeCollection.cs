@@ -28,7 +28,13 @@ using System.Runtime.CompilerServices;
 #endif
 
 namespace System.Xml {
-  internal static partial class XmlAttributeCollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class XmlAttributeCollectionExtensions {
     /// <summary>
     /// Gets the value or a default.
     /// </summary>

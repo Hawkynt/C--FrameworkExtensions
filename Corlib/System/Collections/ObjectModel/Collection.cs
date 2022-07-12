@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -23,7 +23,13 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
 namespace System.Collections.ObjectModel {
-  internal static partial class CollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class CollectionExtensions {
     /// <summary>
     /// Adds items to a collection.
     /// </summary>

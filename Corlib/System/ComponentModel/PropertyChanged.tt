@@ -39,7 +39,13 @@ using System.Linq;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.ComponentModel {
-  internal static partial class PropertyChangedExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class PropertyChangedExtensions {
 
     /// <summary>
     /// The synchornization context to use for all safe invocations if any.

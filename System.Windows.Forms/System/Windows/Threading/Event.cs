@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,8 +19,16 @@
 */
 #endregion
 
+using System.ComponentModel;
+
 namespace System.Windows.Threading {
-  internal static partial class EventExtensions {
+  
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EventExtensions {
     /// <summary>
     /// Invokes an event safely from no matter what thread and makes sure that the subscribers who needs it, get the event invocation in their own threads.
     /// </summary>
@@ -35,13 +43,13 @@ namespace System.Windows.Threading {
       }
       var copy = This;
       foreach (var @delegate in copy.GetInvocationList()) {
-        var dispatcherObject = @delegate.Target as DispatcherObject;
+        var dispatcherObject = @delegate.Target as ISynchronizeInvoke;
         if (dispatcherObject != null) {
-          if (dispatcherObject.Dispatcher.CheckAccess())
+          if (!dispatcherObject.InvokeRequired)
             @delegate.DynamicInvoke(sender, eventArgs);
           else {
             var delegateCopy = @delegate;
-            dispatcherObject.Dispatcher.Invoke(new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)), null);
+            dispatcherObject.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)), null);
           }
         } else
           @delegate.DynamicInvoke(sender, eventArgs);
@@ -60,13 +68,13 @@ namespace System.Windows.Threading {
       }
       var copy = This;
       foreach (var @delegate in copy.GetInvocationList()) {
-        var dispatcherObject = @delegate.Target as DispatcherObject;
+        var dispatcherObject = @delegate.Target as ISynchronizeInvoke;
         if (dispatcherObject != null) {
-          if (dispatcherObject.Dispatcher.CheckAccess())
+          if (!dispatcherObject.InvokeRequired)
             @delegate.DynamicInvoke(arguments);
           else {
             var delegateCopy = @delegate;
-            dispatcherObject.Dispatcher.Invoke(new Action(() => delegateCopy.DynamicInvoke(arguments)), null);
+            dispatcherObject.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(arguments)), null);
           }
         } else
           @delegate.DynamicInvoke(arguments);
@@ -87,15 +95,15 @@ namespace System.Windows.Threading {
       }
       var copy = This;
       foreach (var @delegate in copy.GetInvocationList()) {
-        var dispatcherObject = @delegate.Target as DispatcherObject;
+        var dispatcherObject = @delegate.Target as ISynchronizeInvoke;
         var delegateCopy = @delegate;
         Action call;
         if (dispatcherObject != null) {
           call = () => {
-            if (dispatcherObject.Dispatcher.CheckAccess())
+            if (!dispatcherObject.InvokeRequired)
               delegateCopy.DynamicInvoke(sender, eventArgs);
             else
-              dispatcherObject.Dispatcher.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)), null);
+              dispatcherObject.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)), null);
           };
         } else
           call = () => delegateCopy.DynamicInvoke(sender, eventArgs);
@@ -115,18 +123,18 @@ namespace System.Windows.Threading {
       }
       var copy = This;
       foreach (var @delegate in copy.GetInvocationList()) {
-        var dispatcherObject = @delegate.Target as DispatcherObject;
+        var dispatcherObject = @delegate.Target as ISynchronizeInvoke;
         var delegateCopy = @delegate;
         Action call;
         if (dispatcherObject != null) {
           call = () => {
-            if (dispatcherObject.Dispatcher.CheckAccess())
+            if (!dispatcherObject.InvokeRequired)
               delegateCopy.DynamicInvoke(arguments);
             else {
               var intI = 30;
               while (intI > 0) {
                 try {
-                  dispatcherObject.Dispatcher.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(arguments)), null);
+                  dispatcherObject.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(arguments)), null);
                   intI = 0;
                 } catch (Exception) {
                   intI--;

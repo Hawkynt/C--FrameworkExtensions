@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -24,7 +24,13 @@ using System.Linq;
 namespace System.Security.Cryptography {
   /// <summary>
   /// </summary>
-  public class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
 
     private static readonly byte[] _DEFAULT_S_BOX ={
     

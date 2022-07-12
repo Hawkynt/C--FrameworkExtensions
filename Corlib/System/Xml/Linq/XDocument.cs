@@ -28,7 +28,13 @@
 using System.Linq;
 
 namespace System.Xml.Linq {
-  internal static partial class XDocumentExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class XDocumentExtensions {
 
     /// <summary>
     /// Gets the given attribute's value or a default value.

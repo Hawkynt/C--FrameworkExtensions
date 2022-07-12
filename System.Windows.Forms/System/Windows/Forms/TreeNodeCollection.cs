@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -23,7 +23,13 @@ using System.Collections.Generic;
 
 namespace System.Windows.Forms {
   // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class TreeNodeCollectionExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TreeNodeCollectionExtensions {
 
     /// <summary>
     /// Flatteneds the hierarchy.

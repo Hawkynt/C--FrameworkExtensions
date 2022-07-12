@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,7 +26,13 @@ namespace System {
   /// </summary>
   /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
   /// <typeparam name="TResult">The type of the result.</typeparam>
-  public class IndexedProperty<TIndexer, TResult> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class IndexedProperty<TIndexer, TResult> {
 
     private readonly Func<TIndexer, TResult> _getter;
     private readonly Action<TIndexer, TResult> _setter;
@@ -56,7 +62,13 @@ namespace System {
   /// </summary>
   /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
   /// <typeparam name="TResult">The type of the result.</typeparam>
-  public class ReadOnlyIndexedProperty<TIndexer, TResult> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ReadOnlyIndexedProperty<TIndexer, TResult> {
 
     private readonly Func<TIndexer, TResult> _getter;
     public ReadOnlyIndexedProperty(Func<TIndexer, TResult> getter) {
@@ -71,7 +83,13 @@ namespace System {
   /// </summary>
   /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
   /// <typeparam name="TResult">The type of the result.</typeparam>
-  public class WriteOnlyIndexedProperty<TIndexer, TResult> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class WriteOnlyIndexedProperty<TIndexer, TResult> {
 
     private readonly Action<TIndexer, TResult> _setter;
     public WriteOnlyIndexedProperty(Action<TIndexer, TResult> setter) {
@@ -86,7 +104,12 @@ namespace System {
   }
   #endregion
 
-  public class IndexedProperty<TIndexer, TIndexer2, TResult> {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class IndexedProperty<TIndexer, TIndexer2, TResult> {
     private readonly Func<TIndexer, TIndexer2, TResult> _getter;
     private readonly Action<TIndexer, TIndexer2, TResult> _setter;
     public IndexedProperty(Func<TIndexer, TIndexer2, TResult> getter, Action<TIndexer, TIndexer2, TResult> setter) {
@@ -104,7 +127,12 @@ namespace System {
     }
   }
 
-  public class IndexedProperty<TIndexer, TIndexer2, TIndexer3, TResult> {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class IndexedProperty<TIndexer, TIndexer2, TIndexer3, TResult> {
     private readonly Func<TIndexer, TIndexer2, TIndexer3, TResult> _getter;
     private readonly Action<TIndexer, TIndexer2, TIndexer3, TResult> _setter;
     public IndexedProperty(Func<TIndexer, TIndexer2, TIndexer3, TResult> getter, Action<TIndexer, TIndexer2, TIndexer3, TResult> setter) {

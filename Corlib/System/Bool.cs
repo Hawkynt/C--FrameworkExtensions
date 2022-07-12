@@ -27,7 +27,13 @@ using System.Runtime.CompilerServices;
 namespace System {
   // ReSharper disable once PartialTypeWithSinglePart
   // ReSharper disable once UnusedMember.Global
-  internal static partial class BoolExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class BoolExtensions {
 
 #if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

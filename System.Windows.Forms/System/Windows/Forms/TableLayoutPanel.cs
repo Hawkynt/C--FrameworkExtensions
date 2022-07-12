@@ -28,7 +28,13 @@ using Debug = System.Diagnostics.Debug;
 using System.Linq;
 
 namespace System.Windows.Forms {
-  internal static partial class TableLayoutPanelExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class TableLayoutPanelExtensions {
     /// <summary>
     /// Removes the given row from a TableLayoutPanel.
     /// </summary>

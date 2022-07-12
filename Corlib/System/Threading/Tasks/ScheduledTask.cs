@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,18 +18,27 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
 #define SUPPORTTHREADTIMERS
 
 using System.Collections.Concurrent;
+
+#if NET45_OR_GREATER
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Threading.Tasks {
   /// <summary>
   /// Creates a scheduled task, that combines all calls within a given timespan and than executes only once with the last known value.
   /// </summary>
   /// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
-  internal class ScheduledTask<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ScheduledTask<TValue> {
     private TValue _currentValue;
     private readonly Action<TValue> _action;
     private readonly int _deferredTime;
@@ -66,7 +75,9 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action<TValue> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
+#if NET45_OR_GREATER
       Contract.Requires(action != null);
+#endif
       this._action = action;
       this._deferredTime = deferredTime;
       this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -122,7 +133,9 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
+#if NET45_OR_GREATER
       Contract.Assume(this._action != null);
+#endif
 
       // as long as there is fresh data available, re-use the thread
       while (this._dataAvailable != 0) {
@@ -277,7 +290,9 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
+#if NET45_OR_GREATER
       Contract.Assume(this._action != null);
+#endif
       // sleep if needed
       if (sleepTime != null)
         Thread.Sleep((int)sleepTime);
@@ -326,7 +341,13 @@ namespace System.Threading.Tasks {
   /// Note: does not guarantee that the values are in the right order.
   /// </summary>
   /// <typeparam name="TValue">The type of the values.</typeparam>
-  public class ScheduledCombinedTask<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class ScheduledCombinedTask<TValue> {
     private readonly ConcurrentBag<TValue> _scheduledValues = new ConcurrentBag<TValue>();
     private readonly Action<TValue[]> _action;
     private readonly int _deferredTime;
@@ -363,7 +384,9 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledCombinedTask(Action<TValue[]> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
+#if NET45_OR_GREATER
       Contract.Requires(action != null);
+#endif
       this._action = action;
       this._deferredTime = deferredTime;
       this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -418,8 +441,10 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
+#if NET45_OR_GREATER
       Contract.Assume(this._action != null);
       Contract.Assume(this._scheduledValues != null);
+#endif
       // sleep if needed););
       if (sleepTime != null)
         Thread.Sleep((int)sleepTime);
@@ -455,7 +480,9 @@ namespace System.Threading.Tasks {
     /// <param name="value">The value.</param>
     /// <param name="sleepTime">The sleep time.</param>
     private void _Schedule(TValue value, int sleepTime) {
+#if NET45_OR_GREATER
       Contract.Assume(this._scheduledValues != null);
+#endif
       Interlocked.CompareExchange(ref this._taskIsAborted, 0, 1);
 
       lock (this._lock)
@@ -479,3 +506,4 @@ namespace System.Threading.Tasks {
   }
 
 }
+#endif

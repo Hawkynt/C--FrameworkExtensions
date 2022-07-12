@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,13 +18,19 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 
 namespace System.ComponentModel {
-  internal static partial class SynchronizeInvokeExtensions {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class SynchronizeInvokeExtensions {
     public static bool SafeInvoke<T>(this T This, Action<T> call, bool @async = false) where T : class, ISynchronizeInvoke {
-      Contract.Requires(This != null);
-      Contract.Requires(call != null);
+      Debug.Assert(This != null);
+      Debug.Assert(call != null);
       if (This.InvokeRequired) {
         if (@async)
           This.BeginInvoke(new Action<T>(call), new object[] { This });

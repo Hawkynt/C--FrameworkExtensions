@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,7 +19,7 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Threading;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -31,7 +31,13 @@ namespace System.Collections.Generic {
   /// Items will be pulled out of the enumeration as late as possible, at least on first access, but never more than once, because they'll get cached.
   /// </summary>
   /// <typeparam name="TItem">The type of the underlying enumerations' items.</typeparam>
-  internal class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
     private IEnumerator<TItem> _enumerator;
     private bool _enumerationEnded;
@@ -97,7 +103,7 @@ namespace System.Collections.Generic {
     /// <param name="item">The item to be returned.</param>
     /// <returns><c>true</c> if we could get an item somehow; otherwise, <c>false</c>.</returns>
     private bool _TryGetItemAtPosition(int cachePosition, out TItem item) {
-      Contract.Requires(cachePosition >= 0);
+      Debug.Assert(cachePosition >= 0);
       var cachedItems = this._cachedItems;
       if (cachePosition < cachedItems.Count) {
         item = cachedItems[cachePosition];

@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -26,7 +26,13 @@ namespace System.Threading {
   /// Creates a value that is only calculated on first access and then cached.
   /// </summary>
   /// <typeparam name="TValue">The type of the result.</typeparam>
-  public class Lazy<TValue> {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class Lazy<TValue> {
     private readonly ManualResetEventSlim _valueIsReady = new ManualResetEventSlim(false);
     private readonly object _lock = new object();
     private TValue _value;
@@ -101,7 +107,13 @@ namespace System.Threading {
   /// <summary>
   /// A class that only calls it's action on access.
   /// </summary>
-  public class Lazy {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  class Lazy {
     private readonly Lazy<byte> _lazy;
     public Lazy(Action action) {
       this._lazy = new Lazy<byte>(() => {

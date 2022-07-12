@@ -1,4 +1,4 @@
-#region (c)2010-2020 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,7 +20,13 @@
 #endregion
 using System.Collections.Generic;
 namespace System {
-  internal static class BitConverterExtension {
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static class BitConverterExtension {
     public const byte ISNULL = 0;
     public const byte NOTNULL = 255;
     #region sbyte
