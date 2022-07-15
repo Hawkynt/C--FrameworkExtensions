@@ -47,51 +47,84 @@ namespace System.Collections.Generic {
 #else
   internal
 #endif
-  enum CacheReplacementPolicy:byte {
+  class CacheReplacementPolicy {
+
+    internal byte Value { get; }
+
+    protected CacheReplacementPolicy(byte value) => this.Value =  value;
+
     /// <summary>
     /// Removes random elements from the cache.
     /// </summary>
-    Random = 0,
+    public static CacheReplacementPolicy Random { get; } = new CacheReplacementPolicy(0);
     /// <summary>
     /// Removes the last n elements added to the cache.
     /// </summary>
-    LastInFirstOut = 1,
+    public static CacheReplacementPolicy LastInFirstOut { get; } = new CacheReplacementPolicy(1);
     /// <summary>
     /// Removes the first n elements added to the cache.
     /// </summary>
-    FirstInFirstOut = 2,
+    public static CacheReplacementPolicy FirstInFirstOut { get; } = new CacheReplacementPolicy(2);
     /// <summary>
     /// Removes the n most recently accessed elements in the cache.
     /// </summary>
-    MostRecentlyUsed = 3,
+    public static CacheReplacementPolicy MostRecentlyUsed { get; } = new CacheReplacementPolicy(3);
     /// <summary>
     /// Remove the n least recently accessed element in the cache.
     /// </summary>
-    LeastRecentlyUsed = 4,
+    public static CacheReplacementPolicy LeastRecentlyUsed { get; } = new CacheReplacementPolicy(4);
     /// <summary>
     /// Removes the n smallest elements.
     /// </summary>
-    SmallValuesFirst = 5,
+    public static CacheReplacementPolicy SmallValuesFirst { get; } = new CacheReplacementPolicy(5);
     /// <summary>
     /// Removes the n largest elements.
     /// </summary>
-    LargeValuesFirst = 6,
+    public static CacheReplacementPolicy LargeValuesFirst { get; } = new CacheReplacementPolicy(6);
     /// <summary>
     /// Removes the n least frequently used elements.
     /// </summary>
-    LeastFrequentlyUsed = 7,
+    public static CacheReplacementPolicy LeastFrequentlyUsed { get; } = new CacheReplacementPolicy(7);
     /// <summary>
     /// Removes the n most frequently used elements.
     /// </summary>
-    MostFrequentlyUsed = 8,
+    public static CacheReplacementPolicy MostFrequentlyUsed { get; } = new CacheReplacementPolicy(8);
     /// <summary>
     /// Removes n elements with the least lifetime left.
     /// </summary>
-    LeastAvailableLifetimeLeft = 9,
+    public static CacheReplacementPolicy LeastAvailableLifetimeLeft { get; } = new CacheReplacementPolicy(9);
     /// <summary>
     /// Removes n elements with the most lifetime left.
     /// </summary>
-    MostAvailableLifetimeLeft = 10,
+    public static CacheReplacementPolicy MostAvailableLifetimeLeft { get; } = new CacheReplacementPolicy(10);
+
+    public override string ToString() {
+      var value = this.Value;
+      if (value == Random.Value) return nameof(Random);
+      if (value == LastInFirstOut.Value) return nameof(LastInFirstOut);
+      if (value == FirstInFirstOut.Value) return nameof(FirstInFirstOut);
+      if (value == MostRecentlyUsed.Value) return nameof(MostRecentlyUsed);
+      if (value == LeastRecentlyUsed.Value) return nameof(LeastRecentlyUsed);
+      if (value == SmallValuesFirst.Value) return nameof(SmallValuesFirst);
+      if (value == LargeValuesFirst.Value) return nameof(LargeValuesFirst);
+      if (value == LeastFrequentlyUsed.Value) return nameof(LeastFrequentlyUsed);
+      if (value == MostFrequentlyUsed.Value) return nameof(MostFrequentlyUsed);
+      if (value == LeastAvailableLifetimeLeft.Value) return nameof(LeastAvailableLifetimeLeft);
+      if (value == MostAvailableLifetimeLeft.Value) return nameof(MostAvailableLifetimeLeft);
+      throw new NotSupportedException("Unknown value");
+    }
+
+    #region Equality members
+
+    protected bool Equals(CacheReplacementPolicy other) => other!=null && this.Value == other.Value;
+    public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is CacheReplacementPolicy o && this.Equals(o);
+    public override int GetHashCode() => this.Value.GetHashCode();
+    public static bool operator ==(CacheReplacementPolicy a, CacheReplacementPolicy b) => Equals(a, b);
+    public static bool operator !=(CacheReplacementPolicy a, CacheReplacementPolicy b) => !Equals(a, b);
+    public static bool Equals(CacheReplacementPolicy a, CacheReplacementPolicy b) => a is null && b is null || !(a is null) && a.Equals(b);
+
+    #endregion
+
   }
 
 <#for(var i=1;i<8;++i){
@@ -112,7 +145,7 @@ namespace System.Collections.Generic {
 #endif
   interface ICache<<#=covariantTypeDef#>, out TValue> : IDisposable {
     TValue this[<#=parameterDef#>] { get; }
-    _CacheReplacementPolicy Policy { get; }
+    CacheReplacementPolicy Policy { get; }
     int Count { get; }
     long MemoryOverhead { get; }
     long MemorySize { get; }
@@ -154,7 +187,7 @@ namespace System.Collections.Generic {
           t => _CreateFromTuple(t, factory), 
           maxItems, 
           0, 
-          (_CacheReplacementPolicy)policy, 
+          policy, 
           !lazyCollect
         )
       );
@@ -180,7 +213,7 @@ namespace System.Collections.Generic {
           t => _CreateFromTuple(t, factory), 
           0, 
           maxSizeInBytes, 
-          (_CacheReplacementPolicy)policy, 
+          policy, 
           !lazyCollect
         )
       );
@@ -221,7 +254,7 @@ namespace System.Collections.Generic {
           t=>_CreateFromTuple(t, factory, maxAge), 
           maxItems, 
           0, 
-          (_CacheReplacementPolicy)policy, 
+          policy, 
           !lazyCollect,
           maxAge
         )
@@ -246,7 +279,7 @@ namespace System.Collections.Generic {
           t=>_CreateFromTuple(t, factory, maxAge), 
           0, 
           maxSizeInBytes, 
-          (_CacheReplacementPolicy)policy, 
+          policy, 
           !lazyCollect,
           maxAge
         )
@@ -275,7 +308,7 @@ namespace System.Collections.Generic {
     #region Implementation of ICache
 
     public TValue this[<#=parameterDef#>] => this._cache[<#=tupleCreate#>];
-    public _CacheReplacementPolicy Policy => this._cache.Policy;
+    public CacheReplacementPolicy Policy => this._cache.Policy;
     public int Count => this._cache.Count;
     public long MemoryOverhead => _CacheTypes.GetUsedMemory(this) - this.MemorySize;
     public long MemorySize => this._cache.MemorySize;
@@ -305,7 +338,7 @@ namespace System.Collections.Generic {
     #region Implementation of ICache
 
     public TValue this[<#=parameterDef#>] => this._cache[<#=tupleCreate#>].Value;
-    public _CacheReplacementPolicy Policy => this._cache.Policy;
+    public CacheReplacementPolicy Policy => this._cache.Policy;
     public int Count => this._cache.Count;
     public long MemoryOverhead => _CacheTypes.GetUsedMemory(this) - this.MemorySize;
     public long MemorySize => this._cache.MemorySize;
@@ -318,19 +351,16 @@ namespace System.Collections.Generic {
 
 <#}#>
   
-  internal enum _CacheReplacementPolicy:byte {
-    Random = 0,
-    LastInFirstOut = 1,
-    FirstInFirstOut = 2,
-    MostRecentlyUsed = 3,
-    LeastRecentlyUsed = 4,
-    SmallValuesFirst = 5,
-    LargeValuesFirst = 6,
-    LeastFrequentlyUsed = 7,
-    MostFrequentlyUsed = 8,
-    LeastAvailableLifetimeLeft = 9,
-    MostAvailableLifetimeLeft = 10,
-    NotNeeded = 255,
+  internal sealed class _CacheReplacementPolicy:CacheReplacementPolicy {
+    public static CacheReplacementPolicy NotNeeded { get; } = new _CacheReplacementPolicy(255);
+
+    public _CacheReplacementPolicy(byte value) : base(value) { }
+
+    public override string ToString() {
+      var value = this.Value;
+      if (value == NotNeeded.Value) return nameof(NotNeeded);
+      return base.ToString();
+    }
   }
 
   internal class _CacheTypes {
@@ -488,78 +518,58 @@ namespace System.Collections.Generic {
     private readonly Func<bool> _gcDetector;
     private readonly Func<TKey, _CacheTypes.ICacheItem<TValue>> _itemGetter;
     
-    public _Cache(Func<TKey, TValue> valueFactory, int maxItems, long maxSize, _CacheReplacementPolicy policy, bool enforceGarbageCollectionUponCreation, TimeSpan lifeTime = default(TimeSpan)) {
+    public _Cache(Func<TKey, TValue> valueFactory, int maxItems, long maxSize, CacheReplacementPolicy policy, bool enforceGarbageCollectionUponCreation, TimeSpan lifeTime = default(TimeSpan)) {
       this._sourceValueFactory = valueFactory;
       this.Policy = policy;
             
       var needSizeTracking = maxSize > 0;
       var needValidTracking = lifeTime != default(TimeSpan);
 
-      switch (policy) {
-        case _CacheReplacementPolicy.Random:
+      if (policy == CacheReplacementPolicy.Random) {
           this._garbageCollection = this._RemoveRandom;
           this._valueFactory = this._CreateSelectorLessItem;
-          break;
-
-        case _CacheReplacementPolicy.FirstInFirstOut:
+      } else if (policy == CacheReplacementPolicy.FirstInFirstOut) {
           this._garbageCollection = this._RemoveBySelector;
           this._valueFactory = this._CreateAgeBasedItem;
-          break;
-        case _CacheReplacementPolicy.LastInFirstOut:
+      } else if (policy == CacheReplacementPolicy.LastInFirstOut) {
           this._garbageCollection = this._RemoveBySelectorReversed;
           this._valueFactory = this._CreateAgeBasedItem;
-          break;
-
-        case _CacheReplacementPolicy.SmallValuesFirst:
+      } else if (policy == CacheReplacementPolicy.SmallValuesFirst) {
           this._garbageCollection = this._RemoveBySelector;
           this._valueFactory = this._CreateSizeBasedItem;
           needSizeTracking = true;
-          break;
-        case _CacheReplacementPolicy.LargeValuesFirst:
+      } else if (policy == CacheReplacementPolicy.LargeValuesFirst) {
           this._garbageCollection = this._RemoveBySelectorReversed;
           this._valueFactory = this._CreateSizeBasedItem;
           needSizeTracking = true;
-          break;
-
-        case _CacheReplacementPolicy.LeastRecentlyUsed:
+      } else if (policy == CacheReplacementPolicy.LeastRecentlyUsed) {
           this._garbageCollection = this._RemoveBySelector;
           this._valueFactory = this._CreateAccessBasedItem;
-          break;
-        case _CacheReplacementPolicy.MostRecentlyUsed:
+      } else if (policy == CacheReplacementPolicy.MostRecentlyUsed) {
           this._garbageCollection = this._RemoveBySelectorReversed;
           this._valueFactory = this._CreateAccessBasedItem;
-          break;
-        
-        case _CacheReplacementPolicy.LeastFrequentlyUsed:
+      } else if (policy == CacheReplacementPolicy.LeastFrequentlyUsed) {
           this._garbageCollection = this._RemoveBySelector;
           this._valueFactory = this._CreateFrequencyBasedItem;
-          break;
-        case _CacheReplacementPolicy.MostFrequentlyUsed:
+      } else if (policy == CacheReplacementPolicy.MostFrequentlyUsed) {
           this._garbageCollection = this._RemoveBySelectorReversed;
           this._valueFactory = this._CreateFrequencyBasedItem;
-          break;
-        
-        case _CacheReplacementPolicy.LeastAvailableLifetimeLeft:
+      } else if (policy == CacheReplacementPolicy.LeastAvailableLifetimeLeft) {
           this._lastUsedId = lifeTime.Ticks;
           this._garbageCollection = this._RemoveBySelector;
           this._valueFactory = this._CreateLifetimeBasedItem;
-          break;
-        case _CacheReplacementPolicy.MostAvailableLifetimeLeft:
+      } else if (policy == CacheReplacementPolicy.MostAvailableLifetimeLeft) {
           this._lastUsedId = lifeTime.Ticks;
           this._garbageCollection = this._RemoveBySelectorReversed;
           this._valueFactory = this._CreateLifetimeBasedItem;
-          break;
-        
-        case _CacheReplacementPolicy.NotNeeded:
+      } else if (policy == _CacheReplacementPolicy.NotNeeded) {
           this._garbageCollection = this._RemoveNone;
           this._valueFactory = this._CreateSelectorLessItem;
           maxItems = 0;
           maxSize = 0;
           needSizeTracking = false;
-          break;
-        default:
+      } else
           throw new NotSupportedException($"Unknown policy: {this.Policy}");
-      }
 
       this._maxItems = maxItems;
       this._maxSize = maxSize;
@@ -805,7 +815,7 @@ namespace System.Collections.Generic {
     #region Implementation of ICache
 
     public TValue this[TKey key] => this._itemGetter(key).Value;
-    public _CacheReplacementPolicy Policy { get; }
+    public CacheReplacementPolicy Policy { get; }
     public int Count => this._items.Count;
     public long MemoryOverhead => _CacheTypes.GetUsedMemory(this) - this.MemorySize;
     public long MemorySize {
@@ -824,7 +834,7 @@ namespace System.Collections.Generic {
 
     public void Clear() {
       
-      if(this.Policy != _CacheReplacementPolicy.LeastAvailableLifetimeLeft && this.Policy != _CacheReplacementPolicy.MostAvailableLifetimeLeft )
+      if(this.Policy != CacheReplacementPolicy.LeastAvailableLifetimeLeft && this.Policy != CacheReplacementPolicy.MostAvailableLifetimeLeft )
         Interlocked.Exchange(ref this._lastUsedId, long.MinValue);
       
       var oldCache = Interlocked.Exchange(ref this._items, new ConcurrentDictionary<TKey, _CacheTypes.ICacheItem<TValue>>());

@@ -394,12 +394,22 @@ namespace System.Collections.Generic {
   }
 
   // ReSharper disable once PartialTypeWithSinglePart
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
   static partial class KeyValuePairExtensions {
     public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this)
       => new KeyValuePair<TValue, TKey>(@this.Value, @this.Key)
       ;
   }
 
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
   static partial class EnumerableExtensions {
     public static BiDictionary<TKey, TValue> ToBiDictionary<TItem, TKey, TValue>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, Func<TItem, TValue> valueSelector) {
 #if NET40_OR_GREATER

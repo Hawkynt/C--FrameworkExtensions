@@ -23,7 +23,7 @@
 
 using System.Collections.Concurrent;
 
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
 using System.Diagnostics.Contracts;
 #endif
 
@@ -75,7 +75,7 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action<TValue> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Requires(action != null);
 #endif
       this._action = action;
@@ -133,7 +133,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Assume(this._action != null);
 #endif
 
@@ -205,7 +205,13 @@ namespace System.Threading.Tasks {
   /// <summary>
   /// Creates a scheduled task, that combines all calls within a given timespan and than executes only once.
   /// </summary>
-  internal class ScheduledTask {
+  /// 
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif 
+    class ScheduledTask {
     private readonly Action _action;
     private readonly int _deferredTime;
     private readonly bool _waitUntilTaskReturnedBeforeNextSchedule;
@@ -240,7 +246,9 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
+#if NET40_OR_GREATER
       Contract.Requires(action != null);
+#endif
       this._action = action;
       this._deferredTime = deferredTime;
       this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -290,7 +298,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Assume(this._action != null);
 #endif
       // sleep if needed
@@ -384,7 +392,7 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledCombinedTask(Action<TValue[]> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Requires(action != null);
 #endif
       this._action = action;
@@ -441,7 +449,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Assume(this._action != null);
       Contract.Assume(this._scheduledValues != null);
 #endif
@@ -480,7 +488,7 @@ namespace System.Threading.Tasks {
     /// <param name="value">The value.</param>
     /// <param name="sleepTime">The sleep time.</param>
     private void _Schedule(TValue value, int sleepTime) {
-#if NET45_OR_GREATER
+#if NET40_OR_GREATER
       Contract.Assume(this._scheduledValues != null);
 #endif
       Interlocked.CompareExchange(ref this._taskIsAborted, 0, 1);

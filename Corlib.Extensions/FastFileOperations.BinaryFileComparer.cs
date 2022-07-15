@@ -127,7 +127,7 @@ namespace System.IO {
     /// <summary>
     /// Compares two files by their length.
     /// </summary>
-    public class FileLengthComparer : IFileComparer {
+    public partial class FileLengthComparer : IFileComparer {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
@@ -147,7 +147,7 @@ namespace System.IO {
     /// <summary>
     /// Compares two files by their basic attributes (HARS)
     /// </summary>
-    public class FileSimpleAttributesComparer : IFileComparer {
+    public partial class FileSimpleAttributesComparer : IFileComparer {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
@@ -168,7 +168,7 @@ namespace System.IO {
     /// <summary>
     /// Compares two files by their creation time.
     /// </summary>
-    public class FileCreationTimeComparer : IFileComparer {
+    public partial class FileCreationTimeComparer : IFileComparer {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
@@ -188,7 +188,7 @@ namespace System.IO {
     /// <summary>
     /// Comapres two files by their last write time.
     /// </summary>
-    public class FileLastWriteTimeComparer : IFileComparer {
+    public partial class FileLastWriteTimeComparer : IFileComparer {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {

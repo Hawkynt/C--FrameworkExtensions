@@ -375,7 +375,12 @@ namespace System.ComponentModel {
   }
 
   // ReSharper disable once PartialTypeWithSinglePart
-  internal static partial class EnumerableExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EnumerableExtensions {
     public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> @this) {
       if (@this == null)
         throw new NullReferenceException();

@@ -246,7 +246,12 @@ namespace System.Collections.Generic {
   /// <summary>
   /// Extensions for the generic enumerables.
   /// </summary>
-  internal static partial class EnumerableExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class EnumerableExtensions {
     /// <summary>
     /// Creates a cached version of the given enumeration.
     /// </summary>
