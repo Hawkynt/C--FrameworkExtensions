@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.IO {
   /// <summary>
@@ -38,7 +44,9 @@ namespace System.IO {
     /// <param name="This">This DriveInfo.</param>
     /// <returns><c>true</c> when the drive exists; otherwise, <c>false</c>.</returns>
     public static bool Exists(this DriveInfo This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       try {
         return (This.IsReady || This.DriveType != DriveType.NoRootDirectory);
       } catch {

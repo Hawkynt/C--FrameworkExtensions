@@ -19,11 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if !NET35_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
-#else 
-using Debug = System.Diagnostics.Debug;
 #endif
 using System.Linq;
 
@@ -41,9 +43,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This TableLayoutPanel.</param>
     /// <param name="row">The row.</param>
     public static void RemoveRow(this TableLayoutPanel This, int row) {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var rowCount = This.RowCount;
@@ -85,9 +85,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback if any, passing targetRow,targetColumn,sourceControl,targetControl.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, int, Control, Control> controlCallback = null, bool allowSuspendingLayout = true) {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       if (allowSuspendingLayout)
@@ -108,9 +106,10 @@ namespace System.Windows.Forms {
         --i;
 
         var control = This.GetControlFromPositionFixed(i, lastRow);
-        if (control == null || !alreadyVisitedControls.TryAdd(control, true))
+        if (control == null || !alreadyVisitedControls.ContainsKey(control))
           continue;
 
+        alreadyVisitedControls.Add(control, true);
         var newControl = control.Duplicate();
         if (controlCallback != null)
           controlCallback(lastRow + 1, i, control, newControl);
@@ -130,9 +129,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback, passing the newly created control.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<Control> controlCallback, bool allowSuspendingLayout = true) {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.CopyLastRow((row, col, src, tgt) => controlCallback(tgt));
@@ -144,9 +141,7 @@ namespace System.Windows.Forms {
     /// <param name="controlCallback">The control callback, passing column and the newly created control.</param>
     /// <param name="allowSuspendingLayout">if set to <c>true</c> allows suspending the This layout during this process to prevent flickering.</param>
     public static void CopyLastRow(this TableLayoutPanel This, Action<int, Control> controlCallback, bool allowSuspendingLayout = true) {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.CopyLastRow((row, col, src, tgt) => controlCallback(col, tgt));
@@ -163,9 +158,7 @@ namespace System.Windows.Forms {
     /// <param name="reader">The reader delegate which reads the actual value from the given control and returns it.</param>
     /// <returns>The value that was found.</returns>
     public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel This, uint row, int columnIndex, Func<TControl, TType> reader) where TControl : Control {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       if (row >= This.RowCount)
@@ -186,9 +179,7 @@ namespace System.Windows.Forms {
     /// <param name="columnIndex">The column in which the control should be.</param>
     /// <param name="writer">The writer delegate which sets a value of the control.</param>
     public static void SetColumnValue<TControl>(this TableLayoutPanel This, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       if (row >= This.RowCount)
@@ -213,9 +204,7 @@ namespace System.Windows.Forms {
     /// The control or <c>null</c>.
     /// </returns>
     public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel This, int column, int row) where TControl : Control {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       return (This.GetControlFromPositionFixed(column, row) as TControl);
@@ -230,9 +219,7 @@ namespace System.Windows.Forms {
     /// <param name="row">The row.</param>
     /// <returns>The control or <c>null</c>.</returns>
     public static Control GetControlFromPositionFixed(this TableLayoutPanel This, int column, int row) {
-#if NET35_OR_GREATER
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var result = This.GetControlFromPosition(column, row);

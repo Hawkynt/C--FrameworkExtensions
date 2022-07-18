@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Reflection;
 
@@ -37,7 +43,9 @@ namespace System.Text.RegularExpressions {
     /// <param name="This">This Match.</param>
     /// <returns>The number of \n in the text before this match started.</returns>
     public static int LineNumber(this Match This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       if (!This.Success)
         return (-1);
 
@@ -62,7 +70,9 @@ namespace System.Text.RegularExpressions {
     /// <param name="match">The match.</param>
     /// <returns></returns>
     private static string _GetPrivateTextFieldValue(this Match match) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(match != null);
+#endif
       const string fieldName = "_text";
       var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
       var type = typeof(Match);

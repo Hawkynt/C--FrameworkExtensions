@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -54,7 +58,7 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
 
@@ -131,7 +135,7 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
         return (x.Length == y.Length);
@@ -151,7 +155,7 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
         const FileAttributes MASK = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.ReadOnly | FileAttributes.System;
@@ -172,7 +176,7 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
         return (x.CreationTimeUtc == y.CreationTimeUtc);
@@ -192,7 +196,7 @@ namespace System.IO {
       #region Implementation of IEqualityComparer<in FileInfo>
 
       public bool Equals(FileInfo x, FileInfo y) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
         return (x.LastWriteTimeUtc == y.LastWriteTimeUtc);

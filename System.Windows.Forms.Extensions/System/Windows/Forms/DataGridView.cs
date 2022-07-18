@@ -19,12 +19,17 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Drawing;
@@ -34,7 +39,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 using System.Runtime.CompilerServices;
 #endif
 using System.Text.RegularExpressions;
@@ -1112,7 +1117,9 @@ namespace System.Windows.Forms {
 
         // Update all the existing DataGridViewNumericUpDownCell cells in the column accordingly.
         var dataGridViewRows = dataGridView.Rows;
+#if SUPPORTS_CONTRACTS
         Contract.Assume(dataGridViewRows != null);
+#endif
 
         var rowCount = dataGridViewRows.Count;
         for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
@@ -1653,7 +1660,9 @@ namespace System.Windows.Forms {
       private DataGridViewNumericUpDownEditingControl EditingNumericUpDown {
         get {
           var dataGridView = this.DataGridView;
+#if SUPPORTS_CONTRACTS
           Contract.Assume(dataGridView != null);
+#endif
           return dataGridView.EditingControl as DataGridViewNumericUpDownEditingControl;
         }
       }
@@ -1773,7 +1782,9 @@ namespace System.Windows.Forms {
           // performance reasons (to avoid an unnecessary control destruction and creation). 
           // Here the undo buffer of the TextBox inside the NumericUpDown control gets cleared to avoid
           // interferences between the editing sessions.
+#if SUPPORTS_CONTRACTS
           Contract.Assume(numericUpDown.Controls.Count > 1);
+#endif
           if (numericUpDown.Controls[1] is TextBox textBox)
             textBox.ClearUndo();
         }
@@ -2078,7 +2089,9 @@ namespace System.Windows.Forms {
       /// this cell may be shared among multiple rows.
       /// </summary>
       public void SetDecimalPlaces(int rowIndex, int value) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(value >= 0 && value <= 99);
+#endif
         this.decimalPlaces = value;
         if (this.OwnsEditingNumericUpDown(rowIndex))
           this.EditingNumericUpDown.DecimalPlaces = value;
@@ -2088,7 +2101,9 @@ namespace System.Windows.Forms {
       /// the cell and column Increment property. A row index needs to be provided as a parameter because
       /// this cell may be shared among multiple rows.
       public void SetIncrement(int rowIndex, decimal value) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(value >= (decimal)0.0);
+#endif
         this.increment = value;
         if (this.OwnsEditingNumericUpDown(rowIndex))
           this.EditingNumericUpDown.Increment = value;

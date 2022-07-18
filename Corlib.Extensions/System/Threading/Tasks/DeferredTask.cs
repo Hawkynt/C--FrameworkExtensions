@@ -19,9 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -68,7 +72,7 @@ namespace System.Threading.Tasks {
     public ManualResetEventSlim WaitHandle { get; } = new ManualResetEventSlim(true);
 
     public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action != null);
 #endif
       this._action = action;

@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.ObjectModel {
 
@@ -37,8 +43,10 @@ namespace System.Collections.ObjectModel {
     /// <param name="This">This Collection.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TItem>(this Collection<TItem> This, IEnumerable<TItem> items) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       foreach (var item in items)
         This.Add(item);
     }

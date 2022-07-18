@@ -19,7 +19,6 @@
 */
 #endregion
 
-using System.Linq;
 using System.Net.NetworkInformation;
 
 // ReSharper disable PartialTypeWithSinglePart

@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Diagnostics;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Runtime.Serialization;
@@ -412,7 +416,7 @@ namespace System.Collections.Generic {
 #endif
   static partial class EnumerableExtensions {
     public static BiDictionary<TKey, TValue> ToBiDictionary<TItem, TKey, TValue>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, Func<TItem, TValue> valueSelector) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(keySelector != null);
       Contract.Requires(valueSelector != null);

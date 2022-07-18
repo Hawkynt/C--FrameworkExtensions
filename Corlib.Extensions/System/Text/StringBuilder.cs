@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Text.StringBuildera {
 
@@ -37,8 +43,10 @@ namespace System.Text.StringBuildera {
     /// <param name="This">This StringBuilder.</param>
     /// <param name="lines">The lines to add.</param>
     public static void AppendLines(this StringBuilder This, IEnumerable<string> lines) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(lines != null);
+#endif
       foreach (var line in lines)
         This.AppendLine(line);
     }

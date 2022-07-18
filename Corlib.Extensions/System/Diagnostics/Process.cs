@@ -19,10 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Runtime.InteropServices;
@@ -66,7 +70,7 @@ namespace System.Diagnostics {
     /// <param name="This">This Process.</param>
     /// <returns>The parent process or <c>null</c>.</returns>
     public static Process Parent(this Process This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       try {

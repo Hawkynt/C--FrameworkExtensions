@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Threading {
 
@@ -37,7 +43,9 @@ namespace System.Threading {
     ///   <c>true</c> if the specified ManualResetEvent is set; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsSet(this ManualResetEvent This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (This.WaitOne(0));
     }
   }

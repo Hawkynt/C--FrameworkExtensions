@@ -21,7 +21,7 @@
 
 #endregion
 
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+#if NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.ConstrainedExecution;

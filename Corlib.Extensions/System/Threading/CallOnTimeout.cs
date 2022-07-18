@@ -19,7 +19,11 @@
 */
 #endregion
 
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -47,7 +51,7 @@ namespace System.Threading {
 
     #region ctor,dtor
     public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(timeoutAction!=null);
 #endif
       this.Timeout = timeout;
@@ -77,8 +81,8 @@ namespace System.Threading {
       this.Dispose();
     }
 
-    #endregion
-    #endregion
+#endregion
+#endregion
 
     private void _CheckTimeout(object _) {
       while (!this._isDisposed) {

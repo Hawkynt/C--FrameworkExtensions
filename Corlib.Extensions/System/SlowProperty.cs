@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Threading;
 
 namespace System {
@@ -60,8 +66,10 @@ namespace System {
       this(captureSynchronizationContext ? SynchronizationContext.Current : null, valueGetter, intermediateValue, valueGeneratedCallback) { }
 
     public SlowProperty(SynchronizationContext context, Func<SlowProperty<TValue, TIntermediateValue>, TValue> valueGetter, TIntermediateValue intermediateValue = default(TIntermediateValue), Action<SlowProperty<TValue, TIntermediateValue>> valueGeneratedCallback = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(valueGetter != null);
       Contract.Requires(typeof(TIntermediateValue).IsAssignableFrom(typeof(TValue)));
+#endif
       this._valueGetter = valueGetter;
       this._intermediateValue = intermediateValue;
       this._valueGeneratedCallback = valueGeneratedCallback;

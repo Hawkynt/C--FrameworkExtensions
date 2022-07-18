@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing;
 
 namespace System.Windows.Forms {
@@ -37,8 +44,10 @@ namespace System.Windows.Forms {
     /// <param name="parent">The parent node to check.</param>
     /// <returns><c>true</c> when the node is a child of the given parent, no matter how deep the level is; otherwise, <c>false</c>.</returns>
     public static bool IsChildOf(this TreeNode This, TreeNode parent) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(parent != null);
+#endif
       var start = This;
       while (start != null) {
         if (start == parent)
@@ -54,13 +63,17 @@ namespace System.Windows.Forms {
     /// <param name="This">This TreeNode.</param>
     /// <returns>An id.</returns>
     public static string GetId(this TreeNode This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var parent = This.Parent;
       if (parent == null)
         return (string.Empty);
       var baseId = parent.GetId();
       var neighbours = parent.Nodes;
+#if SUPPORTS_CONTRACTS
       Contract.Assert(neighbours != null);
+#endif
       var myId = 0;
       foreach (var neighbour in neighbours)
         if (neighbour == This)
@@ -76,7 +89,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This TreeNode.</param>
     /// <returns>The image for that node or <c>null</c>.</returns>
     public static Image GetImage(this TreeNode This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
 
       var treeView = This.TreeView;
 
@@ -85,7 +100,9 @@ namespace System.Windows.Forms {
         return (null);
 
       var images = imageList.Images;
+#if SUPPORTS_CONTRACTS
       Contract.Assert(images != null);
+#endif
       if (images.Count < 1)
         return (null);
 

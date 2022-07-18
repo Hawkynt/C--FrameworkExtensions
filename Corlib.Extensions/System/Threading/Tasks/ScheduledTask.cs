@@ -18,12 +18,16 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTTHREADTIMERS
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
 
 using System.Collections.Concurrent;
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -75,7 +79,7 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action<TValue> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action != null);
 #endif
       this._action = action;
@@ -133,7 +137,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assume(this._action != null);
 #endif
 
@@ -246,7 +250,7 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledTask(Action action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action != null);
 #endif
       this._action = action;
@@ -298,7 +302,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assume(this._action != null);
 #endif
       // sleep if needed
@@ -392,7 +396,7 @@ namespace System.Threading.Tasks {
     /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
     /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
     public ScheduledCombinedTask(Action<TValue[]> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action != null);
 #endif
       this._action = action;
@@ -449,7 +453,7 @@ namespace System.Threading.Tasks {
     /// </summary>
     /// <param name="sleepTime">The sleep time.</param>
     private void _OnTimeIsUp(object sleepTime) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assume(this._action != null);
       Contract.Assume(this._scheduledValues != null);
 #endif
@@ -488,7 +492,7 @@ namespace System.Threading.Tasks {
     /// <param name="value">The value.</param>
     /// <param name="sleepTime">The sleep time.</param>
     private void _Schedule(TValue value, int sleepTime) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assume(this._scheduledValues != null);
 #endif
       Interlocked.CompareExchange(ref this._taskIsAborted, 0, 1);

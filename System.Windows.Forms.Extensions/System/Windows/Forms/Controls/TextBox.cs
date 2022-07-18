@@ -19,15 +19,16 @@
 */
 #endregion
 
-using System.Diagnostics.Contracts;
-using System.Drawing;
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using DrawingPoint = System.Drawing.Point;
 using DrawingTextBox = System.Windows.Forms.TextBox;
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -115,7 +116,7 @@ namespace System.Windows.Controls {
     /// </summary>
     /// <param name="This">This TextBox.</param>
     public static void MoveCursorToEnd(this DrawingTextBox This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SelectionStart = This.TextLength;
@@ -129,7 +130,7 @@ namespace System.Windows.Controls {
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryParseInt(this DrawingTextBox This, ref int value) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var text = This.Text;
@@ -154,7 +155,9 @@ namespace System.Windows.Controls {
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryParseInt(this DrawingTextBox This, NumberStyles style, IFormatProvider provider, ref int value) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var text = This.Text;
       if (string.IsNullOrWhiteSpace(text))
         return false;

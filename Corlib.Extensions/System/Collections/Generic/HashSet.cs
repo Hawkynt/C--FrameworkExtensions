@@ -19,9 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Diagnostics;
 using System.Linq;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 #if NET45_OR_GREATER
@@ -86,7 +90,7 @@ namespace System.Collections.Generic {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -136,7 +140,7 @@ namespace System.Collections.Generic {
       if (@this == null)
         throw new NullReferenceException();
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 

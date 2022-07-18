@@ -18,7 +18,6 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
 // TODO: base file offset in dircopy event tokens
 // TODO: exception interceptor callback to allow continue or retry on exceptions in dircopy and filecopy
 // TODO: more events to allow logging actions in dircopy
@@ -26,10 +25,13 @@
 // TODO: junction support (source is jt, target should jt to exact same destination either relative or absolute)
 // TODO: hardlink support (source is hl, target should hl to same relative destinations)
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -161,8 +163,8 @@ namespace System.IO {
         this._allowHardLinks = allowHardLinks;
         this._allowIntegrate = allowIntegrate;
         this._dontResolveSymbolicLinks = dontResolveSymbolicLinks;
-        this._filter = filter ?? _ => true;
-        this._callback = callback ?? _ => { };
+        this._filter = filter ?? (_ => true);
+        this._callback = callback ?? (_ => { });
       }
 
       private void _Dispose() {
@@ -244,7 +246,10 @@ namespace System.IO {
       /// <param name="info">The file/folder information.</param>
       /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
       private bool _MatchesFilter(FileSystemInfo info) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(info != null);
+#endif
+
         return this._filter(info);
       }
 
@@ -255,8 +260,10 @@ namespace System.IO {
       /// <param name="targetFile">The expected target file.</param>
       /// <returns><c>true</c> if the file needs to be copied; otherwise, <c>false</c>.</returns>
       private bool _FileNeedsSync(FileInfo sourceFile, FileInfo targetFile) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(sourceFile != null);
         Contract.Requires(targetFile != null);
+#endif
         if (!sourceFile.Exists)
           return false;
 

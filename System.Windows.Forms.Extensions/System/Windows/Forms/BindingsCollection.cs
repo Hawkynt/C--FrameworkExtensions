@@ -19,8 +19,15 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 
 namespace System.Windows.Forms {
@@ -39,7 +46,9 @@ namespace System.Windows.Forms {
     /// <param name="propertyName">Name of the property.</param>
     /// <returns>The first binding that matches the given property name.</returns>
     public static Binding GetBindingByPropertyName(this BindingsCollection This, string propertyName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (This.GetBindingsByPropertyName(propertyName).First());
     }
 
@@ -50,7 +59,9 @@ namespace System.Windows.Forms {
     /// <param name="propertyName">Name of the property.</param>
     /// <returns>A list of bindings that match the given property name.</returns>
     public static IEnumerable<Binding> GetBindingsByPropertyName(this BindingsCollection This, string propertyName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (This.Cast<Binding>().Where(b => b.PropertyName == propertyName));
     }
   }

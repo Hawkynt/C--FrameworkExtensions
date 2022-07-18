@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -48,7 +52,7 @@ namespace System.ComponentModel {
     /// <param name="this">This BindingList.</param>
     /// <returns>A copy of the list.</returns>
     public static TItem[] ToArray<TItem>(this BindingList<TItem> @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       var result = new TItem[@this.Count];
@@ -63,7 +67,7 @@ namespace System.ComponentModel {
     /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void AddRange<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -78,7 +82,7 @@ namespace System.ComponentModel {
     /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void MoveToFront<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -102,7 +106,7 @@ namespace System.ComponentModel {
     /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void MoveToBack<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -127,7 +131,7 @@ namespace System.ComponentModel {
     /// <param name="items">The items.</param>
     /// <param name="delta">The delta.</param>
     public static void MoveRelative<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items, int delta) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -161,7 +165,7 @@ namespace System.ComponentModel {
             @this.RemoveAt(index);
             var newIndex = index + delta;
             if (newIndex > end) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
               Contract.Assume(end >= 0);
 #endif
               @this.Insert(end--, item);
@@ -184,7 +188,7 @@ namespace System.ComponentModel {
     /// <param name="this">This BindingList.</param>
     /// <param name="items">The items.</param>
     public static void ReplaceAll<T>(this BindingList<T> @this, IEnumerable<T> items) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
@@ -243,7 +247,7 @@ namespace System.ComponentModel {
     }
 
     public static int RemoveWhere<TItem>(this BindingList<TItem> @this, Predicate<TItem> selector) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(selector != null);
 #endif

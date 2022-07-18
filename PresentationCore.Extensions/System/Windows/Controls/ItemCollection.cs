@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 // ReSharper disable UnusedMember.Global
 
@@ -41,7 +47,9 @@ namespace System.Windows.Controls {
     /// <param name="name">The name.</param>
     /// <returns>The FrameworkElement that matches the given name or <c>null</c>.</returns>
     public static FrameworkElement GetElementByName(this ItemCollection This, string name) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return This.OfType<FrameworkElement>().FirstOrDefault(e => e != null && e.Name == name);
     }
 
@@ -51,8 +59,10 @@ namespace System.Windows.Controls {
     /// <param name="This">This ItemCollection.</param>
     /// <param name="items">The items.</param>
     public static void AddRange(this ItemCollection This, IEnumerable items) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(items != null);
+#endif
       foreach (var item in items)
         This.Add(item);
     }

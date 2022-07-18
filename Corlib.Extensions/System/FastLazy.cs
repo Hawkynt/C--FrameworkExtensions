@@ -18,7 +18,12 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -47,7 +52,7 @@ namespace System {
     /// </summary>
     /// <param name="factory">The factory.</param>
     public FastLazy(Func<TValue> factory) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(factory != null);
 #endif
 

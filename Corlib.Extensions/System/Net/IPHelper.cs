@@ -19,9 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.ComponentModel;
 using System.Diagnostics;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -389,7 +393,7 @@ namespace System.Net {
     /// <param name="rowProcessor">The row processor.</param>
     /// <returns>The connections from the table.</returns>
     private static Connection[] _GetTable<TRowtype>(Func<IntPtr, dword, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
-#if !NET40_OR_GREATER
+#if !SUPPORTS_CONTRACTS
       Debug.Assert(call != null);
       Debug.Assert(rowProcessor != null);
 #else

@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.IO {
 
@@ -37,8 +43,10 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <returns>All read bytes.</returns>
     public static byte[] ReadAllBytes(this BinaryReader @this, uint bufferSize = 65536) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(bufferSize > 0);
+#endif
       using (var result = new MemoryStream()) {
         var buffer = new byte[bufferSize];
 

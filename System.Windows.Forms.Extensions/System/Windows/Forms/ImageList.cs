@@ -19,9 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
 using System.Linq;
 using System.IO;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -38,7 +43,7 @@ namespace System.Windows.Forms {
 #endif
   static partial class ImageListExtensions {
     public static void SaveToDirectory(this ImageList @this, string directoryName) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       var images = @this.Images;

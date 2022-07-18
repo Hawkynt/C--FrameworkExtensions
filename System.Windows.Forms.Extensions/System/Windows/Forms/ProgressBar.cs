@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Windows.Forms {
 
@@ -35,7 +42,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This ProgressBar.</param>
     /// <param name="percentage">The percentage to set.</param>
     public static void SetPercent(this ProgressBar This, double percentage) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(percentage, 0), 100) * 0.01d);
     }
 
@@ -45,7 +54,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This ProgressBar.</param>
     /// <param name="value">The normalized value to set (0&lt;x&lt;1).</param>
     public static void SetNormalizedValue(this ProgressBar This, double value) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
     }
 
@@ -56,7 +67,9 @@ namespace System.Windows.Forms {
     /// <param name="current">The current value.</param>
     /// <param name="max">The maximum value to assume.</param>
     public static void SetValue(this ProgressBar This, double current, double max) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       This.SetPercent(max == 0 ? 0 : (current / max * 100));
     }
 
@@ -68,7 +81,9 @@ namespace System.Windows.Forms {
     /// <param name="min">The minimum value to assume.</param>
     /// <param name="max">The maximum value to assume.</param>
     public static void SetValue(this ProgressBar This, double current, double min, double max) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var newMax = max - min;
       This.SetPercent(newMax == 0 ? 0 : ((current - min) / newMax) * 100);
     }

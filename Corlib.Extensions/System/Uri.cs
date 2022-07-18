@@ -19,10 +19,16 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.IO;
 using System.Net;
 using System.Text;
@@ -37,8 +43,11 @@ namespace System {
 #if COMPILE_TO_EXTENSION_DLL
   public
 #else
-  internal
+
+  interna
+
 #endif
+
   static partial class UriExtensions {
 
     private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new Dictionary<HttpRequestHeader, string> {
@@ -60,7 +69,9 @@ namespace System {
     /// The text of the target url
     /// </returns>
     public static string ReadAllText(this Uri This, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       Trace.WriteLine(This.AbsoluteUri);
 
       if (This.IsFile)
@@ -97,7 +108,9 @@ namespace System {
     }
 
     public static Uri GetResponseUri(this Uri This, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       Trace.WriteLine(This.AbsoluteUri);
 
       if (This.IsFile)
@@ -162,7 +175,9 @@ namespace System {
     /// <param name="retryCount">The retry count.</param>
     /// <returns>The text of the target url</returns>
     public static async Task<string> ReadAllTextTaskAsync(this Uri This, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null) {
-      Contract.Requires(This != null);
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(This != null);
+#endif
 
       if (This.IsFile)
         return await (new Task<string>(() => encoding == null ? File.ReadAllText(This.AbsolutePath) : File.ReadAllText(This.AbsolutePath, encoding)));
@@ -322,7 +337,9 @@ namespace System {
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public static Uri Path(this Uri This, string path) {
+#if SUPPORTS_CONTRACTS
       Contract.Ensures(Contract.Result<Uri>() != null);
+#endif
       const char SLASH = '/';
       return string.IsNullOrWhiteSpace(path)
         ? This

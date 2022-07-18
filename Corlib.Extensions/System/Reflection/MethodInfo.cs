@@ -18,7 +18,12 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -62,7 +67,7 @@ namespace System.Reflection {
     /// <param name="type">The type.</param>
     /// <returns>A tidied version of the type name.</returns>
     private static string _tidyTypeName(Type type) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(type != null);
 #endif
 
@@ -138,7 +143,7 @@ namespace System.Reflection {
     /// <param name="This">This MethodInfo.</param>
     /// <returns>The full signature of the method.</returns>
     public static string GetFullSignature(this MethodInfo This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var sb = new StringBuilder();

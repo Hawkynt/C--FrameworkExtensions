@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 #if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
 #endif
@@ -62,7 +68,9 @@ namespace System {
     /// <param name="allowedCharset">The allowed charset.</param>
     /// <returns></returns>
     public static string GeneratePassword(this Random This, qword minimumLength = 8, qword maximumLength = 14, bool useLetters = true, bool allowCaseSensitive = true, bool allowNumbers = true, bool allowSpecialChars = true, string allowedCharset = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
 
       // generate a length
       if (maximumLength < minimumLength)

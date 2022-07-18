@@ -21,7 +21,13 @@
 
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETSTANDARD || NETCOREAPP
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.Concurrent {
 
@@ -37,7 +43,9 @@ namespace System.Collections.Concurrent {
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This ConcurrentQueue.</param>
     public static void Clear<TValue>(this ConcurrentQueue<TValue> This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       TValue dummy;
       while (This.TryDequeue(out dummy))
         ;

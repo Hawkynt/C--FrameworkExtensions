@@ -19,9 +19,15 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -119,7 +125,9 @@ namespace System.Windows.Forms {
     /// <param name="text">The text.</param>
     /// <param name="color">The text color</param>
     public static void AppendTextAndScroll(this RichTextBox @this, string text, Color? color = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
 
       if (string.IsNullOrEmpty(text))
         return;
@@ -145,7 +153,9 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="this">This RichTextBox.</param>
     public static void ScrollToEnd(this RichTextBox @this) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       var start = @this.SelectionStart;
       var length = @this.SelectionLength;
       @this.SelectionStart = @this.Text.Length;
@@ -297,7 +307,7 @@ namespace System.Windows.Forms {
         return;
 
       var position = lines.Take(firstLineStillStanding).Sum(l => l.Length + 2);
-      @this.Select(0,position - 1);
+      @this.Select(0, position - 1);
       @this.SelectedText = string.Empty;
       @this.SelectionStart = @this.TextLength;
       @this.SelectionLength = 0;

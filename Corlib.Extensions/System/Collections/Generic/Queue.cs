@@ -18,7 +18,12 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -38,7 +43,7 @@ namespace System.Collections.Generic {
     /// <param name="This">This Queue.</param>
     /// <param name="items">The items to enqeue.</param>
     public static void AddRange<TItem>(this Queue<TItem> This, IEnumerable<TItem> items) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(items != null);
 #endif
@@ -70,7 +75,7 @@ namespace System.Collections.Generic {
     /// <param name="result">The result.</param>
     /// <returns><c>true</c> if an item could be dequeued; otherwise, <c>false</c>.</returns>
     public static bool TryDequeue<TItem>(this Queue<TItem> @this, out TItem result) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       if (@this.Count < 1) {

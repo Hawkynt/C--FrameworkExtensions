@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.ComponentModel;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -76,7 +80,7 @@ namespace System {
       where TAttribute : Attribute {
 
       var type = field.GetType();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assert(type.IsEnum, "Only supported on enumerations");
 #endif
 

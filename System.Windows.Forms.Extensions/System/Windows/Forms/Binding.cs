@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Windows.Forms {
 
@@ -36,8 +42,10 @@ namespace System.Windows.Forms {
     /// <param name="This">This Binding.</param>
     /// <param name="converter">The converter.</param>
     public static void AddTypeConverter<TType>(this Binding This, Func<object, TType> converter) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(converter != null);
+#endif
       This.Format += (s, e) => {
         if (e.DesiredType != typeof(TType))
           return;

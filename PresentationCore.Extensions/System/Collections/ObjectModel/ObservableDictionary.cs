@@ -41,7 +41,13 @@ namespace System.Collections.ObjectModel {
 
     private readonly Dispatcher _dispatcher;
 
-    #region Constructor
+#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+    private delegate void Net40DelegateClear();
+    private delegate void Net40DelegateAdd1(KeyValuePair<TKey, TValue> item);
+    private delegate void Net40DelegateAdd2(TKey key, TValue value);
+#endif
+
+#region Constructor
 
     public ObservableDictionary(Dispatcher dispatcher = null) {
       this._dictionary = new Dictionary<TKey, TValue>();
@@ -59,7 +65,7 @@ namespace System.Collections.ObjectModel {
       this._dictionary = new Dictionary<TKey, TValue>(capacity);
     }
 
-    #endregion
+#endregion
 
     public void Add(KeyValuePair<TKey, TValue> item) {
       if (this._dispatcher.CheckAccess()) {
@@ -68,7 +74,15 @@ namespace System.Collections.ObjectModel {
         this.OnCollectionChanged(NotifyCollectionChangedAction.Add, item.Value);
         this.AddNotifyEvents(item.Value);
       } else {
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
         this._dispatcher.Invoke(() => this.Add(item));
+#else
+        void Do(KeyValuePair<TKey, TValue> item1) {
+          this.Add(item1);
+        }
+
+        this._dispatcher.Invoke(new Net40DelegateAdd1(Do));
+#endif
       }
     }
 
@@ -80,9 +94,18 @@ namespace System.Collections.ObjectModel {
         this._dictionary.Clear();
         this.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
       } else {
-        this._dispatcher.Invoke(this.Clear);
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+        this._dispatcher.Invoke(() => this.Clear());
+#else
+        void Do() {
+          this.Clear();
+        }
+
+        this._dispatcher.Invoke(new Net40DelegateClear(Do));
+#endif
       }
     }
+
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => this._dictionary.Contains(item);
 
@@ -118,7 +141,16 @@ namespace System.Collections.ObjectModel {
         this.OnCollectionChanged(NotifyCollectionChangedAction.Add, value);
         this.AddNotifyEvents(value);
       } else {
-        this._dispatcher.Invoke(() => this.Add(key, value));
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+      this._dispatcher.Invoke(() => this.Add(key, value));
+#else
+        void Do(TKey tKey, TValue tValue) {
+          this.Add(tKey, tValue);
+        }
+        
+        this._dispatcher.Invoke(new Net40DelegateAdd2(Do));
+#endif
+
       }
     }
 
@@ -163,7 +195,7 @@ namespace System.Collections.ObjectModel {
 
     public ICollection<TValue> Values => this._dictionary.Values;
 
-    #region Enumerator
+#region Enumerator
 
     IEnumerator IEnumerable.GetEnumerator() {
       return this.GetEnumerator();
@@ -173,9 +205,9 @@ namespace System.Collections.ObjectModel {
       return this._dictionary.GetEnumerator();
     }
 
-    #endregion
+#endregion
 
-    #region Notify
+#region Notify
 
     public event NotifyCollectionChangedEventHandler CollectionChanged;
     public event PropertyChangedEventHandler PropertyChanged;
@@ -210,9 +242,9 @@ namespace System.Collections.ObjectModel {
         this.CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, newItem, oldItem));
     }
 
-    #endregion
+#endregion
 
-    #region Private
+#region Private
 
     private void AddNotifyEvents(TValue item) {
       if (item is INotifyCollectionChanged collectionChanged)
@@ -235,6 +267,6 @@ namespace System.Collections.ObjectModel {
     private void OnCollectionChangedEventHandler(object s, NotifyCollectionChangedEventArgs e) =>
       this.OnPropertyChanged("value");
 
-    #endregion
+#endregion
   }
 }

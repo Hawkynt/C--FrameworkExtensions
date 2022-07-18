@@ -19,7 +19,11 @@
 */
 #endregion
 
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -39,7 +43,7 @@ namespace System.Reflection {
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetValue(this PropertyInfo This, object instance, object value) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       try {
@@ -56,7 +60,7 @@ namespace System.Reflection {
     /// <param name="value">The value.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetValue(this PropertyInfo This, object value) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       return This.TrySetValue(null, value);
@@ -71,7 +75,7 @@ namespace System.Reflection {
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The value of the property from the given object or the default value.</returns>
     public static object GetValueOrDefault(this PropertyInfo This, object value, object[] index = null, object defaultValue = null) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(value != null);
 #endif

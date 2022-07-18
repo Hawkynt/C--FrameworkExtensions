@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Runtime.InteropServices;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -95,7 +101,9 @@ namespace System.Threading {
     /// <param name="This">This Thread.</param>
     /// <returns>A disposable object that automatically releases from the low-io mode upon destruction.</returns>
     public static IDisposable IoBackgroundMode(this Thread This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(Thread.CurrentThread == This);
+#endif
       return (new IoBackgroundModeToken());
     }
   }

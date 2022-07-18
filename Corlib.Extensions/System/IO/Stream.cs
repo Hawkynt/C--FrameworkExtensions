@@ -21,15 +21,16 @@
 
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Diagnostics;
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
 using System.Runtime.InteropServices;
-#if !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
-using System.Runtime.Remoting.Messaging;
-#endif
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace System.IO {
     /// <param name="This">This Stream.</param>
     /// <param name="data">The data to write.</param>
     public static void Write(this Stream This, byte[] data) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(data != null);
       Contract.Requires(This.CanWrite);
@@ -64,7 +65,7 @@ namespace System.IO {
     /// <param name="result">The array where to store the results.</param>
     /// <returns>The number of bytes actually read.</returns>
     public static int Read(this Stream This, byte[] result) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(result != null);
       Contract.Requires(This.CanRead);
@@ -79,7 +80,7 @@ namespace System.IO {
     /// <param name="length">The number of bytes to read.</param>
     /// <returns>The number of bytes actually read.</returns>
     public static byte[] ReadBytes(this Stream This, int length) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(length >= 0);
       Contract.Requires(This.CanRead);
@@ -99,7 +100,7 @@ namespace System.IO {
     ///   used (default).
     /// </param>
     public static void Write(this Stream This, int value, bool bigEndian = false) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(This.CanWrite);
 #endif
@@ -126,7 +127,7 @@ namespace System.IO {
     /// </param>
     /// <returns>The int-value that was read.</returns>
     public static int ReadInt(this Stream This, bool bigEndian = false) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(This.CanRead);
 #endif
@@ -149,7 +150,7 @@ namespace System.IO {
     ///   <c>true</c> if the stream was read/written to its end; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsAtEndOfStream(this Stream This) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       return This.Position >= This.Length;
@@ -161,7 +162,7 @@ namespace System.IO {
     /// <param name="This">This Stream.</param>
     /// <returns>The content of the stream.</returns>
     public static byte[] ToArray(this Stream This) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       using (var data = new MemoryStream()) {
@@ -177,7 +178,7 @@ namespace System.IO {
     /// <param name="encoding">The encoding.</param>
     /// <returns>The text from the stream.</returns>
     public static string ReadAllText(this Stream This, Encoding encoding = null) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       if (encoding == null)
@@ -193,7 +194,7 @@ namespace System.IO {
     /// <param name="data">The data.</param>
     /// <param name="encoding">The encoding.</param>
     public static void WriteAllText(this Stream @this, string data, Encoding encoding = null) {
-#if NET45_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       if (encoding == null)

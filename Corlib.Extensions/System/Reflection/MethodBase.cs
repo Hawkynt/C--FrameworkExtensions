@@ -21,8 +21,12 @@
 
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Reflection.Emit;
@@ -36,7 +40,7 @@ namespace System.Reflection {
   internal
 #endif
   static class MethodBaseExtensions {
-    #region nested types
+#region nested types
 
     public class ILInstruction {
       // Fields
@@ -208,7 +212,7 @@ namespace System.Reflection {
     /// <param name="This">This MethodBase.</param>
     /// <returns>A list of instructions.</returns>
     public static ILInstruction[] GetInstructions(this MethodBase This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var body = This.GetMethodBody();
@@ -404,7 +408,7 @@ namespace System.Reflection {
     ///   <c>true</c> if the given method was compiler generated; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsCompilerGenerated(this MethodBase This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var customAttributes = This.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
@@ -419,7 +423,7 @@ namespace System.Reflection {
     ///   <c>true</c> if this is a getter or setter; otherwise, <c>false</c>.
     /// </returns>
     public static bool IsGetterOrSetter(this MethodBase This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var name = This.Name;

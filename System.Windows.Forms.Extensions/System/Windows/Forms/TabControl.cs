@@ -19,6 +19,10 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -26,7 +30,7 @@ using System.Linq;
 using DrawingSize = System.Drawing.Size;
 // ReSharper disable UnusedMember.Global
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -42,13 +46,13 @@ namespace System.Windows.Forms {
   static partial class TabControlExtensions {
 
     public static void AddImageToImageList(this TabControl @this, Image image, string key) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(image != null);
       Contract.Requires(!string.IsNullOrEmpty(key));
 #endif
 
       var imageList = @this.ImageList;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assert(imageList != null, "Can only work on TabControls with assigned ImageList.");
 #endif
 
@@ -111,7 +115,7 @@ namespace System.Windows.Forms {
     /// <param name="page">The page.</param>
     /// <param name="color">The color.</param>
     public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(page != null);
 #endif

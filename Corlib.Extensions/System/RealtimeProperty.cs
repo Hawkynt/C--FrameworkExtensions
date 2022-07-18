@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Threading;
 
 namespace System {
@@ -44,7 +50,9 @@ namespace System {
     private bool _gotValueAtLeastOnce;
 
     public RealtimeProperty(Func<TType> getter, Action<TType> setter = null, TimeSpan? timeout = null, bool isAsyncSetter = false) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(getter != null);
+#endif
       this._getter = getter;
       this._setter = setter;
       this._isAsyncSetter = isAsyncSetter;

@@ -19,8 +19,13 @@
 */
 #endregion
 
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if CONTRACTS_FULL
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Text;
@@ -67,7 +72,7 @@ namespace System {
 
     #region Quoted Printable
     public static string ToQuotedPrintableString(byte[] data) {
-#if CONTRACTS_FULL
+#if SUPPORTS_CONTRACTS
       Contract.Requires(data != null);
 #else
       Diagnostics.Debug.Assert(data!=null);
@@ -84,7 +89,7 @@ namespace System {
     }
 
     public static byte[] FromQuotedPrintableString(string data) {
-#if CONTRACTS_FULL
+#if SUPPORTS_CONTRACTS
       Contract.Requires(data != null);
 #else
       Diagnostics.Debug.Assert(data!=null);
@@ -109,7 +114,7 @@ namespace System {
     /// <param name="data">The data.</param>
     /// <returns>The encoded string.</returns>
     public static string ToBase91String(byte[] data) {
-#if CONTRACTS_FULL
+#if SUPPORTS_CONTRACTS
       Contract.Requires(data != null);
 #else
       Diagnostics.Debug.Assert(data!=null);
@@ -148,7 +153,7 @@ namespace System {
     /// <param name="encoded">The encoded string.</param>
     /// <returns>The data.</returns>
     public static byte[] FromBase91String(string encoded) {
-#if CONTRACTS_FULL
+#if SUPPORTS_CONTRACTS
       Contract.Requires(encoded != null);
 #else
       Diagnostics.Debug.Assert(encoded!=null);

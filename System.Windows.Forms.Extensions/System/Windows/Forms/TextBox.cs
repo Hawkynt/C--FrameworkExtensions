@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using word = System.UInt32;
 namespace System.Windows.Forms {
@@ -35,7 +42,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This TextBox.</param>
     /// <param name="text">The text.</param>
     public static void AppendTextAndScroll(this TextBox This, string text) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       This.AppendText(text ?? string.Empty);
     }
 
@@ -45,7 +54,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This TextBox.</param>
     /// <param name="count">The number of lines to keep.</param>
     public static void KeepLastLines(this TextBox This, word count) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
       var linesToRemove = Math.Max(0, lines.Count - (int)count);
       This.Text = string.Empty;
@@ -58,7 +69,9 @@ namespace System.Windows.Forms {
     /// <param name="This">This TextBox.</param>
     /// <param name="count">The number of lines to keep.</param>
     public static void KeepFirstLines(this TextBox This, word count) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
       This.Text = string.Empty;
       This.AppendText(string.Join(Environment.NewLine, lines.Take((int)count)));

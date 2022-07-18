@@ -22,7 +22,6 @@
 // as long as fake db is defined, this will not execute any statement on the sql server, instead it will print statement to the console and do not use sql parameters, so values can be seen
 #undef FAKE_DB
 
-
 #if FAKE_DB
 #define DO_NOT_USE_PARAMETERS
 #else
@@ -185,9 +184,17 @@ namespace System.Data.SqlClient {
       // if there are any columns to insert
       if (realValues != null && realValues.Any()) {
         _AppendToBuilders(" (", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+        _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.ColumnName.MsSqlIdentifierEscape()).ToArray()), sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+#else
         _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.ColumnName.MsSqlIdentifierEscape())), sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+#endif
         _AppendToBuilders(") VALUES (", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
+#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+        _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.Value.MsSqlDataEscape()).ToArray()), sqlCommandTextWithoutParameters);
+#else
         _AppendToBuilders(string.Join(", ", realValues.Select((i, n) => i.Value.MsSqlDataEscape())), sqlCommandTextWithoutParameters);
+#endif
 
 #if !DO_NOT_USE_PARAMETERS
         _AppendToBuilders(string.Join(", ", realValues.Select(i => {
@@ -204,7 +211,7 @@ namespace System.Data.SqlClient {
             This.Parameters[name].IsNullable = true;
 
           return name;
-        })), sqlCommandTextWithParameters);
+        }).ToArray()), sqlCommandTextWithParameters);
 #endif
         _AppendToBuilders(")", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
       }

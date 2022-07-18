@@ -19,7 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
+
 using System.Text;
 using word = System.UInt16;
 using dword = System.UInt32;
@@ -33,13 +40,17 @@ namespace System {
 #endif
   static partial class Int32Extensions {
     public static void Times(this int This,Action action) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action!=null);
+#endif
       while(This-->0)
         action();
     }
     
     public static void Times(this int This,Action<int> action) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(action!=null);
+#endif
       for(var i=0;i<This;i++)
         action(i);
     }

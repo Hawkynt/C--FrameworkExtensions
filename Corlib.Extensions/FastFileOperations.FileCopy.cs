@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Concurrent;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Threading;
 
@@ -176,7 +182,9 @@ namespace System.IO {
       }
 
       private void _ReleaseReadChunk(Chunk chunk) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(chunk != null);
+#endif
         Interlocked.Add(ref this._bytesRead, chunk.length);
         this._CreateReport(ReportType.FinishedRead, 0, chunk.offset, chunk.length);
         this._readAheadCache.Enqueue(chunk);
@@ -196,7 +204,9 @@ namespace System.IO {
       }
 
       private void _ReleaseWriteChunk(Chunk chunk) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(chunk != null);
+#endif
         var result = Interlocked.Add(ref this._bytesTransferred, chunk.length);
         this._CreateReport(ReportType.FinishedWrite, 0, chunk.offset, chunk.length);
 
@@ -493,8 +503,10 @@ namespace System.IO {
     /// <exception cref="System.IO.FileNotFoundException">When source file does not exist</exception>
     /// <exception cref="System.IO.IOException">When target file exists and should not overwrite</exception>
     public static IFileReport CopyToAsync(this FileInfo This, FileInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, Action<IFileSystemReport> callback = null, int allowedStreams = 1, int bufferSize = -1) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(target != null);
+#endif
 
       if (!File.Exists(This.FullName))
         throw new FileNotFoundException(string.Format(_EX_SOURCE_FILE_DOES_NOT_EXIST, This.FullName));

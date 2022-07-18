@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -119,7 +123,7 @@ namespace System.IO {
     /// <param name="this">This DirectoryInfo.</param>
     /// <exception cref="System.NotSupportedException">Unknown FileSystem item</exception>
     public static void Clear(this DirectoryInfo @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       foreach (var item in @this.EnumerateFileSystemInfos()) {
 #else
@@ -147,7 +151,7 @@ namespace System.IO {
     /// <param name="this">This DirectoryInfo.</param>
     /// <returns>The number of bytes in this directory</returns>
     public static long GetSize(this DirectoryInfo @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       // if less than 4 cores, use sequential approach
@@ -311,7 +315,7 @@ namespace System.IO {
     /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.Refresh();
@@ -337,7 +341,7 @@ namespace System.IO {
     /// <param name="creationTimeUtc">The date&amp;time.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.Refresh();
@@ -363,7 +367,7 @@ namespace System.IO {
     /// <param name="attributes">The attributes.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.Refresh();
@@ -393,7 +397,7 @@ namespace System.IO {
     ///   <c>true</c> on success; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreate(this DirectoryInfo @this, bool recursive) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       if (@this.Exists)
@@ -419,7 +423,7 @@ namespace System.IO {
     /// <param name="recursive">if set to <c>true</c> deletes recursive.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryDelete(this DirectoryInfo @this, bool recursive = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       if (!@this.Exists)
@@ -544,7 +548,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     public static void CreateDirectory(this DirectoryInfo This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       if (This.Parent != null && !This.Exists)
@@ -563,7 +567,7 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="target">The target directory to place files.</param>
     public static void CopyTo(this DirectoryInfo This, DirectoryInfo target) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(target != null);
 #endif
@@ -586,7 +590,7 @@ namespace System.IO {
           }
 
           var directoryInfo = fileSystemInfo as DirectoryInfo;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
 #endif
 
@@ -602,7 +606,7 @@ namespace System.IO {
     /// <param name="name">The name.</param>
     /// <returns></returns>
     public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo This, string name) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       var fullPath = Path.Combine(This.FullName, name);
@@ -666,7 +670,7 @@ namespace System.IO {
     /// <param name="extension">The extension; defaults to '.tmp'.</param>
     /// <returns>A temporary file</returns>
     public static FileInfo GetTempFile(this DirectoryInfo This, string extension = null) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
@@ -699,7 +703,7 @@ namespace System.IO {
     /// <param name="attributes">The attributes; defaults to FileAttributes.Normal.</param>
     /// <returns>A FileInfo instance or <c>null</c> on error.</returns>
     public static FileInfo TryCreateFile(this DirectoryInfo This, string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 

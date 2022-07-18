@@ -18,7 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
+#if NET20_OR_GREATER
 using System.Data;
 namespace System.Web.UI.WebControls {
 
@@ -43,3 +43,5 @@ namespace System.Web.UI.WebControls {
     }
   }
 }
+
+#endif

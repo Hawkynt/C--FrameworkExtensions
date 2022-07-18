@@ -19,9 +19,15 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.ComponentModel;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -109,7 +115,9 @@ namespace System.IO {
     /// <param name="mask">The mask.</param>
     /// <returns>The compiled regex.</returns>
     private static Regex _ConvertMaskToRegex(string mask) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(mask != null);
+#endif
       mask = mask.Replace("\\", "\\\\");
       mask = mask.Replace("[", "\\[");
       mask = mask.Replace("]", "\\]");

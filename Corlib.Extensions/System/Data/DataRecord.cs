@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Data {
 
@@ -36,8 +43,10 @@ namespace System.Data {
     /// <param name="fieldName">Name of the field.</param>
     /// <returns>The value from the database or the default value.</returns>
     public static TType GetValueOrDefault<TType>(this IDataRecord This, string fieldName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(fieldName != null);
+#endif
       var value = This[fieldName];
       return ((value is DBNull || value == null) ? default(TType) : (TType)value);
     }
@@ -52,8 +61,10 @@ namespace System.Data {
     /// The value from the database or the default value.
     /// </returns>
     public static TType GetValueOrDefault<TType>(this IDataRecord This, string fieldName, TType defaultValue) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(fieldName != null);
+#endif
       var value = This[fieldName];
       return ((value is DBNull || value == null) ? defaultValue : (TType)value);
     }

@@ -19,8 +19,12 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
@@ -244,13 +248,19 @@ namespace System.Drawing {
     ;
 
     #region private methods
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
 #if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static byte _ClipToByte(int value) => (byte)Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value));
 
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
 #if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static byte _ClipToByte(double value) => _ClipToByte((int)value);
 

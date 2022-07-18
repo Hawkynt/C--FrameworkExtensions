@@ -216,8 +216,6 @@ del ""%~0""
     /// <param name="this">This AppDomain.</param>
     /// <exception cref="System.Exception">Semaphore already present?</exception>
     public static void RerunInTemporaryDirectory(this AppDomain @this) {
-
-
       var executable = GetExecutable(@this);
       var semaphoreName = executable.Name;
 

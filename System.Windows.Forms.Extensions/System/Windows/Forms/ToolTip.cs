@@ -18,7 +18,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 
 namespace System.Windows.Forms {
@@ -37,8 +44,10 @@ namespace System.Windows.Forms {
     /// <param name="baseControl">The base control.</param>
     /// <param name="toolTipText">The tool tip text.</param>
     public static void SetToolTips(this ToolTip This, Control baseControl, string toolTipText) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(baseControl != null);
+#endif
       This.SetToolTip(baseControl, toolTipText);
       foreach (var c in baseControl.Controls.Cast<Control>().Where(c => c != null))
         This.SetToolTip(c, toolTipText);

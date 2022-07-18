@@ -19,8 +19,6 @@
 */
 #endregion
 
-using System.Linq;
-
 namespace System.ComponentModel {
   /// <summary>
   /// Tells the propertygrid what the minimum value for this number is.

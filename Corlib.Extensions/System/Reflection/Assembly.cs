@@ -21,8 +21,14 @@
 
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.IO;
 using System.Linq;
 
@@ -41,8 +47,10 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>The resource stream.</returns>
     public static Stream GetResourceFileStream(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(fileName != null);
+#endif
       var resourceName = string.Format(
         "{0}.{1}",
         This
@@ -64,7 +72,9 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>A usable stream reader.</returns>
     public static StreamReader GetResourceStreamReader(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (new StreamReader(This.GetResourceFileStream(fileName)));
     }
 
@@ -75,7 +85,9 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>A usable binary reader.</returns>
     public static BinaryReader GetResourceBinaryReader(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (new BinaryReader(This.GetResourceFileStream(fileName)));
     }
 
@@ -86,7 +98,9 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>All text from the resource.</returns>
     public static string ReadResourceAllText(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       using (var reader = This.GetResourceStreamReader(fileName))
         return (reader.ReadToEnd());
     }
@@ -98,7 +112,9 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>All lines from the resource.</returns>
     public static IEnumerable<string> ReadResourceAllLines(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       return (
         This
         .ReadResourceAllText(fileName)
@@ -116,7 +132,9 @@ namespace System.Reflection {
     /// <param name="fileName">Name of the file.</param>
     /// <returns>All bytes from the resource.</returns>
     public static byte[] ReadResourceAllBytes(this Assembly This, string fileName) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       using (var reader = This.GetResourceBinaryReader(fileName))
         return (reader.ReadAllBytes());
     }

@@ -23,7 +23,6 @@
 // ReSharper disable PartialTypeWithSinglePart
 
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace System {
 
@@ -127,7 +126,7 @@ namespace System {
     public static DateTime Max(this DateTime @this, DateTime other) => other > @this ? other : @this;
 
     /// <summary>
-    /// Retuns the one that is less.
+    /// Returns the one that is less.
     /// </summary>
     /// <param name="this">This DateTime</param>
     /// <param name="other">The comparand</param>

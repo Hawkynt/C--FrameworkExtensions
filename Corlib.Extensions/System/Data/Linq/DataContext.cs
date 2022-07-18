@@ -19,10 +19,15 @@
 */
 #endregion
 #if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
@@ -47,7 +52,7 @@ namespace System.Data.Linq {
     /// <param name="this">This DataContext.</param>
     /// <returns>String containing the sql statements.</returns>
     public static string GetChangeSqlStatement(this DataContext @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       using (var memStream = new MemoryStream())

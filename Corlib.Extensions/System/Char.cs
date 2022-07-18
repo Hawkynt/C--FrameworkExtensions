@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS 
 using System.Diagnostics.Contracts;
+#endif
 using System.Globalization;
 using System.Linq;
 #if NET45_OR_GREATER
@@ -43,7 +49,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -56,7 +62,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -69,7 +75,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -84,7 +90,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -99,7 +105,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is upper case; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -114,7 +120,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is lower case; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -129,7 +135,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the specified char is a letter; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -142,7 +148,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The upper-case char.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -156,7 +162,7 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The upper-case char.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -169,7 +175,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Char.</param>
     /// <returns>The lower-case char.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -183,7 +189,7 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="culture">The culture ot use.</param>
     /// <returns>The lower-case char.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -199,7 +205,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER
@@ -213,7 +219,7 @@ namespace System {
     /// <param name="this">This Char.</param>
     /// <param name="count">The count.</param>
     /// <returns>A new string containing the given character the specified times.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if NET45_OR_GREATER

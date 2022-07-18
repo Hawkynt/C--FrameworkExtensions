@@ -19,7 +19,12 @@
 */
 #endregion
 
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Diagnostics.CodeAnalysis;
@@ -147,7 +152,7 @@ namespace System.IO {
     /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
     /// <returns>The icon used by the windows explorer for this file.</returns>
     public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 

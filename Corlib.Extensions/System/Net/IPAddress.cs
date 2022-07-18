@@ -19,13 +19,16 @@
 */
 #endregion
 
-using System.Linq;
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 #if NET45_OR_GREATER
 using System.Threading.Tasks;
 #endif
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #else
 using System.Diagnostics;
@@ -58,7 +61,7 @@ namespace System.Net {
     /// <param name="this">This IPAddress.</param>
     /// <returns>The host name or <c>null</c>.</returns>
     public static string GetHostName(this IPAddress @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
@@ -78,7 +81,7 @@ namespace System.Net {
     /// <param name="This">This IPAddress.</param>
     /// <returns>The host name or <c>null</c>.</returns>
     public static async Task<string> GetHostNameAsync(this IPAddress This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       try {

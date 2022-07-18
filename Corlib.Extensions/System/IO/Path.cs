@@ -19,7 +19,11 @@
 */
 #endregion
 
-#if NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Collections.Concurrent;
@@ -284,7 +288,7 @@ namespace System.IO {
 
       var path = baseDirectory ?? Path.GetTempPath();
       name = Path.GetFileName(name);
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assert(name != null, "Filename went <null>");
 #endif
       var fullName = Path.Combine(path, name);
@@ -310,7 +314,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateFile(string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(fileName != null);
 #endif
       if (File.Exists(fileName))
@@ -372,7 +376,7 @@ namespace System.IO {
 
           tempName.Append(SUFFIX);
           result = Path.Combine(path, tempName.ToString());
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Assume(!string.IsNullOrEmpty(result));
 #endif
         } while (!TryCreateDirectory(result));
@@ -382,13 +386,13 @@ namespace System.IO {
 
       // a name is given, so try to accommodate this
       name = Path.GetFileName(name);
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assert(name != null, "DirectoryName went <null>");
 #endif
       var fullName = Path.Combine(path, name);
 
       // if we could use the given name, return it
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Assume(!string.IsNullOrEmpty(fullName));
 #endif
       if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
@@ -409,7 +413,7 @@ namespace System.IO {
     ///   <c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(!string.IsNullOrEmpty(pathName));
 #endif
       if (Directory.Exists(pathName))
@@ -506,7 +510,7 @@ namespace System.IO {
 
         // extract share
         if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Assume(value.Length > 1);
 #endif
           var idx = value.IndexOf(_pathSeparator, 1);

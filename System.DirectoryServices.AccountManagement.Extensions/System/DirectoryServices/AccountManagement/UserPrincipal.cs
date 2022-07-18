@@ -17,11 +17,19 @@
     along with Hawkynt's .NET Framework extensions.  
     If not, see <http://www.gnu.org/licenses/>.
 */
+
 #endregion
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETSTANDARD || NETCOREAPP
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -46,7 +54,9 @@ namespace System.DirectoryServices.AccountManagement {
     /// The full name.
     /// </returns>
     public static string GetFullName(this UserPrincipal @this, bool surnameFirst = false) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       return surnameFirst
           ? string.Join(", ", new[] { @this.Surname, string.Join(" ", new[] { @this.GivenName, @this.MiddleName }.Where(t => !string.IsNullOrWhiteSpace(t))) }.Where(t => !string.IsNullOrWhiteSpace(t)))
           : string.Join(" ", new[] { @this.GivenName, @this.MiddleName, @this.Surname }.Where(t => !string.IsNullOrWhiteSpace(t)))
@@ -390,3 +400,4 @@ namespace System.DirectoryServices.AccountManagement {
 
   }
 }
+#endif

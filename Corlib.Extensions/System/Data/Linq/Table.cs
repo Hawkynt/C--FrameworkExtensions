@@ -19,9 +19,13 @@
 */
 #endregion
 #if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-#if NET40_OR_GREATER
-using System.Diagnostics.Contracts;
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
+using System.Diagnostics.Contracts;
 #endif
 
 namespace System.Data.Linq {
@@ -34,7 +38,7 @@ namespace System.Data.Linq {
     /// <param name="this">This Table.</param>
     /// <param name="entity">The entity.</param>
     public static void UpdateEntity<TEntity>(this Table<TEntity> @this, TEntity entity) where TEntity : class {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(entity != null);
 #endif
@@ -43,7 +47,7 @@ namespace System.Data.Linq {
     }
 
     public static void Reattach<TEntity>(this Table<TEntity> @this, TEntity entity) where TEntity : class {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(entity != null);
 #endif

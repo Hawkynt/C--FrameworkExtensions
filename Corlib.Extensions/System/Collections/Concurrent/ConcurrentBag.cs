@@ -18,8 +18,15 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.Concurrent {
 
@@ -35,7 +42,9 @@ namespace System.Collections.Concurrent {
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <param name="This">This ConcurrentBag.</param>
     public static void Clear<TValue>(this ConcurrentBag<TValue> This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       TValue dummy;
       while (This.TryTake(out dummy)) { }
     }

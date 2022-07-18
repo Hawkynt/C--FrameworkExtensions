@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -45,7 +51,9 @@ namespace System.Text.RegularExpressions {
     /// <param name="matchCount">The max replaces, default to <c>null</c>.</param>
     /// <returns></returns>
     private static string _ReplaceGroup(this Regex regex, string source, string replacement, string groupName, int? groupId, int? matchCount) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
+#endif
       if (source == null)
         return (null);
       var counter = 0;
@@ -67,7 +75,9 @@ namespace System.Text.RegularExpressions {
     /// <param name="replacement">The replacement.</param>
     /// <returns>A new string with all groups replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, string replacement) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
+#endif
       return (regex._ReplaceGroup(source, replacement, null, null, null));
     }
 
@@ -80,8 +90,10 @@ namespace System.Text.RegularExpressions {
     /// <param name="matchCount">The number of matches.</param>
     /// <returns>A new string with the first n matches replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, string replacement, int matchCount) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
       Contract.Requires(matchCount >= 0);
+#endif
       return (regex._ReplaceGroup(source, replacement, null, null, matchCount));
     }
 
@@ -94,8 +106,10 @@ namespace System.Text.RegularExpressions {
     /// <param name="replacement">The replacement.</param>
     /// <returns>A new string with all groups with the given index replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, int groupId, string replacement) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
       Contract.Requires(groupId >= 0);
+#endif
       return (regex._ReplaceGroup(source, replacement, null, groupId, null));
     }
 
@@ -109,9 +123,11 @@ namespace System.Text.RegularExpressions {
     /// <param name="matchCount">The number of matches.</param>
     /// <returns>A new string with the firstn n groups with the given index replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, int groupId, string replacement, int matchCount) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
       Contract.Requires(groupId >= 0);
       Contract.Requires(matchCount >= 0);
+#endif
       return (regex._ReplaceGroup(source, replacement, null, groupId, matchCount));
     }
 
@@ -124,8 +140,10 @@ namespace System.Text.RegularExpressions {
     /// <param name="replacement">The replacement.</param>
     /// <returns>A new string with all groups with the given index replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, string groupName, string replacement) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
       Contract.Requires(groupName != null);
+#endif
       return (regex._ReplaceGroup(source, replacement, groupName, null, null));
     }
 
@@ -139,9 +157,11 @@ namespace System.Text.RegularExpressions {
     /// <param name="matchCount">The number of matches.</param>
     /// <returns>A new string with the firstn n groups with the given index replaced.</returns>
     public static string ReplaceGroup(this Regex regex, string source, string groupName, string replacement, int matchCount) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(regex != null);
       Contract.Requires(groupName != null);
       Contract.Requires(matchCount >= 0);
+#endif
       return (regex._ReplaceGroup(source, replacement, groupName, null, matchCount));
     }
 
@@ -151,7 +171,9 @@ namespace System.Text.RegularExpressions {
     /// <param name="This">This Regex.</param>
     /// <returns>A dictionary with all named groups and their indexes.</returns>
     public static Dictionary<int, string> GetNamedGroups(this Regex This) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var groupNames = This.GetGroupNames();
       var groupNumbers = This.GetGroupNumbers();
       return (Enumerable.Range(0, Math.Min(groupNames.Length, groupNumbers.Length)).Where(i => groupNames[i] != groupNumbers[i].ToString("0")).ToDictionary(i => groupNumbers[i], i => groupNames[i]));

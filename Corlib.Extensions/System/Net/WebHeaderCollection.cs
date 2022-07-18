@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Net {
 
@@ -36,8 +42,10 @@ namespace System.Net {
     /// <param name="This">This WebHeaderCollection.</param>
     /// <param name="headers">The headers.</param>
     public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<string, string>> headers) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
+#endif
       foreach (var kvp in headers)
         This.Add(kvp.Key, kvp.Value);
     }
@@ -48,8 +56,10 @@ namespace System.Net {
     /// <param name="This">This WebHeaderCollection.</param>
     /// <param name="headers">The headers.</param>
     public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
+#endif
       foreach (var kvp in headers)
         This.Add(kvp.Key, kvp.Value);
     }
@@ -60,8 +70,10 @@ namespace System.Net {
     /// <param name="This">This WebHeaderCollection.</param>
     /// <param name="headers">The headers.</param>
     public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpResponseHeader, string>> headers) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
+#endif
       foreach (var kvp in headers)
         This.Add(kvp.Key, kvp.Value);
     }

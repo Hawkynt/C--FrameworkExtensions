@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Threading {
   /// <summary>
@@ -90,7 +96,9 @@ namespace System.Threading {
     /// The result of the conversion.
     /// </returns>
     public static implicit operator TValue(Lazy<TValue> lazy) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(lazy != null);
+#endif
       return (lazy.Value);
     }
     /// <summary>

@@ -30,7 +30,7 @@
 // ReSharper disable RedundantAttributeUsageProperty
 namespace System.Runtime.CompilerServices {
 
-#if !NET45_OR_GREATER
+#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
 
 #if COMPILE_TO_EXTENSION_DLL

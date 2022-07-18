@@ -19,8 +19,15 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
 using System.Collections.Generic;
-using System.Diagnostics;
+#if SUPPORTS_CONTRACTS
+using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -178,8 +185,8 @@ namespace System.Windows.Forms {
     public static ISuspendedLayoutToken PauseLayout(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       return new SuspendedLayoutToken(@this);
@@ -188,8 +195,8 @@ namespace System.Windows.Forms {
     public static ISuspendedRedrawToken PauseRedraw(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       return new SuspendedRedrawToken(@this);
@@ -206,8 +213,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       Async(@this, t => {
@@ -224,8 +231,8 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnForm(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       var result = @this.Location;
@@ -243,8 +250,8 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnScreen(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       return @this.PointToScreen(Drawing.Point.Empty);
@@ -253,8 +260,8 @@ namespace System.Windows.Forms {
     public static Drawing.Point GetLocationOnClient(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       var result = Drawing.Point.Empty;
@@ -280,8 +287,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       return SafelyInvoke(@this, new __ActionWithDummyParameterWrapper { method = task }.Invoke, async);
@@ -300,8 +307,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (function == null)
         throw new ArgumentNullException(nameof(function));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       return SafelyInvoke(@this, new __FunctionWithDummyParameterWrapper<TResult> { function = function }.Invoke);
@@ -322,8 +329,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (function == null)
         throw new ArgumentNullException(nameof(function));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       if (@this.IsDisposed)
@@ -363,8 +370,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       if (@this.IsDisposed)
@@ -424,8 +431,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       if (@this.InvokeRequired) {
@@ -450,8 +457,8 @@ namespace System.Windows.Forms {
         throw new NullReferenceException();
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       if (@this.InvokeRequired) {
@@ -480,8 +487,8 @@ namespace System.Windows.Forms {
         throw new ArgumentNullException(nameof(syncPreAction));
       if (task == null)
         throw new ArgumentNullException(nameof(task));
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       SafelyInvoke(@this, syncPreAction, false);
@@ -503,8 +510,8 @@ namespace System.Windows.Forms {
     public static string GetTextProperty(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       var text = @this.Text;
@@ -523,8 +530,8 @@ namespace System.Windows.Forms {
     public static void ClearChildren(this Control @this, Predicate<Control> predicate = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       var children = @this.Controls;
@@ -555,8 +562,8 @@ namespace System.Windows.Forms {
     public static IEnumerable<Control> AllControls(this Control @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       foreach (Control child in @this.Controls) {
@@ -601,8 +608,8 @@ namespace System.Windows.Forms {
     public static Control Duplicate(this Control @this, string newName = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
-      System.Diagnostics.Contracts.Contract.EndContractBlock();
+#if SUPPORTS_CONTRACTS
+      Contract.EndContractBlock();
 #endif
 
       if (newName == null)
@@ -625,7 +632,9 @@ namespace System.Windows.Forms {
           BorderStyle = ((Label)@this).BorderStyle,
           CausesValidation = @this.CausesValidation,
           ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
           ContextMenu = @this.ContextMenu,
+#endif
           Cursor = @this.Cursor,
           Enabled = @this.Enabled,
           Visible = @this.Visible,
@@ -671,7 +680,9 @@ namespace System.Windows.Forms {
           Tag = @this.Tag,
           CausesValidation = @this.CausesValidation,
           ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
           ContextMenu = @this.ContextMenu,
+#endif
           Cursor = @this.Cursor,
           Enabled = @this.Enabled,
           Visible = @this.Visible,
@@ -719,7 +730,9 @@ namespace System.Windows.Forms {
           Tag = @this.Tag,
           CausesValidation = @this.CausesValidation,
           ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
           ContextMenu = @this.ContextMenu,
+#endif
           Cursor = @this.Cursor,
           Enabled = @this.Enabled,
           Visible = @this.Visible,
@@ -769,7 +782,9 @@ namespace System.Windows.Forms {
           Tag = @this.Tag,
           CausesValidation = @this.CausesValidation,
           ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
           ContextMenu = @this.ContextMenu,
+#endif
           Cursor = @this.Cursor,
           Enabled = @this.Enabled,
           Visible = @this.Visible,
@@ -822,7 +837,9 @@ namespace System.Windows.Forms {
           Tag = @this.Tag,
           CausesValidation = @this.CausesValidation,
           ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
           ContextMenu = @this.ContextMenu,
+#endif
           Cursor = @this.Cursor,
           Enabled = @this.Enabled,
           Visible = @this.Visible,
@@ -894,9 +911,9 @@ namespace System.Windows.Forms {
         } while (propertyNameChain.Count > 0);
 
         return member.Member.Name;
-          }
+      }
 
-      string _GetBindingSourcePropertyName(Linq.Expressions.Expression e) {
+      string _GetBindingSourcePropertyName(Expression e) {
         switch (e) {
           case MemberExpression member: // controlProperty = bs.PropertyName
             return _GetPropertyName(member);
@@ -913,12 +930,12 @@ namespace System.Windows.Forms {
                  && call.Object is MemberExpression member
             :
             return _GetPropertyName(member);
-          }
+        }
 
         return null;
       }
 
-      string _GetControlPropertyName(Linq.Expressions.Expression e) {
+      string _GetControlPropertyName(Expression e) {
         switch (e) {
           case MemberExpression member
             when member.Expression is ParameterExpression parameter
@@ -937,7 +954,7 @@ namespace System.Windows.Forms {
           default:
             return null;
         }
-        }
+      }
 
       const string excMessage = @"Must be an expression like :
 (control, source) => control.propertyName == source.dataMember
@@ -952,8 +969,8 @@ namespace System.Windows.Forms {
 ";
 
       if (!(expression.Body is BinaryExpression body) || body.NodeType != ExpressionType.Equal)
-            throw new ArgumentException(excMessage);
-          
+        throw new ArgumentException(excMessage);
+
       var propertyName = _GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
       var dataMember = _GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
 

@@ -19,8 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -47,7 +53,9 @@ namespace System.Windows.Forms {
     /// <param name="allowRootNodeDragging">if set to <c>true</c> [allow root node dragging].</param>
     /// <param name="onNodeMove">The action to invoke when a node is moved.</param>
     public static void EnabledDragAndDrop(this TreeView This, Predicate<TreeNode> folderSelector = null, bool allowRootNodeDragging = true, Action<TreeNode, TreeNode, int> onNodeMove = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       lock (_SUBSCRIBED_TREEVIEWS) {
 
         // skip if already subscribed to
@@ -65,7 +73,9 @@ namespace System.Windows.Forms {
     /// <param name="ea">The <see cref="System.EventArgs"/> instance containing the event data.</param>
     private static void _OnDisposing(object sender, EventArgs ea) {
       var treeView = sender as TreeView;
+#if SUPPORTS_CONTRACTS
       Contract.Assert(treeView != null, "Sender must be a TreeView");
+#endif
       lock (_SUBSCRIBED_TREEVIEWS) {
         DragDropInstance dragDropInstance;
 
@@ -139,8 +149,10 @@ namespace System.Windows.Forms {
       private TreeNode _draggedNode;
 
       public DragDropInstance(TreeView treeView, Predicate<TreeNode> folderSelector, bool canDragRootNodes, Action<TreeNode, TreeNode, int> onNodeMove) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(treeView != null);
         Contract.Requires(!treeView.InvokeRequired, "Must be called from within the GUI thread !");
+#endif
         this._treeView = treeView;
         this._folderSelector = folderSelector;
         this._canDragRootNodes = canDragRootNodes;
@@ -560,7 +572,9 @@ namespace System.Windows.Forms {
       /// <param name="treeNode">The TreeNode for which we want to know the detail.</param>
       /// <returns><c>true</c> if the given node is handled as a folder node, which means we can drag items into it; otherwise, <c>false</c>.</returns>
       private bool _IsFolderNode(TreeNode treeNode) {
+#if SUPPORTS_CONTRACTS
         Contract.Requires(treeNode != null);
+#endif
         var folderSelector = this._folderSelector;
         return (folderSelector != null && folderSelector(treeNode));
       }
@@ -667,7 +681,9 @@ namespace System.Windows.Forms {
 
       private void _DrawLeafTopPlaceholders(TreeNode hoveredNode) {
         var treeView = hoveredNode.TreeView;
+#if SUPPORTS_CONTRACTS
         Contract.Assert(treeView != null, "Node must belong to a TreeView");
+#endif
 
         var g = treeView.CreateGraphics();
 
@@ -700,7 +716,9 @@ namespace System.Windows.Forms {
 
       private void _DrawLeafBottomPlaceholders(TreeNode hoveredNode, TreeNode parentNodeDragDrop) {
         var treeView = hoveredNode.TreeView;
+#if SUPPORTS_CONTRACTS
         Contract.Assert(treeView != null, "Node must belong to a TreeView");
+#endif
 
         var g = treeView.CreateGraphics();
 
@@ -738,7 +756,9 @@ namespace System.Windows.Forms {
 
       private void _DrawFolderTopPlaceholders(TreeNode hoveredNode) {
         var treeView = hoveredNode.TreeView;
+#if SUPPORTS_CONTRACTS
         Contract.Assert(treeView != null, "Node must belong to a TreeView");
+#endif
 
         var g = treeView.CreateGraphics();
         var nodeImage = hoveredNode.GetImage();
@@ -770,7 +790,9 @@ namespace System.Windows.Forms {
 
       private void _DrawAddToFolderPlaceholder(TreeNode hoveredNode) {
         var treeView = hoveredNode.TreeView;
+#if SUPPORTS_CONTRACTS
         Contract.Assert(treeView != null, "Node must belong to a TreeView");
+#endif
 
         var g = treeView.CreateGraphics();
         var rightPos = hoveredNode.Bounds.Right + 6;

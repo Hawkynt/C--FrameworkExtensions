@@ -43,10 +43,15 @@
     return result.ToString();
   };
 #>
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 <#if(this.IsDrawingReferenced){#>
@@ -223,7 +228,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="this">This FileInfo.</param>
     public static void EnableCompression(this FileInfo @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
 
@@ -258,7 +263,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
     public static bool TryEnableCompression(this FileInfo @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
 
@@ -299,7 +304,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The description shown in the windows explorer under filetype.</returns>
     public static string GetTypeDescription(this FileInfo This) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 
@@ -348,7 +353,7 @@ namespace System.IO {
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
     public static void MoveTo(this FileInfo This, string destFileName, bool overwrite, TimeSpan? timeout = null) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 
@@ -386,7 +391,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <returns>The result of the hash algorithm</returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 
@@ -405,7 +410,7 @@ namespace System.IO {
     /// The result of the hash algorithm
     /// </returns>
     public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 
@@ -787,7 +792,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void KeepFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -838,7 +843,7 @@ namespace System.IO {
         while (currentFilePosition > 0) {
           var bytesToRead = buffer.Length > currentFilePosition ? (int) currentFilePosition : buffer.Length;
           currentFilePosition -= bytesToRead;
-      
+
           file.Seek(currentFilePosition, SeekOrigin.Begin);
           var bytesRead = file.Read(buffer, 0, bytesToRead);
 
@@ -858,14 +863,14 @@ namespace System.IO {
           var filePosition = GetFilePosition(inputReader);
           if (filePosition <= 0)
             return;
-
+          
           inputReader.Seek(filePosition+1, SeekOrigin.Begin);
           tmpFile = new FileInfo(Path.GetTempFileName());
           using (var tmpFileReader = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
             inputReader.CopyTo(tmpFileReader);
             inputReader.Flush(true);
           }
-          }
+        }
 
         tmpFile.Attributes = @this.Attributes;
         tmpFile.MoveTo(@this.FullName, true);
@@ -890,7 +895,7 @@ namespace System.IO {
     /// <param name="count">The count.</param>
     /// <param name="encoding">The encoding.</param>
     public static void RemoveFirstLines(this FileInfo This, int count, Encoding encoding) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(encoding != null);
 #endif
@@ -1020,7 +1025,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool TryDelete(this FileInfo @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       try {
@@ -1044,7 +1049,7 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreate(this FileInfo This, FileAttributes attributes = FileAttributes.Normal) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
 

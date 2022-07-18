@@ -19,12 +19,14 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.IO;
@@ -253,9 +255,6 @@ namespace System {
       }
     }
 
-#if UNSAFE
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [StructLayout(LayoutKind.Sequential, Size = 32)]
     private struct Block32 {
       public readonly Block4 a;
@@ -283,8 +282,6 @@ namespace System {
 
     }
 
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [StructLayout(LayoutKind.Sequential, Size = 64)]
     private struct Block64 {
       public readonly Block8 a;
@@ -312,7 +309,7 @@ namespace System {
       public Block64(byte u) : this(0x0101010101010101UL * u) { }
     }
 
-#else
+#if !UNSAFE
 
     [SecurityPermission(SecurityAction.InheritanceDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
     private sealed class DisposableGCHandle<TValue> : IDisposable where TValue : class {
@@ -322,7 +319,7 @@ namespace System {
       public IntPtr AddrOfPinnedObject() => this.handle.AddrOfPinnedObject();
       private void _Free() => this.handle.Free();
 
-      #region Properties
+    #region Properties
 
       public TValue Target {
         get => (TValue)this.handle.Target;
@@ -331,9 +328,9 @@ namespace System {
 
       private bool _IsAllocated => this.handle.IsAllocated;
 
-      #endregion
+    #endregion
 
-      #region DisposePattern
+    #region DisposePattern
 
       private void Dispose(bool disposing) {
         if (disposing && this._IsAllocated)
@@ -345,7 +342,7 @@ namespace System {
       public void Dispose() => this.Dispose(true);
       ~DisposableGCHandle() => this.Dispose(false);
 
-      #endregion
+    #endregion
 
     }
 
@@ -356,7 +353,7 @@ namespace System {
 
 #endif
 
-#endregion
+    #endregion
 
     private const int _INDEX_WHEN_NOT_FOUND = -1;
 
@@ -375,7 +372,7 @@ namespace System {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -482,7 +479,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -518,7 +515,7 @@ namespace System {
         throw new NullReferenceException();
       if (size < 1)
         throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -543,7 +540,7 @@ namespace System {
       if (@this.Length == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -641,7 +638,7 @@ namespace System {
     public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -676,7 +673,7 @@ namespace System {
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
     public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(startIndex + count <= @this.Length);
       Contract.Requires(startIndex >= 0);
@@ -693,7 +690,7 @@ namespace System {
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
     public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       var value = @this[firstElementIndex];
@@ -706,7 +703,7 @@ namespace System {
     /// <typeparam name="TItem">Type of elements in the array.</typeparam>
     /// <param name="this">This array.</param>
     public static void Shuffle<TItem>(this TItem[] @this) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       var index = @this.Length;
@@ -721,7 +718,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <returns>A sorted array copy.</returns>
     public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       var result = new TItem[@this.Length];
@@ -735,7 +732,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements.</typeparam>
     /// <param name="this">This array.</param>
     public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
       if (@this.Length > 0)
@@ -790,7 +787,7 @@ namespace System {
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
     public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(converter != null);
 #endif
@@ -838,7 +835,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -856,7 +853,7 @@ namespace System {
         throw new NullReferenceException();
       if (action == null)
         throw new ArgumentNullException(nameof(action));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -874,7 +871,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -892,7 +889,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -910,7 +907,7 @@ namespace System {
         throw new NullReferenceException();
       if (worker == null)
         throw new ArgumentNullException(nameof(worker));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -941,7 +938,7 @@ namespace System {
     public static TItem[] Reverse<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -984,7 +981,7 @@ namespace System {
     public static bool Contains(this Array @this, object value) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1009,7 +1006,7 @@ namespace System {
         throw new NullReferenceException();
       if (@this.Rank < 1)
         throw new ArgumentException("Rank must be > 0", nameof(@this));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1048,7 +1045,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1074,7 +1071,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1100,7 +1097,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1127,7 +1124,7 @@ namespace System {
     public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1153,7 +1150,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
@@ -1272,7 +1269,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1286,7 +1283,7 @@ namespace System {
     public static TItem First<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1300,10 +1297,9 @@ namespace System {
     public static TItem Last<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
-
       var length = @this.LongLength;
       if (length == 0)
         throw new InvalidOperationException("No Elements!");
@@ -1317,7 +1313,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1335,7 +1331,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1357,7 +1353,7 @@ namespace System {
     public static TItem LastOrDefault<TItem>(this TItem[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1371,7 +1367,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1389,7 +1385,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1410,7 +1406,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1430,7 +1426,7 @@ namespace System {
       if (@this.LongLength == 0)
         throw new InvalidOperationException("No Elements!");
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1459,7 +1455,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1480,7 +1476,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1499,7 +1495,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1593,7 +1589,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1608,7 +1604,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1623,7 +1619,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1638,7 +1634,7 @@ namespace System {
         throw new NullReferenceException();
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1653,7 +1649,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1671,7 +1667,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1689,7 +1685,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 

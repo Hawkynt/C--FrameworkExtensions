@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Windows.Threading {
 
@@ -38,10 +44,14 @@ namespace System.Windows.Threading {
     /// <param name="async">if set to <c>true</c> we'll be going to make an asynchronous call to the dispatcher; otherwise, we'll wait till execution ends.</param>
     /// <returns><c>true</c> when the task could be executed on the current thread immediately; otherwise, <c>false</c>.</returns>
     public static bool SafelyInvoke(this DispatcherObject This, Action action, bool @async = false, DispatcherPriority dispatcherPriority = DispatcherPriority.Normal) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(action != null);
+#endif
       var dispatcher = This.Dispatcher;
+#if SUPPORTS_CONTRACTS
       Contract.Assume(dispatcher != null);
+#endif
       if (dispatcher.CheckAccess()) {
         action();
         return (true);

@@ -18,10 +18,17 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
 
 using System.Collections.Generic;
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Collections.Concurrent {
 
@@ -40,8 +47,10 @@ namespace System.Collections.Concurrent {
     /// <param name="key">The key.</param>
     /// <param name="value">The value.</param>
     public static void AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TKey key, TValue value) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(!ReferenceEquals(key, null));
+#endif
       @this.AddOrUpdate(key, value, (_, __) => value);
     }
     /// <summary>
@@ -54,7 +63,9 @@ namespace System.Collections.Concurrent {
     /// <param name="keyFunction">The key generator.</param>
     /// <returns>The added key.</returns>
     public static Tkey Add<Tkey, TValue>(this ConcurrentDictionary<Tkey, TValue> @this, TValue value, Func<Tkey> keyFunction) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       Tkey result;
       do {
         result = keyFunction();
@@ -72,7 +83,9 @@ namespace System.Collections.Concurrent {
     /// <param name="keyEnumerator">The enum containing possible keys.</param>
     /// <returns>The added key.</returns>
     public static TKey Add<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, IEnumerator<TKey> keyEnumerator) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       TKey result;
       do {
         keyEnumerator.MoveNext();
@@ -90,7 +103,9 @@ namespace System.Collections.Concurrent {
     /// <param name="keys">The keys.</param>
     /// <returns>The added key.</returns>
     public static TKey Add<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, IEnumerable<TKey> keys) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       return @this.Add(value, keys.GetEnumerator());
     }
 
@@ -104,7 +119,9 @@ namespace System.Collections.Concurrent {
     /// <param name="key">A key that has that value.</param>
     /// <returns><c>true</c> when the value was found; otherwise, <c>false</c>.</returns>
     public static bool TryGetKey<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, out TKey key) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       var result = false;
       key = default(TKey);
       var keyValuePairs = @this.ToArray();
@@ -124,7 +141,9 @@ namespace System.Collections.Concurrent {
     /// <param name="key">The key to remove.</param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
     public static bool Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TKey key) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       TValue value;
       return @this.TryRemove(key, out value);
     }

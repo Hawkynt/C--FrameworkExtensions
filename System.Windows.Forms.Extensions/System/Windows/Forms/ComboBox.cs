@@ -19,9 +19,16 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
 using System.Collections.Generic;
 using System.ComponentModel;
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 using System.Linq;
 
 namespace System.Windows.Forms {
@@ -62,7 +69,9 @@ namespace System.Windows.Forms {
     /// <param name="displayMember">The display member, if any.</param>
     /// <param name="valueMember">The value member, if any.</param>
     public static void DataSource(this ComboBox @this, object source, string displayMember = null, string valueMember = null) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
+#endif
       var oldDis = @this.DisplayMember;
       var oldVal = @this.ValueMember;
       @this.DataSource = null;
@@ -82,7 +91,9 @@ namespace System.Windows.Forms {
     /// <param name="insertNull">Insert null-object (use as non-selected).</param>
     /// <param name="ignoreValues">Values not to be used.</param>
     public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(typeof(TEnum).IsEnum);
+#endif
 
       @this.DataSource(
         (insertNull ? new[] { new Tuple<object, string>(null, null) } : new Tuple<object, string>[0])
@@ -91,7 +102,9 @@ namespace System.Windows.Forms {
         .Select(
           i => {
             var fieldInfo = typeof(TEnum).GetField(i.ToString());
+#if SUPPORTS_CONTRACTS
             Contract.Assert(fieldInfo != null, "Can not find field");
+#endif
             var attribute =
               (DisplayNameAttribute)fieldInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false).FirstOrDefault();
             return Tuple.Create(i, attribute?.DisplayName ?? i.ToString());
@@ -106,7 +119,9 @@ namespace System.Windows.Forms {
     /// <param name="this">This ComboBox.</param>
     /// <param name="value">The value.</param>
     public static void SetSelectedEnumItem<TEnum>(this ComboBox @this, TEnum value) where TEnum : struct {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(typeof(TEnum).IsEnum);
+#endif
       SetSelectedItem<Tuple<object, string>>(@this, i => Equals((TEnum)i.Item1, value));
     }
 

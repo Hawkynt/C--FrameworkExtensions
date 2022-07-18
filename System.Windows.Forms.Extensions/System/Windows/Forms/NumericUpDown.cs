@@ -19,7 +19,12 @@
 */
 #endregion
 
-#if !NET35_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 
@@ -41,9 +46,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, decimal min, decimal max, decimal step) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.Minimum = min;
@@ -58,9 +61,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, double min, double max, double step) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetMinMaxStep((decimal)min, (decimal)max, (decimal)step);
@@ -73,9 +74,7 @@ namespace System.Windows.Forms {
     /// <param name="max">The max.</param>
     /// <param name="step">The step.</param>
     public static void SetMinMaxStep(this NumericUpDown This, int min, int max, int step) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetMinMaxStep((decimal)min, max, step);
@@ -86,9 +85,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, decimal value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.Value = Math.Min(Math.Max(This.Minimum, value), This.Maximum);
@@ -99,9 +96,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, double value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetSaveValue((decimal)value);
@@ -112,9 +107,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, int value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetSaveValue((decimal)value);
@@ -125,9 +118,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, uint value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetSaveValue((decimal)value);
@@ -138,9 +129,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, long value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetSaveValue((decimal)value);
@@ -151,9 +140,7 @@ namespace System.Windows.Forms {
     /// <param name="This">This NumericUpDown.</param>
     /// <param name="value">The value to set.</param>
     public static void SetSaveValue(this NumericUpDown This, ulong value) {
-#if NET35_OR_GREATER
-      System.Diagnostics.Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
       This.SetSaveValue((decimal)value);
