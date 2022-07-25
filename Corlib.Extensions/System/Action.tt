@@ -1,4 +1,4 @@
-<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
@@ -135,7 +135,15 @@ namespace System {
 
           // NOTE: if no more elements, reset reference timer to avoid overflows
           if (nextElement.Key == 0)
+
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+            _HIRES_REFERENCE_TIMER.Stop();
+            _HIRES_REFERENCE_TIMER.Reset();
+            _HIRES_REFERENCE_TIMER.Start();
+#else
             _HIRES_REFERENCE_TIMER.Restart();
+#endif
+
         }
 
         // when no elements, wait until notified or one hour passed

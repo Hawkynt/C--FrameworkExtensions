@@ -39,7 +39,12 @@ namespace System.Data.SqlClient {
   /// <summary>
   /// Extensions for the sql command.
   /// </summary>
-  internal static partial class CommandExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class CommandExtensions {
     /// <summary>
     /// Executes something that is not a query on the given command.
     /// </summary>
