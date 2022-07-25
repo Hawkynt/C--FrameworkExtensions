@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -84,7 +84,14 @@ namespace System.IO {
       for (var j = 0; j < tgtArray.Length - i; j++)
         result.Add(tgtArray[j + i]);
 
-      return (string.Join(Path.DirectorySeparatorChar + string.Empty, result));
+      return string.Join(
+        Path.DirectorySeparatorChar + string.Empty,
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+        result.ToArray()
+#else
+        result
+#endif
+      );
     }
 
     /// <summary>
@@ -175,7 +182,11 @@ namespace System.IO {
         return false;
 
       if ((int) fileSystemInfo.Attributes != -1)
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+        return (fileSystemInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+#else
         return fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);
+#endif
 
       return fileSystemInfo is DirectoryInfo;
     }

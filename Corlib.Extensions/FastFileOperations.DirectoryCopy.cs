@@ -125,6 +125,7 @@ namespace System.IO {
       private readonly Action<IDirectoryReport> _callback;
       private readonly Func<FileSystemInfo, bool> _filter;
       private readonly ManualResetEventSlim _finishEvent = new ManualResetEventSlim();
+
       private readonly ConcurrentBag<string> _filesToCopy = new ConcurrentBag<string>();
       private readonly ConcurrentQueue<string> _directoriesToParse = new ConcurrentQueue<string>();
       private readonly bool _allowDelete;
@@ -147,14 +148,14 @@ namespace System.IO {
       private int _lastCrawlerIndex;
 
       private Exception _exception;
-      #endregion
+#endregion
 
-      #region props
+#region props
       private bool IsSuccessfulEndConditionReached => Interlocked.Read(ref this._bytesTransferred) == Interlocked.Read(ref this._bytesToTransfer) && !this._filesToCopy.Any() && !this._directoriesToParse.Any();
 
-      #endregion
+#endregion
 
-      #region ctor,dtor
+#region ctor,dtor
       public DirectoryCopyOperation(DirectoryInfo source, DirectoryInfo target, Action<IDirectoryReport> callback, Func<FileSystemInfo, bool> filter, bool allowDelete, bool allowOverwrite, bool allowHardLinks, bool dontResolveSymbolicLinks, bool allowIntegrate) {
         this._source = source;
         this._target = target;
@@ -171,9 +172,9 @@ namespace System.IO {
         this._directoriesToParse.Clear();
         this._filesToCopy.Clear();
       }
-      #endregion
+#endregion
 
-      #region Implementation of IDirectoryOperation
+#region Implementation of IDirectoryOperation
       public FileSystemInfo Source => this._source;
       public FileSystemInfo Target => this._target;
       public long TotalSize => Interlocked.Read(ref this._totalSize);
@@ -200,20 +201,16 @@ namespace System.IO {
       }
 
       public Exception Exception => this._exception;
-      public bool IsDone => this._finishEvent.IsSet;
       public bool ThrewException => this._exception != null;
 
       public void Abort() {
         this.AbortOperation(new OperationCanceledException(_EX_USER_ABORT));
       }
 
-      public void WaitTillDone() {
-        this._finishEvent.Wait();
-      }
+      public bool IsDone => this._finishEvent.IsSet;
+      public void WaitTillDone() => this._finishEvent.Wait();
+      public bool WaitTillDone(TimeSpan timeout) => this._finishEvent.Wait(timeout);
 
-      public bool WaitTillDone(TimeSpan timeout) {
-        return this._finishEvent.Wait(timeout);
-      }
       #endregion
 
       #region methods
@@ -238,7 +235,7 @@ namespace System.IO {
       private long _AddBytesProcessing(long count) {
         return Interlocked.Add(ref this._bytesProcessing, count) - count;
       }
-      #endregion
+#endregion
 
       /// <summary>
       /// Tests if a fileinfo matches the given filter.
@@ -276,7 +273,7 @@ namespace System.IO {
         return !this._comparers.All(c => c.Equals(sourceFile, targetFile));
       }
 
-      #region threads
+#region threads
       private void _StartStreamThreads() {
         for (var i = this._lastStreamIndex; i < this.StreamCount; ++i)
           this._TryStartStreamThread();
@@ -387,9 +384,7 @@ namespace System.IO {
         try {
           var index = (int)state;
           while (!this.IsDone && index < this.CrawlerCount) {
-
-            string directoryName;
-            if (!this._directoriesToParse.TryDequeue(out directoryName)) {
+            if (!this._directoriesToParse.TryDequeue(out string directoryName)) {
 
               // check end condition
               if (!this._directoriesToParse.Any() && this._workingCrawlers < 1 && !this._filesToCopy.Any() && this._workingStreams < 1) {
@@ -424,14 +419,14 @@ namespace System.IO {
 
               // find everything in the source dir to sync
               foreach (var item in sourceDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter)) {
+
                 if (item is DirectoryInfo) {
                   dirs.Add(item.Name);
                   this._directoriesToParse.Enqueue(Path.Combine(directoryName, item.Name));
                   continue;
                 }
 
-                var fileInfo = item as FileInfo;
-                if (fileInfo == null)
+                if (!(item is FileInfo fileInfo))
                   continue;
 
                 files.Add(fileInfo.Name);
@@ -468,33 +463,26 @@ namespace System.IO {
         if (!this._allowDelete)
           return true;
 
-        foreach (var item in targetDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter)) {
+        foreach (var item in targetDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter))
+          try {
+            switch (item) {
+              case DirectoryInfo directoryInfo: {
+                if (!dirs.Contains(item.Name))
+                  directoryInfo.Delete(true);
 
-          var directoryInfo = item as DirectoryInfo;
-          if (directoryInfo != null) {
-            if (!dirs.Contains(item.Name)) {
-              try {
-                directoryInfo.Delete(true);
-              } catch (Exception e) {
-                if (this.AbortOperation(e).ContinuationType == ContinuationType.AbortOperation)
-                  return false;
+                continue;
+              }
+              case FileInfo _: {
+                if (!files.Contains(item.Name))
+                  item.Delete();
+
+                continue;
               }
             }
-
-            continue;
+          } catch (Exception e) {
+            if (this.AbortOperation(e).ContinuationType == ContinuationType.AbortOperation)
+              return false;
           }
-
-          if (item is FileInfo) {
-            if (!files.Contains(item.Name)) {
-              try {
-                item.Delete();
-              } catch (Exception e) {
-                if (this.AbortOperation(e).ContinuationType == ContinuationType.AbortOperation)
-                  return false;
-              }
-            }
-          }
-        }
 
         return true;
       }
@@ -507,8 +495,7 @@ namespace System.IO {
         try {
           var index = (int)state;
           while (!this.IsDone && index < this.StreamCount) {
-            string fileName;
-            if (!this._filesToCopy.TryTake(out fileName)) {
+            if (!this._filesToCopy.TryTake(out string fileName)) {
               Thread.Sleep(1);
               continue;
             }
@@ -577,10 +564,10 @@ namespace System.IO {
             }
         }
       }
-      #endregion
-      #endregion
+#endregion
+#endregion
 
-      #region generate reports
+#region generate reports
       private DirectoryCopyReport _CreateReport(ReportType reportType, FileSystemInfo source, FileSystemInfo target, int streamIndex, long streamOffset, long offset, long size) {
         var result = new DirectoryCopyReport(reportType, this, source, target, streamIndex, streamOffset, offset, size);
         this._callback(result);
@@ -610,11 +597,11 @@ namespace System.IO {
         this._finishEvent.Set();
         return this._CreateReport(ReportType.FinishedOperation, this._source, this._target, -1, 0, 0, this.TotalSize);
       }
-      #endregion
+#endregion
 
     }
 
-    #region copy directory
+#region copy directory
     /// <summary>
     /// Copies a directory asynchronous.
     /// </summary>
@@ -675,6 +662,6 @@ namespace System.IO {
       if (token.Operation.ThrewException)
         throw token.Operation.Exception;
     }
-    #endregion
+#endregion
   }
 }

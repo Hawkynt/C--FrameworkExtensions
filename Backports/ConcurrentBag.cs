@@ -19,41 +19,49 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+#if NET20_OR_GREATER && !NET40_OR_GREATER
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
+using System.Collections.Generic;
 
-namespace System.Threading.Tasks {
+namespace System.Collections.Concurrent {
 
 #if COMPILE_TO_EXTENSION_DLL
   public
 #else
   internal
 #endif
-  static partial class TaskExtensions {
-    /// <summary>
-    /// Gets the result or a default value.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result.</typeparam>
-    /// <param name="this">This Task.</param>
-    /// <param name="defaultValue">The default value.</param>
-    /// <returns></returns>
-    public static TResult GetResultOrDefault<TResult>(this Task<TResult> @this, TResult defaultValue = default(TResult)) {
-      if (@this.IsFaulted)
-        return (defaultValue);
+  class ConcurrentBag<T> {
+    private readonly List<T> _items=new List<T>();
 
-      if (@this.IsCanceled)
-        return (defaultValue);
-
-      try {
-        return (@this.Result);
-      } catch {
-        return (defaultValue);
-      }
+    public bool Any() {
+      lock(this._items)
+        return this._items.Count>0;
     }
+
+    public void Clear() {
+      lock (this._items)
+        this._items.Clear();
+    }
+
+    public void Add(T item) {
+      lock(this._items)
+        this._items.Add(item);
+    }
+
+    public bool TryTake(out T item) {
+      lock (this._items)
+        if (this._items.Count > 0) {
+          item = this._items[0];
+          this._items.RemoveAt(0);
+          return true;
+        }else {
+          item = default;
+          return false;
+        }
+    }
+    
   }
+
 }
 
 #endif

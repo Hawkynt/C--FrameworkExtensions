@@ -196,20 +196,20 @@ namespace System {
                 else
                   colorDefinition += format[intI];
               }
-              var colors = string.IsNullOrWhiteSpace(colorDefinition) ? null : colorDefinition.Split(new[] { ',' }, 2);
+              var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split(new[] { ',' }, 2);
               if (colors == null || colors.Length == 0) {
                 // reset colors
                 Console.ForegroundColor = oldForeground;
                 Console.BackgroundColor = oldBackground;
               } else if (colors.Length == 1) {
                 // set only foreground color
-                if (!string.IsNullOrWhiteSpace(colors[0]))
+                if (colors[0].IsNotNullOrWhiteSpace())
                   Console.ForegroundColor = _GetColorByIndex(byte.Parse(colors[0]));
               } else {
                 // set foreground and background color
-                if (!string.IsNullOrWhiteSpace(colors[0]))
+                if (colors[0].IsNotNullOrWhiteSpace())
                   Console.ForegroundColor = _GetColorByIndex(byte.Parse(colors[0]));
-                if (!string.IsNullOrWhiteSpace(colors[1]))
+                if (colors[1].IsNotNullOrWhiteSpace())
                   Console.BackgroundColor = _GetColorByIndex(byte.Parse(colors[1]));
               }
             } else {

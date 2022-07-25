@@ -21,6 +21,8 @@
 
 #endregion
 
+#if !NET20_OR_GREATER || NET40_OR_GREATER
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -123,3 +125,5 @@ namespace System.ComponentModel {
     }
   }
 }
+
+#endif

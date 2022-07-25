@@ -20,9 +20,8 @@
 */
 
 #endregion
-//
-// requires extension: System.ComponentModel.SortComparer
-//
+
+#if !NET20_OR_GREATER || NET40_OR_GREATER
 
 using System.Collections;
 using System.Collections.Generic;
@@ -389,3 +388,5 @@ namespace System.ComponentModel {
     }
   }
 }
+
+#endif

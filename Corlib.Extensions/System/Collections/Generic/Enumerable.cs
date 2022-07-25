@@ -84,7 +84,7 @@ namespace System.Collections.Generic {
     /// An IEnumerable of Disposables whose elements can also be accessed by an indexer
     /// </summary>
     /// <typeparam name="T">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
-    public interface IDisposableCollection<out T> : IEnumerable<T>, IDisposable where T : IDisposable {
+    public interface IDisposableCollection<T> : IEnumerable<T>, IDisposable where T : IDisposable {
       T this[int i] { get; }
     }
 
@@ -150,13 +150,13 @@ namespace System.Collections.Generic {
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
 
-      if (string.IsNullOrWhiteSpace(query))
+      if (query.IsNullOrWhiteSpace())
         return @this;
 
       var results = @this;
       // ReSharper disable once LoopCanBeConvertedToQuery
       foreach (var filter in query.Trim().Split(' ')) {
-        if (string.IsNullOrWhiteSpace(filter))
+        if (filter.IsNullOrWhiteSpace())
           continue;
 
         results = results.Where(i => selector(i)?.Contains(filter) ?? false);

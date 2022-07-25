@@ -19,7 +19,13 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#endif
+
+#if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
+#endif
 
 namespace System.Security.Cryptography {
 
@@ -36,7 +42,9 @@ namespace System.Security.Cryptography {
     /// <param name="maxValue">The maximum exclusive value.</param>
     /// <returns></returns>
     public static int Next(this RandomNumberGenerator This, int maxValue) {
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#endif
       var data = new byte[4];
       This.GetBytes(data);
       var result = BitConverter.ToInt32(data, 0);

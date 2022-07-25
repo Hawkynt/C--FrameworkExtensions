@@ -60,7 +60,7 @@ namespace System {
     }
 
     public TType Value {
-      get { return (this.GetValue(null)); }
+      get => this.GetValue(null);
       set {
         var setter = this._setter;
         if (setter == null)
@@ -78,11 +78,11 @@ namespace System {
 
     public TimeSpan Timeout { get; set; }
 
-    public bool GotValue { get { return (this._gotValueAtLeastOnce); } }
+    public bool GotValue => this._gotValueAtLeastOnce;
 
     public TType GetValue(TimeSpan? timeout) {
       this._TryGetValue(timeout);
-      return (this._lastKnownValue);
+      return this._lastKnownValue;
     }
 
     private bool _TryGetValue(TimeSpan? timeout) {
@@ -91,7 +91,7 @@ namespace System {
 
       // if already getting value, wait for it
       if (Interlocked.CompareExchange(ref this._isGettingValue, _IS_BUSY, _IS_IDLE) != _IS_IDLE)
-        return (manualResetEventSlim.Wait(timeout ?? this.Timeout));
+        return manualResetEventSlim.Wait(timeout ?? this.Timeout);
 
       // reset value flag
       manualResetEventSlim.Reset();
@@ -108,7 +108,7 @@ namespace System {
       // get in background
       call.BeginInvoke(call.EndInvoke, null);
 
-      return (manualResetEventSlim.Wait(timeout ?? this.Timeout));
+      return manualResetEventSlim.Wait(timeout ?? this.Timeout);
     }
 
   }

@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -48,7 +48,11 @@ namespace System.Net.NetworkInformation {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      return string.Join(":", This.GetAddressBytes().Select(b => string.Format("{0:X2}", b)));
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+      return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
+#else
+      return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}"));
+#endif
     }
 
     /// <summary>

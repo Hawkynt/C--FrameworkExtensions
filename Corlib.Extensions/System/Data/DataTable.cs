@@ -18,7 +18,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if !NETSTANDARD && !NET5_0_OR_GREATER
+
+#if !NETSTANDARD && !NET5_0_OR_GREATER && NET40_OR_GREATER
 using System.ComponentModel;
 using System.Data.Common;
 

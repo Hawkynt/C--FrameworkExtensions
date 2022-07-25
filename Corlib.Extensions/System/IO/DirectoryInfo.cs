@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -726,6 +726,21 @@ namespace System.IO {
         return (null);
       }
     }
+
+#if !NET40_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+
+    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
+      foreach (var entry in @this.GetFileSystemInfos())
+        yield return entry;
+    }
+
+    public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
+      foreach (var entry in @this.GetFiles(searchPattern,searchOption))
+        yield return entry;
+    }
+
+#endif
+
   }
 }
 

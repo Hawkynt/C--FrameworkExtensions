@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netstandard2.1;netstandard2.0;net48;net47;net462;net461;net46;net452;net451;net45;net40</TargetFrameworks>
+    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netstandard2.1;netstandard2.0;net48;net47;net462;net461;net46;net452;net451;net45;net40;net35</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
@@ -119,5 +119,32 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
     <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net35|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net35|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="FuncAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FuncAction.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="FuncAction.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FuncAction.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
 </Project>

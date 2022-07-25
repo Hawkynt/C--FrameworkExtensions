@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   @this file is part of Hawkynt's .NET Framework extensions.
 
@@ -41,6 +41,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Xml.Serialization;
 
 // ReSharper disable UnusedMember.Global
@@ -368,7 +369,9 @@ namespace System {
       }
     }
 
+#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _CACHE = new ConcurrentDictionary<Type, XmlSerializer>();
+#endif
 
     /// <summary>
     /// Creates an item from a XML file.
@@ -382,7 +385,11 @@ namespace System {
     }
 
     private static XmlSerializer _GetSerializerForType<TType>()
+#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
       => _CACHE.GetOrAdd(typeof(TType), t => new XmlSerializer(t))
+#else
+      => new XmlSerializer(typeof(TType))
+#endif
       ;
 
 

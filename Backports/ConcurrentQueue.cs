@@ -19,41 +19,58 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+#if NET20_OR_GREATER && !NET40_OR_GREATER
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
+using System.Collections.Generic;
 
-namespace System.Threading.Tasks {
+namespace System.Collections.Concurrent {
 
 #if COMPILE_TO_EXTENSION_DLL
   public
 #else
   internal
 #endif
-  static partial class TaskExtensions {
-    /// <summary>
-    /// Gets the result or a default value.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result.</typeparam>
-    /// <param name="this">This Task.</param>
-    /// <param name="defaultValue">The default value.</param>
-    /// <returns></returns>
-    public static TResult GetResultOrDefault<TResult>(this Task<TResult> @this, TResult defaultValue = default(TResult)) {
-      if (@this.IsFaulted)
-        return (defaultValue);
+  class ConcurrentQueue<T> {
+    private readonly Queue<T> _queue = new Queue<T>();
 
-      if (@this.IsCanceled)
-        return (defaultValue);
+    public bool IsEmpty => !this.Any();
+    public bool Any() => this.Count > 0;
+    public void Clear() {
+      lock(this._queue)
+        this._queue.Clear();
+    }
 
-      try {
-        return (@this.Result);
-      } catch {
-        return (defaultValue);
+    public int Count {
+      get {
+        lock (this._queue) 
+          return this._queue.Count;
       }
     }
+
+    public T[] ToArray() {
+      lock (this._queue)
+        return this._queue.ToArray();
+    }
+
+    public void Enqueue(T item) {
+      lock (this._queue)
+        this._queue.Enqueue(item);
+    }
+
+    public bool TryDequeue(out T item) {
+      lock (this._queue) {
+        if (this._queue.Count > 0) {
+          item = this._queue.Dequeue();
+          return true;
+        }
+
+        item = default;
+        return false;
+      }
+    }
+
   }
+
 }
 
 #endif

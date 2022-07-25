@@ -25,6 +25,7 @@
 
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_CONTRACTS 
+#define SUPPORTS_TIMESPAN_PROVIDER
 #endif
 
 #if SUPPORTS_CONTRACTS
@@ -244,6 +245,7 @@ namespace System {
       return TimeSpan.Parse(@this);
     }
 
+#if SUPPORTS_TIMESPAN_PROVIDER
     public static TimeSpan ParseTimeSpan(this string @this, IFormatProvider provider) {
 #if !SUPPORTS_CONTRACTS
       Debug.Assert(@this != null);
@@ -252,6 +254,7 @@ namespace System {
 #endif
       return TimeSpan.Parse(@this, provider);
     }
+#endif
     #endregion
 
     #region TryParse
@@ -259,9 +262,9 @@ namespace System {
       return TimeSpan.TryParse(@this, out result);
     }
 
-    public static bool TryParseTimeSpan(this string @this, IFormatProvider provider, out TimeSpan result) {
-      return TimeSpan.TryParse(@this, provider, out result);
-    }
+#if SUPPORTS_TIMESPAN_PROVIDER
+    public static bool TryParseTimeSpan(this string @this, IFormatProvider provider, out TimeSpan result) => TimeSpan.TryParse(@this, provider, out result);
+#endif
 
     #endregion
 
@@ -271,19 +274,21 @@ namespace System {
       if(@this==null)
         return {2};
       
-      TimeSpan result;
-      return TryParseTimeSpan(@this, out result) ? result : {2};
+      return TryParseTimeSpan(@this, out var result) ? result : {2};
     }}
 ")#>
+
+#if SUPPORTS_TIMESPAN_PROVIDER
 <#=GenerateDefaultValueStubs("TimeSpan",@"
     public static TimeSpan ParseTimeSpanOrDefault(this string @this, IFormatProvider provider{0} {1}) {{
       if(@this==null)
         return {2};
       
-      TimeSpan result;
-      return TryParseTimeSpan(@this, provider, out result) ? result : {2};
+      return TryParseTimeSpan(@this, provider, out var result) ? result : {2};
     }}
 ")#>
+#endif
+
     #endregion
 
     #region ParseOrNull
@@ -291,17 +296,20 @@ namespace System {
       if(@this==null)
         return null;
       
-      TimeSpan result;
-      return (TryParseTimeSpan(@this, out result) ? result : (TimeSpan?)null);
+      return TryParseTimeSpan(@this, out var result) ? result : (TimeSpan?)null;
     }
+
+#if SUPPORTS_TIMESPAN_PROVIDER
 
     public static TimeSpan? ParseTimeSpanOrNull(this string @this, IFormatProvider provider) {
       if(@this==null)
         return null;
       
-      TimeSpan result;
-      return (TryParseTimeSpan(@this, provider, out result) ? result : (TimeSpan?)null);
+      return TryParseTimeSpan(@this, provider, out var result) ? result : (TimeSpan?)null;
     }
+
+#endif
+
 
     #endregion
     #endregion

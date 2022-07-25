@@ -43,9 +43,7 @@ namespace System {
 #if COMPILE_TO_EXTENSION_DLL
   public
 #else
-
-  interna
-
+  internal
 #endif
 
   static partial class UriExtensions {
@@ -341,7 +339,7 @@ namespace System {
       Contract.Ensures(Contract.Result<Uri>() != null);
 #endif
       const char SLASH = '/';
-      return string.IsNullOrWhiteSpace(path)
+      return path.IsNullOrWhiteSpace()
         ? This
         : path.StartsWith(SLASH)
           ? new Uri(This.BaseUri().AbsoluteUri.TrimEnd(SLASH) + path)

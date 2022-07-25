@@ -43,7 +43,12 @@ namespace System.IO {
   /// <summary>
   ///   Extensions for Streams.
   /// </summary>
-  internal static partial class StreamExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class StreamExtensions {
     /// <summary>
     ///   Writes a whole array of bytes to a stream.
     /// </summary>
@@ -166,7 +171,17 @@ namespace System.IO {
       Contract.Requires(This != null);
 #endif
       using (var data = new MemoryStream()) {
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+        const int BUFFER_SIZE = 64 * 1024;
+        var buffer = new byte[BUFFER_SIZE];
+        while (!This.IsAtEndOfStream()) {
+          var bytesRead = This.Read(buffer, 0, BUFFER_SIZE);
+          if(bytesRead>0)
+            data.Write(buffer, 0, bytesRead);
+        }
+#else
         This.CopyTo(data);
+#endif
         return data.ToArray();
       }
     }

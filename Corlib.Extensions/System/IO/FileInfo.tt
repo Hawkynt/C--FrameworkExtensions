@@ -1,4 +1,4 @@
-<#@ template debug="false" hostspecific="true" language="C#" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Linq" #>
@@ -866,9 +866,19 @@ namespace System.IO {
           
           inputReader.Seek(filePosition+1, SeekOrigin.Begin);
           tmpFile = new FileInfo(Path.GetTempFileName());
-          using (var tmpFileReader = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
-            inputReader.CopyTo(tmpFileReader);
-            inputReader.Flush(true);
+          using (var tmpFileWriter = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+            var buffer = new byte[BUFFER_SIZE];
+            while (!inputReader.IsAtEndOfStream()) {
+              var bytesRead = inputReader.Read(buffer, 0, BUFFER_SIZE);
+              if(bytesRead>0)
+                tmpFileWriter.Write(buffer, 0, bytesRead);
+            }
+            tmpFileWriter.Flush();
+#else
+            inputReader.CopyTo(tmpFileWriter);
+            tmpFileWriter.Flush(true);
+#endif
           }
         }
 

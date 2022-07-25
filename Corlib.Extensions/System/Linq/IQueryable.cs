@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -46,13 +46,13 @@ namespace System.Linq {
       if (selector == null)
         throw new ArgumentNullException(nameof(selector));
 
-      if (string.IsNullOrWhiteSpace(query))
+      if (query.IsNullOrWhiteSpace())
         return @this;
 
       var results = @this;
       // ReSharper disable once LoopCanBeConvertedToQuery
       foreach (var filter in query.Trim().Split(" ")) {
-        if (string.IsNullOrWhiteSpace(filter))
+        if (filter.IsNullOrWhiteSpace())
           continue;
 
         var constant = Expression.Constant(filter);

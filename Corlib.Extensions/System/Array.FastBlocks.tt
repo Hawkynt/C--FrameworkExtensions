@@ -1,4 +1,4 @@
-<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
@@ -55,6 +55,11 @@
   typeDatas.Add(new TypeData{ name = "byte*"  , hasHandcraftedCopyToMethod = true, noArraySupport = true, isUnsafeOnly = true});
   
 #>
+
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#define SUPPORTS_POINTER_ARITHMETIC
+#endif
 
 using System.Runtime.InteropServices;
 #if NET45_OR_GREATER
@@ -662,7 +667,11 @@ qwordDuffOut:
 
                     do {
                       Marshal.StructureToPtr(block64, @this, false);
+#if SUPPORTS_POINTER_ARITHMETIC
                       @this += 64;
+#else
+                      _Add(ref @this, 64);
+#endif
                       blocks -= 8;
                     } while (blocks >= 8);
 
@@ -674,7 +683,11 @@ qwordDuffOut:
               blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
 <#    }#>
               blockCount1: Marshal.WriteInt64(@this, block8);
+#if SUPPORTS_POINTER_ARITHMETIC
               @this += blocks << 3;
+#else
+              _Add(ref @this, blocks << 3);
+#endif
               blockCount0: continue; // copy single bytes left
 #if !MONO
             } // medium-sized blocks
@@ -825,7 +838,11 @@ qwordDuffOut:
 
                     do {
                       Marshal.StructureToPtr(block64, @this, false);
+#if SUPPORTS_POINTER_ARITHMETIC
                       @this += 64;
+#else
+                      _Add(ref @this, 64);
+#endif
                       blocks -= 8;
                     } while (blocks >= 8);
 
@@ -837,7 +854,11 @@ qwordDuffOut:
               blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
 <#    }#>
               blockCount1: Marshal.WriteInt64(@this, 0);
+#if SUPPORTS_POINTER_ARITHMETIC
               @this += blocks << 3;
+#else
+              _Add(ref @this, blocks << 3);
+#endif
               blockCount0: continue; // copy single bytes left
 #if !MONO
             } // medium-sized blocks

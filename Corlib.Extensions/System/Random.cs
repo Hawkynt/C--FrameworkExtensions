@@ -103,7 +103,6 @@ namespace System {
       var charCount = allowedChars.Length;
       for (var i = length; i > 0; --i) {
         var index = This.Next(charCount);
-        Contract.Assume(index < charCount);
         result.Append(allowedChars[index]);
       }
 

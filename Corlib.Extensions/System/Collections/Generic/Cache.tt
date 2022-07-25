@@ -526,50 +526,50 @@ namespace System.Collections.Generic {
       var needValidTracking = lifeTime != default(TimeSpan);
 
       if (policy == CacheReplacementPolicy.Random) {
-          this._garbageCollection = this._RemoveRandom;
-          this._valueFactory = this._CreateSelectorLessItem;
+        this._garbageCollection = this._RemoveRandom;
+        this._valueFactory = this._CreateSelectorLessItem;
       } else if (policy == CacheReplacementPolicy.FirstInFirstOut) {
-          this._garbageCollection = this._RemoveBySelector;
-          this._valueFactory = this._CreateAgeBasedItem;
+        this._garbageCollection = this._RemoveBySelector;
+        this._valueFactory = this._CreateAgeBasedItem;
       } else if (policy == CacheReplacementPolicy.LastInFirstOut) {
-          this._garbageCollection = this._RemoveBySelectorReversed;
-          this._valueFactory = this._CreateAgeBasedItem;
+        this._garbageCollection = this._RemoveBySelectorReversed;
+        this._valueFactory = this._CreateAgeBasedItem;
       } else if (policy == CacheReplacementPolicy.SmallValuesFirst) {
-          this._garbageCollection = this._RemoveBySelector;
-          this._valueFactory = this._CreateSizeBasedItem;
-          needSizeTracking = true;
+        this._garbageCollection = this._RemoveBySelector;
+        this._valueFactory = this._CreateSizeBasedItem;
+        needSizeTracking = true;
       } else if (policy == CacheReplacementPolicy.LargeValuesFirst) {
-          this._garbageCollection = this._RemoveBySelectorReversed;
-          this._valueFactory = this._CreateSizeBasedItem;
-          needSizeTracking = true;
+        this._garbageCollection = this._RemoveBySelectorReversed;
+        this._valueFactory = this._CreateSizeBasedItem;
+        needSizeTracking = true;
       } else if (policy == CacheReplacementPolicy.LeastRecentlyUsed) {
-          this._garbageCollection = this._RemoveBySelector;
-          this._valueFactory = this._CreateAccessBasedItem;
+        this._garbageCollection = this._RemoveBySelector;
+        this._valueFactory = this._CreateAccessBasedItem;
       } else if (policy == CacheReplacementPolicy.MostRecentlyUsed) {
-          this._garbageCollection = this._RemoveBySelectorReversed;
-          this._valueFactory = this._CreateAccessBasedItem;
+        this._garbageCollection = this._RemoveBySelectorReversed;
+        this._valueFactory = this._CreateAccessBasedItem;
       } else if (policy == CacheReplacementPolicy.LeastFrequentlyUsed) {
-          this._garbageCollection = this._RemoveBySelector;
-          this._valueFactory = this._CreateFrequencyBasedItem;
+        this._garbageCollection = this._RemoveBySelector;
+        this._valueFactory = this._CreateFrequencyBasedItem;
       } else if (policy == CacheReplacementPolicy.MostFrequentlyUsed) {
-          this._garbageCollection = this._RemoveBySelectorReversed;
-          this._valueFactory = this._CreateFrequencyBasedItem;
+        this._garbageCollection = this._RemoveBySelectorReversed;
+        this._valueFactory = this._CreateFrequencyBasedItem;
       } else if (policy == CacheReplacementPolicy.LeastAvailableLifetimeLeft) {
-          this._lastUsedId = lifeTime.Ticks;
-          this._garbageCollection = this._RemoveBySelector;
-          this._valueFactory = this._CreateLifetimeBasedItem;
+        this._lastUsedId = lifeTime.Ticks;
+        this._garbageCollection = this._RemoveBySelector;
+        this._valueFactory = this._CreateLifetimeBasedItem;
       } else if (policy == CacheReplacementPolicy.MostAvailableLifetimeLeft) {
-          this._lastUsedId = lifeTime.Ticks;
-          this._garbageCollection = this._RemoveBySelectorReversed;
-          this._valueFactory = this._CreateLifetimeBasedItem;
+        this._lastUsedId = lifeTime.Ticks;
+        this._garbageCollection = this._RemoveBySelectorReversed;
+        this._valueFactory = this._CreateLifetimeBasedItem;
       } else if (policy == _CacheReplacementPolicy.NotNeeded) {
-          this._garbageCollection = this._RemoveNone;
-          this._valueFactory = this._CreateSelectorLessItem;
-          maxItems = 0;
-          maxSize = 0;
-          needSizeTracking = false;
+        this._garbageCollection = this._RemoveNone;
+        this._valueFactory = this._CreateSelectorLessItem;
+        maxItems = 0;
+        maxSize = 0;
+        needSizeTracking = false;
       } else
-          throw new NotSupportedException($"Unknown policy: {this.Policy}");
+        throw new NotSupportedException($"Unknown policy: {this.Policy}");
 
       this._maxItems = maxItems;
       this._maxSize = maxSize;

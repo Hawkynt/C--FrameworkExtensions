@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -19,6 +19,8 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -32,7 +34,7 @@ namespace System.Threading {
 #endif
   static partial class SemaphoreSlimExtensions {
 
-    #region nested types
+#region nested types
 
     private class SemaphoreAcquired : IDisposable {
       private readonly SemaphoreSlim _semaphore;
@@ -51,7 +53,7 @@ namespace System.Threading {
         this.Dispose();
       }
 
-      #region IDisposable
+#region IDisposable
 
       public void Dispose() {
         if (Interlocked.CompareExchange(ref this._isDisposed, 1, 0) != 0)
@@ -65,10 +67,10 @@ namespace System.Threading {
 #endif
       }
 
-      #endregion
+#endregion
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Tries to wait for the semaphore to enter.
@@ -86,3 +88,5 @@ namespace System.Threading {
 
   }
 }
+
+#endif

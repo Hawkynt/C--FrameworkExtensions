@@ -39,6 +39,8 @@ namespace System.IO {
 #endif
   partial class FastFileOperations {
 
+    public delegate void FileReportCallback(IFileReport report);
+
     private class FileCopyOperation : IFileOperation {
 
       #region nested types
@@ -60,15 +62,15 @@ namespace System.IO {
         #endregion
 
         #region Implementation of IFileReport
-        public ReportType ReportType { get { return (this._reportType); } }
-        public IFileSystemOperation Operation { get { return (this._operation); } }
-        public int StreamIndex { get { return this._streamIndex; } }
-        public long StreamOffset { get { return this._streamOffset; } }
-        public long ChunkOffset { get { return this._chunkOffset; } }
-        public long ChunkSize { get { return this._chunkSize; } }
-        public long StreamSize { get { return this._streamSize; } }
-        public FileSystemInfo Source { get { return this._source; } }
-        public FileSystemInfo Target { get { return this._target; } }
+        public ReportType ReportType => this._reportType;
+        public IFileSystemOperation Operation => this._operation;
+        public int StreamIndex => this._streamIndex;
+        public long StreamOffset => this._streamOffset;
+        public long ChunkOffset => this._chunkOffset;
+        public long ChunkSize => this._chunkSize;
+        public long StreamSize => this._streamSize;
+        public FileSystemInfo Source => this._source;
+        public FileSystemInfo Target => this._target;
         public ContinuationType ContinuationType { get; set; }
 
         #endregion
@@ -104,7 +106,7 @@ namespace System.IO {
       #region fields
       private readonly FileInfo _source;
       private readonly FileInfo _target;
-      private readonly Action<IFileReport> _callback;
+      private readonly FileReportCallback _callback;
       private readonly ManualResetEventSlim _finishEvent = new ManualResetEventSlim();
       private readonly bool _canReadDuringWrite;
       private readonly int _chunkSize;
@@ -120,34 +122,35 @@ namespace System.IO {
       #region props
       public FileStream SourceStream { private get; set; }
       public FileStream TargetStream { private get; set; }
-      public int ChunkSize { get { return (this._chunkSize); } }
-      private long _CurrentReadAheadSize { get { return (this._readAheadCache.ToArray().Sum(c => c.length)); } }
+      public int ChunkSize => this._chunkSize;
+      private long _CurrentReadAheadSize { get { return this._readAheadCache.ToArray().Sum(c => c.length); } }
 
       private bool _CanRead {
         get {
           if (this.IsDone)
-            return (false);
+            return false;
 
           if (this._canReadDuringWrite)
-            return (this._CurrentReadAheadSize < this._maxReadAheadSize);
+            return this._CurrentReadAheadSize < this._maxReadAheadSize;
 
-          return (!this._readAheadCache.Any());
+          return !this._readAheadCache.Any();
         }
       }
 
       private bool _AcquireWriteStream {
         get {
           if (Interlocked.Decrement(ref this._streamCount) >= 0)
-            return (true);
+            return true;
 
           Interlocked.Increment(ref this._streamCount);
-          return (false);
+          return false;
         }
       }
       #endregion
 
       #region ctor,dtor
-      public FileCopyOperation(FileInfo source, FileInfo target, Action<IFileReport> callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1) {
+      
+      public FileCopyOperation(FileInfo source, FileInfo target, FileReportCallback callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1) {
         this._source = source;
         this._target = target;
         this._callback = callback ?? (_ => { });
@@ -167,7 +170,7 @@ namespace System.IO {
       #region chunk management
       private Chunk _GetReadChunk() {
         if (this.IsDone)
-          return (null);
+          return null;
 
         while (!this._CanRead)
           Thread.Sleep(1);
@@ -175,10 +178,10 @@ namespace System.IO {
         var size = this._chunkSize;
         var offset = Interlocked.Add(ref this._readOffset, size) - size;
         if (offset >= this.TotalSize)
-          return (null);
+          return null;
 
         this._CreateReport(ReportType.StartRead, 0, offset, size);
-        return (new Chunk(offset, size));
+        return new Chunk(offset, size);
       }
 
       private void _ReleaseReadChunk(Chunk chunk) {
@@ -196,10 +199,10 @@ namespace System.IO {
           Thread.Sleep(1);
 
         if (this.IsDone)
-          return (null);
+          return null;
 
         this._CreateReport(ReportType.StartWrite, 0, result.offset, result.length);
-        return (result);
+        return result;
 
       }
 
@@ -246,13 +249,13 @@ namespace System.IO {
       /// <param name="stream">The stream.</param>
       private static bool _TryDisposeStream(FileStream stream) {
         if (stream == null)
-          return (true);
+          return true;
 
         try {
           stream.Dispose();
-          return (true);
+          return true;
         } catch {
-          return (false);
+          return false;
         }
       }
 
@@ -261,12 +264,12 @@ namespace System.IO {
       private FileCopyReport _CreateReport(ReportType reportType, int streamIndex, long offset, long size) {
         var result = new FileCopyReport(reportType, this, streamIndex, offset, size);
         this._callback(result);
-        return (result);
+        return result;
       }
 
       public IFileReport OperationStarted() {
         this._RegisterToAppUnload();
-        return (this._CreateReport(ReportType.StartOperation, -1, 0, this.TotalSize));
+        return this._CreateReport(ReportType.StartOperation, -1, 0, this.TotalSize);
       }
 
       public IFileReport OperationFinished() {
@@ -276,7 +279,7 @@ namespace System.IO {
         this._target.LastWriteTimeUtc = this._source.LastWriteTimeUtc;
 
         this._finishEvent.Set();
-        return (this._CreateReport(ReportType.FinishedOperation, -1, 0, this.TotalSize));
+        return this._CreateReport(ReportType.FinishedOperation, -1, 0, this.TotalSize);
       }
 
       public IFileReport OperationAborted(Exception exception) {
@@ -287,11 +290,11 @@ namespace System.IO {
           this._target.Delete();
           this._finishEvent.Set();
         }
-        return (result);
+        return result;
       }
 
       public IFileReport CreatedLink() {
-        return (this._CreateReport(ReportType.CreatedLink, -1, 0, this.TotalSize));
+        return this._CreateReport(ReportType.CreatedLink, -1, 0, this.TotalSize);
       }
       #endregion
 
@@ -434,23 +437,23 @@ namespace System.IO {
       #endregion
 
       #region Implementation of IFileOperation
-      public FileSystemInfo Source { get { return (this._source); } }
-      public FileSystemInfo Target { get { return (this._target); } }
-      public long TotalSize { get { return (this._source.Length); } }
-      public long BytesToTransfer { get { return (this.TotalSize); } }
-      public long BytesRead { get { return (Interlocked.Read(ref this._bytesRead)); } }
-      public long BytesTransferred { get { return (Interlocked.Read(ref this._bytesTransferred)); } }
+      public FileSystemInfo Source => this._source;
+      public FileSystemInfo Target => this._target;
+      public long TotalSize => this._source.Length;
+      public long BytesToTransfer => this.TotalSize;
+      public long BytesRead => Interlocked.Read(ref this._bytesRead);
+      public long BytesTransferred => Interlocked.Read(ref this._bytesTransferred);
 
       public int StreamCount {
-        get { return (this._streamCount); }
+        get => this._streamCount;
         set {
           this._streamCount = Math.Max(1, value);
           Thread.MemoryBarrier();
         }
       }
-      public Exception Exception { get { return (this._exception); } }
-      public bool IsDone { get { return (this._finishEvent.IsSet); } }
-      public bool ThrewException { get { return (this._exception != null); } }
+      public Exception Exception => this._exception;
+      public bool IsDone => this._finishEvent.IsSet;
+      public bool ThrewException => this._exception != null;
 
       public void Abort() {
         this.OperationAborted(new OperationCanceledException(_EX_USER_ABORT));
@@ -461,7 +464,7 @@ namespace System.IO {
       }
 
       public bool WaitTillDone(TimeSpan timeout) {
-        return (this._finishEvent.Wait(timeout));
+        return this._finishEvent.Wait(timeout);
       }
       #endregion
     }
@@ -480,11 +483,11 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <exception cref="System.IO.FileNotFoundException">When source file does not exist</exception>
     /// <exception cref="System.IO.IOException">When target file exists and should not overwrite</exception>
-    public static void CopyTo(this FileInfo This, FileInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, Action<IFileSystemReport> callback = null, int allowedStreams = 1, int bufferSize = _DEFAULT_BUFFER_SIZE) {
+    public static void CopyTo(this FileInfo This, FileInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, FileReportCallback callback = null, int allowedStreams = 1, int bufferSize = _DEFAULT_BUFFER_SIZE) {
       var token = CopyToAsync(This, target, overwrite, allowHardLinks, dontResolveSymbolicLinks, callback, allowedStreams, bufferSize);
       token.Operation.WaitTillDone();
       if (token.Operation.ThrewException)
-        throw (token.Operation.Exception);
+        throw token.Operation.Exception;
     }
 
     /// <summary>
@@ -502,7 +505,7 @@ namespace System.IO {
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">When source file does not exist</exception>
     /// <exception cref="System.IO.IOException">When target file exists and should not overwrite</exception>
-    public static IFileReport CopyToAsync(this FileInfo This, FileInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, Action<IFileSystemReport> callback = null, int allowedStreams = 1, int bufferSize = -1) {
+    public static IFileReport CopyToAsync(this FileInfo This, FileInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, FileReportCallback callback = null, int allowedStreams = 1, int bufferSize = -1) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(target != null);
@@ -520,7 +523,7 @@ namespace System.IO {
         if (targets.Any(t => t.FullName == target.FullName)) {
           var operation = new FileCopyOperation(This, target, callback, false);
           operation.OperationStarted();
-          return (operation.OperationFinished());
+          return operation.OperationFinished();
         }
       }
 
@@ -535,7 +538,7 @@ namespace System.IO {
       if (dontResolveSymbolicLinks) {
         var copySymlink = _CopySymbolicLinkIfNeeded(This, target, callback);
         if (copySymlink != null)
-          return (copySymlink);
+          return copySymlink;
       }
 
       var mainToken = new FileCopyOperation(This, target, callback, !This.IsOnSamePhysicalDrive(target), bufferSize);
@@ -546,7 +549,7 @@ namespace System.IO {
         // link creation successful
         mainToken.OperationStarted();
         mainToken.CreatedLink();
-        return (mainToken.OperationFinished());
+        return mainToken.OperationFinished();
       }
 
       // do copy
@@ -561,7 +564,7 @@ namespace System.IO {
 
         mainToken.TargetStream = new FileStream(target.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, mainToken.ChunkSize, FileOptions.Asynchronous | (mainToken.TotalSize < _MAX_CACHED_SIZE ? FileOptions.None : FileOptions.WriteThrough));
       } catch (Exception e) {
-        return (mainToken.OperationAborted(e));
+        return mainToken.OperationAborted(e);
       }
 
       // trigger start reading
@@ -569,7 +572,7 @@ namespace System.IO {
         mainToken.StartReading();
       else
         result = mainToken.OperationFinished();
-      return (result);
+      return result;
     }
 
     /// <summary>
@@ -579,9 +582,9 @@ namespace System.IO {
     /// <param name="target">The target.</param>
     /// <param name="callback">The callback.</param>
     /// <returns>The last report or <c>null</c>.</returns>
-    private static IFileReport _CopySymbolicLinkIfNeeded(FileInfo source, FileInfo target, Action<IFileSystemReport> callback) {
+    private static IFileReport _CopySymbolicLinkIfNeeded(FileInfo source, FileInfo target, FileReportCallback callback) {
       if (!source.IsSymbolicLink())
-        return (null);
+        return null;
 
       var operation = new FileCopyOperation(source, target, callback, false);
       operation.OperationStarted();
@@ -589,9 +592,9 @@ namespace System.IO {
         var targets = source.GetSymbolicLinkTarget();
         target.CreateSymbolicLinkAt(targets);
         operation.CreatedLink();
-        return (operation.OperationFinished());
+        return operation.OperationFinished();
       } catch (Exception e) {
-        return (operation.OperationAborted(e));
+        return operation.OperationAborted(e);
       }
     }
 

@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -189,7 +189,7 @@ namespace System.Diagnostics
             return result;
         }
 
-        public static FileInfo File(this ProcessStartInfo @this)=>string.IsNullOrWhiteSpace(@this.FileName)?null: new FileInfo(@this.FileName);
+        public static FileInfo File(this ProcessStartInfo @this)=> @this.FileName.IsNullOrWhiteSpace()?null: new FileInfo(@this.FileName);
 
     }
 }

@@ -19,6 +19,8 @@
 */
 #endregion
 
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+
 using System.Collections.Generic;
 using System.Threading;
 
@@ -54,3 +56,5 @@ namespace System.Collections.Concurrent {
     }
   }
 }
+
+#endif

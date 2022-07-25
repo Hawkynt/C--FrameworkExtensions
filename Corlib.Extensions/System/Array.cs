@@ -21,6 +21,7 @@
 
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_CONTRACTS 
+#define SUPPORTS_POINTER_ARITHMETIC
 #endif
 
 using System.Collections;
@@ -2968,9 +2969,17 @@ namespace System {
     private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
 #endif
 
+#if !SUPPORTS_POINTER_ARITHMETIC
+    private static void _Add(ref IntPtr src, int count) => src=new IntPtr(src.ToInt64() + count);
+#endif
+
     private static void _FillWithQWords(IntPtr source, ref int offset, int count, Block8 value) {
       var v = (long)value;
+#if SUPPORTS_POINTER_ARITHMETIC
       source += offset;
+#else
+      _Add(ref source,offset);
+#endif
       offset += count << 3;
 
 #if !MONO
@@ -2986,13 +2995,21 @@ namespace System {
 
         var sizeInBytes = 64;
         var start = source;
+#if SUPPORTS_POINTER_ARITHMETIC
         source += sizeInBytes;
+#else
+        _Add(ref source, sizeInBytes);
+#endif
         count -= 8;
 
         var countInBytes = count << 3;
         while (countInBytes > sizeInBytes) {
           _MemoryCopy(source, start, sizeInBytes);
+#if SUPPORTS_POINTER_ARITHMETIC
           source += sizeInBytes;
+#else
+          _Add(ref source, sizeInBytes);
+#endif
           countInBytes -= sizeInBytes;
           sizeInBytes <<= 1;
         }
@@ -3001,7 +3018,7 @@ namespace System {
       }
 #endif
 
-      while (count >= 8) {
+        while (count >= 8) {
         Marshal.WriteInt64(source, 0, v);
         Marshal.WriteInt64(source, 8, v);
         Marshal.WriteInt64(source, 16, v);
@@ -3010,33 +3027,41 @@ namespace System {
         Marshal.WriteInt64(source, 40, v);
         Marshal.WriteInt64(source, 48, v);
         Marshal.WriteInt64(source, 56, v);
+#if SUPPORTS_POINTER_ARITHMETIC
         source += 64;
+#else
+        _Add(ref source, 64);
+#endif
         count -= 8;
       }
 
       while (count > 0) {
         Marshal.WriteInt64(source, 0, v);
+#if SUPPORTS_POINTER_ARITHMETIC
         source += 8;
+#else
+        _Add(ref source, 8);
+#endif
         --count;
       }
     }
 
 #endif
 
-    #endregion
+#endregion
 
     #region hash computation
 
-    /// <summary>
-    /// Computes the hash.
-    /// </summary>
-    /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
-    /// <param name="this">This Byte-Array.</param>
-    /// <returns>The result of the hash algorithm</returns>
+        /// <summary>
+        /// Computes the hash.
+        /// </summary>
+        /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
+        /// <param name="this">This Byte-Array.</param>
+        /// <returns>The result of the hash algorithm</returns>
 #if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    [DebuggerStepThrough]
+        [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
       if (@this == null)
         throw new NullReferenceException();
