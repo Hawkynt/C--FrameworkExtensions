@@ -304,7 +304,7 @@ Corlib.Extensions/System/Collections/Generic/Cache.cs
 Corlib.Extensions/System/Collections/Generic/Enumerable.Statistics.cs
 Corlib.Extensions/System/ComponentModel/PropertyChanged.cs
 Corlib.Extensions/System/ComponentModel/PropertyChanging.cs
-Corlib.Extensions/System/Math.cs
+Corlib.Extensions/System/Math.T4.cs
 Corlib.Extensions/System/Runtime/Serialization/SerializationInfo.cs
 Corlib.Extensions/System/String.Parsers.cs
 Corlib.Extensions/System/TimeSpan.cs
@@ -312,5 +312,5 @@ Corlib.Extensions/System/Threading/Interlocked.cs
 Corlib.Extensions/System/Type.cs
 System.Drawing.Extensions/System/Drawing/Image.cs
 System.Drawing.Extensions/System/Drawing/Point.cs
-Corlib.Extensions/System/IO/FileInfo.cs
+Corlib.Extensions/System/IO/FileInfo.T4.cs
 Corlib.Extensions/System/IO/Link.cs

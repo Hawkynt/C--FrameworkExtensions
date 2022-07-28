@@ -24,6 +24,10 @@
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_CONTRACTS 
 #endif
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_ASYNC
+#endif
+
 
 using System.Diagnostics;
 #if SUPPORTS_CONTRACTS
@@ -32,8 +36,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+#if SUPPORTS_ASYNC
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -309,7 +315,7 @@ namespace System.IO {
       @this.Read(buffer, offset, count);
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_ASYNC
 
     /// <summary>
     ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
@@ -451,5 +457,19 @@ namespace System.IO {
 
       stream.Seek(absolutePosition, SeekOrigin.Begin);
     }
+
+#if NET20_OR_GREATER && !NET40_OR_GREATER
+
+    public static void CopyTo(this Stream @this,Stream target) {
+      var buffer = new byte[81920];
+      int count;
+      while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
+        target.Write(buffer, 0, count);
+    }
+
+    public static void Flush(this Stream @this, bool _) => @this.Flush();
+
+#endif
+
   }
 }

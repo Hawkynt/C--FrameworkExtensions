@@ -141,7 +141,7 @@
   <ItemGroup Condition="$(FrameworkVersions.Contains('|$(TargetFramework)|'))">
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Data" />
-    <Reference Include="Microsoft.CSharp" />
+    <Reference Condition="$(TargetFramework) != 'net35'" Include="Microsoft.CSharp" />
     <Reference Include="System.Transactions" />
   </ItemGroup>
 
@@ -154,6 +154,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="System\IO\FileInfo.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FileInfo.T4.cs</LastGenOutput>
+    </None>
     <None Update="System\IO\FileInfo.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FileInfo.cs</LastGenOutput>
@@ -185,6 +189,10 @@
     <None Update="System\IO\Link.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Link.cs</LastGenOutput>
+    </None>
+    <None Update="System\Math.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Math.T4.cs</LastGenOutput>
     </None>
     <None Update="System\Math.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -302,20 +310,20 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyChanging.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\IO\FileInfo.cs">
+    <Compile Update="System\IO\FileInfo.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>FileInfo.tt</DependentUpon>
+      <DependentUpon>FileInfo.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\IO\Link.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Link.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Math.cs">
+    <Compile Update="System\Math.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Math.tt</DependentUpon>
+      <DependentUpon>Math.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Runtime\Serialization\SerializationInfo.cs">
       <DesignTime>True</DesignTime>
