@@ -19,9 +19,13 @@
 */
 #endregion
 
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_INLINING
+#endif
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_CONTRACTS 
 #define SUPPORTS_POINTER_ARITHMETIC
+#define SUPPORTS_ASYNC
 #endif
 
 using System.Collections;
@@ -32,25 +36,18 @@ using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.IO.Compression;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 using System.Security.Cryptography;
 using System.Text;
-#if NET40_OR_GREATER
+#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
 using System.Runtime.InteropServices;
 #if !UNSAFE
 using System.Security.Permissions;
 #endif
-using Block2 = System.UInt16;
-using Block4 = System.UInt32;
-using Block8 = System.UInt64;
-
-using SBlock2 = System.Int16;
-using SBlock4 = System.Int32;
-using SBlock8 = System.Int64;
 
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -258,16 +255,16 @@ namespace System {
 
     [StructLayout(LayoutKind.Sequential, Size = 32)]
     private struct Block32 {
-      public readonly Block4 a;
-      public readonly Block4 b;
-      public readonly Block4 c;
-      public readonly Block4 d;
-      public readonly Block4 e;
-      public readonly Block4 f;
-      public readonly Block4 g;
-      public readonly Block4 h;
+      public readonly uint a;
+      public readonly uint b;
+      public readonly uint c;
+      public readonly uint d;
+      public readonly uint e;
+      public readonly uint f;
+      public readonly uint g;
+      public readonly uint h;
 
-      public Block32(Block4 u) {
+      public Block32(uint u) {
         this.a = u;
         this.b = u;
         this.c = u;
@@ -278,23 +275,23 @@ namespace System {
         this.h = u;
       }
 
-      public Block32(Block2 u) : this(0x00010001U * u) { }
+      public Block32(ushort u) : this(0x00010001U * u) { }
       public Block32(byte u) : this(0x01010101U * u) { }
 
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 64)]
     private struct Block64 {
-      public readonly Block8 a;
-      public readonly Block8 b;
-      public readonly Block8 c;
-      public readonly Block8 d;
-      public readonly Block8 e;
-      public readonly Block8 f;
-      public readonly Block8 g;
-      public readonly Block8 h;
+      public readonly ulong a;
+      public readonly ulong b;
+      public readonly ulong c;
+      public readonly ulong d;
+      public readonly ulong e;
+      public readonly ulong f;
+      public readonly ulong g;
+      public readonly ulong h;
 
-      public Block64(Block8 u) {
+      public Block64(ulong u) {
         this.a = u;
         this.b = u;
         this.c = u;
@@ -305,8 +302,8 @@ namespace System {
         this.h = u;
       }
 
-      public Block64(Block4 u) : this(0x0000000100000001UL * u) { }
-      public Block64(Block2 u) : this(0x0001000100010001UL * u) { }
+      public Block64(uint u) : this(0x0000000100000001UL * u) { }
+      public Block64(ushort u) : this(0x0001000100010001UL * u) { }
       public Block64(byte u) : this(0x0101010101010101UL * u) { }
     }
 
@@ -445,7 +442,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="this">This Enumeration.</param>
     /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -459,7 +456,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -497,7 +494,7 @@ namespace System {
     /// <param name="start">The start.</param>
     /// <param name="length">The length; negative values mean: till the end.</param>
     /// <returns>An array slice which accesses the underlying array.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -559,7 +556,7 @@ namespace System {
     /// <param name="this">This Array.</param>
     /// <param name="index">The index.</param>
     /// <returns></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -573,7 +570,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="defaultValue">The default value.</param>
     /// <returns></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -587,7 +584,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -601,7 +598,7 @@ namespace System {
     /// <param name="index">The index.</param>
     /// <param name="factory">The factory to create default values.</param>
     /// <returns></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -773,7 +770,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -804,20 +801,20 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) => Array.ForEach(@this, action);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_ASYNC
     /// <summary>
     /// Executes a callback with each element in an array in parallel.
     /// </summary>
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <param name="action">The callback to execute for each element.</param>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -922,7 +919,7 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="predicate">The predicate.</param>
     /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) => Array.Exists(@this, predicate);
@@ -933,7 +930,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the input array.</typeparam>
     /// <param name="this">This array.</param>
     /// <returns>An array where all values are inverted.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static TItem[] Reverse<TItem>(this TItem[] @this) {
@@ -960,10 +957,10 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Contains<TItem>(this TItem[] @this, TItem value) => @this.IndexOf(value) >= 0;
@@ -1214,7 +1211,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements</typeparam>
     /// <param name="this">This <see cref="Array"/></param>
     /// <returns><c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNullEmpty<TItem>(this TItem[] @this)=>@this==null||@this.Length<=0;
@@ -1225,7 +1222,7 @@ namespace System {
     /// <typeparam name="TItem">The type of the elements</typeparam>
     /// <param name="this">This <see cref="Array"/></param>
     /// <returns><c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c></returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotNullEmpty<TItem>(this TItem[] @this) => @this != null && @this.Length > 0;
@@ -1258,7 +1255,7 @@ namespace System {
 
     #region high performance linq for arrays
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1344,7 +1341,7 @@ namespace System {
       throw new InvalidOperationException("No Elements!");
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1438,13 +1435,13 @@ namespace System {
       return result;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static int Count<TItem>(this TItem[] @this) => @this.Length;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -1702,497 +1699,12 @@ namespace System {
 
     #region byte-array specials
 
-    #region comparison
-
-#if UNSAFE
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceUnsafe(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      fixed (byte* sourceFixedPointer = &source[sourceOffset])
-      fixed (byte* targetFixedPointer = &target[targetOffset]) {
-        var sourcePointer = sourceFixedPointer;
-        var targetPointer = targetFixedPointer;
-
-        const int THRESHOLD = 4;
-
-        { // try 2048-Bit
-          var localCount = count >> 8;
-          if (localCount >= THRESHOLD) {
-            var result = _SequenceEqual256Bytewise(ref sourcePointer, ref targetPointer, localCount);
-            if (!result)
-              return false;
-
-            count &= 0b11111111;
-            if (count == 0)
-              return true;
-          }
-        }
-
-#if !PLATFORM_X86
-        { // try 512-Bit
-          var localCount = count >> 6;
-          if (localCount >= THRESHOLD) {
-            var result = _SequenceEqual64Bytewise(ref sourcePointer, ref targetPointer, localCount);
-            if (!result)
-              return false;
-
-            count &= 0b111111;
-            if (count == 0)
-              return true;
-          }
-        }
-#endif
-
-        { // try 256-Bit
-          var localCount = count >> 5;
-          if (localCount >= THRESHOLD) {
-            var result = _SequenceEqual32Bytewise(ref sourcePointer, ref targetPointer, localCount);
-            if (!result)
-              return false;
-
-            count &= 0b11111;
-            if (count == 0)
-              return true;
-          }
-        }
-
-#if !PLATFORM_X86
-        { // try 64-Bit
-          var localCount = count >> 3;
-          if (localCount >= THRESHOLD) {
-            var result = _SequenceEqual8Bytewise(ref sourcePointer, ref targetPointer, localCount);
-            if (!result)
-              return false;
-
-            count &= 0b111;
-            if (count == 0)
-              return true;
-          }
-        }
-#endif
-
-        { // try 32-Bit
-          var localCount = count >> 2;
-          if (localCount >= THRESHOLD) {
-            var result = _SequenceEqual4Bytewise(ref sourcePointer, ref targetPointer, localCount);
-            if (!result)
-              return false;
-
-            count &= 0b11;
-            if (count == 0)
-              return true;
-          }
-        }
-
-        if (count > 0)
-          return _SequenceEqualBytewise(ref sourcePointer, ref targetPointer, count);
-
-        return true;
-      }
-    }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqualBytewise(ref byte* source, ref byte* target, int count) {
-      while (count > 0) {
-        if (*source != *target)
-          return false;
-
-        ++source;
-        ++target;
-        --count;
-      }
-
-      return true;
-    }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual4Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block4*)s;
-      var target = (Block4*)t;
-      while (count > 0) {
-        if (*source != *target)
-          return false;
-
-        ++source;
-        ++target;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#if !PLATFORM_X86
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual8Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block8*)s;
-      var target = (Block8*)t;
-
-      while (count > 0) {
-        if (*source != *target)
-          return false;
-
-        ++source;
-        ++target;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#endif
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual32Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block32*)s;
-      var target = (Block32*)t;
-
-      while (count > 0) {
-        if (
-          (*source).a != (*target).a
-          || (*source).b != (*target).b
-          || (*source).c != (*target).c
-          || (*source).d != (*target).d
-          || (*source).e != (*target).e
-          || (*source).f != (*target).f
-          || (*source).g != (*target).g
-          || (*source).h != (*target).h
-        )
-          return false;
-
-        ++source;
-        ++target;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#if !PLATFORM_X86
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual64Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block64*)s;
-      var target = (Block64*)t;
-
-      while (count > 0) {
-        if (
-          (*source).a != (*target).a
-          || (*source).b != (*target).b
-          || (*source).c != (*target).c
-          || (*source).d != (*target).d
-          || (*source).e != (*target).e
-          || (*source).f != (*target).f
-          || (*source).g != (*target).g
-          || (*source).h != (*target).h
-        )
-          return false;
-
-        ++source;
-        ++target;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block64*)s;
-      var target = (Block64*)t;
-
-      while (count > 0) {
-        if (
-          (*source).a != (*target).a
-          || (*source).b != (*target).b
-          || (*source).c != (*target).c
-          || (*source).d != (*target).d
-          || (*source).e != (*target).e
-          || (*source).f != (*target).f
-          || (*source).g != (*target).g
-          || (*source).h != (*target).h
-
-          || source[1].a != target[1].a
-          || source[1].b != target[1].b
-          || source[1].c != target[1].c
-          || source[1].d != target[1].d
-          || source[1].e != target[1].e
-          || source[1].f != target[1].f
-          || source[1].g != target[1].g
-          || source[1].h != target[1].h
-
-          || source[2].a != target[2].a
-          || source[2].b != target[2].b
-          || source[2].c != target[2].c
-          || source[2].d != target[2].d
-          || source[2].e != target[2].e
-          || source[2].f != target[2].f
-          || source[2].g != target[2].g
-          || source[2].h != target[2].h
-
-          || source[3].a != target[3].a
-          || source[3].b != target[3].b
-          || source[3].c != target[3].c
-          || source[3].d != target[3].d
-          || source[3].e != target[3].e
-          || source[3].f != target[3].f
-          || source[3].g != target[3].g
-          || source[3].h != target[3].h
-
-        )
-          return false;
-
-        source += 4;
-        target += 4;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#else
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
-      var source = (Block32*)s;
-      var target = (Block32*)t;
-
-      while (count > 0) {
-        if (
-          (*source).a != (*target).a
-          || (*source).b != (*target).b
-          || (*source).c != (*target).c
-          || (*source).d != (*target).d
-          || (*source).e != (*target).e
-          || (*source).f != (*target).f
-          || (*source).g != (*target).g
-          || (*source).h != (*target).h
-
-          || source[1].a != target[1].a
-          || source[1].b != target[1].b
-          || source[1].c != target[1].c
-          || source[1].d != target[1].d
-          || source[1].e != target[1].e
-          || source[1].f != target[1].f
-          || source[1].g != target[1].g
-          || source[1].h != target[1].h
-
-          || source[2].a != target[2].a
-          || source[2].b != target[2].b
-          || source[2].c != target[2].c
-          || source[2].d != target[2].d
-          || source[2].e != target[2].e
-          || source[2].f != target[2].f
-          || source[2].g != target[2].g
-          || source[2].h != target[2].h
-
-          || source[3].a != target[3].a
-          || source[3].b != target[3].b
-          || source[3].c != target[3].c
-          || source[3].d != target[3].d
-          || source[3].e != target[3].e
-          || source[3].f != target[3].f
-          || source[3].g != target[3].g
-          || source[3].h != target[3].h
-
-          || source[4].a != target[4].a
-          || source[4].b != target[4].b
-          || source[4].c != target[4].c
-          || source[4].d != target[4].d
-          || source[4].e != target[4].e
-          || source[4].f != target[4].f
-          || source[4].g != target[4].g
-          || source[4].h != target[4].h
-
-          || source[5].a != target[5].a
-          || source[5].b != target[5].b
-          || source[5].c != target[5].c
-          || source[5].d != target[5].d
-          || source[5].e != target[5].e
-          || source[5].f != target[5].f
-          || source[5].g != target[5].g
-          || source[5].h != target[5].h
-
-          || source[6].a != target[6].a
-          || source[6].b != target[6].b
-          || source[6].c != target[6].c
-          || source[6].d != target[6].d
-          || source[6].e != target[6].e
-          || source[6].f != target[6].f
-          || source[6].g != target[6].g
-          || source[6].h != target[6].h
-
-          || source[7].a != target[7].a
-          || source[7].b != target[7].b
-          || source[7].c != target[7].c
-          || source[7].d != target[7].d
-          || source[7].e != target[7].e
-          || source[7].f != target[7].f
-          || source[7].g != target[7].g
-          || source[7].h != target[7].h
-        )
-          return false;
-
-        source += 8;
-        target += 8;
-        --count;
-      }
-
-      s = (byte*)source;
-      t = (byte*)target;
-      return true;
-    }
-
-#endif
-
-#else
-
-#if DEBUG && !PLATFORM_X86
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static bool _SequenceEqualManagedPointers(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-      using (var targetFixedPointer = DisposableGCHandle.Pin(target)) {
-        var sourcePointer = sourceFixedPointer.AddrOfPinnedObject();
-        var targetPointer = targetFixedPointer.AddrOfPinnedObject();
-        while (count >= 8) {
-          if (Marshal.ReadInt64(sourcePointer, sourceOffset) != Marshal.ReadInt64(targetPointer, targetOffset))
-            return false;
-
-          sourceOffset += 8;
-          targetOffset += 8;
-          count -= 8;
-        }
-
-        while (count > 0) {
-          if (Marshal.ReadByte(sourcePointer, sourceOffset) != Marshal.ReadByte(targetPointer, targetOffset))
-            return false;
-
-          ++sourceOffset;
-          ++targetOffset;
-          --count;
-        }
-      }
-
-      return true;
-    }
-
-#endif
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static bool _SequenceEqualNaive(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      while (count > 0) {
-        if (source[sourceOffset] != target[targetOffset])
-          return false;
-
-        ++sourceOffset;
-        ++targetOffset;
-        --count;
-      }
-
-      return true;
-    }
-
-#endif
-
-    private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-#if UNSAFE
-      return _SequenceUnsafe(source, sourceOffset, target, targetOffset, count);
-#else
-#if DEBUG && !PLATFORM_X86
-      return _SequenceEqualManagedPointers(source, sourceOffset, target, targetOffset, count);
-#else
-      return _SequenceEqualNaive(source, sourceOffset, target, targetOffset, count);
-#endif
-#endif
-    }
-
-    public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      if (ReferenceEquals(source, target) && sourceOffset == targetOffset)
-        return true;
-      if (source == null || target == null)
-        return false;
-
-      var sourceLeft = source.Length - sourceOffset;
-      var targetLeft = target.Length - targetOffset;
-      if (sourceLeft < count)
-        throw new ArgumentOutOfRangeException("Source has too few bytes left");
-
-      if (targetLeft < count)
-        throw new ArgumentOutOfRangeException("Target has too few bytes left");
-
-      return _SequenceEqual(source, sourceOffset, target, targetOffset, sourceLeft);
-    }
-
-    public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset) {
-      if (ReferenceEquals(source, target) && sourceOffset == targetOffset)
-        return true;
-      if (source == null || target == null)
-        return false;
-
-      var sourceLeft = source.Length - sourceOffset;
-      var targetLeft = target.Length - targetOffset;
-      if (sourceLeft != targetLeft)
-        return false;
-
-      return _SequenceEqual(source, sourceOffset, target, targetOffset, sourceLeft);
-    }
-
-    public static bool SequenceEqual(this byte[] source, byte[] target) {
-      if (ReferenceEquals(source, target))
-        return true;
-      if (source == null || target == null)
-        return false;
-
-      var sourceLeft = source.Length;
-      var targetLeft = target.Length;
-      if (sourceLeft != targetLeft)
-        return false;
-
-      if (sourceLeft == 0)
-        return true;
-
-      return _SequenceEqual(source, 0, target, 0, sourceLeft);
-    }
-
-    #endregion
-
     /// <summary>
     /// Creates random data in the given buffer; thus effectively overwriting it in-place.
     /// </summary>
     /// <param name="this">This buffer.</param>
     /// <returns>The given buffer</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -2359,10 +1871,12 @@ namespace System {
       var searchStringLength = searchString.Length;
       var dataStringLength = @this.Length;
 
+      if (searchStringLength < 1)
+        return 0;
+
       if ((dataStringLength + offset) < searchStringLength)
         return _INDEX_WHEN_NOT_FOUND;
-
-
+      
       // ReSharper disable once JoinDeclarationAndInitializer
       int index;
 #if UNSAFE
@@ -2489,576 +2003,15 @@ namespace System {
 
     #endregion
 
-    #region Array Clear
-
-    public static void Clear(this byte[] @this) => _FillWithBytes(@this, 0, @this.Length, 0);
-
-    public static void Clear(this ushort[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (ushort* pointer = &@this[0])
-          _FillWords(pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this short[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (short* pointer = &@this[0])
-          _FillWords((ushort*)pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this uint[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (uint* pointer = &@this[0])
-          _FillDWords(pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillDWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this int[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (int* pointer = &@this[0])
-          _FillDWords((uint*)pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillDWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this float[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (float* pointer = &@this[0])
-          _FillDWords((uint*)pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillDWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this ulong[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (ulong* pointer = &@this[0])
-          _FillQWords(pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillQWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this long[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (long* pointer = &@this[0])
-          _FillQWords((ulong*)pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillQWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    public static void Clear(this double[] @this) {
-#if UNSAFE
-      unsafe {
-        fixed (double* pointer = &@this[0])
-          _FillQWords((ulong*)pointer, @this.Length, 0);
-      }
-#else
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(@this)) {
-        var pointer = sourceFixedPointer.AddrOfPinnedObject();
-        _FillQWordPointer(pointer, 0, @this.Length, 0);
-      }
-#endif
-    }
-
-    #endregion
-
-    #region Byte Array Fill
-
-    public static void Fill(this byte[] @this, byte value) => _FillWithBytes(@this, 0, @this.Length, value);
-    public static void Fill(this byte[] @this, byte value, int offset) {
-      if (offset < 0 || offset > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithBytes(@this, offset, @this.Length - offset, value);
-    }
-    public static void Fill(this byte[] @this, byte value, int offset, int count) {
-      if (offset < 0 || count < 0 || offset + count > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithBytes(@this, offset, count, value);
-    }
-
-    public static void Fill(this byte[] @this, Block2 value, int count) {
-      if (count < 0 || count << 1 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithWords(@this, 0, count, value);
-    }
-    public static void Fill(this byte[] @this, Block2 value, int offset, int count) {
-      if (offset < 0 || count < 0 || (offset + count) << 1 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithWords(@this, offset, count, value);
-    }
-
-    public static void Fill(this byte[] @this, Block4 value, int count) {
-      if (count < 0 || count << 2 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithDWords(@this, 0, count, value);
-    }
-    public static void Fill(this byte[] @this, Block4 value, int offset, int count) {
-      if (offset < 0 || count < 0 || (offset + count) << 2 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithDWords(@this, offset, count, value);
-    }
-
-    public static void Fill(this byte[] @this, Block8 value, int count) {
-      if (count < 0 || count << 3 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithQWords(@this, 0, count, value);
-    }
-    public static void Fill(this byte[] @this, Block8 value, int offset, int count) {
-      if (offset < 0 || count < 0 || (offset + count) << 3 > @this.Length)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWithQWords(@this, offset, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, byte value, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillBytePointer(@this, 0, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, byte value, int offset, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillBytePointer(@this, offset, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, Block2 value, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWordPointer(@this, 0, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, Block2 value, int offset, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillWordPointer(@this, offset, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, Block4 value, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillDWordPointer(@this, 0, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, Block4 value, int offset, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillDWordPointer(@this, offset, count, value);
-    }
-
-    public static void Fill(this IntPtr @this, Block8 value, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillQWordPointer(@this, 0, count, value);
-    }
-
-
-    public static void Fill(this IntPtr @this, Block8 value, int offset, int count) {
-      if (count < 0)
-        throw new ArgumentOutOfRangeException();
-
-      _FillQWordPointer(@this, offset, count, value);
-    }
-
-
-#if UNSAFE
-
-    private static unsafe void _FillWithBytes(byte[] source, int offset, int count, byte value) {
-      fixed (byte* pointer = &source[offset])
-        _FillBytes(pointer, count, value);
-    }
-
-    private static unsafe void _FillWithWords(byte[] source, int offset, int count, Block2 value) {
-      fixed (byte* pointer = &source[offset << 1])
-        _FillWords((Block2*)pointer, count, value);
-    }
-
-    private static unsafe void _FillWithDWords(byte[] source, int offset, int count, Block4 value) {
-      fixed (byte* pointer = &source[offset << 2])
-        _FillDWords((Block4*)pointer, count, value);
-    }
-
-    private static unsafe void _FillWithQWords(byte[] source, int offset, int count, Block8 value) {
-      fixed (byte* pointer = &source[offset << 3])
-        _FillQWords((Block8*)pointer, count, value);
-    }
-
-    private static unsafe void _FillBytePointer(IntPtr source, int offset, int count, byte value) => _FillBytes((byte*)source.ToPointer() + offset, count, value);
-    private static unsafe void _FillWordPointer(IntPtr source, int offset, int count, Block2 value) => _FillWords((Block2*)source.ToPointer() + offset, count, value);
-    private static unsafe void _FillDWordPointer(IntPtr source, int offset, int count, Block4 value) => _FillDWords((Block4*)source.ToPointer() + offset, count, value);
-    private static unsafe void _FillQWordPointer(IntPtr source, int offset, int count, Block8 value) => _FillQWords((Block8*)source.ToPointer() + offset, count, value);
-
-    private static unsafe void _FillBytes(byte* source, int count, byte value) {
-      if (count >= 64) {
-        var localCount = count >> 6;
-        var localSource = (Block64*)source;
-
-        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
-        count &= 0b111111;
-        source = (byte*)localSource;
-      }
-
-      while (count >= 8) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source += 8;
-        count -= 8;
-      }
-
-      while (--count >= 0)
-        *source++ = value;
-    }
-
-    private static unsafe void _FillWords(Block2* source, int count, Block2 value) {
-      if (count >= 64) {
-        var localCount = count >> 5;
-        var localSource = (Block64*)source;
-        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
-        count &= 0b11111;
-        source = (Block2*)localSource;
-      }
-
-      while (count >= 8) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source += 8;
-        count -= 8;
-      }
-
-      while (--count >= 0)
-        *source++ = value;
-    }
-
-    private static unsafe void _FillDWords(Block4* source, int count, Block4 value) {
-      if (count >= 64) {
-        var localCount = count >> 4;
-        var localSource = (Block64*)source;
-        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
-        count &= 0b1111;
-        source = (Block4*)localSource;
-      }
-
-      while (count >= 8) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source += 8;
-        count -= 8;
-      }
-
-      while (--count >= 0)
-        *source++ = value;
-    }
-
-    private static unsafe void _FillQWords(Block8* source, int count, Block8 value) {
-      if (count >= 64) {
-        var localCount = count >> 3;
-        var localSource = (Block64*)source;
-        _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
-        count &= 0b111;
-        source = (Block8*)localSource;
-      }
-
-      while (count >= 8) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source += 8;
-        count -= 8;
-      }
-
-      while (--count >= 0)
-        *source++ = value;
-    }
-
-    private static unsafe void _Fill64ByteBlocks(ref Block64* source, int count, Block64 value) {
-      while (count >= 16) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source[8] = value;
-        source[9] = value;
-        source[10] = value;
-        source[11] = value;
-        source[12] = value;
-        source[13] = value;
-        source[14] = value;
-        source[15] = value;
-        source += 16;
-        count -= 16;
-      }
-
-      if (count >= 8) {
-        *source = value;
-        source[1] = value;
-        source[2] = value;
-        source[3] = value;
-        source[4] = value;
-        source[5] = value;
-        source[6] = value;
-        source[7] = value;
-        source += 8;
-        count -= 8;
-      }
-
-      while (--count >= 0)
-        *source++ = value;
-    }
-
-#else // Managed stuff
-
-    private static void _FillWithBytes(byte[] source, int offset, int count, byte value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillBytePointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithWords(byte[] source, int offset, int count, Block2 value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithDWords(byte[] source, int offset, int count, Block4 value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillDWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithQWords(byte[] source, int offset, int count, Block8 value) {
-      offset <<= 3;
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillWithQWords(sourceFixedPointer.AddrOfPinnedObject(), ref offset, count, value);
-    }
-
-    private static void _FillBytePointer(IntPtr source, int offset, int count, byte value) {
-      if (count >= 8) {
-        var localCount = count >> 3;
-        _FillWithQWords(source, ref offset, localCount, (Block8)value << 56 | (Block8)value << 48 | (Block8)value << 40 | (Block8)value << 32 | (Block8)value << 24 | (Block8)value << 16 | (Block8)value << 8 | value);
-        count &= 0b111;
-      }
-
-      while (--count >= 0)
-        Marshal.WriteByte(source, offset++, value);
-    }
-
-    private static void _FillWordPointer(IntPtr source, int offset, int count, Block2 value) {
-      offset = offset << 1;
-
-      if (count >= 4) {
-        var localCount = count >> 2;
-        _FillWithQWords(source, ref offset, localCount, (Block8)value << 32 | (Block8)value << 24 | (Block8)value << 16 | value);
-        count &= 0b11;
-      }
-
-      while (--count >= 0) {
-        Marshal.WriteInt16(source, offset, (short)value);
-        offset += 2;
-      }
-    }
-
-    private static void _FillDWordPointer(IntPtr source, int offset, int count, Block4 value) {
-      offset = offset << 2;
-
-      if (count >= 2) {
-        var localCount = count >> 1;
-        _FillWithQWords(source, ref offset, localCount, (Block8)value << 32 | value);
-        count &= 0b1;
-      }
-
-      while (--count >= 0) {
-        Marshal.WriteInt32(source, offset, (int)value);
-        offset += 4;
-      }
-    }
-
-    private static void _FillQWordPointer(IntPtr source, int offset, int count, Block8 value) {
-      offset <<= 3;
-      _FillWithQWords(source, ref offset, count, value);
-    }
-
-#if !MONO
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
-    private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
-
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
-    private static extern void __MemoryFill(IntPtr dst, int value, int count);
-    private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
-#endif
-
-#if !SUPPORTS_POINTER_ARITHMETIC
-    private static void _Add(ref IntPtr src, int count) => src=new IntPtr(src.ToInt64() + count);
-#endif
-
-    private static void _FillWithQWords(IntPtr source, ref int offset, int count, Block8 value) {
-      var v = (long)value;
-#if SUPPORTS_POINTER_ARITHMETIC
-      source += offset;
-#else
-      _Add(ref source,offset);
-#endif
-      offset += count << 3;
-
-#if !MONO
-      if (count >= 64) {
-        Marshal.WriteInt64(source, 0, v);
-        Marshal.WriteInt64(source, 8, v);
-        Marshal.WriteInt64(source, 16, v);
-        Marshal.WriteInt64(source, 24, v);
-        Marshal.WriteInt64(source, 32, v);
-        Marshal.WriteInt64(source, 40, v);
-        Marshal.WriteInt64(source, 48, v);
-        Marshal.WriteInt64(source, 56, v);
-
-        var sizeInBytes = 64;
-        var start = source;
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += sizeInBytes;
-#else
-        _Add(ref source, sizeInBytes);
-#endif
-        count -= 8;
-
-        var countInBytes = count << 3;
-        while (countInBytes > sizeInBytes) {
-          _MemoryCopy(source, start, sizeInBytes);
-#if SUPPORTS_POINTER_ARITHMETIC
-          source += sizeInBytes;
-#else
-          _Add(ref source, sizeInBytes);
-#endif
-          countInBytes -= sizeInBytes;
-          sizeInBytes <<= 1;
-        }
-        _MemoryCopy(source, start, countInBytes);
-        return;
-      }
-#endif
-
-        while (count >= 8) {
-        Marshal.WriteInt64(source, 0, v);
-        Marshal.WriteInt64(source, 8, v);
-        Marshal.WriteInt64(source, 16, v);
-        Marshal.WriteInt64(source, 24, v);
-        Marshal.WriteInt64(source, 32, v);
-        Marshal.WriteInt64(source, 40, v);
-        Marshal.WriteInt64(source, 48, v);
-        Marshal.WriteInt64(source, 56, v);
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += 64;
-#else
-        _Add(ref source, 64);
-#endif
-        count -= 8;
-      }
-
-      while (count > 0) {
-        Marshal.WriteInt64(source, 0, v);
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += 8;
-#else
-        _Add(ref source, 8);
-#endif
-        --count;
-      }
-    }
-
-#endif
-
-#endregion
-
     #region hash computation
 
-        /// <summary>
-        /// Computes the hash.
-        /// </summary>
-        /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
-        /// <param name="this">This Byte-Array.</param>
-        /// <returns>The result of the hash algorithm</returns>
-#if NET45_OR_GREATER
+    /// <summary>
+    /// Computes the hash.
+    /// </summary>
+    /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
+    /// <param name="this">This Byte-Array.</param>
+    /// <returns>The result of the hash algorithm</returns>
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         [DebuggerStepThrough]
@@ -3078,7 +2031,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3089,7 +2042,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3100,7 +2053,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3111,7 +2064,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3122,7 +2075,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Byte-Array.</param>
     /// <returns>The hash</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -3130,1013 +2083,9 @@ namespace System {
 
     #endregion
 
-    #region utility classes
-    private static class RuntimeConfiguration {
-      public static readonly int MaxDegreeOfParallelism = Environment.ProcessorCount;
-
-      public static bool Has16BitRegisters => IntPtr.Size >= 2;
-
-      public static bool Has32BitRegisters => IntPtr.Size >= 4;
-
-      public static bool Has64BitRegisters => IntPtr.Size >= 8;
-
-      public const int MIN_ITEMS_FOR_PARALELLISM = 2048;
-      public const int MIN_ITEMS_PER_THREAD = 128;
-
-      public const int DEFAULT_MAX_CHUNK_SIZE = 1024 * 64;
-
-      public const int ALLOCATION_WORD = 128;
-      public const int ALLOCATION_DWORD = 256;
-      public const int ALLOCATION_QWORD = 512;
-
-      public const int BLOCKCOPY_WORD = 2;
-      public const int BLOCKCOPY_DWORD = 4;
-      public const int BLOCKCOPY_QWORD = 8;
-    }
-
-    private static class FastXor {
-      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
-        var end = offset + length;
-        for (var i = offset; i < end; ++i)
-          source[i] ^= operand[i];
-      }
-
-      private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] ^= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
-
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] ^= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoQWords(ulong[] source, ulong[] operand) {
-
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] ^= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      public static void ProcessBytewise(byte[] source, byte[] operand) {
-        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-      }
-
-#if UNSAFE
-      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        fixed (byte* srcPointer = source, opPointer = operand) {
-
-          if (RuntimeConfiguration.Has64BitRegisters) {
-            var sourcePtr = (ulong*)(srcPointer + offset);
-            var operandPtr = (ulong*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-              *sourcePtr ^= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 8;
-              offset += 8;
-            }
-          }
-          if (RuntimeConfiguration.Has32BitRegisters) {
-            var sourcePtr = (uint*)(srcPointer + offset);
-            var operandPtr = (uint*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-              *sourcePtr ^= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 4;
-              offset += 4;
-            }
-          }
-          if (RuntimeConfiguration.Has16BitRegisters) {
-            var sourcePtr = (ushort*)(srcPointer + offset);
-            var operandPtr = (ushort*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-              *sourcePtr ^= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 2;
-              offset += 2;
-            }
-          }
-          {
-            var sourcePtr = srcPointer + offset;
-            var operandPtr = opPointer + offset;
-            while (bytesLeft > 0) {
-              *sourcePtr ^= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft--;
-              offset++;
-            }
-          }
-        }
-      }
-#endif
-
-      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        // long part
-        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
-
-          var chunk = new ulong[maxChunkSize >> 3];
-          var secondChunk = new ulong[maxChunkSize >> 3];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 3;
-            chunkLength = itemCount << 3;
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoQWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-
-        }
-
-        // int part
-        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
-          var chunk = new uint[maxChunkSize >> 2];
-          var secondChunk = new uint[maxChunkSize >> 2];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 2;
-            chunkLength = itemCount << 2;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoDWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // short part
-        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
-          var chunk = new ushort[maxChunkSize >> 1];
-          var secondChunk = new ushort[maxChunkSize >> 1];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 1;
-            chunkLength = itemCount << 1;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // remaining bytes
-        if (bytesLeft > 0)
-          _DoBytes(source, operand, offset, bytesLeft);
-
-      }
-    }
-
-    private static class FastAnd {
-      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
-        var end = offset + length;
-        for (var i = offset; i < end; ++i)
-          source[i] &= operand[i];
-      }
-
-      private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] &= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] &= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoQWords(ulong[] source, ulong[] operand) {
-
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] &= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] &= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      public static void ProcessBytewise(byte[] source, byte[] operand) {
-        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-      }
-
-#if UNSAFE
-      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        fixed (byte* srcPointer = source, opPointer = operand) {
-
-          if (RuntimeConfiguration.Has64BitRegisters) {
-            var sourcePtr = (ulong*)(srcPointer + offset);
-            var operandPtr = (ulong*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-              *sourcePtr &= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 8;
-              offset += 8;
-            }
-          }
-          if (RuntimeConfiguration.Has32BitRegisters) {
-            var sourcePtr = (uint*)(srcPointer + offset);
-            var operandPtr = (uint*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-              *sourcePtr &= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 4;
-              offset += 4;
-            }
-          }
-          if (RuntimeConfiguration.Has16BitRegisters) {
-            var sourcePtr = (ushort*)(srcPointer + offset);
-            var operandPtr = (ushort*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-              *sourcePtr &= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 2;
-              offset += 2;
-            }
-          }
-          {
-            var sourcePtr = srcPointer + offset;
-            var operandPtr = opPointer + offset;
-            while (bytesLeft > 0) {
-              *sourcePtr &= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft--;
-              offset++;
-            }
-          }
-        }
-      }
-#endif
-
-      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        // long part
-        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
-
-          var chunk = new ulong[maxChunkSize >> 3];
-          var secondChunk = new ulong[maxChunkSize >> 3];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 3;
-            chunkLength = itemCount << 3;
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoQWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-
-        }
-
-        // int part
-        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
-          var chunk = new uint[maxChunkSize >> 2];
-          var secondChunk = new uint[maxChunkSize >> 2];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 2;
-            chunkLength = itemCount << 2;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoDWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // short part
-        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
-          var chunk = new ushort[maxChunkSize >> 1];
-          var secondChunk = new ushort[maxChunkSize >> 1];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 1;
-            chunkLength = itemCount << 1;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // remaining bytes
-        if (bytesLeft > 0)
-          _DoBytes(source, operand, offset, bytesLeft);
-
-      }
-    }
-
-    private static class FastOr {
-      private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
-        var end = offset + length;
-        for (var i = offset; i < end; ++i)
-          source[i] |= operand[i];
-      }
-
-      private static void _DoWords(ushort[] source, ushort[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] |= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoDWords(uint[] source, uint[] operand) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] |= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoQWords(ulong[] source, ulong[] operand) {
-
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] |= operand[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] |= operand[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      public static void ProcessBytewise(byte[] source, byte[] operand) {
-        _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-      }
-
-#if UNSAFE
-      public static unsafe void ProcessInUnsafeChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        fixed (byte* srcPointer = source, opPointer = operand) {
-
-          if (RuntimeConfiguration.Has64BitRegisters) {
-            var sourcePtr = (ulong*)(srcPointer + offset);
-            var operandPtr = (ulong*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-              *sourcePtr |= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 8;
-              offset += 8;
-            }
-          }
-          if (RuntimeConfiguration.Has32BitRegisters) {
-            var sourcePtr = (uint*)(srcPointer + offset);
-            var operandPtr = (uint*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-              *sourcePtr |= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 4;
-              offset += 4;
-            }
-          }
-          if (RuntimeConfiguration.Has16BitRegisters) {
-            var sourcePtr = (ushort*)(srcPointer + offset);
-            var operandPtr = (ushort*)(opPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-              *sourcePtr |= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft -= 2;
-              offset += 2;
-            }
-          }
-          {
-            var sourcePtr = srcPointer + offset;
-            var operandPtr = opPointer + offset;
-            while (bytesLeft > 0) {
-              *sourcePtr |= *operandPtr;
-              sourcePtr++;
-              operandPtr++;
-              bytesLeft--;
-              offset++;
-            }
-          }
-        }
-      }
-#endif
-
-      public static void ProcessInChunks(byte[] source, byte[] operand, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, operand, 0, Math.Min(source.Length, operand.Length));
-          return;
-        }
-
-        var bytesLeft = Math.Min(source.Length, operand.Length);
-        var offset = 0;
-
-        // long part
-        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
-
-          var chunk = new ulong[maxChunkSize >> 3];
-          var secondChunk = new ulong[maxChunkSize >> 3];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 3;
-            chunkLength = itemCount << 3;
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoQWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-
-        }
-
-        // int part
-        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
-          var chunk = new uint[maxChunkSize >> 2];
-          var secondChunk = new uint[maxChunkSize >> 2];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 2;
-            chunkLength = itemCount << 2;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoDWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // short part
-        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
-          var chunk = new ushort[maxChunkSize >> 1];
-          var secondChunk = new ushort[maxChunkSize >> 1];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 1;
-            chunkLength = itemCount << 1;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            Buffer.BlockCopy(operand, offset, secondChunk, 0, chunkLength);
-            _DoWords(chunk, secondChunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // remaining bytes
-        if (bytesLeft > 0)
-          _DoBytes(source, operand, offset, bytesLeft);
-
-      }
-    }
-
-    private static class FastNot {
-      private static void _DoBytes(byte[] source, int offset, int length) {
-        var end = offset + length;
-        for (var i = offset; i < end; ++i)
-          source[i] ^= 0xff;
-      }
-
-      private static void _DoWords(ushort[] source) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] ^= 0xffff;
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] ^= 0xffff;
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoDWords(uint[] source) {
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] = ~source[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] = ~source[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      private static void _DoQWords(ulong[] source) {
-
-#if NET40_OR_GREATER
-        if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
-#endif
-          for (var i = 0; i < source.Length; i++)
-            source[i] = ~source[i];
-#if NET40_OR_GREATER
-          return;
-        }
-
-        var maxDegree = Math.Min(RuntimeConfiguration.MaxDegreeOfParallelism, source.Length / RuntimeConfiguration.MIN_ITEMS_PER_THREAD);
-        var index = 0;
-        var o = new object();
-        Action action = () => {
-          int start;
-          lock (o)
-            start = index++;
-          for (var i = start; i < source.Length; i += maxDegree)
-            source[i] = ~source[i];
-        };
-
-        var actions = new Action[maxDegree];
-        for (var i = maxDegree - 1; i >= 0; --i)
-          actions[i] = action;
-
-        Parallel.Invoke(actions);
-#endif
-      }
-
-      public static void ProcessBytewise(byte[] source) {
-        _DoBytes(source, 0, source.Length);
-      }
-
-#if UNSAFE
-      public static unsafe void ProcessInUnsafeChunks(byte[] source, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, 0, source.Length);
-          return;
-        }
-
-        var bytesLeft = source.Length;
-        var offset = 0;
-
-        fixed (byte* srcPointer = source) {
-
-          if (RuntimeConfiguration.Has64BitRegisters) {
-            var sourcePtr = (ulong*)(srcPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-              *sourcePtr = ~*sourcePtr;
-              sourcePtr++;
-              bytesLeft -= 8;
-              offset += 8;
-            }
-          }
-          if (RuntimeConfiguration.Has32BitRegisters) {
-            var sourcePtr = (uint*)(srcPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-              *sourcePtr = ~*sourcePtr;
-              sourcePtr++;
-              bytesLeft -= 4;
-              offset += 4;
-            }
-          }
-          if (RuntimeConfiguration.Has16BitRegisters) {
-            var sourcePtr = (ushort*)(srcPointer + offset);
-            while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-              *sourcePtr ^= 0xffff;
-              sourcePtr++;
-              bytesLeft -= 2;
-              offset += 2;
-            }
-          }
-          {
-            var sourcePtr = srcPointer + offset;
-            while (bytesLeft > 0) {
-              *sourcePtr ^= 0xff;
-              sourcePtr++;
-              bytesLeft--;
-              offset++;
-            }
-          }
-        }
-      }
-#endif
-
-      public static void ProcessInChunks(byte[] source, int maxChunkSize = -1) {
-        if (maxChunkSize < 1)
-          maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
-
-        if (maxChunkSize < 2) {
-          _DoBytes(source, 0, source.Length);
-          return;
-        }
-
-        var bytesLeft = source.Length;
-        var offset = 0;
-
-        // long part
-        if (RuntimeConfiguration.Has64BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_QWORD) {
-
-          var chunk = new ulong[maxChunkSize >> 3];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 3;
-            chunkLength = itemCount << 3;
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            _DoQWords(chunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-
-        }
-
-        // int part
-        if (RuntimeConfiguration.Has32BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_DWORD) {
-          var chunk = new uint[maxChunkSize >> 2];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 2;
-            chunkLength = itemCount << 2;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            _DoDWords(chunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // short part
-        if (RuntimeConfiguration.Has16BitRegisters && bytesLeft > RuntimeConfiguration.ALLOCATION_WORD) {
-          var chunk = new ushort[maxChunkSize >> 1];
-
-          while (bytesLeft > RuntimeConfiguration.BLOCKCOPY_WORD) {
-
-            var chunkLength = Math.Min(bytesLeft, maxChunkSize);
-            var itemCount = chunkLength >> 1;
-            chunkLength = itemCount << 1;
-
-
-            Buffer.BlockCopy(source, offset, chunk, 0, chunkLength);
-            _DoWords(chunk);
-            Buffer.BlockCopy(chunk, 0, source, offset, chunkLength);
-
-            bytesLeft -= chunkLength;
-            offset += chunkLength;
-          }
-        }
-
-        // remaining bytes
-        if (bytesLeft > 0)
-          _DoBytes(source, offset, bytesLeft);
-
-      }
-    }
-    #endregion
-
     #region bitwise operations
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4147,13 +2096,7 @@ namespace System {
       FastXor.ProcessInChunks(@this, operand);
 #endif
     }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void XorBytewise(this byte[] @this, byte[] operand) => FastXor.ProcessBytewise(@this, operand);
-
+    
     public static void And(this byte[] @this, byte[] operand) {
 #if UNSAFE
       FastAnd.ProcessInUnsafeChunks(@this, operand);
@@ -4161,14 +2104,8 @@ namespace System {
       FastAnd.ProcessInChunks(@this, operand);
 #endif
     }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void AndBytewise(this byte[] @this, byte[] operand) => FastAnd.ProcessBytewise(@this, operand);
-
-#if NET45_OR_GREATER
+    
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -4179,31 +2116,7 @@ namespace System {
       FastOr.ProcessInChunks(@this, operand);
 #endif
     }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void OrBytewise(this byte[] @this, byte[] operand) => FastOr.ProcessBytewise(@this, operand);
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void Not(this byte[] @this) {
-#if UNSAFE
-      FastNot.ProcessInUnsafeChunks(@this);
-#else
-      FastNot.ProcessInChunks(@this);
-#endif
-    }
-
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void NotBytewise(this byte[] @this) => FastNot.ProcessBytewise(@this);
-
+    
     #endregion
 
     #endregion
