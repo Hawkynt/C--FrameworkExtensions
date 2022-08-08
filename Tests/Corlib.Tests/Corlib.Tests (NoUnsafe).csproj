@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;netcoreapp3.1;netstandard2.0;net48;net45;net40;net35</TargetFrameworks>
+    <Platforms>x86;x64;AnyCPU</Platforms>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Corlib.Extensions\Corlib.Extensions (NoUnsafe).csproj" />
+  </ItemGroup>
+
+</Project>
