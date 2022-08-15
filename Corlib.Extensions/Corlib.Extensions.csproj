@@ -196,10 +196,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Math.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\Math.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Math.cs</LastGenOutput>
-    </None>
     <None Update="System\Runtime\Serialization\SerializationInfo.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SerializationInfo.cs</LastGenOutput>

@@ -28,7 +28,7 @@
 #define SUPPORTS_INLINING
 #endif
 
-#if SUPPORTS_INLINING
+#if SUPPORTS_INLINING && !UNSAFE
 using System.Runtime.CompilerServices;
 #endif
 
@@ -73,7 +73,8 @@ static partial class ArrayExtensions {
         var index = 0;
 
         void Action() {
-          var start = Interlocked.Increment(ref index)-1;
+        // TODO: bad choice because of cache and data locality
+        var start = Interlocked.Increment(ref index) - 1;
           for (var i = start; i < source.Length; i += maxDegree)
             source[i] ^= 0xffff;
         }
@@ -101,7 +102,7 @@ static partial class ArrayExtensions {
         
         void Action() {
           // TODO: bad choice because of cache and data locality
-          var start = Interlocked.Increment(ref index)-1;
+          var start = Interlocked.Increment(ref index) - 1;
           for (var i = start; i < source.Length; i += maxDegree)
             source[i] = ~source[i];
         }
@@ -130,7 +131,7 @@ static partial class ArrayExtensions {
         
         void Action() {
           // TODO: bad choice because of cache and data locality
-          var start =Interlocked.Increment(ref index)-1;
+          var start =Interlocked.Increment(ref index) - 1;
           for (var i = start; i < source.Length; i += maxDegree)
             source[i] = ~source[i];
         }

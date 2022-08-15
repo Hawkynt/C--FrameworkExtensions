@@ -116,7 +116,7 @@ namespace System.Collections.Generic {
         yield return i;
     }
 
-#if !NET45_OR_GREATER
+#if !NET45_OR_GREATER && !NET5_0_OR_GREATER
     /// <summary>
     /// Appends a single item to the end of the enumeration.
     /// </summary>

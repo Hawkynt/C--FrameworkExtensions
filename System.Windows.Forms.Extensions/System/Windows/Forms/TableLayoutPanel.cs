@@ -106,7 +106,7 @@ namespace System.Windows.Forms {
         --i;
 
         var control = This.GetControlFromPositionFixed(i, lastRow);
-        if (control == null || !alreadyVisitedControls.ContainsKey(control))
+        if (control == null || alreadyVisitedControls.ContainsKey(control))
           continue;
 
         alreadyVisitedControls.Add(control, true);

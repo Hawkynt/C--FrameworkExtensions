@@ -2083,42 +2083,6 @@ namespace System {
 
     #endregion
 
-    #region bitwise operations
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void Xor(this byte[] @this, byte[] operand) {
-#if UNSAFE
-      FastXor.ProcessInUnsafeChunks(@this, operand);
-#else
-      FastXor.ProcessInChunks(@this, operand);
-#endif
-    }
-    
-    public static void And(this byte[] @this, byte[] operand) {
-#if UNSAFE
-      FastAnd.ProcessInUnsafeChunks(@this, operand);
-#else
-      FastAnd.ProcessInChunks(@this, operand);
-#endif
-    }
-    
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static void Or(this byte[] @this, byte[] operand) {
-#if UNSAFE
-      FastOr.ProcessInUnsafeChunks(@this, operand);
-#else
-      FastOr.ProcessInChunks(@this, operand);
-#endif
-    }
-    
-    #endregion
-
     #endregion
 
   }

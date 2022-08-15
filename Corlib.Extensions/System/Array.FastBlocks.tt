@@ -36,6 +36,7 @@
   const int BYTE_COUNT_POINTER      = 1 * 1024 * 1024; // we'll use pointer pinning and block-copies when this many bytes need to be copied
   const int ELEMENT_COUNT_BLOCK     = 256;             // we'll use Array.Copy or Buffer.BlockCopy when more than this many elements are present
   const int UNSAFE_NOT_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe not
+  const int UNSAFE_AND_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe and/xor/or
     
   var typeDatas = new List<TypeData>();
   typeDatas.Add(new TypeData{ name = "sbyte"  , size = 1, useBlockCopyInsteadOfArrayCopy = true, allowByteConversion = true});
@@ -344,126 +345,6 @@ label:
 <#    }#>
 <#  }#>
 
-#if UNSAFE
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
-      => _CopyTo(source + srcIndex, target + tgtIndex, count)
-    ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _CopyTo(byte* source, byte* target, int count) {
-byteLoop:
-
-#if PLATFORM_X86
-
-      switch(count) {
-        case 0: return;
-<#  for(var i = 1; i <= LINEAR_BLOCK_COUNTX86; ++i) {#>
-        case <#=i#>: 
-          <#=EmitCopyBlock(i, 0)#>
-          return;
-<#  }#>
-      }
-      
-      <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX86, 0)#>
-      count -= <#=LINEAR_BLOCK_COUNTX86#>;
-      source += <#=LINEAR_BLOCK_COUNTX86#>;
-      target += <#=LINEAR_BLOCK_COUNTX86#>;
-      
-      var blockCount = count<#=EmitFastIntegerDivide(LINEAR_BLOCK_COUNTX86)#>;
-      count = count<#=EmitFastIntegerModulo(LINEAR_BLOCK_COUNTX86)#>;
-
-blockLoop:
-
-      switch (blockCount) {
-        case 0: goto byteLoop;
-<#  for(var i = 1; i <= INDEX_LOOP_UNROLL; ++i) {#>
-        case <#=i#>: goto blockDuff<#=(INDEX_LOOP_UNROLL - i)#>;
-<#  }#>
-        default: goto blockDuffOut;
-      }
-
-<#  for(var i = 0; i < INDEX_LOOP_UNROLL; ++i) {#>
-blockDuff<#=i#>: <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL - i - 1)#>
-<#  }#>
-
-      var processed = blockCount<#=EmitFastIntegerMultiply(LINEAR_BLOCK_COUNTX86)#>;
-      source += processed;
-      target += processed;
-      goto byteLoop;
-
-blockDuffOut:
-
-      do {
-<#  for(var j = 0; j < INDEX_LOOP_UNROLL; ++j){#>
-        <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX86, j)#>
-<#  }#>
-        source += <#=(INDEX_LOOP_UNROLL * LINEAR_BLOCK_COUNTX86)#>;
-        target += <#=(INDEX_LOOP_UNROLL * LINEAR_BLOCK_COUNTX86)#>;
-        blockCount -= <#=INDEX_LOOP_UNROLL#>;
-      } while (blockCount >= <#=INDEX_LOOP_UNROLL#>);
-      goto blockLoop;
-
-#else
-
-      switch(count) {
-        case 0: return;
-<#  for(var i = 1; i <= LINEAR_BLOCK_COUNTX64; ++i) {#>
-        case <#=i#>: 
-          <#=EmitCopyBlock(i, 0)#>
-          return;
-<#  }#>
-      }
-      
-      <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX64, 0)#>
-      count -= <#=LINEAR_BLOCK_COUNTX64#>;
-      source += <#=LINEAR_BLOCK_COUNTX64#>;
-      target += <#=LINEAR_BLOCK_COUNTX64#>;
-      
-      var blockCount = count<#=EmitFastIntegerDivide(LINEAR_BLOCK_COUNTX64)#>;
-      count = count<#=EmitFastIntegerModulo(LINEAR_BLOCK_COUNTX64)#>;
-
-blockLoop:
-
-      switch (blockCount) {
-        case 0: goto byteLoop;
-<#  for(var i = 1; i <= INDEX_LOOP_UNROLL; ++i) {#>
-        case <#=i#>: goto blockDuff<#=(INDEX_LOOP_UNROLL - i)#>;
-<#  }#>
-        default: goto blockDuffOut;
-      }
-
-<#  for(var i = 0; i < INDEX_LOOP_UNROLL; ++i) {#>
-blockDuff<#=i#>: <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL - i - 1)#>
-<#  }#>
-
-      var processed = blockCount<#=EmitFastIntegerMultiply(LINEAR_BLOCK_COUNTX64)#>;
-      source += processed;
-      target += processed;
-      goto byteLoop;
-
-blockDuffOut:
-
-      do {
-<#  for(var j = 0; j < INDEX_LOOP_UNROLL; ++j){#>
-        <#=EmitCopyBlock(LINEAR_BLOCK_COUNTX64, j)#>
-<#  }#>
-        source += <#=(INDEX_LOOP_UNROLL * LINEAR_BLOCK_COUNTX64)#>;
-        target += <#=(INDEX_LOOP_UNROLL * LINEAR_BLOCK_COUNTX64)#>;
-        blockCount -= <#=INDEX_LOOP_UNROLL#>;
-      } while (blockCount >= <#=INDEX_LOOP_UNROLL#>);
-      goto blockLoop;
-
-#endif
-
-    }
-#endif
-
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -577,9 +458,9 @@ qwordDuffOut:
 <#    }#>
                   default: {
                     do {
-                      *(Block8*) @this = block8;
+                      *(ulong*) @this = block8;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                      ((Block8*) @this)[<#=i#>] = block8;
+                      ((ulong*) @this)[<#=i#>] = block8;
 <#    }#>
                       @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
                       blocks -= <#=INDEX_LOOP_UNROLL#>;
@@ -590,7 +471,7 @@ qwordDuffOut:
                 }
 
 <#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-              blockCount<#=i#>: *(Block8*) @this = block8;
+              blockCount<#=i#>: *(ulong*) @this = block8;
 <#    }#>
               @this += blocks << 3;
               blockCount0:
@@ -600,9 +481,9 @@ qwordDuffOut:
             // large blocks
             var start = @this;
 
-            *(Block8*)@this = block8;
+            *(ulong*)@this = block8;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-            ((Block8*)@this)[<#=i#>] = block8;
+            ((ulong*)@this)[<#=i#>] = block8;
 <#    }#>
             @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
             count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
@@ -654,7 +535,7 @@ qwordDuffOut:
             return;
 <#    }#>
           default: {
-            var block8 = (SBlock8) (0x0101010101010101UL * value);
+            var block8 = (long) (0x0101010101010101UL * value);
             var blocks = count >> 3;
             
 #if !MONO
@@ -749,9 +630,9 @@ qwordDuffOut:
 <#    }#>
                   default: {
                     do {
-                      *(Block8*) @this = 0;
+                      *(ulong*) @this = 0;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                      ((Block8*) @this)[<#=i#>] = 0;
+                      ((ulong*) @this)[<#=i#>] = 0;
 <#    }#>
                       @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
                       blocks -= <#=INDEX_LOOP_UNROLL#>;
@@ -762,7 +643,7 @@ qwordDuffOut:
                 }
 
 <#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-              blockCount<#=i#>: *(Block8*) @this = 0;
+              blockCount<#=i#>: *(ulong*) @this = 0;
 <#    }#>
               @this += blocks << 3;
               blockCount0:
@@ -772,9 +653,9 @@ qwordDuffOut:
             // large blocks
             var start = @this;
 
-            *(Block8*)@this = 0;
+            *(ulong*)@this = 0;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-            ((Block8*)@this)[<#=i#>] = 0;
+            ((ulong*)@this)[<#=i#>] = 0;
 <#    }#>
             @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
             count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
@@ -881,97 +762,38 @@ qwordDuffOut:
 
     #endregion
 
-    #region In-Place Not
+    #region Copy-blocks
 
-    public static void Not(this byte[] @this) => Not(@this, 0, @this.Length);
-    public static void Not(this byte[] @this, int offset, int count) {
-      <#=EmitCountTooSmallCheck()#>  
-      <#=EmitCountTooLargeCheck("@this.Length - offset")#>
-#if UNSAFE
-      _NotUnmanaged(@this, offset, count);
-#else
-      _NotManaged(@this, offset, count);
-#endif      
-    }
+    #if UNSAFE
 
-#if UNSAFE
-
-#if SUPPORTS_INLINING
+    #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _NotUnmanaged(byte[] data, int offset, int count) {
-      if (offset == 0)
-        fixed(byte* pointer = data){
-          _NotUnmanaged(pointer,count);
-        }
-      else
-        fixed(byte* pointer = &data[offset]){
-          _NotUnmanaged(pointer,count);
-        }
-    }
+    #endif
+    private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
+      => _CopyTo(source + srcIndex, target + tgtIndex, count)
+    ;
 
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _NotUnmanaged(byte* data, int count) {
-      for(;;)  
-        switch (count) {
-          case 0: return;
-<#      for(var i = 1; i <= UNSAFE_NOT_SWITCH_COUNT; ++i) {#>
-          case <#=i#>:
-            <#=string.Join("\r\n            ",EmitNegateBytes(i))#>
-            goto case 0;
-<#      }#>
-          default:
-#if PLATFORM_X86
-            var blockCount = count<#=EmitFastIntegerDivide(4)#>;
-            <#=EmitFastIntegerModulo("count", 4)#>
-            for (;;)
-              switch(blockCount) {
-                case 0: goto endOfBlocks;
-<#            for(var i = 1; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                case <#=i#>: 
-                  <#=string.Join("\r\n                  ",EmitNegateBytes86(i * 4))#>
-                  data += <#=(i * 4)#>;
-                  goto endOfBlocks;
-<#            }#>
-                default:
-                  do {
-                    <#=string.Join("\r\n                    ",EmitNegateBytes86(INDEX_LOOP_UNROLL * 4))#>
-                    data += <#=(INDEX_LOOP_UNROLL * 4)#>;
-                    blockCount -= <#=INDEX_LOOP_UNROLL#>;
-                  } while(blockCount >= <#=INDEX_LOOP_UNROLL#>);
-                  continue;
-              }
-#else
-            var blockCount = count<#=EmitFastIntegerDivide(8)#>;
-            <#=EmitFastIntegerModulo("count", 8)#>
-            for (;;)
-              switch(blockCount) {
-                case 0: goto endOfBlocks;
-<#            for(var i = 1; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                case <#=i#>: 
-                  <#=string.Join("\r\n                  ",EmitNegateBytes(i * 8))#>
-                  data += <#=(i * 8)#>;
-                  goto endOfBlocks;
-<#            }#>
-                default:
-                  do {
-                    <#=string.Join("\r\n                    ",EmitNegateBytes(INDEX_LOOP_UNROLL * 8))#>
-                    data += <#=(INDEX_LOOP_UNROLL * 8)#>;
-                    blockCount -= <#=INDEX_LOOP_UNROLL#>;
-                  } while(blockCount >= <#=INDEX_LOOP_UNROLL#>);
-                  continue;
-              }
-#endif
-            endOfBlocks:
-            continue;
-        }
-    }
-
-#endif
+    #if PLATFORM_X86
+    
+    <#=string.Join("\r\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX86, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX86)))#>
+    
+    #else
+    
+    <#=string.Join("\r\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX64, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX64)))#>
+    
+    #endif
+        
+    #endif
 
     #endregion
+
+    <#=string.Join("\r\n    ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
+
+    <#=string.Join("\r\n    ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
+
+    <#=string.Join("\r\n    ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
+
+    <#=string.Join("\r\n    ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
 
   }
 }
@@ -1033,25 +855,39 @@ string GetDataTypeForByteCount(int sizeInBytes) {
 
 string EmitIndexCopy(int i) => string.Format(@"target[tgtIndex{0}] = source[srcIndex{0}];", i == 0 ? string.Empty : " + " + i);
 
-string EmitCopyByte(int i = 0)  => i == 0 ? "*target = *source;"                 : string.Format("target[{0}] = source[{0}];", i);
-string EmitCopyWord(int i = 0)  => i == 0 ? "*(short*)target = *(short*)source;" : string.Format("((short*)target)[{0}] = ((short*)source)[{0}];", i);
-string EmitCopyDWord(int i = 0) => i == 0 ? "*(int*)target = *(int*)source;"     : string.Format("((int*)target)[{0}] = ((int*)source)[{0}];", i);
-string EmitCopyQWord(int i = 0) => i == 0 ? "*(long*)target = *(long*)source;"   : string.Format("((long*)target)[{0}] = ((long*)source)[{0}];", i);
-IEnumerable<string> EmitCopyBytes(int count) => EmitInlineBytes(count, EmitCopyByte, EmitCopyWord, EmitCopyDWord, EmitCopyQWord);
-
 string EmitMarshalCopyByte(int i = 0)  => string.Format("Marshal.WriteByte(target, tgtIndex{0}, Marshal.ReadByte(source, srcIndex{0}));", i == 0 ? string.Empty : " + " + i);
 string EmitMarshalCopyWord(int i = 0)  => string.Format("Marshal.WriteInt16(target, tgtIndex{0}, Marshal.ReadInt16(source, srcIndex{0}));", i == 0 ? string.Empty : " + " + i);
 string EmitMarshalCopyDWord(int i = 0) => string.Format("Marshal.WriteInt32(target, tgtIndex{0}, Marshal.ReadInt32(source, srcIndex{0}));", i == 0 ? string.Empty : " + " + i);
 string EmitMarshalCopyQWord(int i = 0) => string.Format("Marshal.WriteInt64(target, tgtIndex{0}, Marshal.ReadInt64(source, srcIndex{0}));", i == 0 ? string.Empty : " + " + i);
 IEnumerable<string> EmitMarshalCopyBytes(int count) => EmitInlineBytes(count, EmitMarshalCopyByte, EmitMarshalCopyWord, EmitMarshalCopyDWord, EmitMarshalCopyQWord);
 
-string EmitNegateByte(int i = 0) => i == 0 ? "*data ^= 0xff;" : string.Format("data[{0}] ^= 0xff;", i);
-string EmitNegateWord(int i = 0) => i == 0 ? "*(ushort*)data ^= 0xffff;" : string.Format("((ushort*)data)[{0}] ^= 0xffff;", i);
+string EmitNegateByte(int i = 0) => i == 0 ? "*data = (byte)~*data;" : string.Format("data[{0}] = (byte)~data[{0}];", i);
+string EmitNegateWord(int i = 0) => i == 0 ? "*(ushort*)data = (ushort)~*(ushort*)data;" : string.Format("((ushort*)data)[{0}] = (ushort)~((ushort*)data)[{0}];", i);
 string EmitNegateDWord(int i = 0) => i == 0 ? "*(uint*)data = ~*(uint*)data;" : string.Format("((uint*)data)[{0}] = ~((uint*)data)[{0}];", i);
 string EmitNegateQWord(int i = 0) => i == 0 ? "*(ulong*)data = ~*(ulong*)data;" : string.Format("((ulong*)data)[{0}] = ~((ulong*)data)[{0}];", i);
 IEnumerable<string> EmitNegateBytes(int count) => EmitInlineBytes(count, EmitNegateByte, EmitNegateWord, EmitNegateDWord, EmitNegateQWord);
 IEnumerable<string> EmitNegateBytes86(int count) => EmitInlineBytes(count, EmitNegateByte, EmitNegateWord, EmitNegateDWord);
 
+string EmitAndByte(int i = 0) => i == 0 ? "*data &= *operand;" : string.Format("data[{0}] &= operand[{0}];", i);
+string EmitAndWord(int i = 0) => i == 0 ? "*(ushort*)data &= *(ushort*)operand;" : string.Format("((ushort*)data)[{0}] &= ((ushort*)operand)[{0}];", i);
+string EmitAndDWord(int i = 0) => i == 0 ? "*(uint*)data &= *(uint*)operand;" : string.Format("((uint*)data)[{0}] &= ((uint*)operand)[{0}];", i);
+string EmitAndQWord(int i = 0) => i == 0 ? "*(ulong*)data &= *(ulong*)operand;" : string.Format("((ulong*)data)[{0}] &= ((ulong*)operand)[{0}];", i);
+IEnumerable<string> EmitAndBytes(int count) => EmitInlineBytes(count, EmitAndByte, EmitAndWord, EmitAndDWord, EmitAndQWord);
+IEnumerable<string> EmitAndBytes86(int count) => EmitInlineBytes(count, EmitAndByte, EmitAndWord, EmitAndDWord);
+
+string EmitOrByte(int i = 0) => i == 0 ? "*data |= *operand;" : string.Format("data[{0}] |= operand[{0}];", i);
+string EmitOrWord(int i = 0) => i == 0 ? "*(ushort*)data |= *(ushort*)operand;" : string.Format("((ushort*)data)[{0}] |= ((ushort*)operand)[{0}];", i);
+string EmitOrDWord(int i = 0) => i == 0 ? "*(uint*)data |= *(uint*)operand;" : string.Format("((uint*)data)[{0}] |= ((uint*)operand)[{0}];", i);
+string EmitOrQWord(int i = 0) => i == 0 ? "*(ulong*)data |= *(ulong*)operand;" : string.Format("((ulong*)data)[{0}] |= ((ulong*)operand)[{0}];", i);
+IEnumerable<string> EmitOrBytes(int count) => EmitInlineBytes(count, EmitOrByte, EmitOrWord, EmitOrDWord, EmitOrQWord);
+IEnumerable<string> EmitOrBytes86(int count) => EmitInlineBytes(count, EmitOrByte, EmitOrWord, EmitOrDWord);
+
+string EmitXorByte(int i = 0) => i == 0 ? "*data ^= *operand;" : string.Format("data[{0}] ^= operand[{0}];", i);
+string EmitXorWord(int i = 0) => i == 0 ? "*(ushort*)data ^= *(ushort*)operand;" : string.Format("((ushort*)data)[{0}] ^= ((ushort*)operand)[{0}];", i);
+string EmitXorDWord(int i = 0) => i == 0 ? "*(uint*)data ^= *(uint*)operand;" : string.Format("((uint*)data)[{0}] ^= ((uint*)operand)[{0}];", i);
+string EmitXorQWord(int i = 0) => i == 0 ? "*(ulong*)data ^= *(ulong*)operand;" : string.Format("((ulong*)data)[{0}] ^= ((ulong*)operand)[{0}];", i);
+IEnumerable<string> EmitXorBytes(int count) => EmitInlineBytes(count, EmitXorByte, EmitXorWord, EmitXorDWord, EmitXorQWord);
+IEnumerable<string> EmitXorBytes86(int count) => EmitInlineBytes(count, EmitXorByte, EmitXorWord, EmitXorDWord);
 
 IEnumerable<string> EmitInlineBytes(int count, Func<int,string> emitByte,Func<int,string> emitWord = null,Func<int,string> emitDWord = null,Func<int,string> emitQWord = null) {
   var offset = 0;
@@ -1083,12 +919,34 @@ IEnumerable<string> EmitInlineBytes(int count, Func<int,string> emitByte,Func<in
   }
 }
 
-string EmitCopyBlock(int sizeInBytes, int index) {
+IEnumerable<string> EmitCopyBlock(int count,int maximumBlockSize) {
+  var offset = 0;
+  while (maximumBlockSize > 0 && count > 0) {
+    if ( count < maximumBlockSize ) {
+      --maximumBlockSize;  
+      continue;
+    }
+
+    var needsByteOffset = offset % maximumBlockSize != 0;
+    yield return EmitCopyBlockLine(maximumBlockSize, needsByteOffset ? offset : offset / maximumBlockSize, needsByteOffset);
+
+    offset += maximumBlockSize;
+    count -= maximumBlockSize;
+  }
+}
+
+string EmitCopyBlockLine(int sizeInBytes, int index, bool isIndexInBytes) {
   if (sizeInBytes == 1)
     return index == 0 ? "*target = *source;" : string.Format("target[{1}] = source[{1}];", sizeInBytes, index);
   else {
     var dataType = GetDataTypeForByteCount(sizeInBytes);
-    return index == 0 ? string.Format("*({0}*)target = *({0}*)source;", dataType) : string.Format("(({0}*)target)[{1}] = (({0}*)source)[{1}];", dataType, index);
+    return index == 0 
+      ? string.Format("*({0}*)target = *({0}*)source;", dataType) 
+      : 
+        isIndexInBytes
+        ? string.Format("*(({0}*)(target + {1})) = *(({0}*)(source + {1}));", dataType, index)
+        : string.Format("(({0}*)target)[{1}] = (({0}*)source)[{1}];", dataType, index)
+    ;
   }
 }
 
@@ -1201,7 +1059,142 @@ IEnumerable<string> EmitSetBytes(int count, string value) {
     yield return EmitSetByte(offset, value);
 }
 
+IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount, int unrollCount, Func<int, IEnumerable<string>> byteEmitter, Func<int, IEnumerable<string>> byteEmitter86 = null) {
+  yield return "#region In-Place " + name;
+  yield return string.Empty;
+  
+  yield return "public static void " + name 
+    + "(this " 
+    + string.Join(", ",operands.Select((n, i) => "byte[] " + (i==0 ? "@this" : n))) 
+    + ") => " + name + "(" 
+    + string.Join(", ",operands.Select((n, i) => (i==0 ? "@this" : n) + ", 0") ) 
+    + ", @this.Length);"
+    ;
 
+  yield return "public static void " + name 
+    + "(this "
+    + string.Join(", ",operands.Select((n, i) => "byte[] " + (i==0 ? "@this" : n) + ", int " + (i==0 ? "o" : n + "O") + "ffset")) 
+    + ", int count) {";
+
+  yield return "  " + EmitThisNullCheck();
+  foreach(var operand in operands.Skip(1))
+    yield return "  " + EmitArgNullCheck(operand);
+
+  yield return "  " + EmitCountTooSmallCheck();
+
+  for (var i = 0; i < operands.Length; ++i)
+    yield return "  " + EmitCountTooLargeCheck(( i ==0 ? "@this" : operands[i] ) + ".Length - " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset");
+
+  var paramList = string.Join(", ", operands.Select((n, i) => ( i ==0 ? "@this" : operands[i] ) + ", " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"));
+  yield return "  #if UNSAFE";
+  yield return "  _" + name + "Unmanaged(" + paramList + ", count);";
+  yield return "  #else";
+  yield return "  _" + name + "Managed(" + paramList + ", count);";
+  yield return "  #endif";
+  yield return "}";
+  yield return string.Empty;
+  
+  yield return "#if UNSAFE";
+  yield return string.Empty;
+  
+  yield return "#if SUPPORTS_INLINING";
+  yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
+  yield return "#endif";
+  yield return "private static unsafe void _" + name + "Unmanaged("
+    + string.Join(", ", operands.Select((n, i) => "byte[] " + operands[i] + ", int "+ ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"))
+    +", int count) {"
+    ;
+
+  foreach(var operand in operands)
+    yield return "  fixed(byte* " + operand + "Pointer = " + operand + ")";
+  
+  yield return "    _" + name + "Unmanaged(" + string.Join(", ", operands.Select((n, i) => n + "Pointer + " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset")) + ", count);";
+  yield return "}";
+  yield return string.Empty;
+  
+  foreach(var line in EmitUnsafeProcessor("_" + name + "Unmanaged(" + string.Join(", ", operands.Select(n => "byte* " + n)) + ", int count)", caseCount, unrollCount, operands, 8, byteEmitter, 4, byteEmitter86))
+    yield return line;
+
+  yield return string.Empty;
+  
+  yield return "#endif";
+  yield return string.Empty;
+  
+  yield return "#endregion";
+}
+
+IEnumerable<string> EmitUnsafeProcessor(string signature, int caseCount, int unrollCount, string[] variablesToIncrement, int byteBlockCount, Func<int, IEnumerable<string>> byteEmitter, int byteBlockCount86 = 0, Func<int, IEnumerable<string>> byteEmitter86 = null) {
+  yield return "#if SUPPORTS_INLINING";
+  yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
+  yield return "#endif";
+  yield return "private static unsafe void " + signature + " {";
+  yield return "  for(;;) {";
+  yield return "    endOfBlocks: ;";
+  yield return "    switch (count) {";
+  yield return "      case 0: return;";
+  for(var i = 1; i < caseCount; ++i) {
+    yield return "      case " + i + ":";
+    foreach(var line in byteEmitter(i))
+      yield return "        " + line;
+
+    yield return "        return;";
+  }
+  yield return "    }";
+  
+  foreach(var line in byteEmitter(caseCount))
+    yield return "    " + line;
+  
+  yield return "    count -= " + caseCount + ";";
+  yield return "    if (count <= 0) return;";
+  foreach(var j in variablesToIncrement)
+    yield return "    " + j + " += " + caseCount + ";";
+  
+  if (byteEmitter86 != null && byteBlockCount86 > 0) {
+    yield return "    #if PLATFORM_X86";
+    foreach(var line in EmitBlockProcess(byteBlockCount86, unrollCount, byteEmitter86, variablesToIncrement))
+      yield return "      " + line;
+
+    yield return "    #else";
+  }
+
+  foreach(var line in EmitBlockProcess(byteBlockCount, unrollCount, byteEmitter, variablesToIncrement))
+    yield return "      " + line;
+
+  if (byteEmitter86 != null)
+    yield return "    #endif";
+
+  yield return "  }";
+  yield return "}";
+}
+
+IEnumerable<string> EmitBlockProcess(int size, int unrollCount, Func<int, IEnumerable<string>> byteEmitter, string[] variablesToIncrement) {
+  yield return "var blockCount = count" + EmitFastIntegerDivide(size)+ ";";
+  yield return EmitFastIntegerModulo("count", size);
+  yield return "for (;;) {";
+  yield return "  switch(blockCount) {";
+  yield return "    case 0: goto endOfBlocks;";
+  for(var i = 1; i <= unrollCount; ++i) {
+    yield return "    case " + i + ":";
+    foreach(var line in byteEmitter(i * size))
+      yield return "      " + line;
+
+    foreach(var j in variablesToIncrement)
+      yield return "      " + j + " += " + (i * size) + ";";
+
+    yield return "      goto endOfBlocks;";
+  }
+  yield return "  }";
+  yield return "  do {";
+  foreach(var line in byteEmitter(unrollCount * size))
+    yield return "    " + line;
+
+  foreach(var j in variablesToIncrement)
+    yield return "    " + j + " += " + (unrollCount * size) + ";";
+
+  yield return "    blockCount -= " + unrollCount + ";";
+  yield return "  } while(blockCount >= " + unrollCount + ");";
+  yield return "}";
+}
 
 string EmitThisNullCheck() => @"if (@this == null) throw new NullReferenceException();";
 string EmitArgNullCheck(string paramName) => string.Format(@"if ({0} == null) throw new ArgumentNullException(nameof({0}));", paramName);
