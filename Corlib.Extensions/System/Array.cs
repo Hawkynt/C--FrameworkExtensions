@@ -1708,7 +1708,18 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static void RandomizeBuffer(this byte[] @this) => new RNGCryptoServiceProvider().GetBytes(@this);
+    public static void RandomizeBuffer(this byte[] @this) {
+#if NET5_0_OR_GREATER
+      RandomNumberGenerator.Fill(@this);
+#else
+#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD
+      using var provider=new RNGCryptoServiceProvider();
+      provider.GetBytes(@this);
+#else
+      new RNGCryptoServiceProvider().GetBytes(@this);
+#endif
+#endif
+    }
 
     /// <summary>
     /// Gets a small portion of a byte array.
@@ -1770,7 +1781,7 @@ namespace System {
       return result;
     }
 
-    #region compression
+#region compression
 
     /// <summary>
     /// GZips the given bytes.
@@ -1823,9 +1834,9 @@ namespace System {
       }
     }
 
-    #endregion
+#endregion
 
-    #region Byte Array IndexOf
+#region Byte Array IndexOf
 
     private static int _GetInvalidIndex(byte[] _, byte[] __) => _INDEX_WHEN_NOT_FOUND;
 
@@ -2001,10 +2012,12 @@ namespace System {
       return _INDEX_WHEN_NOT_FOUND;
     }
 
-    #endregion
+#endregion
 
-    #region hash computation
+#region hash computation
 
+
+#if !NET6_0_OR_GREATER
     /// <summary>
     /// Computes the hash.
     /// </summary>
@@ -2014,7 +2027,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        [DebuggerStepThrough]
+    [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
       if (@this == null)
         throw new NullReferenceException();
@@ -2022,9 +2035,11 @@ namespace System {
       Contract.EndContractBlock();
 #endif
 
-      using (var provider = new THashAlgorithm())
-        return provider.ComputeHash(@this);
+      using var provider = new THashAlgorithm();
+      return provider.ComputeHash(@this);
     }
+    
+#endif
 
     /// <summary>
     /// Calculates the SHA512 hash.
@@ -2035,7 +2050,10 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static byte[] ComputeSHA512Hash(this byte[] @this) => @this.ComputeHash<SHA512CryptoServiceProvider>();
+    public static byte[] ComputeSHA512Hash(this byte[] @this) {
+      using var provider = SHA512.Create();
+      return provider.ComputeHash(@this);
+    }
 
     /// <summary>
     /// Calculates the SHA384 hash.
@@ -2046,7 +2064,10 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static byte[] ComputeSHA384Hash(this byte[] @this) => @this.ComputeHash<SHA384CryptoServiceProvider>();
+    public static byte[] ComputeSHA384Hash(this byte[] @this) {
+      using var provider = SHA384.Create();
+      return provider.ComputeHash(@this);
+    }
 
     /// <summary>
     /// Calculates the SHA256 hash.
@@ -2057,7 +2078,10 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static byte[] ComputeSHA256Hash(this byte[] @this) => @this.ComputeHash<SHA256CryptoServiceProvider>();
+    public static byte[] ComputeSHA256Hash(this byte[] @this) {
+      using var provider = SHA256.Create();
+      return provider.ComputeHash(@this);
+    }
 
     /// <summary>
     /// Calculates the SHA-1 hash.
@@ -2068,7 +2092,10 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static byte[] ComputeSHA1Hash(this byte[] @this) => @this.ComputeHash<SHA1CryptoServiceProvider>();
+    public static byte[] ComputeSHA1Hash(this byte[] @this) {
+      using var provider = SHA1.Create();
+      return provider.ComputeHash(@this);
+    }
 
     /// <summary>
     /// Calculates the MD5 hash.
@@ -2079,11 +2106,14 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static byte[] ComputeMD5Hash(this byte[] @this) => @this.ComputeHash<MD5CryptoServiceProvider>();
+    public static byte[] ComputeMD5Hash(this byte[] @this) {
+      using var provider = MD5.Create();
+      return provider.ComputeHash(@this);
+    }
 
-    #endregion
+#endregion
 
-    #endregion
+#endregion
 
   }
 }

@@ -27,6 +27,11 @@
 #define SUPPORTS_POINTER_ARITHMETIC
 #endif
 
+
+#if DEBUG && !PLATFORM_X86
+using System.Runtime.InteropServices;
+#endif
+
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif

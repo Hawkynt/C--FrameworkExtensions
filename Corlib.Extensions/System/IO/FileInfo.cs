@@ -346,105 +346,162 @@ namespace System.IO {
     #endregion
 
     #region hash computation
+
+#if !NET6_0_OR_GREATER
+
     /// <summary>
     /// Computes the hash.
     /// </summary>
     /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The result of the hash algorithm</returns>
-    public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This) where THashAlgorithm : HashAlgorithm, new() {
+    public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm,new() {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
 
-      using (var provider = new THashAlgorithm())
-      using (var stream = new FileStream(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
-        return (provider.ComputeHash(stream));
+      using var provider = new THashAlgorithm();
+      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+      return provider.ComputeHash(stream);
     }
-
+    
     /// <summary>
     /// Computes the hash.
     /// </summary>
     /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <param name="blockSize">Size of the block.</param>
     /// <returns>
     /// The result of the hash algorithm
     /// </returns>
-    public static byte[] ComputeHash<THashAlgorithm>(this FileInfo This, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
+    public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
 
-      using (var provider = new THashAlgorithm())
-      using (var stream = new FileStream(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, blockSize)) {
-        provider.Initialize();
-        var lastBlock = new byte[blockSize];
-        var currentBlock = new byte[blockSize];
+      using var provider = new THashAlgorithm();
+      return ComputeHash(@this, provider, blockSize);
+    }
 
-        var lastBlockSize = stream.Read(lastBlock, 0, blockSize);
-        while (true) {
-          var currentBlockSize = stream.Read(currentBlock, 0, blockSize);
-          if (currentBlockSize < 1)
-            break;
+#endif
 
-          provider.TransformBlock(lastBlock, 0, lastBlockSize, null, 0);
+    /// <summary>
+    /// Computes the hash.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="provider">The type of the hash algorithm.</param>
+    /// <returns>The result of the hash algorithm</returns>
+    public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+      Contract.Requires(provider != null);
+#endif
+      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+      return provider.ComputeHash(stream);
+    }
+    
+    /// <summary>
+    /// Computes the hash.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="provider">The type of the hash algorithm.</param>
+    /// <param name="blockSize">Size of the block.</param>
+    /// <returns>
+    /// The result of the hash algorithm
+    /// </returns>
+    public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider, int blockSize) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+      Contract.Requires(provider != null);
+#endif
+      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, blockSize);
 
-          var transfer = lastBlock;
-          lastBlock = currentBlock;
-          currentBlock = transfer;
+      provider.Initialize();
+      var lastBlock = new byte[blockSize];
+      var currentBlock = new byte[blockSize];
 
-          lastBlockSize = currentBlockSize;
-        }
-        provider.TransformFinalBlock(lastBlock, 0, lastBlockSize < 1 ? blockSize : lastBlockSize);
-        return (provider.Hash);
+      var lastBlockSize = stream.Read(lastBlock, 0, blockSize);
+      while (true) {
+        var currentBlockSize = stream.Read(currentBlock, 0, blockSize);
+        if (currentBlockSize < 1)
+          break;
+
+        provider.TransformBlock(lastBlock, 0, lastBlockSize, null, 0);
+
+        // ReSharper disable once SwapViaDeconstruction
+        var temp = lastBlock;
+        lastBlock = currentBlock;
+        currentBlock = temp;
+
+        lastBlockSize = currentBlockSize;
       }
+
+      provider.TransformFinalBlock(lastBlock, 0, lastBlockSize < 1 ? blockSize : lastBlockSize);
+      return provider.Hash;
     }
 
     /// <summary>
     /// Calculates the SHA512 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA512Hash(this FileInfo This) => This.ComputeHash<SHA512CryptoServiceProvider>();
+    public static byte[] ComputeSHA512Hash(this FileInfo @this) {
+      using var provider=SHA512.Create();
+      return @this.ComputeHash(provider);
+    }
 
     /// <summary>
     /// Calculates the SHA512 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <param name="blockSize">Size of the block.</param>
     /// <returns>
     /// The hash
     /// </returns>
-    public static byte[] ComputeSHA512Hash(this FileInfo This, int blockSize) => This.ComputeHash<SHA512CryptoServiceProvider>(blockSize);
+    public static byte[] ComputeSHA512Hash(this FileInfo @this, int blockSize) {
+      using var provider = SHA512.Create();
+      return @this.ComputeHash(provider,blockSize);
+    }
 
     /// <summary>
     /// Calculates the SHA384 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA384Hash(this FileInfo This) => This.ComputeHash<SHA384CryptoServiceProvider>();
+    public static byte[] ComputeSHA384Hash(this FileInfo @this) {
+      using var provider = SHA384.Create();
+      return @this.ComputeHash(provider);
+    }
 
     /// <summary>
     /// Calculates the SHA256 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA256Hash(this FileInfo This) => This.ComputeHash<SHA256CryptoServiceProvider>();
+    public static byte[] ComputeSHA256Hash(this FileInfo @this) {
+      using var provider = SHA256.Create();
+      return @this.ComputeHash(provider);
+    }
 
     /// <summary>
     /// Calculates the SHA-1 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeSHA1Hash(this FileInfo This) => This.ComputeHash<SHA1CryptoServiceProvider>();
+    public static byte[] ComputeSHA1Hash(this FileInfo @this) {
+      using var provider = SHA1.Create();
+      return @this.ComputeHash(provider);
+    }
 
     /// <summary>
     /// Calculates the MD5 hash.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns>The hash</returns>
-    public static byte[] ComputeMD5Hash(this FileInfo This) => This.ComputeHash<MD5CryptoServiceProvider>();
+    public static byte[] ComputeMD5Hash(this FileInfo @this) {
+      using var provider = MD5.Create();
+      return @this.ComputeHash(provider);
+    }
 
     #endregion
 
@@ -466,7 +523,11 @@ namespace System.IO {
       }
 
       // Analyze the BOM
+#if NET5_0_OR_GREATER
+      if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.Default;
+#else
       if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
+#endif
       if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) return Encoding.UTF8;
       if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
       if (bom[0] == 0xfe && bom[1] == 0xff) return Encoding.BigEndianUnicode; //UTF-16BE
@@ -597,9 +658,9 @@ namespace System.IO {
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
 #endif
 
-    #endregion
+#endregion
 
-    #region writing
+#region writing
     /// <summary>
     /// Writes all text.
     /// </summary>
@@ -660,9 +721,9 @@ namespace System.IO {
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents.ToArray(), encoding);
 #endif
 
-    #endregion
+#endregion
 
-    #region appending
+#region appending
     /// <summary>
     /// Appends all text.
     /// </summary>
@@ -716,9 +777,9 @@ namespace System.IO {
     /// <param name="encoding">The encoding.</param>
     public static void AppendLine(this FileInfo This, string contents, Encoding encoding) => This.AppendAllLines(new[] { contents }, encoding);
 
-    #endregion
+#endregion
 
-    #region trimming text files
+#region trimming text files
     /// <summary>
     /// Keeps the first lines of a text file.
     /// </summary>
@@ -866,9 +927,9 @@ namespace System.IO {
           tempFile.Delete();
       }
     }
-    #endregion
+#endregion
 
-    #region opening
+#region opening
     /// <summary>
     /// Opens the specified file.
     /// </summary>
@@ -933,9 +994,9 @@ namespace System.IO {
 
 #endif
 
-    #endregion
+#endregion
 
-    #region get part of filename
+#region get part of filename
     /// <summary>
     /// Gets the filename without extension.
     /// </summary>
@@ -958,7 +1019,7 @@ namespace System.IO {
     /// <returns>A new FileInfo instance with given extension.</returns>
     public static FileInfo WithNewExtension(this FileInfo @this, string extension) => new FileInfo(Path.ChangeExtension(@this.FullName, extension));
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Tries to delete the given file.
@@ -1058,10 +1119,10 @@ namespace System.IO {
     /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
     public static bool NotExists(this FileInfo This) => !This.Exists;
 
-    #region needed consts for converting filename patterns into regexes
+#region needed consts for converting filename patterns into regexes
     private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new Regex("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
     private static readonly Regex _CATCH_EXTENSION_REGEX = new Regex(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-    #endregion
+#endregion
 
     /// <summary>
     /// Converts a given filename pattern into a regular expression.
