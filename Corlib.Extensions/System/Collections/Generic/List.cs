@@ -430,7 +430,8 @@ namespace System.Collections.Generic {
 
       return true;
     }
-    
+
+#if !NET5_0_OR_GREATER
     public static List<T> DeepClone<T>(this List<T> list) 
     {
       object objResult = null;
@@ -444,5 +445,7 @@ namespace System.Collections.Generic {
       }
       return (List<T>)objResult;
     }
+#endif
+
   }
 }

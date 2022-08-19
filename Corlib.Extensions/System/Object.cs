@@ -56,8 +56,11 @@ namespace System {
   internal
 #endif
   static partial class ObjectExtensions {
-    private static readonly Lazy<BinaryFormatter> _formatter = new Lazy<BinaryFormatter>(() => new BinaryFormatter());
+
+#if !NET5_0_OR_GREATER
+    private static readonly Lazy<BinaryFormatter> _formatter = new(() => new BinaryFormatter());
     public static BinaryFormatter Formatter => _formatter.Value;
+#endif
 
     /// <summary>
     /// Gets the property values of the object.
@@ -392,30 +395,19 @@ namespace System {
 #endif
       ;
 
+#if !NET5_0_OR_GREATER
 
-    public static T DeepClone<T>(this T objectToClone) where T : class {
-      object objResult = null;
-      using (var ms = new MemoryStream()) {
-        var bf = new BinaryFormatter();
-        bf.Serialize(ms, objectToClone);
-
-        ms.Position = 0;
-        objResult = bf.Deserialize(ms);
-      }
-      return objResult as T;
-    }
+    public static T DeepClone<T>(this T objectToClone) where T : class => DeepClone((object)objectToClone) as T;
 
     public static object DeepClone(this object objectToClone) {
-      object objResult = null;
-      using (var ms = new MemoryStream()) {
-        var bf = new BinaryFormatter();
-        bf.Serialize(ms, objectToClone);
-
-        ms.Position = 0;
-        objResult = bf.Deserialize(ms);
-      }
-      return objResult;
+      using var ms = new MemoryStream();
+      var bf = new BinaryFormatter();
+      bf.Serialize(ms, objectToClone);
+      ms.Position = 0;
+      return bf.Deserialize(ms);
     }
+
+#endif
 
 #if NET45_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -427,32 +419,30 @@ namespace System {
       return @this;
     }
 
-    public static void ToFile<T>(this T @this, FileInfo file, bool compress = false) {
-      using (var fs = file.OpenWrite()) {
-        if (!compress) {
-          Formatter.Serialize(fs, @this);
-          return;
-        }
+#if !NET5_0_OR_GREATER
 
-        using (var ds = new DeflateStream(fs, CompressionMode.Compress)) {
-          Formatter.Serialize(ds, @this);
-        }
+    public static void ToFile<T>(this T @this, FileInfo file, bool compress = false) {
+      using var fs = file.OpenWrite();
+      if (!compress) {
+        Formatter.Serialize(fs, @this);
+        return;
       }
+
+      using var ds = new DeflateStream(fs, CompressionMode.Compress);
+      Formatter.Serialize(ds, @this);
     }
 
     public static T FromFile<T>(FileInfo file, bool compress = false) {
-      using (var stream = file.OpenRead()) {
-        if (!compress)
-          return (T) Formatter.Deserialize(stream);
+      using var stream = file.OpenRead();
+      if (!compress)
+        return (T) Formatter.Deserialize(stream);
 
-        using (var fs = file.OpenRead()) {
-            using (var ds = new DeflateStream(fs, CompressionMode.Decompress)) {
-              return (T)Formatter.Deserialize(ds);
-            }
-        }
-      }
-
+      using var fs = file.OpenRead();
+      using var ds = new DeflateStream(fs, CompressionMode.Decompress);
+      return (T)Formatter.Deserialize(ds);
     }
+
+#endif
 
   }
 }

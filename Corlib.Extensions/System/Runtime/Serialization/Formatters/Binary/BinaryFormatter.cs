@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -23,79 +23,86 @@
 #define SUPPORTS_CONTRACTS 
 #endif
 
+#if !NET5_0_OR_GREATER
+
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using qword = System.UInt64;
 namespace System.Runtime.Serialization.Formatters.Binary {
   /// <summary>
   /// Extensions for the BinaryFormatter.
   /// </summary>
 
+  
 #if COMPILE_TO_EXTENSION_DLL
+  [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public
 #else
   internal
 #endif
-  static partial class BinaryFormatterExtensions {
+    // ReSharper disable once UnusedMember.Global
+    // ReSharper disable once PartialTypeWithSinglePart
+    static partial class BinaryFormatterExtensions {
     /// <summary>
     /// Serializes the given object.
     /// </summary>
-    /// <param name="This">This BinaryFormatter.</param>
+    /// <param name="this">This BinaryFormatter.</param>
     /// <param name="value">The value to serialize.</param>
     /// <returns>The bytes needed for deserializing the value.</returns>
-    public static byte[] Serialize(this BinaryFormatter This, object value) {
+    public static byte[] Serialize(this BinaryFormatter @this, object value) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      using (var memStream = new MemoryStream()) {
-        This.Serialize(memStream, value);
-        return (memStream.ToArray());
-      }
+      using var memStream = new MemoryStream();
+      @this.Serialize(memStream, value);
+      return memStream.ToArray();
     }
 
     /// <summary>
     /// Serializes the given object and gzips the resulting bytes.
     /// </summary>
-    /// <param name="This">This BinaryFormatter.</param>
+    /// <param name="this">This BinaryFormatter.</param>
     /// <param name="value">The value to serialize.</param>
     /// <returns>The bytes needed for deserializing the value.</returns>
-    public static byte[] SerializeWithGZip(this BinaryFormatter This, object value) {
+    public static byte[] SerializeWithGZip(this BinaryFormatter @this, object value) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      var data = This.Serialize(value);
-      return (data.GZip());
+      var data = @this.Serialize(value);
+      return data.GZip();
     }
 
     /// <summary>
     /// Deserializes the a given byte block.
     /// </summary>
-    /// <param name="This">This BinaryFormatter.</param>
+    /// <param name="this">This BinaryFormatter.</param>
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized value from the byte block.</returns>
-    public static object Deserialize(this BinaryFormatter This, byte[] data) {
+    public static object Deserialize(this BinaryFormatter @this, byte[] data) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(data != null);
 #endif
-      using (var memStream = new MemoryStream(data))
-        return (This.Deserialize(memStream));
+      using var memStream = new MemoryStream(data);
+      return @this.Deserialize(memStream);
     }
 
     /// <summary>
     /// Deserializes the a given gzipped-byte block.
     /// </summary>
-    /// <param name="This">This BinaryFormatter.</param>
+    /// <param name="this">This BinaryFormatter.</param>
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized value from the byte block.</returns>
-    public static object DeserializeWithGZip(this BinaryFormatter This, byte[] data) {
+    public static object DeserializeWithGZip(this BinaryFormatter @this, byte[] data) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
       Contract.Requires(data != null);
 #endif
-      return (This.Deserialize(data.UnGZip()));
+      return @this.Deserialize(data.UnGZip());
     }
   }
 }
+
+#endif
