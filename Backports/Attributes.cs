@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -59,7 +59,7 @@ namespace System.Runtime.CompilerServices {
   sealed class CallerLineNumberAttribute : Attribute { }
 #endif
 
-#if !NET35_OR_GREATER
+#if !NET35_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
   [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
 
 #if COMPILE_TO_EXTENSION_DLL
