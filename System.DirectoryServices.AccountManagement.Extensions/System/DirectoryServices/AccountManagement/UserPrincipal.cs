@@ -32,6 +32,7 @@ using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
 using System.Net.Mail;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 
@@ -39,7 +40,10 @@ namespace System.DirectoryServices.AccountManagement {
   /// <summary>
   /// Extensions for the UserPrincipal objects from System.DirectoryServices.AccountManagement
   /// </summary>
-  #if COMPILE_TO_EXTENSION_DLL
+#if NET5_0_OR_GREATER
+  [SupportedOSPlatform("windows")]
+#endif
+#if COMPILE_TO_EXTENSION_DLL
   public
 #else
   internal
@@ -63,11 +67,11 @@ namespace System.DirectoryServices.AccountManagement {
         ;
     }
 
-    public static MailAddress GetEmailAddress(this UserPrincipal @this) => new MailAddress(@this.EmailAddress, GetFullName(@this), Encoding.UTF8);
-
-
-    private static readonly ConcurrentDictionary<string, UserPrincipal> _DOMAIN_USER_CACHE = new ConcurrentDictionary<string, UserPrincipal>(StringComparer.OrdinalIgnoreCase);
+    public static MailAddress GetEmailAddress(this UserPrincipal @this) => new(@this.EmailAddress, GetFullName(@this), Encoding.UTF8);
     public static UserPrincipal FindDomainUserBySamAccountName(string samAccountName) => FindDomainUserBySamAccountName(samAccountName, false);
+
+    private static readonly ConcurrentDictionary<string, UserPrincipal> _DOMAIN_USER_CACHE = new(StringComparer.OrdinalIgnoreCase);
+
     public static UserPrincipal FindDomainUserBySamAccountName(string samAccountName, bool allowCached) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(samAccountName, _FindDomainUserBySamAccountName) : _FindDomainUserBySamAccountName(samAccountName);
     public static UserPrincipal FindFirstDomainUserByDisplayName(string fullName, bool allowCached = false) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(fullName, _FindDomainUserByDisplayName) : _FindDomainUserByDisplayName(fullName);
 
@@ -78,26 +82,24 @@ namespace System.DirectoryServices.AccountManagement {
     }
 
     private static UserPrincipal _FindDomainUserBySamAccountName(string samAccountName) {
-      using (var context = new PrincipalContext(ContextType.Domain))
-        return UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccountName);
+      using var context = new PrincipalContext(ContextType.Domain);
+      return UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccountName);
     }
 
     private static UserPrincipal _FindDomainUserByDisplayName(string fullName) {
-      using (var context = new PrincipalContext(ContextType.Domain))
-      using (var searcher = new PrincipalSearcher()) {
-        var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim())) };
-        searcher.QueryFilter = user;
-        return (UserPrincipal)searcher.FindOne();
-      }
+      using var context = new PrincipalContext(ContextType.Domain);
+      using var searcher = new PrincipalSearcher();
+      var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim())) };
+      searcher.QueryFilter = user;
+      return (UserPrincipal)searcher.FindOne();
     }
 
     private static UserPrincipal _FindDomainUserBySurname(string surname) {
-      using (var context = new PrincipalContext(ContextType.Domain))
-      using (var searcher = new PrincipalSearcher()) {
-        var user = new UserPrincipal(context) {Surname = surname};
-        searcher.QueryFilter = user;
-        return (UserPrincipal) searcher.FindOne();
-      }
+      using var context = new PrincipalContext(ContextType.Domain);
+      using var searcher = new PrincipalSearcher();
+      var user = new UserPrincipal(context) {Surname = surname};
+      searcher.QueryFilter = user;
+      return (UserPrincipal) searcher.FindOne();
     }
 
     #region LDAP stuff 
@@ -295,9 +297,7 @@ namespace System.DirectoryServices.AccountManagement {
 
       private DirectoryEntry _GetEntry() => _LDAP_CACHE.GetOrAdd(this._distinguishedName);
 
-      private string _ReadProperty(string propertyName) {
-        return this._GetEntry().Properties[propertyName].Cast<string>().FirstOrDefault();
-      }
+      private string _ReadProperty(string propertyName) => this._GetEntry().Properties[propertyName].Cast<string>().FirstOrDefault();
 
       #region Implementation of ILDAPGroup
 
