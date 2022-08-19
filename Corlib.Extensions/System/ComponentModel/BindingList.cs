@@ -1,4 +1,4 @@
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -57,7 +57,7 @@ namespace System.ComponentModel {
 #endif
       var result = new TItem[@this.Count];
       @this.CopyTo(result, 0);
-      return (result);
+      return result;
     }
 
     /// <summary>
@@ -71,8 +71,10 @@ namespace System.ComponentModel {
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      foreach (var item in items)
-        @this.Add(item);
+      Overhaul(@this, list => {
+        foreach (var item in items)
+          list.Add(item);
+      });
     }
 
     /// <summary>
@@ -86,17 +88,12 @@ namespace System.ComponentModel {
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var raiseEvents = @this.RaiseListChangedEvents;
-      try {
-        @this.RaiseListChangedEvents = false;
+      Overhaul(@this, list => {
         foreach (var item in items.Reverse()) {
-          @this.Remove(item);
-          @this.Insert(0, item);
+          list.Remove(item);
+          list.Insert(0, item);
         }
-      } finally {
-        @this.RaiseListChangedEvents = raiseEvents;
-        @this.ResetBindings();
-      }
+      });
     }
 
     /// <summary>
@@ -110,17 +107,12 @@ namespace System.ComponentModel {
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var raiseEvents = @this.RaiseListChangedEvents;
-      try {
-        @this.RaiseListChangedEvents = false;
+      Overhaul(@this, list => {
         foreach (var item in items) {
-          @this.Remove(item);
-          @this.Add(item);
+          list.Remove(item);
+          list.Add(item);
         }
-      } finally {
-        @this.RaiseListChangedEvents = raiseEvents;
-        @this.ResetBindings();
-      }
+      });
     }
 
     /// <summary>
@@ -138,47 +130,39 @@ namespace System.ComponentModel {
       if (delta == 0)
         return;
 
-      var raiseEvents = @this.RaiseListChangedEvents;
-      try {
-        @this.RaiseListChangedEvents = false;
-
-        var count = @this.Count - 1;
+      Overhaul(@this, list => {
+        var count = list.Count - 1;
 
         if (delta < 0) {
           var start = 0;
           foreach (var item in items) {
-            var index = @this.IndexOf(item);
+            var index = list.IndexOf(item);
             if (index < 0)
               continue;
 
-            @this.RemoveAt(index);
+            list.RemoveAt(index);
             var newIndex = index + delta;
-            @this.Insert(newIndex < 0 ? start++ : newIndex, item);
+            list.Insert(newIndex < 0 ? start++ : newIndex, item);
           }
         } else {
           var end = count;
           foreach (var item in items.Reverse()) {
-            var index = @this.IndexOf(item);
+            var index = list.IndexOf(item);
             if (index < 0)
               continue;
 
-            @this.RemoveAt(index);
+            list.RemoveAt(index);
             var newIndex = index + delta;
             if (newIndex > end) {
 #if SUPPORTS_CONTRACTS
               Contract.Assume(end >= 0);
 #endif
-              @this.Insert(end--, item);
+              list.Insert(end--, item);
             } else
-              @this.Insert(newIndex, item);
+              list.Insert(newIndex, item);
           }
         }
-
-
-      } finally {
-        @this.RaiseListChangedEvents = raiseEvents;
-        @this.ResetBindings();
-      }
+      });
     }
 
     /// <summary>
@@ -192,17 +176,11 @@ namespace System.ComponentModel {
       Contract.Requires(@this != null);
       Contract.Requires(items != null);
 #endif
-      var oldState = @this.RaiseListChangedEvents;
-      try {
-        @this.RaiseListChangedEvents = false;
-        @this.Clear();
+      Overhaul(@this, list => {
+        list.Clear();
         foreach (var item in items)
-          @this.Add(item);
-      } finally {
-        @this.RaiseListChangedEvents = oldState;
-        if (oldState)
-          @this.ResetBindings();
-      }
+          list.Add(item);
+      });
     }
 
     /// <summary>
@@ -214,21 +192,19 @@ namespace System.ComponentModel {
     /// <param name="keyGetter">The key getter to compare what items are added/removed/updated.</param>
     /// <param name="itemUpdateMethod">The item update method; takes the old and new item reference and returns the updated item.</param>
     public static void RefreshAll<T>(this BindingList<T> @this, IEnumerable<T> items, Func<T, string> keyGetter, Func<T, T, T> itemUpdateMethod) {
-      var oldState = @this.RaiseListChangedEvents;
-      try {
-        @this.RaiseListChangedEvents = false;
-        var oldKeys = @this.ToDictionary(keyGetter);
+      Overhaul(@this, list => {
+        var oldKeys = list.ToDictionary(keyGetter);
         var newKeys = items.ToDictionary(keyGetter);
 
         // remove not longer needed items
         foreach (var key in oldKeys.Keys.Where(k => !newKeys.ContainsKey(k)))
-          @this.Remove(oldKeys[key]);
+          list.Remove(oldKeys[key]);
 
         foreach (var key in newKeys.Keys) {
 
           // add new items
           if (!oldKeys.ContainsKey(key)) {
-            @this.Add(newKeys[key]);
+            list.Add(newKeys[key]);
             continue;
           }
 
@@ -236,14 +212,10 @@ namespace System.ComponentModel {
           var oldItem = oldKeys[key];
           var newItem = itemUpdateMethod(oldItem, newKeys[key]);
           if (!ReferenceEquals(oldItem, newItem))
-            @this[@this.IndexOf(oldItem)] = newItem;
+            list[@this.IndexOf(oldItem)] = newItem;
         }
 
-      } finally {
-        @this.RaiseListChangedEvents = oldState;
-        if (oldState)
-          @this.ResetBindings();
-      }
+      });
     }
 
     public static int RemoveWhere<TItem>(this BindingList<TItem> @this, Predicate<TItem> selector) {
@@ -260,5 +232,22 @@ namespace System.ComponentModel {
 
       return result;
     }
+
+    public static void Overhaul<TItem>(this BindingList<TItem> @this, Action<BindingList<TItem>> action) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+      Contract.Requires(action != null);
+#endif
+      var raisesEvents = @this.RaiseListChangedEvents;
+      try {
+        @this.RaiseListChangedEvents = false;
+        action(@this);
+      } finally {
+        @this.RaiseListChangedEvents = raisesEvents;
+        if (raisesEvents)
+          @this.ResetBindings();
+      }
+    }
+
   }
 }

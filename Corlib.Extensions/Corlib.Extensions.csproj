@@ -141,9 +141,12 @@
   </PropertyGroup>
   
   <ItemGroup Condition="$(FrameworkVersions.Contains('|$(TargetFramework)|'))">
-    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
     <Reference Condition="$(TargetFramework) != 'net35'" Include="Microsoft.CSharp" />
+    <Reference Condition="$(TargetFramework) == 'net35'" Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Transactions" />
   </ItemGroup>
 

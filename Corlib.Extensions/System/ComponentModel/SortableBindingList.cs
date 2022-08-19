@@ -21,13 +21,18 @@
 
 #endregion
 
-#if !NET20_OR_GREATER || NET40_OR_GREATER
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETSTANDARD || NETCOREAPP
+#define SUPPORTS_LINQ_PARAMETERS
+#endif
 
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
+
+#if SUPPORTS_LINQ_PARAMETERS
+using System.Linq.Expressions;
+#endif
 
 // ReSharper disable UnusedMember.Global
 
@@ -45,114 +50,29 @@ namespace System.ComponentModel {
 #endif
   class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollectionChanged {
 
-    #region nested types
+#region nested types
 
-    /// <summary>
-    /// Sorts a <c>TValue</c>-item-list by a given property in a certain direction using a stable sorting-mechanism
-    /// </summary>
-    private struct DefinedSortComparer : IEnumerable<TValue> {
+    private static class StableSorter {
 
-      /// <summary>
-      /// A value with its original array index for stable sorting
-      /// </summary>
-      private struct ValueWithSourceIndex {
-        public readonly TValue value;
-        public readonly int index;
+      private sealed class SortValueWithSourceIndex : IComparable<SortValueWithSourceIndex> {
+        private readonly int _index;
+        public readonly TValue Value;
+        private readonly object _sortValue;
 
-        public ValueWithSourceIndex(int index, TValue value) {
-          this.index = index;
-          this.value = value;
-        }
-      }
-
-      /// <summary>
-      /// The enumerator for an <c>ValueWithIndex</c> array
-      /// </summary>
-      private sealed class Enumerator : IEnumerator<TValue> {
-
-        private readonly ValueWithSourceIndex[] _items;
-        private int _index = -1;
-        public Enumerator(ValueWithSourceIndex[] items) => this._items = items;
-
-        #region Implementation of IDisposable
-
-        public void Dispose() { }
-
-        #endregion
-
-        #region Implementation of IEnumerator
-
-        public bool MoveNext() => ++this._index < this._items.Length;
-        public void Reset() => this._index = -1;
-        public TValue Current => this._items[this._index].value;
-        object IEnumerator.Current => this.Current;
-
-        #endregion
-      }
-
-      /// <summary>
-      /// The comparer for a specific property of <c>TValue</c> and a given sort direction
-      /// </summary>
-      private sealed class Comparer : IComparer<ValueWithSourceIndex> {
-        private readonly int _factor;
-        private readonly MethodInfo _method;
-        private readonly Func<TValue, object> _call;
-
-        public Comparer(PropertyDescriptor property, ListSortDirection direction) {
-          this._factor = direction == ListSortDirection.Ascending ? 1 : -1;
-
-          // create call delegate
-          var propertyInfo = typeof(TValue).GetProperty(property.Name, BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-          var method = propertyInfo?.GetGetMethod(true);
-
-          if (method == null) {
-            this._call = _ReturnDefaultValue;
-            return;
-          }
-
-          if (method.ReturnType.IsClass)
-#if NET45_OR_GREATER
-            this._call = (Func<TValue, object>)method.CreateDelegate(typeof(Func<TValue, object>));
-#else
-            this._call = value => method.Invoke(value, null);
-#endif
-          else {
-            this._method = method;
-            this._call = this._CallByMethodInfo;
-          }
-
+        public SortValueWithSourceIndex(int index, TValue value, object sortValue) {
+          this._index = index;
+          this.Value = value;
+          this._sortValue = sortValue;
         }
 
-        #region Implementation of IComparer<in SortableBindingList<TValue>.DefinedSortComparer.ValueWithSourceIndex>
+#region Relational members
 
-        /// <inheritdoc/>
-        public int Compare(ValueWithSourceIndex x, ValueWithSourceIndex y) {
-          var result = _CompareValues(this._Call(x.value), this._Call(y.value));
-          return (result != 0 ? result : x.index - y.index) * this._factor;
+        public int CompareTo(SortValueWithSourceIndex other) {
+          var a = this._sortValue;
+          var b = other._sortValue;
+          var result = _CompareValues(a, b);
+          return result == 0 ? this._index.CompareTo(other._index) : result;
         }
-
-        #endregion
-
-        /// <summary>
-        /// Returns a property value using MethodInfo (used for value return types)
-        /// </summary>
-        /// <param name="instance">The object whose property to return</param>
-        /// <returns>The current property value</returns>
-        private object _CallByMethodInfo(TValue instance) => this._method.Invoke(instance, null);
-
-        /// <summary>
-        /// Returns the default value (used when properties can not be found)
-        /// </summary>
-        /// <param name="_">Enforced to pass the object instance by the delegate; but not used here</param>
-        /// <returns></returns>
-        private static object _ReturnDefaultValue(TValue _) => default(TValue);
-
-        /// <summary>
-        /// Returns the property value for the given object instance
-        /// </summary>
-        /// <param name="instance">The object whose property to return</param>
-        /// <returns>The current property value</returns>
-        private object _Call(TValue instance) => instance == null ? null : this._call(instance);
 
         /// <summary>
         /// Compares two arbitrary values of the same type with another
@@ -161,7 +81,6 @@ namespace System.ComponentModel {
         /// <param name="b">The other value</param>
         /// <returns>-1 if a &lt; b; +1 if a &gt; b; otherwise, 0</returns>
         private static int _CompareValues(object a, object b) {
-
           if (ReferenceEquals(a, b))
             return 0;
 
@@ -187,30 +106,64 @@ namespace System.ComponentModel {
           return string.Compare(a.ToString(), b.ToString(), StringComparison.Ordinal);
         }
 
+        private class _AscendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+          public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => x.CompareTo(y);
+          public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
+        }
+
+        private class _DescendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+          public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => -x.CompareTo(y);
+          public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
+        }
+
+        public static IComparer AscendingComparer { get; } = new _AscendingComparer();
+        public static IComparer DescendingComparer { get; } = new _DescendingComparer();
+
+#endregion
+
       }
 
-      private readonly ValueWithSourceIndex[] _items;
+      public static void InPlaceSort(IList<TValue> input, PropertyDescriptor prop, ListSortDirection direction) {
 
-      private DefinedSortComparer(IComparer<ValueWithSourceIndex> comparer, ValueWithSourceIndex[] items) {
-        this._items = items;
-        Array.Sort(this._items, 0, items.Length, comparer);
+#if SUPPORTS_LINQ_PARAMETERS
+        var getter = _propertyGetterCache.GetOrAdd(prop.Name, _CreatePropertyGetter);
+#else
+        var getter = prop.GetValue;
+#endif
+
+        var pairs = new SortValueWithSourceIndex[input.Count];
+        for (var i = 0; i < pairs.Length; ++i)
+          pairs[i] = new SortValueWithSourceIndex(i, input[i], getter(input[i]));
+
+        Array.Sort(
+          pairs,
+          0,
+          pairs.Length,
+          direction == ListSortDirection.Ascending
+            ? SortValueWithSourceIndex.AscendingComparer
+            : SortValueWithSourceIndex.DescendingComparer
+        );
+
+        for (var i = 0; i < pairs.Length; ++i)
+          input[i] = pairs[i].Value;
       }
 
-      public static IEnumerable<TValue> StableSort(IList<TValue> input, PropertyDescriptor prop, ListSortDirection direction) {
-        var pairs = new ValueWithSourceIndex[input.Count];
-        for (var i = 0; i < input.Count; ++i)
-          pairs[i] = new ValueWithSourceIndex(i, input[i]);
+#if SUPPORTS_LINQ_PARAMETERS
+      private static readonly Dictionary<string, Func<TValue, object>> _propertyGetterCache = new();
 
-        var comparer = new Comparer(prop, direction);
-        return new DefinedSortComparer(comparer, pairs);
+      private static Func<TValue, object> _CreatePropertyGetter(string name) {
+        var type = typeof(TValue);
+        var property = type.GetProperty(name)!;
+        var get = property.GetGetMethod()!;
+        
+        var parameter = Expression.Parameter(type);
+        var callGetMethod = Expression.Call(parameter, get);
+        var castToObject = Expression.Convert(callGetMethod, typeof(object));
+
+        var result = (Func<TValue, object>)Expression.Lambda(castToObject, parameter).Compile();
+        return result;
       }
-
-      #region Implementation of IEnumerable
-
-      public IEnumerator<TValue> GetEnumerator() => new Enumerator(this._items);
-      IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-      #endregion
+#endif
 
     }
 
@@ -219,17 +172,8 @@ namespace System.ComponentModel {
     private bool _isSorted;
     private ListSortDirection _sortDirection = ListSortDirection.Ascending;
     private PropertyDescriptor _sortProperty;
-
-    private bool _blockEvents;
-
-    public SortableBindingList() {
-      base.ListChanged += (s, e) => {
-        if (this._blockEvents)
-          return;
-
-        this._OnListChanged(e);
-      };
-    }
+    
+    public SortableBindingList() { }
 
     public SortableBindingList(IEnumerable<TValue> enumerable) {
       if (enumerable == null)
@@ -243,12 +187,9 @@ namespace System.ComponentModel {
       this.AddRange(list);
     }
 
-    private ListChangedEventHandler _listChanged;
-
-    public new event ListChangedEventHandler ListChanged {
-      add => this._listChanged += value;
-      remove => this._listChanged -= value;
-    }
+    public void Sort(string propertyName, ListSortDirection direction)
+      => this.ApplySortCore(TypeDescriptor.GetProperties(typeof(TValue))[propertyName], direction)
+    ;
 
     /// <summary>
     ///   Adds multiple elements to this instance.
@@ -258,16 +199,10 @@ namespace System.ComponentModel {
       if (items == null)
         throw new ArgumentNullException(nameof(items));
 
-      this._blockEvents = true;
-      try {
+      this.Overhaul(l => {
         foreach (var item in items)
-          this.Add(item);
-      } finally {
-        this._blockEvents = false;
-      }
-
-      this._ReApplySortIfNeeded();
-      this._OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+          l.Add(item);
+      });
     }
 
     /// <summary>
@@ -289,70 +224,57 @@ namespace System.ComponentModel {
       if (items == null)
         throw new ArgumentNullException(nameof(items));
 
-      this._blockEvents = true;
-      try {
+      this.Overhaul(l => {
         foreach (var item in items)
-          this.Remove(item);
-      } finally {
-        this._blockEvents = false;
-      }
-
-      this._ReApplySortIfNeeded();
-      this._OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+          l.Remove(item);
+      });
     }
+
+    #region Overrides of BindingList<TValue>
+
+    protected override void OnListChanged(ListChangedEventArgs e) {
+      if (this._ReApplySortIfNeeded()) {
+        base.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+        this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+      } else {
+        base.OnListChanged(e);
+
+        // TODO: only fire whats needed
+        this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+      }
+    }
+    
+    #endregion
 
     protected override bool SupportsSortingCore => true;
     protected override bool IsSortedCore => this._isSorted;
     protected override ListSortDirection SortDirectionCore => this._sortDirection;
     protected override PropertyDescriptor SortPropertyCore => this._sortProperty;
-
-    protected void ApplySortCore() => this.ApplySortCore(this._sortProperty, this._sortDirection);
-
-    private WeakReference _lastListRef;
-    private Action<IEnumerable<TValue>> _lastAddRangeDelegate;
-
+    
     protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction) {
       this._sortDirection = direction;
       this._sortProperty = prop;
       this._isSorted = true;
-      var listRef = this.Items;
-      if (this.Items.IsReadOnly)
+      var list = this.Items;
+      if (list.IsReadOnly || list.Count<1)
         return;
 
-      var items = DefinedSortComparer.StableSort(listRef, prop, direction);
-      listRef.Clear();
-
-      var addRangeDelegate = this._lastAddRangeDelegate;
-      if (this._lastListRef == null || !ReferenceEquals(this._lastListRef.Target, listRef) || !this._lastListRef.IsAlive) {
-        this._lastListRef = new WeakReference(listRef);
-        var mi = listRef.GetType().GetMethod(nameof(List<object>.AddRange));
-        this._lastAddRangeDelegate =
-          addRangeDelegate =
-            mi == null
-              ? null
-#if NET45_OR_GREATER
-              : (Action<IEnumerable<TValue>>)mi.CreateDelegate(typeof(Action<IEnumerable<TValue>>), listRef)
-#else
-              : (Action<IEnumerable<TValue>>)(values => mi.Invoke(listRef, new object[] { values }))
-#endif
-          ;
-      }
-
-      if (addRangeDelegate != null)
-        addRangeDelegate(items);
-      else
-        foreach (var item in items)
-          listRef.Add(item);
-
-      this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+      this.Overhaul(li => StableSorter.InPlaceSort(li, prop, direction));
     }
 
-    /// <summary>
-    /// Reapplies sort core if needed.
-    /// </summary>
-    private void _ReApplySortIfNeeded() {
-      if (this.IsSortedCore)
-        this.ApplySortCore();
+    private bool _ReApplySortIfNeeded() {
+      if (!this.IsSortedCore)
+        return false;
+
+      var isRaisingListChangedEvents = this.RaiseListChangedEvents;
+      try {
+        this.RaiseListChangedEvents = false;
+        this.ApplySortCore(this._sortProperty, this._sortDirection);
+      } finally {
+        this.RaiseListChangedEvents = isRaisingListChangedEvents;
+      }
+
+      return true;
     }
 
     #region Implementation of INotifyCollectionChanged
@@ -361,16 +283,7 @@ namespace System.ComponentModel {
 
     #endregion
 
-    protected virtual void _OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-      => this.CollectionChanged?.Invoke(this, e)
-    ;
-
-    protected virtual void _OnListChanged(ListChangedEventArgs e) {
-      this._listChanged?.Invoke(this, e);
-
-      // TODO: only fire whats needed
-      this._OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-    }
+    protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) => this.CollectionChanged?.Invoke(this, e);
   }
 
   // ReSharper disable once PartialTypeWithSinglePart
@@ -388,5 +301,3 @@ namespace System.ComponentModel {
     }
   }
 }
-
-#endif
