@@ -453,37 +453,7 @@ namespace System.IO {
         return (!@this.Exists);
       }
     }
-
-    /// <summary>
-    /// Checks whether the given directory does not exist.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool NotExists(this DirectoryInfo This) => !This.Exists;
-
-    /// <summary>
-    /// Checks whether the given directory is <c>null</c> or if it does not exists.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo</param>
-    /// <returns><c>true</c> if it is either <c>null</c> or can not be found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool IsNullOrDoesNotExist(this DirectoryInfo @this) => @this == null || !@this.Exists;
-
-    /// <summary>
-    /// Checks whether the given directory is not <c>null</c> and if it exists.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo</param>
-    /// <returns><c>true</c> if it is not <c>null</c> and can not be found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool IsNotNullAndExists(this DirectoryInfo @this) => @this != null && @this.Exists;
-
+      
     /// <summary>
     /// Gets a directory under the current directory.
     /// </summary>
