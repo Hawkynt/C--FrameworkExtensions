@@ -243,6 +243,17 @@ namespace System.IO {
     }
 
     /// <summary>
+    /// Gets all sub-directories.
+    /// </summary>
+    /// <param name="this">This DirectoryInfo</param>
+    /// <param name="searchOption">Whether to get all directories recursively or not.</param>
+    /// <returns>An enumeration of DirectoryInfos</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) => @this.GetDirectories("*.*", searchOption);
+
+    /// <summary>
     /// Enumerates the file system infos.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
@@ -471,7 +482,7 @@ namespace System.IO {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNotNullAndExists(this DirectoryInfo @this) => @this == null || !@this.Exists;
+    public static bool IsNotNullAndExists(this DirectoryInfo @this) => @this != null && @this.Exists;
 
     /// <summary>
     /// Gets a directory under the current directory.
