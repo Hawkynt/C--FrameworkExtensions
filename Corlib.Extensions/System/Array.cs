@@ -1699,6 +1699,33 @@ namespace System {
 
     #region byte-array specials
 
+    private static readonly string _HEX_BYTES_UPPER_CASE = "0123456789ABCDEF";
+    private static readonly string _HEX_BYTES_LOWER_CASE = "0123456789abcdef";
+
+    /// <summary>
+    /// Converts the bytes to a hex representation.
+    /// </summary>
+    /// <param name="this">These Bytes</param>
+    /// <param name="allUpperCase">Uses upper-case (<c>true</c>) hex letters only or lower-case (<c>false</c>).</param>
+    /// <returns>A hex string or <c>null</c></returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string ToHex(this byte[] @this,bool allUpperCase = false) {
+      if (@this == null)
+        return null;
+
+      var format = allUpperCase ? _HEX_BYTES_UPPER_CASE : _HEX_BYTES_LOWER_CASE;
+      var result = new char[@this.Length << 1];
+      for(int i = 0,j = 0; i < @this.Length; ++i,j+=2) {
+        var value = @this[i];
+        result[j] = format[value >> 4];
+        result[j+1] = format[value & 0b1111];
+      }
+
+      return new string(result);
+    }
+
     /// <summary>
     /// Creates random data in the given buffer; thus effectively overwriting it in-place.
     /// </summary>
