@@ -49,6 +49,7 @@ using DrawingSystemColors = System.Drawing.SystemColors;
 using DrawingSize = System.Drawing.Size;
 using DrawingPoint = System.Drawing.Point;
 using DrawingFontStyle = System.Drawing.FontStyle;
+using System.Windows.Form.Extensions;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -272,14 +273,14 @@ namespace System.Windows.Forms {
         var borderRect = this.BorderWidths(advancedBorderStyle);
         var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
 
-        var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
+        var isSelected = cellState._FOS_HasFlag(DataGridViewElementStates.Selected);
         var bkColor =
-            isSelected && (paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground))
+            isSelected && (paintParts._FOS_HasFlag(DataGridViewPaintParts.SelectionBackground))
               ? cellStyle.SelectionBackColor
               : cellStyle.BackColor
           ;
 
-        if (paintParts.HasFlag(DataGridViewPaintParts.Background))
+        if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Background))
           using (var backBrush = new SolidBrush(bkColor))
             graphics.FillRectangle(backBrush, paintRect);
 
@@ -287,7 +288,7 @@ namespace System.Windows.Forms {
         paintRect.Width -= cellStyle.Padding.Horizontal;
         paintRect.Height -= cellStyle.Padding.Vertical;
 
-        if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
+        if (paintParts._FOS_HasFlag(DataGridViewPaintParts.ContentForeground)) {
           if (ProgressBarRenderer.IsSupported) {
             ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
             var barBounds = new Rectangle(paintRect.Left + 3, paintRect.Top + 3, paintRect.Width - 4, paintRect.Height - 6);
@@ -302,13 +303,13 @@ namespace System.Windows.Forms {
           }
         }
 
-        if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && paintParts.HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
+        if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && paintParts._FOS_HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
           var focusRect = paintRect;
           focusRect.Inflate(-3, -3);
           ControlPaint.DrawFocusRectangle(graphics, focusRect);
         }
 
-        if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
+        if (paintParts._FOS_HasFlag(DataGridViewPaintParts.ContentForeground)) {
           var txt = $"{Math.Round(rate * 100)}%";
           const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
           var fColor = cellStyle.ForeColor;
@@ -316,7 +317,7 @@ namespace System.Windows.Forms {
           TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
         }
 
-        if (!paintParts.HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText))
+        if (!paintParts._FOS_HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText))
           return;
 
         var iconBounds = this.GetErrorIconBounds(graphics, cellStyle, rowIndex);
@@ -686,19 +687,19 @@ namespace System.Windows.Forms {
       }
 
       protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts) {
-        if (paintParts.HasFlag(DataGridViewPaintParts.Border))
+        if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Border))
           this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
 
         var borderRect = this.BorderWidths(advancedBorderStyle);
         var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top, cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
 
-        var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
-        var bkColor = isSelected && (paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground))
+        var isSelected = cellState._FOS_HasFlag(DataGridViewElementStates.Selected);
+        var bkColor = isSelected && (paintParts._FOS_HasFlag(DataGridViewPaintParts.SelectionBackground))
               ? cellStyle.SelectionBackColor
               : cellStyle.BackColor
           ;
 
-        if (paintParts.HasFlag(DataGridViewPaintParts.Background))
+        if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Background))
           using (var backBrush = new SolidBrush(bkColor))
             graphics.FillRectangle(backBrush, paintRect);
 
@@ -3629,7 +3630,7 @@ namespace System.Windows.Forms {
 
       using (var brush = rowHeaderAttribute.ForeColor != null
         ? new SolidBrush(rowHeaderAttribute.ForeColor.Value)
-        : e.State.HasFlag(DataGridViewElementStates.Selected)
+        : e.State._FOS_HasFlag(DataGridViewElementStates.Selected)
             ? new SolidBrush(e.InheritedRowStyle.SelectionForeColor)
             : new SolidBrush(e.InheritedRowStyle.ForeColor)) {
 
@@ -3652,7 +3653,7 @@ namespace System.Windows.Forms {
             e.RowBounds.Width - borderWidthLeft - borderWidthRight,
             e.RowBounds.Height - borderWidthBottom);
 
-          using (var backBrush = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
+          using (var backBrush = new SolidBrush(e.State._FOS_HasFlag(DataGridViewElementStates.Selected)
               ? e.InheritedRowStyle.SelectionBackColor
               : e.InheritedRowStyle.BackColor))
             e.Graphics.FillRectangle(backBrush, rowBoundsWithoutBorder);
@@ -4302,7 +4303,11 @@ namespace System.Windows.Forms {
       }
     }
 
+#if NET35_OR_GREATER && !NET40_OR_GREATER
+    private static readonly Dictionary<DataGridViewCell, _CellEditState> _cellEditStates = new Dictionary<DataGridViewCell, _CellEditState>();
+#else
     private static readonly ConditionalWeakTable<DataGridViewCell, _CellEditState> _cellEditStates = new ConditionalWeakTable<DataGridViewCell, _CellEditState>();
+#endif
 
     /// <summary>
     /// Highlights Cells on Beginning of Edit
@@ -4370,7 +4375,11 @@ namespace System.Windows.Forms {
       public bool HasStartedMultipleValueChange => true;
     }
 
+#if NET35_OR_GREATER && !NET40_OR_GREATER
+    private static readonly Dictionary<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new Dictionary<DataGridView, DataGridViewValidationState>();
+#else
     private static readonly ConditionalWeakTable<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new ConditionalWeakTable<DataGridView, DataGridViewValidationState>();
+#endif
 
     private static void This_OnCellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
       if (!(sender is DataGridView dgv))
@@ -4388,7 +4397,7 @@ namespace System.Windows.Forms {
       _dataGridViewValidationStates.Remove(dgv);
     }
 
-    #region various reflection caches
+#region various reflection caches
 
     private static readonly ConcurrentDictionary<Type, object[]> _TYPE_ATTRIBUTE_CACHE = new ConcurrentDictionary<Type, object[]>();
 
@@ -4653,9 +4662,9 @@ namespace System.Windows.Forms {
       method.Invoke(instance, null);
     }
 
-    #endregion
+#endregion
 
-    #region parsing colors
+#region parsing colors
 
     private const string _hexNum = "[0-9a-f]";
     private const string _byteNum = "(?:0*?(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))";
@@ -4744,7 +4753,7 @@ namespace System.Windows.Forms {
       throw new ArgumentException("Unknown color, expecting #AARRGGBB, #RRGGBB, #ARGB, #RGB, knowncolorname, r,g,b (0-255), a,r,g,b (0-255), rgb (0.0-1.0), argb (0.0-1.0) or 'systemcolorname'", nameof(@this));
     }
 
-    #endregion
+#endregion
 
   }
 }

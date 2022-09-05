@@ -27,6 +27,7 @@
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
+using System.Windows.Form.Extensions;
 using word = System.UInt32;
 namespace System.Windows.Forms {
 
@@ -60,7 +61,7 @@ namespace System.Windows.Forms {
       var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
       var linesToRemove = Math.Max(0, lines.Count - (int)count);
       This.Text = string.Empty;
-      This.AppendText(string.Join(Environment.NewLine, lines.Skip(linesToRemove)));
+      This.AppendText(lines.Skip(linesToRemove)._FOS_Join(Environment.NewLine));
     }
 
     /// <summary>
@@ -74,7 +75,7 @@ namespace System.Windows.Forms {
 #endif
       var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
       This.Text = string.Empty;
-      This.AppendText(string.Join(Environment.NewLine, lines.Take((int)count)));
+      This.AppendText(lines.Take((int)count)._FOS_Join(Environment.NewLine));
     }
   }
 }

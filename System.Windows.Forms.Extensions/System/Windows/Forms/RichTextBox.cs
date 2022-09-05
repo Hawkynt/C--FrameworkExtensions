@@ -33,6 +33,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Windows.Form.Extensions;
 using DrawingSize = System.Drawing.Size;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -315,7 +316,11 @@ namespace System.Windows.Forms {
 
     #region richtextbox syntax highlighting
 
+#if NET35_OR_GREATER && !NET40_OR_GREATER
+    private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new Dictionary<RichTextBox, SyntaxHighlighter>();
+#else
     private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new ConditionalWeakTable<RichTextBox, SyntaxHighlighter>();
+#endif
 
     public static void ApplySyntaxHighlighting(this RichTextBox @this, SyntaxHighlightingConfiguration configuration, bool reapply = false) {
       if (@this == null)
@@ -367,7 +372,7 @@ namespace System.Windows.Forms {
         highlighter.ApplySyntaxHighlighting(rtb);
     }
 
-    #region Syntax hightlighting classes
+#region Syntax hightlighting classes
 
     public interface ISyntaxStyle {
       Color? Foreground { get; }
@@ -438,7 +443,7 @@ namespace System.Windows.Forms {
     }
 
     public static class SyntaxHighlightPattern {
-      public static ISyntaxHighlightPattern FromKeywords(IEnumerable<string> keywords, ISyntaxStyle style, bool ignoreCase = false) => new Pattern(new Regex($@"(?<=^|\W)({string.Join("|", keywords.Select(Regex.Escape))})(?=\W|$)", RegexOptions.Compiled | RegexOptions.Singleline | (ignoreCase ? RegexOptions.IgnoreCase : 0)), style);
+      public static ISyntaxHighlightPattern FromKeywords(IEnumerable<string> keywords, ISyntaxStyle style, bool ignoreCase = false) => new Pattern(new Regex($@"(?<=^|\W)({keywords.Select(Regex.Escape)._FOS_Join("|")})(?=\W|$)", RegexOptions.Compiled | RegexOptions.Singleline | (ignoreCase ? RegexOptions.IgnoreCase : 0)), style);
       public static ISyntaxHighlightPattern FromKeyword(string word, ISyntaxStyle style, bool ignoreCase = false) => new Pattern(new Regex($@"(?<=^|\W)({Regex.Escape(word)})(?=\W|$)", RegexOptions.Compiled | RegexOptions.Singleline | (ignoreCase ? RegexOptions.IgnoreCase : 0)), style);
       public static ISyntaxHighlightPattern FromRegex(Regex regex, ISyntaxStyle style) => new Pattern(regex, style);
       public static ISyntaxHighlightPattern FromRegex(Regex regex, IDictionary<string, ISyntaxStyle> styles) => new Pattern(regex, null, new ReadOnlyDictionary<string, ISyntaxStyle>(styles));
@@ -454,13 +459,13 @@ namespace System.Windows.Forms {
           this.GroupStyles = groupStyles;
         }
 
-        #region Implementation of ISyntaxHighlightPattern
+#region Implementation of ISyntaxHighlightPattern
 
         public Regex RegularExpression { get; }
         public ISyntaxStyle Style { get; }
         public IReadOnlyDictionary<string, ISyntaxStyle> GroupStyles { get; }
 
-        #endregion
+#endregion
       }
 
     }
@@ -524,9 +529,9 @@ namespace System.Windows.Forms {
           }
       }
 
-      #endregion
+#endregion
 
-      #endregion
+#endregion
     }
   }
 }

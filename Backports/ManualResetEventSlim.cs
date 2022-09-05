@@ -1,4 +1,4 @@
-﻿#if !NET40_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+﻿#if NET35_OR_GREATER && !NET40_OR_GREATER
 
 namespace System.Threading {
 
@@ -7,7 +7,7 @@ namespace System.Threading {
 #else
   internal
 #endif
-  class ManualResetEventSlim {
+  class ManualResetEventSlim:IDisposable {
 
     private readonly ManualResetEvent _manualResetEvent;
 
@@ -18,7 +18,8 @@ namespace System.Threading {
     public void Wait() => this._manualResetEvent.WaitOne();
     public bool Wait(TimeSpan timeout) => this._manualResetEvent.WaitOne(timeout);
     public void Reset() => this._manualResetEvent.Reset();
-
+    ~ManualResetEventSlim() => this.Dispose();
+    public void Dispose() => GC.SuppressFinalize(this);
   }
 }
 
