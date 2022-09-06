@@ -378,6 +378,27 @@ namespace System.Drawing {
     /// Resizes the specified Image.
     /// </summary>
     /// <param name="this">This Image.</param>
+    /// <param name="longSide">The width/height in pixels.</param>
+    /// <returns></returns>
+    public static Bitmap Resize(this Image @this, int longSide)
+      => Resize(@this, longSide, longSide, true, null)
+    ;
+
+    /// <summary>
+    /// Resizes the specified Image.
+    /// </summary>
+    /// <param name="this">This Image.</param>
+    /// <param name="longSide">The width/height in pixels.</param>
+    /// <param name="fillColor">Color of the fill.</param>
+    /// <returns></returns>
+    public static Bitmap Resize(this Image @this, int longSide, Color fillColor)
+      => Resize(@this, longSide, longSide, true, fillColor)
+    ;
+
+    /// <summary>
+    /// Resizes the specified Image.
+    /// </summary>
+    /// <param name="this">This Image.</param>
     /// <param name="width">The width in pixels.</param>
     /// <param name="height">The height in pixels.</param>
     /// <param name="keepAspect">if set to <c>true</c> keeps image aspect and fills borders with fillColor.</param>

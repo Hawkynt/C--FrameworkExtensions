@@ -19,6 +19,15 @@
 */
 #endregion
 
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_INLINING
+#endif
+#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_CONTRACTS 
+#define SUPPORTS_POINTER_ARITHMETIC
+#endif
+
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -527,9 +536,18 @@ namespace System.Drawing {
         var bitmapData = this.BitmapData;
         var stride = bitmapData.Stride;
         var byteCount = bytesPerPixel * width;
+
+#if SUPPORTS_POINTER_ARITHMETIC
         var startOffset = bitmapData.Scan0 + (y * stride + x * bytesPerPixel);
+#else
+        var startOffset = _Add(bitmapData.Scan0, y * stride + x * bytesPerPixel);
+#endif
         this._DrawHorizontalLine(x, y, width, color); // TODO: if line is long enough, draw part of it, than memory copy
+#if SUPPORTS_POINTER_ARITHMETIC
         var offset = startOffset + stride;
+#else
+        var offset = _Add(startOffset, stride);
+#endif
         --height;
         do {
 
@@ -573,46 +591,102 @@ namespace System.Drawing {
 
           height15:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height14:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height13:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height12:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height11:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height10:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height9:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height8:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height7:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height6:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height5:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height4:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height3:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height2:
           _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
           offset += stride;
+#else
+          _Add(ref offset, stride);
+#endif
           height1:
           _memoryCopyCall(startOffset, offset, byteCount);
           height0:
@@ -625,28 +699,60 @@ namespace System.Drawing {
 
           do {
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
             _memoryCopyCall(startOffset, offset, byteCount);
+#if SUPPORTS_POINTER_ARITHMETIC
             offset += stride;
+#else
+            _Add(ref offset, stride);
+#endif
           } while (--heightOcts > 0);
         } while (true);
       }
 
-      #endregion
+#endregion
 
-      #region CopyFrom
+#region CopyFrom
 
       public void CopyFrom(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
         if (this._FixCopyParametersToBeInbounds(other, ref xs, ref ys, ref width, ref height, ref xt, ref yt))
@@ -729,8 +835,13 @@ namespace System.Drawing {
         var sourceStride = bitmapDataSource.Stride;
         var targetStride = bitmapDataTarget.Stride;
 
+#if SUPPORTS_POINTER_ARITHMETIC
         var yOffsetTarget = bitmapDataTarget.Scan0 + (targetStride * yt + bytesPerPixel * xt);
         var yOffsetSource = bitmapDataSource.Scan0 + (sourceStride * ys + bytesPerPixel * xs);
+#else
+        var yOffsetTarget = _Add(bitmapDataTarget.Scan0, targetStride * yt + bytesPerPixel * xt);
+        var yOffsetSource = _Add(bitmapDataSource.Scan0, sourceStride * ys + bytesPerPixel * xs);
+#endif
         var byteCountPerLine = width * bytesPerPixel;
 
         do {
@@ -758,28 +869,58 @@ namespace System.Drawing {
 
           height7:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height6:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height5:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height4:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height3:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height2:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
           yOffsetSource += sourceStride;
           yOffsetTarget += targetStride;
+#else
+          _Add(ref yOffsetSource, sourceStride);
+          _Add(ref yOffsetTarget, targetStride);
+#endif
           height1:
           _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
           height0:
@@ -792,29 +933,69 @@ namespace System.Drawing {
           // unrolled loop, copying 8 lines in one go - increasing performance roughly by 20% according to benchmarks
           do {
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
             _memoryCopyCall(yOffsetSource, yOffsetTarget, byteCountPerLine);
+#if SUPPORTS_POINTER_ARITHMETIC
             yOffsetSource += sourceStride;
             yOffsetTarget += targetStride;
+#else
+            _Add(ref yOffsetSource, sourceStride);
+            _Add(ref yOffsetTarget, targetStride);
+#endif
           } while (--heightOcts > 0);
         } while (true);
       }
@@ -866,9 +1047,9 @@ namespace System.Drawing {
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
 
-      #endregion
+#endregion
 
-      #region CopyFromGrid
+#region CopyFromGrid
 
       public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
         var sourceX = column * (width + dx) + offsetX;
@@ -928,9 +1109,9 @@ namespace System.Drawing {
         throw new NotImplementedException();
       }
 
-      #endregion
+#endregion
 
-      #region BlendWith
+#region BlendWith
 
 #if NET45_OR_GREATER
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1038,7 +1219,7 @@ namespace System.Drawing {
             this._SetBlendedPixel(xct, yt, other[x, y]);
       }
 
-      #endregion
+#endregion
 
       [DebuggerHidden]
       private void _CheckRectangleParameters(int x, int y, int width, int height) {
@@ -1149,7 +1330,7 @@ namespace System.Drawing {
         return true;
       }
 
-      #region lines
+#region lines
 
 #if NET45_OR_GREATER
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1568,11 +1749,11 @@ namespace System.Drawing {
           color)
       ;
 
-      #endregion
+#endregion
 
     }
 
-    #region optimized pixel format handlers
+#region optimized pixel format handlers
 
     private sealed class ARGB32BitmapLocker : BitmapLockerBase {
       public ARGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
@@ -1792,14 +1973,27 @@ namespace System.Drawing {
         var otherStride = otherLocker.BitmapData.Stride;
         const int bpp = 4;
 
+#if SUPPORTS_POINTER_ARITHMETIC
         var thisOffset = this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
         var otherOffset = otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
+#else
+        var thisOffset = _Add(this.BitmapData.Scan0, yt * thisStride + xt * bpp);
+        var otherOffset = _Add(otherLocker.BitmapData.Scan0, ys * otherStride + xs * bpp);
+#endif
 
+#if SUPPORTS_POINTER_ARITHMETIC
         for (; height > 0; thisOffset += thisStride, otherOffset += otherStride, --height) {
+#else
+        for (; height > 0; _Add(ref thisOffset, thisStride), _Add(ref otherOffset, otherStride), --height) {
+#endif
           var to = thisOffset;
           var oo = otherOffset;
 
+#if SUPPORTS_POINTER_ARITHMETIC
           for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
+#else
+          for (var x = width; x > 0; _Add(ref to, bpp), _Add(ref oo, bpp), --x) {
+#endif
             var otherPixel = (uint)Marshal.ReadInt32(oo);
             if (otherPixel < 0x01000000)
               continue;
@@ -1833,9 +2027,9 @@ namespace System.Drawing {
 #endif
 
 
-    } // ARGB32BitmapLocker
+        } // ARGB32BitmapLocker
 
-    private sealed class RGB32BitmapLocker : BitmapLockerBase {
+      private sealed class RGB32BitmapLocker : BitmapLockerBase {
       public RGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
 
       protected override int _BytesPerPixel => 4;
@@ -1865,7 +2059,11 @@ namespace System.Drawing {
           Debug.Assert(pointer != null, nameof(pointer) + " != null");
           var stride = data.Stride;
           var offset = stride * y + (x << 2);
+#if SUPPORTS_POINTER_ARITHMETIC
           pointer += offset;
+#else
+          _Add(ref pointer, offset);
+#endif
           var b = Marshal.ReadByte(pointer, 0);
           var g = Marshal.ReadByte(pointer, 1);
           var r = Marshal.ReadByte(pointer, 2);
@@ -1897,7 +2095,11 @@ namespace System.Drawing {
           Debug.Assert(pointer != null, nameof(pointer) + " != null");
           var stride = data.Stride;
           var offset = stride * y + (x << 2);
+#if SUPPORTS_POINTER_ARITHMETIC
           pointer += offset;
+#else
+          _Add(ref pointer, offset);
+#endif
           Marshal.WriteByte(pointer, 0, value.B);
           Marshal.WriteByte(pointer, 1, value.G);
           Marshal.WriteByte(pointer, 2, value.R);
@@ -1997,7 +2199,11 @@ namespace System.Drawing {
           Debug.Assert(pointer != null, nameof(pointer) + " != null");
           var stride = data.Stride;
           var offset = stride * y + x * 3;
+#if SUPPORTS_POINTER_ARITHMETIC
           pointer += offset;
+#else
+          _Add(ref pointer, offset);
+#endif
           var b = Marshal.ReadByte(pointer, 0);
           var g = Marshal.ReadByte(pointer, 1);
           var r = Marshal.ReadByte(pointer, 2);
@@ -2029,7 +2235,11 @@ namespace System.Drawing {
           Debug.Assert(pointer != null, nameof(pointer) + " != null");
           var stride = data.Stride;
           var offset = stride * y + x * 3;
+#if SUPPORTS_POINTER_ARITHMETIC
           pointer += offset;
+#else
+          _Add(ref pointer, offset);
+#endif
           Marshal.WriteByte(pointer, 0, value.B);
           Marshal.WriteByte(pointer, 1, value.G);
           Marshal.WriteByte(pointer, 2, value.R);
@@ -2162,7 +2372,7 @@ namespace System.Drawing {
     private sealed class UnsupportedDrawingBitmapLocker : BitmapLockerBase {
       public UnsupportedDrawingBitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) {
         this._exception = new NotSupportedException(
-          $"Wrong pixel format {format} (supported: {string.Join(",", _LOCKER_TYPES.Keys.Select(i => i.ToString()))})"
+          $"Wrong pixel format {format} (supported: {string.Join(",", _LOCKER_TYPES.Keys.Select(i => i.ToString()).ToArray())})"
         );
       }
 
@@ -2175,7 +2385,7 @@ namespace System.Drawing {
 
     } // UnsupportedDrawingBitmapLocker
 
-    #endregion
+#endregion
 
     private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
     private static readonly Dictionary<PixelFormat, LockerFactory> _LOCKER_TYPES = new Dictionary<PixelFormat, LockerFactory> {
@@ -2184,9 +2394,9 @@ namespace System.Drawing {
       {PixelFormat.Format24bppRgb,(b,r,f,f2)=>new RGB24BitmapLocker(b,r,f,f2) },
     };
 
-    #endregion
+#endregion
 
-    #region method delegates
+#region method delegates
 
     public delegate void MemoryCopyDelegate(IntPtr source, IntPtr target, int count);
     public delegate void MemoryFillDelegate(IntPtr source, byte value, int count);
@@ -2207,9 +2417,14 @@ namespace System.Drawing {
       set => _memoryFillCall = value ?? throw new ArgumentNullException(nameof(value), "There must be a valid method pointer");
     }
 
-    #endregion
+#endregion
 
-    #region Lock
+#if !SUPPORTS_POINTER_ARITHMETIC
+    private static IntPtr _Add(IntPtr src, int count) => new IntPtr(src.ToInt64() + count);
+    private static void _Add(ref IntPtr src, int count) => src = _Add(src, count);
+#endif
+
+#region Lock
 
     public static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)
       => _LOCKER_TYPES.TryGetValue(format, out var factory) ? factory(@this, rect, flags, format) : new UnsupportedDrawingBitmapLocker(@this, rect, flags, format)
@@ -2243,7 +2458,7 @@ namespace System.Drawing {
       => Lock(@this, new Rectangle(Point.Empty, @this.Size), flags, format)
     ;
 
-    #endregion
+#endregion
 
     public static Bitmap ConvertPixelFormat(this Bitmap @this, PixelFormat format) {
       if (@this == null)
