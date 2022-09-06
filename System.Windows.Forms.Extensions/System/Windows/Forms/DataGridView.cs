@@ -3198,6 +3198,7 @@ namespace System.Windows.Forms {
           newColumn.DataPropertyName = property.Name;
           columns.RemoveAt(i);
           columns.Insert(i, newColumn);
+          column = newColumn;
         }
 
         // apply visibility for column
