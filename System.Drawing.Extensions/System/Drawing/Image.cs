@@ -1,12 +1,4 @@
-﻿<#@ template debug="false" hostspecific="true" language="C#" #>
-<#@ assembly name="System.Core" #>
-<#@ import namespace="System.Linq" #>
-<#@ import namespace="System.Text" #>
-<#@ import namespace="System.Collections.Generic" #>
-<#@ import namespace="VSLangProj" #>
-<#@ output extension=".cs" #>
-
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -38,19 +30,8 @@ using System.Diagnostics.Contracts;
 #endif
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
-<#if(this.IsFormsReferenced){#>
-using System.Windows.Forms;
-<#}else{#>
-// This file introduces more functionality when project references System.Windows.Forms !
-<#}#>
-<#if(this.IsMediaReferenced){#>
-using System.Windows.Media.Imaging;
-<#}else{#>
-// This file introduces more functionality when project references System.Windows.Media !
-<#}#>
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -246,30 +227,6 @@ namespace System.Drawing {
         return (Icon.FromHandle(hIcon));
       }
     }
-
-<#if(this.IsMediaReferenced){#>
-    /// <summary>
-    /// Converts a GDI+ image into a WPF BitmapImage.
-    /// </summary>
-    /// <param name="image">The image.</param>
-    /// <returns>The BitmapImage</returns>
-    public static BitmapImage ToBitmapImage(this Image image) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(image != null);
-#endif
-      using (var memoryStream = new MemoryStream()) {
-        image.Save(memoryStream, ImageFormat.Png);
-        memoryStream.Position = 0;
-        var result = new BitmapImage();
-        result.BeginInit();
-        result.CacheOption = BitmapCacheOption.OnLoad;
-        result.UriSource = null;
-        result.StreamSource = memoryStream;
-        result.EndInit();
-        return (result);
-      }
-    }
-<#}#>
 
     /// <summary>
     /// Converts image to grayscale.
@@ -507,128 +464,6 @@ namespace System.Drawing {
       return (result);
     }
 
-<#if(this.IsFormsReferenced){#>
-    /// <summary>
-    /// Prints the image using the system's printer dialog.
-    /// </summary>
-    /// <param name="This">This Image.</param>
-    /// <param name="documentName">Name of the document.</param>
-    /// <param name="dialog">The dialog to use; creates its own when none is given.</param>
-    /// <returns>The used printersettings</returns>
-    public static PrinterSettings PrintImageWithDialog(this Image This, string documentName = null, PrintDialog dialog = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      using (var document = new PrintDocument()) {
-        var pageCount = This.GetPageCount();
-
-        var noDialog = dialog == null;
-        try {
-
-          if (noDialog)
-            dialog = new PrintDialog();
-
-          if (documentName != null)
-            document.DocumentName = documentName;
-
-          var currentPageIndex = 0;
-          document.PrintPage += (o, ea) => {
-
-            using (var currentPage = This.GetPageAt(currentPageIndex)) {
-              var imageIsLandscape = currentPage.Width > currentPage.Height;
-              var marginBounds = ea.PageBounds;
-              var paperIsLandscape = marginBounds.Width > marginBounds.Height;
-              Image printImage = null;
-              try {
-                printImage = imageIsLandscape == paperIsLandscape ? currentPage : currentPage.Rotate(90);
-
-                var ratio = printImage.Width / (double)printImage.Height;
-                if (marginBounds.Width / ratio > marginBounds.Height)
-                  marginBounds.Width = (int)(marginBounds.Height * ratio);
-                else
-                  marginBounds.Height = (int)(marginBounds.Width / ratio);
-
-                ea.Graphics.CompositingQuality = CompositingQuality.HighQuality;
-                ea.Graphics.DrawImage(printImage, marginBounds);
-
-              } finally {
-                if (imageIsLandscape != paperIsLandscape)
-                  printImage?.Dispose();
-              }
-            }
-            ea.HasMorePages = ++currentPageIndex < pageCount;
-          };
-
-          dialog.PrinterSettings.MinimumPage = 1;
-          dialog.PrinterSettings.MaximumPage = pageCount;
-          dialog.Document = document;
-
-          if (dialog.ShowDialog() != DialogResult.OK)
-            return (null);
-
-          document.Print();
-          return (document.PrinterSettings);
-
-        } finally {
-          if (noDialog)
-            dialog?.Dispose();
-        }
-      }
-
-    }
-<#}#>
-
-    /// <summary>
-    /// Prints the image without a printer dialog.
-    /// </summary>
-    /// <param name="This">This Image.</param>
-    /// <param name="documentName">Name of the document.</param>
-    /// <param name="settings">The settings.</param>
-    public static void PrintImage(this Image This, string documentName = null, PrinterSettings settings = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      using (var document = new PrintDocument()) {
-        var pageCount = This.GetPageCount();
-
-        if (documentName != null)
-          document.DocumentName = documentName;
-
-        var currentPageIndex = 0;
-        document.PrintPage += (o, ea) => {
-
-          using (var currentPage = This.GetPageAt(currentPageIndex)) {
-            var imageIsLandscape = currentPage.Width > currentPage.Height;
-            var marginBounds = ea.PageBounds;
-            var paperIsLandscape = marginBounds.Width > marginBounds.Height;
-            Image printImage = null;
-            try {
-              printImage = imageIsLandscape == paperIsLandscape ? currentPage : currentPage.Rotate(90);
-
-              var ratio = printImage.Width / (double)printImage.Height;
-              if (marginBounds.Width / ratio > marginBounds.Height)
-                marginBounds.Width = (int)(marginBounds.Height * ratio);
-              else
-                marginBounds.Height = (int)(marginBounds.Width / ratio);
-
-              ea.Graphics.CompositingQuality = CompositingQuality.HighQuality;
-              ea.Graphics.DrawImage(printImage, marginBounds);
-
-            } finally {
-              if (imageIsLandscape != paperIsLandscape)
-                printImage?.Dispose();
-            }
-          }
-          ea.HasMorePages = ++currentPageIndex < pageCount;
-        };
-
-        if (settings != null)
-          document.PrinterSettings = settings;
-
-        document.Print();
-      }
-    }
-
     /// <summary>
     /// Gets a rectangular area of the image.
     /// </summary>
@@ -660,54 +495,3 @@ namespace System.Drawing {
 
   }
 }
-
-
-<#+
-  IEnumerable<Reference> References{
-    get{
-      var serviceProvider = (IServiceProvider)this.Host;
-      if(serviceProvider==null)
-        yield break;
-
-      var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
-      if(dte==null)
-        yield break;
-
-      var document = dte.Solution.FindProjectItem(this.Host.TemplateFile);
-      if(document==null)
-        yield break;
-
-      var project = document.ContainingProject;
-      if(project==null)
-        yield break;
-
-      var vsProject = project.Object as VSProject;
-      if(vsProject==null)
-        yield break;
-
-      foreach(Reference result in vsProject.References)
-        yield return result;
-    }
-  }
-
-  bool IsReferenced(string name){
-    foreach (var r in this.References){
-      if(r.Name==name)
-        return true;
-    }
-
-    return false;
-  }
-
-  bool IsMediaReferenced{
-    get {
-      return this.IsReferenced("System.Windows.Media");
-    }
-  }
-
-  bool IsFormsReferenced{
-    get {
-      return this.IsReferenced("System.Windows.Forms");
-    }
-  }
-#>
