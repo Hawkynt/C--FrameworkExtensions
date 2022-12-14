@@ -31,6 +31,7 @@ using System.Diagnostics.Contracts;
 #endif
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace System.Reflection {
 
@@ -137,6 +138,17 @@ namespace System.Reflection {
 #endif
       using (var reader = This.GetResourceBinaryReader(fileName))
         return (reader.ReadAllBytes());
+    }
+
+    /// <summary>
+    /// Get the guid from, the assembly attributes or returns the fallabck
+    /// </summary>
+    /// <param name="this">Assembly to use</param>
+    /// <param name="fallbackGuid">Fallback to return if needed</param>
+    /// <returns>a valid Guid</returns>
+    public static string GetGuidOrFallback(this Assembly @this, string fallbackGuid = null) {
+      var attributes = @this.GetCustomAttributes(typeof(GuidAttribute), true);
+      return attributes.Length > 0 ? ((GuidAttribute)attributes[0]).Value : fallbackGuid;
     }
   }
 }
