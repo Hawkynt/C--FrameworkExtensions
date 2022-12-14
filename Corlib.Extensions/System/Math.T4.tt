@@ -63,7 +63,7 @@ namespace System {
   static partial class MathEx {
   <# foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -81,7 +81,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This number.</param>
     /// <returns><c>true</c> if the number is odd; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -94,7 +94,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This number.</param>
     /// <returns><c>true</c> if the number is even; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -107,11 +107,24 @@ namespace System {
   <# foreach (var type in new[]{"float","double","decimal"}){#>
     
     /// <summary>
+    /// Calculates 1/x.
+    /// </summary>
+    /// <param name="this">This number.</param>
+    /// <returns>An estimation of the reciprocal.</returns>
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static <#=type#> ReciprocalEstimate(<#=type#> @this) => 1 / @this;
+
+    /// <summary>
     /// Determines whether the specified number is odd.
     /// </summary>
     /// <param name="this">This number.</param>
     /// <returns><c>true</c> if the number is odd; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -125,7 +138,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This number.</param>
     /// <returns><c>true</c> if the number is even; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -137,7 +150,10 @@ namespace System {
   
   <# foreach (var type in new[]{"double","decimal"}){#>
     
-#if NET40_OR_GREATER
+    /// <summary>Returns the largest integral value less than or equal to the specified decimal number.</summary>
+    /// <param name="this">A number.</param>
+    /// <returns>The largest integral value less than or equal to <paramref name="this" />.  Note that the method returns an integral value of type <see cref="T:System.Decimal" />.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -145,7 +161,10 @@ namespace System {
 #endif
     public static <#=type#> Floor(this <#=type#> @this) => Math.Floor(@this);
     
-#if NET40_OR_GREATER
+    /// <summary>Returns the smallest integral value that is greater than or equal to the specified decimal number.</summary>
+    /// <param name="this">A number.</param>
+    /// <returns>The smallest integral value that is greater than or equal to <paramref name="this" />. Note that this method returns a <see cref="T:System.Decimal" /> instead of an integral type.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -153,7 +172,10 @@ namespace System {
 #endif
     public static <#=type#> Ceiling(this <#=type#> @this) => <#=(type=="float"?"("+type+")":"")#>Math.Ceiling(@this);
     
-#if NET40_OR_GREATER
+    /// <summary>Calculates the integral part of a specified decimal number.</summary>
+    /// <param name="this">A number to truncate.</param>
+    /// <returns>The integral part of <paramref name="this" />; that is, the number that remains after any fractional digits have been discarded.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -164,7 +186,10 @@ namespace System {
       
   <# foreach (var item in new[]{T("double",15),T("decimal",28)}){#>
 
-#if NET40_OR_GREATER
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <param name="this">A number to be rounded.</param>
+    /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -172,7 +197,11 @@ namespace System {
 #endif
     public static <#=item.Item1#> Round(this <#=item.Item1#> @this) => <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this);
 
-#if NET40_OR_GREATER
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <param name="this">A number to be rounded.</param>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -185,7 +214,11 @@ namespace System {
       return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits);
     }
 
-#if NET40_OR_GREATER
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="this">A number to be rounded.</param>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -193,7 +226,12 @@ namespace System {
 #endif
     public static <#=item.Item1#> Round(this <#=item.Item1#> @this, MidpointRounding method) => <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, method);
 
-#if NET40_OR_GREATER
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="this">A number to be rounded.</param>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -210,7 +248,7 @@ namespace System {
 
   <# foreach (var type in new[]{"sbyte","short","int","long","float","double","decimal"}){#>
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -218,7 +256,7 @@ namespace System {
 #endif
     public static <#=type#> Abs(this <#=type#> @this) => <#=(type=="float"?"(float)":"")#>Math.Abs(@this);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -230,7 +268,7 @@ namespace System {
   
   <# foreach (var type in new[]{"float","double"}){#>
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -238,7 +276,7 @@ namespace System {
 #endif
     public static bool IsNaN(this <#=type#> @this) => <#=type#>.IsNaN(@this);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -246,7 +284,7 @@ namespace System {
 #endif
     public static bool IsInfinity(this <#=type#> @this) => <#=type#>.IsInfinity(@this);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -254,7 +292,7 @@ namespace System {
 #endif
     public static bool IsPositiveInfinity(this <#=type#> @this) => <#=type#>.IsPositiveInfinity(@this);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -266,7 +304,7 @@ namespace System {
   
   <# foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -274,7 +312,7 @@ namespace System {
 #endif
     public static <#=type#> Squared(this <#=type#> @this) => (<#=type#>)(@this * @this);
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -282,15 +320,15 @@ namespace System {
 #endif
     public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)(@this * @this * @this);
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static <#=type#> ToThePower(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(<#=(type=="decimal"?"(double)":"")#>@this,<#=(type=="decimal"?"(double)":"")#>exponent);
+    public static <#=type#> Pow(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(<#=(type=="decimal"?"(double)":"")#>@this,<#=(type=="decimal"?"(double)":"")#>exponent);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -298,7 +336,7 @@ namespace System {
 #endif
     public static <#=type#> MultipliedWith(this <#=type#> @this,<#=type#> factor) => (<#=type#>)(@this * factor);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -311,7 +349,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This value.</param>
     /// <returns><c>true</c> if the value is zero; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -324,7 +362,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This value.</param>
     /// <returns><c>true</c> if the value is not zero; otherwise, <c>false</c>.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -336,7 +374,7 @@ namespace System {
 
   <# foreach (var method in new[]{"Sqrt","Log10","Log","Sin","Cos","Tan","Sinh","Cosh","Tanh"}){#>
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -350,7 +388,7 @@ namespace System {
   #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
   #endif
-    public static <#=type#> MultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="word"?$"({type})":string.Empty)#>(@this * mul + add);
+    public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="word"?$"({type})":string.Empty)#>(@this * mul + add);
 
   <#}#>
     
@@ -360,7 +398,7 @@ namespace System {
   #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
   #endif
-    public static <#=type#> MultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, mul, add);
+    public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, mul, add);
   <#}#>
 
 #else
@@ -369,12 +407,12 @@ namespace System {
   #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
   #endif
-    public static <#=type#> MultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => @this * mul + add;
+    public static <#=type#> MultiplFusedMultiplyAddyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => @this * mul + add;
   <#}#>
 
 #endif
 
-    #region fast min/max
+    #region fast min/max/avg
 
   <# foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
 
@@ -384,13 +422,13 @@ namespace System {
     /// </summary>
     /// <param name="values">The values.</param>
     /// <returns>The min value.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static <#=type#> Min(params <#=type#>[] values) {
       var length = values.Length;
       if (length == 0)
-        return default(<#=type#>);
+        return default;
 
       var result = values[0];
       for (var i = 1; i < length; ++i) 
@@ -405,13 +443,13 @@ namespace System {
     /// </summary>
     /// <param name="values">The values.</param>
     /// <returns>The max value.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static <#=type#> Max(params <#=type#>[] values) {
       var length = values.Length;
       if (length == 0)
-        return default(<#=type#>);
+        return default;
 
       var result = values[0];
       for (var i = 1; i < length; ++i) 
@@ -421,7 +459,43 @@ namespace System {
       return result;
     }
 
-#if NET40_OR_GREATER
+    /// <summary>
+    /// Gets the maximum value from the given ones.
+    /// </summary>
+    /// <param name="values">The values.</param>
+    /// <returns>The max value.</returns>
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+    public static <#=type#> Average(params <#=type#>[] values) {
+      var length = values.Length;
+      if (length == 0)
+        return default;
+
+<#
+      var tempType = 
+        "|decimal|double|qword|long|".Contains($"|{type}|") 
+        ? type 
+        : 
+          type == "float" 
+          ? "double" 
+          : 
+            "|sbyte|short|int|".Contains($"|{type}|") 
+            ? "long" 
+            : "qword"
+      ;
+
+      var downCast = type == tempType ? string.Empty : $"({type})";
+      var upCast = type == tempType ? string.Empty : $"({tempType})";
+#>
+      var result = <#=upCast#>values[0];
+      for (var i = 1; i < length; ++i) 
+        result += values[i];
+
+      return <#=downCast#>(result / (<#=tempType#>)length);
+    }
+
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static bool IsIn(<#=type#> @this, <#=type#>[] values) {
@@ -436,7 +510,7 @@ namespace System {
       return false;
     }
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static bool IsNotIn(<#=type#> @this, <#=type#>[] values) {
@@ -451,7 +525,7 @@ namespace System {
       return true;
     }
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING
@@ -459,7 +533,7 @@ namespace System {
 #endif
     public static bool IsBetween(<#=type#> @this, <#=type#> lowerBoundary, <#=type#> upperBoundary) => lowerBoundary<@this && @this<upperBoundary;
     
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
 #if SUPPORTS_INLINING

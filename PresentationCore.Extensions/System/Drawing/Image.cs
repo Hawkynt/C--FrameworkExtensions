@@ -47,6 +47,7 @@ namespace System.Drawing {
 #endif
   static partial class ImageExtensions {
 
+#if !NETCOREAPP && !NET5_0_OR_GREATER
     /// <summary>
     /// Converts a GDI+ image into a WPF BitmapImage.
     /// </summary>
@@ -68,6 +69,8 @@ namespace System.Drawing {
         return (result);
       }
     }
+
+#endif
 
   }
 }

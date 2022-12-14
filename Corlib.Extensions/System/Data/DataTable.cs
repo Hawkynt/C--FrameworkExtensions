@@ -24,7 +24,12 @@ using System.ComponentModel;
 using System.Data.Common;
 
 namespace System.Data {
-  internal static partial class DataTableExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class DataTableExtensions {
     /// <summary>
     /// Fills a datatable from a dataadapter.
     /// </summary>

@@ -19,6 +19,9 @@
 */
 #endregion
 
+#if NET5_0_OR_GREATER || NETCOREAPP
+#define SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+#endif
 #if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_INLINING
 #endif
@@ -31,6 +34,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+using System.Diagnostics.CodeAnalysis;
+#endif
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
@@ -107,7 +113,7 @@ namespace System {
       protected readonly int _start;
 
       public ReadOnlyArraySlice(TItem[] source, int start, int length) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(source != null);
 #endif
         if (start + length > source.Length)
@@ -136,7 +142,7 @@ namespace System {
       /// <returns>The item at the given index.</returns>
       public TItem this[int index] {
         get {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
@@ -207,7 +213,7 @@ namespace System {
     public class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
       public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
         Contract.Requires(source != null);
 #endif
       }
@@ -222,13 +228,13 @@ namespace System {
       /// <returns>The item at the given index</returns>
       public new TItem this[int index] {
         get {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Requires(index < this.Length);
 #endif
           return this._source[index + this._start];
         }
         set {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Requires(index < this.Length);
 #endif
           this._source[index + this._start] = value;
@@ -973,7 +979,7 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
     /// </returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static bool Contains(this Array @this, object value) {
@@ -996,7 +1002,7 @@ namespace System {
     /// </summary>
     /// <param name="this">This Array.</param>
     /// <returns>An array of objects holding the contents.</returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
     [Pure]
 #endif
     public static object[] ToArray(this Array @this) {
@@ -1116,9 +1122,6 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-#if NET40_OR_GREATER
-    [Pure]
-#endif
     public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
       if (@this == null)
         throw new NullReferenceException();
@@ -1214,7 +1217,11 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNullEmpty<TItem>(this TItem[] @this)=>@this==null||@this.Length<=0;
+    public static bool IsNullEmpty<TItem>(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(false)] 
+#endif
+      this TItem[] @this)=>@this is not { Length: > 0 };
 
     /// <summary>
     /// Determines whether the given array is not empty.
@@ -1225,7 +1232,11 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNotNullEmpty<TItem>(this TItem[] @this) => @this != null && @this.Length > 0;
+    public static bool IsNotNullEmpty<TItem>(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(true)] 
+#endif
+      this TItem[] @this) => @this is { Length: > 0 };
 
     /// <summary>
     /// Initializes a jagged array with default values.
@@ -1510,7 +1521,7 @@ namespace System {
     public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1527,7 +1538,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1542,7 +1553,7 @@ namespace System {
     public static IEnumerable<object> Reverse(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1556,7 +1567,7 @@ namespace System {
         throw new NullReferenceException();
       if (predicate == null)
         throw new ArgumentNullException(nameof(predicate));
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1571,7 +1582,7 @@ namespace System {
     public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1764,7 +1775,7 @@ namespace System {
         throw new ArgumentOutOfRangeException(nameof(offset), offset, "Must be > 0");
       if (count < 1)
         throw new ArgumentOutOfRangeException(nameof(count), count, "Must be > 0");
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1790,7 +1801,7 @@ namespace System {
         throw new NullReferenceException();
       if (length < 1)
         throw new ArgumentOutOfRangeException(nameof(length), length, "Must be > 0");
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1819,7 +1830,7 @@ namespace System {
     public static byte[] GZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -1840,7 +1851,7 @@ namespace System {
     public static byte[] UnGZip(this byte[] @this) {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 
@@ -2039,9 +2050,9 @@ namespace System {
       return _INDEX_WHEN_NOT_FOUND;
     }
 
-#endregion
+    #endregion
 
-#region hash computation
+    #region hash computation
 
 
 #if !NET6_0_OR_GREATER
@@ -2058,7 +2069,7 @@ namespace System {
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
       if (@this == null)
         throw new NullReferenceException();
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
       Contract.EndContractBlock();
 #endif
 

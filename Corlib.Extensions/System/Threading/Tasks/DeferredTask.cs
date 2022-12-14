@@ -114,7 +114,12 @@ namespace System.Threading.Tasks {
       if (thread == null || Interlocked.CompareExchange(ref this._currentThread, null, thread) != thread)
         return;
 
+#if !NETCOREAPP && !NETSTANDARD && !NET5_0_OR_GREATER
       thread.Abort();
+#else
+      // TODO: signal the running thread to abort somehow ... maybe a reset event, maybe a weak-dictionary IDK
+#endif
+
     }
 
     /// <summary>
