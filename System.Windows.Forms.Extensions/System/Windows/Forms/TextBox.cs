@@ -77,5 +77,62 @@ namespace System.Windows.Forms {
       This.Text = string.Empty;
       This.AppendText(lines.Take((int)count)._FOS_Join(Environment.NewLine));
     }
+
+    /// <summary>
+    /// Duplicates the given TextBox
+    /// </summary>
+    /// <param name="this">This TextBox</param>
+    /// <param name="newName">The new name</param>
+    /// <returns>The duplicated TextBox</returns>
+    public static TextBox Duplicate(this TextBox @this, string newName = null) {
+      newName = newName ?? new Guid().ToString();
+
+      var newTextBox = new TextBox {
+        AllowDrop = @this.AllowDrop,
+        Anchor = @this.Anchor,
+        AutoSize = @this.AutoSize,
+        BackColor = @this.BackColor,
+        BackgroundImage = @this.BackgroundImage,
+        AutoScrollOffset = @this.AutoScrollOffset,
+        BackgroundImageLayout = @this.BackgroundImageLayout,
+        Bounds = @this.Bounds,
+        Capture = @this.Capture,
+        Text = @this.Text,
+        Tag = @this.Tag,
+        CausesValidation = @this.CausesValidation,
+        ClientSize = @this.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+        ContextMenu = @this.ContextMenu,
+#endif
+        Cursor = @this.Cursor,
+        Enabled = @this.Enabled,
+        Visible = @this.Visible,
+        Dock = @this.Dock,
+        Font = @this.Font,
+        ForeColor = @this.ForeColor,
+        ContextMenuStrip = @this.ContextMenuStrip,
+        Location = @this.Location,
+        Size = @this.Size,
+        TextAlign = @this.TextAlign,
+        Padding = @this.Padding,
+        Margin = @this.Margin,
+        UseWaitCursor = @this.UseWaitCursor,
+        Name = newName,
+        RightToLeft = @this.RightToLeft,
+        MinimumSize = @this.MinimumSize,
+        MaximumSize = @this.MaximumSize,
+        AcceptsReturn = @this.AcceptsReturn,
+        AcceptsTab = @this.AcceptsTab,
+        AccessibleDescription = @this.AccessibleDescription,
+        AccessibleName = @this.AccessibleName,
+        AccessibleRole = @this.AccessibleRole,
+        BorderStyle = @this.BorderStyle,
+        CharacterCasing = @this.CharacterCasing,
+        AccessibleDefaultActionDescription = @this.AccessibleDefaultActionDescription,
+      };
+
+      return newTextBox;
+    }
+
   }
 }
