@@ -141,11 +141,6 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="System\Drawing\Image.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Image.tt</DependentUpon>
-    </Compile>
     <Compile Update="System\Drawing\Point.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

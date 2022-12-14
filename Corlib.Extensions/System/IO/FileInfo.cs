@@ -307,9 +307,33 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="destFile">The destination file.</param>
+    /// <param name="timeout">The timeout.</param>
+    public static void MoveTo(this FileInfo This, FileInfo destFile, TimeSpan? timeout = null) => This.MoveTo(destFile.FullName, false, timeout);
+
+    /// <summary>
+    /// Moves the file to the target directory.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <param name="destFile">The destination file.</param>
+    /// <param name="timeout">The timeout.</param>
+    public static void MoveTo(this FileInfo This, FileInfo destFile, TimeSpan timeout) => This.MoveTo(destFile.FullName, false, timeout);
+
+    /// <summary>
+    /// Moves the file to the target directory.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <param name="destFile">The destination file.</param>
+    /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
+    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite) => This.MoveTo(destFile.FullName, overwrite, null);
+
+    /// <summary>
+    /// Moves the file to the target directory.
+    /// </summary>
+    /// <param name="This">This FileInfo.</param>
+    /// <param name="destFile">The destination file.</param>
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
-    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan? timeout = null) => This.MoveTo(destFile.FullName, overwrite, timeout);
+    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan timeout) => This.MoveTo(destFile.FullName, overwrite, timeout);
 
     /// <summary>
     /// Moves the file to the target directory.

@@ -19,7 +19,15 @@
 */
 #endregion
 
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_INLINING
+#endif
+
+
 using System.Collections.Generic;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 namespace System.IO {
 
@@ -46,6 +54,36 @@ namespace System.IO {
           throw new NotImplementedException("Implementation did not meet test requirements");
       }
     }
+
+    /// <summary>
+    /// Checks whether the given FileSystemInfo does not exist.
+    /// </summary>
+    /// <param name="This">This FileSystemInfo.</param>
+    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool NotExists(this FileSystemInfo This) => !This.Exists;
+
+    /// <summary>
+    /// Checks whether the given FileSystemInfo is <c>null</c> or if it does not exists.
+    /// </summary>
+    /// <param name="this">This FileSystemInfo</param>
+    /// <returns><c>true</c> if it is either <c>null</c> or can not be found; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNullOrDoesNotExist(this FileSystemInfo @this) => @this == null || !@this.Exists;
+
+    /// <summary>
+    /// Checks whether the given FileSystemInfo is not <c>null</c> and if it exists.
+    /// </summary>
+    /// <param name="this">This FileSystemInfo</param>
+    /// <returns><c>true</c> if it is not <c>null</c> and can not be found; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNotNullAndExists(this FileSystemInfo @this) => @this != null && @this.Exists;
 
     /// <summary>
     /// Returns a given path relative to another.

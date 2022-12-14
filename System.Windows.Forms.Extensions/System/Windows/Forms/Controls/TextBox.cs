@@ -25,6 +25,7 @@
 
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Windows.Form.Extensions;
 using DrawingPoint = System.Drawing.Point;
 using DrawingTextBox = System.Windows.Forms.TextBox;
 
@@ -134,7 +135,7 @@ namespace System.Windows.Controls {
       Contract.Requires(This != null);
 #endif
       var text = This.Text;
-      if (string.IsNullOrWhiteSpace(text))
+      if (text._FOS_IsNullOrWhiteSpace())
         return false;
 
       if (!int.TryParse(text, out var temp))
@@ -159,7 +160,7 @@ namespace System.Windows.Controls {
       Contract.Requires(This != null);
 #endif
       var text = This.Text;
-      if (string.IsNullOrWhiteSpace(text))
+      if (text._FOS_IsNullOrWhiteSpace())
         return false;
       int temp;
       if (!int.TryParse(text, style, provider, out temp))

@@ -23,12 +23,16 @@
 #define SUPPORTS_CONTRACTS 
 #endif
 
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_INLINING
+#endif
+
 using System.Collections.Generic;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 using System.Runtime.InteropServices;
@@ -239,6 +243,17 @@ namespace System.IO {
     }
 
     /// <summary>
+    /// Gets all sub-directories.
+    /// </summary>
+    /// <param name="this">This DirectoryInfo</param>
+    /// <param name="searchOption">Whether to get all directories recursively or not.</param>
+    /// <returns>An enumeration of DirectoryInfos</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) => @this.GetDirectories("*.*", searchOption);
+
+    /// <summary>
     /// Enumerates the file system infos.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
@@ -438,24 +453,14 @@ namespace System.IO {
         return (!@this.Exists);
       }
     }
-
-    /// <summary>
-    /// Checks whether the given directory does not exist.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool NotExists(this DirectoryInfo This) => !This.Exists;
-
+      
     /// <summary>
     /// Gets a directory under the current directory.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="subdirectories">The relative path to the sub-directory.</param>
     /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if NET40_OR_GREATER
@@ -470,7 +475,7 @@ namespace System.IO {
     /// <param name="This">This DirectoryInfo.</param>
     /// <param name="filePath">The relative path to the file.</param>
     /// <returns>A FileInfo instance pointing to the given path.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if NET40_OR_GREATER
@@ -487,7 +492,9 @@ namespace System.IO {
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
 #if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
 #else
     public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.GetDirectories(searchPattern, searchOption).Any();
@@ -501,7 +508,9 @@ namespace System.IO {
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
 #if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
 #elif NET40_OR_GREATER
     public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly){
@@ -621,7 +630,9 @@ namespace System.IO {
     /// <param name="option">The option.</param>
     /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
 #if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
 #else
     public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetFiles(fileName, option).Any();
@@ -637,7 +648,10 @@ namespace System.IO {
     ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
     /// </returns>
 #if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+
     public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
 #else
     public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetDirectories(directoryName, option).Any();
