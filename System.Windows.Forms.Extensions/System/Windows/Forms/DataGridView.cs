@@ -840,9 +840,6 @@ namespace System.Windows.Forms {
           return this._imageValue ?? this._OwningDataGridViewImageAndTextColumn.Image;
         }
         set {
-          if (this._imageValue == value)
-            return;
-
           this._imageValue = value;
           this._needsResize = false;
           if (value == null)
@@ -2456,6 +2453,34 @@ namespace System.Windows.Forms {
   }
 
   /// <summary>
+  /// Allows specifying the row visibility depending on the underlying object instance.
+  /// </summary>
+  [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DataGridViewConditionalRowHiddenAttribute : Attribute {
+    public DataGridViewConditionalRowHiddenAttribute(string isHiddenWhen) {
+      this.IsHiddenWhen = isHiddenWhen;
+    }
+
+    public string IsHiddenWhen { get; }
+    public bool IsHidden(object row) => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsHiddenWhen, false, false, false, false);
+
+    public static void OnRowPrepaint(IEnumerable<DataGridViewConditionalRowHiddenAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
+      foreach (var attribute in @this)
+        if (attribute.IsHidden(data)) {
+          row.Visible = false;
+          return;
+        }
+      
+      row.Visible = true;
+    }
+  }
+
+  /// <summary>
   /// Allows specifying a value to be used as a progressbar column.
   /// </summary>
   [AttributeUsage(AttributeTargets.Property)]
@@ -2961,6 +2986,28 @@ namespace System.Windows.Forms {
 
   }
 
+  [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+    class DataGridViewRowSelectableAttribute : Attribute {
+    public DataGridViewRowSelectableAttribute(string conditionProperty = null) {
+      this.ConditionPropertyName = conditionProperty;
+    }
+
+    public string ConditionPropertyName { get; }
+
+    public bool IsSelectable(object value) => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false);
+
+    public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
+      if (@this.Any(attribute => !attribute.IsSelectable(data)))
+        row.Selected = false;
+    }
+  }
+
   #endregion
 
 #if COMPILE_TO_EXTENSION_DLL
@@ -2986,6 +3033,7 @@ namespace System.Windows.Forms {
       @this.CellFormatting -= _CellFormatting;
       @this.CellMouseUp -= _CellMouseUp;
       @this.RowPostPaint -= _RowPostPaint;
+      @this.SelectionChanged -= _SelectionChanged;
 
       // subscribe to events
       @this.DataSourceChanged += _DataSourceChanged;
@@ -2997,6 +3045,26 @@ namespace System.Windows.Forms {
       @this.CellFormatting += _CellFormatting;
       @this.CellMouseUp += _CellMouseUp;
       @this.RowPostPaint += _RowPostPaint;
+      @this.SelectionChanged += _SelectionChanged;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private static void _SelectionChanged(object sender, EventArgs e) {
+      if (sender is not DataGridView dgv)
+        return;
+
+      var selectedRows = dgv.Rows.Cast<DataGridViewRow>().Where(r => r.Selected);
+      foreach (var row in selectedRows) {
+        if (!row._TryGetRowType(out var type))
+          continue;
+
+        var attributes = _QueryPropertyAttribute<DataGridViewRowSelectableAttribute>(type);
+        DataGridViewRowSelectableAttribute.OnSelectionChanged(attributes, row, row.DataBoundItem, e);
+      }
     }
 
     /// <summary>
@@ -3592,6 +3660,7 @@ namespace System.Windows.Forms {
         return true;
       }
 
+      TryHandle2<DataGridViewConditionalRowHiddenAttribute>(DataGridViewConditionalRowHiddenAttribute.OnRowPrepaint);
       var isAlreadyStyled = TryHandle2<DataGridViewRowStyleAttribute>(DataGridViewRowStyleAttribute.OnRowPrepaint);
       _FixCellStyleForReadOnlyAndDisabled(dgv, row, type, value, isAlreadyStyled);
       _QueryPropertyAttribute<DataGridViewRowHeightAttribute>(type).FirstOrDefault()?.ApplyTo(value, row);
@@ -3860,6 +3929,7 @@ namespace System.Windows.Forms {
     }
 
     #endregion
+
     public static void EnableDoubleBuffering(this DataGridView @this) {
       if (@this == null)
         throw new NullReferenceException();
@@ -4217,11 +4287,11 @@ namespace System.Windows.Forms {
     }
 
     /// <summary>
-    /// Automatically adjusts the height of the control.
-    /// </summary>
-    /// <param name="this">This DataGridView.</param>
-    /// <param name="maxRowCount">The maximum row count, if any.</param>
-    public static void AutoAdjustHeight(this DataGridView @this, int maxRowCount = -1) {
+      /// Automatically adjusts the height of the control.
+      /// </summary>
+      /// <param name="this">This DataGridView.</param>
+      /// <param name="maxRowCount">The maximum row count, if any.</param>
+      public static void AutoAdjustHeight(this DataGridView @this, int maxRowCount = -1) {
       if (@this == null)
         throw new NullReferenceException();
 
