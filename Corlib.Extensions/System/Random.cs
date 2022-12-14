@@ -85,15 +85,18 @@ namespace System {
       // find out which chars are allowed
       var allowedChars = string.Empty;
       if (string.IsNullOrEmpty(allowedCharset)) {
+        var builder = new StringBuilder(256);
+
         if (useLetters)
-          allowedChars += allowCaseSensitive ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+          builder.Append(allowCaseSensitive ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
         if (allowNumbers)
-          allowedChars += "0123456789";
+          builder.Append("0123456789");
 
         if (allowSpecialChars)
-          allowedChars += @"!""$%&/()=?{[]}\#+*~-_.:,;<>@";
+          builder.Append(@"!""$%&/()=?{[]}\#+*~-_.:,;<>@");
 
+        allowedChars = builder.ToString();
       } else {
         allowedChars = allowedCharset;
       }
