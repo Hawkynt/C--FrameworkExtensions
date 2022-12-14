@@ -19,12 +19,22 @@
 */
 #endregion
 
+#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#define SUPPORTS_INLINING
+#endif
 #if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
 #define SUPPORTS_CONTRACTS 
+#endif
+#if NET5_0_OR_GREATER || NETCOREAPP
+#define SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+#define SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
 #endif
 
 using System.Collections;
 using System.Collections.Generic;
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+using System.Diagnostics.CodeAnalysis;
+#endif
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
@@ -32,9 +42,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-#if NET45_OR_GREATER
 using System.Runtime.CompilerServices;
-#endif
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -55,7 +63,7 @@ namespace System {
     /// This is a list of services which are registered to certain ports according to IANA.
     /// It allows us to use names for these ports if we want to.
     /// </summary>
-    private static readonly Dictionary<string, ushort> _OFFICIAL_PORT_NAMES = new Dictionary<string, ushort> {
+    private static readonly Dictionary<string, ushort> _OFFICIAL_PORT_NAMES = new() {
       {"tcpmux", 1},
       {"echo", 7},
       {"discard", 9},
@@ -164,7 +172,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string RemoveLast(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(0, @this.Length - count);
@@ -178,7 +186,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string RemoveFirst(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(count);
@@ -236,7 +244,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Left(this string @this, int length) {
@@ -255,7 +263,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Right(this string @this, int length) {
@@ -282,8 +290,9 @@ namespace System {
     }
 
     #region needed consts for converting filename patterns into regexes
-    private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new Regex("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
-    private static readonly Regex _CATCH_EXTENSION_REGEX = new Regex(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+    private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
+    private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+    
     #endregion
 
     /// <summary>
@@ -302,16 +311,16 @@ namespace System {
       if (pattern.Length == 0)
         throw new ArgumentException("Pattern is empty.");
 
-      if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern))
+      if (_ILLEGAL_FILENAME_CHARACTERS.IsMatch(pattern))
         throw new ArgumentException("Patterns contains ilegal characters.");
 
-      var hasExtension = _CATCH_EXTENSION_REGEX.IsMatch(pattern);
+      var hasExtension = _CATCH_FILENAME_EXTENSION.IsMatch(pattern);
       var matchExact = false;
 
       if (pattern.IndexOf('?') >= 0)
         matchExact = true;
       else if (hasExtension)
-        matchExact = _CATCH_EXTENSION_REGEX.Match(pattern).Groups[1].Length != 3;
+        matchExact = _CATCH_FILENAME_EXTENSION.Match(pattern).Groups[1].Length != 3;
 
       var regexString = Regex.Escape(pattern);
       regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
@@ -333,7 +342,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool MatchesFilePattern(this string @this, string pattern) {
@@ -355,7 +364,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsMatch(this string This, Regex regex) => This != null && regex.IsMatch(This);
@@ -371,7 +380,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotMatch(this string This, Regex regex) => !IsMatch(This, regex);
@@ -386,7 +395,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => This != null && This.IsMatch(new Regex(regex, regexOptions));
@@ -401,7 +410,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => !IsMatch(This, regex, regexOptions);
@@ -413,7 +422,7 @@ namespace System {
     /// <param name="This">The data.</param>
     /// <param name="regexOptions">The regex options.</param>
     /// <returns>A <see cref="MatchCollection"/> containing the matches.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static MatchCollection Matches(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
@@ -433,7 +442,7 @@ namespace System {
     /// <returns>
     /// A <see cref="GroupCollection"/> containing the found groups.
     /// </returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static GroupCollection MatchGroups(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
@@ -450,7 +459,7 @@ namespace System {
     /// <param name="This">This String.</param>
     /// <param name="parameters">The parameters to use for formatting.</param>
     /// <returns>A formatted string.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 
@@ -488,7 +497,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
@@ -508,7 +517,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, params KeyValuePair<string, object>[] fields) {
@@ -528,7 +537,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, IDictionary<string, string> fields) {
@@ -548,7 +557,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithEx(this string @this, Hashtable fields) {
@@ -721,7 +730,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Regex AsRegularExpression(this string This) => This == null ? null : new Regex(This);
@@ -737,7 +746,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Regex AsRegularExpression(this string This, RegexOptions options) => This == null ? null : new Regex(This, options);
@@ -751,7 +760,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MultipleReplace(this string This, params KeyValuePair<string, object>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, object>>)replacements);
@@ -760,7 +769,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MultipleReplace(this string This, string replacement, params string[] toReplace) => MultipleReplace(This, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
@@ -774,7 +783,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MultipleReplace(this string This, params KeyValuePair<string, string>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, string>>)replacements);
@@ -838,7 +847,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ReplaceRegex(this string This, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
@@ -859,7 +868,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Replace(this string This, Regex regex, string newValue) {
@@ -930,7 +939,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string UpperFirst(this string This) => This == null ? null : This.Length == 1 ? This.ToUpper() : This.Substring(0, 1).ToUpper() + This.Substring(1);
@@ -945,7 +954,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string UpperFirstInvariant(this string This) => This == null ? null : This.Length == 1 ? This.ToUpperInvariant() : This.Substring(0, 1).ToUpperInvariant() + This.Substring(1);
@@ -961,7 +970,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string LowerFirst(this string This, CultureInfo culture = null) => This == null ? null : This.Length == 1 ? (culture == null ? This.ToLower() : This.ToLower(culture)) : (culture == null ? This.Substring(0, 1).ToLower() : This.Substring(0, 1).ToLower(culture)) + This.Substring(1);
@@ -976,7 +985,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string LowerFirstInvariant(this string @this) => @this == null ? null : @this.Length == 1 ? @this.ToLowerInvariant() : @this.Substring(0, 1).ToLowerInvariant() + @this.Substring(1);
@@ -1007,7 +1016,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, char splitter, int max = 0) => This.Split(splitter.ToString(), (ulong)max).ToArray();
@@ -1022,7 +1031,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static IEnumerable<string> Split(this string This, char splitter, ulong max = 0) => This.Split(splitter.ToString(), max);
@@ -1074,7 +1083,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, Regex regex) {
@@ -1095,7 +1104,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string[] Split(this string This, string splitter, StringSplitOptions options) {
@@ -1154,7 +1163,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToPascalCase(this string This, CultureInfo culture = null) => This.ToCamelCase().LowerFirst(culture);
@@ -1167,7 +1176,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToLinq2SqlConnectionString(this string This) {
@@ -1186,7 +1195,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MsSqlDataEscape(this object This) => This == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", This).Replace("'", "''") + "'";
@@ -1199,7 +1208,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string MsSqlIdentifierEscape(this string This) {
@@ -1217,6 +1226,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.
     /// </returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EqualsAny(this string @this, params string[] values) => EqualsAny(@this, (IEnumerable<string>)values);
 
     /// <summary>
@@ -1226,6 +1238,9 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <param name="values">The values to compare to.</param>
     /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EqualsAny(this string @this, StringComparison stringComparison, params string[] values) => EqualsAny(@this, values, stringComparison);
 
     /// <summary>
@@ -1235,6 +1250,9 @@ namespace System {
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EqualsAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(values != null);
@@ -1242,12 +1260,81 @@ namespace System {
       return values.Any(s => string.Equals(@this, s, stringComparison));
     }
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool StartsWith(this string @this, char what, StringComparer comparer) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+#endif
+      return comparer?.Equals(@this.Length>0? @this[0] + string.Empty:string.Empty, what + string.Empty) ?? @this.StartsWith(what);
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this,what,comparer);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool StartsWith(this string @this, string what, StringComparer comparer) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+#endif
+      if (what == null)
+        return @this==null;
+
+      return comparer?.Equals(@this.Substring(0, what.Length), what) ?? @this.StartsWith(what);
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool StartsNotWith(this string @this, string what, StringComparer comparer) => !StartsWith(@this, what, comparer);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool EndsWith(this string @this, char what, StringComparer comparer) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+#endif
+      return comparer?.Equals(@this.Length > 0 ? @this[@this.Length - 1] : string.Empty, what) ?? @this.EndsWith(what);
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool EndsNotWith(this string @this, char what, StringComparer comparer) => !EndsWith(@this, what, comparer);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool EndsWith(this string @this, string what, StringComparer comparer) {
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(@this != null);
+#endif
+      if (what == null)
+        return @this == null;
+
+      return comparer?.Equals(@this.Substring(Math.Max(0,@this.Length - what.Length)), what) ?? @this.EndsWith(what);
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool EndsNotWith(this string @this, string what, StringComparer comparer) => !EndsWith(@this, what, comparer);
+
     /// <summary>
     /// Checks if the string starts with any from the given list.
     /// </summary>
     /// <param name="this">This String.</param>
     /// <param name="values">The values to compare to.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, (IEnumerable<string>)values);
 
     /// <summary>
@@ -1257,6 +1344,9 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <param name="values">The values to compare to.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
 
     /// <summary>
@@ -1266,6 +1356,9 @@ namespace System {
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
@@ -1280,6 +1373,9 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <param name="values">The values to compare to.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, (IEnumerable<string>)values);
 
     /// <summary>
@@ -1289,6 +1385,9 @@ namespace System {
     /// <param name="stringComparison">The string comparison.</param>
     /// <param name="values">The values to compare to.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
 
     /// <summary>
@@ -1298,6 +1397,9 @@ namespace System {
     /// <param name="values">The values to compare to.</param>
     /// <param name="stringComparison">The string comparison.</param>
     /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
@@ -1318,7 +1420,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool StartsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1340,7 +1442,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool EndsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1360,7 +1462,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool StartsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.StartsWith(value, stringComparison);
@@ -1375,7 +1477,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool EndsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.EndsWith(value, stringComparison);
@@ -1392,7 +1494,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsSurroundedWith(this string This, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1416,7 +1518,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsSurroundedWith(this string This, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
@@ -1439,6 +1541,9 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static string ReplaceAtStart(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
         return replacement;
@@ -1457,6 +1562,9 @@ namespace System {
     /// <returns></returns>
 #if SUPPORTS_CONTRACTS
     [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ReplaceAtEnd(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
       if (This == null && what == null)
@@ -1604,65 +1712,89 @@ namespace System {
     /// <summary>
     /// Determines whether the string is <c>null</c> or empty.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNullOrEmpty(this string This) => string.IsNullOrEmpty(This);
+    public static bool IsNullOrEmpty(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(false)] 
+#endif
+      this string @this) => string.IsNullOrEmpty(@this);
 
     /// <summary>
     /// Determines whether the string is not <c>null</c> or empty.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or empty; otherwise, <c>false</c>.
     /// </returns>
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNotNullOrEmpty(this string This) => !string.IsNullOrEmpty(This);
+    public static bool IsNotNullOrEmpty(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(true)] 
+#endif
+      this string @this) => !string.IsNullOrEmpty(@this);
 
     /// <summary>
     /// Determines whether the string is <c>null</c> or whitespace.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <returns>
     ///   <c>true</c> if the string is <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_CONTRACTS
     [Pure]
-    public static bool IsNullOrWhiteSpace(this string This) => string.IsNullOrWhiteSpace(This);
+    public static bool IsNullOrWhiteSpace(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(false)] 
+#endif
+    this string @this) => string.IsNullOrWhiteSpace(@this);
 #else
-    public static bool IsNullOrWhiteSpace(this string This) => This == null || This.Trim().Length < 1;
+    public static bool IsNullOrWhiteSpace(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(false)] 
+#endif
+      this string @this) => @this == null || @this.Trim().Length < 1;
 #endif
 
     /// <summary>
     /// Determines whether the string is not <c>null</c> or whitespace.
     /// </summary>
-    /// <param name="This">This String.</param>
+    /// <param name="this">This String.</param>
     /// <returns>
     ///   <c>true</c> if the string is not <c>null</c> or whitespace; otherwise, <c>false</c>.
     /// </returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_CONTRACTS
     [Pure]
-    public static bool IsNotNullOrWhiteSpace(this string This) => !string.IsNullOrWhiteSpace(This);
+    public static bool IsNotNullOrWhiteSpace(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(true)] 
+#endif
+      this string @this) => !string.IsNullOrWhiteSpace(@this);
 #else
-    public static bool IsNotNullOrWhiteSpace(this string This) => !IsNullOrWhiteSpace(This);
+    public static bool IsNotNullOrWhiteSpace(
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+      [NotNullWhen(true)] 
+#endif
+      this string @this) => !IsNullOrWhiteSpace(@this);
 #endif
 
     /// <summary>
@@ -1677,7 +1809,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool Contains(this string This, string other, StringComparison comparisonType) {
@@ -1691,11 +1823,17 @@ namespace System {
     }
 
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool ContainsAny(
       this string This,
       params string[] other
       ) => ContainsAny(This, (IEnumerable<string>)other);
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool ContainsAny(
       this string This,
       StringComparison comparisonType,
@@ -1708,6 +1846,9 @@ namespace System {
     /// <param name="this">This <see cref="String"/></param>
     /// <param name="needles">String to compare to</param>
     /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
       if (needles == null)
         throw new ArgumentNullException(nameof(needles));
@@ -1722,6 +1863,9 @@ namespace System {
     /// <param name="needles">String to compare to</param>
     /// <param name="comparison">The comparison mode</param>
     /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool IsAnyOf(this string @this, IEnumerable<string> needles,StringComparison comparison) {
       if (needles == null)
         throw new ArgumentNullException(nameof(needles));
@@ -1738,6 +1882,9 @@ namespace System {
     /// <returns>
     ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
     /// </returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
@@ -1755,7 +1902,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string DefaultIfNullOrEmpty(this string This, string defaultValue = null) => This.IsNullOrEmpty() ? defaultValue : This;
@@ -1769,7 +1916,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 
@@ -1789,7 +1936,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
@@ -1945,7 +2092,7 @@ namespace System {
         } else if (currentlyInSingleQuote) {
           if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
             currentlyEscaping = true;
-            pos += escapeSequence.Length;
+            pos += escapeSequence.Length - 1;
           } else if (chr == '\'')
             currentlyInSingleQuote = false;
           else
@@ -1953,7 +2100,7 @@ namespace System {
         } else if (currentlyInDoubleQuote) {
           if (escapeSequence != null && escapeSequence.StartsWith(chr) && @this.Substring(pos - 1, escapeSequence.Length) == escapeSequence) {
             currentlyEscaping = true;
-            pos += escapeSequence.Length;
+            pos += escapeSequence.Length - 1;
           } else if (chr == '"')
             currentlyInDoubleQuote = false;
           else
@@ -1984,7 +2131,7 @@ namespace System {
         yield return currentPart.ToString();
     }
 
-    #region nested HostEndPoint
+#region nested HostEndPoint
     /// <summary>
     /// A host endpoint with port.
     /// </summary>
@@ -2006,7 +2153,7 @@ namespace System {
 
       public static explicit operator IPEndPoint(HostEndPoint This) => new IPEndPoint(Dns.GetHostEntry(This.Host).AddressList[0], This.Port);
     }
-    #endregion
+#endregion
 
     /// <summary>
     /// Parses the host and port from a given string.
@@ -2087,6 +2234,8 @@ namespace System {
       return lf.Length;
     }
 
+    private static readonly Regex _SQL_LIKE_ESCAPING = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
+
     /// <summary>
     /// Equivalent to SQL LIKE Statement.
     /// </summary>
@@ -2095,11 +2244,100 @@ namespace System {
     /// <returns>True if the LIKE matched.</returns>
     public static bool Like(this string @this, string toFind)
       => new Regex(@"\A" 
-                   + new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\")
+                   + _SQL_LIKE_ESCAPING
                      .Replace(toFind, ch => @"\" + ch)
                      .Replace('_', '.')
                      .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
         .IsMatch(@this)
     ;
+
+    /// <summary>
+    /// Converts a string to a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> version of it.
+    /// </summary>
+    /// <param name="this">The string to convert</param>
+    /// <returns>The quoted-printable string</returns>
+    public static string ToQuotedPrintable(this string @this) {
+      if (string.IsNullOrEmpty(@this)) 
+        return @this;
+
+      // see https://github.com/dotnet/runtime/blob/v5.0.3/src/libraries/Common/src/System/HexConverter.cs for the inner workings
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      void ByteToHex2(byte value, out char highNibble, out char lowNibble) {
+        var temp = (uint)(((value & 0xF0) << 4) + (value & 0xF) - 0x8989);
+        temp = (uint)((int)((uint)(-(int)temp & 0x7070) >> 4) + (int)temp + 0xB9B9);
+        lowNibble = (char)(temp & 0xff);
+        highNibble = (char)(temp >> 8);
+      }
+      
+      var bytes = Encoding.UTF8.GetBytes(@this);
+      var result = new StringBuilder(bytes.Length * 2);
+      foreach(var ch in bytes)
+        if (ch < 32 || ch > 126 || ch == '=') {
+          ByteToHex2(ch,out var high,out var low);
+          result.Append('=');
+          result.Append(high);
+          result.Append(low);
+        } else
+          result.Append((char)ch);
+
+      return result.ToString();
+    }
+
+    private static readonly byte[] _CHAR_TO_HEX_LOOKUP={
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xA,  0xB,  0xC,  0xD,  0xE,  0xF,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  
+    };
+
+    /// <summary>
+    /// Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version of it.
+    /// </summary>
+    /// <param name="this">The string to convert</param>
+    /// <returns>The non-quoted-printable string</returns>
+
+    public static string FromQuotedPrintable(this string @this) {
+      if (string.IsNullOrEmpty(@this))
+        return @this;
+
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      int Hex2Short(char highNibble, char lowNibble) {
+        var high = _CHAR_TO_HEX_LOOKUP[highNibble];
+        var low = _CHAR_TO_HEX_LOOKUP[lowNibble];
+        if ((high | low) == 0xff)
+          Throw(highNibble, lowNibble);
+
+        return high << 4 | low;
+      }
+
+      [MethodImpl(MethodImplOptions.NoInlining)]
+      void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
+
+      var bytes = new List<byte>(@this.Length);
+      for (var index = 0; index < @this.Length; ++index)
+        if (@this[index] == '=')
+          bytes.Add((byte)Hex2Short(@this[++index], @this[++index]));
+        else
+          bytes.Add((byte)@this[index]);
+
+      return Encoding.UTF8.GetString(bytes.ToArray());
+    }
+
   }
 }
