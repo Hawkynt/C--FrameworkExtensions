@@ -333,7 +333,7 @@ namespace System.IO {
     /// <param name="destFile">The destination file.</param>
     /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
     /// <param name="timeout">The timeout.</param>
-    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan timeout) => This.MoveTo(destFile.FullName, overwrite, timeout);
+    public static void MoveTo(this FileInfo This, FileInfo destFile, bool overwrite, TimeSpan? timeout = null) => This.MoveTo(destFile.FullName, overwrite, timeout);
 
     /// <summary>
     /// Moves the file to the target directory.

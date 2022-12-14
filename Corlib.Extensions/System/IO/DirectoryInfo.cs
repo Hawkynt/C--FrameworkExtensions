@@ -455,6 +455,16 @@ namespace System.IO {
     }
       
     /// <summary>
+    /// Checks whether the given directory does not exist.
+    /// </summary>
+    /// <param name="This">This DirectoryInfo.</param>
+    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
+#if NET45_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool NotExists(this DirectoryInfo This) => !This.Exists;
+
+    /// <summary>
     /// Gets a directory under the current directory.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
