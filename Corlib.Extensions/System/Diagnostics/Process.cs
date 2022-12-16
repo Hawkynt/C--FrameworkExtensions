@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -30,8 +26,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 #endif
 using System.Runtime.InteropServices;
-
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -100,7 +95,7 @@ namespace System.Diagnostics {
     /// Gets the parent process of the current process.      
     /// </summary>        
     /// <returns>An instance of the Process class.</returns>    
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
@@ -110,7 +105,7 @@ namespace System.Diagnostics {
     /// </summary>    
     /// <param name="id">The process id.</param>   
     /// <returns>An instance of the Process class.</returns>   
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);

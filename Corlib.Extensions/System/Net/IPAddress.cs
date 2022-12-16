@@ -19,13 +19,9 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-#if NET45_OR_GREATER
+#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
 #if SUPPORTS_CONTRACTS
@@ -74,7 +70,7 @@ namespace System.Net {
       }
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_ASYNC && NET45_OR_GREATER // this doesnt work on 4.0 but above
     /// <summary>
     /// Gets the host name for the given ip-Address.
     /// </summary>

@@ -20,10 +20,6 @@
 #endregion
 #if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;

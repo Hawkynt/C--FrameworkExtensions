@@ -19,19 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
-#if NET5_0_OR_GREATER || NETCOREAPP
-#define SUPPORTS_FMADD
-#define SUPPORTS_MATHF
-#endif
-
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING 
-#endif
-
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif

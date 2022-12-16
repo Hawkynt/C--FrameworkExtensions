@@ -30,7 +30,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -409,7 +409,7 @@ namespace System.Threading {
     }
 <#}#>
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -419,7 +419,7 @@ namespace System.Threading {
     public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => Interlocked.CompareExchange(ref source, value, comparand);
 <#}#>
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -430,7 +430,7 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeExchange){#>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -440,25 +440,25 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeIncrementDecrement){#>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Increment(ref <#=type#> source) => Interlocked.Increment(ref source);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Decrement(ref <#=type#> source) => Interlocked.Decrement(ref source);
 <#}else{#>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Increment(ref <#=type#> source) => Add(ref source, 1);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -466,13 +466,13 @@ namespace System.Threading {
 <#}#>
 
 <#if(supportsNativeAdd){#>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
     public static <#=type#> Add(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, value);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]

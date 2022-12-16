@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -35,7 +31,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 using System.Runtime.InteropServices;
@@ -351,7 +347,7 @@ namespace System {
         if (visitedRefs.Contains(fieldValue))
           sum += pointerSize;
         else {
-        sum += _GetMemorySize(fieldValue, field.FieldType.IsValueType, visitedRefs);
+          sum += _GetMemorySize(fieldValue, field.FieldType.IsValueType, visitedRefs);
           visitedRefs.Add(fieldValue);
         }
       }
@@ -409,7 +405,7 @@ namespace System {
 
 #endif
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]

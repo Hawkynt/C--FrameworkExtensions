@@ -19,13 +19,18 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#if SUPPORTS_ASYNC
 
 using System.Collections.Generic;
 using System.Threading;
 
 namespace System.Collections.Concurrent {
-  internal static partial class ConcurrentStackExtensions {
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  static partial class ConcurrentStackExtensions {
     /// <summary>
     /// Pops an item from the stack.
     /// </summary>

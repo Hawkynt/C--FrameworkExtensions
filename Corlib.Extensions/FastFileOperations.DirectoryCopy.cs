@@ -25,10 +25,6 @@
 // TODO: junction support (source is jt, target should jt to exact same destination either relative or absolute)
 // TODO: hardlink support (source is hl, target should hl to same relative destinations)
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 #if SUPPORTS_CONTRACTS

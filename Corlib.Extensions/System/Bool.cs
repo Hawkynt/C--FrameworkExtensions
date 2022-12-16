@@ -20,7 +20,7 @@
 #endregion
 
 // ReSharper disable UnusedMember.Global
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -35,22 +35,22 @@ namespace System {
 #endif
   static partial class BoolExtensions {
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToOneOrZeroString(this bool @this) => _ConvertToString(@this, "1", "0", false);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToYesOrNoString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "Yes", "No", useLowerCaseOnly);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string ToTrueOrFalseString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "True", "False", useLowerCaseOnly);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static string _ConvertToString(bool value, string trueValue, string falseValue, bool useLowerCaseOnly) {
@@ -61,7 +61,7 @@ namespace System {
       return result;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void When(this bool @this, Action @true = null, Action @false = null) {
@@ -71,7 +71,7 @@ namespace System {
         @false?.Invoke();
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void When(this bool @this, Action<bool> @true = null, Action<bool> @false = null) {
@@ -81,7 +81,7 @@ namespace System {
         @false?.Invoke(false);
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool WhenTrue(this bool @this, Action callback) {
@@ -90,7 +90,7 @@ namespace System {
       return @this;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool WhenTrue(this bool @this, Action<bool> callback) {
@@ -99,7 +99,7 @@ namespace System {
       return @this;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool WhenFalse(this bool @this, Action callback) {
@@ -108,7 +108,7 @@ namespace System {
       return @this;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool WhenFalse(this bool @this, Action<bool> callback) {
@@ -117,32 +117,32 @@ namespace System {
       return @this;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult WhenTrue<TResult>(this bool @this, Func<TResult> callback) => @this ? callback() : default(TResult);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult WhenFalse<TResult>(this bool @this, Func<TResult> callback) => @this ? default(TResult) : callback();
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult When<TResult>(this bool @this, Func<TResult> @true = null, Func<TResult> @false = null) => @this ? @true == null ? default(TResult) : @true() : @false == null ? default(TResult) : @false();
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult WhenTrue<TResult>(this bool @this, Func<bool, TResult> callback) => @this ? callback(true) : default(TResult);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult WhenFalse<TResult>(this bool @this, Func<bool, TResult> callback) => @this ? default(TResult) : callback(false);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static TResult When<TResult>(this bool @this, Func<bool, TResult> @true = null, Func<bool, TResult> @false = null) => @this ? @true == null ? default(TResult) : @true(true) : @false == null ? default(TResult) : @false(false);

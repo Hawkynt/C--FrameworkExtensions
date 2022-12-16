@@ -19,11 +19,6 @@
 */
 #endregion
 
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING
-#endif
-
-
 using System.Collections.Generic;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;

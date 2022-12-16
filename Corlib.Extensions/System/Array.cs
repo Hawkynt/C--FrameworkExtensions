@@ -19,18 +19,6 @@
 */
 #endregion
 
-#if NET5_0_OR_GREATER || NETCOREAPP
-#define SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-#endif
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING
-#endif
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#define SUPPORTS_POINTER_ARITHMETIC
-#define SUPPORTS_ASYNC
-#endif
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -118,7 +106,7 @@ namespace System {
 #endif
         if (start + length > source.Length)
           throw new ArgumentException("Exceeding source length", nameof(length));
-
+        
         this._source = source;
         this._start = start;
         this.Length = length;

@@ -18,11 +18,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
+#if SUPPORTS_ASYNC
 
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;

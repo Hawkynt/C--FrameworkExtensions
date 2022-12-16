@@ -19,18 +19,13 @@
 */
 #endregion
 
-
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Generic;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Text;
 using System.Text.RegularExpressions;
-
+// TODO: qp is also in string extensions
 namespace System {
 
 #if COMPILE_TO_EXTENSION_DLL

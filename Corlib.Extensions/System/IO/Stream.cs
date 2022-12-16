@@ -21,14 +21,6 @@
 
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_ASYNC
-#endif
-
-
 using System.Diagnostics;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -315,7 +307,7 @@ namespace System.IO {
       @this.Read(buffer, offset, count);
     }
 
-#if SUPPORTS_ASYNC
+#if SUPPORTS_ASYNC && NET45_OR_GREATER // this doesnt work on 4.0 but above
 
     /// <summary>
     ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer

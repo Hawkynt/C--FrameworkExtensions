@@ -19,16 +19,12 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Linq;
 using System.Diagnostics;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -852,7 +848,7 @@ namespace System.Collections.Generic {
     /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
     /// <param name="this">This Dictionary.</param>
     /// <returns>A new dictionary with the casted values.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
@@ -866,7 +862,7 @@ namespace System.Collections.Generic {
     /// <param name="this">This Dictionary.</param>
     /// <param name="key">The key.</param>
     /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]

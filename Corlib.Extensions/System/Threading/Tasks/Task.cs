@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+#if SUPPORTS_ASYNC
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global

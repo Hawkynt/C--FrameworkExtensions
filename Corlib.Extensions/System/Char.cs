@@ -19,16 +19,12 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 #if SUPPORTS_CONTRACTS 
 using System.Diagnostics.Contracts;
 #endif
 using System.Globalization;
 using System.Linq;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -52,7 +48,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
@@ -65,7 +61,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
@@ -78,7 +74,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
@@ -93,7 +89,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
@@ -108,7 +104,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsUpper(this char @this) => char.IsUpper(@this);
@@ -123,7 +119,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsLower(this char @this) => char.IsLower(@this);
@@ -138,7 +134,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsLetter(this char @this) => char.IsLetter(@this);
@@ -151,7 +147,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToUpper(this char @this) => char.ToUpper(@this);
@@ -165,7 +161,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
@@ -178,7 +174,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToLower(this char @this) => char.ToLower(@this);
@@ -192,7 +188,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
@@ -208,7 +204,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
@@ -222,7 +218,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string Repeat(this char @this, int count) => new string(@this, count);

@@ -19,19 +19,9 @@
 */
 #endregion
 
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING
-#endif
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#define SUPPORTS_POINTER_ARITHMETIC
-#define SUPPORTS_ASYNC
-#endif
-
 #if SUPPORTS_INLINING && !UNSAFE
 using System.Runtime.CompilerServices;
 #endif
-
 
 #if SUPPORTS_ASYNC
 using System.Threading;

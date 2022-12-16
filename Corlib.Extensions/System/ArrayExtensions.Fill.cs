@@ -19,11 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#define SUPPORTS_POINTER_ARITHMETIC
-#endif
-
 #if !UNSAFE
 using System.Runtime.InteropServices;
 #endif
