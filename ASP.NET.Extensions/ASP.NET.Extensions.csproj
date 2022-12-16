@@ -18,49 +18,10 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
+    <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0-windows|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0-windows|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5.0-windows|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5.0-windows|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE;COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
-
-
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
