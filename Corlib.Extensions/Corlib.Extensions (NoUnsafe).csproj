@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <FrameworkVersions>|net48|net472|net471|net47|net462|net461|net46|net452|net451|net45|net40|net35|net30|net20|</FrameworkVersions>
-    <NetVersions>|net5.0|net6.0|netcoreapp2.0|netcoreapp2.1|netcoreapp3.0|netcoreapp3.1|netstandard2.1|netstandard2.0|</NetVersions>
+    <NetVersions>|net5.0|net6.0|net7.0|netcoreapp2.0|netcoreapp2.1|netcoreapp3.0|netcoreapp3.1|netstandard2.1|netstandard2.0|</NetVersions>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,8 +20,7 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- enable optimizations based on configuration values -->
+  <PropertyGroup><!-- enable optimizations based on configuration values -->
     <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
     <DefineConstants Condition="'$(PlatformTarget)' == 'x86' OR  '$(Prefer32Bit)' == 'true'">$(DefineConstants);PLATFORM_X86</DefineConstants>
     <DefineConstants Condition="'$(PlatformTarget)' == 'x64' AND '$(Prefer32Bit)' != 'true'">$(DefineConstants);PLATFORM_X64</DefineConstants>
@@ -37,7 +36,7 @@
 
     <!-- set non default values dependend on compile settings -->
     <IsNetCore Condition="$(TargetFramework.Contains(netcoreapp)) OR ($(TargetFramework.StartsWith(net)) AND !$(TargetFramework.StartsWith(netstandard)) AND !($(TargetFramework.StartsWith(net4)) OR $(TargetFramework.StartsWith(net3)) OR $(TargetFramework.StartsWith(net2)) OR $(TargetFramework.StartsWith(net1)) ))">true</IsNetCore>
-    <NetCoreVersion Condition="$(IsNetCore)">$(TargetFramework.Replace('netcoreapp','').Replace('net',''))</NetCoreVersion>
+    <NetCoreVersion Condition="$(IsNetCore)">$(TargetFramework.Replace('netcoreapp','').Replace('net','').Split('-')[0])</NetCoreVersion>
     <IsNetStandard Condition="$(TargetFramework.Contains(netstandard))">true</IsNetStandard>
     <NetStandardVersion Condition="$(IsNetStandard)">$(TargetFramework.Replace('netstandard',''))</NetStandardVersion>
     <IsNetFramework Condition="!$(IsNetCore) AND !$(IsNetStandard) AND $(TargetFramework.StartsWith(net))">true</IsNetFramework>
@@ -57,16 +56,17 @@
 
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- allow exporting all extensions to other loaded assemblies -->
+  <PropertyGroup><!-- allow exporting all extensions to other loaded assemblies -->
     <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="$(FrameworkVersions.Contains('|$(TargetFramework)|'))">
-    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
     <Reference Condition="$(TargetFramework) != 'net35'" Include="Microsoft.CSharp" />
-    <Reference Condition="$(TargetFramework) == 'net35'" Include="WindowsBase" />
+    <Reference Condition="$(TargetFramework) == 'net35'" Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Transactions" />
   </ItemGroup>
 

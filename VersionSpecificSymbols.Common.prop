@@ -50,7 +50,7 @@ as the last line before </Project> like
         
         <DefineConstants Condition="'$(PlatformTarget)' == 'x86' OR  '$(Prefer32Bit)' == 'true'">$(DefineConstants);PLATFORM_X86</DefineConstants>
         <DefineConstants Condition="'$(PlatformTarget)' == 'x64' AND '$(Prefer32Bit)' != 'true'">$(DefineConstants);PLATFORM_X64</DefineConstants>
-        <DefineConstants Condition="'$(PlatformTarget)' == 'AnyCPU'">$(DefineConstants);PLATFORM_ANYCPU</DefineConstants>
+        <DefineConstants Condition="'$(PlatformTarget)' == 'AnyCPU' OR '$(PlatformTarget)' == ''">$(DefineConstants);PLATFORM_ANYCPU</DefineConstants>
         
         <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
         

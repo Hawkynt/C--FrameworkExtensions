@@ -37,7 +37,7 @@
 
     <!-- set non default values dependend on compile settings -->
     <IsNetCore Condition="$(TargetFramework.Contains(netcoreapp)) OR ($(TargetFramework.StartsWith(net)) AND !$(TargetFramework.StartsWith(netstandard)) AND !($(TargetFramework.StartsWith(net4)) OR $(TargetFramework.StartsWith(net3)) OR $(TargetFramework.StartsWith(net2)) OR $(TargetFramework.StartsWith(net1)) ))">true</IsNetCore>
-    <NetCoreVersion Condition="$(IsNetCore)">$(TargetFramework.Replace('netcoreapp','').Replace('net',''))</NetCoreVersion>
+    <NetCoreVersion Condition="$(IsNetCore)">$(TargetFramework.Replace('netcoreapp','').Replace('net','').Split('-')[0])</NetCoreVersion>
     <IsNetStandard Condition="$(TargetFramework.Contains(netstandard))">true</IsNetStandard>
     <NetStandardVersion Condition="$(IsNetStandard)">$(TargetFramework.Replace('netstandard',''))</NetStandardVersion>
     <IsNetFramework Condition="!$(IsNetCore) AND !$(IsNetStandard) AND $(TargetFramework.StartsWith(net))">true</IsNetFramework>
