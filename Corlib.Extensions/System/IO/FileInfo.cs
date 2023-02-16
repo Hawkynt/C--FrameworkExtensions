@@ -283,8 +283,17 @@ namespace System.IO {
     /// </summary>
     /// <param name="this">This FileInfo.</param>
     /// <param name="targetDirectory">The destination directory.</param>
+    public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory)
+      => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), false)
+    ;
+
+    /// <summary>
+    /// Copies the file to the target directory.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="targetDirectory">The destination directory.</param>
     /// <param name="overwrite"><c>true</c> if existing files shall be overwritten; otherwise, <c>false</c>; default to <c>false</c>.</param>
-    public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite = false)
+    public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
       => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), overwrite)
       ;
 
@@ -293,8 +302,17 @@ namespace System.IO {
     /// </summary>
     /// <param name="this">This FileInfo.</param>
     /// <param name="targetFile">The target file.</param>
+    public static void CopyTo(this FileInfo @this, FileInfo targetFile)
+      => @this.CopyTo(targetFile.FullName, false)
+    ;
+
+    /// <summary>
+    /// Copies the file to the target directory.
+    /// </summary>
+    /// <param name="this">This FileInfo.</param>
+    /// <param name="targetFile">The target file.</param>
     /// <param name="overwrite"><c>true</c> if existing files shall be overwritten; otherwise, <c>false</c>; default to <c>false</c>.</param>
-    public static void CopyTo(this FileInfo @this, FileInfo targetFile, bool overwrite = false)
+    public static void CopyTo(this FileInfo @this, FileInfo targetFile, bool overwrite)
       => @this.CopyTo(targetFile.FullName, overwrite)
       ;
 
