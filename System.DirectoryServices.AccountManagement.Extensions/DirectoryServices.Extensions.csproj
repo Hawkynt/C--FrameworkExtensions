@@ -1,8 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <FrameworkVersions>|net48|net472|net471|net47|net462|net461|net46|net452|net451|net45|net40|net35|net30|net20|</FrameworkVersions>
-    <NetVersions>|net5.0-windows|net5.0|net6.0-windows|net6.0|netcoreapp2.0|netcoreapp2.1|netcoreapp3.0|netcoreapp3.1|netstandard2.1|netstandard2.0|</NetVersions>
-  </PropertyGroup>
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;netcoreapp3.1;netstandard2.0;net48;net45;net40;net35</TargetFrameworks>
@@ -22,14 +18,16 @@
     <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="$(FrameworkVersions.Contains('|$(TargetFramework)|'))">
+  <Import Project="..\VersionSpecificSymbols.Common.prop" />
+  
+  <ItemGroup Condition="$(IsNetFramework)">
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Condition="$(NetVersions.Contains('|$(TargetFramework)|'))" Include="System.DirectoryServices" Version="*" />
-    <PackageReference Condition="$(NetVersions.Contains('|$(TargetFramework)|'))" Include="System.DirectoryServices.AccountManagement" Version="*" />
+    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices" Version="*" />
+    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices.AccountManagement" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

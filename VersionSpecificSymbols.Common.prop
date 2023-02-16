@@ -1,4 +1,21 @@
 <!--
+  This file is part of Hawkynt's .NET Framework extensions.
+
+  Hawkynt's .NET Framework extensions are free software:
+  you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Hawkynt's .NET Framework extensions is distributed in the hope that
+  it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+  the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Hawkynt's .NET Framework extensions.
+  If not, see <http://www.gnu.org/licenses/>.
+  
 ******************************************************************
 Defines the Compile time symbols Microsoft forgot
 Modelled from https://docs.microsoft.com/en-us/dotnet/standard/frameworks
@@ -10,49 +27,98 @@ as the last line before </Project> like
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != ''">$(DefineConstants);NETFRAMEWORK</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.8'))))   &gt;= 0">$(DefineConstants);NET48_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.7.2')))) &gt;= 0">$(DefineConstants);NET472_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.7.1')))) &gt;= 0">$(DefineConstants);NET471_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.7'))))   &gt;= 0">$(DefineConstants);NET47_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.6.2')))) &gt;= 0">$(DefineConstants);NET462_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.6.1')))) &gt;= 0">$(DefineConstants);NET461_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.6'))))   &gt;= 0">$(DefineConstants);NET46_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.5.2')))) &gt;= 0">$(DefineConstants);NET452_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.5.1')))) &gt;= 0">$(DefineConstants);NET451_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.5'))))   &gt;= 0">$(DefineConstants);NET45_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.0'))))   &gt;= 0">$(DefineConstants);NET40_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('3.5'))))   &gt;= 0">$(DefineConstants);NET35_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFrameworkVersion)' != '' AND $([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('2.0'))))   &gt;= 0">$(DefineConstants);NET20_OR_GREATER</DefineConstants>
+    
+        <!-- needed variable default values -->
+        <IsNetCore>false</IsNetCore>
+        <IsNetFramework>false</IsNetFramework>
+        <IsNetStandard>false</IsNetStandard>
+        <NetCoreVersion>0.0</NetCoreVersion>
+        <NetFrameworkVersion>0.0</NetFrameworkVersion>
+        <NetStandardVersion>0.0</NetStandardVersion>
+    
+        <!-- set non default values dependend on compile settings -->
+        <IsNetCore Condition="$(TargetFramework.Contains(netcoreapp)) OR ($(TargetFramework.StartsWith(net)) AND !$(TargetFramework.StartsWith(netstandard)) AND !($(TargetFramework.StartsWith(net4)) OR $(TargetFramework.StartsWith(net3)) OR $(TargetFramework.StartsWith(net2)) OR $(TargetFramework.StartsWith(net1)) ))">true</IsNetCore>
+        <NetCoreVersion Condition="$(IsNetCore)">$(TargetFramework.Replace('netcoreapp','').Replace('net','').Split('-')[0])</NetCoreVersion>
         
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))'">$(DefineConstants);NETCOREAPP</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('1.0'))))     &gt;= 0">$(DefineConstants);NETCOREAPP1_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('1.1'))))     &gt;= 0">$(DefineConstants);NETCOREAPP1_1_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('2.0'))))     &gt;= 0">$(DefineConstants);NETCOREAPP2_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('2.1'))))     &gt;= 0">$(DefineConstants);NETCOREAPP2_1_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('2.2'))))     &gt;= 0">$(DefineConstants);NETCOREAPP2_2_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('3.0'))))     &gt;= 0">$(DefineConstants);NETCOREAPP3_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('3.1'))))     &gt;= 0">$(DefineConstants);NETCOREAPP3_1_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('5.0'))))     &gt;= 0">$(DefineConstants);NET5_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('6.0'))))     &gt;= 0">$(DefineConstants);NET6_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netcoreapp))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netcoreapp',''))').CompareTo($([System.Version]::Parse('7.0'))))     &gt;= 0">$(DefineConstants);NET7_0_OR_GREATER</DefineConstants>
+        <IsNetStandard Condition="$(TargetFramework.Contains(netstandard))">true</IsNetStandard>
+        <NetStandardVersion Condition="$(IsNetStandard)">$(TargetFramework.Replace('netstandard',''))</NetStandardVersion>
         
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))'">$(DefineConstants);NETSTANDARD</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.0'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.1'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_1_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.2'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_2_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.3'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_3_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.4'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_4_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.5'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_5_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('1.6'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_6_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('2.0'))))     &gt;= 0">$(DefineConstants);NETSTANDARD2_0_OR_GREATER</DefineConstants>
-        <DefineConstants Condition="'$(TargetFramework.Contains(netstandard))' AND $([System.Version]::Parse('$(TargetFramework.Replace('netstandard',''))').CompareTo($([System.Version]::Parse('2.1'))))     &gt;= 0">$(DefineConstants);NETSTANDARD2_1_OR_GREATER</DefineConstants>
+        <IsNetFramework Condition="!$(IsNetCore) AND !$(IsNetStandard) AND ($(TargetFramework.StartsWith(net)) OR ('$(TargetFrameworkVersion)' != ''))">true</IsNetFramework>
+        <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFramework)' != ''">$(TargetFramework.Substring(3,1)).$(TargetFramework.Substring(4))</NetFrameworkVersion>
+        <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFrameworkVersion)' != ''">$(TargetFrameworkVersion.Substring(1))</NetFrameworkVersion>
         
+        <DefineConstants Condition="$(IsNetFramework)">$(DefineConstants);NETFRAMEWORK</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.8'))))   &gt;= 0">$(DefineConstants);NET48_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.7.2')))) &gt;= 0">$(DefineConstants);NET472_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.7.1')))) &gt;= 0">$(DefineConstants);NET471_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.7'))))   &gt;= 0">$(DefineConstants);NET47_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.6.2')))) &gt;= 0">$(DefineConstants);NET462_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.6.1')))) &gt;= 0">$(DefineConstants);NET461_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.6'))))   &gt;= 0">$(DefineConstants);NET46_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5.2')))) &gt;= 0">$(DefineConstants);NET452_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5.1')))) &gt;= 0">$(DefineConstants);NET451_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5'))))   &gt;= 0">$(DefineConstants);NET45_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.0'))))   &gt;= 0">$(DefineConstants);NET40_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('3.5'))))   &gt;= 0">$(DefineConstants);NET35_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('2.0'))))   &gt;= 0">$(DefineConstants);NET20_OR_GREATER</DefineConstants>
+        
+        <DefineConstants Condition="$(IsNetStandard)">$(DefineConstants);NETSTANDARD</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.0'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.1'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_1_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.2'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_2_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.3'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_3_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.4'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_4_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.5'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_5_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('1.6'))))     &gt;= 0">$(DefineConstants);NETSTANDARD1_6_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.0'))))     &gt;= 0">$(DefineConstants);NETSTANDARD2_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.1'))))     &gt;= 0">$(DefineConstants);NETSTANDARD2_1_OR_GREATER</DefineConstants>
+        
+        <DefineConstants Condition="$(IsNetCore)">$(DefineConstants);NETCOREAPP</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('1.0'))))         &gt;= 0">$(DefineConstants);NETCOREAPP1_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('1.1'))))         &gt;= 0">$(DefineConstants);NETCOREAPP1_1_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.0'))))         &gt;= 0">$(DefineConstants);NETCOREAPP2_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.1'))))         &gt;= 0">$(DefineConstants);NETCOREAPP2_1_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.2'))))         &gt;= 0">$(DefineConstants);NETCOREAPP2_2_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.0'))))         &gt;= 0">$(DefineConstants);NETCOREAPP3_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.1'))))         &gt;= 0">$(DefineConstants);NETCOREAPP3_1_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0'))))         &gt;= 0">$(DefineConstants);NET5_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('6.0'))))         &gt;= 0">$(DefineConstants);NET6_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('7.0'))))         &gt;= 0">$(DefineConstants);NET7_0_OR_GREATER</DefineConstants>
+                
+        <!-- enable optimizations based on configuration values -->
+        <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
         <DefineConstants Condition="'$(PlatformTarget)' == 'x86' OR  '$(Prefer32Bit)' == 'true'">$(DefineConstants);PLATFORM_X86</DefineConstants>
         <DefineConstants Condition="'$(PlatformTarget)' == 'x64' AND '$(Prefer32Bit)' != 'true'">$(DefineConstants);PLATFORM_X64</DefineConstants>
         <DefineConstants Condition="'$(PlatformTarget)' == 'AnyCPU' OR '$(PlatformTarget)' == ''">$(DefineConstants);PLATFORM_ANYCPU</DefineConstants>
         
-        <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
+        <!-- enable support compilation symbols -->
+
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.0')))) &gt;= 0">$(DefineConstants);SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE</DefineConstants>
+        <DefineConstants Condition="$(IsNetStandard) AND $([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0">$(DefineConstants);SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE</DefineConstants>
+
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5')))) &gt;= 0)">$(DefineConstants);SUPPORTS_INLINING</DefineConstants>
+
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.0')))) &gt;= 0)">$(DefineConstants);SUPPORTS_CONTRACTS;SUPPORTS_ASYNC;SUPPORTS_POINTER_ARITHMETIC</DefineConstants>
+
+        <DefineConstants Condition="($(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0) OR ($(IsNetStandard) AND $([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0)">$(DefineConstants);SUPPORTS_MATHF</DefineConstants>
+        
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.0')))) &gt;= 0">$(DefineConstants);SUPPORTS_FMADD</DefineConstants>
         
     </PropertyGroup>
+    
+    <!-- HINT: This is for debugging! You can invoke this part by executing msbuild /t:ShowProperties in the VS Developer Command Line -->
+    <Target Name="ShowProperties">
+      <Message Text="TargetFramework:$(TargetFramework)" />
+      <Message Text="TargetFrameworkVersion:$(TargetFrameworkVersion)" />
+      <Message Text="AllowUnsafeBlocks:$(AllowUnsafeBlocks)" />
+      <Message Text="PlatformTarget:$(PlatformTarget)" />
+      <Message Text="Prefer32Bit:$(Prefer32Bit)" />
+    
+      <Message Text="IsNetFramework:$(IsNetFramework), Version:$(NetFrameworkVersion)" />
+      <Message Text="IsNetStandard:$(IsNetStandard), Version:$(NetStandardVersion)" />
+      <Message Text="IsNetCore:$(IsNetCore), Version:$(NetCoreVersion)" />
+      
+      <Message Text="Constants: $(DefineConstants)" />
+    </Target>
+    
 </Project>
