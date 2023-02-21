@@ -15,7 +15,6 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
-    <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
     <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
   </PropertyGroup>
 
@@ -27,10 +26,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
   <ItemGroup>

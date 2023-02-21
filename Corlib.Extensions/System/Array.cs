@@ -1735,10 +1735,10 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static void RandomizeBuffer(this byte[] @this) {
-#if NET5_0_OR_GREATER
+#if SUPPORTS_RNG_FILL
       RandomNumberGenerator.Fill(@this);
 #else
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD
+#if NEEDS_RNG_DISPOSE
       using var provider=new RNGCryptoServiceProvider();
       provider.GetBytes(@this);
 #else

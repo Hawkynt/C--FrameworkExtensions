@@ -437,7 +437,7 @@ namespace System {
     /// <summary>
     /// Cache
     /// </summary>
-#if NET40_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
     private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>> _typeCache = new ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>>();
 #endif
 
@@ -457,7 +457,7 @@ namespace System {
       // ReSharper disable once JoinDeclarationAndInitializer
       PropertyDesignerDetails[] result;
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
       if (bindingFlags == null)
         bindingFlags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -471,7 +471,7 @@ namespace System {
       var props = @this.GetProperties(bindingFlags.Value);
       result = Array.ConvertAll(props, i => new PropertyDesignerDetails(i));
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
       // try to add to cache
       inner = _typeCache.GetOrAdd(@this, i => new ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>());
       inner.TryAdd(bindingFlags.Value, result);
@@ -762,7 +762,7 @@ namespace System {
     private delegate object Constructor();
     private static readonly Type _ctorType=typeof(Constructor);
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
     private static readonly ConcurrentDictionary<Type,Constructor> _ctorCache=new ConcurrentDictionary<Type,Constructor>();
 #endif
 
@@ -781,7 +781,7 @@ namespace System {
 #if MONO
       return (TType)Activator.CreateInstance(@this);
 #else
-#if NET40_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
       return (TType)_ctorCache.GetOrAdd(@this,_=>_GetConstructorFactory(@this))();
 #else
       return (TType)@this._GetConstructorFactory()();
@@ -984,11 +984,8 @@ namespace System {
       return ((TType)prop.GetValue(null));
     }
 
-#if NET40_OR_GREATER
-
     <#for(var i=0;i<10;++i){#>
     <#  var pList=i<1?"T":string.Join(", ",Enumerable.Range(1,i+1).Select(j=>"T"+j));#>
-
     /// <summary>
     /// Gets a method pointer to a static method of the given type.
     /// </summary>
@@ -996,23 +993,8 @@ namespace System {
     /// <param name="name">The name of the method.</param>
     /// <param name="flags">The BindingFlags if not simply public.</param>
     /// <returns>A method pointer or <c>null</c></returns>
-#if NET45_OR_GREATER
     public static Action<<#=pList#>> GetStaticMethod<<#=pList#>>(this Type @this, string name, BindingFlags flags = BindingFlags.Public) => (Action<<#=pList#>>)@this.GetMethod(name, BindingFlags.Static | flags)?.CreateDelegate(typeof(Action<<#=pList#>>));
-#else
-    public static Action<<#=pList#>> GetStaticMethod<<#=pList#>>(this Type @this, string name, BindingFlags flags = BindingFlags.Public) {
-      var method=@this.GetMethod(name, BindingFlags.Static | flags);
-      if(method==null) 
-        return null;
-
-      return  (Action<<#=pList#>>)Delegate.CreateDelegate(typeof(Action<<#=pList#>>),method);
-    }
-#endif
-
     <#}#>
-
-#endif
-
-
 
     public static IEnumerable<TAttribute> GetAttributes<TAttribute>(this Type @this,bool inherit=false) where TAttribute:Attribute{
       if(!inherit)

@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET20_OR_GREATER && !NET40_OR_GREATER
+#if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
 

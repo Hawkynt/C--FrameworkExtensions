@@ -21,10 +21,6 @@
 
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETSTANDARD || NETCOREAPP
-#define SUPPORTS_LINQ_PARAMETERS
-#endif
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;

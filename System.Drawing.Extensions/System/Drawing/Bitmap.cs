@@ -19,15 +19,6 @@
 */
 #endregion
 
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING
-#endif
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#define SUPPORTS_POINTER_ARITHMETIC
-#endif
-
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -759,32 +750,32 @@ namespace System.Drawing {
           this.CopyFromUnchecked(other, xs, ys, width, height, xt, yt);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other) => this.CopyFrom(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other, Point target) => this.CopyFrom(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other, Point source, Size size) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFrom(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other, Rectangle source) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFrom(IBitmapLocker other, Rectangle source, Point target) => this.CopyFrom(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -795,32 +786,32 @@ namespace System.Drawing {
         this.CopyFromUnchecked(other, xs, ys, width, height, xt, yt);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other, Point target) => this.CopyFromChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other, Point source, Size size) => this.CopyFromChecked(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFromChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other, Rectangle source) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromChecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -1017,32 +1008,32 @@ namespace System.Drawing {
         this._CopyFromUncheckedNaiive(other, xs, ys, width, height, xt, yt);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Point target) => this.CopyFromUnchecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Point source, Size size) => this.CopyFromUnchecked(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Point source, Size size, Point target) => this.CopyFromUnchecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Rectangle source) => this.CopyFromUnchecked(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.CopyFromUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -1057,28 +1048,28 @@ namespace System.Drawing {
         this.CopyFromChecked(other, sourceX, sourceY, width, height, targetX, targetY);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height)
       ;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height)
       ;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset)
         => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height)
       ;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target)
@@ -1109,36 +1100,36 @@ namespace System.Drawing {
         throw new NotImplementedException();
       }
 
-#endregion
+      #endregion
 
-#region BlendWith
+      #region BlendWith
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other) => this.BlendWith(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other, Point target) => this.BlendWith(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other, Point source, Size size) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWith(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other, Rectangle source) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWith(IBitmapLocker other, Rectangle source, Point target) => this.BlendWith(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -1148,32 +1139,32 @@ namespace System.Drawing {
           this.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other, Point target) => this.BlendWithChecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other, Point source, Size size) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWithChecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other, Rectangle source) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithChecked(IBitmapLocker other, Rectangle source, Point target) => this.BlendWithChecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -1183,32 +1174,32 @@ namespace System.Drawing {
         this.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
       }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Point target) => this.BlendWithUnchecked(other, 0, 0, other.Width, other.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Point source, Size size, Point target) => this.BlendWithUnchecked(other, source.X, source.Y, size.Width, size.Height, target.X, target.Y);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Rectangle source) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height);
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       public void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target) => this.BlendWithUnchecked(other, source.X, source.Y, source.Width, source.Height, target.X, target.Y);
@@ -1330,9 +1321,9 @@ namespace System.Drawing {
         return true;
       }
 
-#region lines
+      #region lines
 
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
       private void _SetBlendedPixel(int x, int y, Color color) {

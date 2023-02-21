@@ -19,11 +19,7 @@
 */
 
 #endregion
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETSTANDARD || NETCOREAPP
-
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
+#if NET45_OR_GREATER || NETSTANDARD || NETCOREAPP
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;

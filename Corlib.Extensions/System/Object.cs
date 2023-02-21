@@ -368,7 +368,7 @@ namespace System {
       }
     }
 
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _CACHE = new ConcurrentDictionary<Type, XmlSerializer>();
 #endif
 
@@ -384,14 +384,14 @@ namespace System {
     }
 
     private static XmlSerializer _GetSerializerForType<TType>()
-#if NET40_OR_GREATER || NETCOREAPP || NETSTANDARD || NET5_0_OR_GREATER
+#if SUPPORTS_CONCURRENT_COLLECTIONS
       => _CACHE.GetOrAdd(typeof(TType), t => new XmlSerializer(t))
 #else
       => new XmlSerializer(typeof(TType))
 #endif
       ;
 
-#if !NET5_0_OR_GREATER
+#if !DEPRECATED_BINARY_FORMATTER
 
     public static T DeepClone<T>(this T objectToClone) where T : class => DeepClone((object)objectToClone) as T;
 
@@ -415,7 +415,7 @@ namespace System {
       return @this;
     }
 
-#if !NET5_0_OR_GREATER
+#if !DEPRECATED_BINARY_FORMATTER
 
     public static void ToFile<T>(this T @this, FileInfo file, bool compress = false) {
       using var fs = file.OpenWrite();

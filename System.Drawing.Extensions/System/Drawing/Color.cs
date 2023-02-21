@@ -19,17 +19,13 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Generic;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
 using System.Reflection;
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
@@ -119,8 +115,8 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of lightning to add.</param>
     /// <returns>A new color.</returns>
-#if NET45_OR_GREATER
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Color Lighten(this Color This, byte amount) => This.Add(amount);
 
@@ -130,7 +126,7 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="amount">The amount of darkness to add.</param>
     /// <returns>A new color.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Color Darken(this Color This, byte amount) => This.Add(-amount);
@@ -141,7 +137,7 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to add.</param>
     /// <returns>A new color.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Color Add(this Color This, int value) => This.Add(value, value, value);
@@ -152,7 +148,7 @@ namespace System.Drawing {
     /// <param name="This">This Color.</param>
     /// <param name="value">The value to multiply with.</param>
     /// <returns>A new color.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Color Multiply(this Color This, double value) => This.Multiply(value, value, value);
@@ -194,7 +190,7 @@ namespace System.Drawing {
     /// </summary>
     /// <param name="This">This Color.</param>
     /// <returns>A new color.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static Color GetComplementaryColor(this Color This) => Color.FromArgb(This.A, byte.MaxValue - This.R, byte.MaxValue - This.G, byte.MaxValue - This.B);
@@ -251,7 +247,7 @@ namespace System.Drawing {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static byte _ClipToByte(int value) => (byte)Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value));
@@ -259,7 +255,7 @@ namespace System.Drawing {
 #if SUPPORTS_CONTRACTS
     [Pure]
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private static byte _ClipToByte(double value) => _ClipToByte((int)value);

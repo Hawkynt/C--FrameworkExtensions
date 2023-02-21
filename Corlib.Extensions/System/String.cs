@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if NET5_0_OR_GREATER || NETCOREAPP
-#define SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
-#endif
-
 using System.Collections;
 using System.Collections.Generic;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
@@ -567,7 +563,7 @@ namespace System {
     /// <param name="this">This string.</param>
     /// <param name="object">The source to get the data from using properties of the same name.</param>
     /// <returns>The string with values</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static string FormatWithObject<T>(this string @this, T @object) {
@@ -2025,11 +2021,7 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
-#if NET40_OR_GREATER
           currentPart.Clear();
-#else
-          currentPart.Length = 0;
-#endif
           pos += delimiter.Length - 1;
         } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
@@ -2103,11 +2095,7 @@ namespace System {
           if (options == StringSplitOptions.None || currentPart.Length > 0)
             yield return currentPart.ToString();
 
-#if NET40_OR_GREATER
           currentPart.Clear();
-#else
-          currentPart.Length = 0;
-#endif
         } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
           currentlyInSingleQuote = true;
         } else if (/*currentPart.Length == 0 &&*/ chr == '"') {

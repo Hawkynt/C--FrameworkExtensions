@@ -489,7 +489,7 @@ namespace System.IO {
         var value = this._fullPath;
         // extract server
         if (value != null && value.StartsWith(_pathSeparator + string.Empty + _pathSeparator)) {
-#if NET40_OR_GREATER
+#if SUPPORTS_CONTRACTS
           Contract.Assume(value.Length > 2);
 #endif
           var idx = value.IndexOf(_pathSeparator, 2);

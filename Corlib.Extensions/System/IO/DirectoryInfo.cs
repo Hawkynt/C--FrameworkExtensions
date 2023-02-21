@@ -152,11 +152,7 @@ namespace System.IO {
 #endif
       // if less than 4 cores, use sequential approach
       if (Environment.ProcessorCount < 4)
-#if NET40_OR_GREATER
         return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
-#else
-        return @this.GetFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
-#endif
 
       // otherwise, use MT approach
       var result = 0L;
@@ -166,11 +162,7 @@ namespace System.IO {
         Action<DirectoryInfo> factory = null;
         factory = d => {
           try {
-#if NET40_OR_GREATER
             foreach (var item in d.EnumerateFileSystemInfos()) {
-#else
-          foreach (var item in d.GetFileSystemInfos()) {
-#endif
               var file = item as FileInfo;
               if (file != null) {
                 Interlocked.Add(ref result, file.Length);
@@ -258,25 +250,17 @@ namespace System.IO {
     public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo This, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
       switch (mode) {
         case RecursionMode.ToplevelOnly: {
-#if NET40_OR_GREATER
-            foreach (var result in This.EnumerateFileSystemInfos())
-#else
-            foreach (var result in This.GetFileSystemInfos())
-#endif
+          foreach (var result in This.EnumerateFileSystemInfos())
               yield return (result);
 
-            break;
-          }
+          break;
+        }
         case RecursionMode.ShortestPathFirst: {
             var results = new Queue<DirectoryInfo>();
             results.Enqueue(This);
             while (results.Any()) {
               var result = results.Dequeue();
-#if NET40_OR_GREATER
               foreach (var fsi in result.EnumerateFileSystemInfos()) {
-#else
-              foreach (var fsi in result.GetFileSystemInfos()) {
-#endif
                 yield return (fsi);
                 var di = fsi as DirectoryInfo;
                 if (di == null)
@@ -293,11 +277,7 @@ namespace System.IO {
             results.Push(This);
             while (results.Any()) {
               var result = results.Pop();
-#if NET40_OR_GREATER
               foreach (var fsi in result.EnumerateFileSystemInfos()) {
-#else
-              foreach (var fsi in result.GetFileSystemInfos()) {
-#endif
                 yield return (fsi);
                 var di = fsi as DirectoryInfo;
                 if (di == null)
@@ -445,13 +425,13 @@ namespace System.IO {
         return (!@this.Exists);
       }
     }
-      
+
     /// <summary>
     /// Checks whether the given directory does not exist.
     /// </summary>
     /// <param name="This">This DirectoryInfo.</param>
     /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool NotExists(this DirectoryInfo This) => !This.Exists;
@@ -465,7 +445,7 @@ namespace System.IO {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if NET40_OR_GREATER
+#if SUPPORTS_PATH_COMBINE_ARRAYS
     public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #else
     public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
@@ -480,7 +460,7 @@ namespace System.IO {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if NET40_OR_GREATER
+#if SUPPORTS_PATH_COMBINE_ARRAYS
     public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
 #else
     public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
@@ -493,14 +473,10 @@ namespace System.IO {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
-#else
-    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.GetDirectories(searchPattern, searchOption).Any();
-#endif
 
     /// <summary>
     /// Determines whether the specified file exists.
@@ -509,50 +485,10 @@ namespace System.IO {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="searchOption">The search option.</param>
     /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
-#elif NET40_OR_GREATER
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly){
-      var stack = new Stack<DirectoryInfo>();
-      stack.Push(This);
-      while (stack.Count > 0) {
-        var currentDirectory = stack.Pop();
-        try {
-          if (currentDirectory.EnumerateFiles(searchPattern).Any())
-            return true;
-
-          if (searchOption != SearchOption.TopDirectoryOnly)
-            foreach (var item in currentDirectory.EnumerateDirectories())
-              stack.Push(item);
-        } catch (UnauthorizedAccessException) {
-          ;
-        }
-      }
-      return false;
-    }
-#else
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) {
-      var stack = new Stack<DirectoryInfo>();
-      stack.Push(This);
-      while (stack.Count > 0) {
-        var currentDirectory = stack.Pop();
-        try {
-          if (currentDirectory.GetFiles(searchPattern).Any())
-            return true;
-
-          if (searchOption != SearchOption.TopDirectoryOnly)
-            foreach (var item in currentDirectory.GetDirectories())
-              stack.Push(item);
-        } catch (UnauthorizedAccessException) {
-          ;
-        }
-      }
-      return false;
-    }
-#endif
 
     /// <summary>
     /// Creates the directory recursively.
@@ -631,14 +567,10 @@ namespace System.IO {
     /// <param name="fileName">Name of the file.</param>
     /// <param name="option">The option.</param>
     /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
-#if NET45_OR_GREATER
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
-#else
-    public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetFiles(fileName, option).Any();
-#endif
 
     /// <summary>
     /// Determines whether the specified directory contains directory.
@@ -649,15 +581,10 @@ namespace System.IO {
     /// <returns>
     ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
     /// </returns>
-#if NET45_OR_GREATER
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-
     public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
-#else
-    public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.GetDirectories(directoryName, option).Any();
-#endif
 
     /// <summary>
     /// Checks whether the given directory exists and contains at least one file.
@@ -743,8 +670,8 @@ namespace System.IO {
       }
     }
 
-#if !NET40_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
-
+#if !SUPPORTS_ENUMERATING_IO
+    
     public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
       foreach (var entry in @this.GetFileSystemInfos())
         yield return entry;
@@ -752,6 +679,11 @@ namespace System.IO {
 
     public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
       foreach (var entry in @this.GetFiles(searchPattern,searchOption))
+        yield return entry;
+    }
+
+    public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
+      foreach (var entry in @this.GetDirectories(searchPattern, searchOption))
         yield return entry;
     }
 

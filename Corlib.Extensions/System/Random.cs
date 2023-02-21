@@ -22,7 +22,7 @@
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 using System.Text;
@@ -46,7 +46,7 @@ namespace System {
     /// <param name="minValue">The min value.</param>
     /// <param name="maxValue">The max value.</param>
     /// <returns>A value between the given boundaries</returns>
-#if NET45_OR_GREATER
+#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static double NextDouble(this Random This, double minValue, double maxValue) => This.NextDouble() * (maxValue - minValue) + minValue;

@@ -220,7 +220,7 @@ namespace System.Collections.Generic {
       return @this.TryGetValue(key, out var result) ? result : default(TValue);
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
 
     /// <summary>
     /// Gets the value or a default.
@@ -288,7 +288,7 @@ namespace System.Collections.Generic {
       return @this.TryGetValue(key, out var result) ? result : defaultValue;
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
 
     /// <summary>
     /// Gets the value or a default.
@@ -461,7 +461,7 @@ namespace System.Collections.Generic {
         @this.Add(key, value);
     }
 
-#if NET40_OR_GREATER
+#if SUPPORTS_TUPLES
 
     /// <summary>
     /// Adds values or updates existings.
@@ -936,7 +936,7 @@ namespace System.Collections.Generic {
       }
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
     /// <summary>
     /// Compares two dictionaries against each other.
     /// </summary>

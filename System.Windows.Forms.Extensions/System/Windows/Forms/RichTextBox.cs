@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 #if SUPPORTS_CONTRACTS
@@ -316,7 +312,7 @@ namespace System.Windows.Forms {
 
     #region richtextbox syntax highlighting
 
-#if NET35_OR_GREATER && !NET40_OR_GREATER
+#if !SUPPORTS_CONDITIONAL_WEAK_TABLE
     private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new Dictionary<RichTextBox, SyntaxHighlighter>();
 #else
     private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new ConditionalWeakTable<RichTextBox, SyntaxHighlighter>();

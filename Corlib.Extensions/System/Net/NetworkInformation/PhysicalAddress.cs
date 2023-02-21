@@ -44,7 +44,7 @@ namespace System.Net.NetworkInformation {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-#if NET20_OR_GREATER && !NET40_OR_GREATER
+#if !SUPPORTS_JOIN_ENUMERABLES
       return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
 #else
       return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}"));

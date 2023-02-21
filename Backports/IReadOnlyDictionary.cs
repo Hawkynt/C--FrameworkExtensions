@@ -1,5 +1,5 @@
 ﻿namespace System.Collections.Generic {
-#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+#if !NET45_OR_GREATER && !NETCOREAPP && !NETSTANDARD
 
 #if COMPILE_TO_EXTENSION_DLL
   public

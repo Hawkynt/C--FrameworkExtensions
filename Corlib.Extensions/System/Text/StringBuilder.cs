@@ -24,7 +24,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.Text.StringBuildera {
+namespace System.Text {
 
 #if COMPILE_TO_EXTENSION_DLL
   public
@@ -46,6 +46,10 @@ namespace System.Text.StringBuildera {
       foreach (var line in lines)
         This.AppendLine(line);
     }
+
+#if !SUPPORTS_STRING_BUILDER_CLEAR
+    public static void Clear(this StringBuilder @this) => @this.Length = 0;
+#endif
 
   }
 }

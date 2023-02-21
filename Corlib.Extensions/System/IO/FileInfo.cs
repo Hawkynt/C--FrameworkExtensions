@@ -561,7 +561,7 @@ namespace System.IO {
       }
 
       // Analyze the BOM
-#if NET5_0_OR_GREATER
+#if DEPRECATED_UTF7
       if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.Default;
 #else
       if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
@@ -662,25 +662,37 @@ namespace System.IO {
     /// <summary>
     /// Reads the lines.
     /// </summary>
-    /// <param name="This">This FileInfo.</param>
+    /// <param name="this">This FileInfo.</param>
     /// <returns></returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadLines(@this.FullName);
 #else
-    public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadAllLines(@this.FullName);
+    public static IEnumerable<string> ReadLines(this FileInfo @this) => ReadLines(@this, FileShare.Read);
 #endif
 
     public static IEnumerable<string> ReadLines(this FileInfo @this, FileShare share) {
-      using(var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, 4096, FileOptions.SequentialScan))
-      using(var reader = new StreamReader(stream))
-      {
-        while(true){
-          var line=reader.ReadLine();
-          if(line==null)
-            yield break;
+      const int bufferSize = 4096;
+      using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
+      using var reader = new StreamReader(stream);
+      while(!reader.EndOfStream){
+        var line=reader.ReadLine();
+        if(line==null)
+          yield break;
 
-          yield return line;
-        }
+        yield return line;
+      }
+    }
+
+    public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding,FileShare share) {
+      const int bufferSize = 4096;
+      using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
+      using var reader = new StreamReader(stream,encoding);
+      while (!reader.EndOfStream) {
+        var line = reader.ReadLine();
+        if (line == null)
+          yield break;
+
+        yield return line;
       }
     }
 
@@ -690,10 +702,10 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="encoding">The encoding.</param>
     /// <returns></returns>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadLines(This.FullName, encoding);
 #else
-    public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => File.ReadAllLines(This.FullName, encoding);
+    public static IEnumerable<string> ReadLines(this FileInfo This, Encoding encoding) => ReadLines(This, encoding,FileShare.Read);
 #endif
 
 #endregion
@@ -741,7 +753,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents) => File.WriteAllLines(This.FullName, contents.ToArray());
@@ -753,7 +765,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents, encoding);
 #else
     public static void WriteAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(This.FullName, contents.ToArray(), encoding);
@@ -782,7 +794,7 @@ namespace System.IO {
     /// </summary>
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllLines(This.FullName, contents);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine);
@@ -794,7 +806,7 @@ namespace System.IO {
     /// <param name="This">This FileInfo.</param>
     /// <param name="contents">The contents.</param>
     /// <param name="encoding">The encoding.</param>
-#if NET40_OR_GREATER
+#if SUPPORTS_ENUMERATING_IO
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllLines(This.FullName, contents, encoding);
 #else
     public static void AppendAllLines(this FileInfo This, IEnumerable<string> contents, Encoding encoding) => File.AppendAllText(This.FullName, string.Join(Environment.NewLine, contents.ToArray()) + Environment.NewLine, encoding);
@@ -1200,7 +1212,7 @@ namespace System.IO {
       return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_STREAM_ASYNC
 
     /// <summary>
     /// Compares two files for content equality.
@@ -1209,20 +1221,20 @@ namespace System.IO {
     /// <param name="other">The other FileInfo.</param>
     /// <param name="bufferSize">The number of bytes to compare in each step (Beware of the 85KB-LOH limit).</param>
     /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
-    public static bool IsContentEqualTo(this FileInfo @this,FileInfo other,int bufferSize=65536){
-      if(@this==null)
+    public static bool IsContentEqualTo(this FileInfo @this, FileInfo other, int bufferSize = 65536) {
+      if (@this == null)
         throw new NullReferenceException();
-      if(other==null)
+      if (other == null)
         throw new ArgumentNullException(nameof(other));
-      
-      if(@this.FullName==other.FullName)
+
+      if (@this.FullName == other.FullName)
         return true;
 
-      var myLength=@this.Length;
-      if(myLength!=other.Length)
+      var myLength = @this.Length;
+      if (myLength != other.Length)
         return false;
 
-      if(myLength==0)
+      if (myLength == 0)
         return true;
 
       using (var sourceStream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -1266,7 +1278,7 @@ namespace System.IO {
             comparisonAsync = _ReadBlockFromStream(comparisonStream, blockIndex, comparisonBufferB);
 
             // compare A and A' and return false upon difference
-            if (sourceBytes!=comparisonBytes || !_AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes))
+            if (sourceBytes != comparisonBytes || !_AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes))
               return false;
 
             // switch A and B and A' and B'
@@ -1277,108 +1289,76 @@ namespace System.IO {
           // compare A and A'
           sourceBytes = sourceAsync.Result;
           comparisonBytes = comparisonAsync.Result;
-          return sourceBytes==comparisonBytes && _AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes);
+          return sourceBytes == comparisonBytes && _AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes);
         }
       }
-    }
 
-#endif
-    
-    /// <summary>
-    /// Swaps the content of two byte array pointers.
-    /// </summary>
-    /// <param name="bufferA">The A buffer.</param>
-    /// <param name="bufferB">The B buffer.</param>
-    private static void _Swap(ref byte[] bufferA, ref byte[] bufferB) {
-      var temp = bufferA;
-      bufferA = bufferB;
-      bufferB = temp;
-    }
-
-#if NET45_OR_GREATER
-
-    /// <summary>
-    /// Starts filling a block from a stream with a given index.
-    /// </summary>
-    /// <param name="stream">The stream.</param>
-    /// <param name="blockIndex">Index of the block.</param>
-    /// <param name="buffer">The buffer to store data at.</param>
-    /// <returns>A Task to wait on</returns>
-    private static Task<int> _ReadBlockFromStream(Stream stream, long blockIndex, byte[] buffer) {
-      var blockSize=buffer.Length;
-      stream.Seek(blockIndex * blockSize, SeekOrigin.Begin);
-      return stream.ReadAsync(buffer, 0, blockSize);
-    }
-
-#endif
-
-    /// <summary>
-    /// Creates a stream of block indexes, which are not simply following each other the get better chances to detect differences early.
-    /// NOTE: In our case we alternate between a block from the beginning and a block from the ending of a file.
-    /// </summary>
-    /// <param name="blockCount">The block count.</param>
-    /// <returns>Block indices</returns>
-    private static IEnumerable<long> _BlockIndexShuffler(long blockCount) {
-      var lowerBlockIndex = 0;
-      var upperBlockIndex = blockCount - 1;
-
-      while (lowerBlockIndex < upperBlockIndex) {
-        yield return lowerBlockIndex++;
-        yield return upperBlockIndex--;
+      void _Swap(ref byte[] bufferA, ref byte[] bufferB) {
+        var temp = bufferA;
+        bufferA = bufferB;
+        bufferB = temp;
       }
 
-      // if odd number of elements, return the last element (which is in the middle)
-      if ((blockCount & 1) == 1)
-        yield return lowerBlockIndex;
+      Task<int> _ReadBlockFromStream(Stream stream, long blockIndex, byte[] buffer) {
+        var blockSize = buffer.Length;
+        stream.Seek(blockIndex * blockSize, SeekOrigin.Begin);
+        return stream.ReadAsync(buffer, 0, blockSize);
+      }
 
-    }
+      IEnumerable<long> _BlockIndexShuffler(long blockCount) {
+        var lowerBlockIndex = 0;
+        var upperBlockIndex = blockCount - 1;
 
-    /// <summary>
-    /// Compares two byte arrays for equality ... hopefully fast.
-    /// </summary>
-    /// <param name="source">The byte array.</param>
-    /// <param name="comparand">The comparand byte array.</param>
-    /// <param name="length">The number of bytes to compare.</param>
-    /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
+        while (lowerBlockIndex < upperBlockIndex) {
+          yield return lowerBlockIndex++;
+          yield return upperBlockIndex--;
+        }
+
+        // if odd number of elements, return the last element (which is in the middle)
+        if ((blockCount & 1) == 1)
+          yield return lowerBlockIndex;
+
+      }
+
 #if UNSAFE
-    private static unsafe bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
-      if(ReferenceEquals(source,comparand))
+      unsafe bool _AreBytesEqual(byte[] source, byte[] comparand, int length) {
+        if (ReferenceEquals(source, comparand))
+          return true;
+
+        if (source == null || comparand == null)
+          return false;
+
+        if (source.Length != comparand.Length)
+          return false;
+
+        fixed (byte* sourcePin = source, comparisonPin = comparand) {
+          var sourcePointer = (long*)sourcePin;
+          var comparisonPointer = (long*)comparisonPin;
+          while (length >= 8) {
+            if (*sourcePointer != *comparisonPointer)
+              return false;
+
+            ++sourcePointer;
+            ++comparisonPointer;
+            length -= 8;
+          }
+
+          var byteSourcePointer = (byte*)sourcePointer;
+          var byteComparisonPointer = (byte*)comparisonPointer;
+          while (length > 0) {
+            if (*byteSourcePointer != *byteComparisonPointer)
+              return false;
+
+            ++byteSourcePointer;
+            ++byteComparisonPointer;
+            --length;
+          }
+        }
+
         return true;
-
-      if(source==null||comparand==null)
-        return false;
-
-      if(source.Length!=comparand.Length)
-        return false;
-
-      fixed (byte* sourcePin = source, comparisonPin = comparand){
-        var sourcePointer = (long*)sourcePin;
-        var comparisonPointer = (long*)comparisonPin;
-        while (length >= 8) {
-          if (*sourcePointer != *comparisonPointer)
-            return false;
-
-          ++sourcePointer;
-          ++comparisonPointer;
-          length -= 8;
-        }
-
-        var byteSourcePointer = (byte*)sourcePointer;
-        var byteComparisonPointer = (byte*)comparisonPointer;
-        while (length > 0) {
-          if (*byteSourcePointer != *byteComparisonPointer)
-            return false;
-
-          ++byteSourcePointer;
-          ++byteComparisonPointer;
-          --length;
-        }
       }
-
-      return true;
-    }
 #else
-    private static bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
+    bool _AreBytesEqual(byte[] source,byte[] comparand,int length){
       if(ReferenceEquals(source,comparand))
         return true;
 
@@ -1388,12 +1368,16 @@ namespace System.IO {
       if(source.Length!=comparand.Length)
         return false;
 
-      for(var i=0;i<length;++i)
+      for(var i = 0;i<length;++i)
         if(source[i]!=comparand[i])
           return false;
 
       return true;
     }
+#endif
+
+    }
+
 #endif
   }
 }

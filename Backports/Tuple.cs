@@ -1,4 +1,4 @@
-﻿#if !NET40_OR_GREATER && !NETCOREAPP && !NET5_OR_GREATER && !NETSTANDARD
+﻿#if !NET40_OR_GREATER && !NETCOREAPP && !NETSTANDARD
 
 // Aggregated and sourced from https://github.com/theraot/Theraot
 

@@ -65,11 +65,7 @@ namespace System.Threading {
         return;
 
       this._isDisposed = true;
-#if NET45_OR_GREATER
-      this._timer.Change(Threading.Timeout.InfiniteTimeSpan, Threading.Timeout.InfiniteTimeSpan);
-#else
       this._timer.Change(Threading.Timeout.Infinite, Threading.Timeout.Infinite);
-#endif
       this._timer.Dispose();
     }
 
@@ -97,10 +93,7 @@ namespace System.Threading {
       }
     }
 
-#if NET45_OR_GREATER
-    private void _CallbackIn(TimeSpan when) => this._timer.Change(when, Threading.Timeout.InfiniteTimeSpan);
-#else
-    private void _CallbackIn(TimeSpan when) => this._timer.Change(when, new TimeSpan(Threading.Timeout.Infinite));
-#endif
+    private void _CallbackIn(TimeSpan when) => this._timer.Change((long)when.TotalMilliseconds, Threading.Timeout.Infinite);
+
   }
 }

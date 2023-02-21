@@ -37,7 +37,7 @@ namespace System.Collections.Generic {
 #endif
   class BiDictionary<TFirst, TSecond> :
     IDictionary<TFirst, TSecond>,
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
     IReadOnlyDictionary<TFirst, TSecond>,
 #endif
     IDictionary {
@@ -99,11 +99,16 @@ namespace System.Collections.Generic {
       => ((IDictionary)this._firstToSecond).Keys
       ;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
 
     IEnumerable<TFirst> IReadOnlyDictionary<TFirst, TSecond>.Keys
       => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Keys
       ;
+
+    IEnumerable<TSecond> IReadOnlyDictionary<TFirst, TSecond>.Values
+      => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Values
+    ;
+
 #endif
 
     public ICollection<TSecond> Values
@@ -113,13 +118,7 @@ namespace System.Collections.Generic {
     ICollection IDictionary.Values
       => ((IDictionary)this._firstToSecond).Values
       ;
-
-#if NET45_OR_GREATER
-    IEnumerable<TSecond> IReadOnlyDictionary<TFirst, TSecond>.Values
-      => ((IReadOnlyDictionary<TFirst, TSecond>)this._firstToSecond).Values
-      ;
-#endif
-
+    
     public IEnumerator<KeyValuePair<TFirst, TSecond>> GetEnumerator()
       => this._firstToSecond.GetEnumerator()
       ;
@@ -217,7 +216,7 @@ namespace System.Collections.Generic {
 
     private class ReverseDictionary :
       IDictionary<TSecond, TFirst>,
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
       IReadOnlyDictionary<TSecond, TFirst>, 
 #endif
       IDictionary {
@@ -271,10 +270,16 @@ namespace System.Collections.Generic {
         => ((IDictionary)this._owner._secondToFirst).Keys
         ;
 
-#if NET45_OR_GREATER
+#if SUPPORTS_READ_ONLY_COLLECTIONS
+
       IEnumerable<TSecond> IReadOnlyDictionary<TSecond, TFirst>.Keys
         => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Keys
         ;
+
+      IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values
+        => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Values
+      ;
+
 #endif
 
       public ICollection<TFirst> Values
@@ -284,12 +289,6 @@ namespace System.Collections.Generic {
       ICollection IDictionary.Values
         => ((IDictionary)this._owner._secondToFirst).Values
         ;
-
-#if NET45_OR_GREATER
-      IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values
-        => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Values
-        ;
-#endif
 
       public IEnumerator<KeyValuePair<TSecond, TFirst>> GetEnumerator()
         => this._owner._secondToFirst.GetEnumerator()

@@ -3,28 +3,28 @@
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 
-#if NET20_OR_GREATER && !NET40_OR_GREATER
-
 namespace System {
 
-#if NET20_OR_GREATER && !NET35_OR_GREATER
+#if !SUPPORTS_ACTION_FUNC
 <#for(var i=0;i<=4;++i){#>
   public delegate void Action<#=i==0?string.Empty:"<"+string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j))+">"#>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
 <#}#>
 #endif
+#if !SUPPORTS_ACTION_FUNC_5
 <#for(var i=5;i<=16;++i){#>
   public delegate void Action<#=i==0?string.Empty:"<"+string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j))+">"#>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
 <#}#>
+#endif
 
-#if NET20_OR_GREATER && !NET35_OR_GREATER
+#if !SUPPORTS_ACTION_FUNC
 <#for(var i=0;i<=4;++i){#>
   public delegate TResult Func<<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j))#><#=i<1?string.Empty:", "#>TResult>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
 <#}#>
 #endif
+#if !SUPPORTS_ACTION_FUNC_5
 <#for(var i=5;i<=16;++i){#>
   public delegate TResult Func<<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j))#><#=i<1?string.Empty:", "#>TResult>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
 <#}#>
+#endif
   
 }
-
-#endif

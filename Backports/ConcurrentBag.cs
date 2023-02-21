@@ -19,7 +19,7 @@
 */
 #endregion
 
-#if NET20_OR_GREATER && !NET40_OR_GREATER
+#if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
 
@@ -59,7 +59,12 @@ namespace System.Collections.Concurrent {
           return false;
         }
     }
-    
+
+    public T[] ToArray() {
+      lock(this._items)
+        return this._items.ToArray();
+    }
+
   }
 
 }

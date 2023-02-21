@@ -40,13 +40,7 @@ namespace System.Collections.ObjectModel {
     private readonly IDictionary<TKey, TValue> _dictionary;
 
     private readonly Dispatcher _dispatcher;
-
-#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
-    private delegate void Net40DelegateClear();
-    private delegate void Net40DelegateAdd1(KeyValuePair<TKey, TValue> item);
-    private delegate void Net40DelegateAdd2(TKey key, TValue value);
-#endif
-
+    
 #region Constructor
 
     public ObservableDictionary(Dispatcher dispatcher = null) {
@@ -74,15 +68,9 @@ namespace System.Collections.ObjectModel {
         this.OnCollectionChanged(NotifyCollectionChangedAction.Add, item.Value);
         this.AddNotifyEvents(item.Value);
       } else {
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-        this._dispatcher.Invoke(() => this.Add(item));
-#else
-        void Do(KeyValuePair<TKey, TValue> item1) {
-          this.Add(item1);
-        }
 
-        this._dispatcher.Invoke(new Net40DelegateAdd1(Do));
-#endif
+        void _Add() => this.Add(item);
+        this._dispatcher.Invoke(new Action(_Add));
       }
     }
 
@@ -94,14 +82,10 @@ namespace System.Collections.ObjectModel {
         this._dictionary.Clear();
         this.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
       } else {
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#if SUPPORTS_DISPATCHER_LAMBDA
         this._dispatcher.Invoke(() => this.Clear());
 #else
-        void Do() {
-          this.Clear();
-        }
-
-        this._dispatcher.Invoke(new Net40DelegateClear(Do));
+        this._dispatcher.Invoke(new Action(this.Clear));
 #endif
       }
     }
@@ -141,16 +125,9 @@ namespace System.Collections.ObjectModel {
         this.OnCollectionChanged(NotifyCollectionChangedAction.Add, value);
         this.AddNotifyEvents(value);
       } else {
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-      this._dispatcher.Invoke(() => this.Add(key, value));
-#else
-        void Do(TKey tKey, TValue tValue) {
-          this.Add(tKey, tValue);
-        }
-        
-        this._dispatcher.Invoke(new Net40DelegateAdd2(Do));
-#endif
 
+        void _Add()=> this.Add(key, value);
+        this._dispatcher.Invoke(new Action(_Add));
       }
     }
 

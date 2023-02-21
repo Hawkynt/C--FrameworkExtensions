@@ -30,7 +30,7 @@
 // ReSharper disable RedundantAttributeUsageProperty
 namespace System.Runtime.CompilerServices {
 
-#if !NET45_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+#if !SUPPORTS_CALLER_MEMBER_NAME
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
 
 #if COMPILE_TO_EXTENSION_DLL
@@ -59,7 +59,7 @@ namespace System.Runtime.CompilerServices {
   sealed class CallerLineNumberAttribute : Attribute { }
 #endif
 
-#if !NET35_OR_GREATER && !NET5_0_OR_GREATER && !NETCOREAPP && !NETSTANDARD
+#if !SUPPORTS_EXTENSIONS
   [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
 
 #if COMPILE_TO_EXTENSION_DLL

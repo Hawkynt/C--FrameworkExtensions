@@ -19,18 +19,7 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_TUPLES
-#define SUPPORTS_CONCURRENT_DICTIONARY
-#endif
-
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_TASK_RUN
-#endif
-
-#if SUPPORTS_ASYNC
 using System.Collections.Concurrent;
-#endif
 using System.Diagnostics;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -1406,7 +1395,6 @@ namespace System.Collections.Generic {
       new DisposableCollection<TItem>(@this)
     ;
 
-#if SUPPORTS_CONCURRENT_DICTIONARY
     public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(this TItem[] @this,Func<TItem,TKey> keyGetter,Func<TItem,TValue> valueGetter,IEqualityComparer<TKey> equalityComparer=null ) {
       if (@this == null)
         throw new NullReferenceException();
@@ -1421,7 +1409,6 @@ namespace System.Collections.Generic {
 
       return result;
     }
-#endif
 
 #if SUPPORTS_TASK_RUN
     /// <summary>

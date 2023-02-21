@@ -19,11 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
-
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,7 +34,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
+#if SUPPORTS_CONDITIONAL_WEAK_TABLE
 using System.Runtime.CompilerServices;
 #endif
 using System.Text.RegularExpressions;
@@ -2827,7 +2822,25 @@ namespace System.Windows.Forms {
 #endif
   sealed class DataGridViewCellStyleAttribute : Attribute {
 
-    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet, DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, string wrapModePropertyName = null) {
+    /// <summary>
+    /// Creates a new <see cref="DataGridViewCellStyleAttribute"/>.
+    /// </summary>
+    /// <param name="foreColor">The color-name used for the property <see cref="DataGridViewCellStyle.ForeColor"/>.
+    /// <remarks>Supports many types of color-names, such as hex values, (a)rgb values, known-colors, system-colors, etc.</remarks>
+    /// </param>
+    /// <param name="backColor">The color-name used for the property <see cref="DataGridViewCellStyle.BackColor"/>.
+    /// <remarks>Supports many types of color-names, such as hex values, (a)rgb values, known-colors, system-colors, etc.</remarks>
+    /// </param>
+    /// <param name="format">The value for the property <see cref="DataGridViewCellStyle.Format"/>.</param>
+    /// <param name="alignment">The value for the property <see cref="DataGridViewCellStyle.Alignment"/>.</param>
+    /// <param name="wrapMode">The value for the property <see cref="DataGridViewCellStyle.WrapMode"/>.</param>
+    /// <param name="conditionalPropertyName">The name of the <see cref="bool"/>-property, deciding if this attribute should be enabled.</param>
+    /// <param name="foreColorPropertyName">The name of the <see cref="Color"/>-property, retrieving the value for <see cref="DataGridViewCellStyle.ForeColor"/>.</param>
+    /// <param name="backColorPropertyName">The name of the <see cref="Color"/>-property, retrieving the value for <see cref="DataGridViewCellStyle.BackColor"/>.</param>
+    /// <param name="wrapModePropertyName">The name of the <see cref="DataGridViewTriState"/>-property, retrieving the value for <see cref="DataGridViewCellStyle.WrapMode"/>.</param>
+    public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet,
+      DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null,
+      string wrapModePropertyName = null) {
       this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
       this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
       this.ConditionalPropertyName = conditionalPropertyName;
@@ -3881,7 +3894,7 @@ namespace System.Windows.Forms {
       }
     }
 
-#if NET40_OR_GREATER
+#if SUPPORTS_CONDITIONAL_WEAK_TABLE
     private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new ConditionalWeakTable<DataGridView, DataGridViewState>();
 #else
     private static readonly Dictionary<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new Dictionary<DataGridView, DataGridViewState>();
@@ -4374,10 +4387,10 @@ namespace System.Windows.Forms {
       }
     }
 
-#if NET35_OR_GREATER && !NET40_OR_GREATER
-    private static readonly Dictionary<DataGridViewCell, _CellEditState> _cellEditStates = new Dictionary<DataGridViewCell, _CellEditState>();
-#else
+#if SUPPORTS_CONDITIONAL_WEAK_TABLE
     private static readonly ConditionalWeakTable<DataGridViewCell, _CellEditState> _cellEditStates = new ConditionalWeakTable<DataGridViewCell, _CellEditState>();
+#else
+    private static readonly Dictionary<DataGridViewCell, _CellEditState> _cellEditStates = new Dictionary<DataGridViewCell, _CellEditState>();
 #endif
 
     /// <summary>
@@ -4446,10 +4459,10 @@ namespace System.Windows.Forms {
       public bool HasStartedMultipleValueChange => true;
     }
 
-#if NET35_OR_GREATER && !NET40_OR_GREATER
-    private static readonly Dictionary<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new Dictionary<DataGridView, DataGridViewValidationState>();
-#else
+#if SUPPORTS_CONDITIONAL_WEAK_TABLE
     private static readonly ConditionalWeakTable<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new ConditionalWeakTable<DataGridView, DataGridViewValidationState>();
+#else
+    private static readonly Dictionary<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new Dictionary<DataGridView, DataGridViewValidationState>();
 #endif
 
     private static void This_OnCellValidating(object sender, DataGridViewCellValidatingEventArgs e) {

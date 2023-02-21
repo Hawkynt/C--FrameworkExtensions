@@ -138,7 +138,7 @@ namespace System.Data.Linq {
       }
     }
 
-#if NET45_OR_GREATER
+#if SUPPORTS_TASK_RUN
     /// <summary>
     /// Try to load asynchronously data from the specified database
     /// </summary>

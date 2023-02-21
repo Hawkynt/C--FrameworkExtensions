@@ -19,11 +19,6 @@
 */
 #endregion
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
-
 using System.Linq;
 using System.IO;
 #if SUPPORTS_CONTRACTS

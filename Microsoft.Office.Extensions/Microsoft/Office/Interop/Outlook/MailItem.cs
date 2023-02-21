@@ -1,9 +1,5 @@
 #if !NETSTANDARD
 
-#if NET40_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_CONTRACTS 
-#endif
-
 using System;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;

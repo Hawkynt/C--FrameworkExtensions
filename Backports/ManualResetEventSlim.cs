@@ -1,4 +1,4 @@
-﻿#if NET35_OR_GREATER && !NET40_OR_GREATER
+﻿#if !SUPPORTS_SLIM_SEMAPHORES
 
 namespace System.Threading {
 

@@ -19,16 +19,15 @@
 */
 #endregion
 
-#if NET45_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP || NETSTANDARD
-#define SUPPORTS_INLINING
-#endif
-
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
 using System.Collections.Generic;
+
+#if !SUPPORTS_JOIN_ENUMERABLES
 using System.Linq;
+#endif
 
 namespace System.Windows.Form.Extensions;
 internal static class FixOldStuff {
@@ -37,10 +36,10 @@ internal static class FixOldStuff {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool _FOS_IsNullOrWhiteSpace(this string @this) =>
-#if NET35_OR_GREATER && !NET40_OR_GREATER
-    @this == null || @this.Trim().Length < 1
-#else
+#if SUPPORTS_IS_NULL_OR_WHITESPACE
     string.IsNullOrWhiteSpace(@this)
+#else
+    @this == null || @this.Trim().Length < 1
 #endif
   ;
 
@@ -48,10 +47,10 @@ internal static class FixOldStuff {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string _FOS_Join(this IEnumerable<string> @this,string separator) =>
-#if NET35_OR_GREATER && !NET40_OR_GREATER
-    string.Join(separator, @this.ToArray())
-#else
+#if SUPPORTS_JOIN_ENUMERABLES
     string.Join(separator, @this)
+#else
+    string.Join(separator, @this.ToArray())
 #endif
   ;
 
@@ -59,10 +58,10 @@ internal static class FixOldStuff {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool _FOS_HasFlag<TEnum>(this TEnum @this, TEnum flag) where TEnum : Enum =>
-#if NET35_OR_GREATER && !NET40_OR_GREATER
-    ((ulong)(object)@this & (ulong)(object)flag) == (ulong)(object)flag
-#else
+#if SUPPORTS_HAS_FLAG
     @this.HasFlag(flag)
+#else
+    ((ulong)(object)@this & (ulong)(object)flag) == (ulong)(object)flag
 #endif
   ;
 
