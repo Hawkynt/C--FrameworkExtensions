@@ -58,10 +58,7 @@
 #>
 
 using System.Runtime.InteropServices;
-
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
 
 using Block1 = System.Byte;
 using Block2 = System.UInt16;
@@ -115,7 +112,7 @@ namespace System {
 <#    }#>
 <#    if(!typeData.noArraySupport) {#>
 
-    <#=EmitMethodHeader("Copy", typeData)#>) {
+    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>) {
       if (@this == null)
         return null;
 
@@ -125,7 +122,7 @@ namespace System {
       return result;
     }
 
-    <#=EmitMethodHeader("Copy", typeData)#>, int index) {
+    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>, int index) {
       if (@this == null)
         return null;
 
@@ -138,7 +135,7 @@ namespace System {
       return result;
     }
 
-    <#=EmitMethodHeader("Copy", typeData)#>, int index, int count) {
+    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>, int index, int count) {
       if (@this == null)
         return null;
 
@@ -155,7 +152,7 @@ namespace System {
 <#    }#>
 
 <#    if(!typeData.NeedsCount) {#>
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, <#=EmitTypeDef(typeData)#> target) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -165,7 +162,7 @@ namespace System {
       _CopyTo(@this, 0 , target, 0, count);
     }
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -178,7 +175,7 @@ namespace System {
       _CopyTo(@this, srcIndex , target, 0, count);
     }
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -191,7 +188,7 @@ namespace System {
       _CopyTo(@this, 0 , target, tgtIndex, count);
     }
 <#    } else {#>
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int count, <#=EmitTypeDef(typeData)#> target) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -200,7 +197,7 @@ namespace System {
       _CopyTo(@this, 0 , target, 0, count);
     }
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int count, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -210,7 +207,7 @@ namespace System {
       _CopyTo(@this, srcIndex , target, 0, count);
     }
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int count, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
 <#      if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -221,7 +218,7 @@ namespace System {
     }
 <#    }#>
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int srcIndex, <#=EmitTypeDef(typeData)#> target, int tgtIndex, int count) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target, int tgtIndex, int count) {
 <#    if(typeData.CanBeNull)  {#>
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
@@ -240,7 +237,7 @@ namespace System {
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
 
-    <#=EmitMethodHeader("void", "CopyTo", typeData)#>, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count) {
+    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count) {
       <#=EmitThisNullCheck()#>
       <#=EmitArgNullCheck("target")#>
       <#=EmitOffsetTooSmallCheck("srcIndex")#>
@@ -252,7 +249,7 @@ namespace System {
       var bytesNeeded = count<#=EmitFastIntegerMultiply(typeData.size)#>;
       var bytesAvailable = (target.Length - tgtIndex)<#=EmitFastIntegerMultiply(tgtTypeData.size)#>;
       <#=EmitCountTooLargeCheck("bytesNeeded", "bytesAvailable", "count")#>
-      if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) throw new ArgumentException("Need more items to fully cover target items", nameof(count));
+      if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) _ThrowArgumentException(nameof(count), "Need more items to fully cover target items");
 <#        } else {#>
       <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "count")#>
 <#        }#>
@@ -273,54 +270,52 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
-label:
-      switch(count){
-        case 0: return;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-        case <#=i#>:
-<#        for(var j = 0; j < i; ++j) {#>
-          <#=EmitIndexCopy(j)#>
-<#        }#>
-          return;
-<#    }#>
-      }
-
-<#    if(BYTE_COUNT_POINTER > 0 && typeData.size > 0 && typeData.useBlockCopyInsteadOfArrayCopy) {#>
-      if( count > <#=(BYTE_COUNT_POINTER / typeData.size)#>) {
-#if UNSAFE
-        unsafe {
-          fixed(<#=typeData.name#>* sourceFixedPointer = &source[srcIndex])
-          fixed(<#=typeData.name#>* targetFixedPointer = &target[tgtIndex])
-            _CopyTo(<#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>sourceFixedPointer, <#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>targetFixedPointer, count<#=EmitFastIntegerMultiply(typeData.size)#>);
+      for (;;) {
+        switch(count){
+          case 0: return;
+<#      for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
+          case <#=i#>:
+<#          for(var j = 0; j < i; ++j) {#>
+            <#=EmitIndexCopy(j)#><#}#>
+            return;
+<#      }#>
         }
+
+<#      if(BYTE_COUNT_POINTER > 0 && typeData.size > 0 && typeData.useBlockCopyInsteadOfArrayCopy) {#>
+        if( count > <#=(BYTE_COUNT_POINTER / typeData.size)#>) {
+#if UNSAFE
+          unsafe {
+            fixed(<#=typeData.name#>* sourceFixedPointer = &source[srcIndex])
+            fixed(<#=typeData.name#>* targetFixedPointer = &target[tgtIndex])
+              _CopyTo(<#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>sourceFixedPointer, <#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>targetFixedPointer, count<#=EmitFastIntegerMultiply(typeData.size)#>);
+          }
 #else
-        using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        using (var targetFixedPointer = DisposableGCHandle.Pin(target))
-          _CopyTo(sourceFixedPointer.AddrOfPinnedObject(), srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, targetFixedPointer.AddrOfPinnedObject(), tgtIndex<#=EmitFastIntegerMultiply(typeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>);
+          using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
+          using (var targetFixedPointer = DisposableGCHandle.Pin(target))
+            _CopyTo(sourceFixedPointer.AddrOfPinnedObject(), srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, targetFixedPointer.AddrOfPinnedObject(), tgtIndex<#=EmitFastIntegerMultiply(typeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>);
 #endif
 
-        return;
-      }
+          return;
+        }
 
-<#    }#>
-<#    if(ELEMENT_COUNT_BLOCK > 0) {#>
-      if(count > <#=ELEMENT_COUNT_BLOCK#>) {
-        <#=(typeData.useBlockCopyInsteadOfArrayCopy ? "Buffer.BlockCopy" : "Array.Copy")#>(source, srcIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, target, tgtIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, count<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>);
-        return;
-      }
+<#      }#>
+<#      if(ELEMENT_COUNT_BLOCK > 0) {#>
+        if(count > <#=ELEMENT_COUNT_BLOCK#>) {
+          <#=(typeData.useBlockCopyInsteadOfArrayCopy ? "Buffer.BlockCopy" : "Array.Copy")#>(source, srcIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, target, tgtIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, count<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>);
+          return;
+        }
 
-<#    }#>
-      while(count >= <#=INDEX_LOOP_UNROLL#>) {
-<#    for(var i = 0; i < INDEX_LOOP_UNROLL; ++i) {#>
-        <#=EmitIndexCopy(i)#>
-<#    }#>
+<#      }#>
+        while(count >= <#=INDEX_LOOP_UNROLL#>) {
+<#      for(var i = 0; i < INDEX_LOOP_UNROLL; ++i) {#>
+          <#=EmitIndexCopy(i)#><#}#>
           
-        srcIndex += <#=INDEX_LOOP_UNROLL#>;
-        tgtIndex += <#=INDEX_LOOP_UNROLL#>;
-        count -= <#=INDEX_LOOP_UNROLL#>;
-      }
+          srcIndex += <#=INDEX_LOOP_UNROLL#>;
+          tgtIndex += <#=INDEX_LOOP_UNROLL#>;
+          count -= <#=INDEX_LOOP_UNROLL#>;
+        }
 
-      goto label;
+      }
     }
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
@@ -342,67 +337,62 @@ label:
 #if UNSAFE
       unsafe { _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count); }
 #else
-byteLoop:
-      switch(count) {
-        case 0: return;
-<#  for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-        case <#=i#>:
-          <#=string.Join("\r\n          ",EmitMarshalCopyBytes(i))#>
-          return;
-<#  }#>
-      }
+      for (;;) {
+        switch(count) {
+          case 0: return;
+<#        for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+          case <#=i#>:
+            <#=string.Join("\n            ",EmitMarshalCopyBytes(i))#>
+            return;
+<#        }#>
+        }
 
 <#  if(MARSHALL_LOOP_UNROLL>1){#>
 
-      <#=string.Join("\r\n      ",EmitMarshalCopyBytes(MARSHALL_SWITCH_COUNT))#>
-      count -= <#=MARSHALL_SWITCH_COUNT#>;
-      srcIndex += <#=MARSHALL_SWITCH_COUNT#>;
-      tgtIndex += <#=MARSHALL_SWITCH_COUNT#>;
+        <#=string.Join("\n        ",EmitMarshalCopyBytes(MARSHALL_SWITCH_COUNT))#>
+        count -= <#=MARSHALL_SWITCH_COUNT#>;
+        srcIndex += <#=MARSHALL_SWITCH_COUNT#>;
+        tgtIndex += <#=MARSHALL_SWITCH_COUNT#>;
     
-      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-      count = count<#=EmitFastIntegerModulo(8)#>;
+        var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
+        count = count<#=EmitFastIntegerModulo(8)#>;
 
-qwordLoop:
+        while (qwordCount > 0) {
+          switch (qwordCount) {
+<#          for(var i = 1; i <= MARSHALL_LOOP_UNROLL; ++i) {#>
+            case <#=i#>: goto qwordDuff<#=(MARSHALL_LOOP_UNROLL - i)#>;<#}#>
+            default: goto qwordDuffOut;
+          }
 
-      switch (qwordCount) {
-        case 0: goto byteLoop;
-<#    for(var i = 1; i <= MARSHALL_LOOP_UNROLL; ++i) {#>
-        case <#=i#>: goto qwordDuff<#=(MARSHALL_LOOP_UNROLL - i)#>;
-<#    }#>
-        default: goto qwordDuffOut;
-      }
+<#      for(var i = 0; i < MARSHALL_LOOP_UNROLL; ++i) {#>
+qwordDuff<#=i#>: <#=EmitMarshalCopyQWord((MARSHALL_LOOP_UNROLL - i - 1) * 8)#><#}#>
 
-<#    for(var i = 0; i < MARSHALL_LOOP_UNROLL; ++i) {#>
-qwordDuff<#=i#>: <#=EmitMarshalCopyQWord((MARSHALL_LOOP_UNROLL - i - 1) * 8)#>;
-<#    }#>
-
-      var processed = qwordCount<#=EmitFastIntegerMultiply(8)#>;
-      srcIndex += processed;
-      tgtIndex += processed;
-      goto byteLoop;
+          var processed = qwordCount<#=EmitFastIntegerMultiply(8)#>;
+          srcIndex += processed;
+          tgtIndex += processed;
+          break;
 
 qwordDuffOut:
 
-      do {
-        <#=string.Join("\r\n        ",EmitMarshalCopyBytes(MARSHALL_LOOP_UNROLL * 8))#>
-        srcIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-        tgtIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-        qwordCount -= <#=MARSHALL_LOOP_UNROLL#>;
-      } while (qwordCount >= <#=MARSHALL_LOOP_UNROLL#>);
+          do {
+            <#=string.Join("\n            ",EmitMarshalCopyBytes(MARSHALL_LOOP_UNROLL * 8))#>
+            srcIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
+            tgtIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
+            qwordCount -= <#=MARSHALL_LOOP_UNROLL#>;
+          } while (qwordCount >= <#=MARSHALL_LOOP_UNROLL#>);
 
-      goto qwordLoop;
+        }
 <#  } else {#>
-      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-      count = count<#=EmitFastIntegerModulo(8)#>;
-      do {
-        <#=string.Join("\r\n        ",EmitMarshalCopyBytes(8))#>
-        srcIndex += 8;
-        tgtIndex += 8;
-        --qwordCount;
-      } while (qwordCount > 0);
-      goto byteLoop;
+        var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
+        count = count<#=EmitFastIntegerModulo(8)#>;
+        do {
+          <#=string.Join("\n          ",EmitMarshalCopyBytes(8))#>
+          srcIndex += 8;
+          tgtIndex += 8;
+          --qwordCount;
+        } while (qwordCount > 0);
 <#  }#>
-
+      }
 #endif
     }
 
@@ -427,7 +417,7 @@ qwordDuffOut:
           case 0: return;
 <#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
           case <#=i#>:
-            <#=string.Join("\r\n            ",EmitSetBytes(i, "value"))#>
+            <#=string.Join("\n            ",EmitSetBytes(i, "value"))#>
             return;
 <#    }#>
           default: {
@@ -521,7 +511,7 @@ qwordDuffOut:
           case 0: return;
 <#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
           case <#=i#>: 
-            <#=string.Join("\r\n            ", EmitMarshalSetBytes(i, "value"))#>
+            <#=string.Join("\n            ", EmitMarshalSetBytes(i, "value"))#>
             return;
 <#    }#>
           default: {
@@ -600,7 +590,7 @@ qwordDuffOut:
           case 0: return;
 <#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
           case <#=i#>:
-            <#=string.Join("\r\n            ",EmitSetBytes(i))#>
+            <#=string.Join("\n            ",EmitSetBytes(i))#>
             return;
 <#    }#>
           default: {
@@ -693,7 +683,7 @@ qwordDuffOut:
           case 0: return;
 <#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
           case <#=i#>: 
-            <#=string.Join("\r\n            ", EmitMarshalSetBytes(i))#>
+            <#=string.Join("\n            ", EmitMarshalSetBytes(i))#>
             return;
 <#    }#>
           default: {
@@ -765,11 +755,11 @@ qwordDuffOut:
 
     #if PLATFORM_X86
     
-    <#=string.Join("\r\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX86, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX86)))#>
+    <#=string.Join("\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX86, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX86)))#>
     
     #else
     
-    <#=string.Join("\r\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX64, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX64)))#>
+    <#=string.Join("\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX64, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX64)))#>
     
     #endif
         
@@ -777,13 +767,29 @@ qwordDuffOut:
 
     #endregion
 
-    <#=string.Join("\r\n    ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
+    <#=string.Join("\n    ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
 
-    <#=string.Join("\r\n    ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
+    <#=string.Join("\n    ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
 
-    <#=string.Join("\r\n    ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
+    <#=string.Join("\n    ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
 
-    <#=string.Join("\r\n    ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
+    <#=string.Join("\n    ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
+
+    #region Throw-Helpers
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void _ThrowArgumentOutOfRangeException(string parameterName, string message) => throw new ArgumentOutOfRangeException(parameterName, message);
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void _ThrowArgumentException(string parameterName, string message) => throw new ArgumentException(message, parameterName);
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void _ThrowArgumentNullException(string parameterName) => throw new ArgumentNullException(parameterName);
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void _ThrowNullReferenceException(string parameterName) => throw new NullReferenceException($@"""{parameterName}"" must not be <null>");
+    
+    #endregion
 
   }
 }
@@ -1186,25 +1192,36 @@ IEnumerable<string> EmitBlockProcess(int size, int unrollCount, Func<int, IEnume
   yield return "}";
 }
 
-string EmitThisNullCheck() => @"if (@this == null) throw new NullReferenceException();";
-string EmitArgNullCheck(string paramName) => string.Format(@"if ({0} == null) throw new ArgumentNullException(nameof({0}));", paramName);
+string EmitThisNullCheck() => @"if (@this == null) _ThrowNullReferenceException(nameof(@this));";
+string EmitArgNullCheck(string paramName) => string.Format(@"if ({0} == null) _ThrowArgumentNullException(nameof({0}));", paramName);
 
-string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) throw new ArgumentOutOfRangeException(nameof({0}), $""Index too small {{{0}}} < 0"");", paramName);
+string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) _ThrowArgumentOutOfRangeException(nameof({0}), $""Index too small {{{0}}} < 0"");", paramName);
 string EmitOffsetTooSmallCheck() => EmitOffsetTooSmallCheck("index");
 
-string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"if ({0} >= {1}) throw new ArgumentOutOfRangeException(nameof({0}), $""Index too large {{{0}}} >= {{{1}}}"");", paramName, limit);
+string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"if ({0} >= {1}) _ThrowArgumentOutOfRangeException(nameof({0}), $""Index too large {{{0}}} >= {{{1}}}"");", paramName, limit);
 string EmitOffsetTooLargeCheck(string limit) => EmitOffsetTooLargeCheck("index", limit);
 string EmitOffsetTooLargeCheck() => EmitOffsetTooLargeCheck("length");
 
-string EmitCountTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) throw new ArgumentOutOfRangeException(nameof({0}), $""Count too small {{{0}}} < 0"");", paramName);
+string EmitCountTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) _ThrowArgumentOutOfRangeException(nameof({0}), $""Count too small {{{0}}} < 0"");", paramName);
 string EmitCountTooSmallCheck() => EmitCountTooSmallCheck("count");
 
-string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"if ({0} > {1}) throw new ArgumentOutOfRangeException(nameof({2}), $""Count too large {{{0}}} > {{{1}}}"");", source, length, paramName);
+string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"if ({0} > {1}) _ThrowArgumentOutOfRangeException(nameof({2}), $""Count too large {{{0}}} > {{{1}}}"");", source, length, paramName);
 string EmitCountTooLargeCheck(string source, string length) => EmitCountTooLargeCheck(source, length, source);
 string EmitCountTooLargeCheck(string length) => EmitCountTooLargeCheck("count", length);
 string EmitCountTooLargeCheck() => EmitCountTooLargeCheck("length");
 
 string EmitMethodHeader(string returnType, string name, TypeData type) => string.Format("public static {0}{1} {2}({3}{4} @this", type.isUnsafeOnly ? "unsafe " : string.Empty, returnType, name, type.isUnsafeOnly ? string.Empty : "this ", EmitTypeDef(type));
 string EmitMethodHeader(string name, TypeData type) => EmitMethodHeader(EmitTypeDef(type), name, type);
+
+IEnumerable<string> EmitMethodHeader2(string returnType, string name, TypeData type) {
+  yield return "#if SUPPORTS_INLINING";
+  yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
+  yield return "#endif";
+  yield return EmitMethodHeader(returnType, name, type);
+}
+
+IEnumerable<string> EmitMethodHeader2(string name, TypeData type) => EmitMethodHeader2(EmitTypeDef(type), name, type);
+
+    
 
 #>
