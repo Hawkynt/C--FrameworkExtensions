@@ -15,6 +15,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />

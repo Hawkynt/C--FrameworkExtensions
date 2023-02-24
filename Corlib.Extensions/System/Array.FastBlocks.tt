@@ -249,7 +249,7 @@ namespace System {
       var bytesNeeded = count<#=EmitFastIntegerMultiply(typeData.size)#>;
       var bytesAvailable = (target.Length - tgtIndex)<#=EmitFastIntegerMultiply(tgtTypeData.size)#>;
       <#=EmitCountTooLargeCheck("bytesNeeded", "bytesAvailable", "count")#>
-      if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) _ThrowArgumentException(nameof(count), "Need more items to fully cover target items");
+      if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) Corlib.Extensions.Guard.AlwaysThrow.CountNotMultipleOfException(nameof(target), count<#=EmitFastIntegerMultiply(typeData.size / tgtTypeData.size)#>, target.Length - tgtIndex);
 <#        } else {#>
       <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "count")#>
 <#        }#>
@@ -775,22 +775,6 @@ qwordDuffOut:
 
     <#=string.Join("\n    ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
 
-    #region Throw-Helpers
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void _ThrowArgumentOutOfRangeException(string parameterName, string message) => throw new ArgumentOutOfRangeException(parameterName, message);
-    
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void _ThrowArgumentException(string parameterName, string message) => throw new ArgumentException(message, parameterName);
-    
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void _ThrowArgumentNullException(string parameterName) => throw new ArgumentNullException(parameterName);
-    
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void _ThrowNullReferenceException(string parameterName) => throw new NullReferenceException($@"""{parameterName}"" must not be <null>");
-    
-    #endregion
-
   }
 }
 
@@ -1192,20 +1176,20 @@ IEnumerable<string> EmitBlockProcess(int size, int unrollCount, Func<int, IEnume
   yield return "}";
 }
 
-string EmitThisNullCheck() => @"if (@this == null) _ThrowNullReferenceException(nameof(@this));";
-string EmitArgNullCheck(string paramName) => string.Format(@"if ({0} == null) _ThrowArgumentNullException(nameof({0}));", paramName);
+string EmitThisNullCheck() => @"if (@this == null) Corlib.Extensions.Guard.AlwaysThrow.NullReferenceException(nameof(@this));";
+string EmitArgNullCheck(string paramName) => string.Format(@"if ({0} == null) Corlib.Extensions.Guard.AlwaysThrow.ArgumentNullException(nameof({0}));", paramName);
 
-string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) _ThrowArgumentOutOfRangeException(nameof({0}), $""Index too small {{{0}}} < 0"");", paramName);
+string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) Corlib.Extensions.Guard.AlwaysThrow.IndexTooLowException(nameof({0}), {0});", paramName);
 string EmitOffsetTooSmallCheck() => EmitOffsetTooSmallCheck("index");
 
-string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"if ({0} >= {1}) _ThrowArgumentOutOfRangeException(nameof({0}), $""Index too large {{{0}}} >= {{{1}}}"");", paramName, limit);
+string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"if ({0} >= {1}) Corlib.Extensions.Guard.AlwaysThrow.IndexTooHighException(nameof({0}), {0}, {1});", paramName, limit);
 string EmitOffsetTooLargeCheck(string limit) => EmitOffsetTooLargeCheck("index", limit);
 string EmitOffsetTooLargeCheck() => EmitOffsetTooLargeCheck("length");
 
-string EmitCountTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) _ThrowArgumentOutOfRangeException(nameof({0}), $""Count too small {{{0}}} < 0"");", paramName);
+string EmitCountTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) Corlib.Extensions.Guard.AlwaysThrow.CountTooLowException(nameof({0}), {0});", paramName);
 string EmitCountTooSmallCheck() => EmitCountTooSmallCheck("count");
 
-string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"if ({0} > {1}) _ThrowArgumentOutOfRangeException(nameof({2}), $""Count too large {{{0}}} > {{{1}}}"");", source, length, paramName);
+string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"if ({0} > {1}) Corlib.Extensions.Guard.AlwaysThrow.CountTooHighException(nameof({2}), {0}, {1});", source, length, paramName);
 string EmitCountTooLargeCheck(string source, string length) => EmitCountTooLargeCheck(source, length, source);
 string EmitCountTooLargeCheck(string length) => EmitCountTooLargeCheck("count", length);
 string EmitCountTooLargeCheck() => EmitCountTooLargeCheck("length");

@@ -21,8 +21,8 @@
 
 /*
  *  This file provides attributes, which are introduced in certain framework 
- *  version thus allowing a modern compiler to produce code targeting older
- *  framework version.
+ *  versions thus allowing a modern compiler to produce code targeting older
+ *  framework versions.
  *
  */
 
@@ -70,4 +70,16 @@ namespace System.Runtime.CompilerServices {
   sealed class ExtensionAttribute : Attribute { }
 #endif
 
+}
+
+namespace System.Diagnostics.CodeAnalysis {
+#if !SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
+  [AttributeUsage(AttributeTargets.Method)]
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DoesNotReturnAttribute: Attribute { }
+#endif
 }
