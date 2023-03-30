@@ -92,86 +92,42 @@ as the last line before </Project> like
         <DefineConstants Condition="'$(PlatformTarget)' == 'AnyCPU' OR '$(PlatformTarget)' == ''">$(DefineConstants);PLATFORM_ANYCPU</DefineConstants>
         
         <!-- enable support compilation symbols -->
+        <!-- because the msbuild has problems when using newlines in "DefineConstants" sections and generates pseudo-warnings, I'll use lots of spaces and you should use word-wrap when editing in Notepad++ and the following line of spaces
+                                                                                                                                                                                                                   
+        -->
         
         <!-- Framework 3.5 -->
-        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('3.5')))) &gt;= 0)">
-          $(DefineConstants);
-          SUPPORTS_ACTION_FUNC;
-          SUPPORTS_EXTENSIONS;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('3.5')))) &gt;= 0)">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_ACTION_FUNC;                                                                                                                                                                                                                   SUPPORTS_EXTENSIONS;                                                                                                                                                                                                                   </DefineConstants>
 
         <!-- Framework 4.0 -->
-        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.0')))) &gt;= 0)">
-          $(DefineConstants);
-          SUPPORTS_ACTION_FUNC_5;
-          SUPPORTS_ASYNC;
-          SUPPORTS_CONCURRENT_COLLECTIONS;
-          SUPPORTS_CONDITIONAL_WEAK_TABLE;
-          SUPPORTS_CONTRACTS;
-          SUPPORTS_ENUMERATING_IO;
-          SUPPORTS_HAS_FLAG;
-          SUPPORTS_IS_NULL_OR_WHITESPACE;
-          SUPPORTS_JOIN_ENUMERABLES;
-          SUPPORTS_LINQ_PARAMETERS;
-          SUPPORTS_PATH_COMBINE_ARRAYS;
-          SUPPORTS_POINTER_ARITHMETIC;
-          SUPPORTS_SLIM_SEMAPHORES;
-          SUPPORTS_STOPWATCH_RESTART;
-          SUPPORTS_STREAM_COPY;
-          SUPPORTS_STRING_BUILDER_CLEAR;
-          SUPPORTS_TIMESPAN_PROVIDER;
-          SUPPORTS_TUPLES;
-          NEEDS_RNG_DISPOSE;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.0')))) &gt;= 0)">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_ACTION_FUNC_5;                                                                                                                                                                                                                   SUPPORTS_ASYNC;                                                                                                                                                                                                                   SUPPORTS_CONCURRENT_COLLECTIONS;                                                                                                                                                                                                                   SUPPORTS_CONDITIONAL_WEAK_TABLE;                                                                                                                                                                                                                   SUPPORTS_CONTRACTS;                                                                                                                                                                                                                   SUPPORTS_ENUMERATING_IO;                                                                                                                                                                                                                   SUPPORTS_HAS_FLAG;                                                                                                                                                                                                                   SUPPORTS_IS_NULL_OR_WHITESPACE;                                                                                                                                                                                                                   SUPPORTS_JOIN_ENUMERABLES;                                                                                                                                                                                                                   SUPPORTS_LINQ_PARAMETERS;                                                                                                                                                                                                                   SUPPORTS_PATH_COMBINE_ARRAYS;                                                                                                                                                                                                                   SUPPORTS_POINTER_ARITHMETIC;                                                                                                                                                                                                                   SUPPORTS_SLIM_SEMAPHORES;                                                                                                                                                                                                                   SUPPORTS_STOPWATCH_RESTART;                                                                                                                                                                                                                   SUPPORTS_STREAM_COPY;                                                                                                                                                                                                                   SUPPORTS_STRING_BUILDER_CLEAR;                                                                                                                                                                                                                   SUPPORTS_TIMESPAN_PROVIDER;                                                                                                                                                                                                                   SUPPORTS_TUPLES;                                                                                                                                                                                                                   NEEDS_RNG_DISPOSE;                                                                                                                                                                                                                   SUPPORTS_LAZY;                                                                                                                                                                                                                   </DefineConstants>
         
         <!-- Framework 4.5 -->
-        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5')))) &gt;= 0)">
-          $(DefineConstants);
-          SUPPORTS_CALLER_MEMBER_NAME;
-          SUPPORTS_DISPATCHER_LAMBDA;
-          SUPPORTS_INLINING;
-          SUPPORTS_METHODINFO_CREATEDELEGATE;
-          SUPPORTS_READ_ONLY_COLLECTIONS;
-          SUPPORTS_STREAM_ASYNC;
-          SUPPORTS_WEBCLIENT_ASYNC;
-          SUPPORTS_TASK_RUN;
-        </DefineConstants>
-
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.5')))) &gt;= 0)">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_CALLER_MEMBER_NAME;                                                                                                                                                                                                                   SUPPORTS_DISPATCHER_LAMBDA;                                                                                                                                                                                                                   SUPPORTS_INLINING;                                                                                                                                                                                                                   SUPPORTS_METHODINFO_CREATEDELEGATE;                                                                                                                                                                                                                  SUPPORTS_READ_ONLY_COLLECTIONS;                                                                                                                                                                                                                   SUPPORTS_STREAM_ASYNC;                                                                                                                                                                                                                   SUPPORTS_WEBCLIENT_ASYNC;                                                                                                                                                                                                                   SUPPORTS_TASK_RUN;                                                                                                                                                                                                                   </DefineConstants>
+        
+        <!-- Framework 4.7 -->
+        <DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('4.7')))) &gt;= 0)">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_TUPLE_ELEMENT_NAMES_ATTRIBUTE;                                                                                                                                                                                                                   SUPPORTS_VALUE_TUPLE;                                                                                                                                                                                                                   </DefineConstants>
+        
+        <!-- Standard 2.0 -->
+        <DefineConstants Condition="$(IsNetStandard) AND $([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_HTTPCLIENT;                                                                                                                                                                                                                      </DefineConstants>
+        
         <!-- Standard 2.1 -->
-        <DefineConstants Condition="$(IsNetStandard) AND $([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0">
-          $(DefineConstants);
-          SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE;
-          SUPPORTS_MATHF;
-          SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetStandard) AND $([System.Version]::Parse('$(NetStandardVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_MATHF;                                                                                                                                                                                                                   SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE;                                                                                                                                                                                                                  SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE;                                                                                                                                                                                                                   SUPPORTS_DISALLOW_NULL_ATTRIBUTE;                                                                                                                                                                                                                   SUPPORTS_RANGE_AND_INDEX;                                                                                                                                                                                                                   </DefineConstants>
         
         <!-- Core 2.0 -->
-        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0">
-          $(DefineConstants);
-          SUPPORTS_MATHF;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_MATHF;                                                                                                                                                                                                                      SUPPORTS_HTTPCLIENT;                                                                                                                                                                                                                      </DefineConstants>
 
         <!-- Core 2.1 -->
-        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0">
-          $(DefineConstants);
-          SUPPORTS_RNG_FILL;
-          SUPPORTS_SPAN;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_RNG_FILL;                                                                                                                                                                                                                   SUPPORTS_SPAN;                                                                                                                                                                                                                      </DefineConstants>
 
         <!-- Core 3.0 -->
-        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.0')))) &gt;= 0">
-          $(DefineConstants);
-          SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE;
-          SUPPORTS_FMADD;
-          SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('3.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_FMADD;                                                                                                                                                                                                                   SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE;                                                                                                                                                                                                                  SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE;                                                                                                                                                                                                                   SUPPORTS_DISALLOW_NULL_ATTRIBUTE;                                                                                                                                                                                                                   SUPPORTS_RANGE_AND_INDEX;                                                                                                                                                                                                                   </DefineConstants>
         
         <!-- Core 5.0 -->
-        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &gt;= 0">
-          $(DefineConstants);
-          DEPRECATED_BINARY_FORMATTER;
-          DEPRECATED_UTF7;
-        </DefineConstants>
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   DEPRECATED_BINARY_FORMATTER;                                                                                                                                                                                                                   DEPRECATED_UTF7;                                                                                                                                                                                                                    </DefineConstants>
+        
+        <!-- Core 6.0 -->
+        <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('6.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_CALLER_ARGUMENT_EXPRESSION_ATTRIBUTE;                                                                                                                                                                                                                    </DefineConstants>
         
     </PropertyGroup>
     
