@@ -21,6 +21,7 @@
 #if SUPPORTS_ASYNC
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -42,7 +43,7 @@ namespace System.Collections.Concurrent {
     /// <param name="this">This <see cref="ConcurrentDictionary"/>.</param>
     /// <param name="key">The key.</param>
     /// <param name="value">The value.</param>
-    public static void AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TKey key, TValue value) {
+    public static void AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this,[DisallowNull] TKey key, TValue value) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(!ReferenceEquals(key, null));

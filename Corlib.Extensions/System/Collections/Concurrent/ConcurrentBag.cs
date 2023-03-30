@@ -36,13 +36,12 @@ namespace System.Collections.Concurrent {
     /// Clears the specified Bag.
     /// </summary>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="This">This ConcurrentBag.</param>
-    public static void Clear<TValue>(this ConcurrentBag<TValue> This) {
+    /// <param name="this">This <see cref="ConcurrentBag{T}"/></param>
+    public static void Clear<TValue>(this ConcurrentBag<TValue> @this) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-      TValue dummy;
-      while (This.TryTake(out dummy)) { }
+      while (@this.TryTake(out _)) { }
     }
   }
 }

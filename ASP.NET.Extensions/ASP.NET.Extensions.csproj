@@ -20,6 +20,7 @@
     <FileVersion>1.0.0.0</FileVersion>
     <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
     <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
+    <CheckEolTargetFramework>False</CheckEolTargetFramework>
   </PropertyGroup>
   
   <ItemGroup>
