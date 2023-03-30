@@ -269,7 +269,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
+    private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
       for (;;) {
         switch(count){
           case 0: return;

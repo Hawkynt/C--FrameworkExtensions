@@ -303,7 +303,6 @@ namespace System {
 
 #if !UNSAFE
 
-    [SecurityPermission(SecurityAction.InheritanceDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
     private sealed class DisposableGCHandle<TValue> : IDisposable where TValue : class {
       private GCHandle handle;
 
@@ -1232,25 +1231,42 @@ namespace System {
     /// <typeparam name="TArray">The type of the array</typeparam>
     /// <param name="lengths">The lengths in all dimensions</param>
     /// <returns>The resulting array</returns>
-    public static TArray CreatedJaggedArray<TArray>(params int[] lengths)
-      => (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths)
-    ;
+    public static TArray CreatedJaggedArray<TArray>(params int[] lengths) {
+      
+      // ReSharper disable once VariableHidesOuterVariable
+      object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
 
-    private static object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
+        // create array in current dimension
+        var result = Array.CreateInstance(arrayType, lengths[index]);
+        var elementType = arrayType.GetElementType();
+        if (elementType == null)
+          return result;
 
-      // create array in current dimension
-      var result = Array.CreateInstance(arrayType, lengths[index]);
-      var elementType = arrayType.GetElementType();
-      if (elementType == null)
+        // set next sub-dimension
+        var nextIndex = index + 1;
+        for (var i = 0; i < lengths[index]; ++i)
+          result.SetValue(_InitializeJaggedArray(elementType, nextIndex, lengths), i);
+
         return result;
+      }
 
-      // set next sub-dimension
-      var nextIndex = index + 1;
-      for (var i = 0; i < lengths[index]; ++i)
-        result.SetValue(_InitializeJaggedArray(elementType, nextIndex, lengths), i);
-
-      return result;
+      return (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths);
     }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string ToStringInstance(this char[] @this) => new(@this);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new string(@this, startIndex, @this.Length - startIndex);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new string(@this, startIndex, length);
 
     #region high performance linq for arrays
 
