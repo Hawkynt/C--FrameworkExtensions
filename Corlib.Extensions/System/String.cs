@@ -34,6 +34,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Corlib.Extensions.Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -266,6 +267,8 @@ namespace System {
       var totalLen = @this.Length;
       return @this.Substring(totalLen - Math.Min(totalLen, length));
     }
+    
+    private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().ToHashSet(c=>c));
 
     /// <summary>
     /// Sanitizes the text to use as a filename.
@@ -273,9 +276,17 @@ namespace System {
     /// <param name="this">This String.</param>
     /// <returns>The sanitized string.</returns>
     public static string SanitizeForFileName(this string @this) {
-      foreach (var c in Path.GetInvalidFileNameChars())
-        @this = @this.Replace(c, '_');
-      return @this;
+      if (IsNullOrEmpty(@this))
+        AlwaysThrow.ArgumentNullException(nameof(@this));
+
+      var invalidFileNameChars = _INVALID_FILE_NAME_CHARS.Value;
+      var result = @this.ToCharArray();
+      for (var i = 0; i < result.Length; ++i) {
+        if (invalidFileNameChars.Contains(result[i]))
+          result[i] = '_';
+      }
+
+      return result.ToStringInstance();
     }
 
     #region needed consts for converting filename patterns into regexes
