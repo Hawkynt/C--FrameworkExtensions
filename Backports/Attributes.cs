@@ -30,6 +30,21 @@
 // ReSharper disable RedundantAttributeUsageProperty
 namespace System.Runtime.CompilerServices {
 
+
+#if !SUPPORTS_CALLER_ARGUMENT_EXPRESSION_ATTRIBUTE
+  [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class CallerArgumentExpressionAttribute : Attribute {
+    public string ParameterName { get; }
+    public CallerArgumentExpressionAttribute(string parameterName) => this.ParameterName = parameterName;
+  }
+#endif
+
 #if !SUPPORTS_CALLER_MEMBER_NAME
   [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
 
@@ -82,4 +97,15 @@ namespace System.Diagnostics.CodeAnalysis {
 #endif
   sealed class DoesNotReturnAttribute: Attribute { }
 #endif
+
+#if !SUPPORTS_DISALLOW_NULL_ATTRIBUTE
+  [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, Inherited = false)]
+#if COMPILE_TO_EXTENSION_DLL
+  public
+#else
+  internal
+#endif
+  sealed class DisallowNullAttribute : Attribute { }
+#endif
+
 }
