@@ -23,7 +23,9 @@
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.Threading {
+using System.Threading;
+
+namespace System {
   /// <summary>
   /// Creates a value that is only calculated on first access and then cached.
   /// </summary>

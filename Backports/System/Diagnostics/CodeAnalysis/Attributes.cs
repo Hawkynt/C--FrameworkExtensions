@@ -28,65 +28,6 @@
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantAttributeUsageProperty
-namespace System.Runtime.CompilerServices {
-
-
-#if !SUPPORTS_CALLER_ARGUMENT_EXPRESSION_ATTRIBUTE
-  [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  sealed class CallerArgumentExpressionAttribute : Attribute {
-    public string ParameterName { get; }
-    public CallerArgumentExpressionAttribute(string parameterName) => this.ParameterName = parameterName;
-  }
-#endif
-
-#if !SUPPORTS_CALLER_MEMBER_NAME
-  [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  sealed class CallerMemberNameAttribute : Attribute { }
-
-  [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  sealed class CallerFilePathAttribute : Attribute { }
-
-  [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  sealed class CallerLineNumberAttribute : Attribute { }
-#endif
-
-#if !SUPPORTS_EXTENSIONS
-  [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  sealed class ExtensionAttribute : Attribute { }
-#endif
-
-}
-
 namespace System.Diagnostics.CodeAnalysis {
 #if !SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
   [AttributeUsage(AttributeTargets.Method)]
