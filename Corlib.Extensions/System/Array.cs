@@ -101,11 +101,10 @@ namespace System {
       protected readonly int _start;
 
       public ReadOnlyArraySlice(TItem[] source, int start, int length) {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(source != null);
-#endif
+        Guard.Against.ThisIsNull(source);
+
         if (start + length > source.Length)
-          throw new ArgumentException("Exceeding source length", nameof(length));
+          Guard.AlwaysThrow.ArgumentException(nameof(length), "Exceeding source length");
         
         this._source = source;
         this._start = start;
@@ -165,7 +164,7 @@ namespace System {
         if (start + length > this.Length)
           throw new ArgumentException("Exceeding source length", nameof(length));
 
-        return new ReadOnlyArraySlice<TItem>(this._source, start + this._start, length);
+        return new(this._source, start + this._start, length);
       }
 
       /// <summary>
@@ -200,11 +199,7 @@ namespace System {
     [DebuggerDisplay("{" + nameof(ToString) + "()}")]
     public class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
 
-      public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(source != null);
-#endif
-      }
+      public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) { }
 
       /// <summary>
       /// Gets or sets the <see cref="TItem" /> at the specified index.
@@ -358,17 +353,10 @@ namespace System {
     /// <returns></returns>
     [DebuggerStepThrough]
     public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this TItem[] @this, TItem[] other, IEqualityComparer<TItem> comparer = null) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (other == null)
-        throw new ArgumentNullException(nameof(other));
-
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      if (comparer == null)
-        comparer = EqualityComparer<TItem>.Default;
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(other);
+      
+      comparer ??= EqualityComparer<TItem>.Default;
 
       var targetIndex = 0;
       var currentSourceBuffer = new Queue<int>();
@@ -411,12 +399,12 @@ namespace System {
           ++targetIndex;
         } else {
           var index = currentSourceBuffer.Dequeue();
-          yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default(TItem));
+          yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default);
         }
       }
 
       while (targetIndex < targetLen) {
-        yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default(TItem), targetIndex, other[targetIndex]);
+        yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, targetIndex, other[targetIndex]);
         ++targetIndex;
       }
     }
@@ -439,7 +427,7 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this?.Length > 0 ? @this : null;
+    public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this : null;
 
     /// <summary>
     /// Slices the specified array.
@@ -453,7 +441,11 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) => new ReadOnlyArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
+    public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
+      Guard.Against.ThisIsNull(@this);
+
+      return new(@this, start, length < 0 ? @this.Length - start : length);
+    }
 
     /// <summary>
     /// Slices the specified array for read-only access.
@@ -466,17 +458,14 @@ namespace System {
     /// </returns>
     [DebuggerStepThrough]
     public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Guard.Against.ThisIsNull(@this);
+      
       if (size < 1)
-        throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(size),"Must be > 0");
 
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
-        yield return new ReadOnlyArraySlice<TItem>(@this, index, Math.Min(length - index, size));
+        yield return new(@this, index, Math.Min(length - index, size));
     }
 
     /// <summary>
@@ -491,7 +480,11 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) => new ArraySlice<TItem>(@this, start, length < 0 ? @this.Length - start : length);
+    public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
+      Guard.Against.ThisIsNull(@this);
+
+      return new(@this, start, length < 0 ? @this.Length - start : length);
+    }
 
     /// <summary>
     /// Slices the specified array.
@@ -502,17 +495,14 @@ namespace System {
     /// <returns>An enumeration of slices</returns>
     [DebuggerStepThrough]
     public static IEnumerable<ArraySlice<TItem>> Slices<TItem>(this TItem[] @this, int size) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Guard.Against.ThisIsNull(@this);
+
       if (size < 1)
-        throw new ArgumentOutOfRangeException(nameof(size), size, "Must be > 0");
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(size), "Must be > 0");
 
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
-        yield return new ArraySlice<TItem>(@this, index, Math.Min(length - index, size));
+        yield return new(@this, index, Math.Min(length - index, size));
     }
 
     /// <summary>
@@ -526,17 +516,16 @@ namespace System {
     /// </returns>
     [DebuggerStepThrough]
     public static TItem GetRandomElement<TItem>(this TItem[] @this, Random random = null) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Guard.Against.ThisIsNull(@this);
+      
       if (@this.Length == 0)
-        throw new InvalidOperationException("No Elements!");
+        Guard.AlwaysThrow.InvalidOperationException("No Elements!");
 
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
+#if SUPPORTS_RANDOM_SHARED
+      random ??= Random.Shared;
+#else
+      random ??= new((int)Stopwatch.GetTimestamp());
 #endif
-
-      if (random == null)
-        random = new Random((int)Stopwatch.GetTimestamp());
 
       var index = random.Next(@this.Length);
       return @this[index];
@@ -553,7 +542,11 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) => @this.Length <= index ? default(TItem) : @this[index];
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) {
+      Guard.Against.ThisIsNull(@this);
+
+      return @this.Length <= index ? default : @this[index];
+    }
 
     /// <summary>
     /// Gets the value or default.
@@ -567,7 +560,11 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) => @this.Length <= index ? defaultValue : @this[index];
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) {
+      Guard.Against.ThisIsNull(@this);
+
+      return @this.Length <= index ? defaultValue : @this[index];
+    }
 
     /// <summary>
     /// Gets the value or default.
@@ -581,7 +578,12 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) => @this.Length <= index ? factory() : @this[index];
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(factory);
+
+      return @this.Length <= index ? factory() : @this[index];
+    }
 
     /// <summary>
     /// Gets the value or default.
@@ -595,7 +597,12 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) => @this.Length <= index ? factory(index) : @this[index];
+    public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(factory);
+
+      return @this.Length <= index ? factory(index) : @this[index];
+    }
 
     /// <summary>
     /// Clones the specified array.
@@ -605,13 +612,12 @@ namespace System {
     /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
     [DebuggerStepThrough]
     public static TItem[] SafelyClone<TItem>(this TItem[] @this) {
-      if (@this == null)
-        return null;
+      Guard.Against.ThisIsNull(@this);
 
       var len = @this.Length;
       var result = new TItem[len];
       if (len > 0)
-        Array.Copy(@this, result, len);
+        @this.CopyTo(result, len);
 
       return result;
     }
@@ -627,18 +633,14 @@ namespace System {
     /// <returns>The joines string.</returns>
     [DebuggerStepThrough]
     public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+      Guard.Against.ThisIsNull(@this);
+      
       var result = new StringBuilder();
       var gotElements = false;
       var defaultValue = default(TItem);
 
       // ReSharper disable ForCanBeConvertedToForeach
-      for (var i = 0; i < @this.Length; i++) {
+      for (var i = 0; i < @this.Length; ++i) {
         var item = @this[i];
         if (skipDefaults && (ReferenceEquals(item, defaultValue) || EqualityComparer<TItem>.Default.Equals(item, defaultValue)))
           continue;
@@ -648,7 +650,7 @@ namespace System {
         else
           gotElements = true;
 
-        result.Append(converter == null ? ReferenceEquals(null, item) ? string.Empty : item.ToString() : converter(item));
+        result.Append(converter == null ? item is null ? string.Empty : item.ToString() : converter(item));
       }
       // ReSharper restore ForCanBeConvertedToForeach
 
@@ -664,8 +666,9 @@ namespace System {
     /// <param name="count">The number of elements from there on.</param>
     /// <returns></returns>
     public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
+      Guard.Against.ThisIsNull(@this);
+
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
       Contract.Requires(startIndex + count <= @this.Length);
       Contract.Requires(startIndex >= 0);
 #endif
@@ -673,6 +676,7 @@ namespace System {
       Array.Copy(@this, startIndex, result, 0, count);
       return result;
     }
+    
     /// <summary>
     /// Swaps the specified data in an array.
     /// </summary>
@@ -680,23 +684,23 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="firstElementIndex">The first value.</param>
     /// <param name="secondElementIndex">The the second value.</param>
-    public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      var value = @this[firstElementIndex];
-      @this[firstElementIndex] = @this[secondElementIndex];
-      @this[secondElementIndex] = value;
+    public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
+      Guard.Against.ThisIsNull(@this);
+
+      (@this[firstElementIndex], @this[secondElementIndex]) = (@this[secondElementIndex], @this[firstElementIndex]);
     }
+
     /// <summary>
     /// Shuffles the specified data.
     /// </summary>
     /// <typeparam name="TItem">Type of elements in the array.</typeparam>
     /// <param name="this">This array.</param>
     public static void Shuffle<TItem>(this TItem[] @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+      Guard.Against.ThisIsNull(@this);
+
       var index = @this.Length;
       var random = new Random();
       while (index > 1)
@@ -709,50 +713,57 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <returns>A sorted array copy.</returns>
     public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+      Guard.Against.ThisIsNull(@this);
+
       var result = new TItem[@this.Length];
       @this.CopyTo(result, 0);
       result.QuickSort();
       return result;
     }
+
     /// <summary>
     /// Quick-sort the given array.
     /// </summary>
     /// <typeparam name="TItem">The type of the elements.</typeparam>
     /// <param name="this">This array.</param>
     public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+      Guard.Against.ThisIsNull(@this);
+
       if (@this.Length > 0)
-        QuickSort_Comparable(@this, 0, @this.Length - 1);
+        _QuickSort_Comparable(@this, 0, @this.Length - 1);
     }
-    private static void QuickSort_Comparable<TValue>(TValue[] @this, int left, int right) where TValue : IComparable<TValue> {
+
+    private static void _QuickSort_Comparable<TValue>(TValue[] @this, int left, int right) where TValue : IComparable<TValue> {
       if (@this == null) {
         // nothing to sort
-      } else {
-        var leftIndex = left;
-        var rightIndex = right;
-        var pivotItem = @this[(leftIndex + rightIndex) >> 1];
-        while (leftIndex <= rightIndex) {
-          while (Comparer<TValue>.Default.Compare(pivotItem, @this[leftIndex]) > 0)
-            leftIndex++;
-          while (Comparer<TValue>.Default.Compare(pivotItem, @this[rightIndex]) < 0)
-            rightIndex--;
-          if (leftIndex > rightIndex) {
-            continue;
-          }
-          @this.Swap(leftIndex, rightIndex);
-          leftIndex++;
-          rightIndex--;
-        }
-        if (left < rightIndex)
-          QuickSort_Comparable(@this, left, rightIndex);
-        if (leftIndex < right)
-          QuickSort_Comparable(@this, leftIndex, right);
+        return;
       }
+
+      var comparer = Comparer<TValue>.Default;
+      var leftIndex = left;
+      var rightIndex = right;
+      var pivotItem = @this[(leftIndex + rightIndex) >> 1];
+
+      while (leftIndex <= rightIndex) {
+        while (comparer.Compare(pivotItem, @this[leftIndex]) > 0)
+          ++leftIndex;
+
+        while (comparer.Compare(pivotItem, @this[rightIndex]) < 0)
+          --rightIndex;
+
+        if (leftIndex > rightIndex)
+          continue;
+
+        @this.Swap(leftIndex, rightIndex);
+        ++leftIndex;
+        --rightIndex;
+      }
+
+      if (left < rightIndex)
+        _QuickSort_Comparable(@this, left, rightIndex);
+
+      if (leftIndex < right)
+        _QuickSort_Comparable(@this, leftIndex, right);
     }
 
     /// <summary>
@@ -767,7 +778,12 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) => Array.ConvertAll(@this, converter);
+    public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(converter);
+        
+      return Array.ConvertAll(@this, converter);
+    }
 
     /// <summary>
     /// Converts all elements.
@@ -778,16 +794,17 @@ namespace System {
     /// <param name="converter">The converter function.</param>
     /// <returns>An array containing the converted values.</returns>
     public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(converter != null);
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(converter);
+
       var length = @this.Length;
       var result = new TOutput[length];
-      for (var index = length - 1; index >= 0; index--)
+      for (var index = length - 1; index >= 0; --index)
         result[index] = converter(@this[index], index);
+
       return result;
     }
+
     /// <summary>
     /// Executes a callback with each element in an array.
     /// </summary>
@@ -798,7 +815,12 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) => Array.ForEach(@this, action);
+    public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(action);
+
+      Array.ForEach(@this, action);
+    }
 
 #if SUPPORTS_ASYNC
     /// <summary>
@@ -811,7 +833,12 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) => Parallel.ForEach(@this, action);
+    public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(action);
+
+      Parallel.ForEach(@this, action);
+    }
 
 #endif
 
@@ -822,16 +849,11 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
     public static void ForEach<TItem>(this TItem[] @this, Action<TItem, int> action) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (action == null)
-        throw new ArgumentNullException(nameof(action));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(action);
 
-      for (var intI = @this.Length - 1; intI >= 0; intI--)
-        action(@this[intI], intI);
+      for (var i = @this.Length - 1; i >= 0; --i)
+        action(@this[i], i);
     }
     /// <summary>
     /// Executes a callback with each element in an array.
@@ -840,16 +862,11 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="action">The callback for each element.</param>
     public static void ForEach<TItem>(this TItem[] @this, Action<TItem, long> action) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (action == null)
-        throw new ArgumentNullException(nameof(action));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(action);
 
-      for (var intI = @this.LongLength - 1; intI >= 0; intI--)
-        action(@this[intI], intI);
+      for (var i = @this.LongLength - 1; i >= 0; --i)
+        action(@this[i], i);
     }
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
@@ -858,16 +875,11 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TItem>(this TItem[] @this, Func<TItem, TItem> worker) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (worker == null)
-        throw new ArgumentNullException(nameof(worker));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      for (var index = @this.LongLength - 1; index >= 0; index--)
-        @this[index] = worker(@this[index]);
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(worker);
+      
+      for (var i = @this.LongLength - 1; i >= 0; --i)
+        @this[i] = worker(@this[i]);
     }
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
@@ -876,17 +888,13 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TItem>(this TItem[] @this, Func<TItem, int, TItem> worker) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (worker == null)
-        throw new ArgumentNullException(nameof(worker));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      for (var index = @this.Length - 1; index >= 0; index--)
-        @this[index] = worker(@this[index], index);
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(worker);
+      
+      for (var i = @this.Length - 1; i >= 0; --i)
+        @this[i] = worker(@this[i], i);
     }
+
     /// <summary>
     /// Executes a callback with each element in an array and writes back the result.
     /// </summary>
@@ -894,17 +902,13 @@ namespace System {
     /// <param name="this">This array.</param>
     /// <param name="worker">The callback for each element.</param>
     public static void ForEach<TItem>(this TItem[] @this, Func<TItem, long, TItem> worker) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (worker == null)
-        throw new ArgumentNullException(nameof(worker));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(worker);
 
-      for (var index = @this.LongLength - 1; index >= 0; index--)
-        @this[index] = worker(@this[index], index);
+      for (var i = @this.LongLength - 1; i >= 0; --i)
+        @this[i] = worker(@this[i], i);
     }
+
     /// <summary>
     /// Returns true if there exists an array
     /// </summary>
@@ -915,7 +919,12 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) => Array.Exists(@this, predicate);
+    public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
+
+      return Array.Exists(@this, predicate);
+    }
 
     /// <summary>
     /// Gets the reverse.
@@ -927,11 +936,7 @@ namespace System {
     [Pure]
 #endif
     public static TItem[] Reverse<TItem>(this TItem[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       var length = @this.LongLength;
       var result = new TItem[length];
@@ -956,7 +961,11 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool Contains<TItem>(this TItem[] @this, TItem value) => @this.IndexOf(value) >= 0;
+    public static bool Contains<TItem>(this TItem[] @this, TItem value) {
+      Guard.Against.ThisIsNull(@this);
+
+      return @this.IndexOf(value) >= 0;
+    }
 
     /// <summary>
     /// Determines whether an array contains the specified value or not.
@@ -970,11 +979,7 @@ namespace System {
     [Pure]
 #endif
     public static bool Contains(this Array @this, object value) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       // ReSharper disable LoopCanBeConvertedToQuery
       foreach (var item in @this)
@@ -993,13 +998,10 @@ namespace System {
     [Pure]
 #endif
     public static object[] ToArray(this Array @this) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Guard.Against.ThisIsNull(@this);
+
       if (@this.Rank < 1)
-        throw new ArgumentException("Rank must be > 0", nameof(@this));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+        Guard.AlwaysThrow.ArgumentException(nameof(@this), "Rank must be > 0");
 
       var result = new object[@this.Length];
       var lbound = @this.GetLowerBound(0);
@@ -1019,7 +1021,7 @@ namespace System {
     /// <returns>
     /// The index of the item in the array or -1.
     /// </returns>
-    public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) => IndexOfOrDefault<TItem>(@this, predicate, _INDEX_WHEN_NOT_FOUND);
+    public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) => IndexOfOrDefault(@this, predicate, _INDEX_WHEN_NOT_FOUND);
 
     /// <summary>
     /// Gets the index of the first item matching the predicate, if any or the given default value.
@@ -1032,14 +1034,9 @@ namespace System {
     /// The index of the item in the array or the default value.
     /// </returns>
     public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, int defaultValue) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
+      
       for (var i = 0; i < @this.Length; ++i)
         if (predicate(@this[i]))
           return i;
@@ -1058,13 +1055,8 @@ namespace System {
     /// The index of the item in the array or the default value.
     /// </returns>
     public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<int> defaultValueFactory) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       for (var i = 0; i < @this.Length; ++i)
         if (predicate(@this[i]))
@@ -1084,13 +1076,8 @@ namespace System {
     /// The index of the item in the array or the default value.
     /// </returns>
     public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<TItem[], int> defaultValueFactory) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       for (var i = 0; i < @this.Length; ++i)
         if (predicate(@this[i]))
@@ -1110,14 +1097,9 @@ namespace System {
     /// The index of the item in the array or -1.
     /// </returns>
     public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
-      if (comparer == null)
-        comparer = EqualityComparer<TItem>.Default;
+      comparer ??= EqualityComparer<TItem>.Default;
 
       for (var i = 0; i < @this.Length; ++i)
         if (comparer.Equals(value, @this[i]))
@@ -1134,13 +1116,9 @@ namespace System {
     /// <returns>The index of the item in the array or -1.</returns>
     [DebuggerStepThrough]
     public static int IndexOf(this Array @this, Predicate<object> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
+
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
         if (predicate(@this.GetValue(i)))
           return i;
@@ -1154,11 +1132,16 @@ namespace System {
     /// <typeparam name="TItem">The type of the array elements</typeparam>
     /// <param name="this">This array</param>
     public static void RotateTowardsZero<TItem>(this TItem[] @this) {
+      Guard.Against.ThisIsNull(@this);
+
+      if(@this.Length == 0) 
+        return;
+
       var first = @this[0];
       for (var i = 1; i < @this.Length; ++i)
         @this[i - 1] = @this[i];
 
-      @this[@this.Length - 1] = first;
+      @this[^1] = first;
     }
 
     /// <summary>
@@ -1261,170 +1244,135 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new string(@this, startIndex, @this.Length - startIndex);
+    public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, @this.Length - startIndex);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new string(@this, startIndex, length);
+    public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, length);
 
-    #region high performance linq for arrays
+#region high performance linq for arrays
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     [DebuggerStepThrough]
-    public static bool Any<TItem>(this TItem[] @this) => @this.Length > 0;
+    public static bool Any<TItem>(this TItem[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
+      return @this.Length > 0;
+    }
 
     [DebuggerStepThrough]
     public static bool Any<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       for (var i = 0; i < @this.LongLength; i++)
         if (predicate(@this[i]))
           return true;
+
       return false;
     }
 
     [DebuggerStepThrough]
     public static TItem First<TItem>(this TItem[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       if (@this.Length == 0)
-        throw new InvalidOperationException("No Elements!");
+        Guard.AlwaysThrow.InvalidOperationException("No Elements!");
 
       return @this[0];
     }
 
     [DebuggerStepThrough]
     public static TItem Last<TItem>(this TItem[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+
       var length = @this.LongLength;
       if (length == 0)
-        throw new InvalidOperationException("No Elements!");
+        Guard.AlwaysThrow.InvalidOperationException("No Elements!");
 
-      return @this[length - 1];
+      return @this[^1];
     }
 
     [DebuggerStepThrough]
     public static TItem First<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      for (var i = 0; i < @this.LongLength; i++) {
-        var current = @this[i];
-        if (predicate(current))
-          return current;
-      }
-      throw new InvalidOperationException("No Elements!");
-    }
-
-    [DebuggerStepThrough]
-    public static TItem Last<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      for (var i = @this.LongLength - 1; i >= 0; --i) {
-        var current = @this[i];
-        if (predicate(current))
-          return current;
-      }
-      throw new InvalidOperationException("No Elements!");
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    [DebuggerStepThrough]
-    public static TItem FirstOrDefault<TItem>(this TItem[] @this) => @this.Length == 0 ? default(TItem) : @this[0];
-
-    [DebuggerStepThrough]
-    public static TItem LastOrDefault<TItem>(this TItem[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
-      var length = @this.LongLength;
-      return length == 0 ? default(TItem) : @this[length - 1];
-    }
-
-    [DebuggerStepThrough]
-    public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       for (var i = 0; i < @this.LongLength; ++i) {
         var current = @this[i];
         if (predicate(current))
           return current;
       }
-      return default(TItem);
+      
+      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      return default;
     }
 
     [DebuggerStepThrough]
-    public static TItem LastOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    public static TItem Last<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       for (var i = @this.LongLength - 1; i >= 0; --i) {
         var current = @this[i];
         if (predicate(current))
           return current;
       }
-      return default(TItem);
+      
+      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      return default;
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this[0] : default;
+
+    [DebuggerStepThrough]
+    public static TItem LastOrDefault<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this[^1] : default;
+
+    [DebuggerStepThrough]
+    public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
+
+      for (var i = 0; i < @this.LongLength; ++i) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+
+      return default;
+    }
+
+    [DebuggerStepThrough]
+    public static TItem LastOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
+
+      for (var i = @this.LongLength - 1; i >= 0; --i) {
+        var current = @this[i];
+        if (predicate(current))
+          return current;
+      }
+
+      return default;
     }
 
     [DebuggerStepThrough]
     public static TItem Aggregate<TItem>(this TItem[] @this, Func<TItem, TItem, TItem> func) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (func == null)
-        throw new ArgumentNullException(nameof(func));
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(func);
+
       if (@this.LongLength == 0)
-        throw new InvalidOperationException("No Elements!");
-
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+        Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      
       var result = @this[0];
-      for (var i = 1; i < @this.LongLength; i++)
+      for (var i = 1; i < @this.LongLength; ++i)
         result = func(result, @this[i]);
 
       return result;
@@ -1432,17 +1380,12 @@ namespace System {
 
     [DebuggerStepThrough]
     public static TAccumulate Aggregate<TItem, TAccumulate>(this TItem[] @this, TAccumulate seed, Func<TAccumulate, TItem, TAccumulate> func) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (func == null)
-        throw new ArgumentNullException(nameof(func));
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(func);
+
       if (@this.LongLength == 0)
-        throw new InvalidOperationException("No Elements!");
-
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+        Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      
       var result = seed;
       for (var i = 0; i < @this.LongLength; ++i)
         result = func(result, @this[i]);
@@ -1464,13 +1407,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static int Count<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       var result = 0;
       // ReSharper disable LoopCanBeConvertedToQuery
@@ -1485,13 +1423,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static long LongCount<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       var result = (long)0;
       for (var i = 0; i < @this.LongLength; ++i)
@@ -1504,13 +1437,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, TItem defaultValue) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       foreach (var item in @this)
         if (predicate(item))
@@ -1519,15 +1447,11 @@ namespace System {
       return defaultValue;
     }
 
-    #region these special Array ...s
+#region these special Array ...s
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       for (var i = 0; i < @this.LongLength; ++i) {
         var item = @this.GetValue(i);
@@ -1538,13 +1462,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static object FirstOrDefault(this Array @this, Predicate<object> predicate, object defaultValue = null) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       foreach (var item in @this)
         if (predicate(item))
@@ -1555,25 +1474,16 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<object> Reverse(this Array @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
         yield return @this.GetValue(i);
     }
 
     [DebuggerStepThrough]
-    public static TItem FirstOrDefault<TItem>(this Array @this, Predicate<TItem> predicate, TItem defaultValue = default(TItem)) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    public static TItem FirstOrDefault<TItem>(this Array @this, Predicate<TItem> predicate, TItem defaultValue = default) {
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       foreach (var item in @this)
         if (predicate((TItem)item))
@@ -1584,27 +1494,18 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
         yield return (TResult)@this.GetValue(i);
     }
 
-    #endregion
+#endregion
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (selector == null)
-        throw new ArgumentNullException(nameof(selector));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(selector);
 
       var length = @this.Length;
       for (var i = 0; i < length; ++i)
@@ -1613,13 +1514,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (selector == null)
-        throw new ArgumentNullException(nameof(selector));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(selector);
 
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i)
@@ -1628,13 +1524,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, int, TResult> selector) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (selector == null)
-        throw new ArgumentNullException(nameof(selector));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(selector);
 
       var length = @this.Length;
       for (var i = 0; i < length; ++i)
@@ -1643,13 +1534,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, long, TResult> selector) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (selector == null)
-        throw new ArgumentNullException(nameof(selector));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(selector);
 
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i)
@@ -1658,13 +1544,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i) {
@@ -1676,13 +1557,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Func<TItem, int, bool> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       var length = @this.Length;
       for (var i = 0; i < length; ++i) {
@@ -1694,13 +1570,8 @@ namespace System {
 
     [DebuggerStepThrough]
     public static IEnumerable<TItem> WhereLong<TItem>(this TItem[] @this, Func<TItem, long, bool> predicate) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (predicate == null)
-        throw new ArgumentNullException(nameof(predicate));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(predicate);
 
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i) {
@@ -1710,9 +1581,9 @@ namespace System {
       }
     }
 
-    #endregion
+#endregion
 
-    #region byte-array specials
+#region byte-array specials
 
     private static readonly string _HEX_BYTES_UPPER_CASE = "0123456789ABCDEF";
     private static readonly string _HEX_BYTES_LOWER_CASE = "0123456789abcdef";
@@ -1738,7 +1609,7 @@ namespace System {
         result[j+1] = format[value & 0b1111];
       }
 
-      return new string(result);
+      return new(result);
     }
 
     /// <summary>
@@ -1772,16 +1643,11 @@ namespace System {
     /// <returns>The subsequent elements.</returns>
     [DebuggerStepThrough]
     public static byte[] Range(this byte[] @this, int offset, int count) {
-      if (@this == null)
-        throw new NullReferenceException();
-
+      Guard.Against.ThisIsNull(@this);
       if (offset < 0)
-        throw new ArgumentOutOfRangeException(nameof(offset), offset, "Must be > 0");
+        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(offset),  "Must be > 0");
       if (count < 1)
-        throw new ArgumentOutOfRangeException(nameof(count), count, "Must be > 0");
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(count),  "Must be > 0");
 
       var length = @this.Length;
       var max = count < length - offset ? count : length - offset;
@@ -1801,13 +1667,9 @@ namespace System {
     /// <returns>The original array if it already exceeds the wanted size, or an array with the correct size.</returns>
     [DebuggerStepThrough]
     public static byte[] Padd(this byte[] @this, int length, byte data = 0) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Guard.Against.ThisIsNull(@this);
       if (length < 1)
-        throw new ArgumentOutOfRangeException(nameof(length), length, "Must be > 0");
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(length), "Must be > 0");
 
       var currentSize = @this.Length;
       if (currentSize >= length)
@@ -1832,18 +1694,13 @@ namespace System {
     /// <returns>A GZipped byte array.</returns>
     [DebuggerStepThrough]
     public static byte[] GZip(this byte[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
-      using (var targetStream = new MemoryStream()) {
-        using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
-          gZipStream.Write(@this, 0, @this.Length);
+      using var targetStream = new MemoryStream();
+      using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
+        gZipStream.Write(@this, 0, @this.Length);
 
-        return targetStream.ToArray();
-      }
+      return targetStream.ToArray();
     }
 
     /// <summary>
@@ -1853,27 +1710,22 @@ namespace System {
     /// <returns>The unzipped byte array.</returns>
     [DebuggerStepThrough]
     public static byte[] UnGZip(this byte[] @this) {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
-      using (var targetStream = new MemoryStream()) {
-        using (var sourceStream = new MemoryStream(@this)) {
-          using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress, false)) {
+      using var targetStream = new MemoryStream();
+      using (var sourceStream = new MemoryStream(@this))
+      using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress, false)) {
 
-            // decompress all bytes
-            var buffer = new byte[64 * 1024];
-            var bytesRead = gZipStream.Read(buffer, 0, buffer.Length);
-            while (bytesRead > 0) {
-              targetStream.Write(buffer, 0, bytesRead);
-              bytesRead = gZipStream.Read(buffer, 0, buffer.Length);
-            }
-          }
+        // decompress all bytes
+        var buffer = new byte[64 * 1024];
+        var bytesRead = gZipStream.Read(buffer, 0, buffer.Length);
+        while (bytesRead > 0) {
+          targetStream.Write(buffer, 0, bytesRead);
+          bytesRead = gZipStream.Read(buffer, 0, buffer.Length);
         }
-        return targetStream.ToArray();
       }
+
+      return targetStream.ToArray();
     }
 
 #endregion
@@ -1915,9 +1767,9 @@ namespace System {
     ;
 
     public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<byte[], byte[], int> defaultValueFunc) {
-      if (@this == null || searchString == null)
-        throw new ArgumentNullException();
-
+      Guard.Against.ThisIsNull(@this);
+      Guard.Against.ArgumentIsNull(searchString);
+      
       if (ReferenceEquals(@this, searchString))
         return 0;
 
@@ -1949,11 +1801,11 @@ namespace System {
       return (index < 0 && defaultValueFunc != null) ? defaultValueFunc(@this, searchString) : index;
     }
 
-    internal static int _ContainsNaïve(byte[] haystack, byte[] needle, int offset) {
+    private static int _ContainsNaïve(byte[] haystack, byte[] needle, int offset) {
       var searchStringLength = needle.Length;
-      var dataStringLength = haystack.Length;
+      var dataStringLength = haystack.Length - offset;
 
-      for (var i = 0; i < dataStringLength; ++i) {
+      for (var i = offset; i < dataStringLength; ++i) {
         var found = true;
         for (var j = 0; j < searchStringLength; ++j) {
           if (haystack[i + j] == needle[j])
@@ -1971,7 +1823,7 @@ namespace System {
 #if UNSAFE
     // maximum Length allowed for @this and searchByteArray = 32/64
     // ReSharper disable once SuggestBaseTypeForParameter
-    internal static unsafe int _ContainsBNDM(byte[] haystack, byte[] needle, int offset) {
+    private static unsafe int _ContainsBNDM(byte[] haystack, byte[] needle, int offset) {
       var searchStringLength = needle.Length;
       var dataStringLength = haystack.Length;
 
@@ -2020,7 +1872,7 @@ namespace System {
     }
 #endif
 
-    internal static int _ContainsBoyerMoore(byte[] haystack, byte[] needle, int offset) {
+    private static int _ContainsBoyerMoore(byte[] haystack, byte[] needle, int offset) {
       var searchStringLength = needle.Length;
       var dataStringLength = haystack.Length;
 
@@ -2054,9 +1906,9 @@ namespace System {
       return _INDEX_WHEN_NOT_FOUND;
     }
 
-    #endregion
+#endregion
 
-    #region hash computation
+#region hash computation
 
 
 #if !NET6_0_OR_GREATER
@@ -2071,11 +1923,7 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
-      if (@this == null)
-        throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+      Guard.Against.ThisIsNull(@this);
 
       using var provider = new THashAlgorithm();
       return provider.ComputeHash(@this);
@@ -2093,6 +1941,8 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeSHA512Hash(this byte[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
       using var provider = SHA512.Create();
       return provider.ComputeHash(@this);
     }
@@ -2107,6 +1957,8 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeSHA384Hash(this byte[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
       using var provider = SHA384.Create();
       return provider.ComputeHash(@this);
     }
@@ -2121,6 +1973,8 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeSHA256Hash(this byte[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
       using var provider = SHA256.Create();
       return provider.ComputeHash(@this);
     }
@@ -2135,6 +1989,8 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeSHA1Hash(this byte[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
       using var provider = SHA1.Create();
       return provider.ComputeHash(@this);
     }
@@ -2149,6 +2005,8 @@ namespace System {
 #endif
     [DebuggerStepThrough]
     public static byte[] ComputeMD5Hash(this byte[] @this) {
+      Guard.Against.ThisIsNull(@this);
+      
       using var provider = MD5.Create();
       return provider.ComputeHash(@this);
     }
