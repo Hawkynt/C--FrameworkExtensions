@@ -66,19 +66,14 @@ namespace System {
       /// Gets the parent process of the current process.
       /// </summary>
       /// <returns>An instance of the Process class.</returns>
-      public static Process GetParentProcess() {
-        return GetParentProcess(Process.GetCurrentProcess().Handle);
-      }
+      public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
 
       /// <summary>
       /// Gets the parent process of specified process.
       /// </summary>
       /// <param name="id">The process id.</param>
       /// <returns>An instance of the Process class.</returns>
-      public static Process GetParentProcess(int id) {
-        Process process = Process.GetProcessById(id);
-        return GetParentProcess(process.Handle);
-      }
+      public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
 
       /// <summary>
       /// Gets the parent process of a specified process.
@@ -86,9 +81,8 @@ namespace System {
       /// <param name="handle">The process handle.</param>
       /// <returns>An instance of the Process class or null if an error occurred.</returns>
       public static Process GetParentProcess(IntPtr handle) {
-        ParentProcessUtilities pbi = new ParentProcessUtilities();
-        int returnLength;
-        int status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength);
+        var pbi = new ParentProcessUtilities();
+        var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
         if (status != 0)
           return null;
 
@@ -109,11 +103,13 @@ namespace System {
     /// <param name="stream">The stream.</param>
     /// <param name="targetDirectory">The target directory.</param>
     /// <param name="domain">The domain.</param>
+    // ReSharper disable once SuggestBaseTypeForParameter
     private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
-      var environment = new Dictionary<string, string>();
-      environment.Add("baseDirectory", domain.BaseDirectory);
-      environment.Add("configurationFile", domain.SetupInformation.ConfigurationFile);
-      environment.Add("deleteOnExit", targetDirectory.FullName);
+      var environment = new Dictionary<string, string> {
+        { "baseDirectory", domain.BaseDirectory },
+        { "configurationFile", domain.SetupInformation.ConfigurationFile },
+        { "deleteOnExit", targetDirectory.FullName }
+      };
 
       var formatter = new BinaryFormatter();
       formatter.Serialize(stream, environment);
@@ -126,9 +122,9 @@ namespace System {
     /// <param name="domain">The domain.</param>
     private static void _LoadEnvironmentFrom(Stream stream, AppDomain domain) {
       var formatter = new BinaryFormatter();
-      var environment = formatter.Deserialize(stream) as Dictionary<string, string>;
+      var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
 
-      var baseDirectory = environment["baseDirectory"];
+      // var baseDirectory = environment["baseDirectory"];
       var configurationFile = environment["configurationFile"];
       var directoryToDeleteOnExit = new DirectoryInfo(environment["deleteOnExit"]);
 
@@ -136,23 +132,24 @@ namespace System {
 
       // make sure we're removed from disk after exit
       if (domain.IsDefaultAppDomain())
-        domain.ProcessExit += (s, e) => _SelfDestruct(directoryToDeleteOnExit);
+        domain.ProcessExit += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
       else
-        domain.DomainUnload += (s, e) => _SelfDestruct(directoryToDeleteOnExit);
+        domain.DomainUnload += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
 
-      domain.UnhandledException += (s, e) => _SelfDestruct(directoryToDeleteOnExit);
+      domain.UnhandledException += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
 
       // catch unexpected shutdowns for console applications
       if (Environment.UserInteractive)
-        Console.CancelKeyPress += (s, e) => {
-          if (e.SpecialKey == ConsoleSpecialKey.ControlBreak) {
-            _SelfDestruct(directoryToDeleteOnExit);
-            return;
-          }
-
-          if (e.SpecialKey == ConsoleSpecialKey.ControlC) {
-            _SelfDestruct(directoryToDeleteOnExit);
-            return;
+        Console.CancelKeyPress += (_, e) => {
+          switch (e.SpecialKey) {
+            case ConsoleSpecialKey.ControlBreak:
+              _SelfDestruct(directoryToDeleteOnExit);
+              return;
+            case ConsoleSpecialKey.ControlC:
+              _SelfDestruct(directoryToDeleteOnExit);
+              return;
+            default:
+              return;
           }
         };
     }
@@ -185,7 +182,7 @@ namespace System {
     /// <param name="directoryToDelete">The directory to delete.</param>
     /// <returns>The generated batch file</returns>
     private static FileInfo _WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
-      var result = new FileInfo(Path.Combine(directoryToDelete.Parent.FullName, string.Format("DeletePid-{0}.$$$.bat", Process.GetCurrentProcess().Id)));
+      var result = new FileInfo(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
       if (result.Exists)
         return null;
 
@@ -216,6 +213,8 @@ del ""%~0""
     /// <param name="this">This AppDomain.</param>
     /// <exception cref="System.Exception">Semaphore already present?</exception>
     public static void RerunInTemporaryDirectory(this AppDomain @this) {
+      Guard.Against.ThisIsNull(@this);
+
       var executable = GetExecutable(@this);
       var semaphoreName = executable.Name;
 
@@ -227,7 +226,7 @@ del ""%~0""
         try {
           parentSemaphore.Connect(0);
         } catch {
-          ;
+          // ignored
         }
 
         // if we could connect, we're the newly spawned child process
@@ -246,11 +245,11 @@ del ""%~0""
         // restart child with original command line if possible to pass all arguments
         var cmd = Environment.CommandLine;
         if (cmd.StartsWith("\"")) {
-          var index = cmd.IndexOf("\"", 1);
-          cmd = index < 0 ? string.Empty : cmd.Substring(index + 1);
+          var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
+          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
         } else {
-          var index = cmd.IndexOf(" ");
-          cmd = index < 0 ? string.Empty : cmd.Substring(index + 1);
+          var index = cmd.IndexOf(" ", StringComparison.Ordinal);
+          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
         }
 
         // start a child process
@@ -275,6 +274,7 @@ del ""%~0""
     ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.
     /// </returns>
     /// <exception cref="Exception">Semaphore already present?</exception>
+    // ReSharper disable once SuggestBaseTypeForParameter
     private static bool _Fork(FileInfo executable, string semaphoreName) {
       var parentProcess = ParentProcessUtilities.GetParentProcess();
       var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
@@ -293,16 +293,16 @@ del ""%~0""
       var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
       using (var mySemaphore = new Semaphore(0, 1, mySemaphoreName, out createNew)) {
         if (!createNew)
-          throw new Exception("Semaphore already present?");
+          throw new("Semaphore already present?");
 
         // restart child with original command line if possible to pass all arguments
         var cmd = Environment.CommandLine;
         if (cmd.StartsWith("\"")) {
-          var index = cmd.IndexOf("\"", 1);
-          cmd = index < 0 ? string.Empty : cmd.Substring(index + 1);
+          var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
+          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
         } else {
-          var index = cmd.IndexOf(" ");
-          cmd = index < 0 ? string.Empty : cmd.Substring(index + 1);
+          var index = cmd.IndexOf(" ", StringComparison.Ordinal);
+          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
         }
 
         // start a child process
@@ -322,6 +322,8 @@ del ""%~0""
     /// <param name="this">This AppDomain.</param>
     /// <returns><c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.</returns>
     public static bool Fork(this AppDomain @this) {
+      Guard.Against.ThisIsNull(@this);
+
       var executable = GetExecutable(@this);
       return _Fork(executable, executable.Name);
     }
@@ -334,7 +336,7 @@ del ""%~0""
     private static DirectoryInfo _CreateTempDirectory() {
       var file = new FileInfo(Path.GetTempFileName());
       var directory = file.Directory;
-      var result = new DirectoryInfo(Path.Combine(directory.FullName, file.Name));
+      var result = new DirectoryInfo(Path.Combine(directory?.FullName ?? ".", file.Name));
       file.Delete();
       result.Create();
       return result;
@@ -377,7 +379,7 @@ del ""%~0""
         .EnumerateFiles("*.dll", SearchOption.AllDirectories)
         .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
       )
-        _CopyAssemblyAndDebugInformation(dll, new FileInfo(Path.Combine(target.FullName, dll.FullName.Substring(sourceDirectory.FullName.Length + 1))).Directory, true);
+        _CopyAssemblyAndDebugInformation(dll, new FileInfo(Path.Combine(target.FullName, dll.FullName[(sourceDirectory.FullName.Length + 1)..])).Directory, true);
 
       return result;
     }
@@ -389,12 +391,14 @@ del ""%~0""
     /// <returns></returns>
     [DebuggerStepThrough]
     public static FileInfo GetExecutable(this AppDomain @this) {
+      Guard.Against.ThisIsNull(@this);
+
       var fileName = @this.FriendlyName;
       const string vsHostPostfix = ".vshost.exe";
       if (fileName.EndsWith(vsHostPostfix))
-        fileName = fileName.Substring(0, fileName.Length - vsHostPostfix.Length) + ".exe";
+        fileName = fileName[..^vsHostPostfix.Length] + ".exe";
 
-      return new FileInfo(Path.Combine(@this.BaseDirectory, fileName));
+      return new(Path.Combine(@this.BaseDirectory, fileName));
     }
 
     /// <summary>
@@ -405,7 +409,7 @@ del ""%~0""
     [DebuggerStepThrough]
     private static FileInfo _GetDebuggingInformationFile(FileInfo assemblyFile) {
       var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
-      var result = new FileInfo(Path.Combine(assemblyFile.Directory.FullName, pdb));
+      var result = new FileInfo(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
       return result;
     }
 
