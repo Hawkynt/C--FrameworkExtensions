@@ -19,11 +19,12 @@
 */
 #endregion
 
+#if !SUPPORTS_LAZY
+
+using System.Threading;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
-
-using System.Threading;
 
 namespace System {
   /// <summary>
@@ -37,18 +38,18 @@ namespace System {
   internal
 #endif
   class Lazy<TValue> {
-    private readonly ManualResetEventSlim _valueIsReady = new ManualResetEventSlim(false);
-    private readonly object _lock = new object();
+    private readonly ManualResetEventSlim _valueIsReady = new(false);
+    private readonly object _lock = new();
     private TValue _value;
     private readonly Func<TValue> _function;
+
     #region ctor
     /// <summary>
     /// Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;"/> class.
     /// </summary>
     /// <param name="function">The function that should create the value.</param>
-    public Lazy(Func<TValue> function) {
-      this._function = function;
-    }
+    public Lazy(Func<TValue> function) => this._function = function;
+
     #endregion
     /// <summary>
     /// Gets a value indicating whether this instance has a value already calculated.
@@ -56,38 +57,35 @@ namespace System {
     /// <value>
     ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
     /// </value>
-    public bool HasValue {
-      get {
-        return (this._valueIsReady.IsSet);
-      }
-    }
+    public bool HasValue => this._valueIsReady.IsSet;
+
     /// <summary>
     /// Gets a value indicating whether this instance completed calculation.
     /// </summary>
     /// <value>
     /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
     /// </value>
-    public bool IsCompleted {
-      get {
-        return (this.HasValue);
-      }
-    }
+    public bool IsCompleted => this.HasValue;
+
     /// <summary>
     /// Gets the value.
     /// </summary>
     public TValue Value {
       get {
-        if (!this.HasValue)
-          lock (this._lock)
-            if (!this.HasValue) {
-              this._value = this._function();
-              this._valueIsReady.Set();
-            }
-        return (this._value);
+        if (this.HasValue)
+          return this._value;
+
+        lock (this._lock)
+          if (!this.HasValue) {
+            this._value = this._function();
+            this._valueIsReady.Set();
+          }
+
+        return this._value;
       }
     }
     /// <summary>
-    /// Performs an implicit conversion from <see cref="System.Threading.Lazy&lt;TValue&gt;"/> to <see cref="TValue"/>.
+    /// Performs an implicit conversion from <see cref="Lazy"/> to <see cref="TValue"/>.
     /// </summary>
     /// <param name="lazy">The obj lazy.</param>
     /// <returns>
@@ -97,7 +95,7 @@ namespace System {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(lazy != null);
 #endif
-      return (lazy.Value);
+      return lazy.Value;
     }
     /// <summary>
     /// Returns a <see cref="System.String"/> that represents this instance.
@@ -105,9 +103,7 @@ namespace System {
     /// <returns>
     /// A <see cref="System.String"/> that represents this instance.
     /// </returns>
-    public override string ToString() {
-      return (this.HasValue ? this.Value.ToString() : ("Lazy of type:" + typeof(TValue).Name));
-    }
+    public override string ToString() => this.HasValue ? this.Value.ToString() : "Lazy of type:" + typeof(TValue).Name;
   }
 
   /// <summary>
@@ -124,7 +120,7 @@ namespace System {
     public Lazy(Action action) {
       this._lazy = new Lazy<byte>(() => {
         action();
-        return (byte.MaxValue);
+        return byte.MaxValue;
       });
     }
     /// <summary>
@@ -133,18 +129,13 @@ namespace System {
     /// <value>
     /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
     /// </value>
-    public bool IsCompleted {
-      get {
-        return (this._lazy.HasValue);
-      }
-    }
+    public bool IsCompleted => this._lazy.HasValue;
+
     /// <summary>
     /// Triggers the action.
     /// </summary>
-    public byte Value {
-      get {
-        return (this._lazy.Value);
-      }
-    }
+    public byte Value => this._lazy.Value;
   }
 }
+
+#endif
