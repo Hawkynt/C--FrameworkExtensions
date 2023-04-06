@@ -43,6 +43,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Guard\Against.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Against.T4.cs</LastGenOutput>
+    </None>
     <None Update="System\IO\FileInfo.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FileInfo.T4.cs</LastGenOutput>
@@ -164,6 +168,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Type.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Guard\Against.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Against.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Action.cs">
       <DesignTime>True</DesignTime>

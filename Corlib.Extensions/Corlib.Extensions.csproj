@@ -35,14 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Guard\Against.T4.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Against.T4.tt</DependentUpon>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.Reflection.Emit.Lightweight" Version="*" />
   </ItemGroup>
 
