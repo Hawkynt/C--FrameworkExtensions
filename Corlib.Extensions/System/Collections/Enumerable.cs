@@ -21,78 +21,77 @@
 
 using System.Linq;
 
-namespace System.Collections {
+namespace System.Collections; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class EnumerableExtensions {
+static partial class EnumerableExtensions {
 
-    /// <summary>
-    /// Counts the elements.
-    /// </summary>
-    /// <param name="this">The collection.</param>
-    /// <returns>the number of elements</returns>
-    public static int Count(this IEnumerable @this) {
-      if (@this == null) throw new NullReferenceException();
+  /// <summary>
+  /// Counts the elements.
+  /// </summary>
+  /// <param name="this">The collection.</param>
+  /// <returns>the number of elements</returns>
+  public static int Count(this IEnumerable @this) {
+    Guard.Against.ThisIsNull(@this);
 
-      return Enumerable.Count(@this.Cast<object>());
-    }
-
-    /// <summary>
-    /// Executes a callback for each item
-    /// </summary>
-    /// <typeparam name="TIn">The type of the items.</typeparam>
-    /// <param name="this">The collection.</param>
-    /// <param name="action">The call to execute.</param>
-    public static void ForEach<TIn>(this IEnumerable @this, Action<TIn> action) {
-      if (@this == null) throw new NullReferenceException();
-      if (action == null) throw new ArgumentNullException(nameof(action));
-
-      foreach (var item in @this)
-        action((TIn)item);
-    }
-
-    /// <summary>
-    /// Converts all.
-    /// </summary>
-    /// <typeparam name="TIn">The type of the input.</typeparam>
-    /// <typeparam name="TOut">The type of the output.</typeparam>
-    /// <param name="this">The collection to convert.</param>
-    /// <param name="converter">The conversion function.</param>
-    /// <returns></returns>
-    public static IEnumerable ConvertAll<TIn, TOut>(this IEnumerable @this, Func<TIn, TOut> converter) {
-      if (@this == null) throw new NullReferenceException();
-      if (converter == null) throw new ArgumentNullException(nameof(converter));
-
-      // ReSharper disable LoopCanBeConvertedToQuery
-      foreach (var item in @this)
-        // ReSharper restore LoopCanBeConvertedToQuery
-        yield return converter((TIn)item);
-    }
-
-    /// <summary>
-    /// Converts a non-generic enumeration into an array of objects.
-    /// </summary>
-    /// <param name="this">This enumeration..</param>
-    /// <returns>The array containing the elements.</returns>
-    public static object[] ToObjectArray(this IEnumerable @this) => @this?.Cast<object>().ToArray();
-
-    #region linq
-
-    /// <summary>
-    /// Determines whether elements are present or not.
-    /// </summary>
-    /// <param name="this">This enumeration.</param>
-    /// <returns><c>true</c> if there is at least one element; otherwise, <c>false</c>.</returns>
-    public static bool Any(this IEnumerable @this) {
-      if (@this == null) throw new NullReferenceException();
-
-      return @this.GetEnumerator().MoveNext();
-    }
-
-    #endregion
+    return Enumerable.Count(@this.Cast<object>());
   }
+
+  /// <summary>
+  /// Executes a callback for each item
+  /// </summary>
+  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <param name="this">The collection.</param>
+  /// <param name="action">The call to execute.</param>
+  public static void ForEach<TIn>(this IEnumerable @this, Action<TIn> action) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(action);
+
+    foreach (var item in @this)
+      action((TIn)item);
+  }
+
+  /// <summary>
+  /// Converts all.
+  /// </summary>
+  /// <typeparam name="TIn">The type of the input.</typeparam>
+  /// <typeparam name="TOut">The type of the output.</typeparam>
+  /// <param name="this">The collection to convert.</param>
+  /// <param name="converter">The conversion function.</param>
+  /// <returns></returns>
+  public static IEnumerable ConvertAll<TIn, TOut>(this IEnumerable @this, Func<TIn, TOut> converter) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(converter);
+
+    // ReSharper disable LoopCanBeConvertedToQuery
+    foreach (var item in @this)
+      // ReSharper restore LoopCanBeConvertedToQuery
+      yield return converter((TIn)item);
+  }
+
+  /// <summary>
+  /// Converts a non-generic enumeration into an array of objects.
+  /// </summary>
+  /// <param name="this">This enumeration..</param>
+  /// <returns>The array containing the elements.</returns>
+  public static object[] ToObjectArray(this IEnumerable @this) => @this?.Cast<object>().ToArray();
+
+  #region linq
+
+  /// <summary>
+  /// Determines whether elements are present or not.
+  /// </summary>
+  /// <param name="this">This enumeration.</param>
+  /// <returns><c>true</c> if there is at least one element; otherwise, <c>false</c>.</returns>
+  public static bool Any(this IEnumerable @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    return @this.GetEnumerator().MoveNext();
+  }
+
+  #endregion
 }

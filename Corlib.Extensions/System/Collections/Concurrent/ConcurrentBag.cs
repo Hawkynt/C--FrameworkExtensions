@@ -18,31 +18,25 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if SUPPORTS_ASYNC
+#if SUPPORTS_CONCURRENT_COLLECTIONS
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
-
-namespace System.Collections.Concurrent {
+namespace System.Collections.Concurrent;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class ConcurrentBagExtensions {
-    /// <summary>
-    /// Clears the specified Bag.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="this">This <see cref="ConcurrentBag{T}"/></param>
-    public static void Clear<TValue>(this ConcurrentBag<TValue> @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      while (@this.TryTake(out _)) { }
-    }
+static partial class ConcurrentBagExtensions {
+  /// <summary>
+  /// Clears the specified Bag.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the values.</typeparam>
+  /// <param name="this">This <see cref="ConcurrentBag{T}"/></param>
+  public static void Clear<TValue>(this ConcurrentBag<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    while (@this.TryTake(out _)) { }
   }
 }
 

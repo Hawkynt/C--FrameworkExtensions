@@ -20,31 +20,26 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 
-namespace System.Collections.ObjectModel {
+namespace System.Collections.ObjectModel; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class CollectionExtensions {
-    /// <summary>
-    /// Adds items to a collection.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Collection.</param>
-    /// <param name="items">The items.</param>
-    public static void AddRange<TItem>(this Collection<TItem> This, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(items != null);
-#endif
-      foreach (var item in items)
-        This.Add(item);
-    }
+  /// <summary>
+  /// Adds items to a collection.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Collection.</param>
+  /// <param name="items">The items.</param>
+  public static void AddRange<TItem>(this Collection<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+      
+    foreach (var item in items)
+      @this.Add(item);
   }
 }

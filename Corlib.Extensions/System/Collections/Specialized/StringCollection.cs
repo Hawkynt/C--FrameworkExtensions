@@ -19,27 +19,25 @@
 */
 #endregion
 
-using System.Diagnostics;
-
-namespace System.Collections.Specialized {
+namespace System.Collections.Specialized; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class StringCollectionExtensions {
+static partial class StringCollectionExtensions {
 
-    /// <summary>
-    /// Copies the content of this collection to an array.
-    /// </summary>
-    /// <param name="This">The this.</param>
-    /// <returns></returns>
-    public static string[] ToArray(this StringCollection This) {
-      Debug.Assert(This != null);
-      var result = new string[This.Count];
-      This.CopyTo(result, 0);
-      return (result);
-    }
+  /// <summary>
+  /// Copies the content of this collection to an array.
+  /// </summary>
+  /// <param name="this">The this.</param>
+  /// <returns></returns>
+  public static string[] ToArray(this StringCollection @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    var result = new string[@this.Count];
+    @this.CopyTo(result, 0);
+    return result;
   }
 }

@@ -19,46 +19,43 @@
 */
 #endregion
 
-using System.Diagnostics;
-
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class KeyValuePairExtensions {
-    /// <summary>
-    /// Creates a dictionary from the given key/value pairs.
-    /// Note: if more than one key/value pair exists with the same key name, only the last value gets stored in the dictionary.
-    /// </summary>
-    /// <typeparam name="TKey">The type of the keys.</typeparam>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="This">This enumeration of key/value pairs.</param>
-    /// <param name="comparer">The equality comparer.</param>
-    /// <returns>
-    /// A new dictionary.
-    /// </returns>
-    public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> This, IEqualityComparer<TKey> comparer = null) {
-      Debug.Assert(This != null);
+  /// <summary>
+  /// Creates a dictionary from the given key/value pairs.
+  /// Note: if more than one key/value pair exists with the same key name, only the last value gets stored in the dictionary.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <typeparam name="TValue">The type of the values.</typeparam>
+  /// <param name="this">This enumeration of key/value pairs.</param>
+  /// <param name="comparer">The equality comparer.</param>
+  /// <returns>
+  /// A new dictionary.
+  /// </returns>
+  public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> @this, IEqualityComparer<TKey> comparer = null) {
+    Guard.Against.ThisIsNull(@this);
 
-      // if the enumeration is a collection, than initialize the dictionary with a known number of items.
-      var collection = This as ICollection;
-      var result = collection != null
-        ? comparer == null ? new Dictionary<TKey, TValue>(collection.Count) : new Dictionary<TKey, TValue>(collection.Count, comparer)
-        : comparer == null ? new Dictionary<TKey, TValue>() : new Dictionary<TKey, TValue>(comparer)
-        ;
+    // if the enumeration is a collection, than initialize the dictionary with a known number of items.
+    var result = @this is ICollection collection
+        ? comparer == null ? new(collection.Count) : new Dictionary<TKey, TValue>(collection.Count, comparer)
+        : comparer == null ? new() : new Dictionary<TKey, TValue>(comparer)
+      ;
 
-      foreach (var keyValuePair in This) {
-        var key = keyValuePair.Key;
-        var val = keyValuePair.Value;
-        if (result.ContainsKey(key))
-          result[key] = val;
-        else
-          result.Add(key, val);
-      }
-      return (result);
+    foreach (var keyValuePair in @this) {
+      var key = keyValuePair.Key;
+      var val = keyValuePair.Value;
+      if (result.ContainsKey(key))
+        result[key] = val;
+      else
+        result.Add(key, val);
     }
+
+    return result;
   }
 }

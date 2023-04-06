@@ -19,29 +19,27 @@
 */
 #endregion
 
-using System.Diagnostics;
-
-namespace System.Collections.Specialized {
+namespace System.Collections.Specialized; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class StringDictionaryExtensions {
-    /// <summary>
-    /// Adds or updates the specified key.
-    /// </summary>
-    /// <param name="This">This StringDictionary.</param>
-    /// <param name="key">The key.</param>
-    /// <param name="value">The value.</param>
-    public static void AddOrUpdate(this StringDictionary This, string key, string value) {
-      Debug.Assert(This != null);
-      Debug.Assert(key != null);
-      if (This.ContainsKey(key))
-        This[key] = value;
-      else
-        This.Add(key, value);
-    }
+static partial class StringDictionaryExtensions {
+  /// <summary>
+  /// Adds or updates the specified key.
+  /// </summary>
+  /// <param name="this">This StringDictionary.</param>
+  /// <param name="key">The key.</param>
+  /// <param name="value">The value.</param>
+  public static void AddOrUpdate(this StringDictionary @this, string key, string value) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(key);
+
+    if (@this.ContainsKey(key))
+      @this[key] = value;
+    else
+      @this.Add(key, value);
   }
 }

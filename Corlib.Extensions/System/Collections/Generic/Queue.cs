@@ -19,67 +19,68 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
-
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class QueueExtensions {
 
-    /// <summary>
-    /// Adds all given items to the queue.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Queue.</param>
-    /// <param name="items">The items to enqeue.</param>
-    public static void AddRange<TItem>(this Queue<TItem> This, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(items != null);
-#endif
-      foreach (var item in items)
-        This.Enqueue(item);
+  /// <summary>
+  /// Adds all given items to the queue.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Queue.</param>
+  /// <param name="items">The items to enqeue.</param>
+  public static void AddRange<TItem>(this Queue<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+
+    foreach (var item in items)
+      @this.Enqueue(item);
+  }
+
+  /// <summary>
+  /// Adds a given item to the queue.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Queue.</param>
+  /// <param name="item">The item to enqeue.</param>
+  public static void Add<TItem>(this Queue<TItem> @this, TItem item) {
+    Guard.Against.ThisIsNull(@this);
+      
+    @this.Enqueue(item);
+  }
+
+  /// <summary>
+  /// Fetches one item.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Queue.</param>
+  /// <returns>The first item.</returns>
+  public static TItem Fetch<TItem>(this Queue<TItem> @this) {
+    Guard.Against.ThisIsNull(@this);
+      
+    return @this.Dequeue();
+  }
+
+  /// <summary>
+  /// Tries to dequeue an item from the queue.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Queue.</param>
+  /// <param name="result">The result.</param>
+  /// <returns><c>true</c> if an item could be dequeued; otherwise, <c>false</c>.</returns>
+  public static bool TryDequeue<TItem>(this Queue<TItem> @this, out TItem result) {
+    Guard.Against.ThisIsNull(@this);
+
+    if (@this.Count < 1) {
+      result = default;
+      return false;
     }
-
-    /// <summary>
-    /// Adds a given item to the queue.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="this">This Queue.</param>
-    /// <param name="item">The item to enqeue.</param>
-    public static void Add<TItem>(this Queue<TItem> @this, TItem item) => @this.Enqueue(item);
-
-    /// <summary>
-    /// Fetches one item.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="this">This Queue.</param>
-    /// <returns>The first item.</returns>
-    public static TItem Fetch<TItem>(this Queue<TItem> @this) => @this.Dequeue();
-
-    /// <summary>
-    /// Tries to dequeue an item from the queue.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="this">This Queue.</param>
-    /// <param name="result">The result.</param>
-    /// <returns><c>true</c> if an item could be dequeued; otherwise, <c>false</c>.</returns>
-    public static bool TryDequeue<TItem>(this Queue<TItem> @this, out TItem result) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      if (@this.Count < 1) {
-        result = default(TItem);
-        return false;
-      }
-      result = @this.Dequeue();
-      return true;
-    }
+    result = @this.Dequeue();
+    return true;
   }
 }

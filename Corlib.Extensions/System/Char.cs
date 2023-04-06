@@ -92,7 +92,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsDigit(this char @this) => @this >= '0' && @this <= '9';
+    public static bool IsDigit(this char @this) => @this is >= '0' and <= '9';
 
     /// <summary>
     /// Determines whether the specified char is upper case.
@@ -221,6 +221,6 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string Repeat(this char @this, int count) => new string(@this, count);
+    public static string Repeat(this char @this, int count) => new(@this, count);
   }
 }

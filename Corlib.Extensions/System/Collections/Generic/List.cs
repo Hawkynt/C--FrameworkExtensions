@@ -19,429 +19,422 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
-
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class ListExtensions {
 
-    /// <summary>
-    /// Removes the given items from the list.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This enumerable.</param>
-    /// <param name="items">The items.</param>
-    public static void RemoveAll<TItem>(this IList<TItem> This, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(items != null);
+  /// <summary>
+  /// Removes the given items from the list.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This enumerable.</param>
+  /// <param name="items">The items.</param>
+  public static void RemoveAll<TItem>(this IList<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+
+    var removeables = new List<TItem>(items);
+    foreach (var item in removeables)
+      @this.Remove(item);
+  }
+
+  // return part 
+  public static T[] Splice<T>(this IList<T> @this, int start, int count) {
+    Guard.Against.ThisIsNull(@this);
+    
+    var result = new T[count];
+    for (var i = count - 1; i >= 0; i--)
+      result[i] = @this[i + start];
+
+    return result;
+  }
+
+  // swap two elements
+  public static void Swap<T>(this IList<T> @this, int i, int j) {
+    Guard.Against.ThisIsNull(@this);
+    
+    (@this[i], @this[j]) = (@this[j], @this[i]);
+  }
+
+  // fisher-yates shuffle array
+  public static void Shuffle<T>(this IList<T> @this) {
+    Guard.Against.ThisIsNull(@this);
+    
+    var i = @this.Count;
+
+#if SUPPORTS_RANDOM_SHARED
+    var random = Random.Shared;
+#else
+    var random = new Random();
 #endif
+    while (i-- > 1)
+      @this.Swap(random.Next(i + 1), i);
 
-      var removeables = new List<TItem>(items);
-      foreach (var item in removeables)
-        This.Remove(item);
+  }
 
-    }
+  public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(converter);
 
-    // return part 
-    public static T[] Splice<T>(this IList<T> @this, int start, int count) {
-      var result = new T[count];
-      for (var i = count - 1; i >= 0; i--)
-        result[i] = @this[i + start];
+    return Array.ConvertAll(@this.ToArray(), converter);
+  }
 
-      return result;
-    }
+  public static void ForEach<TInput>(this IList<TInput> @this, Action<TInput> action) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(action);
 
-    // swap two elements
-    public static void Swap<T>(this IList<T> @this, int i, int j) {
-      var tmp = @this[i];
-      @this[i] = @this[j];
-      @this[j] = tmp;
-    }
+    Array.ForEach(@this.ToArray(), action);
+  }
 
-    // fisher-yates shuffle array
-    public static void Shuffle<T>(this IList<T> @this) {
-      var i = @this.Count;
-      var random = new Random();
-      while (i-- > 1)
-        @this.Swap(random.Next(i + 1), i);
+  /// <summary>
+  /// Removes items at the given position.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="start">The start.</param>
+  /// <param name="count">The count.</param>
+  public static void RemoveRange<TInput>(this IList<TInput> @this, int start, int count) {
+    Guard.Against.ThisIsNull(@this);
 
-    }
-
-    public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter)
-      => Array.ConvertAll(@this.ToArray(), converter)
-    ;
-
-    public static void ForEach<TInput>(this IList<TInput> @this, Action<TInput> action) {
-      Array.ForEach(@this.ToArray(), action);
-    }
-
-    /// <summary>
-    /// Removes items at the given position.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="start">The start.</param>
-    /// <param name="count">The count.</param>
-    public static void RemoveRange<TInput>(this IList<TInput> @this, int start, int count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-
+    switch (count) {
       // special case I - return when nothing to remove
-      if (count < 1)
+      case < 1:
         return;
-
+    
       // special case II - only one item removed
-      if (count == 1) {
+      case 1:
         @this.RemoveAt(start);
         return;
-      }
-
-      // special case, given a real List<T>
-      var realList = @this as List<TInput>;
-      if (realList != null) {
-        realList.RemoveRange(start, count);
-        return;
-      }
-
-      // remove every single item, starting backwards to avoid broken indexes
-      for (var i = Math.Min(@this.Count - 1, start + count - 1); i >= start; --i)
-        @this.RemoveAt(i);
     }
 
-    /// <summary>
-    /// Adds the items.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="items">The items.</param>
-    public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
-
-      // special case, given a real List<T>
-      var realList = @this as List<TInput>;
-      if (realList != null) {
-        realList.AddRange(items);
-        return;
-      }
-
-      foreach (var item in items)
-        @this.Add(item);
+    // special case, given a real List<T>
+    if (@this is List<TInput> realList) {
+      realList.RemoveRange(start, count);
+      return;
     }
 
-    /// <summary>
-    /// Adds if not null.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="item">The item.</param>
-    public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    // remove every single item, starting backwards to avoid broken indexes
+    for (var i = Math.Min(@this.Count - 1, start + count - 1); i >= start; --i)
+      @this.RemoveAt(i);
+  }
 
-      if (item != null)
-        @this.Add(item);
+  /// <summary>
+  /// Adds the items.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="items">The items.</param>
+  public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+
+    // special case, given a real List<T>
+    if (@this is List<TInput> realList) {
+      realList.AddRange(items);
+      return;
     }
 
-    /// <summary>
-    /// Keeps the first n items.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="count">The count.</param>
-    public static void KeepFirst<TInput>(this IList<TInput> @this, int count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    foreach (var item in items)
+      @this.Add(item);
+  }
 
+  /// <summary>
+  /// Adds if not null.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="item">The item.</param>
+  public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
+    Guard.Against.ThisIsNull(@this);
+
+    if (item != null)
+      @this.Add(item);
+  }
+
+  /// <summary>
+  /// Keeps the first n items.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="count">The count.</param>
+  public static void KeepFirst<TInput>(this IList<TInput> @this, int count) {
+    Guard.Against.ThisIsNull(@this);
+
+    switch (count) {
       // special case: keep nothing
-      if (count < 1) {
+      case < 1:
         @this.Clear();
         return;
-      }
-
+    
       // special case: keep the first element
-      if (count == 1) {
+      case 1: {
         var item = @this[0];
         @this.Clear();
         @this.Add(item);
         return;
       }
-
-      // special case: keep all elements
-      var len = @this.Count;
-      if (count >= len)
-        return;
-
-      var index = count;
-      count = len - index;
-
-      if (count > index) {
-
-        // more to remove than to keep, copy the items and clear the list, then re-add
-        var copy = new TInput[index];
-        for (var i = 0; i < index; ++i)
-          copy[i] = @this[i];
-        @this.Clear();
-        @this.AddRange(copy);
-      } else
-
-        // only few elements to remove
-        @this.RemoveRange(index, count);
     }
 
-    /// <summary>
-    /// Keeps the last n items.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="count">The count.</param>
-    public static void KeepLast<TInput>(this IList<TInput> @this, int count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    // special case: keep all elements
+    var len = @this.Count;
+    if (count >= len)
+      return;
 
-      // special case: remove all items
-      if (count < 1) {
-        @this.Clear();
-        return;
-      }
+    var index = count;
+    count = len - index;
 
-      // special case: keep all elements
-      var len = @this.Count;
-      if (count > len)
-        return;
+    if (count > index) {
 
-      // special case: keep last item
-      if (count == 1) {
-        var item = @this[len - 1];
-        @this.Clear();
-        @this.Add(item);
-        return;
-      }
+      // more to remove than to keep, copy the items and clear the list, then re-add
+      var copy = new TInput[index];
+      for (var i = 0; i < index; ++i)
+        copy[i] = @this[i];
 
-      var index = len - count;
-      if (count > index) {
+      @this.Clear();
+      @this.AddRange(copy);
+    } else
 
-        // more to remove than to keep
-        var copy = new TInput[count];
-        for (int i = count - 1, j = len - 1; i >= 0; --i, --j)
-          copy[i] = @this[j];
-        @this.Clear();
-        @this.AddRange(copy);
-      } else
+      // only few elements to remove
+      @this.RemoveRange(index, count);
+  }
 
-        // only few elements to remove
-        @this.RemoveRange(0, index);
+  /// <summary>
+  /// Keeps the last n items.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="count">The count.</param>
+  public static void KeepLast<TInput>(this IList<TInput> @this, int count) {
+    Guard.Against.ThisIsNull(@this);
+
+    // special case: remove all items
+    if (count < 1) {
+      @this.Clear();
+      return;
     }
 
-    /// <summary>
-    /// Removes the first n items.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="count">The count.</param>
-    public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      var remaining = @this.Count - count;
-      @this.KeepLast(remaining);
+    // special case: keep all elements
+    var len = @this.Count;
+    if (count > len)
+      return;
+
+    // special case: keep last item
+    if (count == 1) {
+      var item = @this[len - 1];
+      @this.Clear();
+      @this.Add(item);
+      return;
     }
 
-    /// <summary>
-    /// Removes the last n items.
-    /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    /// <param name="this">This IList.</param>
-    /// <param name="count">The count.</param>
-    public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      var remaining = @this.Count - count;
-      @this.KeepFirst(remaining);
-    }
+    var index = len - count;
+    if (count > index) {
 
-    /// <summary>
-    /// Returns all permutations of the specified items.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="this">The items.</param>
-    /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
-    /// <returns></returns>
-    public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      var length = @this.Count;
-      if (length < 1)
-        yield break;
+      // more to remove than to keep
+      var copy = new TInput[count];
+      for (int i = count - 1, j = len - 1; i >= 0; --i, --j)
+        copy[i] = @this[j];
+      @this.Clear();
+      @this.AddRange(copy);
+    } else
 
-      var current = new T[length];
-      var state = new int[length];
-      for (var i = 0; i < length; ++i)
-        current[i] = @this[state[i] = i];
+      // only few elements to remove
+      @this.RemoveRange(0, index);
+  }
 
-      var lastIndex = length - 1;
-      while (true) {
+  /// <summary>
+  /// Removes the first n items.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="count">The count.</param>
+  public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
+    Guard.Against.ThisIsNull(@this);
 
-        // return copy or working array
-        if (separateArrays) {
-          var result = new T[length];
-          current.CopyTo(result, 0);
-          yield return result;
-        } else
-          yield return current;
+    var remaining = @this.Count - count;
+    @this.KeepLast(remaining);
+  }
 
-        // increment the 2nd last digit
-        var index = lastIndex - 1;
-        while (true) {
+  /// <summary>
+  /// Removes the last n items.
+  /// </summary>
+  /// <typeparam name="TInput">The type of the input.</typeparam>
+  /// <param name="this">This IList.</param>
+  /// <param name="count">The count.</param>
+  public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
+    Guard.Against.ThisIsNull(@this);
 
-          // increment as long as there are matching slots
-          var slotsBefore = new HashSet<int>(state.Take(index));
-          do {
-            ++state[index];
-          } while (slotsBefore.Contains(state[index]));
+    var remaining = @this.Count - count;
+    @this.KeepFirst(remaining);
+  }
 
-          // if we did not ran out of digits
-          if (state[index] <= lastIndex)
-            break;
+  /// <summary>
+  /// Returns all permutations of the specified items.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  /// <param name="this">The items.</param>
+  /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+  /// <returns></returns>
+  public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
+    Guard.Against.ThisIsNull(@this);
 
-          // otherwise, try incrementing the left next slot
-          --index;
+    var length = @this.Count;
+    if (length < 1)
+      yield break;
 
-          // no more slots, all permutations done
-          if (index < 0)
-            yield break;
-        }
+    var current = new T[length];
+    var state = new int[length];
+    for (var i = 0; i < length; ++i)
+      current[i] = @this[state[i] = i];
 
-        // fill content by digit
-        current[index] = @this[state[index]];
+    var lastIndex = length - 1;
+    while (true) {
 
-        // fill all slots after the incremented one
-        for (var i = index + 1; i < length; ++i) {
-          state[i] = 0;
-
-          var slotsBefore = new HashSet<int>(state.Take(i));
-          while (slotsBefore.Contains(state[i]))
-            ++state[i];
-
-          current[i] = @this[state[i]];
-        }
-
-      }
-
-    }
-
-    /// <summary>
-    /// Returns all permutations of the specified items.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="this">The items.</param>
-    /// <param name="length">The length of each permutation.</param>
-    /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
-    /// <returns></returns>
-    public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      if (length < 1)
-        yield break;
-
-      var itemLastIndex = @this.Count - 1;
-      if (itemLastIndex < 0)
-        yield break;
-
-      var current = new T[length];
-      for (var i = 0; i < length; ++i)
-        current[i] = @this[0];
-
-      var states = new int[length];
-      --length;
-
-      // this version creates a new array for each permutations and returns it
+      // return copy or working array
       if (separateArrays) {
-        while (true) {
-          var result = new T[length + 1];
-          current.CopyTo(result, 0);
-          yield return result;
+        var result = new T[length];
+        current.CopyTo(result, 0);
+        yield return result;
+      } else
+        yield return current;
 
-          if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
-            yield break;
-        }
+      // increment the 2nd last digit
+      var index = lastIndex - 1;
+      while (true) {
+
+        // increment as long as there are matching slots
+        var slotsBefore = new HashSet<int>(state.Take(index));
+        do {
+          ++state[index];
+        } while (slotsBefore.Contains(state[index]));
+
+        // if we did not ran out of digits
+        if (state[index] <= lastIndex)
+          break;
+
+        // otherwise, try incrementing the left next slot
+        --index;
+
+        // no more slots, all permutations done
+        if (index < 0)
+          yield break;
       }
 
+      // fill content by digit
+      current[index] = @this[state[index]];
+
+      // fill all slots after the incremented one
+      for (var i = index + 1; i < length; ++i) {
+        state[i] = 0;
+
+        var slotsBefore = new HashSet<int>(state.Take(i));
+        while (slotsBefore.Contains(state[i]))
+          ++state[i];
+
+        current[i] = @this[state[i]];
+      }
+
+    }
+
+  }
+
+  /// <summary>
+  /// Returns all permutations of the specified items.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  /// <param name="this">The items.</param>
+  /// <param name="length">The length of each permutation.</param>
+  /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+  /// <returns></returns>
+  public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
+    Guard.Against.ThisIsNull(@this);
+
+    if (length < 1)
+      yield break;
+
+    var itemLastIndex = @this.Count - 1;
+    if (itemLastIndex < 0)
+      yield break;
+
+    var current = new T[length];
+    for (var i = 0; i < length; ++i)
+      current[i] = @this[0];
+
+    var states = new int[length];
+    --length;
+
+    // this version creates a new array for each permutations and returns it
+    if (separateArrays) {
       while (true) {
-        yield return current;
+        var result = new T[length + 1];
+        current.CopyTo(result, 0);
+        yield return result;
 
         if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
           yield break;
       }
-
     }
 
-    /// <summary>
-    /// The permutation core.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="items">The items.</param>
-    /// <param name="length">The length.</param>
-    /// <param name="states">The states.</param>
-    /// <param name="itemLastIndex">Last index of the item.</param>
-    /// <param name="current">The current.</param>
-    /// <returns><c>true</c> if there are more permutations available; otherwise, <c>false</c>.</returns>
-    private static bool _ArePermutationsLeft<T>(IList<T> items, int length, int[] states, int itemLastIndex, T[] current) {
+    while (true) {
+      yield return current;
 
-      // set counter position back to last index
-      var index = length;
-      while (states[index] >= itemLastIndex) {
-        states[index] = 0;
-        current[index] = items[0];
-        --index;
-
-        // all permutations done
-        if (index < 0)
-          return false;
-      }
-
-      // create next permutation
-      current[index] = items[++states[index]];
-
-      return true;
+      if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
+        yield break;
     }
-
-#if !NET5_0_OR_GREATER
-    public static List<T> DeepClone<T>(this List<T> list) 
-    {
-      object objResult = null;
-      using (var  ms = new MemoryStream())
-      {
-        var  bf =   new BinaryFormatter();
-        bf.Serialize(ms, list);
-
-        ms.Position = 0;
-        objResult = bf.Deserialize(ms);
-      }
-      return (List<T>)objResult;
-    }
-#endif
 
   }
+
+  /// <summary>
+  /// The permutation core.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  /// <param name="items">The items.</param>
+  /// <param name="length">The length.</param>
+  /// <param name="states">The states.</param>
+  /// <param name="itemLastIndex">Last index of the item.</param>
+  /// <param name="current">The current.</param>
+  /// <returns><c>true</c> if there are more permutations available; otherwise, <c>false</c>.</returns>
+  private static bool _ArePermutationsLeft<T>(IList<T> items, int length, int[] states, int itemLastIndex, T[] current) {
+
+    // set counter position back to last index
+    var index = length;
+    while (states[index] >= itemLastIndex) {
+      states[index] = 0;
+      current[index] = items[0];
+      --index;
+
+      // all permutations done
+      if (index < 0)
+        return false;
+    }
+
+    // create next permutation
+    current[index] = items[++states[index]];
+
+    return true;
+  }
+
+#if !DEPRECATED_BINARY_FORMATTER
+  public static List<T> DeepClone<T>(this List<T> list) 
+  {
+    object objResult;
+    using (var  ms = new MemoryStream()) {
+      var  bf =   new BinaryFormatter();
+      bf.Serialize(ms, list);
+
+      ms.Position = 0;
+      objResult = bf.Deserialize(ms);
+    }
+    return (List<T>)objResult;
+  }
+#endif
+
 }

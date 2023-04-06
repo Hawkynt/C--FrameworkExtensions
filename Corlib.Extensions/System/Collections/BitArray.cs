@@ -21,38 +21,41 @@
 
 using System.Collections.Generic;
 
-namespace System.Collections {
+namespace System.Collections; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class BitArrayExtensions {
+static partial class BitArrayExtensions {
 
-    /// <summary>
-    /// Get the set bit positions.
-    /// </summary>
-    /// <param name="this">This <see cref="BitArray"/></param>
-    /// <returns>An enumeration of indexes.</returns>
-    public static IEnumerable<int> GetSetBits(this BitArray @this) {
-      for (var i = 0; i < @this.Length; ++i) {
-        if (@this[i])
-          yield return i;
-      }
+  /// <summary>
+  /// Get the set bit positions.
+  /// </summary>
+  /// <param name="this">This <see cref="BitArray"/></param>
+  /// <returns>An enumeration of indexes.</returns>
+  public static IEnumerable<int> GetSetBits(this BitArray @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    for (var i = 0; i < @this.Length; ++i) {
+      if (@this[i])
+        yield return i;
     }
-
-    /// <summary>
-    /// Get the unset bit positions.
-    /// </summary>
-    /// <param name="this">This <see cref="BitArray"/></param>
-    /// <returns>An enumeration of indexes.</returns>
-    public static IEnumerable<int> GetUnsetBits(this BitArray @this) {
-      for (var i = 0; i < @this.Length; ++i) {
-        if (!@this[i])
-          yield return i;
-      }
-    }
-
   }
+
+  /// <summary>
+  /// Get the unset bit positions.
+  /// </summary>
+  /// <param name="this">This <see cref="BitArray"/></param>
+  /// <returns>An enumeration of indexes.</returns>
+  public static IEnumerable<int> GetUnsetBits(this BitArray @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    for (var i = 0; i < @this.Length; ++i) {
+      if (!@this[i])
+        yield return i;
+    }
+  }
+
 }

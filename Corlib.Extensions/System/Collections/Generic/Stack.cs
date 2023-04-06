@@ -19,63 +19,65 @@
 */
 #endregion
 
-using System.Diagnostics;
-
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class StackExtensions {
-    /// <summary>
-    /// Inverts the specified stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">The stack to invert.</param>
-    public static void Invert<TItem>(this Stack<TItem> This) {
-      Debug.Assert(This != null);
-      var helpStack = new Queue<TItem>(This.Count);
-      while (This.Count > 0)
-        helpStack.Enqueue(This.Pop());
-      while (helpStack.Count > 0)
-        This.Push(helpStack.Dequeue());
-    }
+  /// <summary>
+  /// Inverts the specified stack.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">The stack to invert.</param>
+  public static void Invert<TItem>(this Stack<TItem> @this) {
+    Guard.Against.ThisIsNull(@this);
 
-    /// <summary>
-    /// Adds all given items to the stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <param name="items">The items to push on top of the stack.</param>
-    public static void AddRange<TItem>(this Stack<TItem> This, IEnumerable<TItem> items) {
-      Debug.Assert(This != null);
-      Debug.Assert(items != null);
-      foreach (var item in items)
-        This.Push(item);
-    }
+    var helpStack = new Queue<TItem>(@this.Count);
+    while (@this.Count > 0)
+      helpStack.Enqueue(@this.Pop());
 
-    /// <summary>
-    /// Adds a given item to the stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <param name="item">The item to push on top of the stack.</param>
-    public static void Add<TItem>(this Stack<TItem> This, TItem item) {
-      Debug.Assert(This != null);
-      This.Push(item);
-    }
+    while (helpStack.Count > 0)
+      @this.Push(helpStack.Dequeue());
+  }
 
-    /// <summary>
-    /// Fetches one item.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="This">This Stack.</param>
-    /// <returns>The top-most item.</returns>
-    public static TItem Fetch<TItem>(this Stack<TItem> This) {
-      Debug.Assert(This != null);
-      return (This.Pop());
-    }
+  /// <summary>
+  /// Adds all given items to the stack.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Stack.</param>
+  /// <param name="items">The items to push on top of the stack.</param>
+  public static void AddRange<TItem>(this Stack<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+
+    foreach (var item in items)
+      @this.Push(item);
+  }
+
+  /// <summary>
+  /// Adds a given item to the stack.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Stack.</param>
+  /// <param name="item">The item to push on top of the stack.</param>
+  public static void Add<TItem>(this Stack<TItem> @this, TItem item) {
+    Guard.Against.ThisIsNull(@this);
+
+    @this.Push(item);
+  }
+
+  /// <summary>
+  /// Fetches one item.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Stack.</param>
+  /// <returns>The top-most item.</returns>
+  public static TItem Fetch<TItem>(this Stack<TItem> @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    return @this.Pop();
   }
 }

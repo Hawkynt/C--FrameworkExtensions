@@ -19,46 +19,43 @@
 */
 #endregion
 
-#if SUPPORTS_ASYNC
+#if SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
 using System.Threading;
 
-namespace System.Collections.Concurrent {
+namespace System.Collections.Concurrent;
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class ConcurrentStackExtensions {
-    /// <summary>
-    /// Pops an item from the stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="this">This ConcurrentStack.</param>
-    /// <returns>The item that was popped.</returns>
-    public static TItem Pop<TItem>(this ConcurrentStack<TItem> @this) {
-      if (ReferenceEquals(null, @this))
-        throw new NullReferenceException();
+static partial class ConcurrentStackExtensions {
+  /// <summary>
+  /// Pops an item from the stack.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This ConcurrentStack.</param>
+  /// <returns>The item that was popped.</returns>
+  public static TItem Pop<TItem>(this ConcurrentStack<TItem> @this) {
+    Guard.Against.ThisIsNull(@this);
 
-      TItem result;
-      while (!@this.TryPop(out result)) { Thread.Sleep(0); }
-      return (result);
-    }
+    TItem result;
+    while (!@this.TryPop(out result)) { Thread.Sleep(0); }
+    return result;
+  }
 
-    /// <summary>
-    /// Pushes the all given items to the stack.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="this">This ConcurrentStack.</param>
-    /// <param name="items">The items.</param>
-    public static void PushRange<TItem>(this ConcurrentStack<TItem> @this, IEnumerable<TItem> items) {
-      if (ReferenceEquals(null, @this))
-        throw new NullReferenceException();
+  /// <summary>
+  /// Pushes the all given items to the stack.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This ConcurrentStack.</param>
+  /// <param name="items">The items.</param>
+  public static void PushRange<TItem>(this ConcurrentStack<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
 
-      foreach (var item in items)
-        @this.Push(item);
-    }
+    foreach (var item in items)
+      @this.Push(item);
   }
 }
 

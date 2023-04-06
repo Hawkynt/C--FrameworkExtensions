@@ -23,40 +23,44 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class EnumeratorExtensions {
 
-    /// <summary>
-    /// Takes the specified amount of elements.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="this">This Enumerator.</param>
-    /// <param name="count">The number of values to take.</param>
-    /// <returns>An enumeration of values</returns>
-    public static IEnumerable<TValue> Take<TValue>(this IEnumerator<TValue> @this, int count) {
-      for (var i = 0; i < count && @this.MoveNext(); ++i)
-        yield return @this.Current;
-    }
-
-    /// <summary>
-    /// Gets the next element from the enumeration.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="this">This Enumeration.</param>
-    /// <returns></returns>
-    /// <exception cref="System.IndexOutOfRangeException">Enumeration ended</exception>
-    public static TValue Next<TValue>(this IEnumerator<TValue> @this) {
-      if (@this.MoveNext())
-        return @this.Current;
-
-      throw new IndexOutOfRangeException("Enumeration ended");
-    }
-
+  /// <summary>
+  /// Takes the specified amount of elements.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the value.</typeparam>
+  /// <param name="this">This Enumerator.</param>
+  /// <param name="count">The number of values to take.</param>
+  /// <returns>An enumeration of values</returns>
+  public static IEnumerable<TValue> Take<TValue>(this IEnumerator<TValue> @this, int count) {
+    Guard.Against.ThisIsNull(@this);
+      
+    for (var i = 0; i < count && @this.MoveNext(); ++i)
+      yield return @this.Current;
   }
+
+  /// <summary>
+  /// Gets the next element from the enumeration.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the value.</typeparam>
+  /// <param name="this">This Enumeration.</param>
+  /// <returns></returns>
+  /// <exception cref="System.IndexOutOfRangeException">Enumeration ended</exception>
+  public static TValue Next<TValue>(this IEnumerator<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+      
+    if (@this.MoveNext())
+      return @this.Current;
+
+    Guard.AlwaysThrow.IndexOutOfRangeException();
+    return default;
+  }
+
 }

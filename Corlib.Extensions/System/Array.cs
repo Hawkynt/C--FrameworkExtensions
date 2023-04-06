@@ -35,6 +35,7 @@ using System.Runtime.CompilerServices;
 #endif
 using System.Security.Cryptography;
 using System.Text;
+using System.Drawing;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -459,10 +460,8 @@ namespace System {
     [DebuggerStepThrough]
     public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
       Guard.Against.ThisIsNull(@this);
+      Guard.Against.NegativeValuesAndZero(size);
       
-      if (size < 1)
-        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(size),"Must be > 0");
-
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
         yield return new(@this, index, Math.Min(length - index, size));
@@ -496,9 +495,7 @@ namespace System {
     [DebuggerStepThrough]
     public static IEnumerable<ArraySlice<TItem>> Slices<TItem>(this TItem[] @this, int size) {
       Guard.Against.ThisIsNull(@this);
-
-      if (size < 1)
-        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(size), "Must be > 0");
+      Guard.Against.NegativeValuesAndZero(size);
 
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
@@ -1644,10 +1641,8 @@ namespace System {
     [DebuggerStepThrough]
     public static byte[] Range(this byte[] @this, int offset, int count) {
       Guard.Against.ThisIsNull(@this);
-      if (offset < 0)
-        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(offset),  "Must be > 0");
-      if (count < 1)
-        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(count),  "Must be > 0");
+      Guard.Against.IndexOutOfRange(offset);
+      Guard.Against.CountOutOfRange(count);
 
       var length = @this.Length;
       var max = count < length - offset ? count : length - offset;
@@ -1668,9 +1663,8 @@ namespace System {
     [DebuggerStepThrough]
     public static byte[] Padd(this byte[] @this, int length, byte data = 0) {
       Guard.Against.ThisIsNull(@this);
-      if (length < 1)
-        Guard.AlwaysThrow.ArgumentOutOfRangeException(nameof(length), "Must be > 0");
-
+      Guard.Against.CountOutOfRange(length);
+      
       var currentSize = @this.Length;
       if (currentSize >= length)
         return @this;

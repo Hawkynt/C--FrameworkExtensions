@@ -23,73 +23,73 @@ using System.Linq;
 
 // ReSharper disable PartialTypeWithSinglePart
 
-namespace System.Collections.Generic {
+namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class CollectionExtensions {
-    /// <summary>
-    /// Executes an action on each item.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="this">The collection.</param>
-    /// <param name="action">The call to execute.</param>
-    public static void ForEach<TValue>(this ICollection<TValue> @this, Action<TValue> action) {
-      if (@this == null) throw new NullReferenceException();
+  /// <summary>
+  /// Executes an action on each item.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the values.</typeparam>
+  /// <param name="this">The collection.</param>
+  /// <param name="action">The call to execute.</param>
+  public static void ForEach<TValue>(this ICollection<TValue> @this, Action<TValue> action) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(action);
 
-      Array.ForEach(@this.ToArray(), action);
+    Array.ForEach(@this.ToArray(), action);
+  }
+
+  /// <summary>
+  /// Converts all.
+  /// </summary>
+  /// <typeparam name="TIn">The type of the input collection.</typeparam>
+  /// <typeparam name="TOut">The type of the output collection.</typeparam>
+  /// <param name="this">The collection.</param>
+  /// <param name="converter">The converter function.</param>
+  /// <returns></returns>
+  public static TOut[] ConvertAll<TIn, TOut>(this ICollection<TIn> @this, Converter<TIn, TOut> converter) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(converter);
+
+    return Array.ConvertAll(@this.ToArray(), converter);
+  }
+
+  /// <summary>
+  /// Adds a range of items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This Collection.</param>
+  /// <param name="items">The items.</param>
+  public static void AddRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
+
+    // PERF: check for special list first
+    if (@this is List<TItem> list) {
+      list.AddRange(items);
+      return;
     }
 
-    /// <summary>
-    /// Converts all.
-    /// </summary>
-    /// <typeparam name="TIn">The type of the input collection.</typeparam>
-    /// <typeparam name="TOut">The type of the output collection.</typeparam>
-    /// <param name="this">The collection.</param>
-    /// <param name="converter">The converter function.</param>
-    /// <returns></returns>
-    public static TOut[] ConvertAll<TIn, TOut>(this ICollection<TIn> @this, Converter<TIn, TOut> converter) {
-      if (@this == null) throw new NullReferenceException();
+    foreach (var item in items)
+      @this.Add(item);
+  }
 
-      return Array.ConvertAll(@this.ToArray(), converter);
-    }
+  /// <summary>
+  /// Removes the range of items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This Collection.</param>
+  /// <param name="items">The items.</param>
+  public static void RemoveRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(items);
 
-    /// <summary>
-    /// Adds a range of items.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items.</typeparam>
-    /// <param name="this">This Collection.</param>
-    /// <param name="items">The items.</param>
-    public static void AddRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
-      if (@this == null) throw new NullReferenceException();
-      if (items == null) throw new ArgumentNullException(nameof(items));
-
-      // PERF: check for special list first
-      var list = @this as List<TItem>;
-      if (list != null) {
-        list.AddRange(items);
-        return;
-      }
-
-      foreach (var item in items)
-        @this.Add(item);
-    }
-
-    /// <summary>
-    /// Removes the range of items.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the item.</typeparam>
-    /// <param name="this">This Collection.</param>
-    /// <param name="items">The items.</param>
-    public static void RemoveRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
-      if (@this == null) throw new NullReferenceException();
-      if (items == null) throw new ArgumentNullException(nameof(items));
-
-      foreach (var item in items)
-        @this.Remove(item);
-    }
+    foreach (var item in items)
+      @this.Remove(item);
   }
 }

@@ -25,48 +25,47 @@ using System.Linq;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System.Collections.Specialized {
+namespace System.Collections.Specialized; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class OrderedDictionaryExtensions {
-  }
+static partial class OrderedDictionaryExtensions {
+}
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {
-    private readonly List<TKey> _keys = new List<TKey>();
+class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {
+  private readonly List<TKey> _keys = new();
 
-    public OrderedDictionary() {
-    }
-
-    public OrderedDictionary(IEqualityComparer<TKey> comparer)
-      : base(comparer) {
-    }
-
-    public new void Add(TKey key, TValue value) {
-      base.Add(key, value);
-      this._keys.Add(key);
-    }
-
-    public new void Remove(TKey key) {
-      base.Remove(key);
-      this._keys.Remove(key);
-    }
-
-    public new void Clear() {
-      base.Clear();
-      this._keys.Clear();
-    }
-
-    public new IEnumerable<TKey> Keys => this._keys.Select(k => k);
-    public new IEnumerable<TValue> Values => this._keys.Select(k => this[k]);
-    public new IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => this._keys.Select(k => new KeyValuePair<TKey, TValue>(k, this[k])).GetEnumerator();
+  public OrderedDictionary() {
   }
+
+  public OrderedDictionary(IEqualityComparer<TKey> comparer)
+    : base(comparer) {
+  }
+
+  public new void Add(TKey key, TValue value) {
+    base.Add(key, value);
+    this._keys.Add(key);
+  }
+
+  public new void Remove(TKey key) {
+    base.Remove(key);
+    this._keys.Remove(key);
+  }
+
+  public new void Clear() {
+    base.Clear();
+    this._keys.Clear();
+  }
+
+  public new IEnumerable<TKey> Keys => this._keys.Select(k => k);
+  public new IEnumerable<TValue> Values => this._keys.Select(k => this[k]);
+  public new IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => this._keys.Select(k => new KeyValuePair<TKey, TValue>(k, this[k])).GetEnumerator();
 }

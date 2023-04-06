@@ -19,55 +19,57 @@
 */
 #endregion
 
-using System.Diagnostics;
 using System.Linq;
 
-namespace System.Collections {
+namespace System.Collections; 
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class CollectionExtensions {
-    /// <summary>
-    /// Executes an action on each item.
-    /// </summary>
-    /// <param name="This">The collection.</param>
-    /// <param name="call">The call to execute.</param>
-    public static void ForEach(this ICollection This, Action<object> call) {
-      Debug.Assert(This != null);
-      foreach (var value in This)
-        call(value);
-    }
-    /// <summary>
-    /// Converts all.
-    /// </summary>
-    /// <typeparam name="TOUT">The type of the output collection.</typeparam>
-    /// <param name="This">The collection to convert.</param>
-    /// <param name="converter">The converter.</param>
-    /// <returns></returns>
-    public static TOUT[] ConvertAll<TOUT>(this ICollection This, Converter<object, TOUT> converter) {
-      Debug.Assert(This != null);
-      Debug.Assert(converter != null);
-      return (
-        from object data in This
-        select converter(data)
-      ).ToArray();
-    }
+static partial class CollectionExtensions {
+  /// <summary>
+  /// Executes an action on each item.
+  /// </summary>
+  /// <param name="this">The collection.</param>
+  /// <param name="call">The call to execute.</param>
+  public static void ForEach(this ICollection @this, Action<object> call) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(call);
 
-    /// <summary>
-    /// Copies the collection into an array.
-    /// </summary>
-    /// <param name="This">This ICollection.</param>
-    /// <returns>An array containing all elements.</returns>
-    public static object[] ToArray(this ICollection This) {
-      Debug.Assert(This != null);
-      var len = This.Count;
-      var result = new object[len];
-      This.CopyTo(result, 0);
-      return (result);
-    }
-
+    foreach (var value in @this)
+      call(value);
   }
+  /// <summary>
+  /// Converts all.
+  /// </summary>
+  /// <typeparam name="TOUT">The type of the output collection.</typeparam>
+  /// <param name="this">The collection to convert.</param>
+  /// <param name="converter">The converter.</param>
+  /// <returns></returns>
+  public static TOUT[] ConvertAll<TOUT>(this ICollection @this, Converter<object, TOUT> converter) {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(converter);
+
+    return (
+      from object data in @this
+      select converter(data)
+    ).ToArray();
+  }
+
+  /// <summary>
+  /// Copies the collection into an array.
+  /// </summary>
+  /// <param name="this">This ICollection.</param>
+  /// <returns>An array containing all elements.</returns>
+  public static object[] ToArray(this ICollection @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    var len = @this.Count;
+    var result = new object[len];
+    @this.CopyTo(result, 0);
+    return result;
+  }
+
 }

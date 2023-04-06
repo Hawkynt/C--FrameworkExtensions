@@ -19,33 +19,26 @@
 */
 #endregion
 
-#if SUPPORTS_ASYNC
+#if SUPPORTS_CONCURRENT_COLLECTIONS
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
-
-namespace System.Collections.Concurrent {
+namespace System.Collections.Concurrent;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class ConcurrentQueueExtensions {
-    /// <summary>
-    /// Clears the specified Queue.
-    /// </summary>
-    /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <param name="This">This ConcurrentQueue.</param>
-    public static void Clear<TValue>(this ConcurrentQueue<TValue> This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      TValue dummy;
-      while (This.TryDequeue(out dummy))
-        ;
-    }
+static partial class ConcurrentQueueExtensions {
+  /// <summary>
+  /// Clears the specified Queue.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the values.</typeparam>
+  /// <param name="this">This ConcurrentQueue.</param>
+  public static void Clear<TValue>(this ConcurrentQueue<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    TValue dummy;
+    while (@this.TryDequeue(out dummy)) { }
   }
 }
 

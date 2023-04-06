@@ -27,116 +27,124 @@ namespace System;
 
 static partial class ArrayExtensions {
 
-  public static void Fill(this byte[] @this, byte value) => _FillWithBytes(@this, 0, @this.Length, value);
+  public static void Fill(this byte[] @this, byte value) {
+    Guard.Against.ThisIsNull(@this);
+
+    _FillWithBytes(@this, 0, @this.Length, value);
+  }
 
   public static void Fill(this byte[] @this, byte value, int offset) {
-    if (offset < 0 || offset > @this.Length)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.IndexOutOfRange(offset, @this.Length);
 
     _FillWithBytes(@this, offset, @this.Length - offset, value);
   }
 
   public static void Fill(this byte[] @this, byte value, int offset, int count) {
-    if (offset < 0 || count < 0 || offset + count > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.IndexOutOfRange(offset, @this.Length);
+    Guard.Against.CountOutOfRange(count, offset + count, @this.Length);
+    
     _FillWithBytes(@this, offset, count, value);
   }
 
   public static void Fill(this byte[] @this, ushort value, int count) {
-    if (count < 0 || count << 1 > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count, count << 1, @this.Length);
+    
     _FillWithWords(@this, 0, count, value);
   }
 
   public static void Fill(this byte[] @this, ushort value, int offset, int count) {
-    if (offset < 0 || count < 0 || (offset + count) << 1 > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.IndexOutOfRange(offset, @this.Length);
+    Guard.Against.CountOutOfRange(count, (offset + count) << 1, @this.Length);
+    
     _FillWithWords(@this, offset, count, value);
   }
 
   public static void Fill(this byte[] @this, uint value, int count) {
-    if (count < 0 || count << 2 > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count, count << 2, @this.Length);
+    
     _FillWithDWords(@this, 0, count, value);
   }
 
   public static void Fill(this byte[] @this, uint value, int offset, int count) {
-    if (offset < 0 || count < 0 || (offset + count) << 2 > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.IndexOutOfRange(offset, @this.Length);
+    Guard.Against.CountOutOfRange(count, (offset + count) << 2, @this.Length);
+    
     _FillWithDWords(@this, offset, count, value);
   }
 
   public static void Fill(this byte[] @this, ulong value, int count) {
-    if (count < 0 || count << 3 > @this.Length)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count, count << 3, @this.Length);
 
     _FillWithQWords(@this, 0, count, value);
   }
 
   public static void Fill(this byte[] @this, ulong value, int offset, int count) {
-    if (offset < 0 || count < 0 || (offset + count) << 3 > @this.Length)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.IndexOutOfRange(offset, @this.Length);
+    Guard.Against.CountOutOfRange(count, (offset + count) << 3, @this.Length);
+    
     _FillWithQWords(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, byte value, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
-
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
+    
     _FillBytePointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, byte value, int offset, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillBytePointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, ushort value, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, ushort value, int offset, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillWordPointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, uint value, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillDWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, uint value, int offset, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillDWordPointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, ulong value, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillQWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, ulong value, int offset, int count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException();
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.CountOutOfRange(count);
 
     _FillQWordPointer(@this, offset, count, value);
   }
@@ -315,24 +323,24 @@ static partial class ArrayExtensions {
 #else // Managed stuff
 
     private static void _FillWithBytes(byte[] source, int offset, int count, byte value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillBytePointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
+      _FillBytePointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
     }
 
     private static void _FillWithWords(byte[] source, int offset, int count, ushort value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
+      _FillWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
     }
 
     private static void _FillWithDWords(byte[] source, int offset, int count, uint value) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillDWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
+      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
+      _FillDWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
     }
 
     private static void _FillWithQWords(byte[] source, int offset, int count, ulong value) {
       offset <<= 3;
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-        _FillWithQWords(sourceFixedPointer.AddrOfPinnedObject(), ref offset, count, value);
+      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
+      _FillWithQWords(sourceFixedPointer.AddrOfPinnedObject(), ref offset, count, value);
     }
 
     private static void _FillBytePointer(IntPtr source, int offset, int count, byte value) {
