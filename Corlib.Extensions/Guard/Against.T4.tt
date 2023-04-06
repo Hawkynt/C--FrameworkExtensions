@@ -1,0 +1,152 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+namespace Guard;
+
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+partial class Against {
+
+<#foreach (var type in new[]{"sbyte", "byte", "short", "ushort", "int", "uint", "long", "ulong", "float", "double", "decimal"}) {#>
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsZero(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value == 0)
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be zero.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesBelow(<#=type#> value, <#=type#> minimum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value < minimum)
+      AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesBelowOrEqual(<#=type#> value, <#=type#> minimum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value <= minimum)
+      AlwaysThrow.ArgumentBelowOrEqualRangeException(expression ?? nameof(value), value, minimum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesAbove(<#=type#> value, <#=type#> maximum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value > maximum)
+      AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, maximum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesAboveOrEqual(<#=type#> value, <#=type#> maximum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value >= maximum)
+      AlwaysThrow.ArgumentAboveOrEqualRangeException(expression ?? nameof(value), value, maximum, caller);
+  }
+
+<#}#>
+
+<#foreach (var type in new[]{"sbyte", "short", "int", "long", "float", "double", "decimal"}) {#>
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void NegativeValues(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value < 0)
+      AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, 0, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void NegativeValuesAndZero(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value <= 0)
+      AlwaysThrow.ArgumentBelowOrEqualRangeException(expression ?? nameof(value), value, 0, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void PositiveValues(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value > 0)
+      AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, 0, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void PositiveValuesAndZero(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value >= 0)
+      AlwaysThrow.ArgumentAboveOrEqualRangeException(expression ?? nameof(value), value, 0, caller);
+  }
+
+<#}#>
+
+<#foreach (var type in new[]{"float", "double"}) {#>
+  
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (<#=type#>.IsInfinity(value))
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be infinity.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsPositiveInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (<#=type#>.IsPositiveInfinity(value))
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be +infinity.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsNegativeInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (<#=type#>.IsNegativeInfinity(value))
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be -infinity.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsNaN(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (<#=type#>.IsNaN(value))
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be NaN.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValueIsNonNumeric(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (<#=type#>.IsInfinity(value) || <#=type#>.IsNaN(value))
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be numeric value ({value}).", caller);
+  }
+
+<#}#>
+
+}

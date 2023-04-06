@@ -314,3 +314,4 @@ System.Drawing.Extensions/System/Drawing/Point.cs
 Corlib.Extensions/System/IO/FileInfo.T4.cs
 Corlib.Extensions/System/IO/Link.cs
 Backports/System/FuncAction.cs
+Corlib.Extensions/Guard/Against.T4.cs
