@@ -1,4 +1,5 @@
-﻿#region (c)2010-2042 Hawkynt
+﻿#if !SUPPORTS_LAZY
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,8 +19,6 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
-#if !SUPPORTS_LAZY
 
 using System.Threading;
 #if SUPPORTS_CONTRACTS
@@ -43,14 +42,14 @@ namespace System {
     private TValue _value;
     private readonly Func<TValue> _function;
 
-    #region ctor
+#region ctor
     /// <summary>
     /// Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;"/> class.
     /// </summary>
     /// <param name="function">The function that should create the value.</param>
     public Lazy(Func<TValue> function) => this._function = function;
 
-    #endregion
+#endregion
     /// <summary>
     /// Gets a value indicating whether this instance has a value already calculated.
     /// </summary>

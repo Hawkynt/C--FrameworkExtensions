@@ -1,4 +1,5 @@
-﻿#region (c)2010-2042 Hawkynt
+﻿#if !SUPPORTS_CONCURRENT_COLLECTIONS
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -18,8 +19,6 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-
-#if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
 
