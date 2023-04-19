@@ -21,7 +21,7 @@
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
     
   <ItemGroup>
-    <None Update="FuncAction.tt">
+    <None Update="System\FuncAction.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FuncAction.cs</LastGenOutput>
     </None>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="FuncAction.cs">
+    <Compile Update="System\FuncAction.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>FuncAction.tt</DependentUpon>
