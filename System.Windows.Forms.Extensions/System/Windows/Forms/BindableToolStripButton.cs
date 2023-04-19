@@ -14,13 +14,13 @@ class BindableToolStripButton : ToolStripButton, IBindableComponent {
 
   #region IBindableComponent Members
 
-  private BindingContext? _bindingContext;
-  private ControlBindingsCollection? _dataBindings;
+  private BindingContext _bindingContext;
+  private ControlBindingsCollection _dataBindings;
 
   [Browsable(false)]
   public BindingContext BindingContext {
-    get => _bindingContext ??= new BindingContext();
-    set => _bindingContext = value;
+    get => this._bindingContext ??= new();
+    set => this._bindingContext = value;
   }
 
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
@@ -28,7 +28,7 @@ class BindableToolStripButton : ToolStripButton, IBindableComponent {
   [Description("Bindings")]
   [RefreshProperties(RefreshProperties.All)]
   [ParenthesizePropertyName(true)]
-  public ControlBindingsCollection DataBindings => _dataBindings ??= new ControlBindingsCollection(this);
+  public ControlBindingsCollection DataBindings => this._dataBindings ??= new(this);
 
   #endregion
 
