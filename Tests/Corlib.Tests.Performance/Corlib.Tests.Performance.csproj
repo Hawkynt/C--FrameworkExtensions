@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- TargetFrameworks>net6.0;netcoreapp3.1;netstandard2.0;net48;net45;net40;net35</TargetFrameworks-->
+    <TargetFramework>net6.0</TargetFramework>
+    <Platforms>x86;x64;AnyCPU</Platforms>
+    
+    <IsPackable>false</IsPackable>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Condition="$(TargetFramework) == 'net35'" Include="BenchmarkDotNet" Version="0.7.4" />
+    <PackageReference Condition="$(TargetFramework) == 'net40'" Include="BenchmarkDotNet" Version="0.9.7" />
+    <PackageReference Condition="$(TargetFramework) == 'net45'" Include="BenchmarkDotNet" Version="0.10.3" />
+    <PackageReference Condition="$(TargetFramework) == 'net48'" Include="BenchmarkDotNet" Version="0.11.3" />
+    <PackageReference Condition="$(TargetFramework) == 'netstandard2.0'" Include="BenchmarkDotNet" Version="0.13.5" />
+    <PackageReference Condition="$(TargetFramework) == 'netcoreapp3.1'" Include="BenchmarkDotNet" Version="0.11.3" />
+    <PackageReference Condition="$(TargetFramework) == 'net6.0'" Include="BenchmarkDotNet" Version="0.13.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Corlib.Extensions\Corlib.Extensions.csproj" />
+  </ItemGroup>
+
+</Project>
