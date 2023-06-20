@@ -95,56 +95,56 @@ static partial class ArrayExtensions {
 
   public static void Fill(this IntPtr @this, byte value, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
     
     _FillBytePointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, byte value, int offset, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillBytePointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, ushort value, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, ushort value, int offset, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillWordPointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, uint value, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillDWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, uint value, int offset, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillDWordPointer(@this, offset, count, value);
   }
 
   public static void Fill(this IntPtr @this, ulong value, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillQWordPointer(@this, 0, count, value);
   }
 
   public static void Fill(this IntPtr @this, ulong value, int offset, int count) {
     Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountOutOfRange(count);
+    Guard.Against.CountBelowOrEqualZero(count);
 
     _FillQWordPointer(@this, offset, count, value);
   }
