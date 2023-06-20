@@ -92,7 +92,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsDigit(this char @this) => @this is >= '0' and <= '9';
+    public static bool IsDigit(this char @this) => char.IsDigit(@this);
 
     /// <summary>
     /// Determines whether the specified char is upper case.
