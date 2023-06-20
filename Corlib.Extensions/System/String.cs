@@ -291,7 +291,11 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string RemoveLast(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(0, @this.Length - count);
+  public static string RemoveLast(this string @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, @this.Length);
+    return count != @this.Length ? @this[..^count] : string.Empty;
+  }
 
   /// <summary>
   /// Removes the first n chars from a string.
@@ -305,7 +309,11 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string RemoveFirst(this string @this, int count) => string.IsNullOrEmpty(@this) || count < 1 ? @this : @this.Length < count ? string.Empty : @this.Substring(count);
+  public static string RemoveFirst(this string @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, @this.Length);
+    return count != @this.Length ? @this[count..] : string.Empty;
+  }
 
   /// <summary>
   /// Gets a substring.
