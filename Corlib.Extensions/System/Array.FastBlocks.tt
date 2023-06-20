@@ -491,7 +491,24 @@ qwordDuffOut:
 
 #else
 
-            _MemoryFill(@this, value, count);
+            block8 = *(Block8*)start;
+<#    lastBlockCount = int.MaxValue;#>
+<#    foreach(var blockCount in new[]{8, 1}){#>
+<#      var bytesPerLoop = 8 * blockCount;#>
+<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
+            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+<#      lastBlockCount = blockCount;#>
+              count -= <#=bytesPerLoop#>;
+              *(Block8*)@this = block8;
+<#      for(var i = 1; i < blockCount; ++i) {#>
+              ((Block8*)@this)[<#=i#>] = block8;
+<#      }#>
+              @this += <#=bytesPerLoop#>;
+            }
+<#    }#>
+            
+            if (count != 0)
+              continue;
             
 #endif
 
@@ -663,7 +680,25 @@ qwordDuffOut:
 
 #else
 
-            _MemoryFill(@this, 0, count);
+           var block8 = *(Block8*)start;
+<#    lastBlockCount = int.MaxValue;#>
+<#    foreach(var blockCount in new[]{8, 1}){#>
+<#      var bytesPerLoop = 8 * blockCount;#>
+<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
+            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+<#      lastBlockCount = blockCount;#>
+              count -= <#=bytesPerLoop#>;
+              *(Block8*)@this = block8;
+<#      for(var i = 1; i < blockCount; ++i) {#>
+              ((Block8*)@this)[<#=i#>] = block8;
+<#      }#>
+              @this += <#=bytesPerLoop#>;
+            }
+<#    }#>
+            
+            if (count != 0)
+              continue;
+
             
 #endif
 
