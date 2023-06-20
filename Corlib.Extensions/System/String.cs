@@ -1462,55 +1462,21 @@ static partial class StringExtensions {
   /// <param name="culture">The culture to use; defaults to current culture.</param>
   /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+  [Pure]
 #endif
-    return This.Split(new[] { splitter }, options);
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string ToPascalCase(this string @this, CultureInfo culture = null) {
+    Against.ThisIsNull(@this);
+    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, true);
   }
+
 
   /// <summary>
   /// Converts a word to camel case.
   /// </summary>
-  /// <param name="This">This String.</param>
-  /// <param name="culture">The culture to use; defaults to current culture.</param>
-  /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
-  public static string ToCamelCase(this string This, CultureInfo culture = null) {
-    if (This == null)
-      return null;
-    if (culture == null)
-      culture = CultureInfo.CurrentCulture;
-
-    var result = new StringBuilder(This.Length);
-    var hump = true;
-
-    // ReSharper disable ConvertToConstant.Local
-#pragma warning disable CC0030 // Make Local Variable Constant.
-    var numbers = "0123456789";
-    var allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-#pragma warning restore CC0030 // Make Local Variable Constant.
-    // ReSharper restore ConvertToConstant.Local
-
-    foreach (var chr in This) {
-      if (numbers.IndexOf(chr) >= 0) {
-        result.Append(chr);
-        hump = true;
-      } else if (allowedChars.IndexOf(chr) < 0)
-        hump = true;
-      else {
-        result.Append((hump ? char.ToUpper(chr, culture) : chr).ToString(culture));
-        hump = false;
-      }
-    }
-
-    return result.ToString();
-  }
-
-  /// <summary>
-  /// Converts a word to pascal case.
-  /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="culture">The culture to use; defaults to current culture.</param>
   /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
 #if SUPPORTS_CONTRACTS
@@ -1519,7 +1485,45 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string ToPascalCase(this string This, CultureInfo culture = null) => This.ToCamelCase().LowerFirst(culture);
+  public static string ToCamelCase(this string @this, CultureInfo culture = null) {
+    Against.ThisIsNull(@this);
+    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, false);
+  }
+
+  private static string _ChangeCasing(string input, CultureInfo culture, bool pascalCase) {
+
+    var result = new StringBuilder(input.Length);
+
+    var isFirstLetter = true;
+    var hump = pascalCase;
+    var lastCharWasUppercase = false;
+    foreach (var chr in input) {
+      if (chr.IsDigit()) {
+        result.Append(chr);
+        hump = true;
+      } else if (!chr.IsLetter())
+        hump = true;
+      else {
+        var newChar = isFirstLetter
+          ? pascalCase
+            ? chr.ToUpper(culture)
+            : chr.ToLower(culture)
+          : hump
+            ? chr.ToUpper(culture)
+            : lastCharWasUppercase
+              ? chr.ToLower(culture)
+              : chr
+          ;
+
+        result.Append(newChar);
+        lastCharWasUppercase = newChar.IsUpper();
+        hump = false;
+        isFirstLetter = false;
+      }
+    }
+
+    return result.ToString();
+  }
 
   /// <summary>
   /// Transforms the given connection string into a linq2sql compatible one by removing the driver.
