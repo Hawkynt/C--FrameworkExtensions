@@ -35,6 +35,8 @@ using System.Threading;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.IO {
+  using Guard;
+
   /// <summary>
   /// Extensions for the DirectoryInfo type.
   /// </summary>
@@ -48,14 +50,19 @@ namespace System.IO {
 
     #region nested types
 
-    private class SubdirectoryInfo {
+    private readonly struct SubdirectoryInfo {
       public SubdirectoryInfo(DirectoryInfo directory, string pathRelativeToRoot) {
-        this.Directory = directory;
-        this.PathRelativeToRoot = pathRelativeToRoot;
+        this._directory = directory;
+        this._pathRelativeToRoot = pathRelativeToRoot;
       }
 
-      public DirectoryInfo Directory { get; }
-      public string PathRelativeToRoot { get; }
+      private readonly DirectoryInfo _directory;
+      private readonly string _pathRelativeToRoot;
+
+      public void Deconstruct(out DirectoryInfo directory, out string pathRelativeToRoot) {
+        directory = this._directory;
+        pathRelativeToRoot = this._pathRelativeToRoot;
+      }
     }
 
     private static class NativeMethods {
@@ -507,29 +514,26 @@ namespace System.IO {
     }
 
     /// <summary>
-    /// Copies the specified directory.
+    /// Copies the specified directorys' contents to the target directory.
     /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="this">This DirectoryInfo.</param>
     /// <param name="target">The target directory to place files.</param>
-    public static void CopyTo(this DirectoryInfo This, DirectoryInfo target) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(target != null);
-#endif
+    public static void CopyTo(this DirectoryInfo @this, DirectoryInfo target) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(target);
+
       var stack = new Stack<SubdirectoryInfo>();
-      stack.Push(new SubdirectoryInfo(This, "."));
+      stack.Push(new(@this, "."));
       while (stack.Count > 0) {
-        var current = stack.Pop();
-        var relativePath = current.PathRelativeToRoot;
+        var (directory, relativePath) = stack.Pop();
         var targetPath = Path.Combine(target.FullName, relativePath);
 
         // create directory if it does not exist
         if (!IO.Directory.Exists(targetPath))
           IO.Directory.CreateDirectory(targetPath);
 
-        foreach (var fileSystemInfo in current.Directory.GetFileSystemInfos()) {
-          var fileInfo = fileSystemInfo as FileInfo;
-          if (fileInfo != null) {
+        foreach (var fileSystemInfo in directory.GetFileSystemInfos()) {
+          if (fileSystemInfo is FileInfo fileInfo) {
             fileInfo.CopyTo(Path.Combine(targetPath, fileInfo.Name));
             continue;
           }
