@@ -1049,50 +1049,41 @@ static partial class StringExtensions {
   /// <summary>
   /// Replaces using a regular expression.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="newValue">The replacement.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns>A string with the replacements.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string ReplaceRegex(this string This, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(regex != null);
-#endif
-    return This == null ? null : new Regex(regex, regexOptions).Replace(This, newValue ?? string.Empty);
+  public static string ReplaceRegex(this string @this, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(regex);
+    return @this == null ? null : new Regex(regex, regexOptions).Replace(@this, newValue ?? string.Empty);
   }
   /// <summary>
   /// Replaces using a regular expression.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="newValue">The replacement.</param>
   /// <returns>
   /// A string with the replacements.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string Replace(this string This, Regex regex, string newValue) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(regex != null);
-    Contract.Requires(newValue != null);
-#endif
-    return This == null ? null : regex.Replace(This, newValue);
+  public static string Replace(this string @this, Regex regex, string newValue) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(regex);
+    return @this == null ? null : regex.Replace(@this, newValue);
   }
 
   /// <summary>
   /// Replaces in a string but only n number of times.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="oldValue">What to replace.</param>
   /// <param name="newValue">The replacement.</param>
   /// <param name="count">The number of times this gets replaced.</param>
@@ -1101,15 +1092,15 @@ static partial class StringExtensions {
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
-  public static string Replace(this string This, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
+  public static string Replace(this string @this, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(Enum.IsDefined(typeof(StringComparison), comparison));
 #endif
-    if (This == null || oldValue == null || count < 1)
-      return This;
-    if (newValue == null)
-      newValue = string.Empty;
-    var result = This;
+    if (@this == null || oldValue == null || count < 1)
+      return @this;
+    
+    newValue ??= string.Empty;
+    var result = @this;
 
     var removedLength = oldValue.Length;
     var newLength = newValue.Length;
@@ -1117,12 +1108,14 @@ static partial class StringExtensions {
     var pos = 0;
     for (var i = count; i > 0;) {
       --i;
+
 #if SUPPORTS_CONTRACTS
       Contract.Assume(pos < result.Length);
 #endif
       var n = result.IndexOf(oldValue, pos, comparison);
       if (n < 0)
         break;
+
       if (n == 0) {
 #if SUPPORTS_CONTRACTS
         Contract.Assume(removedLength <= result.Length);
@@ -1132,7 +1125,7 @@ static partial class StringExtensions {
 #if SUPPORTS_CONTRACTS
         Contract.Assume(n + removedLength <= result.Length);
 #endif
-        result = result.Substring(0, n) + newValue + result.Substring(n + removedLength);
+        result = result[..n] + newValue + result[(n + removedLength)..];
       }
       pos = n + newLength;
     }
