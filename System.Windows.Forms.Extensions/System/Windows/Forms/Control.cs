@@ -1001,6 +1001,44 @@ namespace System.Windows.Forms {
 
     #endregion
 
+    private class IsDesignModeDetector {
+      public static IsDesignModeDetector Instance { get; } = new();
+
+      private readonly Dictionary<Type, Func<Control, bool>> _methodCache = new();
+
+      private IsDesignModeDetector() { }
+
+      public bool GetDesignModePropertyValue(Control c) {
+        Func<Control, bool> getter;
+        var controlType = c.GetType();
+        lock (this._methodCache)
+          if (!this._methodCache.TryGetValue(controlType, out getter))
+            this._methodCache.Add(controlType, getter = CreateGetDesignModePropertyGetter(controlType));
+
+        return getter(c);
+      }
+
+      private static Func<Control, bool> CreateGetDesignModePropertyGetter(Type controlType) {
+        var propertyInfo = controlType.GetProperty("DesignMode", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        var getMethod = propertyInfo?.GetGetMethod(true);
+        if (getMethod == null)
+          return _ => false;
+
+        var call = (Func<Control, bool>)Delegate.CreateDelegate(typeof(Func<Control, bool>), getMethod);
+        return call;
+      }
+
+    }
+    
+    /// <summary>
+    /// Checks if this or parents are in DesignMode.
+    /// Use this instead because <see cref="System.ComponentModel.Component.DesignMode">Component.DesignMode</see> is only set after
+    /// <see cref="Form.Load"/> was invoked.
+    /// </summary>
+    /// <param name="this">The control on which to check if it's in DesignMode.</param>
+    /// <returns>True if DesignMode.</returns>
+    public static bool IsDesignMode(this Control @this) => IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this);
 
   }
 }
