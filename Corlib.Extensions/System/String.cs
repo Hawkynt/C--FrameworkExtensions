@@ -245,19 +245,38 @@ static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="count">The count.</param>
   /// <returns></returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string Repeat(this string @this, int count) {
-    if (@this == null)
-      return null;
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.ValuesBelowOrEqual(count, 1);
 
-    if (count < 1)
-      return string.Empty;
+    var length = @this.Length;
+    if (length == 1)
+      return @this[0].Repeat(count);
 
-    var n = new StringBuilder(@this.Length * count);
+    switch (count) {
+      case 0:
+        return string.Empty;
+      case 1:
+        return @this;
+      case 2:
+        return @this + @this;
+      case 3:
+        return string.Concat(@this, @this, @this);
+      case 4:
+        return string.Concat(@this, @this, @this, @this);
+      default: {
+        var result = new StringBuilder(length * count);
+        for (var i = count; i > 0; --i)
+          result.Append(@this);
 
-    for (var i = 0; i < count; i++)
-      n.Append(@this);
-
-    return n.ToString();
+        return result.ToString();
+      }
+    }
   }
 
   /// <summary>
