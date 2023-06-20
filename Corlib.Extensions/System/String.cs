@@ -671,19 +671,15 @@ static partial class StringExtensions {
   /// <summary>
   /// Uses the string as a format string.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="parameters">The parameters to use for formatting.</param>
   /// <returns>A formatted string.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-
-  public static string FormatWith(this string This, params object[] parameters) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(parameters != null);
-#endif
-    return string.Format(This, parameters);
+  public static string FormatWith(this string @this, params object[] parameters) {
+    Against.ThisIsNull(@this);
+    return string.Format(@this, parameters);
   }
 
   /// <summary>
@@ -694,10 +690,8 @@ static partial class StringExtensions {
   /// <param name="comparer">The comparer.</param>
   /// <returns></returns>
   public static string FormatWithEx(this string @this, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fields != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fields);
     var fieldCache = fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, comparer);
     return FormatWithEx(@this, f => fieldCache.ContainsKey(f) ? fieldCache[f] : null);
   }
@@ -896,43 +890,47 @@ static partial class StringExtensions {
         if (passFieldFormatToGetter || (formatStartIndex = fieldContent.IndexOf(':')) < 0)
           result.Append(fieldGetter(fieldContent));
         else {
-          var fieldName = fieldContent.Left(formatStartIndex);
-          var fieldFormat = fieldContent.Substring(formatStartIndex + 1);
+          var fieldName = fieldContent[..formatStartIndex];
+          var fieldFormat = fieldContent[(formatStartIndex + 1)..];
           result.Append(string.Format($"{{0:{fieldFormat}}}", fieldGetter(fieldName)));
         }
       } else {
-
         // we're currently copying
-        if (current == '{') {
+        switch (current) {
+          case '{': {
+            // copy what we've already got
+            var textContent = @this.Substring(lastStartPos, fieldContentLength);
+            lastStartPos = i;
+            result.Append(textContent);
 
-          // copy what we've already got
-          var textContent = @this.Substring(lastStartPos, fieldContentLength);
-          lastStartPos = i;
-          result.Append(textContent);
+            // filter out double brackets
+            if (next is "{") {
 
-          // filter out double brackets
-          if (next != null && next == "{") {
+              // skip the following bracket
+              ++i;
+            } else {
 
-            // skip the following bracket
-            ++i;
-          } else {
+              // field start found, switch mode
+              isInField = true;
+            }
 
-            // field start found, switch mode
-            isInField = true;
+            break;
           }
-        } else if (current == '}' && next != null && next == "}") {
+          case '}' when next is "}": {
+            // copy what we've already got
+            var textContent = @this.Substring(lastStartPos, fieldContentLength);
+            lastStartPos = i;
+            result.Append(textContent);
 
-          // copy what we've already got
-          var textContent = @this.Substring(lastStartPos, fieldContentLength);
-          lastStartPos = i;
-          result.Append(textContent);
-
-          // skip double brackets
-          ++i;
+            // skip double brackets
+            ++i;
+            break;
+          }
         }
       }
     }
-    var remainingContent = @this.Substring(lastStartPos);
+
+    var remainingContent = @this[lastStartPos..];
     result.Append(remainingContent);
     return result.ToString();
   }
