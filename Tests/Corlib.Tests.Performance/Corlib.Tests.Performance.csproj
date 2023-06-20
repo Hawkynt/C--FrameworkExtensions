@@ -14,6 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Corlib.Extensions\Guard\Against.cs" Link="Against.cs" />
+    <Compile Include="..\..\Corlib.Extensions\Guard\Against.T4.cs" Link="Against.T4.cs" />
+    <Compile Include="..\..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="AlwaysThrow.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Condition="$(TargetFramework) == 'net35'" Include="BenchmarkDotNet" Version="0.7.4" />
     <PackageReference Condition="$(TargetFramework) == 'net40'" Include="BenchmarkDotNet" Version="0.9.7" />
     <PackageReference Condition="$(TargetFramework) == 'net45'" Include="BenchmarkDotNet" Version="0.10.3" />
