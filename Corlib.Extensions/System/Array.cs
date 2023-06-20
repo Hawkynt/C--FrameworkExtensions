@@ -1641,8 +1641,8 @@ namespace System {
     [DebuggerStepThrough]
     public static byte[] Range(this byte[] @this, int offset, int count) {
       Guard.Against.ThisIsNull(@this);
-      Guard.Against.IndexOutOfRange(offset);
-      Guard.Against.CountOutOfRange(count);
+      Guard.Against.IndexBelowZero(offset);
+      Guard.Against.CountBelowOrEqualZero(count);
 
       var length = @this.Length;
       var max = count < length - offset ? count : length - offset;
@@ -1663,7 +1663,7 @@ namespace System {
     [DebuggerStepThrough]
     public static byte[] Padd(this byte[] @this, int length, byte data = 0) {
       Guard.Against.ThisIsNull(@this);
-      Guard.Against.CountOutOfRange(length);
+      Guard.Against.CountBelowOrEqualZero(length);
       
       var currentSize = @this.Length;
       if (currentSize >= length)
