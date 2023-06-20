@@ -323,42 +323,45 @@ static partial class StringExtensions {
   /// <param name="end">The end index of the first char not contained in the result; can be negative to indicate a "from-the-end".</param>
   /// <returns>the substring</returns>
   public static string SubString(this string @this, int start, int end = 0) {
-    if (@this == null)
-      return null;
-    string result;
+    Against.ThisIsNull(@this);
+
+    var result = string.Empty;
     var length = @this.Length;
+
+    // ReSharper disable once InvertIf (perf-opt)
     if (length > 0) {
 
-      // allow specifying start from back of the string when negative
-      if (start < 0)
-        start += length;
+      // if (start < 0) start += length
+      // if (end <= 0) end += length
+      var startMask = start;
+      var endMask = end - 1;
+      startMask >>= 31;
+      endMask >>= 31;
+      startMask &= length;
+      endMask &= length;
+      start += startMask;
+      end += endMask;
 
-      if (start < 0)
-        start = 0;
+      // if (start < 0) start = 0
+      startMask = ~start;
+      startMask >>= 31;
+      start &= startMask;
 
-      // allow specifying end from back of the string when negative
-      if (end <= 0)
-        end += length;
+      if (start != end) {
+        var len = end - start;
 
-      var len = end - start;
+        // if (len > length) len = length - start
+        len -= (len - (length - start)) & ((length - len) >> 31);
 
-      if (len > length)
-        len = length - start;
-
-      // when reading too less chars -> returns empty string
-      if (len <= 0)
-        return string.Empty;
-
-#if SUPPORTS_CONTRACTS
-      Contract.Assume(len >= 0);
-      Contract.Assume(start + len <= @this.Length);
-#endif
-      result = @this.Substring(start, len);
-    } else {
-      result = string.Empty;
+        if (len > 0)
+          result = @this.Substring(start, len);
+      } else
+        result = @this[start].ToString();
     }
+
     return result;
   }
+
   /// <summary>
   /// Gets the first n chars from a string.
   /// </summary>
