@@ -1135,7 +1135,8 @@ static partial class StringExtensions {
   /// <summary>
   /// Uppers the first char in a string.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
+  /// <param name="culture"></param>
   /// <returns>
   /// A string where the first char was capitalized.
   /// </returns>
@@ -1145,41 +1146,38 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string UpperFirst(this string This) => This == null ? null : This.Length == 1 ? This.ToUpper() : This.Substring(0, 1).ToUpper() + This.Substring(1);
+  public static string UpperFirst(this string @this, CultureInfo culture = null) {
+    Against.ThisIsNull(@this);
+
+    var length = @this.Length;
+    string result;
+    if (length != 0) {
+      var firstChar = @this[0];
+      var firstCharUpper = culture == null ? char.ToUpper(firstChar) : char.ToUpper(firstChar, culture);
+      if (firstCharUpper != firstChar) {
+#if UNSAFE
+#if SUPPORTS_SPAN
+        result = new(@this);
+#else
+        result = string.Copy(@this);
+#endif
+        unsafe {
+          fixed (char* ptrResult = result)
+            *ptrResult = firstCharUpper;
+        }
+#else
+        result = length == 1 ? firstCharUpper.ToString() : firstCharUpper + @this[1..];
+#endif
+      } else
+        result = @this;
+    } else
+      result = string.Empty;
+
+    return result;
+  }
 
   /// <summary>
   /// Uppers the first char in a string.
-  /// </summary>
-  /// <param name="This">This string.</param>
-  /// <returns>
-  /// A string where the first char was capitalized.
-  /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static string UpperFirstInvariant(this string This) => This == null ? null : This.Length == 1 ? This.ToUpperInvariant() : This.Substring(0, 1).ToUpperInvariant() + This.Substring(1);
-
-  /// <summary>
-  /// Lowers the first char in a string.
-  /// </summary>
-  /// <param name="This">This string.</param>
-  /// <param name="culture">The culture.</param>
-  /// <returns>
-  /// A string where the first char was capitalized.
-  /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static string LowerFirst(this string This, CultureInfo culture = null) => This == null ? null : This.Length == 1 ? (culture == null ? This.ToLower() : This.ToLower(culture)) : (culture == null ? This.Substring(0, 1).ToLower() : This.Substring(0, 1).ToLower(culture)) + This.Substring(1);
-
-  /// <summary>
-  /// Lowers the first char in a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <returns>
@@ -1191,7 +1189,122 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string LowerFirstInvariant(this string @this) => @this == null ? null : @this.Length == 1 ? @this.ToLowerInvariant() : @this.Substring(0, 1).ToLowerInvariant() + @this.Substring(1);
+ public static string UpperFirstInvariant(this string @this) {
+    Against.ThisIsNull(@this);
+
+    var length = @this.Length;
+    string result;
+    if (length != 0) {
+      var firstChar = @this[0];
+      var firstCharUpper = char.ToUpperInvariant(firstChar);
+      if (firstCharUpper != firstChar) {
+#if UNSAFE
+#if SUPPORTS_SPAN
+        result = new(@this);
+#else
+        result = string.Copy(@this);
+#endif
+        unsafe {
+          fixed (char* ptrResult = result)
+            *ptrResult = firstCharUpper;
+        }
+#else
+        result = length == 1 ? firstCharUpper.ToString() : firstCharUpper + @this[1..];
+#endif
+      } else
+        result = @this;
+    } else
+      result = string.Empty;
+
+    return result;
+  }
+
+  /// <summary>
+  /// Lowers the first char in a string.
+  /// </summary>
+  /// <param name="this">This string.</param>
+  /// <param name="culture">The culture.</param>
+  /// <returns>
+  /// A string where the first char was capitalized.
+  /// </returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string LowerFirst(this string @this, CultureInfo culture = null) {
+    Against.ThisIsNull(@this);
+
+    var length = @this.Length;
+    string result;
+    if (length != 0) {
+      var firstChar = @this[0];
+      var firstCharLower = culture == null ? char.ToLower(firstChar) : char.ToLower(firstChar, culture);
+      if (firstCharLower != firstChar) {
+#if UNSAFE
+#if SUPPORTS_SPAN
+        result = new(@this);
+#else
+        result = string.Copy(@this);
+#endif
+        unsafe {
+          fixed (char* ptrResult = result)
+            *ptrResult = firstCharLower;
+        }
+#else
+        result = length == 1 ? firstCharLower.ToString() : firstCharLower + @this[1..];
+#endif
+      } else
+        result = @this;
+    } else
+      result = string.Empty;
+
+    return result;
+  }
+
+    /// <summary>
+    /// Lowers the first char in a string.
+    /// </summary>
+    /// <param name="this">This string.</param>
+    /// <returns>
+    /// A string where the first char was capitalized.
+    /// </returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string LowerFirstInvariant(this string @this) {
+    Against.ThisIsNull(@this);
+
+    var length = @this.Length;
+    string result;
+    if (length != 0) {
+      var firstChar = @this[0];
+      var firstCharLower = char.ToLowerInvariant(firstChar);
+      if (firstCharLower != firstChar) {
+#if UNSAFE
+#if SUPPORTS_SPAN
+        result = new(@this);
+#else
+        result = string.Copy(@this);
+#endif
+        unsafe {
+          fixed (char* ptrResult = result)
+            *ptrResult = firstCharLower;
+        }
+#else
+        result = length == 1 ? firstCharLower.ToString() : firstCharLower + @this[1..];
+#endif
+      } else
+        result = @this;
+    } else
+      result = string.Empty;
+
+    return result;
+  }
 
   /// <summary>
   /// Splits a string into equal length parts.
