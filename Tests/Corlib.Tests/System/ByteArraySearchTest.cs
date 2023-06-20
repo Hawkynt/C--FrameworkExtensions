@@ -84,7 +84,7 @@ namespace System.ArrayExtensionsTests {
 
     [Test]
     public void PatternIsNull() {
-      var byteArray1 = new byte[] {65, 65};
+      var byteArray1 = new byte[] { 65, 65 };
       try {
         var index = byteArray1.IndexOfOrMinusOne(null);
         Assert.Fail();
@@ -93,20 +93,13 @@ namespace System.ArrayExtensionsTests {
 
     [Test]
     public void DataIsNull() {
-      var byteArray2 = new byte[] {65, 65, 65};
-      try {
-        var index = ArrayExtensions.IndexOfOrMinusOne(null, byteArray2);
-        Assert.Fail();
-      } catch (ArgumentNullException) { }
+      var byteArray2 = new byte[] { 65, 65,65  };
+      Assert.That(()=> ArrayExtensions.IndexOfOrMinusOne(null, byteArray2),Throws.InstanceOf<NullReferenceException>());
     }
 
     [Test]
     public void BothAreNull() {
-      try {
-        var index = ArrayExtensions.IndexOfOrMinusOne(null, null);
-        ;
-        Assert.Fail();
-      } catch (ArgumentNullException) { }
+      Assert.That(()=> ArrayExtensions.IndexOfOrMinusOne(null, null),Throws.InstanceOf<NullReferenceException>());
     }
 
     [Test]

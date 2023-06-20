@@ -51,19 +51,13 @@ namespace System.ArrayExtensionsTests {
     [Test]
     public void OffsetTooLarge() {
       var byteArray1 = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-      try {
-        byteArray1.Fill(0, 30, 10);
-        Assert.Fail();
-      } catch (ArgumentOutOfRangeException) { }
+      Assert.That(()=> byteArray1.Fill(0, 30, 10),Throws.TypeOf<IndexOutOfRangeException>());
     }
 
     [Test]
     public void OffsetTooSmall() {
       var byteArray1 = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-      try {
-        byteArray1.Fill(0, -5);
-        Assert.Fail();
-      } catch (ArgumentOutOfRangeException) { }
+      Assert.That(() => byteArray1.Fill(0, -5), Throws.TypeOf<IndexOutOfRangeException>());
     }
 
     [Test]
