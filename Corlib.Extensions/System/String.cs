@@ -412,25 +412,113 @@ static partial class StringExtensions {
   /// Sanitizes the text to use as a filename.
   /// </summary>
   /// <param name="this">This String.</param>
+  /// <param name="sanitation">The character to use for sanitation; defaults to underscore (_)</param>
   /// <returns>The sanitized string.</returns>
-  public static string SanitizeForFileName(this string @this) {
-    if (IsNullOrEmpty(@this))
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+#if UNSAFE
 
+  public static unsafe string SanitizeForFileName(this string @this, char sanitation = '_') {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(@this);
+    
+    var result = @this;
     var invalidFileNameChars = _INVALID_FILE_NAME_CHARS.Value;
-    var result = @this.ToCharArray();
-    for (var i = 0; i < result.Length; ++i) {
-      if (invalidFileNameChars.Contains(result[i]))
-        result[i] = '_';
+
+    var length = (uint)@this.Length;
+    fixed (char* srcPointer = @this) {
+      var currentPointer = srcPointer;
+      for (; length > 0; ++currentPointer, --length) {
+        if (!invalidFileNameChars.Contains(*currentPointer))
+          continue;
+
+        // copy-on-write the source string
+#if SUPPORTS_SPAN
+        result = new(@this);
+#else
+        result = string.Copy(@this);
+#endif
+        fixed (char* dstPointer = result) {
+          
+          // re-base the pointer we're not gonna need the srcPointer from here on
+          currentPointer += dstPointer - srcPointer;
+
+          // we already know the current char is invalid
+          --length;
+          *currentPointer++ = sanitation;
+
+          // process the rest
+          for (; length > 0; ++currentPointer, --length)
+            if (invalidFileNameChars.Contains(*currentPointer))
+              *currentPointer = sanitation;
+
+          result = new(dstPointer);
+        }
+        break;
+      }
     }
 
-    return result.ToStringInstance();
+    return result;
   }
 
-#region needed consts for converting filename patterns into regexes
+#else
+
+  public static string SanitizeForFileName(this string @this, char sanitation = '_') {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(@this);
+    
+    var result = @this;
+    var invalidFileNameChars = _INVALID_FILE_NAME_CHARS.Value;
+    
+    for (var i = 0; i < @this.Length; ++i) {
+      if (!invalidFileNameChars.Contains(@this[i]))
+        continue;
+
+      // ReSharper disable once UnusedVariable
+      var length = @this.Length;
+
+      // create copy and work on that
+#if SUPPORTS_SPAN
+      if (length <= _MAX_STACKALLOC_STRING_LENGTH) {
+        Span<char> results = stackalloc char[length];
+        @this.CopyTo(results);
+        results[i] = sanitation;
+        for (++i; i < results.Length; ++i)
+          if (invalidFileNameChars.Contains(results[i]))
+            results[i] = sanitation;
+
+        result = new(results);
+        break;
+      }
+#endif
+
+#if SUPPORTS_ARRAYPOOL
+      var buffer = ArrayPool<char>.Shared.Rent(length);
+      @this.CopyTo(buffer);
+      buffer[i] = sanitation;
+      for (++i; i < length; ++i)
+        if (invalidFileNameChars.Contains(buffer[i]))
+          buffer[i] = sanitation;
+
+      result = new string(buffer, 0, length);
+      ArrayPool<char>.Shared.Return(buffer);
+#else
+      var buffer = @this.ToCharArray();
+      buffer[i] = sanitation;
+      for (++i; i < buffer.Length; ++i)
+        if (invalidFileNameChars.Contains(buffer[i]))
+          buffer[i] = sanitation;
+
+      result = new(buffer);
+#endif
+      break;
+    }
+    return result;
+  }
+
+#endif
+
+  #region needed consts for converting filename patterns into regexes
   private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
   private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-    
 #endregion
 
   /// <summary>
