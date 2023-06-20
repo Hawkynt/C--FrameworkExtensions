@@ -572,10 +572,9 @@ static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool MatchesFilePattern(this string @this, string pattern) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(pattern != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(pattern);
+
     return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
   }
 
@@ -639,24 +638,22 @@ static partial class StringExtensions {
   /// Matches the specified regex.
   /// </summary>
   /// <param name="regex">The regex.</param>
-  /// <param name="This">The data.</param>
+  /// <param name="this">The data.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns>A <see cref="MatchCollection"/> containing the matches.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static MatchCollection Matches(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(regex != null);
-#endif
-    return new Regex(regex, regexOptions).Matches(This);
+  public static MatchCollection Matches(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(regex);
+    return new Regex(regex, regexOptions).Matches(@this);
   }
 
   /// <summary>
   /// Matches the specified regex and returns the groups.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns>
@@ -665,12 +662,10 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static GroupCollection MatchGroups(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(regex != null);
-#endif
-    return new Regex(regex, regexOptions).Match(This).Groups;
+  public static GroupCollection MatchGroups(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(regex);
+    return new Regex(regex, regexOptions).Match(@this).Groups;
   }
 
   /// <summary>
