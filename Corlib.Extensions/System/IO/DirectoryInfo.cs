@@ -125,19 +125,16 @@ namespace System.IO {
 #else
       foreach (var item in @this.GetFileSystemInfos()) {
 #endif
-        var file = item as FileInfo;
-        if (file != null) {
-          file.Delete();
-          continue;
+        switch (item) {
+          case FileInfo file:
+            file.Delete();
+            continue;
+          case DirectoryInfo directory:
+            directory.Delete(true);
+            continue;
+          default:
+            throw new NotSupportedException("Unknown FileSystem item");
         }
-
-        var directory = item as DirectoryInfo;
-        if (directory != null) {
-          directory.Delete(true);
-          continue;
-        }
-
-        throw new NotSupportedException("Unknown FileSystem item");
       }
     }
 
@@ -223,7 +220,7 @@ namespace System.IO {
         return (This);
 
       var path = originalPath.Substring(This.Root.FullName.Length);
-      return (new DirectoryInfo(Path.Combine(sb.ToString().TrimEnd(), path)));
+      return (new(Path.Combine(sb.ToString().TrimEnd(), path)));
     }
 
     /// <summary>
@@ -446,9 +443,9 @@ namespace System.IO {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_PATH_COMBINE_ARRAYS
-    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
+    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #else
-    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new DirectoryInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
+    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #endif
 
     /// <summary>
@@ -461,9 +458,9 @@ namespace System.IO {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_PATH_COMBINE_ARRAYS
-    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
+    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
 #else
-    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new FileInfo(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
+    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
 #endif
 
     /// <summary>
@@ -540,8 +537,7 @@ namespace System.IO {
 #if SUPPORTS_CONTRACTS
           Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
 #endif
-
-          stack.Push(new SubdirectoryInfo(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
+          stack.Push(new(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
         }
       }
     }
@@ -557,7 +553,7 @@ namespace System.IO {
       Contract.Requires(This != null);
 #endif
       var fullPath = Path.Combine(This.FullName, name);
-      return IO.Directory.Exists(fullPath) ? new DirectoryInfo(fullPath) : This.CreateSubdirectory(name);
+      return IO.Directory.Exists(fullPath) ? new(fullPath) : This.CreateSubdirectory(name);
     }
 
     /// <summary>
@@ -618,20 +614,22 @@ namespace System.IO {
 #endif
       extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
 
-      const int LENGTH = 4;
-      const string PREFIX = "tmp";
-      var random = new Random();
-      Func<string> generator = () => {
+      static string Generator(Random random,string ext) {
+        const int LENGTH = 4;
+        const string PREFIX = "tmp";
         var result = new StringBuilder(16);
         result.Append(PREFIX);
         for (var i = 0; i < LENGTH; ++i)
           result.Append(random.Next(0, 16).ToString("X"));
-        result.Append(extension);
+
+        result.Append(ext);
         return result.ToString();
-      };
+      }
+
+      var random = new Random();
 
       while (true) {
-        var result = This.TryCreateFile(generator(), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
+        var result = This.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
         if (result != null)
           return result;
       }
@@ -658,7 +656,7 @@ namespace System.IO {
         var fileHandle = IO.File.Open(fullFileName, FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
         IO.File.SetAttributes(fullFileName, attributes);
-        return (new FileInfo(fullFileName));
+        return (new(fullFileName));
       } catch (UnauthorizedAccessException) {
 
         // in case multiple threads try to create the same file, this gets fired
