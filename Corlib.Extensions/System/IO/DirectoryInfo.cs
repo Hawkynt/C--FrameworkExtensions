@@ -152,43 +152,44 @@ namespace System.IO {
         return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
 
       // otherwise, use MT approach
-      var result = 0L;
-      long[] itemsLeft = { 1L };
-      using (var evente = new AutoResetEvent(false)) {
+      long[] itemsLeftAndResult = { 1L, 0L };
+      using var pushNotification = new AutoResetEvent(false);
 
-        Action<DirectoryInfo> factory = null;
-        factory = d => {
-          try {
-            foreach (var item in d.EnumerateFileSystemInfos()) {
-              var file = item as FileInfo;
-              if (file != null) {
-                Interlocked.Add(ref result, file.Length);
-                continue;
-              }
+      void ExecuteAsync(DirectoryInfo directory) {
+        if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
+          return;
 
-              var folder = item as DirectoryInfo;
-              if (folder != null) {
-                Interlocked.Increment(ref itemsLeft[0]);
-                if (!ThreadPool.QueueUserWorkItem(_ => factory(folder)))
-                  factory.BeginInvoke(folder, factory.EndInvoke, null);
-
-                continue;
-              }
-
-              throw new NotSupportedException("Unknown FileSystemInfo item");
-            }
-          } finally {
-            Interlocked.Decrement(ref itemsLeft[0]);
-            evente.Set();
-          }
-        };
-        factory.BeginInvoke(@this, factory.EndInvoke, null);
-
-        while (Interlocked.Read(ref itemsLeft[0]) > 0)
-          evente.WaitOne();
+        var call = WorkOnDirectory;
+        call.BeginInvoke(directory, call.EndInvoke, null);
       }
 
-      return result;
+      void WorkOnDirectory(DirectoryInfo directory) {
+        try {
+          foreach (var item in directory.EnumerateFileSystemInfos()) {
+            switch (item) {
+              case FileInfo file:
+                Interlocked.Add(ref itemsLeftAndResult[1], file.Length);
+                continue;
+              case DirectoryInfo folder: {
+                Interlocked.Increment(ref itemsLeftAndResult[0]);
+                ExecuteAsync(folder);
+                continue;
+              }
+              default:
+                throw new NotSupportedException("Unknown FileSystemInfo item");
+            }
+          }
+        } finally {
+          if(Interlocked.Decrement(ref itemsLeftAndResult[0])<=0)
+            // ReSharper disable once AccessToDisposedClosure
+            pushNotification.Set();
+        }
+      }
+
+      ExecuteAsync(@this);
+      pushNotification.WaitOne();
+
+      return itemsLeftAndResult[1];
     }
 
     /// <summary>
