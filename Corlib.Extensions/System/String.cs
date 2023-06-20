@@ -24,6 +24,9 @@
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
+#if SUPPORTS_ARRAYPOOL
+using Buffers;
+#endif
 using Collections;
 using Collections.Generic;
 using Diagnostics;
@@ -49,6 +52,9 @@ internal
 #endif
 static partial class StringExtensions {
   #region consts
+
+  private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
+
   /// <summary>
   /// This is a list of services which are registered to certain ports according to IANA.
   /// It allows us to use names for these ports if we want to.
@@ -118,6 +124,10 @@ static partial class StringExtensions {
       : @this[..index] + replacement
       ;
   }
+
+#if SUPPORTS_SPAN && !SUPPORTS_STRING_COPYTO_SPAN
+  public static void CopyTo(this string @this, Span<char> target) => @this.AsSpan().CopyTo(target);
+#endif
 
   /// <summary>
   /// Exchanges a certain character of the string with the given character.
@@ -195,8 +205,8 @@ static partial class StringExtensions {
 #endif
   public static string ExchangeAt(this string @this, int index, int count, string replacement) {
     Against.ThisIsNull(@this);
-    Against.NegativeValues(index);
-    Against.NegativeValuesAndZero(count);
+    Against.IndexBelowZero(index);
+    Against.CountBelowOrEqualZero(count);
 
     return (index, count, length: @this.Length) switch {
       (0, var c, var l) when l <= c => replacement,
@@ -221,7 +231,7 @@ static partial class StringExtensions {
   [DebuggerHidden]
   [StackTraceHidden]
   private static bool _IsInUnchecked(this string @this, IEnumerable<string> values) => values.Contains(@this);
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -455,7 +465,7 @@ static partial class StringExtensions {
   /// <summary>
   /// Determines whether the specified string matches the given regex.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
   /// <returns>
   ///   <c>true</c> if it matches; otherwise, <c>false</c>.
@@ -466,12 +476,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsMatch(this string This, Regex regex) => This != null && regex.IsMatch(This);
+  public static bool IsMatch(this string @this, Regex regex) => @this != null && regex.IsMatch(@this);
 
   /// <summary>
   /// Determines whether the specified string matches the given regex.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
   /// <returns>
   ///   <c>false</c> if it matches; otherwise, <c>true</c>.
@@ -482,37 +492,31 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNotMatch(this string This, Regex regex) => !IsMatch(This, regex);
+  public static bool IsNotMatch(this string @this, Regex regex) => !IsMatch(@this, regex);
 
   /// <summary>
   /// Determines whether the specified string matches the given regex.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => This != null && This.IsMatch(new Regex(regex, regexOptions));
+  public static bool IsMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => @this != null && @this.IsMatch(new Regex(regex, regexOptions));
 
   /// <summary>
   /// Determines whether the specified string matches the given regex.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns><c>false</c> if it matches; otherwise, <c>true</c>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNotMatch(this string This, string regex, RegexOptions regexOptions = RegexOptions.None) => !IsMatch(This, regex, regexOptions);
+  public static bool IsNotMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => !IsMatch(@this, regex, regexOptions);
 
   /// <summary>
   /// Matches the specified regex.
@@ -824,20 +828,17 @@ static partial class StringExtensions {
   /// <summary>
   /// Uses the string as a regular expression.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <returns>An new instance of RegularExpression.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Regex AsRegularExpression(this string This) => This == null ? null : new Regex(This);
+  public static Regex AsRegularExpression(this string @this) => @this == null ? null : new Regex(@this);
 
   /// <summary>
   /// Uses the string as a regular expression.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="options">The regex options.</param>
   /// <returns>
   /// An new instance of RegularExpression.
@@ -848,12 +849,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static Regex AsRegularExpression(this string This, RegexOptions options) => This == null ? null : new Regex(This, options);
+  public static Regex AsRegularExpression(this string @this, RegexOptions options) => @this == null ? null : new Regex(@this, options);
 
   /// <summary>
   /// Replaces multiple contents.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
 #if SUPPORTS_CONTRACTS
@@ -862,7 +863,7 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string MultipleReplace(this string This, params KeyValuePair<string, object>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, object>>)replacements);
+  public static string MultipleReplace(this string @this, params KeyValuePair<string, object>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, object>>)replacements);
 
 
 #if SUPPORTS_CONTRACTS
@@ -871,12 +872,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string MultipleReplace(this string This, string replacement, params string[] toReplace) => MultipleReplace(This, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
+  public static string MultipleReplace(this string @this, string replacement, params string[] toReplace) => MultipleReplace(@this, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
 
   /// <summary>
   /// Replaces multiple contents.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
 #if SUPPORTS_CONTRACTS
@@ -885,28 +886,28 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string MultipleReplace(this string This, params KeyValuePair<string, string>[] replacements) => MultipleReplace(This, (IEnumerable<KeyValuePair<string, string>>)replacements);
+  public static string MultipleReplace(this string @this, params KeyValuePair<string, string>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, string>>)replacements);
 
   /// <summary>
   /// Replaces multiple contents.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
-  public static string MultipleReplace(this string This, IEnumerable<KeyValuePair<string, string>> replacements) => MultipleReplace(This, replacements?.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value)));
+  public static string MultipleReplace(this string @this, IEnumerable<KeyValuePair<string, string>> replacements) => MultipleReplace(@this, replacements?.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value)));
 
   /// <summary>
   /// Replaces multiple contents.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
-  public static string MultipleReplace(this string This, IEnumerable<KeyValuePair<string, object>> replacements) {
-    if (string.IsNullOrEmpty(This) || replacements == null)
-      return This;
+  public static string MultipleReplace(this string @this, IEnumerable<KeyValuePair<string, object>> replacements) {
+    if (string.IsNullOrEmpty(@this) || replacements == null)
+      return @this;
 
     var list = replacements.OrderByDescending(kvp => kvp.Key.Length).ToArray();
-    var length = This.Length;
+    var length = @this.Length;
     var result = new StringBuilder(length);
     for (var i = 0; i < length; ++i) {
       var found = false;
@@ -915,7 +916,7 @@ static partial class StringExtensions {
         if (i + keyLength > length)
           continue;
 
-        var part = This.Substring(i, keyLength);
+        var part = @this.Substring(i, keyLength);
         if (kvp.Key != part)
           continue;
 
@@ -928,7 +929,7 @@ static partial class StringExtensions {
       }
 
       if (!found)
-        result.Append(This[i]);
+        result.Append(@this[i]);
 
     }
 
@@ -1270,7 +1271,7 @@ static partial class StringExtensions {
   /// <summary>
   /// Transforms the given connection string into a linq2sql compatible one by removing the driver.
   /// </summary>
-  /// <param name="This">This ConnectionString.</param>
+  /// <param name="this">This ConnectionString.</param>
   /// <returns>The transformed result.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -1278,18 +1279,18 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string ToLinq2SqlConnectionString(this string This) {
+  public static string ToLinq2SqlConnectionString(this string @this) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
 #endif
     var regex = new Regex(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
-    return regex.Replace(This, string.Empty);
+    return regex.Replace(@this, string.Empty);
   }
 
   /// <summary>
   /// Escapes the string to be used as sql data.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <returns></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -1297,12 +1298,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string MsSqlDataEscape(this object This) => This == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", This).Replace("'", "''") + "'";
+  public static string MsSqlDataEscape(this object @this) => @this == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", @this).Replace("'", "''") + "'";
 
   /// <summary>
   /// Escapes the string to be used as sql identifiers eg. table or column names.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <returns></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -1310,11 +1311,11 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string MsSqlIdentifierEscape(this string This) {
+  public static string MsSqlIdentifierEscape(this string @this) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(!This.IsNullOrWhiteSpace());
+    Contract.Requires(!@this.IsNullOrWhiteSpace());
 #endif
-    return "[" + This.Replace("]", "]]") + "]";
+    return "[" + @this.Replace("]", "]]") + "]";
   }
 
   /// <summary>
@@ -1366,13 +1367,13 @@ static partial class StringExtensions {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(@this != null);
 #endif
-    return comparer?.Equals(@this.Length>0? @this[0] + string.Empty:string.Empty, what + string.Empty) ?? @this.StartsWith(what);
+    return comparer?.Equals(@this.Length > 0 ? @this[0] + string.Empty : string.Empty, what + string.Empty) ?? @this.StartsWith(what);
   }
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this,what,comparer);
+  public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this, what, comparer);
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1382,9 +1383,9 @@ static partial class StringExtensions {
     Contract.Requires(@this != null);
 #endif
     if (what == null)
-      return @this==null;
+      return @this == null;
 
-    return comparer?.Equals(@this.Substring(0, what.Length), what) ?? @this.StartsWith(what);
+    return comparer?.Equals(@this[..what.Length], what) ?? @this.StartsWith(what);
   }
 
 #if SUPPORTS_INLINING
@@ -1399,7 +1400,7 @@ static partial class StringExtensions {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(@this != null);
 #endif
-    return comparer?.Equals(@this.Length > 0 ? @this[@this.Length - 1] : string.Empty, what) ?? @this.EndsWith(what);
+    return comparer?.Equals(@this.Length > 0 ? @this[^1] : string.Empty, what) ?? @this.EndsWith(what);
   }
 
 #if SUPPORTS_INLINING
@@ -1417,7 +1418,7 @@ static partial class StringExtensions {
     if (what == null)
       return @this == null;
 
-    return comparer?.Equals(@this.Substring(Math.Max(0,@this.Length - what.Length)), what) ?? @this.EndsWith(what);
+    return comparer?.Equals(@this[Math.Max(0, @this.Length - what.Length)..], what) ?? @this.EndsWith(what);
   }
 
 #if SUPPORTS_INLINING
@@ -1789,22 +1790,22 @@ static partial class StringExtensions {
 
 #else
 
-    public static string TrimEnd(this string @this, string what) {
-      if (@this == null || what == null)
+  public static string TrimEnd(this string @this, string what) {
+    if (@this == null || what == null)
+      return @this;
+
+    var index = @this.Length - what.Length;
+
+    // source shorter than search string, exit  
+    if (index < 0)
+      return @this;
+
+    for (int j = index, i = 0; i < what.Length; ++j, ++i)
+      if (@this[j] != what[i])
         return @this;
 
-      var index = @this.Length - what.Length;
-
-      // source shorter than search string, exit  
-      if (index < 0)
-        return @this;
-
-      for (int j = index, i = 0; i < what.Length; ++j, ++i)
-        if (@this[j] != what[i])
-          return @this;
-
-      return @this.Substring(0, index);
-    }
+    return @this.Substring(0, index);
+  }
 
 #endif
 
@@ -1965,7 +1966,7 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsAnyOf(this string @this, IEnumerable<string> needles,StringComparison comparison) {
+  public static bool IsAnyOf(this string @this, IEnumerable<string> needles, StringComparison comparison) {
     if (needles == null)
       throw new ArgumentNullException(nameof(needles));
 
@@ -2334,7 +2335,7 @@ static partial class StringExtensions {
   /// <param name="toFind">The text to find.</param>
   /// <returns>True if the LIKE matched.</returns>
   public static bool Like(this string @this, string toFind)
-    => new Regex(@"\A" 
+    => new Regex(@"\A"
                  + _SQL_LIKE_ESCAPING
                    .Replace(toFind, ch => @"\" + ch)
                    .Replace('_', '.')
@@ -2348,7 +2349,7 @@ static partial class StringExtensions {
   /// <param name="this">The string to convert</param>
   /// <returns>The quoted-printable string</returns>
   public static string ToQuotedPrintable(this string @this) {
-    if (string.IsNullOrEmpty(@this)) 
+    if (string.IsNullOrEmpty(@this))
       return @this;
 
     // see https://github.com/dotnet/runtime/blob/v5.0.3/src/libraries/Common/src/System/HexConverter.cs for the inner workings
@@ -2361,12 +2362,12 @@ static partial class StringExtensions {
       lowNibble = (char)(temp & 0xff);
       highNibble = (char)(temp >> 8);
     }
-      
+
     var bytes = Encoding.UTF8.GetBytes(@this);
     var result = new StringBuilder(bytes.Length * 2);
-    foreach(var ch in bytes)
+    foreach (var ch in bytes)
       if (ch < 32 || ch > 126 || ch == '=') {
-        ByteToHex2(ch,out var high,out var low);
+        ByteToHex2(ch, out var high, out var low);
         result.Append('=');
         result.Append(high);
         result.Append(low);
@@ -2376,23 +2377,23 @@ static partial class StringExtensions {
     return result.ToString();
   }
 
-  private static readonly byte[] _CHAR_TO_HEX_LOOKUP={
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xA,  0xB,  0xC,  0xD,  0xE,  0xF,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF  
+  private static readonly byte[] _CHAR_TO_HEX_LOOKUP ={
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xA,  0xB,  0xC,  0xD,  0xE,  0xF,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
   };
 
   /// <summary>
