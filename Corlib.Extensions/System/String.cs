@@ -366,7 +366,7 @@ static partial class StringExtensions {
   /// Gets the first n chars from a string.
   /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="length">The number of chars to get.</param>
+  /// <param name="count">The number of chars to get.</param>
   /// <returns>A string with the first n chars.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -374,18 +374,21 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string Left(this string @this, int length) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(length >= 0);
-#endif
-    return @this?.Substring(0, Math.Min(length, @this.Length));
+  public static string Left(this string @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowZero(count);
+
+    // if (count > @this.Length) count = @this.Length
+    var mask = @this.Length - count;
+    count += mask & (mask >> 31);
+    return @this[..count];
   }
 
   /// <summary>
   /// Gets the last n chars from a string.
   /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="length">The number of chars to get.</param>
+  /// <param name="count">The number of chars to get.</param>
   /// <returns>A string with the last n chars.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -393,19 +396,17 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string Right(this string @this, int length) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(length >= 0);
-#endif
-    // ReSharper disable once UseNullPropagation
-    if (@this == null)
-      return null;
+  public static string Right(this string @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowZero(count);
 
-    var totalLen = @this.Length;
-    return @this.Substring(totalLen - Math.Min(totalLen, length));
+    // if (count > @this.Length) count = @this.Length
+    var mask = @this.Length - count;
+    count += mask & (mask >> 31);
+    return @this[^count..];
   }
-    
-  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().ToHashSet(c=>c));
+
+  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().ToHashSet(c => c));
 
   /// <summary>
   /// Sanitizes the text to use as a filename.
