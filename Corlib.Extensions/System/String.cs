@@ -117,11 +117,12 @@ static partial class StringExtensions {
 #endif
   public static string ExchangeAt(this string @this, int index, string replacement) {
     Against.ThisIsNull(@this);
-    Against.NegativeValuesAndZero(index);
+    Against.IndexBelowZero(index);
+    Against.ValueIsZero(index);
 
-    return index >= @this.Length 
-      ? @this + replacement 
-      : @this[..index] + replacement
+    return index < @this.Length
+      ? @this[..index] + replacement
+      : @this + replacement
       ;
   }
 
@@ -143,7 +144,7 @@ static partial class StringExtensions {
 #endif
   public static string ExchangeAt(this string @this, int index, char replacement) {
     Against.ThisIsNull(@this);
-    Against.NegativeValues(index);
+    Against.IndexBelowZero(index);
 
     var length = @this.Length;
 
@@ -152,12 +153,9 @@ static partial class StringExtensions {
     if (index == 0 && length <= 1)
       return replacement.ToString();
 
-    var result = length < 256 ? stackalloc char[length + 1] : new char[length + 1]; // allocate one character more
-#if NET5_0_OR_GREATER
+    var result = length < _MAX_STACKALLOC_STRING_LENGTH ? stackalloc char[length + 1] : new char[length + 1]; // allocate one character more
     @this.CopyTo(result);
-#else
-    @this.AsSpan().CopyTo(result);
-#endif
+
     if (index >= length) {
       result[length] = replacement;
       return new(result);
@@ -171,17 +169,17 @@ static partial class StringExtensions {
     string part1;
     var part2 = replacement.ToString();
 
-    if (index == 0) {
+    if (index < length) {
+      if (index < length - 1)
+        return @this[..index] + part2 + @this[(index + 1)..];
+
+      part1 = @this[..^1];
+    } else if (index == 0) {
       if (length <= 1)
         return part2;
 
       part1 = part2;
       part2 = @this[1..];
-    } else if(index<length) {
-      if (index < length - 1)
-        return @this[..index] + part2 + @this[(index + 1)..];
-
-      part1 = @this[..^1];
     } else {
       part1 = @this;
     }
