@@ -1312,12 +1312,10 @@ static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="length">The number of chars each part should have</param>
   /// <returns>An enumeration of string parts</returns>
-  public static IEnumerable<string> Split(this string @this,int length) {
-    if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
-    if (length <= 0)
-      throw new ArgumentOutOfRangeException(nameof(length));
-
+  public static IEnumerable<string> Split(this string @this, int length) {
+    Against.ThisIsNull(@this);
+    Against.NegativeValuesAndZero(length);
+    
     for (var i = 0; i < @this.Length; i += length)
       yield return @this.Substring(i, length);
   }
@@ -1325,7 +1323,7 @@ static partial class StringExtensions {
   /// <summary>
   /// Splits the specified string by another one.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
   /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
   /// <returns>The parts.</returns>
@@ -1335,65 +1333,94 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string[] Split(this string This, char splitter, int max = 0) => This.Split(splitter.ToString(), (ulong)max).ToArray();
+  public static string[] Split(this string @this, char splitter, int max) {
+    Against.ThisIsNull(@this);
+    Against.NegativeValues(max);
+
+    return Split(@this, splitter.ToString(), (ulong)max).ToArray();
+  }
 
   /// <summary>
   /// Splits the specified string by another one.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
-  /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
   /// <returns>The parts.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<string> Split(this string This, char splitter, ulong max = 0) => This.Split(splitter.ToString(), max);
+  public static IEnumerable<string> Split(this string @this, char splitter) => Split(@this, splitter, 0UL);
 
   /// <summary>
   /// Splits the specified string by another one.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
   /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
   /// <returns>The parts.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<string> Split(this string This, string splitter, ulong max = 0) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(!string.IsNullOrEmpty(splitter));
+  public static IEnumerable<string> Split(this string @this, char splitter, ulong max) => Split(@this, splitter.ToString(), max);
+
+  /// <summary>
+  /// Splits the specified string by another one.
+  /// </summary>
+  /// <param name="this">This string.</param>
+  /// <param name="splitter">The splitter.</param>
+  /// <returns>The parts.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    if (This == null)
-      yield break;
+  public static IEnumerable<string> Split(this string @this, string splitter) {
+    Against.ThisIsNull(@this);
+
+    return _Split(@this, splitter, 0UL);
+  }
+
+  /// <summary>
+  /// Splits the specified string by another one.
+  /// </summary>
+  /// <param name="this">This string.</param>
+  /// <param name="splitter">The splitter.</param>
+  /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+  /// <returns>The parts.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<string> Split(this string @this, string splitter, ulong max) {
+    Against.ThisIsNull(@this);
+
+    return _Split(@this, splitter, max);
+  }
+
+  private static IEnumerable<string> _Split(this string @this, string splitter, ulong max) {
+    splitter ??= string.Empty;
 
     var splitterLength = splitter.Length;
-    int startIndex;
+    if (splitterLength == 0 || splitterLength > @this.Length) {
+      yield return @this;
+      yield break;
+    }
+
+    int nextIndex;
     if (max == 0)
       max = ulong.MaxValue;
 
-    var currentStartIndex = 0;
+    var startIndex = 0;
 
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(currentStartIndex <= This.Length);
-#endif
-    while (max-- > 0 && (startIndex = This.IndexOf(splitter, currentStartIndex, StringComparison.Ordinal)) >= 0) {
-      yield return This.Substring(currentStartIndex, startIndex - currentStartIndex);
-      currentStartIndex = startIndex + splitterLength;
+    while (max-- > 0 && (nextIndex = @this.IndexOf(splitter, startIndex, StringComparison.Ordinal)) >= 0) {
+      yield return @this[startIndex..nextIndex];
+      startIndex = nextIndex + splitterLength;
     }
 
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(currentStartIndex <= This.Length);
-#endif
-    yield return This.Substring(currentStartIndex);
+    yield return @this[startIndex..];
   }
 
   /// <summary>
   /// Splits the specified string using a regular expression.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="regex">The regex to use.</param>
   /// <returns>The parts.</returns>
 #if SUPPORTS_CONTRACTS
@@ -1402,18 +1429,17 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string[] Split(this string This, Regex regex) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(regex != null);
-#endif
-    return regex.Split(This);
+  public static string[] Split(this string @this, Regex regex) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(regex);
+
+    return regex.Split(@this);
   }
 
   /// <summary>
   /// Splits the specified string.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
   /// <param name="options">The options.</param>
   /// <returns>The parts</returns>
@@ -1423,7 +1449,18 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string[] Split(this string This, string splitter, StringSplitOptions options) {
+  public static string[] Split(this string @this, string splitter, StringSplitOptions options) {
+    Against.ThisIsNull(@this);
+
+    return @this.Split(new[] { splitter }, options);
+  }
+
+  /// <summary>
+  /// Converts a word to pascal case.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="culture">The culture to use; defaults to current culture.</param>
+  /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
 #if SUPPORTS_CONTRACTS
     Contract.Requires(This != null);
 #endif
