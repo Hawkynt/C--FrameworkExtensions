@@ -1768,7 +1768,7 @@ static partial class StringExtensions {
   /// <summary>
   /// Checks whether the given string starts with the specified character.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns>
@@ -1780,17 +1780,17 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
+  public static bool StartsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
 #endif
-    return This.Length > 0 && string.Equals(This[0] + string.Empty, value + string.Empty, stringComparison);
+    return @this.Length > 0 && string.Equals(@this[0] + string.Empty, value + string.Empty, stringComparison);
   }
 
   /// <summary>
   /// Checks whether the given string ends with the specified character.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns>
@@ -1802,17 +1802,17 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool EndsWith(this string This, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
+  public static bool EndsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
 #endif
-    return This.Length > 0 && string.Equals(This[This.Length - 1] + string.Empty, value + string.Empty, stringComparison);
+    return @this.Length > 0 && string.Equals(@this[^1] + string.Empty, value + string.Empty, stringComparison);
   }
 
   /// <summary>
   /// Checks whether the given string starts not with the specified text.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
@@ -1822,12 +1822,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.StartsWith(value, stringComparison);
+  public static bool StartsNotWith(this string @this, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
 
   /// <summary>
   /// Checks whether the given string ends not with the specified text.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
@@ -1837,12 +1837,12 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool EndsNotWith(this string This, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !This.EndsWith(value, stringComparison);
+  public static bool EndsNotWith(this string @this, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.EndsWith(value, stringComparison);
 
   /// <summary>
   /// Determines whether the given string is surrounded by another one.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="text">The text that should be around the given string.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns>
@@ -1854,18 +1854,18 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsSurroundedWith(this string This, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
+  public static bool IsSurroundedWith(this string @this, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
     Contract.Requires(text != null);
 #endif
-    return This.IsSurroundedWith(text, text, stringComparison);
+    return @this.IsSurroundedWith(text, text, stringComparison);
   }
 
   /// <summary>
   /// Determines whether the given string is surrounded by two others.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="prefix">The prefix.</param>
   /// <param name="postfix">The postfix.</param>
   /// <param name="stringComparison">The string comparison.</param>
@@ -1878,19 +1878,19 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsSurroundedWith(this string This, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
+  public static bool IsSurroundedWith(this string @this, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
     Contract.Requires(prefix != null);
     Contract.Requires(postfix != null);
 #endif
-    return This.StartsWith(prefix, stringComparison) && This.EndsWith(postfix, stringComparison);
+    return @this.StartsWith(prefix, stringComparison) && @this.EndsWith(postfix, stringComparison);
   }
 
   /// <summary>
   /// Replaces a specified string at the start of another if possible.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="what">What to replace.</param>
   /// <param name="replacement">The replacement.</param>
   /// <param name="stringComparison">The string comparison.</param>
@@ -1901,18 +1901,19 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string ReplaceAtStart(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
-    if (This == null && what == null)
-      return replacement;
-    if (This == null || This.Length < what.Length)
-      return This;
-    return This.StartsWith(what, stringComparison) ? replacement + This.Substring(what.Length) : This;
+  public static string ReplaceAtStart(this string @this, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+    
+    if (@this == null || @this.Length < what.Length)
+      return @this;
+    return @this.StartsWith(what, stringComparison) ? replacement + @this[what.Length..] : @this;
   }
 
   /// <summary>
   /// Replaces a specified string at the end of another if possible.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="what">What to replace.</param>
   /// <param name="replacement">The replacement.</param>
   /// <param name="stringComparison">The string comparison.</param>
@@ -1923,12 +1924,13 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string ReplaceAtEnd(this string This, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
-    if (This == null && what == null)
-      return replacement;
-    if (This == null || This.Length < what.Length)
-      return This;
-    return This.EndsWith(what, stringComparison) ? This.Substring(0, This.Length - what.Length) + replacement : This;
+  public static string ReplaceAtEnd(this string @this, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+
+    if (@this == null || @this.Length < what.Length)
+      return @this;
+    return @this.EndsWith(what, stringComparison) ? @this[..^what.Length] + replacement : @this;
   }
 
 #if SUPPORTS_CONTRACTS
