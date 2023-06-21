@@ -1939,9 +1939,9 @@ static partial class StringExtensions {
 #if UNSAFE
 
   public static unsafe string TrimEnd(this string @this, string what) {
-    if (@this == null || what == null)
-      return @this;
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+    
     var count = what.Length;
     var index = @this.Length - count;
 
@@ -2050,8 +2050,8 @@ static partial class StringExtensions {
 #else
 
   public static string TrimEnd(this string @this, string what) {
-    if (@this == null || what == null)
-      return @this;
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
 
     var index = @this.Length - what.Length;
 

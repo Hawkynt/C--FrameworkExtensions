@@ -687,6 +687,15 @@ public class StringTests {
     => _ExecuteTest(() => input.ReplaceAtEnd(what, replacement, comparison), expected, exception)
   ;
 
+  [Test]
+  [TestCase(null,null,null,typeof(NullReferenceException))]
+  [TestCase("", null, null, typeof(ArgumentNullException))]
+  [TestCase("abc", "bc", "a")]
+  [TestCase("abc", "ab", "abc")]
+  public void TrimEnd(string? input, string? what, string? expected, Type? exception = null) 
+    => _ExecuteTest(() => input.TrimEnd(what), expected, exception)
+  ;
+
   private static void _ExecuteTest<TResult>(Func<TResult> resultProvider,TResult expected,Type? exception) {
     if (exception == null)
       Assert.That(resultProvider(), Is.EqualTo(expected));
