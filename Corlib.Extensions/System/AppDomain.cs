@@ -18,7 +18,11 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+
+#if !NETSTANDARD && !NETCOREAPP
+#define _SUPPORTS_APP_CONFIGURATION_PATH
+#endif
+
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PartialTypeWithSinglePart
@@ -36,237 +40,247 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Principal;
 using System.Threading;
 
-namespace System {
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
+namespace System;
+
+
+#if SUPPORTS_INLINING
+using Runtime.CompilerServices;
 #endif
-  static partial class AppDomainExtensions {
 
-    private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
+#if COMPILE_TO_EXTENSION_DLL
+public
+#else
+internal
+#endif
+static partial class AppDomainExtensions {
 
-    #region nested types
+  private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
 
-    /// <summary>
-    /// A utility class to determine a process parent.
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    private struct ParentProcessUtilities {
-      // These members must match PROCESS_BASIC_INFORMATION
-      // ReSharper disable MemberCanBePrivate.Local
-      internal IntPtr Reserved1;
-      internal IntPtr PebBaseAddress;
-      internal IntPtr Reserved2_0;
-      internal IntPtr Reserved2_1;
-      internal IntPtr UniqueProcessId;
-      internal IntPtr InheritedFromUniqueProcessId;
-      // ReSharper restore MemberCanBePrivate.Local
+#region nested types
 
-      [DllImport("ntdll.dll")]
-      private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
+  /// <summary>
+  /// A utility class to determine a process parent.
+  /// </summary>
+  [StructLayout(LayoutKind.Sequential)]
+  private struct ParentProcessUtilities {
+    // These members must match PROCESS_BASIC_INFORMATION
+    // ReSharper disable MemberCanBePrivate.Local
+    internal IntPtr Reserved1;
+    internal IntPtr PebBaseAddress;
+    internal IntPtr Reserved2_0;
+    internal IntPtr Reserved2_1;
+    internal IntPtr UniqueProcessId;
+    internal IntPtr InheritedFromUniqueProcessId;
+    // ReSharper restore MemberCanBePrivate.Local
 
-      /// <summary>
-      /// Gets the parent process of the current process.
-      /// </summary>
-      /// <returns>An instance of the Process class.</returns>
-      public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
-
-      /// <summary>
-      /// Gets the parent process of specified process.
-      /// </summary>
-      /// <param name="id">The process id.</param>
-      /// <returns>An instance of the Process class.</returns>
-      public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
-
-      /// <summary>
-      /// Gets the parent process of a specified process.
-      /// </summary>
-      /// <param name="handle">The process handle.</param>
-      /// <returns>An instance of the Process class or null if an error occurred.</returns>
-      public static Process GetParentProcess(IntPtr handle) {
-        var pbi = new ParentProcessUtilities();
-        var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
-        if (status != 0)
-          return null;
-
-        try {
-          return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
-        } catch (ArgumentException) {
-          // not found
-          return null;
-        }
-      }
-    }
-
-    #endregion
+    [DllImport("ntdll.dll")]
+    private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
 
     /// <summary>
-    /// Saves the parent process' environment to disk.
+    /// Gets the parent process of the current process.
     /// </summary>
-    /// <param name="stream">The stream.</param>
-    /// <param name="targetDirectory">The target directory.</param>
-    /// <param name="domain">The domain.</param>
-    // ReSharper disable once SuggestBaseTypeForParameter
-    private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
-      var environment = new Dictionary<string, string> {
-        { "baseDirectory", domain.BaseDirectory },
-        { "configurationFile", domain.SetupInformation.ConfigurationFile },
-        { "deleteOnExit", targetDirectory.FullName }
-      };
-
-      var formatter = new BinaryFormatter();
-      formatter.Serialize(stream, environment);
-    }
+    /// <returns>An instance of the Process class.</returns>
+    public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
 
     /// <summary>
-    /// Loads a saved environment from the parent process.
+    /// Gets the parent process of specified process.
     /// </summary>
-    /// <param name="stream">The stream.</param>
-    /// <param name="domain">The domain.</param>
-    private static void _LoadEnvironmentFrom(Stream stream, AppDomain domain) {
-      var formatter = new BinaryFormatter();
-      var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
-
-      // var baseDirectory = environment["baseDirectory"];
-      var configurationFile = environment["configurationFile"];
-      var directoryToDeleteOnExit = new DirectoryInfo(environment["deleteOnExit"]);
-
-      domain.SetupInformation.ConfigurationFile = configurationFile;
-
-      // make sure we're removed from disk after exit
-      if (domain.IsDefaultAppDomain())
-        domain.ProcessExit += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-      else
-        domain.DomainUnload += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-
-      domain.UnhandledException += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-
-      // catch unexpected shutdowns for console applications
-      if (Environment.UserInteractive)
-        Console.CancelKeyPress += (_, e) => {
-          switch (e.SpecialKey) {
-            case ConsoleSpecialKey.ControlBreak:
-              _SelfDestruct(directoryToDeleteOnExit);
-              return;
-            case ConsoleSpecialKey.ControlC:
-              _SelfDestruct(directoryToDeleteOnExit);
-              return;
-            default:
-              return;
-          }
-        };
-    }
+    /// <param name="id">The process id.</param>
+    /// <returns>An instance of the Process class.</returns>
+    public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
 
     /// <summary>
-    /// Removes the given directory by spawning a child-process, thus allowing to remove ourselves.
+    /// Gets the parent process of a specified process.
     /// </summary>
-    /// <param name="myDirectory">My directory.</param>
-    private static void _SelfDestruct(DirectoryInfo myDirectory) {
-      var batchFile = _WriteBatchToDeleteDirectory(myDirectory);
-      if (batchFile == null)
-        return;
-
-      var process = new Process {
-        StartInfo = {
-          FileName = batchFile.FullName,
-          WindowStyle = ProcessWindowStyle.Hidden,
-          CreateNoWindow = true,
-          UseShellExecute = true
-        },
-      };
-      process.Start();
-      process.PriorityClass = ProcessPriorityClass.BelowNormal;
-    }
-
-    /// <summary>
-    /// Writes a batch file deleting a given directory and itself afterwards.
-    /// Note: Batch file is written to the directories parent directory.
-    /// </summary>
-    /// <param name="directoryToDelete">The directory to delete.</param>
-    /// <returns>The generated batch file</returns>
-    private static FileInfo _WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
-      var result = new FileInfo(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
-      if (result.Exists)
+    /// <param name="handle">The process handle.</param>
+    /// <returns>An instance of the Process class or null if an error occurred.</returns>
+    public static Process GetParentProcess(IntPtr handle) {
+      var pbi = new ParentProcessUtilities();
+      var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
+      if (status != 0)
         return null;
 
-      File.WriteAllText(result.FullName, $@"
+      try {
+        return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
+      } catch (ArgumentException) {
+        // not found
+        return null;
+      }
+    }
+  }
+
+  #endregion
+
+#if _SUPPORTS_APP_CONFIGURATION_PATH
+
+  /// <summary>
+  /// Saves the parent process' environment to disk.
+  /// </summary>
+  /// <param name="stream">The stream.</param>
+  /// <param name="targetDirectory">The target directory.</param>
+  /// <param name="domain">The domain.</param>
+  // ReSharper disable once SuggestBaseTypeForParameter
+  private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
+    var environment = new Dictionary<string, string> {
+      { "baseDirectory", domain.BaseDirectory },
+      { "configurationFile", domain.SetupInformation.ConfigurationFile },
+      { "deleteOnExit", targetDirectory.FullName }
+    };
+
+    var formatter = new BinaryFormatter();
+    formatter.Serialize(stream, environment);
+  }
+
+  /// <summary>
+  /// Loads a saved environment from the parent process.
+  /// </summary>
+  /// <param name="stream">The stream.</param>
+  /// <param name="domain">The domain.</param>
+  private static void _LoadEnvironmentFrom(Stream stream, AppDomain domain) {
+    var formatter = new BinaryFormatter();
+    var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
+
+    // var baseDirectory = environment["baseDirectory"];
+    var configurationFile = environment["configurationFile"];
+    var directoryToDeleteOnExit = new DirectoryInfo(environment["deleteOnExit"]);
+
+    domain.SetupInformation.ConfigurationFile = configurationFile;
+
+    // make sure we're removed from disk after exit
+    if (domain.IsDefaultAppDomain())
+      domain.ProcessExit += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
+    else
+      domain.DomainUnload += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
+
+    domain.UnhandledException += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
+
+    // catch unexpected shutdowns for console applications
+    if (Environment.UserInteractive)
+      Console.CancelKeyPress += (_, e) => {
+        switch (e.SpecialKey) {
+          case ConsoleSpecialKey.ControlBreak:
+            _SelfDestruct(directoryToDeleteOnExit);
+            return;
+          case ConsoleSpecialKey.ControlC:
+            _SelfDestruct(directoryToDeleteOnExit);
+            return;
+          default:
+            return;
+        }
+      };
+  }
+
+#endif
+
+  /// <summary>
+  /// Removes the given directory by spawning a child-process, thus allowing to remove ourselves.
+  /// </summary>
+  /// <param name="myDirectory">My directory.</param>
+  private static void _SelfDestruct(DirectoryInfo myDirectory) {
+    var batchFile = _WriteBatchToDeleteDirectory(myDirectory);
+    if (batchFile == null)
+      return;
+
+    var process = new Process {
+      StartInfo = {
+        FileName = batchFile.FullName,
+        WindowStyle = ProcessWindowStyle.Hidden,
+        CreateNoWindow = true,
+        UseShellExecute = true
+      },
+    };
+    process.Start();
+    process.PriorityClass = ProcessPriorityClass.BelowNormal;
+  }
+
+  /// <summary>
+  /// Writes a batch file deleting a given directory and itself afterwards.
+  /// Note: Batch file is written to the directories parent directory.
+  /// </summary>
+  /// <param name="directoryToDelete">The directory to delete.</param>
+  /// <returns>The generated batch file</returns>
+  private static FileInfo _WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
+    var result = new FileInfo(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
+    if (result.Exists)
+      return null;
+
+    File.WriteAllText(result.FullName, $@"
 @echo off
 :repeat
 echo Trying to delete...
 rd /q /s ""{directoryToDelete.FullName}""
 if exist ""{directoryToDelete.FullName}"" (
-  ping 127.0.0.1 -n 3 >NUL
-  goto repeat
+ping 127.0.0.1 -n 3 >NUL
+goto repeat
 )
 del ""%~0""
 ");
-      return result;
+    return result;
+  }
+
+#if _SUPPORTS_APP_CONFIGURATION_PATH
+
+  /// <summary>
+  /// Reruns the given app domain from a temporary directory.
+  /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
+  ///       * this first creates a temporary directory
+  ///       * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
+  ///       * saves the current environment to a file
+  ///       * spawns the new process at the temporary location
+  ///       * restores the saved environment
+  ///       * makes sure that the temporary location is deleted by the child-process upon exit
+  /// </summary>
+  /// <param name="this">This AppDomain.</param>
+  /// <exception cref="System.Exception">Semaphore already present?</exception>
+  public static void RerunInTemporaryDirectory(this AppDomain @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    var executable = GetExecutable(@this);
+    var semaphoreName = executable.Name;
+
+    var parentProcess = ParentProcessUtilities.GetParentProcess();
+    var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
+
+    // try to connect to parent pipe
+    using (var parentSemaphore = new NamedPipeClientStream(".", parentSemaphoreName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
+      try {
+        parentSemaphore.Connect(0);
+      } catch {
+        // ignored
+      }
+
+      // if we could connect, we're the newly spawned child process
+      if (parentSemaphore.IsConnected) {
+        _LoadEnvironmentFrom(parentSemaphore, @this);
+        return;
+      }
     }
 
-    /// <summary>
-    /// Reruns the given app domain from a temporary directory.
-    /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
-    ///       * this first creates a temporary directory
-    ///       * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
-    ///       * saves the current environment to a file
-    ///       * spawns the new process at the temporary location
-    ///       * restores the saved environment
-    ///       * makes sure that the temporary location is deleted by the child-process upon exit
-    /// </summary>
-    /// <param name="this">This AppDomain.</param>
-    /// <exception cref="System.Exception">Semaphore already present?</exception>
-    public static void RerunInTemporaryDirectory(this AppDomain @this) {
-      Guard.Against.ThisIsNull(@this);
+    // we are the parent process, so acquire a new pipe for ourselves
+    var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
+    using (var mySemaphore = new NamedPipeServerStream(mySemaphoreName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
+      var directory = _CreateTempDirectory();
+      var newTarget = _CopyExecutableAndAllAssemblies(executable, directory);
 
-      var executable = GetExecutable(@this);
-      var semaphoreName = executable.Name;
-
-      var parentProcess = ParentProcessUtilities.GetParentProcess();
-      var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
-
-      // try to connect to parent pipe
-      using (var parentSemaphore = new NamedPipeClientStream(".", parentSemaphoreName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
-        try {
-          parentSemaphore.Connect(0);
-        } catch {
-          // ignored
-        }
-
-        // if we could connect, we're the newly spawned child process
-        if (parentSemaphore.IsConnected) {
-          _LoadEnvironmentFrom(parentSemaphore, @this);
-          return;
-        }
+      // restart child with original command line if possible to pass all arguments
+      var cmd = Environment.CommandLine;
+      if (cmd.StartsWith("\"")) {
+        var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
+        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
+      } else {
+        var index = cmd.IndexOf(" ", StringComparison.Ordinal);
+        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
       }
 
-      // we are the parent process, so acquire a new pipe for ourselves
-      var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-      using (var mySemaphore = new NamedPipeServerStream(mySemaphoreName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
-        var directory = _CreateTempDirectory();
-        var newTarget = _CopyExecutableAndAllAssemblies(executable, directory);
+      // start a child process
+      var startInfo = new ProcessStartInfo(newTarget.FullName, cmd) { UseShellExecute = false };
+      Process.Start(startInfo);
 
-        // restart child with original command line if possible to pass all arguments
-        var cmd = Environment.CommandLine;
-        if (cmd.StartsWith("\"")) {
-          var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
-          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-        } else {
-          var index = cmd.IndexOf(" ", StringComparison.Ordinal);
-          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-        }
+      // wait till the child release the semaphore
+      mySemaphore.WaitForConnection();
+      _SaveEnvironmentTo(mySemaphore, directory, @this);
 
-        // start a child process
-        var startInfo = new ProcessStartInfo(newTarget.FullName, cmd) { UseShellExecute = false };
-        Process.Start(startInfo);
-
-        // wait till the child release the semaphore
-        mySemaphore.WaitForConnection();
-        _SaveEnvironmentTo(mySemaphore, directory, @this);
-
-        Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
-      }
-
+      Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
     }
 
   }
@@ -379,144 +393,141 @@ del ""%~0""
     /// <exception cref="Exception">Semaphore already present?</exception>
     // ReSharper disable once SuggestBaseTypeForParameter
     private static bool _Fork(FileInfo executable, string semaphoreName) {
-      var parentProcess = ParentProcessUtilities.GetParentProcess();
-      var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
-      bool createNew;
+    var parentProcess = ParentProcessUtilities.GetParentProcess();
+    var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
+    bool createNew;
 
-      // try to get parent semaphore first
-      using (var parentSemaphore = new Semaphore(0, 1, parentSemaphoreName, out createNew))
-        if (!createNew) {
+    // try to get parent semaphore first
+    using (var parentSemaphore = new Semaphore(0, 1, parentSemaphoreName, out createNew))
+      if (!createNew) {
 
-          // we couldn't create it, because we're a child process
-          parentSemaphore.Release();
-          return true;
-        }
-
-      // we are the parent process, so acquire a new semaphore for ourselves
-      var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-      using (var mySemaphore = new Semaphore(0, 1, mySemaphoreName, out createNew)) {
-        if (!createNew)
-          throw new("Semaphore already present?");
-
-        // restart child with original command line if possible to pass all arguments
-        var cmd = Environment.CommandLine;
-        if (cmd.StartsWith("\"")) {
-          var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
-          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-        } else {
-          var index = cmd.IndexOf(" ", StringComparison.Ordinal);
-          cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-        }
-
-        // start a child process
-        var startInfo = new ProcessStartInfo(executable.FullName, cmd);
-        Process.Start(startInfo);
-
-        // wait till the child release the semaphore
-        mySemaphore.WaitOne();
-        return false;
+        // we couldn't create it, because we're a child process
+        parentSemaphore.Release();
+        return true;
       }
+
+    // we are the parent process, so acquire a new semaphore for ourselves
+    var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
+    using (var mySemaphore = new Semaphore(0, 1, mySemaphoreName, out createNew)) {
+      if (!createNew)
+        throw new("Semaphore already present?");
+
+      // restart child with original command line if possible to pass all arguments
+      var cmd = Environment.CommandLine;
+      if (cmd.StartsWith("\"")) {
+        var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
+        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
+      } else {
+        var index = cmd.IndexOf(" ", StringComparison.Ordinal);
+        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
+      }
+
+      // start a child process
+      var startInfo = new ProcessStartInfo(executable.FullName, cmd);
+      Process.Start(startInfo);
+
+      // wait till the child release the semaphore
+      mySemaphore.WaitOne();
+      return false;
     }
-
-    /// <summary>
-    /// Creates a new process from the given appdomain using the same executable and command line.
-    /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
-    /// </summary>
-    /// <param name="this">This AppDomain.</param>
-    /// <returns><c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.</returns>
-    public static bool Fork(this AppDomain @this) {
-      Guard.Against.ThisIsNull(@this);
-
-      var executable = GetExecutable(@this);
-      return _Fork(executable, executable.Name);
-    }
-
-    /// <summary>
-    /// Creates a temporary directory.
-    /// </summary>
-    /// <returns>The temporary directory.</returns>
-    [DebuggerStepThrough]
-    private static DirectoryInfo _CreateTempDirectory() {
-      var file = new FileInfo(Path.GetTempFileName());
-      var directory = file.Directory;
-      var result = new DirectoryInfo(Path.Combine(directory?.FullName ?? ".", file.Name));
-      file.Delete();
-      result.Create();
-      return result;
-    }
-
-    /// <summary>
-    /// Copies an assembly file (.exe/.dll) to a target directory and keeps PDB debugging files.
-    /// </summary>
-    /// <param name="source">The source.</param>
-    /// <param name="target">The target.</param>
-    /// <param name="overwrite">if set to <c>true</c> overwrites files already at the target location.</param>
-    /// <returns>The new assembly file</returns>
-    [DebuggerStepThrough]
-    private static FileInfo _CopyAssemblyAndDebugInformation(FileInfo source, DirectoryInfo target, bool overwrite = false) {
-      if (!target.Exists)
-        target.Create();
-
-      var result = new FileInfo(Path.Combine(target.FullName, source.Name));
-      if (source.Exists)
-        source.CopyTo(result.FullName, overwrite);
-
-      var pdbFile = _GetDebuggingInformationFile(source);
-      if (pdbFile.Exists)
-        pdbFile.CopyTo(Path.Combine(target.FullName, pdbFile.Name), true);
-
-      return result;
-    }
-
-    /// <summary>
-    /// Copies the given executable file and all other executables in the same directory to the given location, retaining original directory structure.
-    /// </summary>
-    /// <param name="source">The source executable.</param>
-    /// <param name="target">The target directory.</param>
-    /// <returns>The new executable file.</returns>
-    [DebuggerStepThrough]
-    private static FileInfo _CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target) {
-      var result = _CopyAssemblyAndDebugInformation(source, target);
-      var sourceDirectory = source.Directory;
-      foreach (var dll in sourceDirectory
-        .EnumerateFiles("*.dll", SearchOption.AllDirectories)
-        .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
-      )
-        _CopyAssemblyAndDebugInformation(dll, new FileInfo(Path.Combine(target.FullName, dll.FullName[(sourceDirectory.FullName.Length + 1)..])).Directory, true);
-
-      return result;
-    }
-
-    /// <summary>
-    /// Gets the executable for the given app domain.
-    /// </summary>
-    /// <param name="this">This AppDomain.</param>
-    /// <returns></returns>
-    [DebuggerStepThrough]
-    public static FileInfo GetExecutable(this AppDomain @this) {
-      Guard.Against.ThisIsNull(@this);
-
-      var fileName = @this.FriendlyName;
-      const string vsHostPostfix = ".vshost.exe";
-      if (fileName.EndsWith(vsHostPostfix))
-        fileName = fileName[..^vsHostPostfix.Length] + ".exe";
-
-      return new(Path.Combine(@this.BaseDirectory, fileName));
-    }
-
-    /// <summary>
-    /// Gets the debugging information file for the given assembly file.
-    /// </summary>
-    /// <param name="assemblyFile">The assembly file.</param>
-    /// <returns></returns>
-    [DebuggerStepThrough]
-    private static FileInfo _GetDebuggingInformationFile(FileInfo assemblyFile) {
-      var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
-      var result = new FileInfo(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
-      return result;
-    }
-
   }
-}
 
-#endif
+  /// <summary>
+  /// Creates a new process from the given appdomain using the same executable and command line.
+  /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
+  /// </summary>
+  /// <param name="this">This AppDomain.</param>
+  /// <returns><c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.</returns>
+  public static bool Fork(this AppDomain @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    var executable = GetExecutable(@this);
+    return _Fork(executable, executable.Name);
+  }
+
+  /// <summary>
+  /// Creates a temporary directory.
+  /// </summary>
+  /// <returns>The temporary directory.</returns>
+  [DebuggerStepThrough]
+  private static DirectoryInfo _CreateTempDirectory() {
+    var file = new FileInfo(Path.GetTempFileName());
+    var directory = file.Directory;
+    var result = new DirectoryInfo(Path.Combine(directory?.FullName ?? ".", file.Name));
+    file.Delete();
+    result.Create();
+    return result;
+  }
+
+  /// <summary>
+  /// Copies an assembly file (.exe/.dll) to a target directory and keeps PDB debugging files.
+  /// </summary>
+  /// <param name="source">The source.</param>
+  /// <param name="target">The target.</param>
+  /// <param name="overwrite">if set to <c>true</c> overwrites files already at the target location.</param>
+  /// <returns>The new assembly file</returns>
+  [DebuggerStepThrough]
+  private static FileInfo _CopyAssemblyAndDebugInformation(FileInfo source, DirectoryInfo target, bool overwrite = false) {
+    if (!target.Exists)
+      target.Create();
+
+    var result = new FileInfo(Path.Combine(target.FullName, source.Name));
+    if (source.Exists)
+      source.CopyTo(result.FullName, overwrite);
+
+    var pdbFile = _GetDebuggingInformationFile(source);
+    if (pdbFile.Exists)
+      pdbFile.CopyTo(Path.Combine(target.FullName, pdbFile.Name), true);
+
+    return result;
+  }
+
+  /// <summary>
+  /// Copies the given executable file and all other executables in the same directory to the given location, retaining original directory structure.
+  /// </summary>
+  /// <param name="source">The source executable.</param>
+  /// <param name="target">The target directory.</param>
+  /// <returns>The new executable file.</returns>
+  [DebuggerStepThrough]
+  private static FileInfo _CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target) {
+    var result = _CopyAssemblyAndDebugInformation(source, target);
+    var sourceDirectory = source.Directory;
+    foreach (var dll in sourceDirectory
+      .EnumerateFiles("*.dll", SearchOption.AllDirectories)
+      .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
+    )
+      _CopyAssemblyAndDebugInformation(dll, new FileInfo(Path.Combine(target.FullName, dll.FullName[(sourceDirectory.FullName.Length + 1)..])).Directory, true);
+
+    return result;
+  }
+
+  /// <summary>
+  /// Gets the executable for the given app domain.
+  /// </summary>
+  /// <param name="this">This AppDomain.</param>
+  /// <returns></returns>
+  [DebuggerStepThrough]
+  public static FileInfo GetExecutable(this AppDomain @this) {
+    Guard.Against.ThisIsNull(@this);
+
+    var fileName = @this.FriendlyName;
+    const string vsHostPostfix = ".vshost.exe";
+    if (fileName.EndsWith(vsHostPostfix))
+      fileName = fileName[..^vsHostPostfix.Length] + ".exe";
+
+    return new(Path.Combine(@this.BaseDirectory, fileName));
+  }
+
+  /// <summary>
+  /// Gets the debugging information file for the given assembly file.
+  /// </summary>
+  /// <param name="assemblyFile">The assembly file.</param>
+  /// <returns></returns>
+  [DebuggerStepThrough]
+  private static FileInfo _GetDebuggingInformationFile(FileInfo assemblyFile) {
+    var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
+    var result = new FileInfo(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
+    return result;
+  }
+
+}
