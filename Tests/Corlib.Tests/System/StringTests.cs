@@ -19,53 +19,53 @@ public class StringTests {
   );
 
   public readonly record struct FormatWithExParametersTestData(
-    string? Input, 
-    Func<string, object?>? FieldGetter, 
-    bool PassFieldFormatToGetter, 
-    string? Expected, 
+    string? Input,
+    Func<string, object?>? FieldGetter,
+    bool PassFieldFormatToGetter,
+    string? Expected,
     Type? Exception = null
   );
 
   public readonly record struct StringComparisonTestData(
-    string? Haystack, 
-    char Needle, 
-    StringComparison Comparison, 
+    string? Haystack,
+    char Needle,
+    StringComparison Comparison,
     bool ExpectedResult
   );
 
   public readonly record struct StringComparerTestData(
-    string? Haystack, 
-    char Needle, 
-    StringComparer Comparer, 
+    string? Haystack,
+    char Needle,
+    StringComparer Comparer,
     bool ExpectedResult
   );
 
   public readonly record struct FormatWithParametersTestData(
-    string? Input, 
-    string? Expected, 
-    Type? Exception = null, 
+    string? Input,
+    string? Expected,
+    Type? Exception = null,
     params object[]? Parameters
   );
 
   public readonly record struct MatchGroupsTestData(
-    string? Input, 
-    string? Regex, 
-    string[]? Expected, 
-    RegexOptions RegexOptions, 
+    string? Input,
+    string? Regex,
+    string[]? Expected,
+    RegexOptions RegexOptions,
     Type? Exception = null
   );
 
   public readonly record struct MatchesTestData(
     string? Input,
     string? Regex,
-    string[]? Expected, 
-    RegexOptions RegexOptions, 
+    string[]? Expected,
+    RegexOptions RegexOptions,
     Type? Exception = null
   );
 
   public readonly record struct MultipleReplaceTestData(
-    string? Input, 
-    IEnumerable<KeyValuePair<string, object?>>? Replacements, 
+    string? Input,
+    IEnumerable<KeyValuePair<string, object?>>? Replacements,
     string? Expected,
     Type? Exception = null
   );
@@ -77,7 +77,7 @@ public class StringTests {
     yield return new("abc", string.Empty, null, new[] { "abc" });
     yield return new("abc", "b", null, new[] { "a", "c" });
     yield return new("abc", "d", null, new[] { "abc" });
-    yield return new("abcbdbe", "b", null, new[] { "a","c","d","e" });
+    yield return new("abcbdbe", "b", null, new[] { "a", "c", "d", "e" });
     yield return new("abcbdbe", "b", 2, new[] { "a", "c", "dbe" });
     yield return new("abcbdbe", "b", 1, new[] { "a", "cbdbe" });
   }
@@ -93,14 +93,14 @@ public class StringTests {
     yield return new("hallo", new Dictionary<string, object?> { { "Katze", "Riesen" }, { "llo", "zahn" } }, "hazahn");
     yield return new("hallo", new Dictionary<string, object?> { { "ha", "Riesen" }, { "ll", "zahn" }, { "o", 5 } }, "Riesenzahn5");
   }
-  
+
   private static IEnumerable<MatchesTestData> _TestMatchesTestData() {
     yield return new(null, @"^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
     yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sprEad" }, RegexOptions.None);
     yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sheD", "sprEad" }, RegexOptions.IgnoreCase);
   }
-  
+
   private static IEnumerable<MatchGroupsTestData> _TestMatchGroupsTestData() {
     yield return new(null, @"^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
@@ -109,7 +109,7 @@ public class StringTests {
     yield return new("saiD sheD see spear spread super", @"s\w+d", new[] { "spread" }, RegexOptions.None);
     yield return new("SAid sheD seE spear sprEaD Super", @"s\w+d", new[] { "SAid" }, RegexOptions.IgnoreCase);
   }
-  
+
   private static IEnumerable<FormatWithParametersTestData> _TestFormatWithParameters() {
     yield return new("Money is: {0:c} and tomorrow it is: {1:c}", "Money is: 21,80 € and tomorrow it is: 24,10 €", null, new object[] { 21.8, 24.1 });
     yield return new(null, null, typeof(NullReferenceException), new object[] { 21.8, 24.1 });
@@ -118,8 +118,8 @@ public class StringTests {
   }
 
   private static IEnumerable<FormatWithExParametersTestData> _TestFormatWithExParameters() {
-    yield return new(null, field => field, false, null,typeof(NullReferenceException));
-    yield return new(string.Empty, null,false, null, typeof(ArgumentNullException));
+    yield return new(null, field => field, false, null, typeof(NullReferenceException));
+    yield return new(string.Empty, null, false, null, typeof(ArgumentNullException));
     yield return new("Hallo {name}", field => field, false, "Hallo name");
     yield return new("Hallo {name}", _ => null, false, "Hallo ");
     yield return new("Hallo {name:0.0}", _ => 5, false, "Hallo 5,0");
@@ -239,33 +239,29 @@ public class StringTests {
 
   [Test]
   [TestCaseSource(nameof(_TestStringsComparer))]
-  public void StartsWith_CharacterComparer(StringComparerTestData data) 
-    => _ExecuteTest(() => data.Haystack.StartsWith(data.Needle, data.Comparer), data.ExpectedResult, null)
-  ;
-  
+  public void StartsWith_CharacterComparer(StringComparerTestData data)
+    => _ExecuteTest(() => data.Haystack.StartsWith(data.Needle, data.Comparer), data.ExpectedResult, null);
+
   [Test]
   [TestCaseSource(nameof(_TestStringsComparison))]
-  public void StartsWith_CharacterComparison(StringComparisonTestData data) 
-    => _ExecuteTest(() => data.Haystack.StartsWith(data.Needle, data.Comparison), data.ExpectedResult, null)
-  ;
+  public void StartsWith_CharacterComparison(StringComparisonTestData data)
+    => _ExecuteTest(() => data.Haystack.StartsWith(data.Needle, data.Comparison), data.ExpectedResult, null);
 
   [Test]
   [TestCase(null, true)]
   [TestCase("", true)]
   [TestCase(" ", false)]
   [TestCase("abc", false)]
-  public void IsNullOrEmpty(string? toTest, bool expected) 
-    => _ExecuteTest(toTest.IsNullOrEmpty, expected, null)
-  ;
+  public void IsNullOrEmpty(string? toTest, bool expected)
+    => _ExecuteTest(toTest.IsNullOrEmpty, expected, null);
 
   [Test]
   [TestCase(null, true)]
   [TestCase("", true)]
   [TestCase(" ", true)]
   [TestCase("abc", false)]
-  public void IsNullOrWhitespace(string? toTest, bool expected) 
-    => _ExecuteTest(toTest.IsNullOrWhiteSpace, expected, null)
-  ;
+  public void IsNullOrWhitespace(string? toTest, bool expected)
+    => _ExecuteTest(toTest.IsNullOrWhiteSpace, expected, null);
 
   [Test]
   [TestCase("", "")]
@@ -286,9 +282,8 @@ public class StringTests {
   [TestCase("ABC", 1, null, "A")]
   [TestCase("ABC", 1, "a", "Aa")]
   [TestCase("ABC", 10, "a", "ABCa")]
-  public void ExchangeAt_WithFullStringReplacement(string input, int index, string replacement, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.ExchangeAt(index, replacement), expected, exception)
-  ;
+  public void ExchangeAt_WithFullStringReplacement(string input, int index, string replacement, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.ExchangeAt(index, replacement), expected, exception);
 
   [Test]
   [TestCase(null, 0, 'a', "a", typeof(NullReferenceException))]
@@ -300,9 +295,8 @@ public class StringTests {
   [TestCase("ABC", 1, 'a', "AaC")]
   [TestCase("ABC", 2, 'a', "ABa")]
   [TestCase("ABC", 10, 'a', "ABCa")]
-  public void ExchangeAt_WithSingleCharacterReplacement(string input, int index, char replacement, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.ExchangeAt(index, replacement), expected, exception)
-  ;
+  public void ExchangeAt_WithSingleCharacterReplacement(string input, int index, char replacement, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.ExchangeAt(index, replacement), expected, exception);
 
   [Test]
   [TestCase(null, 0, 0, null, null, typeof(NullReferenceException))]
@@ -316,9 +310,8 @@ public class StringTests {
   [TestCase("ABC", 2, 2, "a", "ABa")]
   [TestCase("ABC", 3, 1, "a", "ABCa")]
   [TestCase("ABC", 3, 1, "aa", "ABCaa")]
-  public void ExchangeAt_WithStringCountReplacement(string input, int index, int length, string replacement, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.ExchangeAt(index, length, replacement), expected, exception)
-  ;
+  public void ExchangeAt_WithStringCountReplacement(string input, int index, int length, string replacement, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.ExchangeAt(index, length, replacement), expected, exception);
 
   [Test]
   [TestCase(null, null, false, typeof(NullReferenceException))]
@@ -353,9 +346,8 @@ public class StringTests {
   [TestCase("ab", 3, "ababab")]
   [TestCase("ab", 4, "abababab")]
   [TestCase("ab", 5, "ababababab")]
-  public void Repeat(string input, int count, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.Repeat(count), expected, exception)
-  ;
+  public void Repeat(string input, int count, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.Repeat(count), expected, exception);
 
   [Test]
   [TestCase(null, 1, null, typeof(NullReferenceException))]
@@ -364,9 +356,8 @@ public class StringTests {
   [TestCase("", 1, "", typeof(ArgumentOutOfRangeException))]
   [TestCase("ab", 2, "")]
   [TestCase("ab", 1, "a")]
-  public void RemoveLast(string input, int count, string expected, Type? exception = null) 
-    => _ExecuteTest(()=>input.RemoveLast(count),expected,exception)
-  ;
+  public void RemoveLast(string input, int count, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.RemoveLast(count), expected, exception);
 
   [Test]
   [TestCase(null, 1, null, typeof(NullReferenceException))]
@@ -375,9 +366,8 @@ public class StringTests {
   [TestCase("", 1, "", typeof(ArgumentOutOfRangeException))]
   [TestCase("ab", 2, "")]
   [TestCase("ab", 1, "b")]
-  public void RemoveFirst(string input, int count, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.RemoveFirst(count), expected, exception)
-  ;
+  public void RemoveFirst(string input, int count, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.RemoveFirst(count), expected, exception);
 
   [Test]
   [TestCase(null, 0, 0, null, typeof(NullReferenceException))]
@@ -388,9 +378,8 @@ public class StringTests {
   [TestCase("abc", -2, 100, "bc")]
   [TestCase("abc", -100, 3, "abc")]
   [TestCase("abc", -100, -99, "")]
-  public void SubString(string input, int start, int end, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.SubString(start, end), expected, exception)
-  ;
+  public void SubString(string input, int start, int end, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.SubString(start, end), expected, exception);
 
   [Test]
   [TestCase(null, 0, null, typeof(NullReferenceException))]
@@ -401,9 +390,8 @@ public class StringTests {
   [TestCase("abc", 100, "abc")]
   [TestCase("abc", -100, "", typeof(ArgumentOutOfRangeException))]
 
-  public void Left(string input, int count, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.Left(count), expected, exception)
-  ;
+  public void Left(string input, int count, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.Left(count), expected, exception);
 
   [Test]
   [TestCase(null, 0, null, typeof(NullReferenceException))]
@@ -414,9 +402,8 @@ public class StringTests {
   [TestCase("abc", 100, "abc")]
   [TestCase("abc", -100, "", typeof(ArgumentOutOfRangeException))]
 
-  public void Right(string input, int count, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.Right(count), expected, exception)
-  ;
+  public void Right(string input, int count, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.Right(count), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(NullReferenceException))]
@@ -442,9 +429,8 @@ public class StringTests {
     "12345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689_")]
   [TestCase("C:\\test\\demo?.tx*", "CXXtestXdemoX.txX", 'X')]
   public void SanitizeForFileName(string input, string expected, char? sanitation = null, Type? exception = null)
-    => _ExecuteTest(() => sanitation == null ? input.SanitizeForFileName() : input.SanitizeForFileName(sanitation.Value), expected, exception)
-  ;
-  
+    => _ExecuteTest(() => sanitation == null ? input.SanitizeForFileName() : input.SanitizeForFileName(sanitation.Value), expected, exception);
+
   [Test]
   [TestCase(null, "", null, typeof(NullReferenceException))]
   [TestCase("", null, null, typeof(ArgumentNullException))]
@@ -461,18 +447,16 @@ public class StringTests {
   [TestCase("abc.mp3", "?mp3", false)]
   [TestCase("abc.mp3", "*.mp", false)]
 
-  public void MatchesFilePattern(string input, string pattern, bool expected, Type? exception = null) 
-    => _ExecuteTest(() => input.MatchesFilePattern(pattern),expected,exception)
-  ;
+  public void MatchesFilePattern(string input, string pattern, bool expected, Type? exception = null)
+    => _ExecuteTest(() => input.MatchesFilePattern(pattern), expected, exception);
 
   [Test]
   [TestCase(null, @"^.*mp3$", false)]
   [TestCase("abc.mp3", @"^.*mp3$", true)]
   [TestCase("abc.mp", @"^.*mp3$", false)]
 
-  public void IsMatch(string input, string regex, bool expected, Type? exception = null) 
-    => _ExecuteTest(() => input.IsMatch(new(regex)),expected,exception)
-  ;
+  public void IsMatch(string input, string regex, bool expected, Type? exception = null)
+    => _ExecuteTest(() => input.IsMatch(new(regex)), expected, exception);
 
   [Test]
   [TestCase(null, @"^.*mp3$", true)]
@@ -480,26 +464,23 @@ public class StringTests {
   [TestCase("abc.mp", @"^.*mp3$", true)]
 
   public void IsNotMatch(string input, string regex, bool expected, Type? exception = null)
-    => _ExecuteTest(() => input.IsNotMatch(new(regex)), expected, exception)
-  ;
+    => _ExecuteTest(() => input.IsNotMatch(new(regex)), expected, exception);
 
   [Test]
   [TestCase(null, @"^.*mp3$", RegexOptions.None, false)]
   [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, true)]
   [TestCase("abc.mp", @"^.*mp3$", RegexOptions.None, false)]
 
-  public void IsMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null) 
-    => _ExecuteTest(() => input.IsMatch(new(regex, regexOptions)),expected,exception)
-  ;
+  public void IsMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null)
+    => _ExecuteTest(() => input.IsMatch(new(regex, regexOptions)), expected, exception);
 
   [Test]
   [TestCase(null, @"^.*mp3$", RegexOptions.None, true)]
   [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, false)]
   [TestCase("abc.mp", @"^.*mp3$", RegexOptions.None, true)]
 
-  public void IsNotMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null) 
-    => _ExecuteTest(() => input.IsNotMatch(new(regex, regexOptions)),expected,exception)
-  ;
+  public void IsNotMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null)
+    => _ExecuteTest(() => input.IsNotMatch(new(regex, regexOptions)), expected, exception);
 
   [Test]
   [TestCaseSource(nameof(_TestMatchesTestData))]
@@ -536,60 +517,54 @@ public class StringTests {
   [Test]
   [TestCaseSource(nameof(_TestFormatWithParameters))]
 
-  public void FormatWith(FormatWithParametersTestData data) 
-    => _ExecuteTest(() => data.Input.FormatWith(data.Parameters),data.Expected,data.Exception)
-  ;
+  public void FormatWith(FormatWithParametersTestData data)
+    => _ExecuteTest(() => data.Input.FormatWith(data.Parameters), data.Expected, data.Exception);
 
   [Test]
   [TestCaseSource(nameof(_TestFormatWithExParameters))]
-  public void FormatWithEx(FormatWithExParametersTestData data) 
-    => _ExecuteTest(() => data.Input.FormatWithEx(data.FieldGetter, data.PassFieldFormatToGetter),data.Expected,data.Exception)
-  ;
+  public void FormatWithEx(FormatWithExParametersTestData data)
+    => _ExecuteTest(() => data.Input.FormatWithEx(data.FieldGetter, data.PassFieldFormatToGetter), data.Expected, data.Exception);
 
   [Test]
   [TestCaseSource(nameof(_TestMultipleReplaceTestData))]
-  public void MultipleReplace(MultipleReplaceTestData data) 
-    => _ExecuteTest(() => data.Input.MultipleReplace(data.Replacements),data.Expected,data.Exception)
-  ;
+  public void MultipleReplace(MultipleReplaceTestData data)
+    => _ExecuteTest(() => data.Input.MultipleReplace(data.Replacements), data.Expected, data.Exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", RegexOptions.None, "", null,typeof(NullReferenceException))]
+  [TestCase(null, @"^.*mp3$", RegexOptions.None, "", null, typeof(NullReferenceException))]
   [TestCase("abc.MP3", null, RegexOptions.None, "", null, typeof(ArgumentNullException))]
   [TestCase("abc.mp3", @"^.*mp3$", RegexOptions.None, null, "")]
   [TestCase("abc.MP", @"^.*mp3$", RegexOptions.IgnoreCase, null, "abc.MP")]
   [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, "", "")]
   [TestCase("Bit and Bat", "B.t", RegexOptions.None, "BAT", "BAT and BAT")]
   [TestCase("BiT and BaT", "B.t", RegexOptions.IgnoreCase, "BAT", "BAT and BAT")]
-  public void ReplaceRegex(string input, string regex, RegexOptions regexOptions, string newValue, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.ReplaceRegex(regex, newValue, regexOptions),expected,exception)
-  ;
+  public void ReplaceRegex(string input, string regex, RegexOptions regexOptions, string newValue, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.ReplaceRegex(regex, newValue, regexOptions), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$",  "", null, typeof(NullReferenceException))]
-  [TestCase("abc.MP3", null,  "", null, typeof(ArgumentNullException))]
-  [TestCase("abc.mp3", @"^.*mp3$",  "", "")]
-  [TestCase("Bit and Bat", "B.t",  "BAT", "BAT and BAT")]
-  [TestCase("BiT and BaT", "B.t",  "BAT", "BiT and BaT")]
-  public void Replace(string input, string regex, string newValue, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.Replace(new Regex(regex), newValue),expected,exception)
-  ;
+  [TestCase(null, @"^.*mp3$", "", null, typeof(NullReferenceException))]
+  [TestCase("abc.MP3", null, "", null, typeof(ArgumentNullException))]
+  [TestCase("abc.mp3", @"^.*mp3$", "", "")]
+  [TestCase("Bit and Bat", "B.t", "BAT", "BAT and BAT")]
+  [TestCase("BiT and BaT", "B.t", "BAT", "BiT and BaT")]
+  public void Replace(string input, string regex, string newValue, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.Replace(new Regex(regex), newValue), expected, exception);
 
   [Test]
-  [TestCase(null, "", "", 1,StringComparison.CurrentCulture,null)]
+  [TestCase(null, "", "", 1, StringComparison.CurrentCulture, null)]
   [TestCase("", null, "", 1, StringComparison.CurrentCulture, "")]
   [TestCase("", "", "", 0, StringComparison.CurrentCulture, "")]
-  public void Replace(string input, string oldValue, string newValue, int count, StringComparison comparison, string expected, Type? exception = null) 
-    => _ExecuteTest(() => input.Replace(oldValue, newValue, count, comparison),expected,exception)
-  ;
+  public void Replace(string input, string oldValue, string newValue, int count, StringComparison comparison, string expected, Type? exception = null)
+    => _ExecuteTest(() => input.Replace(oldValue, newValue, count, comparison), expected, exception);
 
   [Test]
-  [TestCase(null,null,typeof(NullReferenceException))]
+  [TestCase(null, null, typeof(NullReferenceException))]
   [TestCase("", "")]
   [TestCase("a", "A")]
   [TestCase("ı", "I")]
   [TestCase("AB", "AB")]
   [TestCase("ab", "Ab")]
-  public void UpperFirst(string input, string expected, Type? exception = null) => _ExecuteTest(()=>input.UpperFirst(CultureInfo.GetCultureInfo("de-DE")),expected,exception);
+  public void UpperFirst(string input, string expected, Type? exception = null) => _ExecuteTest(() => input.UpperFirst(CultureInfo.GetCultureInfo("de-DE")), expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
@@ -598,7 +573,7 @@ public class StringTests {
   [TestCase("ı", "ı")]
   [TestCase("AB", "AB")]
   [TestCase("ab", "Ab")]
-  public void UpperFirstInvariant(string input, string expected, Type? exception = null) => _ExecuteTest(input.UpperFirstInvariant,expected,exception);
+  public void UpperFirstInvariant(string input, string expected, Type? exception = null) => _ExecuteTest(input.UpperFirstInvariant, expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
@@ -607,7 +582,7 @@ public class StringTests {
   [TestCase("ϴ", "θ")]
   [TestCase("ab", "ab")]
   [TestCase("AB", "aB")]
-  public void LowerFirst(string input, string expected, Type? exception = null) => _ExecuteTest(()=>input.LowerFirst(CultureInfo.GetCultureInfo("de-DE")), expected, exception);
+  public void LowerFirst(string input, string expected, Type? exception = null) => _ExecuteTest(() => input.LowerFirst(CultureInfo.GetCultureInfo("de-DE")), expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
@@ -623,25 +598,24 @@ public class StringTests {
   public void Split(SplitParametersTestData test) {
     IEnumerable<string> Execute() => test.Max == null ? test.Input.Split(test.Splitter) : test.Input.Split(test.Splitter, test.Max.Value);
 
-    if(test.Exception==null) 
-      Assert.That(Execute(),Is.EquivalentTo(test.Expected!));
+    if (test.Exception == null)
+      Assert.That(Execute(), Is.EquivalentTo(test.Expected!));
     else
-      Assert.That(Execute,Throws.TypeOf(test.Exception!));
+      Assert.That(Execute, Throws.TypeOf(test.Exception!));
   }
 
   [Test]
-  [TestCase(null,null,typeof(NullReferenceException))]
-  [TestCase("","")]
-  [TestCase("CamelCase","camelCase")]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", "")]
+  [TestCase("CamelCase", "camelCase")]
   [TestCase("camelCase", "camelCase")]
   [TestCase("cAMelCase", "cAmelCase")]
   [TestCase("camel-case", "camelCase")]
   [TestCase("  camel-case", "camelCase")]
   [TestCase("camel-case  ", "camelCase")]
   [TestCase("camel1case", "camel1Case")]
-  public void CamelCase(string? input, string? expected, Type? exception = null) 
-    => _ExecuteTest(()=>input.ToCamelCase(),expected,exception)
-  ;
+  public void CamelCase(string? input, string? expected, Type? exception = null)
+    => _ExecuteTest(() => input.ToCamelCase(), expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
@@ -654,11 +628,10 @@ public class StringTests {
   [TestCase("pascal-case  ", "PascalCase")]
   [TestCase("pascal1case", "Pascal1Case")]
   public void PascalCase(string? input, string? expected, Type? exception = null)
-    => _ExecuteTest(() => input.ToPascalCase(), expected, exception)
-  ;
+    => _ExecuteTest(() => input.ToPascalCase(), expected, exception);
 
   [Test]
-  [TestCase(null,null,null,StringComparison.Ordinal,null,typeof(NullReferenceException))]
+  [TestCase(null, null, null, StringComparison.Ordinal, null, typeof(NullReferenceException))]
   [TestCase("", null, null, StringComparison.Ordinal, "", typeof(ArgumentNullException))]
   [TestCase("", "", null, StringComparison.Ordinal, "")]
   [TestCase("", "", "", StringComparison.Ordinal, "")]
@@ -669,8 +642,7 @@ public class StringTests {
   [TestCase("abc", "A", "def", StringComparison.OrdinalIgnoreCase, "defbc")]
   [TestCase("abc", "ABCD", "def", StringComparison.OrdinalIgnoreCase, "abc")]
   public void ReplaceAtStart(string? input, string? what, string? replacement, StringComparison comparison, string? expected, Type? exception = null)
-    => _ExecuteTest(() => input.ReplaceAtStart(what, replacement, comparison), expected, exception)
-  ;
+    => _ExecuteTest(() => input.ReplaceAtStart(what, replacement, comparison), expected, exception);
 
   [Test]
   [TestCase(null, null, null, StringComparison.Ordinal, null, typeof(NullReferenceException))]
@@ -684,19 +656,27 @@ public class StringTests {
   [TestCase("abc", "C", "def", StringComparison.OrdinalIgnoreCase, "abdef")]
   [TestCase("abc", "ABCD", "def", StringComparison.OrdinalIgnoreCase, "abc")]
   public void ReplaceAtEnd(string? input, string? what, string? replacement, StringComparison comparison, string? expected, Type? exception = null)
-    => _ExecuteTest(() => input.ReplaceAtEnd(what, replacement, comparison), expected, exception)
-  ;
+    => _ExecuteTest(() => input.ReplaceAtEnd(what, replacement, comparison), expected, exception);
 
   [Test]
-  [TestCase(null,null,null,typeof(NullReferenceException))]
+  [TestCase(null, null, null, typeof(NullReferenceException))]
   [TestCase("", null, null, typeof(ArgumentNullException))]
   [TestCase("abc", "bc", "a")]
   [TestCase("abc", "ab", "abc")]
-  public void TrimEnd(string? input, string? what, string? expected, Type? exception = null) 
-    => _ExecuteTest(() => input.TrimEnd(what), expected, exception)
-  ;
+  public void TrimEnd(string? input, string? what, string? expected, Type? exception = null)
+    => _ExecuteTest(() => input.TrimEnd(what), expected, exception);
 
-  private static void _ExecuteTest<TResult>(Func<TResult> resultProvider,TResult expected,Type? exception) {
+  [Test]
+  [TestCase(null, true)]
+  [TestCase("", true)]
+  [TestCase("a", false)]
+  public void NullOrEmpty(string? input, bool expected) {
+    Assert.That(input.IsNullOrEmpty(), Is.EqualTo(expected));
+    Assert.That(input.IsNotNullOrEmpty(), Is.EqualTo(!expected));
+  }
+
+
+  private static void _ExecuteTest<TResult>(Func<TResult> resultProvider, TResult expected, Type? exception) {
     if (exception == null)
       Assert.That(resultProvider(), Is.EqualTo(expected));
     else
