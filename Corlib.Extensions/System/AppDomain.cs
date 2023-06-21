@@ -24,11 +24,13 @@
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+using Guard;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Principal;
@@ -41,6 +43,8 @@ namespace System {
   internal
 #endif
   static partial class AppDomainExtensions {
+
+    private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
 
     #region nested types
 
@@ -260,10 +264,109 @@ del ""%~0""
         mySemaphore.WaitForConnection();
         _SaveEnvironmentTo(mySemaphore, directory, @this);
 
-        Environment.Exit(0);
+        Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
       }
 
     }
+
+  }
+
+#endif
+
+  /// <summary>
+  /// Queries the environment for another process with the same entry assembly and throws an <see cref="Exception"/> when present.
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void EnsureSingleInstanceOrThrow(this AppDomain @this)
+    => EnsureSingleInstanceOrThrow(@this, _CreateStandardSemaphoreName(@this))
+  ;
+
+  /// <summary>
+  /// Queries the environment for another process with the same entry assembly and throws an <see cref="Exception"/> when present.
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="semaphoreName">The name of the semaphore to query</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void EnsureSingleInstanceOrThrow(this AppDomain @this, string semaphoreName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+
+    if (!IsSingleInstance(@this, semaphoreName))
+      throw new("AppDomain already loaded");
+  }
+
+  /// <summary>
+  /// Queries the environment for another process with the same entry assembly and exits when present.
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void EnsureSingleInstanceOrExit(this AppDomain @this)
+    => EnsureSingleInstanceOrExit(@this, _CreateStandardSemaphoreName(@this))
+    ;
+
+  /// <summary>
+  /// Queries the environment for another process with the same entry assembly and exits when present.
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="semaphoreName">The name of the semaphore to query</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void EnsureSingleInstanceOrExit(this AppDomain @this, string semaphoreName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+
+    if(!IsSingleInstance(@this,semaphoreName))
+      Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
+  }
+
+  /// <summary>
+  /// Queries the environment for another process with the same entry assembly.
+  /// Note: Creates a semaphore which is held until process exit
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <returns><c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsSingleInstance(this AppDomain @this) => IsSingleInstance(@this, _CreateStandardSemaphoreName(@this));
+
+  /// <summary>
+  /// Create a standard semaphore name for a given AppDomain. Defaults to entry assemblies' fullname or friendlyname of the domain.
+  /// </summary>
+  /// <param name="appDomain">The <see cref="AppDomain"/> to generaten the name for</param>
+  /// <returns>A name to use</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  private static string _CreateStandardSemaphoreName(AppDomain appDomain) => Assembly.GetEntryAssembly()?.FullName ?? appDomain.FriendlyName;
+
+  /// <summary>
+  /// Queries the environment for a given semaphore and acquires it if not present.
+  /// Note: Semaphore is held until process exit
+  /// </summary>
+  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="semaphoreName">The name of the semaphore to query</param>
+  /// <returns><c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise, <c>false</c>.</returns>
+  public static bool IsSingleInstance(this AppDomain @this, string semaphoreName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+
+    var semaphore = new Semaphore(0, 1, semaphoreName, out var createNew);
+    if (createNew)
+      @this.DomainUnload += delegate { semaphore.Dispose(); };
+    else
+      semaphore.Dispose();
+
+    return createNew;
+  }
 
     /// <summary>
     /// Creates a new process from the given executable using the same command line.
