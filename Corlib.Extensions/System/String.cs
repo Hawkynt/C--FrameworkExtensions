@@ -2128,7 +2128,17 @@ static partial class StringExtensions {
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
       [NotNullWhen(false)] 
 #endif
-      this string @this) => @this == null || @this.Trim().Length < 1;
+      this string @this) {
+    if (@this == null)
+      return true;
+    
+    // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+    foreach(var chr in @this)
+      if(!chr.IsWhiteSpace())
+        return false;
+
+    return true;
+  }
 #endif
 
   /// <summary>
