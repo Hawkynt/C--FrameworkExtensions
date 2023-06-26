@@ -9,14 +9,14 @@ using static Corlib.Tests.NUnit.TestUtilities;
 public class ProcessTests {
 
   [Test]
-  public static void GetParentProcess() => Assert.That(ProcessExtensions.GetParentProcess()!=null);
+  public static void GetParentProcess() => Assert.That(ProcessExtensions.GetParentProcess() != null);
 
   [Test]
   public static void Parent() => Assert.That(ProcessExtensions.GetParentProcess().Id == Process.GetCurrentProcess().Parent().Id);
 
   [Test]
   public static void ParentOfChildren() {
-    var myPid=Process.GetCurrentProcess().Id;
+    var myPid = Process.GetCurrentProcess().Id;
     int childParentId;
 
     Process? childProcess = null;
@@ -26,7 +26,7 @@ public class ProcessTests {
     } finally {
       childProcess?.Kill();
     }
-    
+
     Assert.That(myPid == childParentId);
   }
 
@@ -34,20 +34,36 @@ public class ProcessTests {
   public static void Children() {
     var myself = Process.GetCurrentProcess();
     int childId;
-    int? childId2;
-
-    Process? childProcess=null;
+    Process? child;
+    Process? childProcess = null;
     try {
-      childProcess = Process.Start(new ProcessStartInfo("cmd.exe"){CreateNoWindow = true,WindowStyle = ProcessWindowStyle.Hidden} );
-      // TODO: FIXME: test doesn't want to run somehow
+      childProcess = Process.Start(new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden });
       childId = childProcess.Id;
       var children = myself.Children().ToArray();
-      childId2 = children.FirstOrDefault()?.Id;
+      child = children.FirstOrDefault(p => p.Id == childId);
     } finally {
       childProcess?.Kill();
     }
-    
-    Assert.That(childId2,Is.EqualTo(childId));
+
+    Assert.That(child, Is.Not.Null);
+  }
+
+  [Test]
+  public static void AllChildren() {
+    var myself = Process.GetCurrentProcess();
+    int childId;
+    Process? child;
+    Process? childProcess = null;
+    try {
+      childProcess = Process.Start(new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, Arguments = "/k cmd.exe" });
+      childId = childProcess.Id;
+      var children = myself.AllChildren().ToArray();
+      child = children.FirstOrDefault(p => p.Parent()?.Id == childId);
+    } finally {
+      childProcess?.Kill();
+    }
+
+    Assert.That(child, Is.Not.Null);
   }
 
 }

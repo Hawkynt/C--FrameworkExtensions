@@ -30,6 +30,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 #endif
 using Guard;
+using System.Linq;
+
 namespace System.Diagnostics;
 
 // ReSharper disable PartialTypeWithSinglePart
@@ -120,6 +122,50 @@ static partial class ProcessExtensions {
 
     var id = @this.Id;
     return Process.GetProcesses().Where(p => p.GetParentProcessOrNull()?.Id == id);
+  }
+
+  /// <summary>
+  /// Get all child processes and their children ..and... of the given <see cref="Process"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="Process"/></param>
+  /// <returns>An enumeration of <see cref="Process"/>es</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<Process> AllChildren(this Process @this) {
+
+    static void FillList(Process process, List<Process> list, IDictionary<int, Process[]> allProcessIdsWithChildren) {
+      list.Clear();
+      if(allProcessIdsWithChildren.TryGetValue(process.Id, out var children))
+        list.AddRange(children);
+    }
+
+    static void PushReverse(IList<Process> list, Stack<Process> stack) {
+      for (var i = list.Count - 1; i >= 0; --i)
+        stack.Push(list[i]);
+    }
+
+    var allProcessIdsWithChildren = Process
+        .GetProcesses()
+        .Select(p => new { Process = p, Parent = GetParentProcessOrNull(p) })
+        .Where(p => p.Parent != null)
+        .GroupBy(p=>p.Parent.Id)
+        .ToDictionary(g => g.Key, g => g.Select(p=>p.Process).ToArray())
+      ;
+
+    var stack = new Stack<Process>();
+    var tempList = new List<Process>();
+    var result = @this;
+    for (;;) {
+      FillList(result, tempList, allProcessIdsWithChildren);
+      PushReverse(tempList, stack);
+
+      if (!stack.Any())
+        break;
+
+      result = stack.Pop();
+      yield return result;
+    }
   }
 
   /// <summary>        
