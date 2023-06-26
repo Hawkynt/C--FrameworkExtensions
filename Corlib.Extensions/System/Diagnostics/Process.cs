@@ -148,7 +148,7 @@ static partial class ProcessExtensions {
     var allProcessIdsWithChildren = Process
         .GetProcesses()
         .Select(p => new { Process = p, Parent = GetParentProcessOrNull(p) })
-        .Where(p => p.Parent != null)
+        .Where(p => p.Parent.IsNotNull())
         .GroupBy(p=>p.Parent.Id)
         .ToDictionary(g => g.Key, g => g.Select(p=>p.Process).ToArray())
       ;
