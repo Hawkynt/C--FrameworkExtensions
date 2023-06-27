@@ -2169,7 +2169,7 @@ static partial class StringExtensions {
   /// <summary>
   /// Determines whether a given string contains another one.
   /// </summary>
-  /// <param name="This">This string.</param>
+  /// <param name="this">This string.</param>
   /// <param name="other">The string to look for.</param>
   /// <param name="comparisonType">Type of the comparison.</param>
   /// <returns>
@@ -2181,14 +2181,17 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool Contains(this string This, string other, StringComparison comparisonType) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    if (other == null)
+  public static bool Contains(this string @this, string other, StringComparison comparisonType) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+
+    if (other.Length <= 0)
+      return true;
+
+    if(other.Length > @this.Length) 
       return false;
 
-    return This.IndexOf(other, comparisonType) >= 0;
+    return @this.IndexOf(other, comparisonType) >= 0;
   }
 
 

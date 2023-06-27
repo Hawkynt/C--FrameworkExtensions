@@ -686,5 +686,18 @@ public class StringTests {
     Assert.That(input.IsNullOrWhiteSpace(), Is.EqualTo(expected));
     Assert.That(input.IsNotNullOrWhiteSpace(), Is.EqualTo(!expected));
   }
-  
+
+  [Test]
+  [TestCase(null,null,StringComparison.Ordinal,false,typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("abc", "bc", StringComparison.Ordinal, true)]
+  [TestCase("abc", "BC", StringComparison.Ordinal, false)]
+  [TestCase("abc", "BC", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "bc", StringComparison.Ordinal, false)]
+  [TestCase("a", "", StringComparison.Ordinal, true)]
+  [TestCase("a", "abc", StringComparison.Ordinal, false)]
+  public void Contains(string? input, string? what, StringComparison comparison, bool expected, Type? exception = null)
+    => ExecuteTest(() => input.Contains(what, comparison), expected, exception)
+    ;
+
 }
