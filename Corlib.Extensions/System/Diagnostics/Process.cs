@@ -22,9 +22,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Runtime.InteropServices;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;

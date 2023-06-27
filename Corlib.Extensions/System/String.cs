@@ -528,7 +528,7 @@ static partial class StringExtensions {
   /// <returns>The regex.</returns>
   private static Regex _ConvertFilePatternToRegex(string pattern) {
 
-    const string nonDotCharacters = @"[^.]*";
+    const string nonDotCharacters = "[^.]*";
 
     if (pattern == null)
       throw new ArgumentNullException();
@@ -556,7 +556,7 @@ static partial class StringExtensions {
       regexString += nonDotCharacters;
 
     regexString += "$";
-    return new Regex(regexString, RegexOptions.IgnoreCase);
+    return new(regexString, RegexOptions.IgnoreCase);
   }
 
   /// <summary>
@@ -620,7 +620,7 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => @this != null && @this.IsMatch(new Regex(regex, regexOptions));
+  public static bool IsMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => @this != null && @this.IsMatch(new(regex, regexOptions));
 
   /// <summary>
   /// Determines whether the specified string matches the given regex.
@@ -2221,10 +2221,20 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static bool IsAnyOf(this string @this, params string[] needles) => needles.Any(n => n == @this);
+  
+  /// <summary>
+  /// Checks whether the given string matches any of the provided
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="needles">String to compare to</param>
+  /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
-    if (needles == null)
-      throw new ArgumentNullException(nameof(needles));
-
+    Against.ArgumentIsNull(needles);
+    
     return needles.Any(n => n == @this);
   }
 
@@ -2239,8 +2249,7 @@ static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles, StringComparison comparison) {
-    if (needles == null)
-      throw new ArgumentNullException(nameof(needles));
+    Against.ArgumentIsNull(needles);
 
     return needles.Any(n => string.Equals(n, @this, comparison));
   }
@@ -2515,7 +2524,7 @@ static partial class StringExtensions {
     /// </summary>
     public int Port { get; }
 
-    public static explicit operator IPEndPoint(HostEndPoint This) => new IPEndPoint(Dns.GetHostEntry(This.Host).AddressList[0], This.Port);
+    public static explicit operator IPEndPoint(HostEndPoint This) => new(Dns.GetHostEntry(This.Host).AddressList[0], This.Port);
   }
 #endregion
 
@@ -2535,13 +2544,13 @@ static partial class StringExtensions {
     ushort port = 0;
     var index = host.IndexOf(':');
     if (index < 0)
-      return new HostEndPoint(host, port);
+      return new(host, port);
 
     var portText = host.Substring(index + 1);
     host = host.Left(index);
     if (!ushort.TryParse(portText, out port) && !_OFFICIAL_PORT_NAMES.TryGetValue(portText.Trim().ToLower(), out port))
       return null;
-    return new HostEndPoint(host, port);
+    return new(host, port);
   }
 
   /// <summary>
@@ -2630,7 +2639,7 @@ static partial class StringExtensions {
 #endif
     void ByteToHex2(byte value, out char highNibble, out char lowNibble) {
       var temp = (uint)(((value & 0xF0) << 4) + (value & 0xF) - 0x8989);
-      temp = (uint)((int)((uint)(-(int)temp & 0x7070) >> 4) + (int)temp + 0xB9B9);
+      temp = (uint)(((-(int)temp & 0x7070) >>> 4) + (int)temp + 0xB9B9);
       lowNibble = (char)(temp & 0xff);
       highNibble = (char)(temp >> 8);
     }

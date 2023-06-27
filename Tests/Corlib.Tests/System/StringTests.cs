@@ -700,4 +700,29 @@ public class StringTests {
     => ExecuteTest(() => input.Contains(what, comparison), expected, exception)
     ;
 
+  [Test]
+  [TestCase("", null, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", true)]
+  [TestCase("a", "a|b", true)]
+  [TestCase("a", "b|a", true)]
+  [TestCase("a", "A|B", false)]
+  [TestCase("", "x||z", true)]
+  [TestCase(null, "-", true)]
+  public void IsAnyOf(string? input, string? needlesSeparatedByPipes, bool expected, Type? exception = null)
+    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i=>i=="-"?null:i)), expected, exception)
+  ;
+
+  [Test]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "a|b", StringComparison.Ordinal, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A|B", StringComparison.Ordinal, false)]
+  [TestCase("a", "A|B", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("", "x||z", StringComparison.Ordinal, true)]
+  [TestCase(null, "-", StringComparison.Ordinal, true)]
+  public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null)
+    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i => i == "-" ? null : i), comparison), expected, exception)
+    ;
+
 }
