@@ -1574,49 +1574,7 @@ static partial class StringExtensions {
 #endif
     return "[" + @this.Replace("]", "]]") + "]";
   }
-
-  /// <summary>
-  /// Checks if the string equals to any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns>
-  ///   <c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.
-  /// </returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EqualsAny(this string @this, params string[] values) => EqualsAny(@this, (IEnumerable<string>)values);
-
-  /// <summary>
-  /// Checks if the string equals to any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EqualsAny(this string @this, StringComparison stringComparison, params string[] values) => EqualsAny(@this, values, stringComparison);
-
-  /// <summary>
-  /// Checks if the string equals to any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string the matches; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EqualsAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(values != null);
-#endif
-    return values.Any(s => string.Equals(@this, s, stringComparison));
-  }
-
+  
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
