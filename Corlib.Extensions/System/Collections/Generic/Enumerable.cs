@@ -1401,6 +1401,66 @@ public
 #endif
 
   /// <summary>
+  /// Determines whether a given <see cref="Enumerable"/> contains exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has one element; otherwise, <see langword="false"/>.</returns>
+  public static bool IsSingle<TValue>(this IEnumerable<TValue> @this) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var _ in @this) {
+      if (found)
+        return false;
+
+      found = true;
+    }
+
+    return found;
+  }
+
+  /// <summary>
+  /// Determines whether the given <see cref="Enumerable"/> contains more or less than one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has less or more than one element; otherwise, <see langword="false"/>.</returns>
+  public static bool IsNoSingle<TValue>(this IEnumerable<TValue> @this)
+    => !IsSingle(@this)
+  ;
+
+  /// <summary>
+  /// Determines whether a given <see cref="Enumerable"/> has more than one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has at least two elements; otherwise, <see langword="false"/>.</returns>
+  public static bool IsMultiple<TValue>(this IEnumerable<TValue> @this) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var item in @this) {
+      if (found)
+        return true;
+
+      found = true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Determines whether a given <see cref="Enumerable"/> has no more than one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has zero or one element; otherwise, <see langword="false"/>.</returns>
+  public static bool IsNoMultiple<TValue>(this IEnumerable<TValue> @this)
+    => !IsMultiple(@this)
+  ;
+
+  /// <summary>
   /// Determines whether a given value is exactly once in the given <see cref="Enumerable"/>.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>

@@ -9,6 +9,44 @@ using global::System.Collections.Generic;
 public class EnumerableTests {
 
   private static IEnumerable<string>? _ConvertFromString(string? input) => input?.Split('|');
+  private static IEnumerable<string>? _ConvertFromStringAllowEmpty(string? input) => input == null ? null : input == string.Empty ? new string[0] : input.Split('|');
+
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", false)]
+  [TestCase("a", true)]
+  [TestCase("a|a", false)]
+  public void IsSingle(string? input, bool expected, Type? exception = null)
+    => ExecuteTest(() => _ConvertFromStringAllowEmpty(input).IsSingle(), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", true)]
+  [TestCase("a", false)]
+  [TestCase("a|a", true)]
+  public void IsNoSingle(string? input, bool expected, Type? exception = null)
+    => ExecuteTest(() => _ConvertFromStringAllowEmpty(input).IsNoSingle(), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", false)]
+  [TestCase("a", false)]
+  [TestCase("a|a", true)]
+  public void IsMultiple(string? input, bool expected, Type? exception = null)
+    => ExecuteTest(() => _ConvertFromString(input).IsMultiple(), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", true)]
+  [TestCase("a", true)]
+  [TestCase("a|a", false)]
+  public void IsNoMultiple(string? input, bool expected, Type? exception = null)
+    => ExecuteTest(() => _ConvertFromString(input).IsNoMultiple(), expected, exception)
+  ;
 
   [Test]
   [TestCase(null,null,false,typeof(NullReferenceException))]
