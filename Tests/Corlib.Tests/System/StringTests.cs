@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace Corlib.Tests.System;
-
-using global::System.Globalization;
 
 [TestFixture]
 public class StringTests {
@@ -112,10 +111,10 @@ public class StringTests {
   }
 
   private static IEnumerable<FormatWithParametersTestData> _TestFormatWithParameters() {
-    yield return new("Money is: {0:c} and tomorrow it is: {1:c}", "Money is: 21,80 € and tomorrow it is: 24,10 €", null, new object[] { 21.8, 24.1 });
-    yield return new(null, null, typeof(NullReferenceException), new object[] { 21.8, 24.1 });
+    yield return new("Money is: {0:c} and tomorrow it is: {1:c}", "Money is: 21,80 € and tomorrow it is: 24,10 €", null, 21.8, 24.1);
+    yield return new(null, null, typeof(NullReferenceException), 21.8, 24.1);
     yield return new("", null, typeof(ArgumentNullException), null);
-    yield return new("Money is: {0:c} degrees and tomorrow it is: {2:c} degrees", null, typeof(FormatException), new object[] { 21.8, 24.1 });
+    yield return new("Money is: {0:c} degrees and tomorrow it is: {2:c} degrees", null, typeof(FormatException), 21.8, 24.1);
   }
 
   private static IEnumerable<FormatWithExParametersTestData> _TestFormatWithExParameters() {
@@ -597,7 +596,9 @@ public class StringTests {
   [Test]
   [TestCaseSource(nameof(_TestSplitTestData))]
   public void Split(SplitParametersTestData test) {
+#pragma warning disable CS8602
     IEnumerable<string> Execute() => test.Max == null ? test.Input.Split(test.Splitter) : test.Input.Split(test.Splitter, test.Max.Value);
+#pragma warning restore CS8602
 
     if (test.Exception == null)
       Assert.That(Execute(), Is.EquivalentTo(test.Expected!));
@@ -697,8 +698,12 @@ public class StringTests {
   [TestCase("a", "", StringComparison.Ordinal, true)]
   [TestCase("a", "abc", StringComparison.Ordinal, false)]
   public void Contains(string? input, string? what, StringComparison comparison, bool expected, Type? exception = null)
+#pragma warning disable CS8602
+#pragma warning disable CS8604
     => ExecuteTest(() => input.Contains(what, comparison), expected, exception)
-    ;
+#pragma warning restore CS8604
+#pragma warning restore CS8602
+  ;
 
   [Test]
   [TestCase("", null, false, typeof(ArgumentNullException))]
@@ -709,8 +714,8 @@ public class StringTests {
   [TestCase("", "x||z", true)]
   [TestCase(null, "-", true)]
   public void IsAnyOf(string? input, string? needlesSeparatedByPipes, bool expected, Type? exception = null)
-    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i=>i=="-"?null:i)), expected, exception)
-  ;
+    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i => i == "-" ? null : i)), expected, exception)
+    ;
 
   [Test]
   [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
@@ -724,5 +729,7 @@ public class StringTests {
   public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null)
     => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i => i == "-" ? null : i), comparison), expected, exception)
     ;
+
+  // TODO: ContainsAny
 
 }

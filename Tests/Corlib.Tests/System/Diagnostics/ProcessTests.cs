@@ -33,12 +33,12 @@ public class ProcessTests {
   [Test]
   public static void Children() {
     var myself = Process.GetCurrentProcess();
-    int childId;
+    int? childId;
     Process? child;
     Process? childProcess = null;
     try {
       childProcess = Process.Start(new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden });
-      childId = childProcess.Id;
+      childId = childProcess?.Id;
       var children = myself.Children().ToArray();
       child = children.FirstOrDefault(p => p.Id == childId);
     } finally {
@@ -51,12 +51,12 @@ public class ProcessTests {
   [Test]
   public static void AllChildren() {
     var myself = Process.GetCurrentProcess();
-    int childId;
+    int? childId;
     Process? child;
     Process? childProcess = null;
     try {
       childProcess = Process.Start(new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, Arguments = "/k cmd.exe" });
-      childId = childProcess.Id;
+      childId = childProcess?.Id;
       var children = myself.AllChildren().ToArray();
       child = children.FirstOrDefault(p => p.Parent()?.Id == childId);
     } finally {

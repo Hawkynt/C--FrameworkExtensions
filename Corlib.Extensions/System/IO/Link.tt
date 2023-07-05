@@ -408,7 +408,6 @@ namespace System.IO {
     /// <returns><c>true</c> on success; otherwise, <c>false</c> (end of list).</returns>
     private static bool _FindNextFileName(IntPtr handle, ref StringBuilder buffer) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(handle!=null);
       Contract.Requires(buffer!=null);
 #endif
 
