@@ -37,7 +37,9 @@ using System.Text;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace System.Collections.Generic; 
+namespace System.Collections.Generic;
+
+using Guard;
 
 #if COMPILE_TO_EXTENSION_DLL
 public
@@ -1398,4 +1400,69 @@ public
   }
 #endif
 
+  /// <summary>
+  /// Determines whether a given value is exactly once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="value">The value to look for</param>
+  /// <returns><see langword="true"/> if the item is exactly one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasSingle<TValue>(this IEnumerable<TValue> @this, TValue value) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var item in @this)
+      if (Equals(item, value)) {
+        if(found) 
+          return false;
+
+        found = true;
+      }
+
+    return found;
+  }
+
+  /// <summary>
+  /// Determines whether a given value is not exactly once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="value">The value to look for</param>
+  /// <returns><see langword="true"/> if the item not or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, TValue value)
+    => !HasSingle(@this, value)
+  ;
+
+  /// <summary>
+  /// Determines whether a given value is more than once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="value">The value to look for</param>
+  /// <returns><see langword="true"/> if the item is found more one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasMultiple<TValue>(this IEnumerable<TValue> @this, TValue value) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var item in @this)
+      if (Equals(item, value)) {
+        if (found)
+          return true;
+
+        found = true;
+      }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Determines whether a given value is not more than once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="value">The value to look for</param>
+  /// <returns><see langword="true"/> if the item is found less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, TValue value)
+    => !HasMultiple(@this, value)
+    ;
 }
