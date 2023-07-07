@@ -1525,4 +1525,72 @@ public
   public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, TValue value)
     => !HasMultiple(@this, value)
     ;
+
+
+  /// <summary>
+  /// Determines whether a given predicate matches exactly once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="predicate">The predicate to match</param>
+  /// <returns><see langword="true"/> if the predicate matches exactly one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasSingle<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var item in @this)
+      if (predicate(item)) {
+        if (found)
+          return false;
+
+        found = true;
+      }
+
+    return found;
+  }
+
+  /// <summary>
+  /// Determines whether a given predicate matches not exactly once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="predicate">The predicate to match</param>
+  /// <returns><see langword="true"/> if the predicate matches not at all or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
+    => !HasSingle(@this, predicate)
+  ;
+
+  /// <summary>
+  /// Determines whether a given predicate matches more than once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="predicate">The predicate to match</param>
+  /// <returns><see langword="true"/> if the predicate matches more than one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasMultiple<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate) {
+    Against.ThisIsNull(@this);
+
+    var found = false;
+    foreach (var item in @this)
+      if (predicate(item)) {
+        if (found)
+          return true;
+
+        found = true;
+      }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Determines whether a given predicate matches no more than once in the given <see cref="Enumerable"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="Enumerable"/></param>
+  /// <param name="predicate">The predicate to match</param>
+  /// <returns><see langword="true"/> if the predicate matches less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+  public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
+    => !HasMultiple(@this, predicate)
+  ;
+
 }
