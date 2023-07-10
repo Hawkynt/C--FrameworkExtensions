@@ -9,18 +9,14 @@ namespace Corlib.Tests.System.Collections.Generic;
 public class EnumerableTests {
 
   private static IEnumerable<string>? _ConvertFromString(string? input) => input?.Split('|');
-
-  // ReSharper disable once UseArrayEmptyMethod
-  private static IEnumerable<string>? _ConvertFromStringAllowEmpty(string? input) => input == null ? null : input == string.Empty ? new string[0] : input.Split('|');
-
-
+  
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
   [TestCase("", false)]
   [TestCase("a", true)]
   [TestCase("a|a", false)]
   public void IsSingle(string? input, bool expected, Type? exception = null)
-    => ExecuteTest(() => _ConvertFromStringAllowEmpty(input).IsSingle(), expected, exception);
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).IsSingle(), expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
@@ -28,7 +24,7 @@ public class EnumerableTests {
   [TestCase("a", false)]
   [TestCase("a|a", true)]
   public void IsNoSingle(string? input, bool expected, Type? exception = null)
-    => ExecuteTest(() => _ConvertFromStringAllowEmpty(input).IsNoSingle(), expected, exception);
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).IsNoSingle(), expected, exception);
 
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]

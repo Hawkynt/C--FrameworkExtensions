@@ -7,6 +7,8 @@ using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace Corlib.Tests.System;
 
+using global::System.Linq;
+
 [TestFixture]
 public class StringTests {
 
@@ -320,7 +322,7 @@ public class StringTests {
   [TestCase("a", "a,b", true)]
   [TestCase("a", "b,c", false)]
   public void IsIn(string needle, string? haystack, bool expected, Type? exception = null) {
-    var hay = haystack?.Split(',').Select(i => i.Trim());
+    var hay = ArrayExtensions.Select(haystack?.Split(','), i => i.Trim());
     ExecuteTest(() => needle.IsIn(hay), expected, exception);
   }
 
@@ -331,7 +333,7 @@ public class StringTests {
   [TestCase("a", "a,b", false)]
   [TestCase("a", "b,c", true)]
   public void IsNotIn(string needle, string? haystack, bool expected, Type? exception = null) {
-    var hay = haystack?.Split(',').Select(i => i.Trim());
+    var hay = ArrayExtensions.Select(haystack?.Split(','), i => i.Trim());
     ExecuteTest(() => needle.IsNotIn(hay), expected, exception);
   }
 
@@ -712,9 +714,9 @@ public class StringTests {
   [TestCase("a", "b|a", true)]
   [TestCase("a", "A|B", false)]
   [TestCase("", "x||z", true)]
-  [TestCase(null, "-", true)]
+  [TestCase(null, "!", true)]
   public void IsAnyOf(string? input, string? needlesSeparatedByPipes, bool expected, Type? exception = null)
-    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i => i == "-" ? null : i)), expected, exception)
+    => ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes)), expected, exception)
     ;
 
   [Test]
@@ -725,10 +727,88 @@ public class StringTests {
   [TestCase("a", "A|B", StringComparison.Ordinal, false)]
   [TestCase("a", "A|B", StringComparison.OrdinalIgnoreCase, true)]
   [TestCase("", "x||z", StringComparison.Ordinal, true)]
-  [TestCase(null, "-", StringComparison.Ordinal, true)]
+  [TestCase(null, "!", StringComparison.Ordinal, true)]
   public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null)
-    => ExecuteTest(() => input.IsAnyOf(needlesSeparatedByPipes?.Split('|').Select(i => i == "-" ? null : i), comparison), expected, exception)
+    => ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), expected, exception)
     ;
+
+  [Test]
+  [TestCase(null,null,false,typeof(NullReferenceException))]
+  [TestCase("", null, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", true)]
+  [TestCase("a", "b", false)]
+  [TestCase("a", "b|a", true)]
+  [TestCase("a", "", false)]
+  [TestCase("a", "|", true)]
+  [TestCase("a", "!", true)]
+  public void StartsWithAnyOfString(string? input, string? needles, bool expected, Type? exception = null) 
+    =>ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception)
+    ;
+
+  [TestCase(null, null, 's', false, typeof(NullReferenceException))]
+  [TestCase("", null, 's', false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", 's', true)]
+  [TestCase("a", "A", 's', false)]
+  [TestCase("a", "A", 'i', true)]
+  [TestCase("a", "b|a", 's', true)]
+  [TestCase("a", "", 's', false)]
+  [TestCase("a", "|", 's', true)]
+  [TestCase("a", "!", 's', true)]
+  public void StartsWithAnyOfString(string? input, string? needles, char c, bool expected, Type? exception = null) {
+    var comparer = c != 'i' ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+    ExecuteTest(() => input.StartsWithAny(comparer, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles), comparer), expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  [TestCase("a", "", StringComparison.Ordinal, false)]
+  [TestCase("a", "|", StringComparison.Ordinal, true)]
+  [TestCase("a", "!", StringComparison.Ordinal, true)]
+
+  public void StartsWithAnyOfString(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.StartsWithAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles), comparison), expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, false, typeof(NullReferenceException))]
+  [TestCase("", null, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", true)]
+  [TestCase("a", "b", false)]
+  [TestCase("a", "b|a", true)]
+  public void StartsWithAnyOfChar(string? input, string? needles, bool expected, Type? exception = null)
+    => ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s[0]).ToArray()), expected, exception)
+    ;
+
+  [TestCase(null, null, 's', false, typeof(NullReferenceException))]
+  [TestCase("", null, 's', false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", 's', true)]
+  [TestCase("a", "A", 's', false)]
+  [TestCase("a", "A", 'i', true)]
+  [TestCase("a", "b|a", 's', true)]
+  public void StartsWithAnyOfChar(string? input, string? needles, char c, bool expected, Type? exception = null) {
+    var comparer = c != 'i' ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+    ExecuteTest(() => input.StartsWithAny(comparer, ConvertFromStringToTestArray(needles)?.Select(s => s[0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s[0]), comparer), expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  public void StartsWithAnyOfChar(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.StartsWithAny(comparison, ConvertFromStringToTestArray(needles)?.Select(s => s[0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s[0]), comparison), expected, exception);
+  }
 
   // TODO: ContainsAny
 

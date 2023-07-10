@@ -1650,7 +1650,7 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, (IEnumerable<string>)values);
+  public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
   /// Checks if the string starts with any from the given list.
@@ -1674,12 +1674,110 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(values != null);
+  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s ?? string.Empty, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="comparer">The string comparison.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static bool StartsWithAny(this string @this, StringComparer comparer, params string[] values) => StartsWithAny(@this, values, comparer);
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="comparer">The string comparison.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s ?? string.Empty, comparer));
+  }
+
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, params char[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="stringComparison">The string comparison.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparison stringComparison, params char[] values) => StartsWithAny(@this, values, stringComparison);
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="stringComparison">The string comparison.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
     return values.Any(s => @this.StartsWith(s, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="comparer">The string comparison.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparer comparer, params char[] values) => StartsWithAny(@this, values, comparer);
+
+  /// <summary>
+  /// Checks if the string starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="comparer">The string comparison.</param>
+  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s, comparer));
   }
 
   /// <summary>
