@@ -1409,15 +1409,21 @@ public
   public static bool IsSingle<TValue>(this IEnumerable<TValue> @this) {
     Against.ThisIsNull(@this);
 
-    var found = false;
-    foreach (var _ in @this) {
-      if (found)
-        return false;
+    switch (@this) {
+      case TValue[] array: return array.Length == 1;
+      case ICollection<TValue> collection: return collection.Count == 1;
+      default: {
+        var found = false;
+        foreach (var _ in @this) {
+          if (found)
+            return false;
 
-      found = true;
+          found = true;
+        }
+
+        return found;
+      }
     }
-
-    return found;
   }
 
   /// <summary>
@@ -1439,15 +1445,21 @@ public
   public static bool IsMultiple<TValue>(this IEnumerable<TValue> @this) {
     Against.ThisIsNull(@this);
 
-    var found = false;
-    foreach (var item in @this) {
-      if (found)
-        return true;
+    switch (@this) {
+      case TValue[] array: return array.Length > 1;
+      case ICollection<TValue> collection: return collection.Count > 1;
+      default: {
+        var found = false;
+        foreach (var item in @this) {
+          if (found)
+            return true;
 
-      found = true;
+          found = true;
+        }
+
+        return false;
+      }
     }
-
-    return false;
   }
 
   /// <summary>
