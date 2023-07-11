@@ -1602,7 +1602,7 @@ static partial class StringExtensions {
 #endif
   public static bool StartsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
-    return @this.Length > 0 && string.Equals(@this[0] + string.Empty, value + string.Empty, stringComparison);
+    return @this.Length > 0 && string.Equals(@this[0].ToString(), value.ToString(), stringComparison);
   }
   
 #if SUPPORTS_INLINING
@@ -1653,20 +1653,16 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool EndsWith(this string @this, char what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    return comparer?.Equals(@this.Length > 0 ? @this[^1] : string.Empty, what) ?? @this.EndsWith(what);
+  public static bool EndsWith(this string @this, char value, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    return comparer?.Equals(@this.Length > 0 ? @this[^1].ToString() : string.Empty, value.ToString()) ?? @this.EndsWith(value);
   }
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWith(this string @this, string what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
     if (what == null)
       return @this == null;
 
@@ -1969,6 +1965,23 @@ static partial class StringExtensions {
   /// Checks if the <see cref="String"/> ends with any from the given list.
   /// </summary>
   /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparer comparer, params string[] values) => EndsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<string> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
@@ -1981,18 +1994,6 @@ static partial class StringExtensions {
 
     return values.Any(s => @this.EndsWith(s ?? string.Empty, stringComparison));
   }
-
-  /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
-  /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWithAny(this string @this, StringComparer comparer, params string[] values) => EndsWithAny(@this, values, comparer);
 
   /// <summary>
   /// Checks if the <see cref="String"/> ends with any from the given list.
@@ -2038,6 +2039,23 @@ static partial class StringExtensions {
   /// Checks if the <see cref="String"/> ends with any character from the given list.
   /// </summary>
   /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparer comparer, params char[] values) => EndsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<char> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
@@ -2050,18 +2068,6 @@ static partial class StringExtensions {
 
     return values.Any(s => @this.EndsWith(s, stringComparison));
   }
-
-  /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
-  /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWithAny(this string @this, StringComparer comparer, params char[] values) => EndsWithAny(@this, values, comparer);
 
   /// <summary>
   /// Checks if the <see cref="String"/> ends with any character from the given list.
@@ -2080,6 +2086,67 @@ static partial class StringExtensions {
     return values.Any(s => @this.EndsWith(s, comparer));
   }
 
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, params string[] values) => !EndsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, StringComparison comparison, params string[] values) => !EndsWithAny(@this, comparison, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, StringComparer comparer, params string[] values) => !EndsWithAny(@this, comparer, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, params char[] values) => !EndsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, StringComparison comparison, params char[] values) => !EndsWithAny(@this, comparison, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, StringComparer comparer, params char[] values) => !EndsWithAny(@this, comparer, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<string> values) => !EndsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<string> values, StringComparison comparison) => !EndsWithAny(@this, values, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) => !EndsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<char> values) => !EndsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<char> values, StringComparison comparison) => !EndsWithAny(@this, values, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) => !EndsWithAny(@this, values, comparer);
+  
   #endregion
 
   /// <summary>

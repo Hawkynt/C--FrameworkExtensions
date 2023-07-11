@@ -743,7 +743,9 @@ public class StringTests {
   [TestCase("a", "!", true)]
   public void StartsWithAnyOfString(string? input, string? needles, bool expected, Type? exception = null) {
     ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)), expected, exception);
     ExecuteTest(() => input.StartsNotWithAny(ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.StartsNotWithAny(ConvertFromStringToTestArray(needles)), !expected, exception);
   }
 
   [TestCase(null, null, 's', false, typeof(NullReferenceException))]
@@ -789,7 +791,9 @@ public class StringTests {
   [TestCase("a", "b|a", true)]
   public void StartsWithAnyOfChar(string? input, string? needles, bool expected, Type? exception = null) {
     ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.StartsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0])), expected, exception);
     ExecuteTest(() => input.StartsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
+    ExecuteTest(() => input.StartsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0])), !expected, exception);
   }
 
   [TestCase(null, null, 's', false, typeof(NullReferenceException))]
@@ -820,6 +824,98 @@ public class StringTests {
     ExecuteTest(() => input.StartsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparison), !expected, exception);
   }
 
+  [Test]
+  [TestCase(null, null, false, typeof(NullReferenceException))]
+  [TestCase("", null, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", true)]
+  [TestCase("a", "b", false)]
+  [TestCase("a", "b|a", true)]
+  [TestCase("a", "", false)]
+  [TestCase("a", "|", true)]
+  [TestCase("a", "!", true)]
+  public void EndsWithAnyOfString(string? input, string? needles, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)), !expected, exception);
+  }
+
+  [TestCase(null, null, 's', false, typeof(NullReferenceException))]
+  [TestCase("", null, 's', false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", 's', true)]
+  [TestCase("a", "A", 's', false)]
+  [TestCase("a", "A", 'i', true)]
+  [TestCase("a", "b|a", 's', true)]
+  [TestCase("a", "", 's', false)]
+  [TestCase("a", "|", 's', true)]
+  [TestCase("a", "!", 's', true)]
+  public void EndsWithAnyOfString(string? input, string? needles, char c, bool expected, Type? exception = null) {
+    var comparer = c != 'i' ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+    ExecuteTest(() => input.EndsWithAny(comparer, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles), comparer), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(comparer, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles), comparer), !expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  [TestCase("a", "", StringComparison.Ordinal, false)]
+  [TestCase("a", "|", StringComparison.Ordinal, true)]
+  [TestCase("a", "!", StringComparison.Ordinal, true)]
+
+  public void EndsWithAnyOfString(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.EndsWithAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles), comparison), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles), comparison), !expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, false, typeof(NullReferenceException))]
+  [TestCase("", null, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", true)]
+  [TestCase("a", "b", false)]
+  [TestCase("a", "b|a", true)]
+  public void EndsWithAnyOfChar(string? input, string? needles, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0])), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0])), !expected, exception);
+  }
+
+  [TestCase(null, null, 's', false, typeof(NullReferenceException))]
+  [TestCase("", null, 's', false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", 's', true)]
+  [TestCase("a", "A", 's', false)]
+  [TestCase("a", "A", 'i', true)]
+  [TestCase("a", "b|a", 's', true)]
+  public void EndsWithAnyOfChar(string? input, string? needles, char c, bool expected, Type? exception = null) {
+    var comparer = c != 'i' ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+    ExecuteTest(() => input.EndsWithAny(comparer, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparer), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(comparer, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparer), !expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  public void EndsWithAnyOfChar(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.EndsWithAny(comparison, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), expected, exception);
+    ExecuteTest(() => input.EndsWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparison), expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(comparison, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
+    ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparison), !expected, exception);
+  }
+  
   // TODO: ContainsAny
 
 }
