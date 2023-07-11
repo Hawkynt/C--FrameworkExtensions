@@ -1574,253 +1574,17 @@ static partial class StringExtensions {
 #endif
     return "[" + @this.Replace("]", "]]") + "]";
   }
-  
+
+  #region StartsWith/StartsNotWith
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWith(this string @this, char what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
     return comparer?.Equals(@this.Length > 0 ? @this[0] + string.Empty : string.Empty, what + string.Empty) ?? @this.StartsWith(what);
   }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this, what, comparer);
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWith(this string @this, string what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    if (what == null)
-      return @this == null;
-
-    return comparer?.Equals(@this[..what.Length], what) ?? @this.StartsWith(what);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsNotWith(this string @this, string what, StringComparer comparer) => !StartsWith(@this, what, comparer);
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWith(this string @this, char what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    return comparer?.Equals(@this.Length > 0 ? @this[^1] : string.Empty, what) ?? @this.EndsWith(what);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsNotWith(this string @this, char what, StringComparer comparer) => !EndsWith(@this, what, comparer);
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWith(this string @this, string what, StringComparer comparer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    if (what == null)
-      return @this == null;
-
-    return comparer?.Equals(@this[Math.Max(0, @this.Length - what.Length)..], what) ?? @this.EndsWith(what);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsNotWith(this string @this, string what, StringComparer comparer) => !EndsWith(@this, what, comparer);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    return values.Any(s => @this.StartsWith(s ?? string.Empty, stringComparison));
-  }
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="comparer">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, StringComparer comparer, params string[] values) => StartsWithAny(@this, values, comparer);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="comparer">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    return values.Any(s => @this.StartsWith(s ?? string.Empty, comparer));
-  }
-
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, params char[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, StringComparison stringComparison, params char[] values) => StartsWithAny(@this, values, stringComparison);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparison stringComparison) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    return values.Any(s => @this.StartsWith(s, stringComparison));
-  }
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="comparer">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, StringComparer comparer, params char[] values) => StartsWithAny(@this, values, comparer);
-
-  /// <summary>
-  /// Checks if the string starts with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="comparer">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    return values.Any(s => @this.StartsWith(s, comparer));
-  }
-
-  /// <summary>
-  /// Checks if the string ends with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, (IEnumerable<string>)values);
-
-  /// <summary>
-  /// Checks if the string ends with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
-
-  /// <summary>
-  /// Checks if the string ends with any from the given list.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="values">The values to compare to.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns><c>true</c> if there is at least one string in the list that matches the start; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(values != null);
-#endif
-    return values.Any(s => @this.EndsWith(s, stringComparison));
-  }
-
+  
   /// <summary>
   /// Checks whether the given string starts with the specified character.
   /// </summary>
@@ -1837,10 +1601,76 @@ static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    return @this.Length > 0 && string.Equals(@this[0] + string.Empty, value + string.Empty, stringComparison);
+  }
+  
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWith(this string @this, string what, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    if (what == null)
+      return @this == null;
+
+    return comparer?.Equals(@this[..what.Length], what) ?? @this.StartsWith(what);
+  }
+  
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this, what, comparer);
+  
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWith(this string @this, string what, StringComparer comparer) => !StartsWith(@this, what, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
+
+  /// <summary>
+  /// Checks whether the given string starts not with the specified text.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="value">The value.</param>
+  /// <param name="stringComparison">The string comparison.</param>
+  /// <returns></returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWith(this string @this, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
+
+  #endregion
+
+  #region EndsWith/EndsNotWith
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWith(this string @this, char what, StringComparer comparer) {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(@this != null);
 #endif
-    return @this.Length > 0 && string.Equals(@this[0] + string.Empty, value + string.Empty, stringComparison);
+    return comparer?.Equals(@this.Length > 0 ? @this[^1] : string.Empty, what) ?? @this.EndsWith(what);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWith(this string @this, string what, StringComparer comparer) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(@this != null);
+#endif
+    if (what == null)
+      return @this == null;
+
+    return comparer?.Equals(@this[Math.Max(0, @this.Length - what.Length)..], what) ?? @this.EndsWith(what);
   }
 
   /// <summary>
@@ -1865,20 +1695,21 @@ static partial class StringExtensions {
     return @this.Length > 0 && string.Equals(@this[^1] + string.Empty, value + string.Empty, stringComparison);
   }
 
-  /// <summary>
-  /// Checks whether the given string starts not with the specified text.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="value">The value.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool StartsNotWith(this string @this, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
+  public static bool EndsNotWith(this string @this, char what, StringComparer comparer) => !EndsWith(@this, what, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWith(this string @this, string what, StringComparer comparer) => !EndsWith(@this, what, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsNotWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.EndsWith(value, stringComparison);
 
   /// <summary>
   /// Checks whether the given string ends not with the specified text.
@@ -1894,6 +1725,362 @@ static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsNotWith(this string @this, string value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.EndsWith(value, stringComparison);
+
+  #endregion
+
+  #region StartsWithAny/StartsNotWithAny
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparer comparer, params string[] values) => StartsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<string> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s ?? string.Empty, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s ?? string.Empty, comparer));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, params char[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparison stringComparison, params char[] values) => StartsWithAny(@this, values, stringComparison);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, StringComparer comparer, params char[] values) => StartsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<char> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.StartsWith(s, comparer));
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, params string[] values) => !StartsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, StringComparison comparison, params string[] values) => !StartsWithAny(@this, comparison, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, StringComparer comparer, params string[] values) => !StartsWithAny(@this, comparer, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, params char[] values) => !StartsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, StringComparison comparison, params char[] values) => !StartsWithAny(@this, comparison, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, StringComparer comparer, params char[] values) => !StartsWithAny(@this, comparer, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<string> values) => !StartsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<string> values, StringComparison comparison) => !StartsWithAny(@this, values, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) => !StartsWithAny(@this, values, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<char> values) => !StartsWithAny(@this, values);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<char> values, StringComparison comparison) => !StartsWithAny(@this, values, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool StartsNotWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) => !StartsWithAny(@this, values, comparer);
+
+  #endregion
+
+  #region EndsWithAny/EndsNotWithAny
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.EndsWith(s ?? string.Empty, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparer comparer, params string[] values) => EndsWithAny(@this, values, comparer);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<string> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.EndsWith(s ?? string.Empty, comparer));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, params char[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparison stringComparison, params char[] values) => EndsWithAny(@this, values, stringComparison);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="stringComparison">The mode to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<char> values, StringComparison stringComparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.EndsWith(s, stringComparison));
+  }
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, StringComparer comparer, params char[] values) => EndsWithAny(@this, values, comparer);
+
+  /// <summary>
+  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="values">The values to compare to.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool EndsWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+
+    return values.Any(s => @this.EndsWith(s, comparer));
+  }
+
+  #endregion
 
   /// <summary>
   /// Determines whether the given string is surrounded by another one.
