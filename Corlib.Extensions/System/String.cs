@@ -406,6 +406,60 @@ static partial class StringExtensions {
     return @this[^count..];
   }
 
+  /// <summary>
+  /// Gets the first <see cref="Char"/> of the <see cref="String"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <returns>The first <see cref="Char"/></returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char First(this string @this) => @this[0];
+
+  /// <summary>
+  /// Gets the first <see cref="Char"/> of the <see cref="String"/> or a default value.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="default">The default <see cref="Char"/> to return</param>
+  /// <returns>The first <see cref="Char"/></returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char FirstOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[0];
+
+  /// <summary>
+  /// Gets the last <see cref="Char"/> of the <see cref="String"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <returns>The last <see cref="Char"/></returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char Last(this string @this) => @this[^1];
+
+  /// <summary>
+  /// Gets the last <see cref="Char"/> of the <see cref="String"/> or a default value.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="default">The default <see cref="Char"/> to return</param>
+  /// <returns>The last <see cref="Char"/></returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
+
   private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().ToHashSet(c => c));
 
   /// <summary>
