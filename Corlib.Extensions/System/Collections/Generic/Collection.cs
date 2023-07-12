@@ -20,17 +20,19 @@
 #endregion
 
 using System.Linq;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
-
 namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
-  internal
+internal
 #endif
-  static partial class CollectionExtensions {
+static partial class CollectionExtensions {
   /// <summary>
   /// Executes an action on each item.
   /// </summary>
@@ -91,5 +93,61 @@ public
 
     foreach (var item in items)
       @this.Remove(item);
+  }
+
+  /// <summary>
+  /// Determines whether a given <see cref="ICollection"/> contains exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="ICollection"/></param>
+  /// <returns><see langword="true"/> if the <see cref="ICollection"/> has one element; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsSingle<TValue>(this ICollection<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);  
+    return @this.Count == 1;
+  }
+
+  /// <summary>
+  /// Determines whether a given <see cref="ICollection"/> contains more than one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="ICollection"/></param>
+  /// <returns><see langword="true"/> if the <see cref="ICollection"/> has more than one element; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsMultiple<TValue>(this ICollection<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+    return @this.Count > 1;
+  }
+
+  /// <summary>
+  /// Determines whether a given <see cref="ICollection"/> contains not exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="ICollection"/></param>
+  /// <returns><see langword="true"/> if the <see cref="ICollection"/> has less or more than one element; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNoSingle<TValue>(this ICollection<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+    return @this.Count != 1;
+  }
+
+  /// <summary>
+  /// Determines whether a given <see cref="ICollection"/> contains no more than one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <param name="this">This <see cref="ICollection"/></param>
+  /// <returns><see langword="true"/> if the <see cref="ICollection"/> has less than two elements; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNoMultiple<TValue>(this ICollection<TValue> @this) {
+    Guard.Against.ThisIsNull(@this);
+    return @this.Count <= 1;
   }
 }

@@ -112,7 +112,7 @@ public
   /// <returns>A new enumeration with the added item</returns>
   /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
   public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     yield return item;
 
@@ -130,7 +130,7 @@ public
     /// <returns>A new enumeration with the added item</returns>
     /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
     public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
-      Guard.Against.ThisIsNull(@this);
+      Against.ThisIsNull(@this);
 
       foreach (var i in @this)
         yield return i;
@@ -148,8 +148,8 @@ public
   /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white")</param>
   /// <param name="selector">Which column of the record to filter</param>
   public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> @this, Func<TRow, string> selector, string query) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     if (query.IsNullOrWhiteSpace())
       return @this;
@@ -176,8 +176,8 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> other, IEqualityComparer<TItem> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(other);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
 
     comparer ??= EqualityComparer<TItem>.Default;
 
@@ -276,7 +276,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
       
     return new(@this);
   }
@@ -295,7 +295,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return new(@this, comparer);
   }
@@ -311,8 +311,8 @@ public
   /// </returns>
   [DebuggerStepThrough]
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, int initialCapacity) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.NegativeValues(initialCapacity);
+    Against.ThisIsNull(@this);
+    Against.NegativeValues(initialCapacity);
       
     var items = new List<TItem>(initialCapacity);
     items.AddRange(@this);
@@ -335,8 +335,8 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, IEqualityComparer<TResult> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     return comparer == null ? new(@this.Select(selector)) : new HashSet<TResult>(@this.Select(selector), comparer);
   }
@@ -392,7 +392,7 @@ public
   /// <returns>A shuffled enumeration.</returns>
   [DebuggerStepThrough]
   public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> @this, Random random = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
 #if SUPPORTS_RANDOM_SHARED
       random ??= Random.Shared;
@@ -549,15 +549,15 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
       
     return @this.SelectMany(c => c as TItem[] ?? c.ToArray());
   }
 
 #if SUPPORTS_TUPLES
   public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
       
     var groups = @this.GroupBy(predicate).ToArray();
     var result = Tuple.Create(
@@ -581,7 +581,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool ContainsNot<TItem>(this IEnumerable<TItem> @this, TItem item, IEqualityComparer<TItem> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return !(comparer == null ? @this.Contains(item) : @this.Contains(item, comparer));
   }
@@ -599,7 +599,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool ContainsNotAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items, IEqualityComparer<TItem> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return !ContainsAny(@this, items, comparer);
   }
@@ -615,8 +615,8 @@ public
   ///   <c>true</c> if the enumeration contains any of the listed values; otherwise, <c>false</c>.
   /// </returns>
   public static bool ContainsAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> list, IEqualityComparer<TItem> equalityComparer = null) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(list);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(list);
 
     // we'll cache all visited values from the list, so we don't have to enumerate more than once
     var itemCache = new List<TItem>();
@@ -670,8 +670,8 @@ public
   /// <param name="action">The action.</param>
   [DebuggerStepThrough]
   public static void ForEach<TItem>(this IEnumerable<TItem> @this, Action<TItem> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     foreach (var item in @this)
       action(item);
@@ -686,8 +686,8 @@ public
   /// <param name="action">The call to execute.</param>
   [DebuggerStepThrough]
   public static void ForEach<TItem>(this IEnumerable<TItem> @this, Action<TItem, int> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     var index = 0;
     foreach (var item in @this)
@@ -706,8 +706,8 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
       
     Parallel.ForEach(@this, action);
   }
@@ -719,8 +719,8 @@ public
   /// <param name="this">This enumeration.</param>
   /// <param name="action">The call to execute.</param>
   public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn, int> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
 #pragma warning disable CC0031 // Check for null before calling a delegate
     @this.Select((v, i) => new Action(() => action(v, i))).ParallelForEach(i => i());
@@ -742,8 +742,8 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, TOut> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     return @this.Select(converter);
   }
@@ -761,8 +761,8 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, int, TOut> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
       
     return @this.Select(converter);
   }
@@ -778,8 +778,8 @@ public
   /// A new enumeration which automatically calls the progress callback when items are pulled.
   /// </returns>
   public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<double> progressCallback, bool delayed = false) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(progressCallback);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(progressCallback);
 
     var collection = @this as ICollection<TIn> ?? @this.ToList();
     return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
@@ -796,8 +796,8 @@ public
   /// A new enumeration which automatically calls the progress callback when items are pulled.
   /// </returns>
   public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<long, long> progressCallback, bool delayed = false) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(progressCallback);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(progressCallback);
 
     var collection = @this as ICollection<TIn> ?? @this.ToList();
     return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
@@ -813,8 +813,8 @@ public
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
   public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<double> progressCallback, bool delayed = false) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(progressCallback);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(progressCallback);
 
     return AsProgressReporting(@this, length, (i, c) => progressCallback(i == c ? 1 : (double)i / c), delayed);
   }
@@ -829,8 +829,8 @@ public
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
   public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<long, long> progressCallback, bool delayed = false) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(progressCallback);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(progressCallback);
 
     if (length == 0)
       progressCallback(0, 0);
@@ -863,8 +863,8 @@ public
   /// <param name="condition">The condition.</param>
   /// <returns></returns>
   public static bool All<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> condition) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(condition);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(condition);
 
     // original but slower implementation
     //return (!This.Where((o, i) => !condition(o, i)).Any());
@@ -888,8 +888,8 @@ public
   /// <param name="selector">The selector.</param>
   /// <returns>An enumeration with distinct elements.</returns>
   public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> @this, Func<TIn, TCompare> selector) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var list = (
       from i in @this
@@ -915,7 +915,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
       
     return @this.SelectMany(s => s as TItem[] ?? s.ToArray());
   }
@@ -930,7 +930,7 @@ public
   /// <param name="converter">The converter.</param>
   /// <returns>The joined string.</returns>
   public static string Join<TIn>(this IEnumerable<TIn> @this, string join = ", ", bool skipDefaults = false, Func<TIn, string> converter = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var result = new StringBuilder();
     var gotElements = false;
@@ -962,8 +962,8 @@ public
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, int defaultValue = -1) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var result = 0;
     foreach (var item in @this)
@@ -985,9 +985,9 @@ public
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<int> defaultValue) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
-    Guard.Against.ArgumentIsNull(defaultValue);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+    Against.ArgumentIsNull(defaultValue);
       
     var result = 0;
     foreach (var item in @this)
@@ -1009,9 +1009,9 @@ public
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, int> defaultValue) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
-    Guard.Against.ArgumentIsNull(defaultValue);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+    Against.ArgumentIsNull(defaultValue);
       
     var result = 0;
     // ReSharper disable once PossibleMultipleEnumeration
@@ -1047,7 +1047,7 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     foreach (var item in @this)
       return item;
@@ -1064,8 +1064,8 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(defaultValueFactory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(defaultValueFactory);
 
     foreach (var item in @this)
       return item;
@@ -1082,8 +1082,8 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(defaultValueFactory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(defaultValueFactory);
 
     // ReSharper disable once PossibleMultipleEnumeration
     foreach (var item in @this)
@@ -1124,8 +1124,8 @@ public
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     foreach (var item in @this)
       if (selector(item))
@@ -1144,9 +1144,9 @@ public
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
-    Guard.Against.ArgumentIsNull(defaultValueFactory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+    Against.ArgumentIsNull(defaultValueFactory);
       
     foreach (var item in @this)
       if (selector(item))
@@ -1165,9 +1165,9 @@ public
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
-    Guard.Against.ArgumentIsNull(defaultValueFactory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+    Against.ArgumentIsNull(defaultValueFactory);
       
     // ReSharper disable once PossibleMultipleEnumeration
     foreach (var item in @this)
@@ -1299,7 +1299,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
       
     return @this.OrderBy(i => i);
   }
@@ -1312,7 +1312,7 @@ public
   /// <param name="random">The random instance, if any.</param>
   /// <returns>The items in a randomized order.</returns>
   public static IEnumerable<TItem> Randomize<TItem>(this IEnumerable<TItem> @this, Random random = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
 #if SUPPORTS_RANDOM_SHARED
       random ??= Random.Shared;
@@ -1338,8 +1338,8 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static IEnumerable<TItem> TakeUntil<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     return @this.TakeWhile(i => !predicate(i));
   }
@@ -1353,8 +1353,8 @@ public
   /// <returns></returns>
   [DebuggerStepThrough]
   public static IEnumerable<TItem> SkipUntil<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     return @this.SkipWhile(i => !predicate(i));
   }
@@ -1370,9 +1370,9 @@ public
   ;
 
   public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(this TItem[] @this,Func<TItem,TKey> keyGetter,Func<TItem,TValue> valueGetter,IEqualityComparer<TKey> equalityComparer=null ) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(keyGetter);
-    Guard.Against.ArgumentIsNull(valueGetter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keyGetter);
+    Against.ArgumentIsNull(valueGetter);
 
     var result = equalityComparer == null ? new() : new ConcurrentDictionary<TKey, TValue>(equalityComparer);
     foreach (var item in @this)
@@ -1390,8 +1390,8 @@ public
   /// <param name="action">the action performed for each element in the IEnumerable</param>
   /// <returns>A awaitable task representing this action</returns>
   public static async Task DoForEveryItemAsync<TItem>(this IEnumerable<TItem> @this, Action<TItem> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
   
     await Task.Run(() => {
       foreach (var item in @this)
@@ -1432,6 +1432,9 @@ public
   /// <typeparam name="TValue">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has less or more than one element; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool IsNoSingle<TValue>(this IEnumerable<TValue> @this)
     => !IsSingle(@this)
   ;
@@ -1470,6 +1473,9 @@ public
   /// <typeparam name="TValue">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has zero or one element; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+# endif
   public static bool IsNoMultiple<TValue>(this IEnumerable<TValue> @this)
     => !IsMultiple(@this)
   ;
@@ -1503,6 +1509,9 @@ public
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item not or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, TValue value)
     => !HasSingle(@this, value)
   ;
@@ -1536,6 +1545,9 @@ public
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item is found less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, TValue value)
     => !HasMultiple(@this, value)
     ;
@@ -1570,6 +1582,9 @@ public
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches not at all or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
     => !HasSingle(@this, predicate)
   ;
@@ -1603,6 +1618,9 @@ public
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
     => !HasMultiple(@this, predicate)
   ;
