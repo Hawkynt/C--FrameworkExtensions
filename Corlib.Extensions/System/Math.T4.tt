@@ -196,7 +196,7 @@ namespace System {
 #endif
     public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(digits >= 0 && digits <= <#=item.Item2#>);
+      Contract.Requires(digits is >= 0 and <= <#=item.Item2#>);
 #endif
       return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits);
     }
@@ -226,7 +226,7 @@ namespace System {
 #endif
     public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits, MidpointRounding method) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(digits >= 0 && digits <= <#=item.Item2#>);
+      Contract.Requires(digits is >= 0 and <= <#=item.Item2#>);
 #endif
       return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits, method);
     }
@@ -251,9 +251,57 @@ namespace System {
 #endif
     public static <#=type#> Sign(this <#=type#> @this) => <#=(type=="sbyte"||type=="short"?"("+type+")":"")#>(@this < 0 ? -1 : 1);
 
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsPositive(this <#=type#> @this) => @this > 0;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsPositiveOrZero(this <#=type#> @this) => @this >= 0;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNegative(this <#=type#> @this) => @this < 0;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNegativeOrZero(this <#=type#> @this) => @this <= 0;
+
   <#}#>
   
   <# foreach (var type in new[]{"float","double"}){#>
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNumeric(this <#=type#> @this) => !(<#=type#>.IsNaN(@this) || <#=type#>.IsInfinity(@this));
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsNonNumeric(this <#=type#> @this) => <#=type#>.IsNaN(@this) || <#=type#>.IsInfinity(@this);
     
 #if SUPPORTS_CONTRACTS
     [Pure]
@@ -356,6 +404,54 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static bool IsNotZero(this <#=type#> @this) => @this != 0;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsBelow(this <#=type#> @this, <#=type#> exclusiveLimit) => @this < exclusiveLimit;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsBelowOrEqual(this <#=type#> @this, <#=type#> inclusiveLimit) => @this <= inclusiveLimit;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsAbove(this <#=type#> @this, <#=type#> exclusiveLimit) => @this > exclusiveLimit;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsAboveOrEqual(this <#=type#> @this, <#=type#> inclusiveLimit) => @this >= inclusiveLimit;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsBetween(this <#=type#> @this, <#=type#> exclusiveLowerLimit, <#=type#> exclusiveUpperLimit) => @this > exclusiveLowerLimit && @this < exclusiveUpperLimit;
+
+#if SUPPORTS_CONTRACTS
+    [Pure]
+#endif
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static bool IsInRange(this <#=type#> @this, <#=type#> inclusiveLowerLimit, <#=type#> inclusiveUpperLimit) => @this >= inclusiveLowerLimit && @this <= inclusiveUpperLimit;
 
   <#}#>
 
@@ -511,22 +607,6 @@ namespace System {
 
       return true;
     }
-
-#if SUPPORTS_CONTRACTS
-    [Pure]
-#endif
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool IsBetween(<#=type#> @this, <#=type#> lowerBoundary, <#=type#> upperBoundary) => lowerBoundary<@this && @this<upperBoundary;
-    
-#if SUPPORTS_CONTRACTS
-    [Pure]
-#endif
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool IsInRange(<#=type#> @this, <#=type#> lowerBoundary, <#=type#> upperBoundary) => lowerBoundary<=@this && @this<=upperBoundary;
 
     #endregion
 

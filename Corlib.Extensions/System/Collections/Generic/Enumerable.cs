@@ -1446,8 +1446,10 @@ public
     Against.ThisIsNull(@this);
 
     switch (@this) {
-      case TValue[] array: return array.Length > 1;
-      case ICollection<TValue> collection: return collection.Count > 1;
+      case TValue[] array:
+        return array.Length > 1;
+      case ICollection<TValue> collection:
+        return collection.Count > 1;
       default: {
         var found = false;
         foreach (var item in @this) {
