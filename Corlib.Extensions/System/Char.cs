@@ -31,196 +31,256 @@ using System.Runtime.CompilerServices;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System {
+namespace System;
+
+using Collections.Generic;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class CharExtensions {
+static partial class CharExtensions {
 
-    /// <summary>
-    /// Determines whether the given character is a whitespace.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+  /// <summary>
+  /// Determines whether the given <see cref="Char"/> is a whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
+  public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
 
-    /// <summary>
-    /// Determines whether the given char is the null character or a whitespace.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+  /// <summary>
+  /// Determines whether the given <see cref="Char"/> is the null character or a whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
+  public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
 
-    /// <summary>
-    /// Determines whether the given char is not the null character or a whitespace.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
+  /// <summary>
+  /// Determines whether the given <see cref="Char"/> is not the null character or a whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
+  public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
 
-    /// <summary>
-    /// Determines whether the specified char is a digit.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified char is a digit; otherwise, <c>false</c>.
-    /// </returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is a digit.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a digit; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsDigit(this char @this) => char.IsDigit(@this);
+  public static bool IsDigit(this char @this) => char.IsDigit(@this);
 
-    /// <summary>
-    /// Determines whether the specified char is upper case.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified char is upper case; otherwise, <c>false</c>.
-    /// </returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is not a digit.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not a digit; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsUpper(this char @this) => char.IsUpper(@this);
+  public static bool IsNotDigit(this char @this) => !char.IsDigit(@this);
 
-    /// <summary>
-    /// Determines whether the specified char is lower case.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified char is lower case; otherwise, <c>false</c>.
-    /// </returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is upper-case.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is upper-case; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsLower(this char @this) => char.IsLower(@this);
+  public static bool IsUpper(this char @this) => char.IsUpper(@this);
 
-    /// <summary>
-    /// Determines whether the specified char is a letter.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified char is a letter; otherwise, <c>false</c>.
-    /// </returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is not upper-case.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not upper-case; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsLetter(this char @this) => char.IsLetter(@this);
+  public static bool IsNotUpper(this char @this) => !char.IsUpper(@this);
 
-    /// <summary>
-    /// converts the given character to uppercase.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>The upper-case char.</returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is lower-case.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is lower-case; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static char ToUpper(this char @this) => char.ToUpper(@this);
+  public static bool IsLower(this char @this) => char.IsLower(@this);
 
-    /// <summary>
-    /// converts the given character to uppercase.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <param name="culture">The culture ot use.</param>
-    /// <returns>The upper-case char.</returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is not lower-case.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not lower-case; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
+  public static bool IsNotLower(this char @this) => !char.IsLower(@this);
 
-    /// <summary>
-    /// converts the given character to lowercase.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <returns>The lower-case char.</returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is a letter.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a letter; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static char ToLower(this char @this) => char.ToLower(@this);
+  public static bool IsLetter(this char @this) => char.IsLetter(@this);
 
-    /// <summary>
-    /// converts the given character to lowercase.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <param name="culture">The culture ot use.</param>
-    /// <returns>The lower-case char.</returns>
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is not a letter.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not a letter; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
+  public static bool IsNotLetter(this char @this) => !char.IsLetter(@this);
 
-    /// <summary>
-    /// Determines whether the given char is any of the ones in the list.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <param name="list">The list.</param>
-    /// <returns>
-    ///   <c>true</c> if the given char is in the list; otherwise, <c>false</c>.
-    /// </returns>
+  /// <summary>
+  /// converts the given <see cref="Char"/> to uppercase.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns>The upper-case <see cref="Char"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
+  public static char ToUpper(this char @this) => char.ToUpper(@this);
 
-    /// <summary>
-    /// Repeats this character several times.
-    /// </summary>
-    /// <param name="this">This Char.</param>
-    /// <param name="count">The count.</param>
-    /// <returns>A new string containing the given character the specified times.</returns>
+  /// <summary>
+  /// converts the given <see cref="Char"/> to uppercase.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <param name="culture">The <see cref="CultureInfo"/> to use.</param>
+  /// <returns>The upper-case <see cref="Char"/>.</returns>
 #if SUPPORTS_CONTRACTS
-    [Pure]
+  [Pure]
 #endif
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string Repeat(this char @this, int count) => new(@this, count);
-  }
+  public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
+
+  /// <summary>
+  /// converts the given <see cref="Char"/> to lowercase.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns>The lower-case <see cref="Char"/>.</returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char ToLower(this char @this) => char.ToLower(@this);
+
+  /// <summary>
+  /// converts the given <see cref="Char"/> to lowercase.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <param name="culture">The <see cref="CultureInfo"/> to use.</param>
+  /// <returns>The lower-case <see cref="Char"/>.</returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
+
+  /// <summary>
+  /// Determines whether the given <see cref="Char"/> is any of the ones in the list.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <param name="list">The list.</param>
+  /// <returns><see langword="true"/> if the given <see cref="Char"/> is in the list; otherwise, <see langword="false"/>.
+  /// </returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
+
+  /// <summary>
+  /// Determines whether the given <see cref="Char"/> is any of the ones in the list.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <param name="list">The list.</param>
+  /// <returns><see langword="true"/> if the given <see cref="Char"/> is in the list; otherwise, <see langword="false"/>.
+  /// </returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsAnyOf(this char @this, IEnumerable<char> list) => list.Any(c => c == @this);
+  
+  /// <summary>
+  /// Repeats this <see cref="Char"/> several times.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <param name="count">The count.</param>
+  /// <returns>A new string containing the given <see cref="Char"/> the specified times.</returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string Repeat(this char @this, int count) => new(@this, count);
+
 }
