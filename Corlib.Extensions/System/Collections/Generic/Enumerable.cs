@@ -1370,6 +1370,22 @@ public
   }
 
   /// <summary>
+  /// Orders the collection by its elements itself.
+  /// </summary>
+  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <param name="this">This enumeration.</param>
+  /// <returns></returns>
+  [DebuggerStepThrough]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<TIn> OrderByDescending<TIn>(this IEnumerable<TIn> @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.OrderByDescending(i => i);
+  }
+
+  /// <summary>
   /// Returns the items in a randomized order.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>

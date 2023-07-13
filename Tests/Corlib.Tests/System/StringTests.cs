@@ -319,23 +319,21 @@ public class StringTests {
   [TestCase(null, null, false, typeof(NullReferenceException))]
   [TestCase("a", null, false, typeof(ArgumentNullException))]
   [TestCase("a", "", false)]
-  [TestCase("a", "a,b", true)]
-  [TestCase("a", "b,c", false)]
-  public void IsIn(string needle, string? haystack, bool expected, Type? exception = null) {
-    var hay = ArrayExtensions.Select(haystack?.Split(','), i => i.Trim());
-    ExecuteTest(() => needle.IsIn(hay), expected, exception);
-  }
+  [TestCase("a", "a|b", true)]
+  [TestCase("a", "b|c", false)]
+  public void IsIn(string needle, string? haystack, bool expected, Type? exception = null) 
+    => ExecuteTest(() => needle.IsIn(ConvertFromStringToTestArray(haystack)), expected, exception)
+    ;
 
   [Test]
   [TestCase(null, null, false, typeof(NullReferenceException))]
   [TestCase("a", null, false, typeof(ArgumentNullException))]
   [TestCase("a", "", true)]
-  [TestCase("a", "a,b", false)]
-  [TestCase("a", "b,c", true)]
-  public void IsNotIn(string needle, string? haystack, bool expected, Type? exception = null) {
-    var hay = ArrayExtensions.Select(haystack?.Split(','), i => i.Trim());
-    ExecuteTest(() => needle.IsNotIn(hay), expected, exception);
-  }
+  [TestCase("a", "a|b", false)]
+  [TestCase("a", "b|c", true)]
+  public void IsNotIn(string needle, string? haystack, bool expected, Type? exception = null) 
+    => ExecuteTest(() => needle.IsNotIn(ConvertFromStringToTestArray(haystack)), expected, exception)
+    ;
 
   [Test]
   [TestCase(null, 0, null, typeof(NullReferenceException))]
