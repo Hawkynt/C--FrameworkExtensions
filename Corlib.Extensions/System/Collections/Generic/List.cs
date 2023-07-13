@@ -153,6 +153,118 @@ static partial class ListExtensions {
   /// Tries to get the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetFirst<T>(this List<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[0];
+    return true;
+  }
+  
+  /// <summary>
+  /// Tries to get the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetLast<T>(this List<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[^1];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetItem<T>(this List<T> @this, int index, out T result) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Count <= index) {
+      result = default;
+      return false;
+    }
+
+    result = @this[index];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetFirst<T>(this List<T> @this, T value) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0)
+      return false;
+
+    @this[0] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetLast<T>(this List<T> @this, T value) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0)
+      return false;
+
+    @this[^1] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetItem<T>(this List<T> @this, int index, T value) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Count <= index)
+      return false;
+
+    @this[index] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
   /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
