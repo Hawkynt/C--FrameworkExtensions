@@ -31,8 +31,8 @@ internal class TestUtilities {
   /// </summary>
   /// <param name="input">The values to split</param>
   /// <returns></returns>
-  public static IEnumerable<string?>? ConvertFromStringToTestArray(string? input) 
-    => input == null ? null : input == string.Empty ? _EMPTY_ARRAY : input.Split('|').Select(c=>c=="!"?null:c)
+  public static IEnumerable<string?>? ConvertFromStringToTestArray(string? input)
+    => input == null ? null : input == string.Empty ? _EMPTY_ARRAY : input.Split('|').Select(c => c == "!" ? null : c)
     ;
 
 

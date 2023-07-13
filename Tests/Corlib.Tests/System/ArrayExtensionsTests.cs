@@ -1,9 +1,11 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
+using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System.Tests; 
 
 [TestFixture]
-public class ArrayExtensionsTests {
+public class ArrayTests {
 
   [Test]
   [TestCase(0)]
@@ -207,9 +209,50 @@ public class ArrayExtensionsTests {
     if (target.Length < 1)
       return;
 
-    target[target.Length-1] = 1;
+    target[^1] = 1;
     var shouldBeFalse = source.SequenceEqual(target);
     Assert.IsFalse(shouldBeFalse);
     Assert.IsTrue(shouldBeTrue, $"Unequals for length {size}");
   }
+
+
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("a", true, "a")]
+  [TestCase("a|b", true, "a")]
+  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      string? v = null;
+      var r = input == null ? ((string?[])null!).TryGetFirst(out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetFirst(out v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("a", true, "a")]
+  [TestCase("a|b", true, "b")]
+  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      string? v = null;
+      var r = input == null ? ((string?[])null!).TryGetLast(out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetLast(out v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, 0, false, null, typeof(NullReferenceException))]
+  [TestCase("", -1, false, null, typeof(IndexOutOfRangeException))]
+  [TestCase("a", 1, false, null)]
+  [TestCase("a|b|c", 1, true, "b")]
+  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      string? v = null;
+      var r = input == null ? ((string?[])null!).TryGetItem(index, out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetItem(index, out v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
 }

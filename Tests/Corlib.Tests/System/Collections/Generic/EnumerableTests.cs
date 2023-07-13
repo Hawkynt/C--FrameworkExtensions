@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using static Corlib.Tests.NUnit.TestUtilities;
 using NUnit.Framework;
+using System.Linq;
+
 namespace Corlib.Tests.System.Collections.Generic;
 
 [TestFixture]
@@ -103,5 +105,41 @@ public class EnumerableTests {
   [TestCase("a|a", "a", false)]
   public void HasNoMultiplePredicate(string? input, string? search, bool expected, Type? exception = null)
     => ExecuteTest(() => ConvertFromStringToTestArray(input).HasNoMultiple(s => s == search), expected, exception);
+  
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("a", true, "a")]
+  [TestCase("a|b", true, "a")]
+  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      var r = ConvertFromStringToTestArray(input).TryGetFirst(out var v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("a", true, "a")]
+  [TestCase("a|b", true, "b")]
+  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      var r = ConvertFromStringToTestArray(input).TryGetLast(out var v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, 0, false, null, typeof(NullReferenceException))]
+  [TestCase("", -1, false, null, typeof(IndexOutOfRangeException))]
+  [TestCase("a", 1, false, null)]
+  [TestCase("a|b|c", 1, true, "b")]
+  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      var r = ConvertFromStringToTestArray(input).TryGetItem(index, out var v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
 
 }
