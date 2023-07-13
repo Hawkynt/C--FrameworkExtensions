@@ -19,18 +19,196 @@
 */
 #endregion
 
-using System.IO;
+using Guard;
 using System.Linq;
+#if !DEPRECATED_BINARY_FORMATTER
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+#endif
 
 namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
-  internal
+internal
 #endif
-  static partial class ListExtensions {
+static partial class ListExtensions {
+
+  /// <summary>
+  /// Tries to get the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetFirst<T>(this IList<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[0];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetLast<T>(this IList<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[^1];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetItem<T>(this IList<T> @this, int index, out T result) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Count <= index) {
+      result = default;
+      return false;
+    }
+
+    result = @this[index];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetFirst<T>(this IList<T> @this, T value) {
+    Against.ThisIsNull(@this);
+    
+    if (@this.Count <= 0)
+      return false;
+    
+    @this[0] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetLast<T>(this IList<T> @this, T value) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0)
+      return false;
+
+    @this[^1] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetItem<T>(this IList<T> @this, int index, T value) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Count <= index)
+      return false;
+
+    @this[index] = value;
+    return true;
+  }
+
+#if SUPPORTS_READ_ONLY_COLLECTIONS
+
+  /// <summary>
+  /// Tries to get the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetFirst<T>(this IReadOnlyList<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[0];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetLast<T>(this IReadOnlyList<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Count <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[^1];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetItem<T>(this IReadOnlyList<T> @this, int index, out T result) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Count <= index) {
+      result = default;
+      return false;
+    }
+
+    result = @this[index];
+    return true;
+  }
+
+#endif
 
   /// <summary>
   /// Removes the given items from the list.
@@ -39,8 +217,8 @@ public
   /// <param name="this">This enumerable.</param>
   /// <param name="items">The items.</param>
   public static void RemoveAll<TItem>(this IList<TItem> @this, IEnumerable<TItem> items) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(items);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     var removeables = new List<TItem>(items);
     foreach (var item in removeables)
@@ -49,7 +227,7 @@ public
 
   // return part 
   public static T[] Splice<T>(this IList<T> @this, int start, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     
     var result = new T[count];
     for (var i = count - 1; i >= 0; i--)
@@ -60,14 +238,14 @@ public
 
   // swap two elements
   public static void Swap<T>(this IList<T> @this, int i, int j) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     
     (@this[i], @this[j]) = (@this[j], @this[i]);
   }
 
   // fisher-yates shuffle array
   public static void Shuffle<T>(this IList<T> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     
     var i = @this.Count;
 
@@ -82,15 +260,15 @@ public
   }
 
   public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     return Array.ConvertAll(@this.ToArray(), converter);
   }
 
   public static void ForEach<TInput>(this IList<TInput> @this, Action<TInput> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     Array.ForEach(@this.ToArray(), action);
   }
@@ -103,7 +281,7 @@ public
   /// <param name="start">The start.</param>
   /// <param name="count">The count.</param>
   public static void RemoveRange<TInput>(this IList<TInput> @this, int start, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     switch (count) {
       // special case I - return when nothing to remove
@@ -134,8 +312,8 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="items">The items.</param>
   public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(items);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     // special case, given a real List<T>
     if (@this is List<TInput> realList) {
@@ -154,7 +332,7 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="item">The item.</param>
   public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (item != null)
       @this.Add(item);
@@ -167,7 +345,7 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
   public static void KeepFirst<TInput>(this IList<TInput> @this, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     switch (count) {
       // special case: keep nothing
@@ -214,7 +392,7 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
   public static void KeepLast<TInput>(this IList<TInput> @this, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     // special case: remove all items
     if (count < 1) {
@@ -257,7 +435,7 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
   public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var remaining = @this.Count - count;
     @this.KeepLast(remaining);
@@ -270,7 +448,7 @@ public
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
   public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var remaining = @this.Count - count;
     @this.KeepFirst(remaining);
@@ -284,7 +462,7 @@ public
   /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
   /// <returns></returns>
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var length = @this.Count;
     if (length < 1)
@@ -355,7 +533,7 @@ public
   /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
   /// <returns></returns>
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (length < 1)
       yield break;

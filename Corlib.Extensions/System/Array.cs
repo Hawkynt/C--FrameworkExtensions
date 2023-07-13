@@ -51,6 +51,8 @@ using System.Security.Permissions;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
+using Guard;
+
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
@@ -102,10 +104,10 @@ static partial class ArrayExtensions {
     protected readonly int _start;
 
     public ReadOnlyArraySlice(TItem[] source, int start, int length) {
-      Guard.Against.ThisIsNull(source);
+      Against.ThisIsNull(source);
 
       if (start + length > source.Length)
-        Guard.AlwaysThrow.ArgumentException(nameof(length), "Exceeding source length");
+        AlwaysThrow.ArgumentException(nameof(length), "Exceeding source length");
 
       this._source = source;
       this._start = start;
@@ -354,8 +356,8 @@ static partial class ArrayExtensions {
   /// <returns></returns>
   [DebuggerStepThrough]
   public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this TItem[] @this, TItem[] other, IEqualityComparer<TItem> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(other);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
 
     comparer ??= EqualityComparer<TItem>.Default;
 
@@ -444,7 +446,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return new(@this, start, length < 0 ? @this.Length - start : length);
   }
@@ -460,8 +462,8 @@ static partial class ArrayExtensions {
   /// </returns>
   [DebuggerStepThrough]
   public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.NegativeValuesAndZero(size);
+    Against.ThisIsNull(@this);
+    Against.NegativeValuesAndZero(size);
 
     var length = @this.Length;
     for (var index = 0; index < length; index += size)
@@ -481,7 +483,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return new(@this, start, length < 0 ? @this.Length - start : length);
   }
@@ -495,8 +497,8 @@ static partial class ArrayExtensions {
   /// <returns>An enumeration of slices</returns>
   [DebuggerStepThrough]
   public static IEnumerable<ArraySlice<TItem>> Slices<TItem>(this TItem[] @this, int size) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.NegativeValuesAndZero(size);
+    Against.ThisIsNull(@this);
+    Against.NegativeValuesAndZero(size);
 
     var length = @this.Length;
     for (var index = 0; index < length; index += size)
@@ -514,10 +516,10 @@ static partial class ArrayExtensions {
   /// </returns>
   [DebuggerStepThrough]
   public static TItem GetRandomElement<TItem>(this TItem[] @this, Random random = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Length == 0)
-      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      AlwaysThrow.InvalidOperationException("No Elements!");
 
 #if SUPPORTS_RANDOM_SHARED
     random ??= Random.Shared;
@@ -541,7 +543,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.Length <= index ? default : @this[index];
   }
@@ -559,7 +561,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.Length <= index ? defaultValue : @this[index];
   }
@@ -577,8 +579,8 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(factory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(factory);
 
     return @this.Length <= index ? factory() : @this[index];
   }
@@ -596,8 +598,8 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(factory);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(factory);
 
     return @this.Length <= index ? factory(index) : @this[index];
   }
@@ -610,7 +612,7 @@ static partial class ArrayExtensions {
   /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
   [DebuggerStepThrough]
   public static TItem[] SafelyClone<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var len = @this.Length;
     var result = new TItem[len];
@@ -631,7 +633,7 @@ static partial class ArrayExtensions {
   /// <returns>The joines string.</returns>
   [DebuggerStepThrough]
   public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var result = new StringBuilder();
     var gotElements = false;
@@ -664,7 +666,7 @@ static partial class ArrayExtensions {
   /// <param name="count">The number of elements from there on.</param>
   /// <returns></returns>
   public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
 #if SUPPORTS_CONTRACTS
     Contract.Requires(startIndex + count <= @this.Length);
@@ -686,7 +688,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     (@this[firstElementIndex], @this[secondElementIndex]) = (@this[secondElementIndex], @this[firstElementIndex]);
   }
@@ -697,7 +699,7 @@ static partial class ArrayExtensions {
   /// <typeparam name="TItem">Type of elements in the array.</typeparam>
   /// <param name="this">This array.</param>
   public static void Shuffle<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var index = @this.Length;
     var random = new Random();
@@ -712,7 +714,7 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <returns>A sorted array copy.</returns>
   public static TItem[] QuickSorted<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var result = new TItem[@this.Length];
     @this.CopyTo(result, 0);
@@ -726,7 +728,7 @@ static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the elements.</typeparam>
   /// <param name="this">This array.</param>
   public static void QuickSort<TItem>(this TItem[] @this) where TItem : IComparable<TItem> {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Length > 0)
       _QuickSort_Comparable(@this, 0, @this.Length - 1);
@@ -778,8 +780,8 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     return Array.ConvertAll(@this, converter);
   }
@@ -793,8 +795,8 @@ static partial class ArrayExtensions {
   /// <param name="converter">The converter function.</param>
   /// <returns>An array containing the converted values.</returns>
   public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Func<TItem, int, TOutput> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     var length = @this.Length;
     var result = new TOutput[length];
@@ -815,8 +817,8 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     Array.ForEach(@this, action);
   }
@@ -833,8 +835,8 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     Parallel.ForEach(@this, action);
   }
@@ -848,8 +850,8 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="action">The callback for each element.</param>
   public static void ForEach<TItem>(this TItem[] @this, Action<TItem, int> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     for (var i = @this.Length - 1; i >= 0; --i)
       action(@this[i], i);
@@ -862,8 +864,8 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="action">The callback for each element.</param>
   public static void ForEach<TItem>(this TItem[] @this, Action<TItem, long> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     for (var i = @this.LongLength - 1; i >= 0; --i)
       action(@this[i], i);
@@ -876,8 +878,8 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="worker">The callback for each element.</param>
   public static void ForEach<TItem>(this TItem[] @this, Func<TItem, TItem> worker) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(worker);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(worker);
 
     for (var i = @this.LongLength - 1; i >= 0; --i)
       @this[i] = worker(@this[i]);
@@ -890,8 +892,8 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="worker">The callback for each element.</param>
   public static void ForEach<TItem>(this TItem[] @this, Func<TItem, int, TItem> worker) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(worker);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(worker);
 
     for (var i = @this.Length - 1; i >= 0; --i)
       @this[i] = worker(@this[i], i);
@@ -904,8 +906,8 @@ static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="worker">The callback for each element.</param>
   public static void ForEach<TItem>(this TItem[] @this, Func<TItem, long, TItem> worker) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(worker);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(worker);
 
     for (var i = @this.LongLength - 1; i >= 0; --i)
       @this[i] = worker(@this[i], i);
@@ -922,8 +924,8 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     return Array.Exists(@this, predicate);
   }
@@ -938,7 +940,7 @@ static partial class ArrayExtensions {
   [Pure]
 #endif
   public static TItem[] Reverse<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var length = @this.LongLength;
     var result = new TItem[length];
@@ -964,7 +966,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool Contains<TItem>(this TItem[] @this, TItem value) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.IndexOf(value) >= 0;
   }
@@ -981,7 +983,7 @@ static partial class ArrayExtensions {
   [Pure]
 #endif
   public static bool Contains(this Array @this, object value) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     // ReSharper disable LoopCanBeConvertedToQuery
     foreach (var item in @this)
@@ -1000,10 +1002,10 @@ static partial class ArrayExtensions {
   [Pure]
 #endif
   public static object[] ToArray(this Array @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Rank < 1)
-      Guard.AlwaysThrow.ArgumentException(nameof(@this), "Rank must be > 0");
+      AlwaysThrow.ArgumentException(nameof(@this), "Rank must be > 0");
 
     var result = new object[@this.Length];
     var lbound = @this.GetLowerBound(0);
@@ -1037,8 +1039,8 @@ static partial class ArrayExtensions {
   /// The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, int defaultValue) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.Length; ++i)
       if (predicate(@this[i]))
@@ -1058,8 +1060,8 @@ static partial class ArrayExtensions {
   /// The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<int> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.Length; ++i)
       if (predicate(@this[i]))
@@ -1079,8 +1081,8 @@ static partial class ArrayExtensions {
   /// The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<TItem[], int> defaultValueFactory) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.Length; ++i)
       if (predicate(@this[i]))
@@ -1100,7 +1102,7 @@ static partial class ArrayExtensions {
   /// The index of the item in the array or -1.
   /// </returns>
   public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     comparer ??= EqualityComparer<TItem>.Default;
 
@@ -1119,8 +1121,8 @@ static partial class ArrayExtensions {
   /// <returns>The index of the item in the array or -1.</returns>
   [DebuggerStepThrough]
   public static int IndexOf(this Array @this, Predicate<object> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
       if (predicate(@this.GetValue(i)))
@@ -1135,7 +1137,7 @@ static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the array elements</typeparam>
   /// <param name="this">This array</param>
   public static void RotateTowardsZero<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Length == 0)
       return;
@@ -1260,15 +1262,15 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.Length > 0;
   }
 
   [DebuggerStepThrough]
   public static bool Any<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.LongLength; i++)
       if (predicate(@this[i]))
@@ -1279,29 +1281,141 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem First<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Length == 0)
-      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      AlwaysThrow.InvalidOperationException("No Elements!");
 
     return @this[0];
   }
 
   [DebuggerStepThrough]
   public static TItem Last<TItem>(this TItem[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var length = @this.LongLength;
     if (length == 0)
-      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      AlwaysThrow.InvalidOperationException("No Elements!");
 
     return @this[^1];
   }
 
+  /// <summary>
+  /// Tries to get the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetFirst<T>(this T[] @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Length > 0) {
+      result = @this[0];
+      return true;
+    }
+
+    result = default;
+    return false;
+  }
+
+  /// <summary>
+  /// Tries to get the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetLast<T>(this T[] @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Length <= 0) {
+      result = default;
+      return false;
+    }
+
+    result = @this[^1];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to get the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetItem<T>(this T[] @this, int index, out T result) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Length <= index) {
+      result = default;
+      return false;
+    }
+
+    result = @this[index];
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetFirst<T>(this T[] @this, T value) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Length <= 0)
+      return false;
+
+    @this[0] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetLast<T>(this T[] @this, T value) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Length <= 0)
+      return false;
+
+    @this[^1] = value;
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to set the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="value">The value for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  public static bool TrySetItem<T>(this T[] @this, int index, T value) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    if (@this.Length <= index)
+      return false;
+
+    @this[index] = value;
+    return true;
+  }
+
   [DebuggerStepThrough]
   public static TItem First<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.LongLength; ++i) {
       var current = @this[i];
@@ -1309,14 +1423,14 @@ static partial class ArrayExtensions {
         return current;
     }
 
-    Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+    AlwaysThrow.InvalidOperationException("No Elements!");
     return default;
   }
 
   [DebuggerStepThrough]
   public static TItem Last<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = @this.LongLength - 1; i >= 0; --i) {
       var current = @this[i];
@@ -1324,7 +1438,7 @@ static partial class ArrayExtensions {
         return current;
     }
 
-    Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+    AlwaysThrow.InvalidOperationException("No Elements!");
     return default;
   }
 
@@ -1339,8 +1453,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = 0; i < @this.LongLength; ++i) {
       var current = @this[i];
@@ -1353,8 +1467,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem LastOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     for (var i = @this.LongLength - 1; i >= 0; --i) {
       var current = @this[i];
@@ -1367,11 +1481,11 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem Aggregate<TItem>(this TItem[] @this, Func<TItem, TItem, TItem> func) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(func);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(func);
 
     if (@this.LongLength == 0)
-      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      AlwaysThrow.InvalidOperationException("No Elements!");
 
     var result = @this[0];
     for (var i = 1; i < @this.LongLength; ++i)
@@ -1382,11 +1496,11 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TAccumulate Aggregate<TItem, TAccumulate>(this TItem[] @this, TAccumulate seed, Func<TAccumulate, TItem, TAccumulate> func) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(func);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(func);
 
     if (@this.LongLength == 0)
-      Guard.AlwaysThrow.InvalidOperationException("No Elements!");
+      AlwaysThrow.InvalidOperationException("No Elements!");
 
     var result = seed;
     for (var i = 0; i < @this.LongLength; ++i)
@@ -1409,8 +1523,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static int Count<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     var result = 0;
     // ReSharper disable LoopCanBeConvertedToQuery
@@ -1425,8 +1539,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static long LongCount<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     var result = (long)0;
     for (var i = 0; i < @this.LongLength; ++i)
@@ -1439,8 +1553,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, TItem defaultValue) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     foreach (var item in @this)
       if (predicate(item))
@@ -1453,7 +1567,7 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     for (var i = 0; i < @this.LongLength; ++i) {
       var item = @this.GetValue(i);
@@ -1464,8 +1578,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static object FirstOrDefault(this Array @this, Predicate<object> predicate, object defaultValue = null) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     foreach (var item in @this)
       if (predicate(item))
@@ -1476,7 +1590,7 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<object> Reverse(this Array @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
       yield return @this.GetValue(i);
@@ -1484,8 +1598,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this Array @this, Predicate<TItem> predicate, TItem defaultValue = default) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     foreach (var item in @this)
       if (predicate((TItem)item))
@@ -1496,7 +1610,7 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
       yield return (TResult)@this.GetValue(i);
@@ -1506,8 +1620,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var length = @this.Length;
     for (var i = 0; i < length; ++i)
@@ -1516,8 +1630,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, TResult> selector) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var length = @this.LongLength;
     for (var i = 0; i < length; ++i)
@@ -1526,8 +1640,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> Select<TItem, TResult>(this TItem[] @this, Func<TItem, int, TResult> selector) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var length = @this.Length;
     for (var i = 0; i < length; ++i)
@@ -1536,8 +1650,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TResult> SelectLong<TItem, TResult>(this TItem[] @this, Func<TItem, long, TResult> selector) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(selector);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
 
     var length = @this.LongLength;
     for (var i = 0; i < length; ++i)
@@ -1546,8 +1660,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     var length = @this.LongLength;
     for (var i = 0; i < length; ++i) {
@@ -1559,8 +1673,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TItem> Where<TItem>(this TItem[] @this, Func<TItem, int, bool> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     var length = @this.Length;
     for (var i = 0; i < length; ++i) {
@@ -1572,8 +1686,8 @@ static partial class ArrayExtensions {
 
   [DebuggerStepThrough]
   public static IEnumerable<TItem> WhereLong<TItem>(this TItem[] @this, Func<TItem, long, bool> predicate) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(predicate);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     var length = @this.LongLength;
     for (var i = 0; i < length; ++i) {
@@ -1645,9 +1759,9 @@ static partial class ArrayExtensions {
   /// <returns>The subsequent elements.</returns>
   [DebuggerStepThrough]
   public static byte[] Range(this byte[] @this, int offset, int count) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.IndexBelowZero(offset);
-    Guard.Against.CountBelowOrEqualZero(count);
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(offset);
+    Against.CountBelowOrEqualZero(count);
 
     var length = @this.Length;
     var max = count < length - offset ? count : length - offset;
@@ -1667,8 +1781,8 @@ static partial class ArrayExtensions {
   /// <returns>The original array if it already exceeds the wanted size, or an array with the correct size.</returns>
   [DebuggerStepThrough]
   public static byte[] Padd(this byte[] @this, int length, byte data = 0) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.CountBelowOrEqualZero(length);
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(length);
 
     var currentSize = @this.Length;
     if (currentSize >= length)
@@ -1693,7 +1807,7 @@ static partial class ArrayExtensions {
   /// <returns>A GZipped byte array.</returns>
   [DebuggerStepThrough]
   public static byte[] GZip(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var targetStream = new MemoryStream();
     using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
@@ -1709,7 +1823,7 @@ static partial class ArrayExtensions {
   /// <returns>The unzipped byte array.</returns>
   [DebuggerStepThrough]
   public static byte[] UnGZip(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var targetStream = new MemoryStream();
     using (var sourceStream = new MemoryStream(@this))
@@ -1758,8 +1872,8 @@ static partial class ArrayExtensions {
     => IndexOfOrDefault(@this, searchString, offset, (t, _) => defaultValueFunc(t));
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<byte[], byte[], int> defaultValueFunc) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(searchString);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(searchString);
 
     if (ReferenceEquals(@this, searchString))
       return 0;
@@ -1920,7 +2034,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = new THashAlgorithm();
     return provider.ComputeHash(@this);
@@ -1938,7 +2052,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA512Hash(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = SHA512.Create();
     return provider.ComputeHash(@this);
@@ -1954,7 +2068,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA384Hash(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = SHA384.Create();
     return provider.ComputeHash(@this);
@@ -1970,7 +2084,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA256Hash(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = SHA256.Create();
     return provider.ComputeHash(@this);
@@ -1986,7 +2100,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA1Hash(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = SHA1.Create();
     return provider.ComputeHash(@this);
@@ -2002,7 +2116,7 @@ static partial class ArrayExtensions {
 #endif
   [DebuggerStepThrough]
   public static byte[] ComputeMD5Hash(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     using var provider = MD5.Create();
     return provider.ComputeHash(@this);
@@ -2022,7 +2136,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsSingle<TValue>(this TValue[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Length == 1;
   }
 
@@ -2036,7 +2150,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsMultiple<TValue>(this TValue[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Length > 1;
   }
 
@@ -2050,7 +2164,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNoSingle<TValue>(this TValue[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Length != 1;
   }
 
@@ -2064,7 +2178,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNoMultiple<TValue>(this TValue[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Length <= 1;
   }
 }

@@ -1039,6 +1039,71 @@ public
   public static int IndexOf<TIn>(this IEnumerable<TIn> @this, TIn item) => IndexOrDefault(@this, a => Equals(a, item), -1);
 
   /// <summary>
+  /// Tries to get the first item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetFirst<T>(this IEnumerable<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    foreach (var item in @this) {
+      result = item;
+      return true;
+    }
+
+    result = default;
+    return false;
+  }
+
+  /// <summary>
+  /// Tries to get the last item.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetLast<T>(this IEnumerable<T> @this, out T result) {
+    Against.ThisIsNull(@this);
+
+    result = default;
+    var foundItems = false;
+    foreach (var item in @this) {
+      result = item;
+      foundItems = true;
+    }
+
+    return foundItems;
+  }
+
+  /// <summary>
+  /// Tries to get the item at the given index.
+  /// </summary>
+  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="index">The items' position</param>
+  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
+  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGetItem<T>(this IEnumerable<T> @this, int index, out T result) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    foreach (var item in @this) {
+      if (index > 0) {
+        --index;
+        continue;
+      }
+
+      result = item;
+      return true;
+    }
+
+    result = default;
+    return false;
+  }
+
+  /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
   /// <typeparam name="TIn">The type of the in.</typeparam>
