@@ -1104,6 +1104,65 @@ public
   }
 
   /// <summary>
+  /// Tries to apply the given selector in case the <see cref="IEnumerable{T}"/> is not empty without enumerating multiple times.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <typeparam name="TResult">The selectors' result type</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="selector">The selector to apply to the enumeration</param>
+  /// <param name="result">The result of the selector when applied to the <see cref="IEnumerable{T}"/></param>
+  /// <returns><see langword="true"/> when the enumeration contains at least one item; otherwise, <see langword="false"/>.</returns>
+  public static bool TryGet<TItem, TResult>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TResult> selector, out TResult result) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+
+    var enumerator=@this.GetEnumerator();
+    if (!enumerator.MoveNext()) {
+      result = default;
+      return false;
+    }
+
+    IEnumerable<TItem> Enumerate() {
+      yield return enumerator.Current;
+      while(enumerator.MoveNext())
+        yield return enumerator.Current;
+
+      enumerator.Dispose();
+    }
+
+    result = selector(Enumerate());
+    return true;
+  }
+
+  /// <summary>
+  /// Tries to calculate the maximum of the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="result">The maximum or the <see langword="default"/></param>
+  /// <returns><see langword="true"/> when the enumeration contains at least one item; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool TryGetMax<TItem>(this IEnumerable<TItem> @this, out TItem result)
+    => TryGet(@this, t => t.Max(), out result)
+  ;
+
+  /// <summary>
+  /// Tries to calculate the minimum of the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="result">The minimum or the <see langword="default"/></param>
+  /// <returns><see langword="true"/> when the enumeration contains at least one item; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool TryGetMin<TItem>(this IEnumerable<TItem> @this, out TItem result)
+    => TryGet(@this, t => t.Min(), out result)
+  ;
+
+  /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
   /// <typeparam name="TIn">The type of the in.</typeparam>
@@ -1396,7 +1455,7 @@ public
     Against.ThisIsNull(@this);
 
 #if SUPPORTS_RANDOM_SHARED
-      random ??= Random.Shared;
+    random ??= Random.Shared;
 #else
     random ??= new();
 #endif
@@ -1536,7 +1595,7 @@ public
         return collection.Count > 1;
       default: {
         var found = false;
-        foreach (var item in @this) {
+        foreach (var _ in @this) {
           if (found)
             return true;
 
