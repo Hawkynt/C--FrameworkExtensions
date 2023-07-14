@@ -1149,6 +1149,25 @@ public
   ;
 
   /// <summary>
+  /// Tries to calculate the maximum of the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of items</typeparam>
+  /// <typeparam name="TResult">The type of result</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="selector">The selector on how to get the sort-value.</param>
+  /// <param name="result">The maximum or the <see langword="default"/></param>
+  /// <returns><see langword="true"/> when the enumeration contains at least one item; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool TryGetMaxBy<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, out TItem result) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+
+    return TryGet(@this, t => t.MaxBy(selector), out result);
+  }
+
+  /// <summary>
   /// Tries to calculate the minimum of the given items.
   /// </summary>
   /// <typeparam name="TItem">The type of items</typeparam>
@@ -1161,6 +1180,193 @@ public
   public static bool TryGetMin<TItem>(this IEnumerable<TItem> @this, out TItem result)
     => TryGet(@this, t => t.Min(), out result)
   ;
+
+  /// <summary>
+  /// Tries to calculate the minimum of the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of items</typeparam>
+  /// <typeparam name="TResult">The type of result</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="selector">The selector on how to get the sort-value.</param>
+  /// <param name="result">The minimum or the <see langword="default"/></param>
+  /// <returns><see langword="true"/> when the enumeration contains at least one item; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool TryGetMinBy<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, out TItem result) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+
+    return TryGet(@this, t => t.MinBy(selector), out result);
+  }
+
+#if !SUPPORTS_MINMAX_BY
+
+  /// <summary>Returns the maximum value in a generic sequence according to a specified key selector function.</summary>
+  /// <param name="this">A sequence of values to determine the maximum value of.</param>
+  /// <param name="keySelector">A function to extract the key for each element.</param>
+  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
+  /// <exception cref="T:System.ArgumentNullException">
+  /// <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
+  /// <returns>The value with the maximum key in the sequence.</returns>
+  public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) 
+    => MaxBy(@this, keySelector, null)
+    ;
+
+  /// <summary>Returns the maximum value in a generic sequence according to a specified key selector function.</summary>
+  /// <param name="this">A sequence of values to determine the maximum value of.</param>
+  /// <param name="keySelector">A function to extract the key for each element.</param>
+  /// <param name="comparer">The <see cref="T:System.Collections.Generic.IComparer{T}" /> to compare keys.</param>
+  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
+  /// <exception cref="T:System.ArgumentNullException">
+  /// <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
+  /// <returns>The value with the maximum key in the sequence.</returns>
+  public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keySelector);
+
+    comparer ??= Comparer<TKey>.Default;
+    using var enumerator = @this.GetEnumerator();
+    if (!enumerator.MoveNext()) {
+      if (default(TSource) == null)
+        return default;
+      
+      AlwaysThrow.NoElements();
+    }
+
+    var source1 = enumerator.Current;
+    var y = keySelector(source1);
+    if (default(TKey) == null) {
+      for (; y == null; y = keySelector(source1)) {
+        if (!enumerator.MoveNext())
+          return source1;
+
+        source1 = enumerator.Current;
+      }
+
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (x == null || comparer.Compare(x, y) <= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+
+    } else if (ReferenceEquals(comparer, Comparer<TKey>.Default)) {
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (Comparer<TKey>.Default.Compare(x, y) <= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+
+    } else {
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (comparer.Compare(x, y) <= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+    }
+
+    return source1;
+  }
+
+  /// <summary>Returns the minimum value in a generic sequence according to a specified key selector function.</summary>
+  /// <param name="this">A sequence of values to determine the minimum value of.</param>
+  /// <param name="keySelector">A function to extract the key for each element.</param>
+  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
+  /// <exception cref="T:System.ArgumentNullException">
+  /// <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
+  /// <returns>The value with the minimum key in the sequence.</returns>
+  public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) 
+    => MinBy(@this, keySelector, null)
+    ;
+
+  /// <summary>Returns the minimum value in a generic sequence according to a specified key selector function.</summary>
+  /// <param name="this">A sequence of values to determine the minimum value of.</param>
+  /// <param name="keySelector">A function to extract the key for each element.</param>
+  /// <param name="comparer">The <see cref="T:System.Collections.Generic.IComparer{T}" /> to compare keys.</param>
+  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
+  /// <exception cref="T:System.ArgumentNullException">
+  /// <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
+  /// <returns>The value with the minimum key in the sequence.</returns>
+  public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keySelector);
+
+    comparer ??= Comparer<TKey>.Default;
+    using var enumerator = @this.GetEnumerator();
+    if (!enumerator.MoveNext()) {
+      if (default(TSource) == null)
+        return default;
+
+      AlwaysThrow.NoElements();
+    }
+
+    var source1 = enumerator.Current;
+    var y = keySelector(source1);
+    if (default(TKey) == null) {
+      for (; y == null; y = keySelector(source1)) {
+        if (!enumerator.MoveNext())
+          return source1;
+
+        source1 = enumerator.Current;
+      }
+
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (x == null || comparer.Compare(x, y) >= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+
+    } else if (ReferenceEquals(comparer, Comparer<TKey>.Default)) {
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (Comparer<TKey>.Default.Compare(x, y) >= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+
+    } else {
+      while (enumerator.MoveNext()) {
+        var current = enumerator.Current;
+        var x = keySelector(current);
+        if (comparer.Compare(x, y) >= 0)
+          continue;
+
+        y = x;
+        source1 = current;
+      }
+    }
+
+    return source1;
+  }
+
+#endif
 
   /// <summary>
   /// Gets the first item or the default value.

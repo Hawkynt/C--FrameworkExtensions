@@ -166,4 +166,27 @@ public class EnumerableTests {
     }, (result, expected), exception);
   }
 
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("ab|ba", true, "ab")]
+  [TestCase("ba|ab", true, "ab")]
+  public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i=>i![1], out var v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase("", false, null)]
+  [TestCase("ab|ba", true, "ba")]
+  [TestCase("ba|ab", true, "ba")]
+  public void TryGetMinBy(string? input, bool result, string? expected, Type? exception = null) {
+    ExecuteTest(() => {
+      var r = ConvertFromStringToTestArray(input).TryGetMinBy(i => i![1], out var v);
+      return (r, v);
+    }, (result, expected), exception);
+  }
 }

@@ -121,5 +121,10 @@ internal static class AlwaysThrow {
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void InvalidOperationException(string message, [CallerMemberName] string caller = null) => throw new InvalidOperationException($"{(caller == null ? string.Empty : caller + ":")}{message}");
-  
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void NoElements([CallerMemberName] string caller = null) => throw new InvalidOperationException($"{(caller == null ? string.Empty : caller + ":")}The sequence contains no elements.");
+
 }
