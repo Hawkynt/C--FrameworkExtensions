@@ -189,4 +189,61 @@ public class EnumerableTests {
       return (r, v);
     }, (result, expected), exception);
   }
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("a", "b", "b|a")]
+  public void Prepend(string? input, string data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(data).Join("|"), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null,null,null,typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("a", "b", "a|b")]
+  public void Append(string? input, string data, string? expected, Type? exception = null) 
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(data).Join("|"), expected, exception)
+    ;
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", null, "",typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("", "a|b", "a|b")]
+  [TestCase("a", "b", "b|a")]
+  public void PrependArray(string? input, string? data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", null, "", typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("", "a|b", "a|b")]
+  [TestCase("a", "b", "a|b")]
+  public void AppendArray(string? input, string? data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", null, "", typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("", "a|b", "a|b")]
+  [TestCase("a", "b", "b|a")]
+  public void PrependEnumerable(string? input, string? data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)).Join("|"), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", null, "", typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("", "a|b", "a|b")]
+  [TestCase("a", "b", "a|b")]
+  public void AppendEnumerable(string? input, string? data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)).Join("|"), expected, exception)
+  ;
+
 }

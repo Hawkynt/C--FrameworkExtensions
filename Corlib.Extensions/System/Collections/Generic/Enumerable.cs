@@ -103,16 +103,18 @@ public
 
   #endregion
 
+#if !SUPPORTS_ENUMERABLE_APPEND
+
   /// <summary>
-  /// Appends a single item to the beginning of the enumeration.
+  /// Appends a single item to the beginning of the <see cref="IEnumerable{T}"/>.
   /// </summary>
   /// <typeparam name="TItem">The type of the items</typeparam>
-  /// <param name="this">This enumeration</param>
-  /// <param name="item">The item to prepend</param>
-  /// <returns>A new enumeration with the added item</returns>
-  /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="item">The item to append</param>
+  /// <returns>A new <see cref="IEnumerable{T}"/> with the added item</returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
   public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
 
     yield return item;
 
@@ -120,24 +122,100 @@ public
       yield return i;
   }
 
-#if !NET45_OR_GREATER && !NET5_0_OR_GREATER
-    /// <summary>
-    /// Appends a single item to the end of the enumeration.
-    /// </summary>
-    /// <typeparam name="TItem">The type of the items</typeparam>
-    /// <param name="this">This enumeration</param>
-    /// <param name="item">The item to append</param>
-    /// <returns>A new enumeration with the added item</returns>
-    /// <exception cref="NullReferenceException">When the given enumeration is <c>null</c></exception>
-    public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
-      Against.ThisIsNull(@this);
+  /// <summary>
+  /// Appends a single item to the end of the <see cref="IEnumerable{T}"/>.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="item">The item to append</param>
+  /// <returns>A new <see cref="IEnumerable{T}"/> with the added item</returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
+  public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
+      Against.ArgumentIsNull(@this);
 
       foreach (var i in @this)
         yield return i;
-
+      
       yield return item;
     }
+
 #endif
+
+  /// <summary>
+  /// Appends the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="items">The items to append at the start.</param>
+  /// <returns>The new <see cref="IEnumerable{T}"/></returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
+  public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, params TItem[] items) {
+    Against.ArgumentIsNull(@this);
+    Against.ArgumentIsNull(items);
+
+    foreach (var i in items)
+      yield return i;
+
+    foreach (var i in @this)
+      yield return i;
+  }
+
+  /// <summary>
+  /// Appends the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="items">The items to append at the end.</param>
+  /// <returns>The new <see cref="IEnumerable{T}"/></returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
+  public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, params TItem[] items) {
+    Against.ArgumentIsNull(@this);
+    Against.ArgumentIsNull(items);
+
+    foreach (var i in @this)
+      yield return i;
+
+    foreach (var i in items)
+      yield return i;
+  }
+
+  /// <summary>
+  /// Prepends the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="items">The items to append at the start.</param>
+  /// <returns>The new <see cref="IEnumerable{T}"/></returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
+  public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items) {
+    Against.ArgumentIsNull(@this);
+    Against.ArgumentIsNull(items);
+
+    foreach (var i in items)
+      yield return i;
+    
+    foreach (var i in @this)
+      yield return i;
+  }
+
+  /// <summary>
+  /// Appends the given items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items</typeparam>
+  /// <param name="this">This <see cref="IEnumerable{T}"/></param>
+  /// <param name="items">The items to append at the end.</param>
+  /// <returns>The new <see cref="IEnumerable{T}"/></returns>
+  /// <exception cref="ArgumentNullException">When the given <see cref="IEnumerable{T}"/> is <see langword="null"/></exception>
+  public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items) {
+    Against.ArgumentIsNull(@this);
+    Against.ArgumentIsNull(items);
+
+    foreach (var i in @this)
+      yield return i;
+
+    foreach (var i in items)
+      yield return i;
+  }
 
   /// <summary>
   /// Modifies the resultset to include filtering based on the given query string.
