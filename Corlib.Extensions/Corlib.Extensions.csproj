@@ -23,6 +23,10 @@
 
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
+  </ItemGroup>
+
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
   
   <PropertyGroup><!-- allow exporting all extensions to other loaded assemblies -->
