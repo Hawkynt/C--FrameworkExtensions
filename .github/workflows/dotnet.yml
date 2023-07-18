@@ -27,13 +27,13 @@ jobs:
     - name: Show Info
       run: dotnet --info
     - name: Restore dependencies
-      run: dotnet restore ${{ matrix.csproj-file }}
+      run: dotnet restore "${{ matrix.csproj-file }}"
     - name: Build
-      run: dotnet build ${{ matrix.csproj-file }} --no-restore --configuration Release /p:EnableWindowsTargeting=true
+      run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
     - name: Test
-      run: dotnet test ${{ matrix.csproj-file }} --no-build --verbosity normal /p:EnableWindowsTargeting=true
+      run: dotnet test "${{ matrix.csproj-file }}" --no-build --verbosity normal
     - name: Pack NuGet package
-      run: dotnet pack ${{ matrix.csproj-file }} --configuration Release --output ./artifacts /p:EnableWindowsTargeting=true
+      run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
     - name: Publish the package to nuget.org
       run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
       env:
