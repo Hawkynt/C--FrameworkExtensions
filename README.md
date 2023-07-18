@@ -1,4 +1,4 @@
-# C# Framework Extensions
+# C# Framework Extensions [![Build Status](https://img.shields.io/github/actions/workflow/status/Hawkynt/C--FrameworkExtensions/dotnet.yml?branch=master "Build Status")](https://github.com/Hawkynt/C--FrameworkExtensions/actions)
 
 Extensions to the [.NET Framework](https://en.wikipedia.org/wiki/.NET_Framework) and [.Net Core](https://en.wikipedia.org/wiki/.NET) for use with [C# programming language](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) or any other compatible .[NET language](https://en.wikipedia.org/wiki/List_of_.NET_libraries_and_frameworks).
 
