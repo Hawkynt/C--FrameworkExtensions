@@ -16,8 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        dotnet-version: ['net35','net40','net45','net48','netstandard2.0','netcoreapp3.1','net6.0']
-        csproj-file: ['Backports/Backports.csproj']
+        csproj-file: ['Backports/Backports.csproj','Corlib.Extensions/Corlib.Extensions.csproj','Corlib.Extensions/Corlib.Extensions (NoUnsafe).csproj','PresentationCore.Extensions/PresentationCore.Extensions.csproj','System.Drawing.Extensions/System.Drawing.Extensions.csproj','System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj']
 
     steps:
     - uses: actions/checkout@v3
@@ -25,13 +24,16 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.x
-    - run: echo 'Using .NET SDK version ${{ steps.stepid.outputs.dotnet-version }}'
     - name: Restore dependencies
       run: dotnet restore ${{ matrix.csproj-file }}
     - name: Build
-      run: dotnet build ${{ matrix.csproj-file }} --no-restore --configuration Release --framework ${{ matrix.dotnet-version }}
+      run: dotnet build ${{ matrix.csproj-file }} --no-restore --configuration Release
     - name: Test
       run: dotnet test ${{ matrix.csproj-file }} --no-build --verbosity normal
     - name: Pack NuGet package
       run: dotnet pack ${{ matrix.csproj-file }} --configuration Release --output ./artifacts
+    - name: Publish the package to nuget.org
+      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
       
