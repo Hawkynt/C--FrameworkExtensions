@@ -24,11 +24,12 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: 7.x
+    - run: echo 'Using .NET SDK version ${{ steps.stepid.outputs.dotnet-version }}'
     - name: Restore dependencies
       run: dotnet restore ${{ matrix.csproj-file }}
     - name: Build
-      run: dotnet build ${{ matrix.csproj-file }} --no-restore --configuration Release
+      run: dotnet build ${{ matrix.csproj-file }} --no-restore --configuration Release --framework ${{ matrix.dotnet-version }}
     - name: Test
       run: dotnet test ${{ matrix.csproj-file }} --no-build --verbosity normal
     - name: Pack NuGet package
