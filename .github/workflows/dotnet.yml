@@ -33,10 +33,10 @@ jobs:
       run: dotnet test "${{ matrix.csproj-file }}" --no-build --verbosity normal
     - name: Pack NuGet package
       run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
-#    - name: Publish the package to nuget.org
-#      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
-#      env:
-#        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+    - name: Publish the package to nuget.org
+      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
     
   build:
     needs: buildBackports
@@ -62,8 +62,8 @@ jobs:
       run: dotnet test "${{ matrix.csproj-file }}" --no-build --verbosity normal
     - name: Pack NuGet package
       run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
-#    - name: Publish the package to nuget.org
-#      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
-#      env:
-#        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+    - name: Publish the package to nuget.org
+      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
       
