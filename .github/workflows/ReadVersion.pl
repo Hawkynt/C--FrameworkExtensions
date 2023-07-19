@@ -1,9 +1,10 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 use strict;
 use warnings;
 
 sub main(@) {
   my ($inputFile) = @_;
+  print "[Info]Grabbing version from file $inputFile\n";
   die "[Error]Input file not set. Usage $0 <projectFile>" unless $inputFile;
   die "[Error]Could not find file $inputFile" unless -f $inputFile;
   my $version = QueryVersionFromFile($inputFile) || '1.0.0.0';
