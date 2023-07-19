@@ -1,0 +1,7 @@
+﻿<assembly name="Corlib.Extensions">
+  <member name="M:Guard.Against.ArgumentIsNull``1(``0,System.String,System.String)">
+    <parameter name="value">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+</assembly>

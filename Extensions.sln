@@ -33,6 +33,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance (NoUnsafe)", "Tests\Corlib.Tests.Performance\Corlib.Tests.Performance (NoUnsafe).csproj", "{043C14EA-CC10-4973-947F-63E9797658C4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "ExternalAnnotations", "{0A73474B-0AF6-47CF-B596-8E7CDC9AC001}"
+	ProjectSection(SolutionItems) = preProject
+		ExternalAnnotations\Corlib.Extensions.xml = ExternalAnnotations\Corlib.Extensions.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{91D58AC8-D51A-4C58-B890-8DB59D58E4E3}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\ReadVersion.pl = .github\workflows\ReadVersion.pl
+		.github\workflows\Zyborg-Tests.yml = .github\workflows\Zyborg-Tests.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
