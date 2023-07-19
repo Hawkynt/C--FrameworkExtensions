@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netcoreapp3.1;net6.0</TargetFrameworks>
@@ -6,9 +6,11 @@
     <Version>1.0.0</Version>
     <Authors>Hawkynt</Authors>
     <PackageTags>Framework;Extensions;Hawkynt</PackageTags>
-    <Description>
-      This library enables Framework-Extensions.
-    </Description>
+    <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/DirectoryServices.Extensions</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>Extensions to DirectoryServices.</Description>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
@@ -21,7 +23,6 @@
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
-
   </PropertyGroup>
   
   <ItemGroup>
@@ -42,5 +43,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Readme.md" Pack="True" PackagePath=".">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
