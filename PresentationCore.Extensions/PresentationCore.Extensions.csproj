@@ -5,10 +5,14 @@
     <Version>1.0.0</Version>
     <Authors>Hawkynt</Authors>
     <PackageTags>Framework;Extensions;Hawkynt</PackageTags>
+    <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/PresentationCore.Extensions</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <Description>
       This library enables Framework-Extensions.
     </Description>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <UseWpf>True</UseWpf>
@@ -33,6 +37,12 @@
   
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="Readme.md" Pack="True" PackagePath=".">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

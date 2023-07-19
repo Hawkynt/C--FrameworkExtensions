@@ -6,6 +6,10 @@
     <Version>1.0.0</Version>
     <Authors>Hawkynt</Authors>
     <PackageTags>Framework;Extensions;Hawkynt</PackageTags>
+    <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/System.Drawing.Extensions</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <Description>
       This library enables Framework-Extensions.
     </Description>
@@ -35,6 +39,9 @@
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
   
   <ItemGroup>
+    <None Include="Readme.md" Pack="True" PackagePath=".">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="System\Drawing\Image.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Image.cs</LastGenOutput>
