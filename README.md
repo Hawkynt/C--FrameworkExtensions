@@ -1,4 +1,7 @@
-# C# Framework Extensions [![Build Status](https://img.shields.io/github/actions/workflow/status/Hawkynt/C--FrameworkExtensions/dotnet.yml?branch=master "Build Status")](https://github.com/Hawkynt/C--FrameworkExtensions/actions)
+# C# Framework Extensions 
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Hawkynt/C--FrameworkExtensions/dotnet.yml?branch=master "Build Status")](https://github.com/Hawkynt/C--FrameworkExtensions/actions)
+[![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/master)
+[![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
 Extensions to the [.NET Framework](https://en.wikipedia.org/wiki/.NET_Framework) and [.Net Core](https://en.wikipedia.org/wiki/.NET) for use with [C# programming language](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) or any other compatible .[NET language](https://en.wikipedia.org/wiki/List_of_.NET_libraries_and_frameworks).
 
