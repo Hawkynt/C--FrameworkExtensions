@@ -26,7 +26,7 @@ sub QueryVersionFromFile($){
       if($line =~ /<version>\s*([\d\.]+)\s*<\/version>/i){
         close FH;
         my ($version) = $line =~ /<version>\s*([\d\.]+)\s*<\/version>/i;
-        print "[Info]Found version $version\n";
+        print "[Verbose]Found version in file $inputFile: $version\n";
         return $version;
       }
     }
