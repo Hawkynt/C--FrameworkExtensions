@@ -50,7 +50,7 @@ sub WriteToEnvironment($$){
 
 sub QueryGitVersion(;$){
   my ($workingCopyFileOrFolder)=@_;
-  my $command = "git rev-list origin --count $workingCopyFileOrFolder";
+  my $command = "git rev-list HEAD --all --branches --count $workingCopyFileOrFolder";
   print "[Verbose]Executing git> $command\n";
   my $result=`$command`;
   chomp $result;
