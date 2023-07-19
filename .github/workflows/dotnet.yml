@@ -19,20 +19,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.x
+        
     - name: Show Info
       run: dotnet --info
+      
+    - name: Receive Version
+      run: ".github/workflows/ReadVersion.pl"
+      
     - name: Restore dependencies
       run: dotnet restore "${{ matrix.csproj-file }}"
+      
     - name: Build
-      run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
+      run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release -p:Version=${{ env.Compile_Version }}
+      
     - name: Test
       run: dotnet test "${{ matrix.csproj-file }}" --no-build --verbosity normal
+      
     - name: Pack NuGet package
-      run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
+      run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts -p:Version=${{ env.Compile_Version }}
+      
 #    - name: Publish the package to nuget.org
 #      run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
 #      env:
