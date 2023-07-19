@@ -10,9 +10,7 @@
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/System.Windows.Forms.Extensions</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Description>
-      This library enables Framework-Extensions.
-    </Description>
+    <Description>Extensions to WindowsForms.</Description>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

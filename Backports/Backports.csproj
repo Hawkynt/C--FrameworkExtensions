@@ -9,9 +9,7 @@
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/Backports</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Description>
-      This library enables Framework-Extensions.
-    </Description>
+    <Description>Extensions to assure newer compiler features work in older versions.</Description>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
