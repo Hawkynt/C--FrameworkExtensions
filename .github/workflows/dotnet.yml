@@ -33,7 +33,7 @@ jobs:
       run: dotnet --info
       
     - name: Receive Version
-      run: ".github/workflows/ReadVersion.pl"
+      run: perl ".github/workflows/ReadVersion.pl" "${{ matrix.csproj-file }}"
       
     - name: Restore dependencies
       run: dotnet restore "${{ matrix.csproj-file }}"
