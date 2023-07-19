@@ -60,7 +60,7 @@ jobs:
 
     strategy:
       matrix:
-        csproj-file: ['Corlib.Extensions/Corlib.Extensions.csproj','Corlib.Extensions/Corlib.Extensions (NoUnsafe).csproj','PresentationCore.Extensions/PresentationCore.Extensions.csproj','System.Drawing.Extensions/System.Drawing.Extensions.csproj','System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj','System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj']
+        csproj-file: ['Corlib.Extensions/Corlib.Extensions.csproj','PresentationCore.Extensions/PresentationCore.Extensions.csproj','System.Drawing.Extensions/System.Drawing.Extensions.csproj','System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj','System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj']
 
     steps:
     - uses: actions/checkout@v3
