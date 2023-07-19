@@ -10,16 +10,20 @@ on:
     branches: [ "master" ]
 
 jobs:
-  buildBackports:
+   
+  Build_Backports:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         csproj-file: ['Backports/Backports.csproj']
 
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -48,8 +52,8 @@ jobs:
 #      env:
 #        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
     
-  build:
-    needs: buildBackports
+  Build_Corlib_And_Co:
+    needs: Build_Backports
     runs-on: ubuntu-latest
 
     strategy:
