@@ -9,7 +9,8 @@ sub main(@) {
   die "[Error]Could not find file $inputFile" unless -f $inputFile;
   my $version = QueryVersionFromFile($inputFile) || '1.0.0.0';
   print "[Info]Using version $version\n";
-  my $gitVersion=QueryGitVersion();
+  my $path = GetPathFrom($inputFile);
+  my $gitVersion=QueryGitVersion($path);
   print "[Info]Using git version $gitVersion\n";
   WriteToEnvironment(($ENV{GITHUB_ENV} || 'env'), <<EOF
 Project_Version=$version
@@ -19,15 +20,21 @@ EOF
   );
 }
 
+sub GetPathFrom($) {
+  my ($result) = @_;
+  $result=~s/[\/\\]?[^\/\\]*?$//;
+  return $result;
+}
+
 sub QueryVersionFromFile($){
   my ($inputFile) = @_;
   open FH,"<",$inputFile or die "[Error] Could not open file $inputFile";
     while(my $line=<FH>){
       if($line =~ /<version>\s*([\d\.]+)\s*<\/version>/i){
         close FH;
-        my ($version) = $line =~ /<version>\s*([\d\.]+)\s*<\/version>/i;
-        print "[Verbose]Found version in file $inputFile: $version\n";
-        return $version;
+        my ($result) = $line =~ /<version>\s*([\d\.]+)\s*<\/version>/i;
+        print "[Verbose]Found version in file $inputFile: $result\n";
+        return $result;
       }
     }
   close FH;
@@ -41,8 +48,10 @@ sub WriteToEnvironment($$){
   close FH;
 }
 
-sub QueryGitVersion(){
-  my $result=`git rev-list HEAD --count`;
+sub QueryGitVersion(;$){
+  my ($workingCopyFileOrFolder)=@_;
+  print "[Verbose]Executing git> git rev-list HEAD --count $workingCopyFileOrFolder \n";
+  my $result=`git rev-list HEAD --count $workingCopyFileOrFolder`;
   chomp $result;
   return $result;
 }
