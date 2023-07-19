@@ -42,7 +42,7 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static void ArgumentIsNull<T>([NotNull][JetBrains.Annotations.NoEnumeration] T value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) where T : class {
+  public static void ArgumentIsNull<T>([NotNull] T value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) where T : class {
     if (value == null)
       AlwaysThrow.ArgumentNullException(expression ?? nameof(value), caller);
   }
