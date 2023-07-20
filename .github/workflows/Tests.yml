@@ -6,12 +6,14 @@ on:
       - completed
 jobs:
   RunTests:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         csproj-file: ['Tests/Corlib.Tests/Corlib.Tests.csproj','Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj']
         configuration: ['Debug','Release']
         architecture: ['AnyCPU','x86','x64']
+
+    runs-on: ${{ matrix.os }}
     
     steps:
      - uses: actions/checkout@v3
