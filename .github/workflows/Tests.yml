@@ -1,8 +1,7 @@
 name:  Tests
 on: 
   workflow_run:
-    workflows:
-      - "Build.yml"
+    workflows: ["Build"]
     types:
       - completed
 jobs:
