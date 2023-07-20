@@ -460,7 +460,7 @@ static partial class StringExtensions {
 #endif
   public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
 
-  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().ToHashSet(c => c));
+  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().Union(new[] { ':', '?', '*', '/', '\\' }).ToHashSet(c => c));
 
   /// <summary>
   /// Sanitizes the text to use as a filename.

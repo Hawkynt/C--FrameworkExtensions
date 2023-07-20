@@ -409,10 +409,8 @@ public class StringTests {
   [TestCase(null, null, null, typeof(NullReferenceException))]
   [TestCase("", "", null, typeof(ArgumentException))]
   [TestCase("a", "a")]
-  [TestCase(":", "_")]
   [TestCase("abc", "abc")]
   [TestCase("C\\Users\\user\\", "C_Users_user_")]
-  [TestCase("C:Usersuser", "C_Usersuser")]
   [TestCase("\"<>|\0\u0001\u0002\u0003\u0004\u0005\u0006", "___________")]
   [TestCase("C\"Usersuser", "C_Usersuser")]
   [TestCase("C<Usersuser", "C_Usersuser")]
@@ -421,9 +419,11 @@ public class StringTests {
   [TestCase("C\u0001Usersuser", "C_Usersuser")]
   [TestCase("C\aUsersuser", "C_Usersuser")]
   [TestCase("C\u001FUsersuser", "C_Usersuser")]
+  [TestCase("C/Usersuser", "C_Usersuser")]
+  [TestCase("C:Usersuser", "C_Usersuser")]
+  [TestCase(":", "_")]
   [TestCase("C*Usersuser", "C_Usersuser")]
   [TestCase("C?Usersuser", "C_Usersuser")]
-  [TestCase("C/Usersuser", "C_Usersuser")]
   [TestCase(
     "12345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689:",
     "12345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689012345689_")]
