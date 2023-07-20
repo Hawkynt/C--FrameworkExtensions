@@ -17,10 +17,7 @@ jobs:
        uses: actions/setup-dotnet@v3
        with:
          dotnet-version: 7.x
-  
-     - name: Build
-       run: dotnet build "${{ matrix.csproj-file }}" --configuration Release
-       
+
      - name: Test
-       run: dotnet test "${{ matrix.csproj-file }}" --no-build --verbosity normal
+       run: dotnet test "${{ matrix.csproj-file }}" --configuration Release --verbosity normal
      
