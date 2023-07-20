@@ -1,4 +1,4 @@
-name:  RunTests
+name:  Tests
 on: 
   workflow_run:
     workflows:
