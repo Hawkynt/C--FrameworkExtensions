@@ -1,0 +1,23 @@
+name:  Tests
+on: 
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+jobs:
+  RunTests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        csproj-file: ['Tests/Corlib.Tests/Corlib.Tests.csproj','Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj']
+    
+    steps:
+     - uses: actions/checkout@v3
+     - name: Setup .NET
+       uses: actions/setup-dotnet@v3
+       with:
+         dotnet-version: 7.x
+
+     - name: Test
+       run: dotnet test "${{ matrix.csproj-file }}" --configuration Release --verbosity normal
+     
