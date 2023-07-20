@@ -19,13 +19,11 @@ This is the folder where all extensions to .NET classes go.
 | Package | Description |
 | --- | --- |
 | [FrameworkExtensions.Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) | Extensions to assure newer compiler features work in older versions. |
-| [FrameworkExtensions.PresentationCore](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore) | Extensions to WPF. |
-| [FrameworkExtensions.System.Drawing](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing) | Extensions to System.Drawing. |
 | [FrameworkExtensions.Corlib](https://www.nuget.org/packages/FrameworkExtensions.Corlib) | Extensions for every type of project. |
-| [FrameworkExtensions.System.Windows.Forms](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms) | Extensions to WindowsForms. |
 | [FrameworkExtensions.DirectoryServices](https://www.nuget.org/packages/FrameworkExtensions.DirectoryServices) | Extensions to DirectoryServices. |
-
-
+| [FrameworkExtensions.System.Drawing](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing) | Extensions to System.Drawing. |
+| [FrameworkExtensions.System.Windows.Forms](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms) | Extensions to WindowsForms. |
+| [FrameworkExtensions.PresentationCore](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore) | Extensions to WPF. |
 
 ## Licensing
 * [LGPL-3.0](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License)
