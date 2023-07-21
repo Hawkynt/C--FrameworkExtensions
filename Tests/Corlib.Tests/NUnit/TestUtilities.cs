@@ -35,5 +35,12 @@ internal class TestUtilities {
     => input == null ? null : input == string.Empty ? _EMPTY_ARRAY : input.Split('|').Select(c => c == "!" ? null : c)
     ;
 
+  /// <summary>
+  /// Whether we're currently running under something Windows-like
+  /// </summary>
+  /// <returns></returns>
+  public static bool IsWindowsPlatform() 
+    => Environment.OSVersion.Platform is PlatformID.Win32Windows or PlatformID.Win32NT or PlatformID.Win32S or PlatformID.WinCE or PlatformID.Xbox
+    ;
 
 }

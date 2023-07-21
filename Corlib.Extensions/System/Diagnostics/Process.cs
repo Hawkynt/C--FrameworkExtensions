@@ -253,8 +253,7 @@ static partial class ProcessExtensions {
   /// <returns>An instance of the Process class or <see langword="null"/>.</returns>
   public static Process GetParentProcessOrNull(IntPtr handle) {
     try {
-      var pbi = NativeMethods.NtQueryInformationProcess(handle);
-      return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
+      return GetParentProcess(handle);
     } catch (Win32Exception /* can not find process */) {
       return null;
     } catch (InvalidOperationException /* process exited */) {

@@ -8,6 +8,7 @@ using static Corlib.Tests.NUnit.TestUtilities;
 namespace Corlib.Tests.System;
 
 using global::System.Linq;
+using global::System.Threading;
 
 [TestFixture]
 public class StringTests {
@@ -517,13 +518,17 @@ public class StringTests {
   [Test]
   [TestCaseSource(nameof(_TestFormatWithParameters))]
 
-  public void FormatWith(FormatWithParametersTestData data)
-    => ExecuteTest(() => data.Input.FormatWith(data.Parameters), data.Expected, data.Exception);
+  public void FormatWith(FormatWithParametersTestData data) {
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
+    ExecuteTest(() => data.Input.FormatWith(data.Parameters), data.Expected, data.Exception);
+  }
 
   [Test]
   [TestCaseSource(nameof(_TestFormatWithExParameters))]
-  public void FormatWithEx(FormatWithExParametersTestData data)
-    => ExecuteTest(() => data.Input.FormatWithEx(data.FieldGetter, data.PassFieldFormatToGetter), data.Expected, data.Exception);
+  public void FormatWithEx(FormatWithExParametersTestData data) {
+    Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
+    ExecuteTest(() => data.Input.FormatWithEx(data.FieldGetter, data.PassFieldFormatToGetter), data.Expected, data.Exception);
+  }
 
   [Test]
   [TestCaseSource(nameof(_TestMultipleReplaceTestData))]

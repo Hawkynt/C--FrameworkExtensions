@@ -460,7 +460,16 @@ static partial class StringExtensions {
 #endif
   public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
 
-  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => Path.GetInvalidFileNameChars().Union(new[] { ':', '?', '*', '/', '\\' }).ToHashSet(c => c));
+  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => 
+    Path.GetInvalidFileNameChars()
+      .Union("<>|:?*/\\")
+      .ToHashSet(c => c)
+    );
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  private static bool _IsInvalidCharacter(char c) => c < 32 || c >= 127 || _INVALID_FILE_NAME_CHARS.Value.Contains(c);
 
   /// <summary>
   /// Sanitizes the text to use as a filename.
@@ -475,13 +484,12 @@ static partial class StringExtensions {
     Against.ArgumentIsNullOrEmpty(@this);
     
     var result = @this;
-    var invalidFileNameChars = _INVALID_FILE_NAME_CHARS.Value;
-
+    
     var length = (uint)@this.Length;
     fixed (char* srcPointer = @this) {
       var currentPointer = srcPointer;
       for (; length > 0; ++currentPointer, --length) {
-        if (!invalidFileNameChars.Contains(*currentPointer))
+        if (!_IsInvalidCharacter(*currentPointer))
           continue;
 
         // copy-on-write the source string
@@ -501,7 +509,7 @@ static partial class StringExtensions {
 
           // process the rest
           for (; length > 0; ++currentPointer, --length)
-            if (invalidFileNameChars.Contains(*currentPointer))
+            if (_IsInvalidCharacter(*currentPointer))
               *currentPointer = sanitation;
 
           result = new(dstPointer);
@@ -520,10 +528,9 @@ static partial class StringExtensions {
     Against.ArgumentIsNullOrEmpty(@this);
     
     var result = @this;
-    var invalidFileNameChars = _INVALID_FILE_NAME_CHARS.Value;
     
     for (var i = 0; i < @this.Length; ++i) {
-      if (!invalidFileNameChars.Contains(@this[i]))
+      if (!_IsInvalidCharacter(@this[i]))
         continue;
 
       // ReSharper disable once UnusedVariable
@@ -536,7 +543,7 @@ static partial class StringExtensions {
         @this.CopyTo(results);
         results[i] = sanitation;
         for (++i; i < results.Length; ++i)
-          if (invalidFileNameChars.Contains(results[i]))
+          if (_IsInvalidCharacter(results[i]))
             results[i] = sanitation;
 
         result = new(results);
@@ -549,7 +556,7 @@ static partial class StringExtensions {
       @this.CopyTo(buffer);
       buffer[i] = sanitation;
       for (++i; i < length; ++i)
-        if (invalidFileNameChars.Contains(buffer[i]))
+        if (_IsInvalidCharacter(buffer[i]))
           buffer[i] = sanitation;
 
       result = new string(buffer, 0, length);
@@ -558,7 +565,7 @@ static partial class StringExtensions {
       var buffer = @this.ToCharArray();
       buffer[i] = sanitation;
       for (++i; i < buffer.Length; ++i)
-        if (invalidFileNameChars.Contains(buffer[i]))
+        if (_IsInvalidCharacter(buffer[i]))
           buffer[i] = sanitation;
 
       result = new(buffer);
@@ -2722,7 +2729,7 @@ static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the given string respecting single and double quotes and allows for escape seququences to be used in these strings.
+  /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="delimiter">The delimiter to use.</param>
