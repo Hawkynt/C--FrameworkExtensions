@@ -6,10 +6,14 @@ on:
       - completed
 jobs:
   RunTests:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         csproj-file: ['Tests/Corlib.Tests/Corlib.Tests.csproj','Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj']
+        configuration: ['Debug','Release']
+        architecture: ['AnyCPU','x86','x64']
+
+    runs-on: ${{ matrix.os }}
     
     steps:
      - uses: actions/checkout@v3
@@ -19,5 +23,5 @@ jobs:
          dotnet-version: 7.x
 
      - name: Test
-       run: dotnet test "${{ matrix.csproj-file }}" --configuration Release --verbosity normal
+       run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal
      
