@@ -4,8 +4,11 @@
 name: Build
 
 on:
-  push:
-    branches: [ "master" ]
+  schedule:
+    - cron: '00 12 * * *'
+
+#  push:
+#    branches: [ "master" ]
 #  pull_request:
 #    branches: [ "master" ]
 
