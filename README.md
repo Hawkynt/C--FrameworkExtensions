@@ -16,21 +16,21 @@ This is the folder where all extensions to .NET classes go.
 
 ## Packages
 
-| Package | Description |
-| --- | --- |
-| [FrameworkExtensions.Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) | Extensions to assure newer compiler features work in older versions. |
-| [FrameworkExtensions.Corlib](https://www.nuget.org/packages/FrameworkExtensions.Corlib) | Extensions for every type of project. |
-| [FrameworkExtensions.DirectoryServices](https://www.nuget.org/packages/FrameworkExtensions.DirectoryServices) | Extensions to DirectoryServices. |
-| [FrameworkExtensions.System.Drawing](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing) | Extensions to System.Drawing. |
-| [FrameworkExtensions.System.Windows.Forms](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms) | Extensions to WindowsForms. |
-| [FrameworkExtensions.PresentationCore](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore) | Extensions to WPF. |
+| Package | Description | Version |
+| --- | --- | --- |
+| [FrameworkExtensions.Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) | Extensions to assure newer compiler features work in older versions. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.Backports)](https://www.nuget.org/packages/FrameworkExtensions.Backports/) |
+| [FrameworkExtensions.Corlib](https://www.nuget.org/packages/FrameworkExtensions.Corlib) | Extensions for every type of project. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.Corlib)](https://www.nuget.org/packages/FrameworkExtensions.Corlib/) |
+| [FrameworkExtensions.DirectoryServices](https://www.nuget.org/packages/FrameworkExtensions.DirectoryServices) | Extensions to DirectoryServices. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.DirectoryServices)](https://www.nuget.org/packages/FrameworkExtensions.DirectoryServices/) |
+| [FrameworkExtensions.System.Drawing](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing) | Extensions to System.Drawing. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Drawing)](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing/) |
+| [FrameworkExtensions.System.Windows.Forms](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms) | Extensions to WindowsForms. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Windows.Forms)](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms/) |
+| [FrameworkExtensions.PresentationCore](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore) | Extensions to WPF. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.PresentationCore)](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore/) |
 
 ## Licensing
 * [LGPL-3.0](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License)
 * give credit to ***Hawkynt*** when using
 * please do **pull**-requests if you add something
 * report issues to and get in contact at [GitHub](https://github.com/Hawkynt/C--FrameworkExtensions)
-* always deliver the LICENSE file to your code's customer
+* always deliver the [LICENSE](https://www.gnu.org/licenses/lgpl-3.0.txt) file to your code's customer
 
 ## Rules
-See [CONTRIBUTING.md](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/CONTRIBUTING.md)
+See [CONTRIBUTING](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/CONTRIBUTING.md)
