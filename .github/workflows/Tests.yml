@@ -8,6 +8,7 @@ on:
 jobs:
   RunTests:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         csproj-file: ['Tests/Corlib.Tests/Corlib.Tests.csproj','Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj']
