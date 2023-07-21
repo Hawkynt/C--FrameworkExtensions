@@ -17,7 +17,7 @@ Please make it as easy for me as you can by avoiding things like
 * different code style
 * hard-to-figure-out-stuff without meaningful comments
 * huge changesets (try to push more often, that helps)
-* endless discussions (I'm the captain and the captain is in charge of the spaceship)
+* endless discussions (I'm the captain and the captain is in charge of this spaceship)
 
 ## So, you are brave enough?
 
@@ -63,10 +63,12 @@ If you gonna fix actions, code, tests or whatever just let me know.
 * everything that is a variable is camelCase: `int myInt = 40;` 
 * everything private/protected is prefixed by underscore: `private string _myText;`
 * constants cry for help: `private const int _MY_SECRET_ID = 0xdeadbeef;`
+* pseudo-consts also cry: `private static readonly string _MY_SECRET_API_KEY = Settings.Default.ApiKey;`
 * methods want to *start doing* something *big*: `public void InsertStuffIntoDatabase() { }`
 * interfaces are selfish: `public interface IKnowBetter { }`
 * generic type parameters do *T*-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
 * enums, enum-members, classes, namespaces, structs, records, properties all use PascalCase: `public class Car { }`
+* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a nested class named `NativeMethods` 
 
 ### Formatting Style
 * there is not tab, only two spaces for indendation
@@ -78,6 +80,7 @@ public void TestStuff(bool assertionFailed) {
     FailHard();
   else {
     KillingMeSoftly();
+    // with his words
   }
 }
 ```
@@ -112,6 +115,10 @@ public void MarkStuff(
     ;
 
 }
+
+public void ShowMeExpressions()
+  => DoItNow()
+  ;
 ```
 
 * regions go where code goes
@@ -158,6 +165,7 @@ var spaceBag = new [] { "spaces", "after", "commas" }
 
 // this also applies to for, foreach, while, lock, using, fixed, catch, when, etc.
 if (spaceIsNotEnclosingConditions) {
+
   // just here to make it multiline
   throw new InvalidOperationException("I'm gonna cry" + ((99 + 1) * 10) + " times")
 }
@@ -179,7 +187,7 @@ result = !input;
 ### File Layout
 * usings first
 * use file based namespaces
-* put nested classes up or separate them into partials named Class.NestedClass.cs
+* put nested classes up or separate them into partials named *Class.NestedClass.cs*
 * put constants below
 * try to get fields now
 * now props
@@ -187,6 +195,7 @@ result = !input;
 * now methods
 * if a field is only needed for single method (e.g. backing field, memoization cache), put it directly in front of the method
 * partial classes are OK, especially when classes grow big and have logically-connected blocks
+* when having static stuff, move that before the instance members of the same type
 
 ### Namespaces
 * order alphabetically (if not logically coherent in a #if-directive)
@@ -196,7 +205,7 @@ result = !input;
 
 ### Syntax Style
 * use `var` for all declarations possible
-* spare the type after new if the compiler knows what you doing, use together with var to your maximum decrease in typing
+* spare the type after new if the compiler knows what you doing, use together with var to your maximum saving of typing
 ``` cs
 // BAD:
 Dictionary<string, List<string>> cache = new Dictionary<string, List<string>>();
@@ -213,7 +222,7 @@ var cache = new Dictionary<string, List<string>>();
 var cache = (Dictionary<string, List<string>>)null;
 
 // WORSE:
-Dictionary<string, List<string>> cache = (Dictionary<string, List<string>>)null;
+Dictionary<string, List<string>> cache = (Dictionary<string, List<string>>) null;
 Dictionary<string, List<string>> cache = default(Dictionary<string, List<string>>);
 
 // GOOD:
@@ -291,9 +300,12 @@ var guests = new List<User> { guest };
 var guests = new List<User> { new User { Name = "Alex" } };
 ```
 
+* learn about postfix and prefix operators if you don't know the [difference](https://riptutorial.com/csharp/example/8183/postfix-and-prefix-increment-and-decrement) yet
+* seal nested classes to improve [performance](https://www.meziantou.net/performance-benefits-of-sealed-class.htm)
+
 ### Null-Checking and validation
 
-* use [Guard](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.cs)-clauses instead of checking yourself
+* use [Guard](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.cs)-clauses instead of checking yourself (they are already tuned for performance in most cases)
 
 ``` cs
 public static void DoSomething(this string @this, string other, int count) {
@@ -320,7 +332,7 @@ public static void DoSomething(this string @this) {
 }
 ```
 
-* do validate all public code ([taint-mode](https://en.wikipedia.org/wiki/Taint_checking)), avoid duplicate validations in private code
+* do validate all public data ([taint-mode](https://en.wikipedia.org/wiki/Taint_checking)), avoid duplicate validations in private code
 
 ``` cs
 public static void DoSomething(this string @this) {
@@ -394,6 +406,39 @@ for (;;) {
 }
 ```
 
+* for-[loops](https://softwareengineering.stackexchange.com/a/164554/33478) use prefix increment/decrement
+``` cs
+// BAD:
+for (var i = 0; i < 100; i++) { ... }
+
+// GOOD:
+for (var i = 0; i < 100; ++i) { ... }
+```
+
+* some tricky stuff is welcome as an exercise for the reader
+``` cs
+// for without init
+for (; j != 20 ; ++j) { ... }
+
+// multi statements
+for (int i = 5, j = 20; i < j ; ++i, --j) { ... }
+
+// no footer
+for (int i = 5; i > 0 ;) { ... }
+
+// multi-assigments
+var a = b = 20;
+
+// multiline-multi-assigments
+var a 
+    = b 
+    = 20
+    ;
+
+// even in conditions
+while ( (c = 20) < 100 ) { ... }
+```
+
 * do not depend on more than [Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) and [Corlib.Extensions](https://www.nuget.org/packages/FrameworkExtensions.Corlib)
 
 
@@ -401,3 +446,10 @@ for (;;) {
 * use [design-patterns](https://en.wikipedia.org/wiki/Software_design_pattern)
 * use [SOLID](https://en.wikipedia.org/wiki/SOLID)
 * when you violate stuff on purpose, comment why you did so
+
+### Try to have fun
+* not everything is set in stone
+* there are the "it depends"-cases
+* there's always a "does-not-fit-here"-case
+* and there will always be code not up-to-date to these standards for whatever boring reasons
+* just leaving the files cleaner than before will help steering into the right direction (so look-around +/- 10 lines from where you made changes and tidy them if you can)
