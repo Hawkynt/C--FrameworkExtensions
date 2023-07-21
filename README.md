@@ -33,14 +33,4 @@ This is the folder where all extensions to .NET classes go.
 * always deliver the LICENSE file to your code's customer
 
 ## Rules
-There are some guidelines for extensions which have proven one's worth:
-* Every referenced assembly/package should have its own project/assembly
-* Use folders for every part of the namespace
-* Every file in there should have a name that is build like this: "**Type**.cs"
-* The namespace in the files is always the same namespace as the original type is in
-* The classname is always "**Type**Extensions". The class is always "internal/public static partial", thus allowing us to extend it further in a given project
-  by adding another partial class with the same name
-* All public methods must be static
-* The first parameter of all "public" methods must be the type itself and is called "**@this**" or alternatively "*This*" (only for old code)
-* For extensions to static classes like "Math" or "Activator",
-  there is no "This"-parameter
+See [CONTRIBUTING.md](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/CONTRIBUTING.md)
