@@ -40,9 +40,31 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "Exte
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{91D58AC8-D51A-4C58-B890-8DB59D58E4E3}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\Build.yml = .github\workflows\Build.yml
 		.github\workflows\ReadVersion.pl = .github\workflows\ReadVersion.pl
-		.github\workflows\Zyborg-Tests.yml = .github\workflows\Zyborg-Tests.yml
+		.github\workflows\Tests.yml = .github\workflows\Tests.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{8E643B2A-E5CD-4CE8-B7D6-79C93069F863}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		CONTRIBUTING.md = CONTRIBUTING.md
+		LICENSE = LICENSE
+		Readme.md = Readme.md
+		SECURITY.md = SECURITY.md
+		VersionSpecificSymbols.Common.prop = VersionSpecificSymbols.Common.prop
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{4A960D64-0B81-489D-8F27-FC4B296A9697}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compilation", "Compilation", "{08CA0DB8-2C9F-464C-930F-2858DE6433E2}"
+	ProjectSection(SolutionItems) = preProject
+		VersionSpecificSymbols.Common.prop = VersionSpecificSymbols.Common.prop
 	EndProjectSection
 EndProject
 Global
@@ -232,6 +254,8 @@ Global
 		{3BF2FB63-DE3F-4DA4-AEBD-B968902AD325} = {FA60440D-3003-4C19-92A9-F08490B6AEC7}
 		{44FC2350-4999-4A9B-9EDF-CF6AB5639C55} = {FA60440D-3003-4C19-92A9-F08490B6AEC7}
 		{043C14EA-CC10-4973-947F-63E9797658C4} = {FA60440D-3003-4C19-92A9-F08490B6AEC7}
+		{91D58AC8-D51A-4C58-B890-8DB59D58E4E3} = {8E643B2A-E5CD-4CE8-B7D6-79C93069F863}
+		{4A960D64-0B81-489D-8F27-FC4B296A9697} = {8E643B2A-E5CD-4CE8-B7D6-79C93069F863}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {440AB277-6F60-499B-96D2-0953EEAE9C0C}
