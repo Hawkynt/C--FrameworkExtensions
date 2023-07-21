@@ -1,18 +1,28 @@
-﻿namespace Corlib.Tests.System.Diagnostics;
-
-using global::NUnit.Framework;
-using global::System.Diagnostics;
-using global::System.Linq;
+﻿using NUnit.Framework;
+using System.Diagnostics;
+using System.Linq;
 using static Corlib.Tests.NUnit.TestUtilities;
+
+namespace Corlib.Tests.System.Diagnostics;
 
 [TestFixture]
 public class ProcessTests {
 
   [Test]
-  public static void GetParentProcess() => Assert.That(ProcessExtensions.GetParentProcess() != null);
+  public static void GetParentProcess() {
+    if (!IsWindowsPlatform())
+      Assert.Pass("[Skipped]Not supported on non windows platforms");
+
+    Assert.That(ProcessExtensions.GetParentProcess() != null);
+  }
 
   [Test]
-  public static void Parent() => Assert.That(ProcessExtensions.GetParentProcess().Id == Process.GetCurrentProcess().Parent().Id);
+  public static void Parent() {
+    if (!IsWindowsPlatform())
+      Assert.Pass("[Skipped]Not supported on non windows platforms");
+
+    Assert.That(ProcessExtensions.GetParentProcess().Id == Process.GetCurrentProcess().Parent().Id);
+  }
 
   private static readonly string _EXECUTABLE_TO_TEST = IsWindowsPlatform() ? "cmd.exe" : "bash";
 

@@ -462,7 +462,7 @@ static partial class StringExtensions {
 
   private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => 
     Path.GetInvalidFileNameChars()
-      .Union("<>|:?*/\\")
+      .Union("<>|:?*/\\\"")
       .ToHashSet(c => c)
     );
 

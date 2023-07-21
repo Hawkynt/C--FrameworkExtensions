@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -6,9 +8,6 @@ using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace Corlib.Tests.System;
-
-using global::System.Linq;
-using global::System.Threading;
 
 [TestFixture]
 public class StringTests {
@@ -98,14 +97,14 @@ public class StringTests {
   }
 
   private static IEnumerable<MatchesTestData> _TestMatchesTestData() {
-    yield return new(null, @"^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
+    yield return new(null, "^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
     yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sprEad" }, RegexOptions.None);
     yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sheD", "sprEad" }, RegexOptions.IgnoreCase);
   }
 
   private static IEnumerable<MatchGroupsTestData> _TestMatchGroupsTestData() {
-    yield return new(null, @"^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
+    yield return new(null, "^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
     yield return new("said shed see spear spread super", @"s\w+d", new[] { "said" }, RegexOptions.None);
     yield return new("saiD shed see spear spread super", @"s\w+d", new[] { "shed" }, RegexOptions.None);
@@ -452,33 +451,33 @@ public class StringTests {
     => ExecuteTest(() => input.MatchesFilePattern(pattern), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", false)]
-  [TestCase("abc.mp3", @"^.*mp3$", true)]
-  [TestCase("abc.mp", @"^.*mp3$", false)]
+  [TestCase(null, "^.*mp3$", false)]
+  [TestCase("abc.mp3", "^.*mp3$", true)]
+  [TestCase("abc.mp", "^.*mp3$", false)]
 
   public void IsMatch(string input, string regex, bool expected, Type? exception = null)
     => ExecuteTest(() => input.IsMatch(new(regex)), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", true)]
-  [TestCase("abc.mp3", @"^.*mp3$", false)]
-  [TestCase("abc.mp", @"^.*mp3$", true)]
+  [TestCase(null, "^.*mp3$", true)]
+  [TestCase("abc.mp3", "^.*mp3$", false)]
+  [TestCase("abc.mp", "^.*mp3$", true)]
 
   public void IsNotMatch(string input, string regex, bool expected, Type? exception = null)
     => ExecuteTest(() => input.IsNotMatch(new(regex)), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", RegexOptions.None, false)]
-  [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, true)]
-  [TestCase("abc.mp", @"^.*mp3$", RegexOptions.None, false)]
+  [TestCase(null, "^.*mp3$", RegexOptions.None, false)]
+  [TestCase("abc.MP3", "^.*mp3$", RegexOptions.IgnoreCase, true)]
+  [TestCase("abc.mp", "^.*mp3$", RegexOptions.None, false)]
 
   public void IsMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null)
     => ExecuteTest(() => input.IsMatch(new(regex, regexOptions)), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", RegexOptions.None, true)]
-  [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, false)]
-  [TestCase("abc.mp", @"^.*mp3$", RegexOptions.None, true)]
+  [TestCase(null, "^.*mp3$", RegexOptions.None, true)]
+  [TestCase("abc.MP3", "^.*mp3$", RegexOptions.IgnoreCase, false)]
+  [TestCase("abc.mp", "^.*mp3$", RegexOptions.None, true)]
 
   public void IsNotMatch(string input, string regex, RegexOptions regexOptions, bool expected, Type? exception = null)
     => ExecuteTest(() => input.IsNotMatch(new(regex, regexOptions)), expected, exception);
@@ -536,20 +535,20 @@ public class StringTests {
     => ExecuteTest(() => data.Input.MultipleReplace(data.Replacements), data.Expected, data.Exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", RegexOptions.None, "", null, typeof(NullReferenceException))]
+  [TestCase(null, "^.*mp3$", RegexOptions.None, "", null, typeof(NullReferenceException))]
   [TestCase("abc.MP3", null, RegexOptions.None, "", null, typeof(ArgumentNullException))]
-  [TestCase("abc.mp3", @"^.*mp3$", RegexOptions.None, null, "")]
-  [TestCase("abc.MP", @"^.*mp3$", RegexOptions.IgnoreCase, null, "abc.MP")]
-  [TestCase("abc.MP3", @"^.*mp3$", RegexOptions.IgnoreCase, "", "")]
+  [TestCase("abc.mp3", "^.*mp3$", RegexOptions.None, null, "")]
+  [TestCase("abc.MP", "^.*mp3$", RegexOptions.IgnoreCase, null, "abc.MP")]
+  [TestCase("abc.MP3", "^.*mp3$", RegexOptions.IgnoreCase, "", "")]
   [TestCase("Bit and Bat", "B.t", RegexOptions.None, "BAT", "BAT and BAT")]
   [TestCase("BiT and BaT", "B.t", RegexOptions.IgnoreCase, "BAT", "BAT and BAT")]
   public void ReplaceRegex(string input, string regex, RegexOptions regexOptions, string newValue, string expected, Type? exception = null)
     => ExecuteTest(() => input.ReplaceRegex(regex, newValue, regexOptions), expected, exception);
 
   [Test]
-  [TestCase(null, @"^.*mp3$", "", null, typeof(NullReferenceException))]
+  [TestCase(null, "^.*mp3$", "", null, typeof(NullReferenceException))]
   [TestCase("abc.MP3", null, "", null, typeof(ArgumentNullException))]
-  [TestCase("abc.mp3", @"^.*mp3$", "", "")]
+  [TestCase("abc.mp3", "^.*mp3$", "", "")]
   [TestCase("Bit and Bat", "B.t", "BAT", "BAT and BAT")]
   [TestCase("BiT and BaT", "B.t", "BAT", "BiT and BaT")]
   public void Replace(string input, string regex, string newValue, string expected, Type? exception = null)
