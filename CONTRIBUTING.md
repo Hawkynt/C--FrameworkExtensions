@@ -27,19 +27,18 @@ There are some guidelines for extensions which have proven one's worth:
 
 * Every referenced assembly/package should have its own project/assembly
 * Use folders for every part of the namespace
-* Every file in there should have a name that is build like this: "**Type**.cs"
-* The classname is always "**Type**Extensions". The class is always "internal/public static partial", thus allowing us to extend it further in a given project
-  by adding another partial class with the same name
-* All public methods must be static
-* For extensions to static classes like "Math" or "Activator",
-  there is no "This"-parameter
-* Get a test for your contribution under "Tests" following the examples already in place
+* Every file in there should have a name that is build like this: "**Type***.cs*"
+* The classname is always "**Type***Extensions*". The class is always `internal/public static partial`, thus allowing us to extend it further in a given project by adding another partial class with the same name
+* All **public** methods must be **static**
+* For extensions to static classes like **Math** or **Activator**,
+  there is no **This**-parameter
+* Get a test for your contribution under "**Tests**"-*folder* following the examples already in place
 * Do not write [too many](https://en.wikipedia.org/wiki/Equivalence_partitioning) tests
-* Do write [enough](https://en.wikipedia.org/wiki/Boundary-value_analysis) tests
+* But do write [enough](https://en.wikipedia.org/wiki/Boundary-value_analysis) tests
 
 ## Are you keen on refactoring?
 
-You can go on and refactor whatever you think is necessary to make the code more readable or adept to new .Net versions.
+You can go on and refactor whatever you think is necessary to make the code more readable or adapt more recent .Net versions.
 However don't make the code slower or more memory-hungry during refactoring.
 Pay kind attention to details, escpecially all that compiler-sugar ([async](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async)/[await](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await), [yield](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/yield), [lambdas](https://medium.com/criteo-engineering/beware-lambda-captures-383efe3a4345), [Patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns), [LINQ](https://www.youtube.com/watch?v=Dv_nsoEmC7s&list=PLzQZKn8ki7X1XhXSjaSQpRr4Am1uFK4fo)) and [boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing).
 C# is doing a lot under the hood which you only see when using [dotPeek](https://www.jetbrains.com/decompiler/), [dnSpy](https://github.com/dnSpy/dnSpy), [Reflector](https://www.red-gate.com/products/reflector/), [ILSpy](https://github.com/icsharpcode/ILSpy), [SharpLab](https://sharplab.io/) or any other decompilation tool.
@@ -48,13 +47,13 @@ You should make yourself comfortable with the [difference](https://www.c-sharpco
 Ask if unsure and [learn](https://www.youtube.com/watch?v=Tb2Fx9qku_o) about [micro-optimizations](https://www.specbranch.com/posts/intro-to-micro-optimization/) and [why they are needed](https://medium.com/google-developers/the-truth-about-preventative-optimizations-ccebadfd3eb5).
 If you really feel it, create benchmark code under "Tests" like the one already in place.
 
-BTW: I am using JetBrains [ReSharper](https://www.jetbrains.com/resharper/) so don't wonder upon specific comments for it.
+BTW: I am using [JetBrains](https://www.jetbrains.com) [ReSharper](https://www.jetbrains.com/resharper/) so don't wonder upon specific comments for it.
 
 ## Hardcore-Fixer?
 
 Everyone can learn new things and nobody is perfect.
-Some things just don't work yet like I like them to be.
-If you gonna fix actions, code, tests or whatever just let me know.
+Some things just don't work (yet) like I like them to be.
+If you gonna fix actions, code, tests, docs or whatever just let me know.
 
 ## Code-Conventions
 
@@ -70,7 +69,7 @@ If you gonna fix actions, code, tests or whatever just let me know.
 * interfaces are self**I**sh: `public interface IKnowBetter { }`
 * generic type parameters do **T**-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
 * enums, enum-members, classes, namespaces, structs, records, properties all use **PascalCase**: `public class Car { }`
-* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a private nested class named **NativeMethods**
+* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a **private nested class** named **NativeMethods**
 
 ``` cs
 public static partial class IntPtrExtensions {
@@ -104,7 +103,7 @@ public void TestStuff(bool assertionFailed) {
 }
 ```
 
-* when, for whatever reason, you need to shorten lines, do so at operators or after commas and indent
+* when, for whatever reason, you need to shorten lines, do so at operators, brackets or after commas and indent
 
 ``` cs
 public void MarkStuff(
@@ -215,21 +214,21 @@ result = !input;
 * put constants below
 * try to get fields now
 * now props
-* now ctor/dtor/Dispose
+* now cctor/ctor/dtor/Dispose
 * now methods
-* if a field is only needed for single method (e.g. backing field, memoization cache), put it directly in front of the method
-* partial classes are OK, especially when classes grow big and have logically-connected blocks
+* if a field is only needed for a single method (e.g. backing field, memoization cache), put it directly in front of the method
+* partial classes are OK, especially when class-files grow big and have logically-connected blocks - name them **ClassName.BlockName.cs**
 * when having static stuff, move that before the instance members of the same type
 
 ### Namespaces and Usings
 
 * The namespace in the file is always the same namespace as the original type is in
 * use file based namespaces if applicable
-* only one namespace per file
+* only one namespace per file, multiple types however are perfectly fine
 * order usings alphabetically (if not logically coherent in a #if-directive)
-* no global usings file
-* no global:: prefix
-* try to avoid static aliasing
+* no *global usings* file
+* no **global::** prefix
+* try to avoid *static aliasing*
 
 ### Syntax Style
 
@@ -240,14 +239,14 @@ result = !input;
 // BAD:
 Dictionary<string, List<string>> cache = new Dictionary<string, List<string>>();
 
+// BETTER:
+var cache = new Dictionary<string, List<string>>();
+
 // GOOD:
 Dictionary<string, List<string>> cache = new();
-
-// ALSO GOOD:
-var cache = new Dictionary<string, List<string>>();
 ```
 
-* when assigning `null` or `default`, prefer explicit type over var
+* when assigning `null` or `default`, prefer explicit type over `var`
 
 ``` cs
 // BAD:
@@ -266,7 +265,7 @@ Dictionary<string, List<string>> cache = default;
 
 * use `this.` for everything that accesses an instance member
 * use keywords for types when available (like `string`, `int`, `float`, `bool`)
-* use explicit access modifiers (like `public`, `internal`)
+* use explicit access modifiers (like `public`, `protected`, `private`, `internal`)
 * use expression bodies when possible
 
 ``` cs
@@ -289,6 +288,7 @@ public double CalculateTheThirdStuff()
 ``` cs
 //BAD:
 private int _chargeBackingField;
+
 public int Charge {
   get {
     return this._chargeBackingField;
@@ -300,15 +300,18 @@ public int Charge {
 
 // WORSE: C# is not Java
 private int _chargeBackingField;
+
 public int GetCharge() {
-    return this._chargeBackingField;
+  return this._chargeBackingField;
 }
+
 public void SetCharge(int value) {
-    this._chargeBackingField = value;
+  this._chargeBackingField = value;
 }
 
 // BETTER:
 private int _chargeBackingField;
+
 public int Charge {
   get => this._chargeBackingField;
   set => this._chargeBackingField = value;
@@ -405,17 +408,17 @@ public static void DoSomething<T>(this IEnumerable<T> @this) {
 #endif
 public static void EarlyMornings(DateTime date) {
   if(date.Hour < 7)
-    AlwaysThrow.NoCokeYet();
+    AlwaysThrow.NoCokeYetException();
 }
 
 /* Goes into AlwaysThrow.cs */
 [DebuggerHidden]
 // GOOD: never inline throw-helpers, it would hurt performance by preventing the calling method to get inlined
 [MethodImpl(MethodImplOptions.NoInlining)]
-// GOOD: tell the static code analyser that we won't return ever
+// GOOD: tell the static code analyzer that we won't return ever
 [DoesNotReturn]
 // GOOD: name like the exception you're gonna throw
-public static void ArgumentOutOfRangeException(string parameterName, string message) => throw new ArgumentOutOfRangeException(parameterName, message);
+public static void NoCokeYetException() => throw new NoCokeYetException();
 ```
 
 * when adding specific stuff for numbers use the [Against.T4.tt](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.T4.tt) to avoid writing nearly identical code for each number type
@@ -433,6 +436,8 @@ public static void ArgumentOutOfRangeException(string parameterName, string mess
   }
 <#}#>
 ```
+
+* use [T4](https://learn.microsoft.com/en-us/visualstudio/modeling/code-generation-and-t4-text-templates) to save you from writing nearly identical code in general, name the [text-templating](https://learn.microsoft.com/en-us/visualstudio/modeling/guidelines-for-writing-t4-text-templates) files **ClassName.T4.tt**
 
 ### Other stuff
 
@@ -466,10 +471,10 @@ for (int i = 5, j = 20; i < j ; ++i, --j) { ... }
 // no footer
 for (int i = 5; i > 0 ;) { ... }
 
-// multi-assigments
+// multi-assignments
 var a = b = 20;
 
-// multiline-multi-assigments
+// multiline-multi-assignments
 var a 
     = b 
     = 20
