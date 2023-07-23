@@ -41,7 +41,7 @@ There are some guidelines for extensions which have proven one's worth:
 You can go on and refactor whatever you think is necessary to make the code more readable or adept to new .Net versions. 
 However don't make the code slower or more memory-hungry during refactoring. 
 Pay kind attention to details, escpecially all that compiler-sugar ([async](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async)/[await](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await), [yield](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/yield), [lambdas](https://medium.com/criteo-engineering/beware-lambda-captures-383efe3a4345), [Patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns), [LINQ](https://www.youtube.com/watch?v=Dv_nsoEmC7s&list=PLzQZKn8ki7X1XhXSjaSQpRr4Am1uFK4fo)) and [boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing).
-C# is doing a lot under the hood which you only see when using [dotPeek](https://www.jetbrains.com/decompiler/), [dnSpy](https://github.com/dnSpy/dnSpy), [Reflector](https://www.red-gate.com/products/reflector/), [ILSpy](https://github.com/icsharpcode/ILSpy) or any other decompilation tool.
+C# is doing a lot under the hood which you only see when using [dotPeek](https://www.jetbrains.com/decompiler/), [dnSpy](https://github.com/dnSpy/dnSpy), [Reflector](https://www.red-gate.com/products/reflector/), [ILSpy](https://github.com/icsharpcode/ILSpy), [SharpLab](https://sharplab.io/) or any other decompilation tool.
 You should make yourself comfortable with the [difference](https://www.c-sharpcorner.com/article/stack-vs-heap-memory-c-sharp/) between [heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) and [stack](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/stackalloc) allocations, know the [large object heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap) and its size.
 
 Ask if unsure and [learn](https://www.youtube.com/watch?v=Tb2Fx9qku_o) about [micro-optimizations](https://www.specbranch.com/posts/intro-to-micro-optimization/) and [why they are needed](https://medium.com/google-developers/the-truth-about-preventative-optimizations-ccebadfd3eb5).
@@ -63,15 +63,15 @@ If you gonna fix actions, code, tests or whatever just let me know.
 * everything that is a variable is camelCase: `int myInt = 40;` 
 * everything private/protected is prefixed by underscore: `private string _myText;`
 * constants cry for help: `private const int _MY_SECRET_ID = 0xdeadbeef;`
-* pseudo-consts also cry: `private static readonly string _MY_SECRET_API_KEY = Settings.Default.ApiKey;`
+* pseudo-consts also cry: `public static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
 * methods want to *start doing* something *big*: `public void InsertStuffIntoDatabase() { }`
 * interfaces are selfish: `public interface IKnowBetter { }`
 * generic type parameters do *T*-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
 * enums, enum-members, classes, namespaces, structs, records, properties all use PascalCase: `public class Car { }`
-* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a nested class named `NativeMethods` 
+* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a private nested class named `NativeMethods` 
 
 ### Formatting Style
-* there is not tab, only two spaces for indendation
+* there is no tab, only two spaces for indendation
 * brackets are [K&R](https://en.wikipedia.org/wiki/Indentation_style#K&R_style)-style
 * indent statements in a bracketed scope and also if they are single-statement blocks
 ``` cs
