@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# VSCode
+.vscode/
+
 # User-specific files
 *.suo
 *.user
@@ -304,3 +307,4 @@ Corlib.Extensions/System/IO/FileInfo.T4.cs
 Corlib.Extensions/System/IO/Link.cs
 System.Drawing.Extensions/System/Drawing/Image.cs
 System.Drawing.Extensions/System/Drawing/Point.cs
+

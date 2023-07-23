@@ -25,11 +25,9 @@ There are some guidelines for extensions which have proven one's worth:
 * Every referenced assembly/package should have its own project/assembly
 * Use folders for every part of the namespace
 * Every file in there should have a name that is build like this: "**Type**.cs"
-* The namespace in the files is always the same namespace as the original type is in
 * The classname is always "**Type**Extensions". The class is always "internal/public static partial", thus allowing us to extend it further in a given project
   by adding another partial class with the same name
 * All public methods must be static
-* The first parameter of all "public" methods must be the type itself and is called "**@this**" or alternatively "*This*" (only for old legacy code)
 * For extensions to static classes like "Math" or "Activator",
   there is no "This"-parameter
 * Get a test for your contribution under "Tests" following the examples already in place
@@ -65,10 +63,23 @@ If you gonna fix actions, code, tests or whatever just let me know.
 * constants cry for help: `private const int _MY_SECRET_ID = 0xdeadbeef;`
 * pseudo-consts also cry: `public static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
 * methods want to *start doing* something *big*: `public void InsertStuffIntoDatabase() { }`
-* interfaces are selfish: `public interface IKnowBetter { }`
-* generic type parameters do *T*-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
-* enums, enum-members, classes, namespaces, structs, records, properties all use PascalCase: `public class Car { }`
-* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a private nested class named `NativeMethods` 
+* interfaces are self**I**sh: `public interface IKnowBetter { }`
+* generic type parameters do **T**-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
+* enums, enum-members, classes, namespaces, structs, records, properties all use **PascalCase**: `public class Car { }`
+* anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a private nested class named **NativeMethods**
+``` cs
+public static partial class IntPtrExtensions {
+  private static class NativeMethods {
+    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
+    public static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
+  }
+
+  public static void CopyTo(this IntPtr @this, IntPtr other, int count)
+    => NativeMethods._MemoryCopy(other, @this, count)
+    ;
+}
+```
+* The first parameter of all *public* methods that extend a given class must be the type itself and is called **@this** or alternatively *This* (only for old legacy code)
 
 ### Formatting Style
 * there is no tab, only two spaces for indendation
@@ -186,7 +197,6 @@ result = !input;
 
 ### File Layout
 * usings first
-* use file based namespaces
 * put nested classes up or separate them into partials named *Class.NestedClass.cs*
 * put constants below
 * try to get fields now
@@ -197,8 +207,11 @@ result = !input;
 * partial classes are OK, especially when classes grow big and have logically-connected blocks
 * when having static stuff, move that before the instance members of the same type
 
-### Namespaces
-* order alphabetically (if not logically coherent in a #if-directive)
+### Namespaces and Usings
+* The namespace in the file is always the same namespace as the original type is in
+* use file based namespaces if applicable
+* only one namespace per file
+* order usings alphabetically (if not logically coherent in a #if-directive)
 * no global usings file
 * no global:: prefix
 * try to avoid static aliasing
