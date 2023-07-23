@@ -1,12 +1,13 @@
 # C# Framework Extensions
+
 [![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Build.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Build.yml)
 [![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
 [![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master) ![Activity](https://img.shields.io/github/commit-activity/y/Hawkynt/C--FrameworkExtensions?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/master)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 ![Language](https://img.shields.io/github/languages/top/Hawkynt/C--FrameworkExtensions?color=purple)
 ![LineCount](https://tokei.rs/b1/github/Hawkynt/C--FrameworkExtensions?color=magenta)
-![Size](https://img.shields.io/github/languages/code-size/Hawkynt/C--FrameworkExtensions?color=green) / 
-![Repo-Size](https://img.shields.io/github/repo-size/Hawkynt/C--FrameworkExtensions?color=red)
+![Size](https://img.shields.io/github/languages/code-size/Hawkynt/C--FrameworkExtensions?color=green) /
+ ![Repo-Size](https://img.shields.io/github/repo-size/Hawkynt/C--FrameworkExtensions?color=red)
 [![Stars](https://img.shields.io/github/stars/Hawkynt/C--FrameworkExtensions?color=yellow)](https://github.com/Hawkynt/C--FrameworkExtensions/stargazers)
 [![NuGet.org](https://img.shields.io/badge/Packages_on-NuGet.org-dodgerblue)](https://www.nuget.org/profiles/Hawkynt)
 
@@ -26,6 +27,7 @@ This is the folder where all extensions to .NET classes go.
 | [FrameworkExtensions.PresentationCore](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore) | Extensions to WPF. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.PresentationCore)](https://www.nuget.org/packages/FrameworkExtensions.PresentationCore/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/FrameworkExtensions.PresentationCore)](https://www.nuget.org/stats/packages/FrameworkExtensions.PresentationCore?groupby=Version) |
 
 ## Licensing
+
 * [LGPL-3.0](https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License)
 * give credit to ***Hawkynt*** when using
 * please do **pull**-requests if you add something
@@ -33,4 +35,5 @@ This is the folder where all extensions to .NET classes go.
 * always deliver the [LICENSE](https://www.gnu.org/licenses/lgpl-3.0.txt) file to your code's customer
 
 ## Rules
+
 See [CONTRIBUTING](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/CONTRIBUTING.md)

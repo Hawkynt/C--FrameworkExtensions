@@ -4,7 +4,8 @@
 
 These extensions are meant to be extended by everyone who is firm in [C#](https://dotnet.microsoft.com/en-us/learn/csharp).
 
-I appreciate every idea making these classes 
+I appreciate every idea making these classes
+
 * go faster
 * use less memory
 * have more throughput
@@ -14,6 +15,7 @@ I appreciate every idea making these classes
   
 However, this is not my daily business and I kindly ask you for some time to read through your pull-requests and issues.
 Please make it as easy for me as you can by avoiding things like
+
 * different code style
 * hard-to-figure-out-stuff without meaningful comments
 * huge changesets (try to push more often, that helps)
@@ -22,6 +24,7 @@ Please make it as easy for me as you can by avoiding things like
 ## So, you are brave enough?
 
 There are some guidelines for extensions which have proven one's worth:
+
 * Every referenced assembly/package should have its own project/assembly
 * Use folders for every part of the namespace
 * Every file in there should have a name that is build like this: "**Type**.cs"
@@ -36,8 +39,8 @@ There are some guidelines for extensions which have proven one's worth:
 
 ## Are you keen on refactoring?
 
-You can go on and refactor whatever you think is necessary to make the code more readable or adept to new .Net versions. 
-However don't make the code slower or more memory-hungry during refactoring. 
+You can go on and refactor whatever you think is necessary to make the code more readable or adept to new .Net versions.
+However don't make the code slower or more memory-hungry during refactoring.
 Pay kind attention to details, escpecially all that compiler-sugar ([async](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async)/[await](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await), [yield](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/yield), [lambdas](https://medium.com/criteo-engineering/beware-lambda-captures-383efe3a4345), [Patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns), [LINQ](https://www.youtube.com/watch?v=Dv_nsoEmC7s&list=PLzQZKn8ki7X1XhXSjaSQpRr4Am1uFK4fo)) and [boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing).
 C# is doing a lot under the hood which you only see when using [dotPeek](https://www.jetbrains.com/decompiler/), [dnSpy](https://github.com/dnSpy/dnSpy), [Reflector](https://www.red-gate.com/products/reflector/), [ILSpy](https://github.com/icsharpcode/ILSpy), [SharpLab](https://sharplab.io/) or any other decompilation tool.
 You should make yourself comfortable with the [difference](https://www.c-sharpcorner.com/article/stack-vs-heap-memory-c-sharp/) between [heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) and [stack](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/stackalloc) allocations, know the [large object heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap) and its size.
@@ -49,16 +52,17 @@ BTW: I am using JetBrains [ReSharper](https://www.jetbrains.com/resharper/) so d
 
 ## Hardcore-Fixer?
 
-Everyone can learn new things and nobody is perfect. 
-Some things just don't work yet like I like them to be. 
+Everyone can learn new things and nobody is perfect.
+Some things just don't work yet like I like them to be.
 If you gonna fix actions, code, tests or whatever just let me know.
 
 ## Code-Conventions
 
 ### Naming Style
+
 * based loosely on Microsoft [guidelines](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
 * using [camelCase](https://www.theserverside.com/answer/Pascal-case-vs-camel-case-Whats-the-difference) `changeTheWorld` and [PascalCase](https://www.freecodecamp.org/news/snake-case-vs-camel-case-vs-pascal-case-vs-kebab-case-whats-the-difference/) `LeaveAsIs`
-* everything that is a variable is camelCase: `int myInt = 40;` 
+* everything that is a variable is camelCase: `int myInt = 40;`
 * everything private/protected is prefixed by underscore: `private string _myText;`
 * constants cry for help: `private const int _MY_SECRET_ID = 0xdeadbeef;`
 * pseudo-consts also cry: `public static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
@@ -67,6 +71,7 @@ If you gonna fix actions, code, tests or whatever just let me know.
 * generic type parameters do **T**-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
 * enums, enum-members, classes, namespaces, structs, records, properties all use **PascalCase**: `public class Car { }`
 * anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a private nested class named **NativeMethods**
+
 ``` cs
 public static partial class IntPtrExtensions {
   private static class NativeMethods {
@@ -79,12 +84,15 @@ public static partial class IntPtrExtensions {
     ;
 }
 ```
+
 * The first parameter of all *public* methods that extend a given class must be the type itself and is called **@this** or alternatively *This* (only for old legacy code)
 
 ### Formatting Style
+
 * there is no tab, only two spaces for indendation
 * brackets are [K&R](https://en.wikipedia.org/wiki/Indentation_style#K&R_style)-style
 * indent statements in a bracketed scope and also if they are single-statement blocks
+
 ``` cs
 public void TestStuff(bool assertionFailed) {
   if (assertionFailed)
@@ -95,7 +103,9 @@ public void TestStuff(bool assertionFailed) {
   }
 }
 ```
+
 * when, for whatever reason, you need to shorten lines, do so at operators or after commas and indent
+
 ``` cs
 public void MarkStuff(
   string text,
@@ -133,6 +143,7 @@ public void ShowMeExpressions()
 ```
 
 * regions go where code goes
+
 ``` cs
 class TaxiDriver {
 
@@ -147,10 +158,10 @@ class TaxiDriver {
   #endregion
 
 }
-
 ```
 
 * the only valid way to indent switch-statements is this
+
 ``` cs
 switch (onWhateverVariable) {
   case 0:   // single line statement
@@ -169,6 +180,7 @@ switch (onWhateverVariable) {
 ```
 
 * there is lots of space(s) but never more than one contiguous blank line
+
 ``` cs
 var spacesBefore = "andAfterEqualSigns";
 var spaces = "BeforeAnd" + "AfterOperators";
@@ -185,6 +197,7 @@ return "successfully typed spaces";
 ```
 
 * put spaces around operators but beware of these special cases
+
 ``` cs
 ++i;
 j++;
@@ -196,6 +209,7 @@ result = !input;
 ```
 
 ### File Layout
+
 * usings first
 * put nested classes up or separate them into partials named *Class.NestedClass.cs*
 * put constants below
@@ -208,6 +222,7 @@ result = !input;
 * when having static stuff, move that before the instance members of the same type
 
 ### Namespaces and Usings
+
 * The namespace in the file is always the same namespace as the original type is in
 * use file based namespaces if applicable
 * only one namespace per file
@@ -217,8 +232,10 @@ result = !input;
 * try to avoid static aliasing
 
 ### Syntax Style
+
 * use `var` for all declarations possible
 * spare the type after new if the compiler knows what you doing, use together with var to your maximum saving of typing
+
 ``` cs
 // BAD:
 Dictionary<string, List<string>> cache = new Dictionary<string, List<string>>();
@@ -229,7 +246,9 @@ Dictionary<string, List<string>> cache = new();
 // ALSO GOOD:
 var cache = new Dictionary<string, List<string>>();
 ```
+
 * when assigning `null` or `default`, prefer explicit type over var
+
 ``` cs
 // BAD:
 var cache = (Dictionary<string, List<string>>)null;
@@ -244,10 +263,12 @@ Dictionary<string, List<string>> cache = null;
 // ALSO GOOD:
 Dictionary<string, List<string>> cache = default;
 ```
+
 * use `this.` for everything that accesses an instance member
 * use keywords for types when available (like `string`, `int`, `float`, `bool`)
 * use explicit access modifiers (like `public`, `internal`)
 * use expression bodies when possible
+
 ``` cs
 // BAD:
 public int CalculateStuff() {
@@ -264,6 +285,7 @@ public double CalculateTheThirdStuff()
 ```
 
 * use anonymous/calculated properties when possible
+
 ``` cs
 //BAD:
 private int _chargeBackingField;
@@ -297,6 +319,7 @@ public int Charge { get; set; }
 ```
 
 * use property and collection initializer syntax when applicable
+
 ``` cs
 // BAD:
 var guest = new User();
@@ -412,7 +435,9 @@ public static void ArgumentOutOfRangeException(string parameterName, string mess
 ```
 
 ### Other stuff
+
 * the endless loop lets the for cry
+
 ``` cs
 for (;;) {
   ...
@@ -420,6 +445,7 @@ for (;;) {
 ```
 
 * for-[loops](https://softwareengineering.stackexchange.com/a/164554/33478) use prefix increment/decrement
+
 ``` cs
 // BAD:
 for (var i = 0; i < 100; i++) { ... }
@@ -429,6 +455,7 @@ for (var i = 0; i < 100; ++i) { ... }
 ```
 
 * some tricky stuff is welcome as an exercise for the reader
+
 ``` cs
 // for without init
 for (; j != 20 ; ++j) { ... }
@@ -454,13 +481,14 @@ while ( (c = 20) < 100 ) { ... }
 
 * do not depend on more than [Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) and [Corlib.Extensions](https://www.nuget.org/packages/FrameworkExtensions.Corlib)
 
-
 ### Architecture
+
 * use [design-patterns](https://en.wikipedia.org/wiki/Software_design_pattern)
 * use [SOLID](https://en.wikipedia.org/wiki/SOLID)
 * when you violate stuff on purpose, comment why you did so
 
 ### Try to have fun
+
 * not everything is set in stone
 * there are the "it depends"-cases
 * there's always a "does-not-fit-here"-case
