@@ -25,6 +25,10 @@ using System.Linq;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 #endif
+using System.Diagnostics;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 namespace System.Collections.Generic; 
 
@@ -34,6 +38,22 @@ public
 internal
 #endif
 static partial class ListExtensions {
+
+  /// <summary>
+  /// Implements a faster shortcut for LINQ's .Any()
+  /// </summary>
+  /// <param name="this">This <see cref="IList{T}"/></param>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <returns><see langword="true"/> if there is at least one item in the <see cref="IList{T}"/>; otherwise, <see langword="false"/>.</returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
+  public static bool Any<TItem>(this IList<TItem> @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Count > 0;
+  }
 
   /// <summary>
   /// Tries to get the first item.
@@ -148,6 +168,38 @@ static partial class ListExtensions {
   }
 
 #if SUPPORTS_READ_ONLY_COLLECTIONS
+  
+  /// <summary>
+  /// Implements a faster shortcut for LINQ's .Any()
+  /// </summary>
+  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <returns><see langword="true"/> if there is at least one item in the <see cref="IReadOnlyList{T}"/>; otherwise, <see langword="false"/>.</returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
+  public static bool Any<TItem>(this IReadOnlyList<TItem> @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Count > 0;
+  }
+
+  /// <summary>
+  /// Implements a faster shortcut for LINQ's .Any()
+  /// </summary>
+  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <returns><see langword="true"/> if there is at least one item in the <see cref="List{T}"/>; otherwise, <see langword="false"/>.</returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
+  public static bool Any<TItem>(this List<TItem> @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Count > 0;
+  }
 
   /// <summary>
   /// Tries to get the first item.
@@ -421,8 +473,9 @@ static partial class ListExtensions {
   /// Adds the items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
-  /// <param name="this">This IList.</param>
+  /// <param name="this">This <see cref="IList{T}"/>.</param>
   /// <param name="items">The items.</param>
+  [DebuggerStepThrough]
   public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(items);
@@ -438,11 +491,32 @@ static partial class ListExtensions {
   }
 
   /// <summary>
+  /// Adds a range of items.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This <see cref="ICollection{T}"/>.</param>
+  /// <param name="items">The items.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
+  public static void AddRange<TItem>(this List<TItem> @this, IEnumerable<TItem> items) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
+    @this.AddRange(items);
+  }
+
+  /// <summary>
   /// Adds if not null.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
-  /// <param name="this">This IList.</param>
+  /// <param name="this">This <see cref="IList{T}"/>.</param>
   /// <param name="item">The item.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
     Against.ThisIsNull(@this);
 
@@ -546,6 +620,10 @@ static partial class ListExtensions {
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
     Against.ThisIsNull(@this);
 
@@ -559,6 +637,10 @@ static partial class ListExtensions {
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
     Against.ThisIsNull(@this);
 

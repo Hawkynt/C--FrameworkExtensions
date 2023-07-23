@@ -59,8 +59,8 @@ static partial class CollectionExtensions {
   /// <param name="this">The collection.</param>
   /// <param name="action">The call to execute.</param>
   public static void ForEach<TValue>(this ICollection<TValue> @this, Action<TValue> action) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(action);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     Array.ForEach(@this.ToArray(), action);
   }
@@ -73,9 +73,13 @@ static partial class CollectionExtensions {
   /// <param name="this">The collection.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static TOut[] ConvertAll<TIn, TOut>(this ICollection<TIn> @this, Converter<TIn, TOut> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     return Array.ConvertAll(@this.ToArray(), converter);
   }
@@ -84,11 +88,11 @@ static partial class CollectionExtensions {
   /// Adds a range of items.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This Collection.</param>
+  /// <param name="this">This <see cref="ICollection{T}"/>.</param>
   /// <param name="items">The items.</param>
   public static void AddRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(items);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     // PERF: check for special list first
     if (@this is List<TItem> list) {
@@ -106,9 +110,13 @@ static partial class CollectionExtensions {
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Collection.</param>
   /// <param name="items">The items.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static void RemoveRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(items);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     foreach (var item in items)
       @this.Remove(item);
@@ -124,7 +132,7 @@ static partial class CollectionExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsSingle<TValue>(this ICollection<TValue> @this) {
-    Guard.Against.ThisIsNull(@this);  
+    Against.ThisIsNull(@this);  
     return @this.Count == 1;
   }
 
@@ -138,7 +146,7 @@ static partial class CollectionExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsMultiple<TValue>(this ICollection<TValue> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Count > 1;
   }
 
@@ -152,7 +160,7 @@ static partial class CollectionExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNoSingle<TValue>(this ICollection<TValue> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Count != 1;
   }
 
@@ -166,7 +174,7 @@ static partial class CollectionExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNoMultiple<TValue>(this ICollection<TValue> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     return @this.Count <= 1;
   }
 }

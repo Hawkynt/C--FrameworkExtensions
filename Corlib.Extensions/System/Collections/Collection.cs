@@ -53,11 +53,15 @@ static partial class CollectionExtensions {
   /// <summary>
   /// Executes an action on each item.
   /// </summary>
-  /// <param name="this">The collection.</param>
+  /// <param name="this">The <see cref="ICollection"/>.</param>
   /// <param name="call">The call to execute.</param>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static void ForEach(this ICollection @this, Action<object> call) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(call);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(call);
 
     foreach (var value in @this)
       call(value);
@@ -66,12 +70,16 @@ static partial class CollectionExtensions {
   /// Converts all.
   /// </summary>
   /// <typeparam name="TOUT">The type of the output collection.</typeparam>
-  /// <param name="this">The collection to convert.</param>
+  /// <param name="this">The <see cref="ICollection"/> to convert.</param>
   /// <param name="converter">The converter.</param>
   /// <returns></returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static TOUT[] ConvertAll<TOUT>(this ICollection @this, Converter<object, TOUT> converter) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(converter);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
 
     return (
       from object data in @this
@@ -82,10 +90,14 @@ static partial class CollectionExtensions {
   /// <summary>
   /// Copies the collection into an array.
   /// </summary>
-  /// <param name="this">This ICollection.</param>
+  /// <param name="this">This <see cref="ICollection"/>.</param>
   /// <returns>An array containing all elements.</returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
   public static object[] ToArray(this ICollection @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var len = @this.Count;
     var result = new object[len];
