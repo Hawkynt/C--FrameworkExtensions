@@ -19,7 +19,12 @@
 */
 #endregion
 
+using Guard;
 using System.Linq;
+using System.Diagnostics;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 namespace System.Collections; 
 
@@ -29,6 +34,22 @@ public
 internal
 #endif
 static partial class CollectionExtensions {
+
+  /// <summary>
+  /// Implements a faster shortcut for LINQ's .Any()
+  /// </summary>
+  /// <param name="this">This <see cref="ICollection"/></param>
+  /// <returns><see langword="true"/> if there is at least one item in the <see cref="ICollection"/>; otherwise, <see langword="false"/>.</returns>
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  [DebuggerStepThrough]
+  public static bool Any(this ICollection @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Count > 0;
+  }
+
   /// <summary>
   /// Executes an action on each item.
   /// </summary>
