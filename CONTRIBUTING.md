@@ -27,7 +27,7 @@ There are some guidelines for extensions which have proven one's worth:
 
 * Every referenced assembly/package should have its own project/assembly
 * Use folders for every part of the namespace
-* Every file in there should have a name that is build like this: "**Type***.cs*"
+* Every file in there should have a name that is build like this: "**Type** *.cs*"
 * The classname is always "**Type***Extensions*". The class is always `internal/public static partial`, thus allowing us to extend it further in a given project by adding another partial class with the same name
 * All **public** methods must be **static**
 * For extensions to static classes like **Math** or **Activator**,
@@ -42,7 +42,7 @@ You can go on and refactor whatever you think is necessary to make the code more
 However don't make the code slower or more memory-hungry during refactoring.
 Pay kind attention to details, escpecially all that compiler-sugar ([async](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/async)/[await](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await), [yield](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/yield), [lambdas](https://medium.com/criteo-engineering/beware-lambda-captures-383efe3a4345), [Patterns](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns), [LINQ](https://www.youtube.com/watch?v=Dv_nsoEmC7s&list=PLzQZKn8ki7X1XhXSjaSQpRr4Am1uFK4fo)) and [boxing](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing).
 C# is doing a lot under the hood which you only see when using [dotPeek](https://www.jetbrains.com/decompiler/), [dnSpy](https://github.com/dnSpy/dnSpy), [Reflector](https://www.red-gate.com/products/reflector/), [ILSpy](https://github.com/icsharpcode/ILSpy), [SharpLab](https://sharplab.io/) or any other decompilation tool.
-You should make yourself comfortable with the [difference](https://www.c-sharpcorner.com/article/stack-vs-heap-memory-c-sharp/) between [heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) and [stack](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/stackalloc) allocations, know the [large object heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap) and its size.
+You should make yourself comfortable with the [difference](https://www.c-sharpcorner.com/article/stack-vs-heap-memory-c-sharp/) between [heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals) and [stack](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/stackalloc) allocations, know the [large object heap](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap) and its size ([~82KB](https://devblogs.microsoft.com/dotnet/large-object-heap-uncovered-from-an-old-msdn-article/)).
 
 Ask if unsure and [learn](https://www.youtube.com/watch?v=Tb2Fx9qku_o) about [micro-optimizations](https://www.specbranch.com/posts/intro-to-micro-optimization/) and [why they are needed](https://medium.com/google-developers/the-truth-about-preventative-optimizations-ccebadfd3eb5).
 If you really feel it, create benchmark code under "Tests" like the one already in place.
@@ -67,8 +67,12 @@ If you gonna fix actions, code, tests, docs or whatever just let me know.
 * pseudo-consts also cry: `public static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
 * methods want to *start doing* something *big*: `public void InsertStuffIntoDatabase() { }`
 * interfaces are self**I**sh: `public interface IKnowBetter { }`
+* abstract classes prefix with **A**: `public abstract class AKnowBetterBase { }`
 * generic type parameters do **T**-poses: `public void DoThatThing<TItem, TResult>(Func<TItem, TResult> renderer) { }`
 * enums, enum-members, classes, namespaces, structs, records, properties all use **PascalCase**: `public class Car { }`
+* avoid acronyms if they're not globally known (e.g. Id)
+* if "proper names" are used, convert them to camelCase/PascalCase: `public static void DoForIetfLanguageTag`
+* *bool*s want to start with something like *Has*, *Can*, *Exists*, *Contains*, *Try*
 * anything doing [P/Invoke](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke) is in a **private nested class** named **NativeMethods**
 
 ``` cs
@@ -90,6 +94,37 @@ public static partial class IntPtrExtensions {
 
 * there is no tab, only two spaces for indendation
 * brackets are [K&R](https://en.wikipedia.org/wiki/Indentation_style#K&R_style)-style
+* try to avoid nesting using multiple return-statements for shortcuts even though this means code duplication
+
+``` cs
+// BAD:
+public void CheckInFile(File file) {
+  if (file != null) {
+    if (file.IsCheckedOut) {
+      if(file.IsOpen) {
+        file.Close();
+      }
+
+      file.CheckIn();
+    }
+  }
+}
+
+// GOOD:
+public void CheckInFile(File file) {
+  if (file == null)
+    return;
+
+  if (!file.IsCheckedOut)
+    return;
+  
+  if(file.IsOpen)
+    file.Close();
+
+  file.CheckIn();
+}
+```
+
 * indent statements in a bracketed scope and also if they are single-statement blocks
 
 ``` cs
@@ -159,6 +194,25 @@ class TaxiDriver {
 }
 ```
 
+* pre-processor directives always start left
+
+``` cs
+class TaxiDriver {
+
+  // BAD:
+  #if ALLOW_TAXI_CTOR
+  public TaxiDriver() { }
+  #endif
+
+  // GOOD:
+#if ALLOW_TAXI_DTOR
+  ~TaxiDriver() { }
+#endif
+
+}
+
+```
+
 * the only valid way to indent switch-statements is this
 
 ``` cs
@@ -207,6 +261,8 @@ copy = *pointer;
 result = !input;
 ```
 
+* try to get methods on one screen page (ca. 60 lines of code, max. 120 characters per line)
+
 ### File Layout
 
 * usings first
@@ -219,6 +275,29 @@ result = !input;
 * if a field is only needed for a single method (e.g. backing field, memoization cache), put it directly in front of the method
 * partial classes are OK, especially when class-files grow big and have logically-connected blocks - name them **ClassName.BlockName.cs**
 * when having static stuff, move that before the instance members of the same type
+* when attributing stuff, make sure each attribute gets its own line and brackets - merge with parameters if single attribute
+
+``` cs
+// BAD:
+[NotNullWhen(true), MethodImpl(MethodImplOptions.AggressiveInlining)]
+bool DoStuff( [NotNull, Localizable] string a) { }
+
+[MethodImpl(MethodImplOptions.AggressiveInlining)]bool DoStuff2(
+  [NotNull] string b
+) { }
+
+// GOOD:
+[NotNullWhen(true)]
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+bool DoStuff(
+  [NotNull]
+  [Localizable] 
+  string a
+) { }
+
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+bool DoStuff2([NotNull] string b) { }
+```
 
 ### Namespaces and Usings
 
@@ -266,6 +345,37 @@ Dictionary<string, List<string>> cache = default;
 * use `this.` for everything that accesses an instance member
 * use keywords for types when available (like `string`, `int`, `float`, `bool`)
 * use explicit access modifiers (like `public`, `protected`, `private`, `internal`)
+* don't forget to dispose, use `using`-Blocks if possible, use the right `try { } finally { }`-pattern when needed
+
+``` cs
+// BAD:
+var myDisposable = new DisposableClass();
+...
+myDisposeable.Dispose();
+
+// WORSE:
+var myDisposable = new DisposableClass();
+...
+
+// BETTER: if needed because something hasn't IDisposable implemented
+DisposableClass myDisposable = null;
+try {
+  myDisposable = new DisposableClass();
+  ...
+} finally {
+  myDisposable?.Dispose();
+}
+
+// GOOD:
+using (var myDisposable = new DisposableClass()) {
+  ...
+}
+
+// ALSO GOOD: auto-dipose upon end of current scope
+using var myDisposable = new DisposableClass();
+...
+```
+
 * use expression bodies when possible
 
 ``` cs
@@ -328,19 +438,118 @@ public int Charge { get; set; }
 var guest = new User();
 guest.Name = "Alex";
 
+var guest2 = new User();
+guest2.Name = "Michael";
+guest2.Age = 32;
+
 var guests = new List<User>();
 guests.Add(guest);
+guests.Add(guest2);
 
 // GOOD:
 var guest = new User { Name = "Alex" };
-var guests = new List<User> { guest };
+var guest2 = new User { Name = "Michael", Age = 32 };
+var guests = new List<User> { guest, guest2 };
 
-// GOOD: combining with inlining in simple statements is OK
-var guests = new List<User> { new User { Name = "Alex" } };
+// GOOD: combining with inlining on single line in simple statements is OK
+var alexOnly = new List<User> { new User { Name = "Alex" } };
+
+// GOOD: using line-breaks to see what's going on
+var guests = new List<User> { 
+  new User { Name = "Alex" },
+  new User { Name = "Michael", Age = 32 }
+};
+
+// ALSO GOOD: sometimes property lists are longer than in this example
+var guests = new List<User> { 
+  new User { 
+    Name = "Alex" 
+  },
+  new User { 
+    Name = "Michael", 
+    Age = 32 
+  }
+};
 ```
 
 * learn about postfix and prefix operators if you don't know the [difference](https://riptutorial.com/csharp/example/8183/postfix-and-prefix-increment-and-decrement) yet
 * seal nested classes to improve [performance](https://www.meziantou.net/performance-benefits-of-sealed-class.htm)
+* use ternary-operator if possible
+
+``` cs
+// BAD:
+if ( c < 15)
+  return "below";
+else
+  return "above";
+
+// GOOD:
+return c < 15 ? "below" : "above";
+```
+
+* don't reserve empty blocks to make room for the "future"
+
+``` cs
+// BAD:
+if ( i > 25) {
+  ...
+} else { 
+  // in case we need the else someday
+}
+
+switch (j) {
+  case 1:
+    // in case we need this someday
+    break;
+  case 2:
+    return "OK";
+  default:
+    // in case we need this someday
+    break;
+}
+
+// GOOD:
+if ( i > 25) {
+  ...
+}
+
+switch (j) {
+  case 2:
+    return "OK";
+  case 1:
+  default:
+    throw new NotSupportedException();
+}
+
+// in this case it would be even better to use this code
+if (j == 2)
+  return "OK";
+
+throw new NotSupportedException();
+```
+
+* try to avoid methods with more than 8 parameters and using *Tuples* with more than 5 type-parameters
+* instead of using [optional values](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/named-and-optional-arguments) in parameters, prefer overloads (optional values are baked into [caller-site](https://stackoverflow.com/questions/30317625/does-adding-optional-parameters-change-method-signatures-and-would-it-trigger-me) and are hard to change afterwards)
+
+``` cs
+// BAD:
+public static void DoRandomStuff(this string @this, int startAt = 0, int count = -1) {
+  ...
+}
+
+// GOOD:
+public static void DoRandomStuff(this string @this) 
+  => DoRandomStuff(@this, 0, -1)
+  ;
+
+public static void DoRandomStuff(this string @this, int startAt)
+  => DoRandomStuff(@this, startAt, -1)
+  ;
+
+public static void DoRandomStuff(this string @this, int startAt, int count) {
+  ...
+}
+```
 
 ### Null-Checking and validation
 
@@ -437,11 +646,51 @@ public static void NoCokeYetException() => throw new NoCokeYetException();
 <#}#>
 ```
 
-* use [T4](https://learn.microsoft.com/en-us/visualstudio/modeling/code-generation-and-t4-text-templates) to save you from writing nearly identical code in general, name the [text-templating](https://learn.microsoft.com/en-us/visualstudio/modeling/guidelines-for-writing-t4-text-templates) files **ClassName.T4.tt**
+* wrap methods inside the *NativeMethods* class and handle exceptions and type conversion there
+
+``` cs
+public static partial class IntPtrExtensions {
+
+  private static class NativeMethods {
+
+    public interface IWindowHandle { }
+
+    private readonly record struct WindowHandle(IntPtr Handle) : IWindowHandle {
+      public static bool IsInvalid(IntPtr handle) => handle == IntPtr.Zero || (long)handle < 0;
+    }
+    
+    [DllImport("user32.dll", SetLastError = true, EntryPoint = "FindWindow")]
+    private static extern IntPtr _FindWindow(string lpClassName, string lpWindowName);
+
+    public static IWindowHandle FindWindow(string lpClassName, string lpWindowName) {
+      var result = _FindWindow( lpClassName, lpWindowName);
+      if (WindowHandle.IsInvalid(result))
+        throw new Win32Exception();
+
+      return new WindowHandle(result);
+    }
+
+    [DllImport("user32.dll", SetLastError = true, EntryPoint = "SetForegroundWindow")]
+    private static extern bool _SetForegroundWindow(IntPtr hWnd);
+
+    public static void SetForegroundWindow(IWindowHandle hWnd) {
+      if (hWnd is not WindowHandle handle)
+        throw new InvalidOperationException("Window handle not created from within this class");
+
+      if (_SetForegroundWindow(handle.Handle))
+        return;
+
+      throw new Win32Exception();
+    }
+
+  }
+}
+```
 
 ### Other stuff
 
-* the endless loop lets the for cry
+* use [T4](https://learn.microsoft.com/en-us/visualstudio/modeling/code-generation-and-t4-text-templates) to save you from writing nearly identical code in general, name the [text-templating](https://learn.microsoft.com/en-us/visualstudio/modeling/guidelines-for-writing-t4-text-templates) files **ClassName.T4.tt**
+* the endless loop lets the *for* cry
 
 ``` cs
 for (;;) {
@@ -449,7 +698,7 @@ for (;;) {
 }
 ```
 
-* for-[loops](https://softwareengineering.stackexchange.com/a/164554/33478) use prefix increment/decrement
+* *for*-[loops](https://softwareengineering.stackexchange.com/a/164554/33478) use prefix increment/decrement
 
 ``` cs
 // BAD:
@@ -483,6 +732,22 @@ var a
 // even in conditions
 while ( (c = 20) < 100 ) { ... }
 ```
+
+* don't trust in the intelligence of the compiler and read about
+
+  - [Block-Processing](https://www.c-sharpcorner.com/article/fast-equality-comparison/)
+  - [Branchless-Assignments](https://blog.joberty.com/branchless-programming-why-your-cpu-will-thank-you/)
+  - [Bounds-Checks](https://www.codeproject.com/articles/844781/digging-into-net-loop-performance-bounds-checking) and how to [get rid](https://tooslowexception.com/getting-rid-of-array-bound-checks-ref-returns-and-net-5/) of them
+  - [Cache-Blocking](https://www.intel.com/content/www/us/en/developer/articles/technical/cache-blocking-techniques.html)
+  - [Duff's-Device](https://en.wikipedia.org/wiki/Duff%27s_device)
+  - [Branch-Tables](https://en.wikipedia.org/wiki/Branch_table)
+  - [Loop Optimization](https://en.wikipedia.org/wiki/Loop_optimization) and [Unrolling](https://en.wikipedia.org/wiki/Loop_unrolling) (T4 can assist here)
+  - [Out-of-order execution](https://en.wikipedia.org/wiki/Register_renaming)
+  - [Non-Blocking](https://en.wikipedia.org/wiki/Non-blocking_algorithm)
+  - [Pre-Allocation](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.-ctor?view=net-7.0#system-collections-generic-list-1-ctor(system-int32)) and [Object-Pooling](https://en.wikipedia.org/wiki/Object_pool_pattern)
+  - [Spans](https://www.codemag.com/Article/2207031/Writing-High-Performance-Code-Using-SpanT-and-MemoryT-in-C)
+  - how to turn [Recursion to Iteration](https://www.baeldung.com/cs/convert-recursion-to-iteration) using [Stacks](https://www.cs.odu.edu/~zeil/cs361/latest/Public/recursionConversion/index.html), [Queues](https://stackoverflow.com/questions/159590/way-to-go-from-recursion-to-iteration) and [Tail-Calls](https://thomaslevesque.com/2011/09/02/tail-recursion-in-c/)
+  - [Tail-Calls](https://github.com/dotnet/runtime/issues/2191) in general
 
 * do not depend on more than [Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) and [Corlib.Extensions](https://www.nuget.org/packages/FrameworkExtensions.Corlib)
 
