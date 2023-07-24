@@ -931,7 +931,23 @@ public class StringTests {
     ExecuteTest(() => input.EndsNotWithAny(comparison, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
     ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparison), !expected, exception);
   }
- 
-  // TODO: ContainsAny
 
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, true)]
+  [TestCase("a", "", StringComparison.Ordinal, false)]
+  [TestCase("a", "|", StringComparison.Ordinal, true)]
+  [TestCase("a", "!", StringComparison.Ordinal, true)]
+
+  public void ContainsAnyOfString(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.ContainsAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), comparison), expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), comparison), !expected, exception);
+  }
+  
 }

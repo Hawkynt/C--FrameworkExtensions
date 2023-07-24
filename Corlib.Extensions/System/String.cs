@@ -2645,48 +2645,111 @@ internal
     return false;
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool ContainsNot(this string @this, string value) => !@this.Contains(value);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool ContainsNot(this string @this, string value, StringComparison comparisonType) => !@this.Contains(value, comparisonType);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool ContainsNot(this string @this, string value, StringComparer comparer) => !@this.Contains(value, comparer);
 
   #endregion
 
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool ContainsAny(
-    this string This,
-    params string[] other
-  ) => ContainsAny(This, (IEnumerable<string>)other);
+  #region ContainsAny/ContainsNotAny
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool ContainsAny(
-    this string This,
-    StringComparison comparisonType,
-    params string[] other
-  ) => ContainsAny(This, other, comparisonType);
-  
-  /// <summary>
-  /// Determines whether a given string contains one of others.
-  /// </summary>
-  /// <param name="This">This string.</param>
-  /// <param name="other">The strings to look for.</param>
-  /// <param name="comparisonType">Type of the comparison.</param>
-  /// <returns>
-  ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
-  /// </returns>
+  public static bool ContainsAny(this string @this, params string[] other) => ContainsAny(@this, other, StringComparison.CurrentCulture);
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(other != null);
+  public static bool ContainsAny(this string @this, StringComparison comparisonType, params string[] other) => ContainsAny(@this, other, comparisonType);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    return other.Any(item => This.Contains(item, comparisonType));
+  public static bool ContainsAny(this string @this, StringComparer comparer, params string[] other) => ContainsAny(@this, other, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAny(this string @this, IEnumerable<string> other) => ContainsAny(@this, other, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Determines whether a given <see cref="String"/> contains one of others.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="other">The strings to look for.</param>
+  /// <param name="comparisonType">Type of the comparison.</param>
+  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="String"/>; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAny(this string @this, IEnumerable<string> other, StringComparison comparisonType) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+
+    return other.Any(item => @this.Contains(item ?? string.Empty, comparisonType));
   }
+
+  /// <summary>
+  /// Determines whether a given <see cref="String"/> contains one of others.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="other">The strings to look for.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons.</param>
+  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="String"/>; otherwise, <see langword="false"/>. </returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAny(this string @this, IEnumerable<string> other, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+    Against.ArgumentIsNull(comparer);
+
+    return other.Any(item => @this.Contains(item ?? string.Empty, comparer));
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, params string[] other) => !ContainsAny(@this, other, StringComparison.CurrentCulture);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, StringComparison comparisonType, params string[] other) => !ContainsAny(@this, other, comparisonType);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, StringComparer comparer, params string[] other) => !ContainsAny(@this, other, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, IEnumerable<string> other) => !ContainsAny(@this, other, StringComparison.CurrentCulture);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, IEnumerable<string> other, StringComparison comparison) => !ContainsAny(@this, other, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsNotAny(this string @this, IEnumerable<string> other, StringComparer comparer) => !ContainsAny(@this, other, comparer);
+
+  #endregion
 
   /// <summary>
   /// Checks whether the given string matches any of the provided
