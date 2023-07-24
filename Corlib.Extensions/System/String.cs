@@ -50,7 +50,7 @@ public
 #else
 internal
 #endif
-static partial class StringExtensions {
+  static partial class StringExtensions {
   #region consts
 
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
@@ -60,48 +60,51 @@ static partial class StringExtensions {
   /// It allows us to use names for these ports if we want to.
   /// </summary>
   private static readonly Dictionary<string, ushort> _OFFICIAL_PORT_NAMES = new() {
-    {"tcpmux", 1},
-    {"echo", 7},
-    {"discard", 9},
-    {"daytime", 13},
-    {"quote", 17},
-    {"chargen", 19},
-    {"ftp", 21},
-    {"ssh", 22},
-    {"telnet", 23},
-    {"smtp", 25},
-    {"time", 37},
-    {"whois", 43},
-    {"dns", 53},
-    {"mtp", 57},
-    {"tftp", 69},
-    {"gopher", 70},
-    {"finger", 79},
-    {"http", 80},
-    {"kerberos", 88},
-    {"pop2", 109},
-    {"pop3", 110},
-    {"ident", 113},
-    {"auth", 113},
-    {"sftp", 115},
-    {"sql", 118},
-    {"nntp", 119},
-    {"ntp", 123},
-    {"imap", 143},
-    {"bftp", 152},
-    {"sgmp", 153},
-    {"snmp", 161},
-    {"snmptrap", 162},
-    {"irc", 194},
-    {"ipx", 213},
-    {"mpp", 218},
-    {"imap3", 220},
-    {"https", 443},
-    {"rip", 520},
-    {"rpc", 530},
-    {"nntps", 563},
+    { "tcpmux", 1 },
+    { "echo", 7 },
+    { "discard", 9 },
+    { "daytime", 13 },
+    { "quote", 17 },
+    { "chargen", 19 },
+    { "ftp", 21 },
+    { "ssh", 22 },
+    { "telnet", 23 },
+    { "smtp", 25 },
+    { "time", 37 },
+    { "whois", 43 },
+    { "dns", 53 },
+    { "mtp", 57 },
+    { "tftp", 69 },
+    { "gopher", 70 },
+    { "finger", 79 },
+    { "http", 80 },
+    { "kerberos", 88 },
+    { "pop2", 109 },
+    { "pop3", 110 },
+    { "ident", 113 },
+    { "auth", 113 },
+    { "sftp", 115 },
+    { "sql", 118 },
+    { "nntp", 119 },
+    { "ntp", 123 },
+    { "imap", 143 },
+    { "bftp", 152 },
+    { "sgmp", 153 },
+    { "snmp", 161 },
+    { "snmptrap", 162 },
+    { "irc", 194 },
+    { "ipx", 213 },
+    { "mpp", 218 },
+    { "imap3", 220 },
+    { "https", 443 },
+    { "rip", 520 },
+    { "rpc", 530 },
+    { "nntps", 563 },
   };
+
   #endregion
+
+  #region ExchangeAt
 
   /// <summary>
   /// Exchanges a certain part of the string with the given newString.
@@ -121,8 +124,8 @@ static partial class StringExtensions {
     Against.ValueIsZero(index);
 
     return index < @this.Length
-      ? @this[..index] + replacement
-      : @this + replacement
+        ? @this[..index] + replacement
+        : @this + replacement
       ;
   }
 
@@ -183,7 +186,7 @@ static partial class StringExtensions {
     } else {
       part1 = @this;
     }
-    
+
     return part1 + part2;
 
 #endif
@@ -214,6 +217,10 @@ static partial class StringExtensions {
     };
   }
 
+  #endregion
+
+  #region IsIn/IsNotIn
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -238,6 +245,8 @@ static partial class StringExtensions {
     Against.ArgumentIsNull(values);
     return !_IsInUnchecked(@this, values);
   }
+
+  #endregion
 
   /// <summary>
   /// Repeats the specified string a certain number of times.
@@ -406,6 +415,8 @@ static partial class StringExtensions {
     return @this[^count..];
   }
 
+  #region First/Last
+
   /// <summary>
   /// Gets the first <see cref="Char"/> of the <see cref="String"/>.
   /// </summary>
@@ -460,11 +471,13 @@ static partial class StringExtensions {
 #endif
   public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
 
-  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() => 
+  #endregion
+
+  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() =>
     Path.GetInvalidFileNameChars()
       .Union("<>|:?*/\\\"")
       .ToHashSet(c => c)
-    );
+  );
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -482,9 +495,9 @@ static partial class StringExtensions {
   public static unsafe string SanitizeForFileName(this string @this, char sanitation = '_') {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(@this);
-    
+
     var result = @this;
-    
+
     var length = (uint)@this.Length;
     fixed (char* srcPointer = @this) {
       var currentPointer = srcPointer;
@@ -499,7 +512,7 @@ static partial class StringExtensions {
         result = string.Copy(@this);
 #endif
         fixed (char* dstPointer = result) {
-          
+
           // re-base the pointer we're not gonna need the srcPointer from here on
           currentPointer += dstPointer - srcPointer;
 
@@ -514,6 +527,7 @@ static partial class StringExtensions {
 
           result = new(dstPointer);
         }
+
         break;
       }
     }
@@ -578,9 +592,11 @@ static partial class StringExtensions {
 #endif
 
   #region needed consts for converting filename patterns into regexes
+
   private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
   private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-#endregion
+
+  #endregion
 
   /// <summary>
   /// Converts a given filename pattern into a regular expression.
@@ -638,6 +654,8 @@ static partial class StringExtensions {
 
     return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
   }
+
+  #region Matching Regexes
 
   /// <summary>
   /// Determines whether the specified string matches the given regex.
@@ -728,6 +746,10 @@ static partial class StringExtensions {
     Against.ArgumentIsNullOrEmpty(regex);
     return new Regex(regex, regexOptions).Match(@this).Groups;
   }
+
+  #endregion
+
+  #region Formatting
 
   /// <summary>
   /// Uses the string as a format string.
@@ -996,6 +1018,8 @@ static partial class StringExtensions {
     return result.ToString();
   }
 
+  #endregion
+
   /// <summary>
   /// Uses the string as a regular expression.
   /// </summary>
@@ -1123,6 +1147,7 @@ static partial class StringExtensions {
     Against.ArgumentIsNullOrEmpty(regex);
     return @this == null ? null : new Regex(regex, regexOptions).Replace(@this, newValue ?? string.Empty);
   }
+
   /// <summary>
   /// Replaces using a regular expression.
   /// </summary>
@@ -1159,7 +1184,7 @@ static partial class StringExtensions {
 #endif
     if (@this == null || oldValue == null || count < 1)
       return @this;
-    
+
     newValue ??= string.Empty;
     var result = @this;
 
@@ -1188,10 +1213,14 @@ static partial class StringExtensions {
 #endif
         result = result[..n] + newValue + result[(n + removedLength)..];
       }
+
       pos = n + newLength;
     }
+
     return result;
   }
+
+  #region Upper/Lower
 
   /// <summary>
   /// Uppers the first char in a string.
@@ -1250,7 +1279,7 @@ static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
- public static string UpperFirstInvariant(this string @this) {
+  public static string UpperFirstInvariant(this string @this) {
     Against.ThisIsNull(@this);
 
     var length = @this.Length;
@@ -1324,13 +1353,13 @@ static partial class StringExtensions {
     return result;
   }
 
-    /// <summary>
-    /// Lowers the first char in a string.
-    /// </summary>
-    /// <param name="this">This string.</param>
-    /// <returns>
-    /// A string where the first char was capitalized.
-    /// </returns>
+  /// <summary>
+  /// Lowers the first char in a string.
+  /// </summary>
+  /// <param name="this">This string.</param>
+  /// <returns>
+  /// A string where the first char was capitalized.
+  /// </returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -1367,6 +1396,10 @@ static partial class StringExtensions {
     return result;
   }
 
+  #endregion
+
+  #region Splitting
+
   /// <summary>
   /// Splits a string into equal length parts.
   /// </summary>
@@ -1376,7 +1409,7 @@ static partial class StringExtensions {
   public static IEnumerable<string> Split(this string @this, int length) {
     Against.ThisIsNull(@this);
     Against.NegativeValuesAndZero(length);
-    
+
     for (var i = 0; i < @this.Length; i += length)
       yield return @this.Substring(i, length);
   }
@@ -1516,6 +1549,8 @@ static partial class StringExtensions {
     return @this.Split(new[] { splitter }, options);
   }
 
+  #endregion
+
   /// <summary>
   /// Converts a word to pascal case.
   /// </summary>
@@ -1566,14 +1601,14 @@ static partial class StringExtensions {
         hump = true;
       else {
         var newChar = isFirstLetter
-          ? pascalCase
-            ? chr.ToUpper(culture)
-            : chr.ToLower(culture)
-          : hump
-            ? chr.ToUpper(culture)
-            : lastCharWasUppercase
-              ? chr.ToLower(culture)
-              : chr
+            ? pascalCase
+              ? chr.ToUpper(culture)
+              : chr.ToLower(culture)
+            : hump
+              ? chr.ToUpper(culture)
+              : lastCharWasUppercase
+                ? chr.ToLower(culture)
+                : chr
           ;
 
         result.Append(newChar);
@@ -1645,7 +1680,7 @@ static partial class StringExtensions {
     Against.ThisIsNull(@this);
     return comparer?.Equals(@this.Length > 0 ? @this[0] + string.Empty : string.Empty, what + string.Empty) ?? @this.StartsWith(what);
   }
-  
+
   /// <summary>
   /// Checks whether the given string starts with the specified character.
   /// </summary>
@@ -1665,7 +1700,7 @@ static partial class StringExtensions {
     Against.ThisIsNull(@this);
     return @this.Length > 0 && string.Equals(@this[0].ToString(), value.ToString(), stringComparison);
   }
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1676,12 +1711,12 @@ static partial class StringExtensions {
 
     return comparer?.Equals(@this[..what.Length], what) ?? @this.StartsWith(what);
   }
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this, what, comparer);
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2207,7 +2242,7 @@ static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsNotWithAny(this string @this, IEnumerable<char> values, StringComparer comparer) => !EndsWithAny(@this, values, comparer);
-  
+
   #endregion
 
   /// <summary>
@@ -2275,7 +2310,7 @@ static partial class StringExtensions {
   public static string ReplaceAtStart(this string @this, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
-    
+
     if (@this == null || @this.Length < what.Length)
       return @this;
     return @this.StartsWith(what, stringComparison) ? replacement + @this[what.Length..] : @this;
@@ -2312,7 +2347,7 @@ static partial class StringExtensions {
   public static unsafe string TrimEnd(this string @this, string what) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
-    
+
     var count = what.Length;
     var index = @this.Length - count;
 
@@ -2410,6 +2445,7 @@ static partial class StringExtensions {
               srcPtr += stepSize;
               cmpPtr += stepSize;
             } while (--cntSteps > 0);
+
             break;
 #endif
         }
@@ -2439,6 +2475,8 @@ static partial class StringExtensions {
 
 #endif
 
+  #region Null and WhiteSpace checks
+
   /// <summary>
   /// Determines whether the string is <c>null</c> or empty.
   /// </summary>
@@ -2454,7 +2492,7 @@ static partial class StringExtensions {
 #endif
   public static bool IsNullOrEmpty(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(false)] 
+    [NotNullWhen(false)]
 #endif
     this string @this) => string.IsNullOrEmpty(@this);
 
@@ -2473,7 +2511,7 @@ static partial class StringExtensions {
 #endif
   public static bool IsNotNullOrEmpty(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(true)] 
+    [NotNullWhen(true)]
 #endif
     this string @this) => !string.IsNullOrEmpty(@this);
 
@@ -2491,7 +2529,7 @@ static partial class StringExtensions {
   [Pure]
   public static bool IsNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(false)] 
+    [NotNullWhen(false)]
 #endif
     this string @this) => string.IsNullOrWhiteSpace(@this);
 #else
@@ -2526,7 +2564,7 @@ static partial class StringExtensions {
   [Pure]
   public static bool IsNotNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(true)] 
+    [NotNullWhen(true)]
 #endif
     this string @this) => !string.IsNullOrWhiteSpace(@this);
 #else
@@ -2537,34 +2575,81 @@ static partial class StringExtensions {
       this string @this) => !IsNullOrWhiteSpace(@this);
 #endif
 
+  #endregion
+
+  #region Contains/ContainsNot
+
+#if !SUPPORTS_STRING_CONTAINS_COMPARISON_TYPE
+
   /// <summary>
-  /// Determines whether a given string contains another one.
+  /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="other">The string to look for.</param>
-  /// <param name="comparisonType">Type of the comparison.</param>
-  /// <returns>
-  ///   <c>true</c> if the other string is part of the given string; otherwise, <c>false</c>.
-  /// </returns>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="value">The string to seek.</param>
+  /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
+  /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool Contains(this string @this, string other, StringComparison comparisonType) {
+  public static bool Contains(this string @this, string value, StringComparison comparisonType) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(other);
+    Against.ArgumentIsNull(value);
 
-    if (other.Length <= 0)
+    if (value.Length <= 0)
       return true;
 
-    if(other.Length > @this.Length) 
+    if (value.Length > @this.Length)
       return false;
 
-    return @this.IndexOf(other, comparisonType) >= 0;
+    return @this.IndexOf(value, comparisonType) >= 0;
   }
 
+#endif
+
+  /// <summary>
+  /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="value">The string to seek.</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use.</param>
+  /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
+  public static bool Contains(this string @this, string value, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(value);
+    Against.ArgumentIsNull(comparer);
+
+    if (comparer == StringComparer.Ordinal)
+      return @this.Contains(value, StringComparison.Ordinal);
+    if (comparer == StringComparer.OrdinalIgnoreCase)
+      return @this.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+    if (comparer == StringComparer.InvariantCulture)
+      return @this.Contains(value, StringComparison.InvariantCulture);
+    if (comparer == StringComparer.InvariantCultureIgnoreCase)
+      return @this.Contains(value, StringComparison.InvariantCultureIgnoreCase);
+
+    // Note: sadly we can't refactor that using a jump table because it depends on the current thread's culture
+    if (comparer == StringComparer.CurrentCulture)
+      return @this.Contains(value, StringComparison.CurrentCulture);
+    if (comparer == StringComparer.CurrentCultureIgnoreCase)
+      return @this.Contains(value, StringComparison.CurrentCultureIgnoreCase);
+
+    var otherLength = value.Length;
+    for (var i = 0; i < @this.Length - otherLength; ++i)
+      if (comparer.Equals(@this[i..otherLength], value))
+        return true;
+
+    return false;
+  }
+
+  public static bool ContainsNot(this string @this, string value) => !@this.Contains(value);
+  public static bool ContainsNot(this string @this, string value, StringComparison comparisonType) => !@this.Contains(value, comparisonType);
+  public static bool ContainsNot(this string @this, string value, StringComparer comparer) => !@this.Contains(value, comparer);
+
+  #endregion
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2582,6 +2667,26 @@ static partial class StringExtensions {
     StringComparison comparisonType,
     params string[] other
   ) => ContainsAny(This, other, comparisonType);
+  
+  /// <summary>
+  /// Determines whether a given string contains one of others.
+  /// </summary>
+  /// <param name="This">This string.</param>
+  /// <param name="other">The strings to look for.</param>
+  /// <param name="comparisonType">Type of the comparison.</param>
+  /// <returns>
+  ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
+  /// </returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(This != null);
+    Contract.Requires(other != null);
+#endif
+    return other.Any(item => This.Contains(item, comparisonType));
+  }
 
   /// <summary>
   /// Checks whether the given string matches any of the provided
@@ -2624,27 +2729,7 @@ static partial class StringExtensions {
 
     return needles.Any(n => string.Equals(n, @this, comparison));
   }
-
-  /// <summary>
-  /// Determines whether a given string contains one of others.
-  /// </summary>
-  /// <param name="This">This string.</param>
-  /// <param name="other">The strings to look for.</param>
-  /// <param name="comparisonType">Type of the comparison.</param>
-  /// <returns>
-  ///   <c>true</c> if any of the other strings is part of the given string; otherwise, <c>false</c>.
-  /// </returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool ContainsAny(this string This, IEnumerable<string> other, StringComparison comparisonType = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(other != null);
-#endif
-    return other.Any(item => This.Contains(item, comparisonType));
-  }
-
+  
   /// <summary>
   /// Returns a default value if the given string is <c>null</c> or empty.
   /// </summary>

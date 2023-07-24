@@ -72,6 +72,17 @@ public class StringTests {
     Type? Exception = null
   );
 
+  private static StringComparer _FromComparison(StringComparison comparison) 
+    => comparison switch {
+      StringComparison.InvariantCulture => StringComparer.InvariantCulture,
+      StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
+      StringComparison.Ordinal => StringComparer.Ordinal,
+      StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+      StringComparison.CurrentCulture => StringComparer.CurrentCulture,
+      StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
+      _ => throw new NotSupportedException($"Unknown comparison mode {comparison}")
+    };
+
   private static IEnumerable<SplitParametersTestData> _TestSplitTestData() {
     yield return new(null, null, null, null, typeof(NullReferenceException));
     yield return new(string.Empty, string.Empty, null, new[] { string.Empty });
@@ -701,13 +712,16 @@ public class StringTests {
   [TestCase("a", "bc", StringComparison.Ordinal, false)]
   [TestCase("a", "", StringComparison.Ordinal, true)]
   [TestCase("a", "abc", StringComparison.Ordinal, false)]
-  public void Contains(string? input, string? what, StringComparison comparison, bool expected, Type? exception = null)
+  public void Contains(string? input, string? what, StringComparison comparison, bool expected, Type? exception = null) {
 #pragma warning disable CS8602
 #pragma warning disable CS8604
-    => ExecuteTest(() => input.Contains(what, comparison), expected, exception)
+    ExecuteTest(() => input.Contains(what, comparison), expected, exception);
+    ExecuteTest(() => input.ContainsNot(what, comparison), !expected, exception);
+    ExecuteTest(() => input.Contains(what, _FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.ContainsNot(what, _FromComparison(comparison)), !expected, exception);
 #pragma warning restore CS8604
 #pragma warning restore CS8602
-  ;
+  }
 
   [Test]
   [TestCase("", null, false, typeof(ArgumentNullException))]
@@ -917,7 +931,7 @@ public class StringTests {
     ExecuteTest(() => input.EndsNotWithAny(comparison, ConvertFromStringToTestArray(needles)?.Select(s => s![0]).ToArray()), !expected, exception);
     ExecuteTest(() => input.EndsNotWithAny(ConvertFromStringToTestArray(needles)?.Select(s => s![0]), comparison), !expected, exception);
   }
-  
+ 
   // TODO: ContainsAny
 
 }
