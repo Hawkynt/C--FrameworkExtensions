@@ -731,9 +731,10 @@ public class StringTests {
   [TestCase("a", "A|B", false)]
   [TestCase("", "x||z", true)]
   [TestCase(null, "!", true)]
-  public void IsAnyOf(string? input, string? needlesSeparatedByPipes, bool expected, Type? exception = null)
-    => ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes)), expected, exception)
-    ;
+  public void IsAnyOf(string? input, string? needlesSeparatedByPipes, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes)), expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes)), !expected, exception);
+  }
 
   [Test]
   [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
@@ -744,10 +745,17 @@ public class StringTests {
   [TestCase("a", "A|B", StringComparison.OrdinalIgnoreCase, true)]
   [TestCase("", "x||z", StringComparison.Ordinal, true)]
   [TestCase(null, "!", StringComparison.Ordinal, true)]
-  public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null)
-    => ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), expected, exception)
-    ;
-  
+  public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.IsAnyOf(comparison, ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), expected, exception);
+    ExecuteTest(() => input.IsAnyOf(_FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), _FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(comparison, ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), !expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(_FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), _FromComparison(comparison)), !expected, exception);
+  }
+
   [Test]
   [TestCase(null,null,false,typeof(NullReferenceException))]
   [TestCase("", null, false, typeof(ArgumentNullException))]
