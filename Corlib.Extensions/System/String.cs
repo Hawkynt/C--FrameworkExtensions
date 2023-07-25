@@ -2751,6 +2751,8 @@ internal
 
   #endregion
 
+  #region IsAnyOf/IsNotAnyOf
+
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
@@ -2760,8 +2762,18 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsAnyOf(this string @this, params string[] needles) => needles.Any(n => n == @this);
-  
+  public static bool IsAnyOf(this string @this, params string[] needles) => IsAnyOf(@this, (IEnumerable<string>)needles);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsAnyOf(this string @this, StringComparison comparison, params string[] needles) => IsAnyOf(@this, needles, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsAnyOf(this string @this, StringComparer comparer, params string[] needles) => IsAnyOf(@this, needles, comparer);
+
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
@@ -2792,7 +2804,56 @@ internal
 
     return needles.Any(n => string.Equals(n, @this, comparison));
   }
+
+  /// <summary>
+  /// Checks whether the given string matches any of the provided
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="needles">String to compare to</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsAnyOf(this string @this, IEnumerable<string> needles, StringComparer comparer) {
+    Against.ArgumentIsNull(needles);
+    Against.ArgumentIsNull(comparer);
+
+    return needles.Any(n => comparer.Equals(n, @this));
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, params string[] needles) => !IsAnyOf(@this, (IEnumerable<string>)needles);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, StringComparison comparison, params string[] needles) => !IsAnyOf(@this, needles, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, StringComparer comparer, params string[] needles) => !IsAnyOf(@this, needles, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles) => !IsAnyOf(@this, needles); 
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles, StringComparison comparison) => !IsAnyOf(@this, needles, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles, StringComparer comparer) => !IsAnyOf(@this, needles, comparer);
   
+  #endregion
+
   /// <summary>
   /// Returns a default value if the given string is <c>null</c> or empty.
   /// </summary>
