@@ -535,51 +535,40 @@ qwordDuffOut:
             var block8 = (long) (0x0101010101010101UL * value);
             var blocks = count >> 3;
             
-#if !MONO
-            const int MAX_MANAGED_BLOCKS = 50;
-
-            if (blocks < MAX_MANAGED_BLOCKS) {
-#endif
-              count &= 0b111;
-              for (;;)
-                switch (blocks) {
+            count &= 0b111;
+            for (;;)
+              switch (blocks) {
 <#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-                  case <#=i#>: goto blockCount<#=i#>;
+                case <#=i#>: goto blockCount<#=i#>;
 <#    }#>
-                  default: {
-                    var block64=(object)new Block64((ulong)block8);
+                default: {
+                  var block64=(object)new Block64((ulong)block8);
 
-                    do {
-                      Marshal.StructureToPtr(block64, @this, false);
+                  do {
+                    Marshal.StructureToPtr(block64, @this, false);
 #if SUPPORTS_POINTER_ARITHMETIC
-                      @this += 64;
+                    @this += 64;
 #else
-                      _Add(ref @this, 64);
+                    _Add(ref @this, 64);
 #endif
-                      blocks -= 8;
-                    } while (blocks >= 8);
+                    blocks -= 8;
+                  } while (blocks >= 8);
 
-                    continue; // next blocks
-                  }
+                  continue; // next blocks
                 }
+              }
               
 <#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-              blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
+            blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
 <#    }#>
-              blockCount1: Marshal.WriteInt64(@this, block8);
+            blockCount1: Marshal.WriteInt64(@this, block8);
 #if SUPPORTS_POINTER_ARITHMETIC
-              @this += blocks << 3;
+            @this += blocks << 3;
 #else
-              _Add(ref @this, blocks << 3);
+            _Add(ref @this, blocks << 3);
 #endif
-              blockCount0: continue; // copy single bytes left
-#if !MONO
-            } // medium-sized blocks
+            blockCount0: continue; // copy single bytes left
 
-            // large blocks
-            _MemoryFill(@this, value, count);
-            return;
-#endif              
           } // single-byte default
         } // single-byte switch
     }
@@ -724,51 +713,40 @@ qwordDuffOut:
           default: {
             var blocks = count >> 3;
             
-#if !MONO
-            const int MAX_MANAGED_BLOCKS = 50;
-
-            if (blocks < MAX_MANAGED_BLOCKS) {
-#endif
-              count &= 0b111;
-              for (;;)
-                switch (blocks) {
+            count &= 0b111;
+            for (;;)
+              switch (blocks) {
 <#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-                  case <#=i#>: goto blockCount<#=i#>;
+                case <#=i#>: goto blockCount<#=i#>;
 <#    }#>
-                  default: {
-                    var block64=(object)new Block64();
+                default: {
+                  var block64=(object)new Block64();
 
-                    do {
-                      Marshal.StructureToPtr(block64, @this, false);
+                  do {
+                    Marshal.StructureToPtr(block64, @this, false);
 #if SUPPORTS_POINTER_ARITHMETIC
-                      @this += 64;
+                    @this += 64;
 #else
-                      _Add(ref @this, 64);
+                    _Add(ref @this, 64);
 #endif
-                      blocks -= 8;
-                    } while (blocks >= 8);
+                    blocks -= 8;
+                  } while (blocks >= 8);
 
-                    continue; // next blocks
-                  }
+                  continue; // next blocks
                 }
+              }
               
 <#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-              blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
+            blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
 <#    }#>
-              blockCount1: Marshal.WriteInt64(@this, 0);
+            blockCount1: Marshal.WriteInt64(@this, 0);
 #if SUPPORTS_POINTER_ARITHMETIC
-              @this += blocks << 3;
+            @this += blocks << 3;
 #else
-              _Add(ref @this, blocks << 3);
+            _Add(ref @this, blocks << 3);
 #endif
-              blockCount0: continue; // copy single bytes left
-#if !MONO
-            } // medium-sized blocks
+            blockCount0: continue; // copy single bytes left
 
-            // large blocks
-            _MemoryFill(@this, 0, count);
-            return;
-#endif              
           } // single-byte default
         } // single-byte switch
     }

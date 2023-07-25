@@ -389,15 +389,6 @@ static partial class ArrayExtensions {
       _FillWithQWords(source, ref offset, count, value);
     }
 
-#if !MONO
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memcpy")]
-    private static extern IntPtr _MemoryCopy(IntPtr dst, IntPtr src, int count);
-
-    [DllImport("ntdll.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "memset")]
-    private static extern void __MemoryFill(IntPtr dst, int value, int count);
-    private static void _MemoryFill(IntPtr dst, byte value, int count) => __MemoryFill(dst, value, count);
-#endif
-
 #if !SUPPORTS_POINTER_ARITHMETIC
     private static void _Add(ref IntPtr src, int count) => src=new IntPtr(src.ToInt64() + count);
 #endif
@@ -411,7 +402,6 @@ static partial class ArrayExtensions {
 #endif
       offset += count << 3;
 
-#if !MONO
       if (count >= 64) {
         Marshal.WriteInt64(source, 0, v);
         Marshal.WriteInt64(source, 8, v);
@@ -433,7 +423,7 @@ static partial class ArrayExtensions {
 
         var countInBytes = count << 3;
         while (countInBytes > sizeInBytes) {
-          _MemoryCopy(source, start, sizeInBytes);
+          _CopyTo(start, 0, source, 0, sizeInBytes);
 #if SUPPORTS_POINTER_ARITHMETIC
           source += sizeInBytes;
 #else
@@ -442,12 +432,11 @@ static partial class ArrayExtensions {
           countInBytes -= sizeInBytes;
           sizeInBytes <<= 1;
         }
-        _MemoryCopy(source, start, countInBytes);
+        _CopyTo(start, 0, source, 0, countInBytes);
         return;
       }
-#endif
 
-        while (count >= 8) {
+      while (count >= 8) {
         Marshal.WriteInt64(source, 0, v);
         Marshal.WriteInt64(source, 8, v);
         Marshal.WriteInt64(source, 16, v);
