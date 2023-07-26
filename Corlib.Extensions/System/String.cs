@@ -2780,20 +2780,30 @@ internal
   /// <param name="this">This <see cref="String"/></param>
   /// <param name="needles">String to compare to</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
     Against.ArgumentIsNull(needles);
 
-    if (@this != null)
-      return needles.Contains(@this);
+    switch (@this) {
+      case null: {
 
-    // ReSharper disable once LoopCanBeConvertedToQuery
-    foreach(var value in needles)
-      if (value == null)
-        return true;
-      
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var value in needles)
+          if (value == null)
+            return true;
+
+        break;
+      }
+      default: {
+
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var value in needles)
+          if (value == @this)
+            return true;
+
+        break;
+      }
+    }
+
     return false;
   }
 
@@ -2804,9 +2814,6 @@ internal
   /// <param name="needles">String to compare to</param>
   /// <param name="comparison">The comparison mode</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles, StringComparison comparison) {
     Against.ArgumentIsNull(needles);
 
