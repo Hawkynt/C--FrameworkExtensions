@@ -2887,49 +2887,75 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles, StringComparer comparer) => !IsAnyOf(@this, needles, comparer);
-  
+
   #endregion
 
+  #region DefaultIf
+
   /// <summary>
-  /// Returns a default value if the given string is <c>null</c> or empty.
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/>.
   /// </summary>
-  /// <param name="This">This String.</param>
-  /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
-  /// <returns>The given string or the given default value.</returns>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="defaultValue">The default value</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string DefaultIfNullOrEmpty(this string This, string defaultValue = null) => This.IsNullOrEmpty() ? defaultValue : This;
+  public static string DefaultIfNull(this string @this, string defaultValue) => @this ?? defaultValue;
 
   /// <summary>
-  /// Returns a default value if the given string is <c>null</c> or whitespace.
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/>.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
-  /// <returns>The given string or the given default value.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="factory">The factory to generate the default value</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-
-  public static string DefaultIfNullOrWhiteSpace(this string @this, Func<string> defaultValue) {
-    if (defaultValue == null)
-      throw new ArgumentNullException(nameof(defaultValue));
-
-    return @this.IsNullOrWhiteSpace() ? defaultValue() : @this;
+  public static string DefaultIfNull(this string @this, Func<string> factory) {
+    Against.ArgumentIsNull(factory);
+    
+    return @this ?? factory();
   }
 
   /// <summary>
-  /// Returns a default value if the given string is <c>null</c> or whitespace.
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or empty.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
-  /// <returns>The given string or the given default value.</returns>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string DefaultIfNullOrEmpty(this string @this, string defaultValue = null) => @this.IsNullOrEmpty() ? defaultValue : @this;
+
+  /// <summary>
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or empty.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="factory">The factory to generate the default value</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string DefaultIfNullOrEmpty(this string @this, Func<string> factory) {
+    Against.ArgumentIsNull(factory);
+
+    return @this.IsNullOrEmpty() ? factory() : @this;
+  }
+
+  /// <summary>
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -2937,6 +2963,23 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
+
+  /// <summary>
+  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="factory">The default value; optional, defaults to <see langword="null"/>.</param>
+  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string DefaultIfNullOrWhiteSpace(this string @this, Func<string> factory) {
+    Against.ArgumentIsNull(factory);
+
+    return @this.IsNullOrWhiteSpace() ? factory() : @this;
+  }
+
+  #endregion
 
   /// <summary>
   /// Breaks the given string down into lines.

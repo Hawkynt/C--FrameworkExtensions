@@ -957,5 +957,38 @@ public class StringTests {
     ExecuteTest(() => input.ContainsNotAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
     ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), comparison), !expected, exception);
   }
-  
+
+  [Test]
+  [TestCase(null,null,null)]
+  [TestCase(null, "a", "a")]
+  [TestCase("b", "a", "b")]
+  public void DefaultIfNull(string? input, string value, string? expected) {
+    ExecuteTest(() => input.DefaultIfNull(value), expected, null);
+    ExecuteTest(() => input.DefaultIfNull(() => value), expected, null);
+    ExecuteTest(() => input.DefaultIfNull((Func<string>)null!), expected, typeof(ArgumentNullException));
+  }
+
+  [Test]
+  [TestCase(null, null, null)]
+  [TestCase(null, "a", "a")]
+  [TestCase("", "a", "a")]
+  [TestCase("b", "a", "b")]
+  public void DefaultIfNullOrEmpty(string? input, string value, string? expected) {
+    ExecuteTest(() => input.DefaultIfNullOrEmpty(), expected == input ? input : null, null);
+    ExecuteTest(() => input.DefaultIfNullOrEmpty(value), expected, null);
+    ExecuteTest(() => input.DefaultIfNullOrEmpty(() => value), expected, null);
+    ExecuteTest(() => input.DefaultIfNullOrEmpty((Func<string>)null!), expected, typeof(ArgumentNullException));
+  }
+
+  [Test]
+  [TestCase(null, null, null)]
+  [TestCase(null, "a", "a")]
+  [TestCase("", "a", "a")]
+  [TestCase("b", "a", "b")]
+  public void DefaultIfNullOrWhiteSpace(string? input, string value, string? expected) {
+    ExecuteTest(() => input.DefaultIfNullOrWhiteSpace(), expected == input ? input : null, null);
+    ExecuteTest(() => input.DefaultIfNullOrWhiteSpace(value), expected, null);
+    ExecuteTest(() => input.DefaultIfNullOrWhiteSpace(() => value), expected, null);
+    ExecuteTest(() => input.DefaultIfNullOrWhiteSpace((Func<string>)null!), expected, typeof(ArgumentNullException));
+  }
 }
