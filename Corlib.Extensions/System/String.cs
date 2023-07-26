@@ -2785,8 +2785,16 @@ internal
 #endif
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
     Against.ArgumentIsNull(needles);
-    
-    return needles.Any(n => n == @this);
+
+    if (@this != null)
+      return needles.Contains(@this);
+
+    // ReSharper disable once LoopCanBeConvertedToQuery
+    foreach(var value in needles)
+      if (value == null)
+        return true;
+      
+    return false;
   }
 
   /// <summary>
@@ -2802,7 +2810,28 @@ internal
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles, StringComparison comparison) {
     Against.ArgumentIsNull(needles);
 
-    return needles.Any(n => string.Equals(n, @this, comparison));
+    switch (@this) {
+      case null: {
+      
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var value in needles)
+          if (value == null)
+            return true;
+
+        break;
+      }
+      default: {
+
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var value in needles)
+          if (string.Equals(value, @this, comparison))
+            return true;
+
+        break;
+      }
+    }
+
+    return false;
   }
 
   /// <summary>
@@ -2819,7 +2848,7 @@ internal
     Against.ArgumentIsNull(needles);
     Against.ArgumentIsNull(comparer);
 
-    return needles.Any(n => comparer.Equals(n, @this));
+    return needles.Contains(@this, comparer);
   }
 
 #if SUPPORTS_INLINING
