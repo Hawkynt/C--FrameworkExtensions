@@ -991,4 +991,30 @@ public class StringTests {
     ExecuteTest(() => input.DefaultIfNullOrWhiteSpace(() => value), expected, null);
     ExecuteTest(() => input.DefaultIfNullOrWhiteSpace((Func<string>)null!), expected, typeof(ArgumentNullException));
   }
+
+  [Test]
+  [TestCase(null,StringExtensions.LineBreakMode.None,typeof(NullReferenceException))]
+  [TestCase("",StringExtensions.LineBreakMode.None)]
+  [TestCase("\r", StringExtensions.LineBreakMode.CarriageReturn)]
+  [TestCase("\n", StringExtensions.LineBreakMode.LineFeed)]
+  [TestCase("\x0c", StringExtensions.LineBreakMode.FormFeed)]
+  [TestCase("\x85", StringExtensions.LineBreakMode.NextLine)]
+  [TestCase("\x15", StringExtensions.LineBreakMode.NegativeAcknowledge)]
+  [TestCase("\u2028", StringExtensions.LineBreakMode.LineSeparator)]
+  [TestCase("\u2029", StringExtensions.LineBreakMode.ParagraphSeparator)]
+  [TestCase("\r\n", StringExtensions.LineBreakMode.CrLf)]
+  [TestCase("\n\r", StringExtensions.LineBreakMode.LfCr)]
+  [TestCase("\r\r", StringExtensions.LineBreakMode.CarriageReturn)]
+  [TestCase("\n\n", StringExtensions.LineBreakMode.LineFeed)]
+  [TestCase("a\r", StringExtensions.LineBreakMode.CarriageReturn)]
+  [TestCase("a\n", StringExtensions.LineBreakMode.LineFeed)]
+  [TestCase("a\x0c", StringExtensions.LineBreakMode.FormFeed)]
+  [TestCase("a\x85", StringExtensions.LineBreakMode.NextLine)]
+  [TestCase("a\x15", StringExtensions.LineBreakMode.NegativeAcknowledge)]
+  [TestCase("a\u2028", StringExtensions.LineBreakMode.LineSeparator)]
+  [TestCase("a\u2029", StringExtensions.LineBreakMode.ParagraphSeparator)]
+  public void DetectLineBreakMode(string? input, StringExtensions.LineBreakMode expected, Type? exception = null)
+    => ExecuteTest(input.DetectLineBreakMode, expected, exception)
+    ;
+
 }

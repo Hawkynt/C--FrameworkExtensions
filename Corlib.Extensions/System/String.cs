@@ -2981,6 +2981,92 @@ internal
 
   #endregion
 
+  #region Line-Breaking stuff
+
+  /// <summary>
+  /// The type of line-break
+  /// </summary>
+  public enum LineBreakMode {
+    All = -2,
+    AutoDetect = -1,
+    None = 0,
+    CarriageReturn = 0x0D,
+    LineFeed = 0x0A,
+    CrLf = 0x0D0A,
+    LfCr = 0x0A0D,
+    FormFeed = 0x0C,
+    NextLine = 0x85,
+    LineSeparator = 0x2028,
+    ParagraphSeparator = 0x2029,
+    NegativeAcknowledge = 0x15
+  }
+
+  /// <summary>
+  /// Tries to detect the used line-break mode.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <returns>The first matching line-break found or <see cref="LineBreakMode.None"/>.</returns>
+  public static LineBreakMode DetectLineBreakMode(this string @this) {
+    Against.ThisIsNull(@this);
+
+    if (@this.Length == 0)
+      return LineBreakMode.None;
+
+    const char CR = (char)LineBreakMode.CarriageReturn;
+    const char LF = (char)LineBreakMode.LineFeed;
+    const char FF = (char)LineBreakMode.FormFeed;
+    const char NEL = (char)LineBreakMode.NextLine;
+    const char LS = (char)LineBreakMode.LineSeparator;
+    const char PS = (char)LineBreakMode.ParagraphSeparator;
+    const char NL = (char)LineBreakMode.NegativeAcknowledge;
+
+    var previousChar = @this[0];
+    switch (previousChar) {
+      case FF:
+        return LineBreakMode.FormFeed;
+      case NEL:
+        return LineBreakMode.NextLine;
+      case LS:
+        return LineBreakMode.LineSeparator;
+      case PS:
+        return LineBreakMode.ParagraphSeparator;
+      case NL:
+        return LineBreakMode.NegativeAcknowledge;
+    }
+
+    for (var i = 1; i < @this.Length; ++i) {
+      var currentChar = @this[i];
+      switch (currentChar) {
+        case CR when previousChar == LF:
+          return LineBreakMode.LfCr;
+        case CR when previousChar == CR:
+          return LineBreakMode.CarriageReturn;
+        case LF when previousChar == LF:
+          return LineBreakMode.LineFeed;
+        case LF when previousChar == CR:
+          return LineBreakMode.CrLf;
+        case FF:
+          return LineBreakMode.FormFeed;
+        case NEL:
+          return LineBreakMode.NextLine;
+        case LS:
+          return LineBreakMode.LineSeparator;
+        case PS:
+          return LineBreakMode.ParagraphSeparator;
+        case NL:
+          return LineBreakMode.NegativeAcknowledge;
+      }
+
+      previousChar = currentChar;
+    }
+
+    return previousChar switch {
+      CR => LineBreakMode.CarriageReturn,
+      LF => LineBreakMode.LineFeed,
+      _ => LineBreakMode.None
+    };
+  }
+
   /// <summary>
   /// Breaks the given string down into lines.
   /// </summary>
@@ -3015,6 +3101,24 @@ internal
     var result = count < 1 ? This.Split(new[] { delimiter }, options) : This.Split(new[] { delimiter }, count, options);
     return result;
   }
+  
+  /// <summary>
+  /// Counts the number of lines in the given text.
+  /// </summary>
+  /// <param name="this">This string.</param>
+  /// <returns>The number of lines.</returns>
+  public static long LineCount(this string @this) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(@this != null);
+#endif
+    var crlf = @this.Split(new[] { "\r\n" }, StringSplitOptions.None);
+    var lfcr = string.Join("\n\r", crlf).Split(new[] { "\n\r" }, StringSplitOptions.None);
+    var cr = string.Join("\n", lfcr).Split(new[] { "\n" }, StringSplitOptions.None);
+    var lf = string.Join("\r", cr).Split(new[] { "\r" }, StringSplitOptions.None);
+    return lf.Length;
+  }
+
+  #endregion
 
   /// <summary>
   /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
@@ -3248,22 +3352,6 @@ internal
 
     var index = @this.IndexOf(pattern, comparison);
     return index < 0 ? @this : @this.Substring(0, index);
-  }
-
-  /// <summary>
-  /// Counts the number of lines in the given text.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <returns>The number of lines.</returns>
-  public static long LineCount(this string @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    var crlf = @this.Split(new[] { "\r\n" }, StringSplitOptions.None);
-    var lfcr = string.Join("\n\r", crlf).Split(new[] { "\n\r" }, StringSplitOptions.None);
-    var cr = string.Join("\n", lfcr).Split(new[] { "\n" }, StringSplitOptions.None);
-    var lf = string.Join("\r", cr).Split(new[] { "\r" }, StringSplitOptions.None);
-    return lf.Length;
   }
 
   private static readonly Regex _SQL_LIKE_ESCAPING = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
