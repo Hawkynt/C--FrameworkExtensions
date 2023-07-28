@@ -22,6 +22,7 @@
 // ReSharper disable UnusedMember.Global
 namespace Guard;
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -176,4 +177,14 @@ internal static partial class Against {
       AlwaysThrow.CountTooHighException(expression ?? nameof(value), value, checkValue, maxValue, caller);
   }
 
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void UnknownEnumValues<TEnum>(TEnum value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) where TEnum : Enum {
+    if (Enum.IsDefined(typeof(TEnum), value))
+      return;
+
+    AlwaysThrow.UnknownEnumValue(expression ?? nameof(value), value, caller);
+  }
 }

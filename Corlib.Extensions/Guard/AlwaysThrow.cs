@@ -127,4 +127,9 @@ internal static class AlwaysThrow {
   [DoesNotReturn]
   public static void NoElements([CallerMemberName] string caller = null) => throw new InvalidOperationException($"{(caller == null ? string.Empty : caller + ":")}The sequence contains no elements.");
 
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void UnknownEnumValue<TEnum>(string parameterName, TEnum value, [CallerMemberName] string caller = null) where TEnum : Enum => throw new ArgumentException($"{(caller == null ? string.Empty : caller + ":")}The value {value} provided is not part of the enum {typeof(TEnum).Name}", parameterName) { Data = { { parameterName, value }, { "AllowedKeys", Enum.GetNames(typeof(TEnum)) }, { "AllowedValues", Enum.GetValues(typeof(TEnum)) } } };
+
 }
