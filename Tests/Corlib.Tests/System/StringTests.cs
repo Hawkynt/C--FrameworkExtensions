@@ -1056,5 +1056,20 @@ public class StringTests {
   [TestCase("a\n\r\rb", LineBreakMode.All, 20, StringSplitOptions.None, "a||b")]
   [TestCase("a\n\r\rb", LineBreakMode.All, 20, StringSplitOptions.RemoveEmptyEntries, "a|b")]
   public void Lines(string? input, LineBreakMode mode, int count, StringSplitOptions options, string? expected, Type? exception = null)
-    => ExecuteTest(() => input.Lines(mode, count, options)?.Join("|"), expected, exception);
+    => ExecuteTest(() => input.Lines(mode, count, options)?.Join("|"), expected, exception)
+    ;
+
+  [Test]
+  [TestCase(null,0,-1,null,typeof(NullReferenceException))]
+  [TestCase("", 0, -1, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("abc", 5, -1, null, typeof(ArgumentException))]
+  [TestCase("abc", 5, LineJoinMode.CarriageReturn, "abc")]
+  [TestCase("abc def", 5, LineJoinMode.LineFeed, "abc\ndef")]
+  [TestCase("abc             def", 5, LineJoinMode.LineFeed, "abc\ndef")]
+  [TestCase("abc def         ", 5, LineJoinMode.LineFeed, "abc\ndef\n")]
+  [TestCase("abcdef", 5, LineJoinMode.LineFeed, "abcd\nef")]
+  public void WordWrap(string? input, int count, LineJoinMode mode, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.WordWrap(count, mode), expected, exception)
+    ;
+
 }

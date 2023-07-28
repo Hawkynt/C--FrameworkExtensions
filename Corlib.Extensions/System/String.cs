@@ -3002,6 +3002,21 @@ internal
   }
 
   /// <summary>
+  /// The type of delimiter to use when joining lines
+  /// </summary>
+  public enum LineJoinMode {
+    CarriageReturn = 0x0D,
+    LineFeed = 0x0A,
+    CrLf = 0x0D0A,
+    LfCr = 0x0A0D,
+    FormFeed = 0x0C,
+    NextLine = 0x85,
+    LineSeparator = 0x2028,
+    ParagraphSeparator = 0x2029,
+    NegativeAcknowledge = 0x15
+  }
+
+  /// <summary>
   /// Tries to detect the used line-break mode.
   /// </summary>
   /// <param name="this">This <see cref="String"/></param>
@@ -3150,6 +3165,18 @@ internal
   private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, int count)
     => _GetLines(text, removeEmpty, count)
     ;
+  
+  private static readonly string[] _POSSIBLE_SPLITTERS = {
+    "\r\n",
+    "\n\r",
+    "\n",
+    "\r",
+    "\x15",
+    "\x0C",
+    "\x85",
+    "\u2028",
+    "\u2029"
+  };
 
   private static string[] _GetLines(string text, bool removeEmpty, int count) {
     return count == 0
@@ -3256,21 +3283,132 @@ internal
     Against.UnknownEnumValues(options);
     return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
-  
+
   /// <summary>
   /// Counts the number of lines in the given <see cref="String"/>.
   /// </summary>
   /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
+  /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
-  public static long LineCount(this string @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    var crlf = @this.Split(new[] { "\r\n" }, StringSplitOptions.None);
-    var lfcr = string.Join("\n\r", crlf).Split(new[] { "\n\r" }, StringSplitOptions.None);
-    var cr = string.Join("\n", lfcr).Split(new[] { "\n" }, StringSplitOptions.None);
-    var lf = string.Join("\r", cr).Split(new[] { "\r" }, StringSplitOptions.None);
-    return lf.Length;
+  public static int LineCount(this string @this, LineBreakMode mode = LineBreakMode.All, bool ignoreEmptyLines = false) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+
+    return EnumerateLines(@this, mode, ignoreEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None).Count();
+  }
+
+  /// <summary>
+  /// Counts the number of lines in the given <see cref="String"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
+  /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
+  /// <returns>The number of lines.</returns>
+  public static long LongLineCount(this string @this, LineBreakMode mode = LineBreakMode.All, bool ignoreEmptyLines = false) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+
+    return EnumerateLines(@this, mode, ignoreEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None).LongCount();
+  }
+
+  /// <summary>
+  /// Does word-wrapping if needed
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="count">The maximum number of characters per line</param>
+  /// <param name="mode">How to join lines</param>
+  /// <returns>The word-wrapped text</returns>
+  /// <exception cref="NotImplementedException"></exception>
+  public static string WordWrap(this string @this, int count, LineJoinMode mode) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(mode);
+
+    if (@this.Length <= count)
+      return @this;
+
+    string joiner;
+    switch (mode) {
+      case LineJoinMode.CrLf:
+        joiner ="\r\n";
+        break;
+      case LineJoinMode.LfCr:
+        joiner = "\n\r";
+        break;
+      case LineJoinMode.CarriageReturn:
+      case LineJoinMode.LineFeed:
+      case LineJoinMode.FormFeed:
+      case LineJoinMode.NextLine:
+      case LineJoinMode.LineSeparator:
+      case LineJoinMode.ParagraphSeparator:
+      case LineJoinMode.NegativeAcknowledge:
+        joiner = ((char)mode).ToString();
+        break;
+      default:
+        throw new NotImplementedException();
+    }
+
+    var length = @this.Length;
+    var result=new StringBuilder(length);
+    var joinerLength = joiner.Length;
+    for (var lineStart = 0;;) {
+      var nextBreakAt = lineStart + count - joinerLength;
+      if (nextBreakAt >= length) {
+        result.Append(@this, lineStart, length - lineStart);
+        return result.ToString();
+      }
+
+      var proposedBreakAt = nextBreakAt;
+      if (char.IsWhiteSpace(@this[nextBreakAt])) {
+        
+        // backtrack till last non whitespace
+        do {
+          --nextBreakAt;
+        } while (nextBreakAt > lineStart && char.IsWhiteSpace(@this[nextBreakAt]));
+
+        if (nextBreakAt > lineStart) {
+        
+          // found at least one character, add it
+          result.Append(@this, lineStart, nextBreakAt - lineStart + 1);
+          result.Append(joiner);
+        }
+
+        // because the current char is whitespace, we can move on
+        ++proposedBreakAt;
+
+      } else {
+
+        // backtrack to last whitespace
+        do {
+          --nextBreakAt;
+        } while (nextBreakAt > lineStart && !char.IsWhiteSpace(@this[nextBreakAt]));
+
+        if (nextBreakAt > lineStart) {
+        
+          // found at least one character, add it
+          result.Append(@this, lineStart, nextBreakAt - lineStart);
+          result.Append(joiner);
+          proposedBreakAt = nextBreakAt + 1;
+        } else {
+
+          // the current word is longer than the count, hard-wrap it
+          result.Append(@this, lineStart, proposedBreakAt - lineStart);
+          result.Append(joiner);
+        }
+      }
+
+      // find start of next word
+      while (char.IsWhiteSpace(@this[proposedBreakAt])) {
+        ++proposedBreakAt;
+
+        // if only whitespace left
+        if (proposedBreakAt >= length)
+          return result.ToString();
+      } 
+      
+      lineStart = proposedBreakAt;
+    }
   }
 
   #endregion
@@ -3640,18 +3778,6 @@ internal
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-  };
-
-  private static readonly string[] _POSSIBLE_SPLITTERS = {
-    "\r\n",
-    "\n\r",
-    "\n",
-    "\r",
-    "\x15",
-    "\x0C",
-    "\x85",
-    "\u2028",
-    "\u2029"
   };
 
   /// <summary>
