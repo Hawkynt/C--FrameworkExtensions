@@ -2986,7 +2986,7 @@ internal
   /// <summary>
   /// The type of line-break
   /// </summary>
-  public enum LineBreakMode {
+  public enum LineBreakMode: short {
     All = -2,
     AutoDetect = -1,
     None = 0,
@@ -3004,7 +3004,7 @@ internal
   /// <summary>
   /// The type of delimiter to use when joining lines
   /// </summary>
-  public enum LineJoinMode {
+  public enum LineJoinMode: ushort {
     CarriageReturn = 0x0D,
     LineFeed = 0x0A,
     CrLf = 0x0D0A,
@@ -3137,6 +3137,7 @@ internal
     Against.UnknownEnumValues(mode);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
+
     return _EnumerateLines(@this, mode, count, options);
   }
 
@@ -3147,6 +3148,7 @@ internal
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.UnknownEnumValues(options);
+
     return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, 0);
   }
 
@@ -3158,6 +3160,7 @@ internal
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
+
     return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
 
@@ -3260,6 +3263,7 @@ internal
     Against.UnknownEnumValues(mode);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
+    
     return _GetLines(@this, mode, count, options);
   }
 
@@ -3270,6 +3274,7 @@ internal
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.UnknownEnumValues(options);
+    
     return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, 0);
   }
 
@@ -3281,6 +3286,7 @@ internal
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
+    
     return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
 

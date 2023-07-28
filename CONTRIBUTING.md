@@ -64,7 +64,8 @@ If you gonna fix actions, code, tests, docs or whatever just let me know.
 * everything that is a variable is camelCase: `int myInt = 40;`
 * everything private/protected is prefixed by underscore: `private string _myText;`
 * constants cry for help: `private const int _MY_SECRET_ID = 0xdeadbeef;`
-* pseudo-consts also cry: `public static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
+* pseudo-consts also cry if they are in a *private* room: `private static readonly string MY_SECRET_API_KEY = Settings.Default.ApiKey;`
+* in *public* areas pseudo-consts give the impression of being a get-only property but with more access speed: `public static readonly string TheBigBadWolf = "What does the fox say?";`
 * methods want to *start doing* something *big*: `public void InsertStuffIntoDatabase() { }`
 * interfaces are self**I**sh: `public interface IKnowBetter { }`
 * abstract classes prefix with **A**: `public abstract class AKnowBetterBase { }`
@@ -345,7 +346,7 @@ Dictionary<string, List<string>> cache = default;
 * use `this.` for everything that accesses an instance member
 * use keywords for types when available (like `string`, `int`, `float`, `bool`)
 * use explicit access modifiers (like `public`, `protected`, `private`, `internal`)
-* don't forget to dispose, use `using`-Blocks if possible, use the right `try { } finally { }`-pattern when needed
+* don't forget to dispose stuff -  use `using`-Blocks if possible, use the right `try { } finally { }`-pattern when needed
 
 ``` cs
 // BAD:
@@ -529,7 +530,7 @@ throw new NotSupportedException();
 ```
 
 * try to avoid methods with more than 8 parameters and using *Tuples* with more than 5 type-parameters
-* instead of using [optional values](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/named-and-optional-arguments) in parameters, prefer overloads (optional values are baked into [caller-site](https://stackoverflow.com/questions/30317625/does-adding-optional-parameters-change-method-signatures-and-would-it-trigger-me) and are hard to change afterwards)
+* instead of using [optional values](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/named-and-optional-arguments) in parameters, prefer overloads (optional values are baked into [caller-site](https://stackoverflow.com/questions/30317625/does-adding-optional-parameters-change-method-signatures-and-would-it-trigger-me) upon compilation and are hard to change afterwards)
 
 ``` cs
 // BAD:
@@ -621,7 +622,7 @@ private static void _DoSpecificStuff(string @this) {
 }
 ```
 
-* use throw-helpers from the [AlwaysThrow](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/AlwaysThrow.cs)-class
+* use throw-helpers if possible from the [AlwaysThrow](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/AlwaysThrow.cs)-class
 
 ``` cs
 public static void DoSomething<T>(this IEnumerable<T> @this) {
@@ -672,7 +673,7 @@ public static void NoCokeYetException() => throw new NoCokeYetException();
 <#}#>
 ```
 
-* wrap methods inside the *NativeMethods* class and handle exceptions and type conversion there
+* wrap P/Invoke methods inside the *NativeMethods* class and handle exceptions and type conversion there
 
 ``` cs
 public static partial class IntPtrExtensions {
@@ -756,24 +757,24 @@ var a
     ;
 
 // even in conditions
-while ( (c = 20) < 100 ) { ... }
+while ( (c = 20) < b ) { ... }
 ```
 
 * don't trust in the intelligence of the compiler and read about
 
-  - [Block-Processing](https://www.c-sharpcorner.com/article/fast-equality-comparison/)
-  - [Branchless-Assignments](https://blog.joberty.com/branchless-programming-why-your-cpu-will-thank-you/)
-  - [Bounds-Checks](https://www.codeproject.com/articles/844781/digging-into-net-loop-performance-bounds-checking) and how to [get rid](https://tooslowexception.com/getting-rid-of-array-bound-checks-ref-returns-and-net-5/) of them
-  - [Cache-Blocking](https://www.intel.com/content/www/us/en/developer/articles/technical/cache-blocking-techniques.html)
-  - [Duff's-Device](https://en.wikipedia.org/wiki/Duff%27s_device)
-  - [Branch-Tables](https://en.wikipedia.org/wiki/Branch_table)
-  - [Loop Optimization](https://en.wikipedia.org/wiki/Loop_optimization) and [Unrolling](https://en.wikipedia.org/wiki/Loop_unrolling) (T4 can assist here)
-  - [Out-of-order execution](https://en.wikipedia.org/wiki/Register_renaming)
-  - [Non-Blocking](https://en.wikipedia.org/wiki/Non-blocking_algorithm)
-  - [Pre-Allocation](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.-ctor#system-collections-generic-list-1-ctor(system-int32)) and [Object-Pooling](https://en.wikipedia.org/wiki/Object_pool_pattern)
-  - [Spans](https://www.codemag.com/Article/2207031/Writing-High-Performance-Code-Using-SpanT-and-MemoryT-in-C)
-  - how to turn [Recursion to Iteration](https://www.baeldung.com/cs/convert-recursion-to-iteration) using [Stacks](https://www.cs.odu.edu/~zeil/cs361/latest/Public/recursionConversion/index.html), [Queues](https://stackoverflow.com/questions/159590/way-to-go-from-recursion-to-iteration) and [Tail-Calls](https://thomaslevesque.com/2011/09/02/tail-recursion-in-c/)
-  - [Tail-Calls](https://github.com/dotnet/runtime/issues/2191) in general
+  * [Block-Processing](https://www.c-sharpcorner.com/article/fast-equality-comparison/)
+  * [Branchless-Assignments](https://blog.joberty.com/branchless-programming-why-your-cpu-will-thank-you/)
+  * [Bounds-Checks](https://www.codeproject.com/articles/844781/digging-into-net-loop-performance-bounds-checking) and how to [get rid](https://tooslowexception.com/getting-rid-of-array-bound-checks-ref-returns-and-net-5/) of them
+  * [Cache-Blocking](https://www.intel.com/content/www/us/en/developer/articles/technical/cache-blocking-techniques.html)
+  * [Duff's-Device](https://en.wikipedia.org/wiki/Duff%27s_device)
+  * [Branch-Tables](https://en.wikipedia.org/wiki/Branch_table)
+  * [Loop Optimization](https://en.wikipedia.org/wiki/Loop_optimization) and [Unrolling](https://en.wikipedia.org/wiki/Loop_unrolling) (T4 can assist here)
+  * [Out-of-order execution](https://en.wikipedia.org/wiki/Register_renaming)
+  * [Non-Blocking](https://en.wikipedia.org/wiki/Non-blocking_algorithm)
+  * [Pre-Allocation](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.-ctor#system-collections-generic-list-1-ctor(system-int32)) and [Object-Pooling](https://en.wikipedia.org/wiki/Object_pool_pattern)
+  * [Spans](https://www.codemag.com/Article/2207031/Writing-High-Performance-Code-Using-SpanT-and-MemoryT-in-C)
+  * how to turn [Recursion to Iteration](https://www.baeldung.com/cs/convert-recursion-to-iteration) using [Stacks](https://www.cs.odu.edu/~zeil/cs361/latest/Public/recursionConversion/index.html), [Queues](https://stackoverflow.com/questions/159590/way-to-go-from-recursion-to-iteration) and [Tail-Calls](https://thomaslevesque.com/2011/09/02/tail-recursion-in-c/)
+  * [Tail-Calls](https://github.com/dotnet/runtime/issues/2191) in general
 
 * do not depend on more than [Backports](https://www.nuget.org/packages/FrameworkExtensions.Backports) and [Corlib.Extensions](https://www.nuget.org/packages/FrameworkExtensions.Corlib)
 
