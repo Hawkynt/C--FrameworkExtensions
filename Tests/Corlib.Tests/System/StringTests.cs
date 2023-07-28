@@ -1019,9 +1019,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,0,null,null,typeof(NullReferenceException))]
-  [TestCase("", 0, 0, null, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("", 1, 65535, null, null, typeof(ArgumentException))]
+  [TestCase(null,0,(TruncateMode)0,null,null,typeof(NullReferenceException))]
+  [TestCase("", 0, (TruncateMode)0, null, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("", 1, (TruncateMode)65535, null, null, typeof(ArgumentException))]
   [TestCase("", 2, TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
   [TestCase("", 2, TruncateMode.KeepStart, "123", "")]
   [TestCase("ab", 2, TruncateMode.KeepStart, "123", "ab")]
@@ -1043,8 +1043,8 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null, 0, 0, 0, null, typeof(NullReferenceException))]
-  [TestCase("", -1000, 0, 0, null, typeof(ArgumentException))]
+  [TestCase(null, (LineBreakMode)0, 0, 0, null, typeof(NullReferenceException))]
+  [TestCase("", (LineBreakMode)(-32768), 0, 0, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 0, 0, null, typeof(ArgumentOutOfRangeException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, -1, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, StringSplitOptions.None, "")]
@@ -1060,9 +1060,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,-1,null,typeof(NullReferenceException))]
-  [TestCase("", 0, -1, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("abc", 5, -1, null, typeof(ArgumentException))]
+  [TestCase(null,0,(LineJoinMode)65535,null,typeof(NullReferenceException))]
+  [TestCase("", 0, (LineJoinMode)65535, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("abc", 5, (LineJoinMode)65535, null, typeof(ArgumentException))]
   [TestCase("abc", 5, LineJoinMode.CarriageReturn, "abc")]
   [TestCase("abc def", 5, LineJoinMode.LineFeed, "abc\ndef")]
   [TestCase("abc             def", 5, LineJoinMode.LineFeed, "abc\ndef")]
