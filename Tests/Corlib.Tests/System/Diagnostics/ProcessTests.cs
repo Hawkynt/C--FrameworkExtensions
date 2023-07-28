@@ -76,10 +76,13 @@ public class ProcessTests {
     Process? child;
     Process? childProcess = null;
     try {
-      childProcess = Process.Start(new ProcessStartInfo(_EXECUTABLE_TO_TEST) { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, Arguments = "/k cmd.exe" });
+      childProcess = Process.Start(new ProcessStartInfo(_EXECUTABLE_TO_TEST) { CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, Arguments = "/k " + _EXECUTABLE_TO_TEST });
       childId = childProcess?.Id;
-      var children = myself.AllChildren().ToArray();
-      child = children.FirstOrDefault(p => p.Parent()?.Id == childId);
+      var stopwatch = Stopwatch.StartNew();
+      do {
+        var children = myself.AllChildren().ToArray();
+        child = children.FirstOrDefault(p => p.Parent()?.Id == childId);
+      } while (child == null && stopwatch.Elapsed.TotalSeconds < 10);
     } finally {
       childProcess?.Kill();
     }
