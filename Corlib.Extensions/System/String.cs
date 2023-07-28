@@ -3334,30 +3334,24 @@ internal
     if (@this.Length <= count)
       return @this;
 
-    string joiner;
-    switch (mode) {
-      case LineJoinMode.CrLf:
-        joiner ="\r\n";
-        break;
-      case LineJoinMode.LfCr:
-        joiner = "\n\r";
-        break;
-      case LineJoinMode.CarriageReturn:
-      case LineJoinMode.LineFeed:
-      case LineJoinMode.FormFeed:
-      case LineJoinMode.NextLine:
-      case LineJoinMode.LineSeparator:
-      case LineJoinMode.ParagraphSeparator:
-      case LineJoinMode.NegativeAcknowledge:
-        joiner = ((char)mode).ToString();
-        break;
-      default:
-        throw new NotImplementedException();
-    }
+    var joiner = mode switch {
+      LineJoinMode.CarriageReturn or
+      LineJoinMode.LineFeed or
+      LineJoinMode.FormFeed or
+      LineJoinMode.NextLine or
+      LineJoinMode.LineSeparator or
+      LineJoinMode.ParagraphSeparator or
+      LineJoinMode.NegativeAcknowledge
+        => ((char)mode).ToString(),
+      LineJoinMode.CrLf => "\r\n",
+      LineJoinMode.LfCr => "\n\r",
+      _ => throw new NotImplementedException()
+    };
 
     var length = @this.Length;
-    var result=new StringBuilder(length);
     var joinerLength = joiner.Length;
+    var result=new StringBuilder(length + (length / count + 1) * joinerLength);
+    
     for (var lineStart = 0;;) {
       var nextBreakAt = lineStart + count - joinerLength;
       if (nextBreakAt >= length) {
