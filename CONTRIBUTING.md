@@ -586,6 +586,26 @@ public static void DoSomething(this string @this) {
 }
 ```
 
+* validate arguments in order of appearance
+
+``` cs
+// BAD:
+public static void DoSomething(this string @this, string other, int count) {
+  Guard.Against.CountBelowOrEqualZero(count);
+  Guard.Against.ThisIsNull(@this);
+  Guard.Against.ArgumentIsNull(other);
+  ...
+}
+
+// GOOD:
+public static void DoSomething(this string @this, string other, int count) {
+  Guard.Against.ThisIsNull(@this);
+  Guard.Against.ArgumentIsNull(other);
+  Guard.Against.CountBelowOrEqualZero(count);
+  ...
+}
+```
+
 * do validate all public data ([taint-mode](https://en.wikipedia.org/wiki/Taint_checking)), avoid duplicate validations in private code
 
 ``` cs
