@@ -1017,4 +1017,28 @@ public class StringTests {
     => ExecuteTest(input.DetectLineBreakMode, expected, exception)
     ;
 
+  [Test]
+  [TestCase(null,0,0,null,null,typeof(NullReferenceException))]
+  [TestCase("", 0, 0, null, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("", 1, 65535, null, null, typeof(ArgumentException))]
+  [TestCase("", 2, StringExtensions.TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
+  [TestCase("", 2, StringExtensions.TruncateMode.KeepStart, "123", "")]
+  [TestCase("ab", 2, StringExtensions.TruncateMode.KeepStart, "123", "ab")]
+  [TestCase("abcde", 4, StringExtensions.TruncateMode.KeepStart, "123", "a123")]
+  [TestCase("abcde", 4, StringExtensions.TruncateMode.KeepEnd, "123", "123e")]
+  [TestCase("abc", 2, StringExtensions.TruncateMode.KeepStart, "123", "a3")]
+  [TestCase("abc", 2, StringExtensions.TruncateMode.KeepEnd, "123", "1c")]
+  [TestCase("abcdef", 5, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "a123f")]
+  [TestCase("abcdefg", 6, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "ab123g")]
+  [TestCase("abcdef", 4, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "a123")]
+  [TestCase("abcdefghijklmno", 7, StringExtensions.TruncateMode.KeepMiddle, "123", "123h123")]
+  [TestCase("abcdefghijklmnop", 7, StringExtensions.TruncateMode.KeepMiddle, "123", "123h123")]
+  [TestCase("abcdefghijklmno", 5, StringExtensions.TruncateMode.KeepMiddle, "123", "12h23")]
+  [TestCase("abcdefghijklmno", 4, StringExtensions.TruncateMode.KeepMiddle, "123", "12h3")]
+  [TestCase("abcdefghijklmnop", 5, StringExtensions.TruncateMode.KeepMiddle, "123", "12i23")]
+  [TestCase("abcdefghijklmnop", 4, StringExtensions.TruncateMode.KeepMiddle, "123", "12i3")]
+  public void Truncate(string? input, int count, StringExtensions.TruncateMode mode, string? ellipse, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.Truncate(count, mode, ellipse), expected, exception)
+    ;
+
 }

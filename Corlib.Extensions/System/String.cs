@@ -3068,10 +3068,10 @@ internal
   }
 
   /// <summary>
-  /// Breaks the given string down into lines.
+  /// Breaks the given <see cref="String"/> down into lines.
   /// </summary>
-  /// <param name="This">This String.</param>
-  /// <param name="delimiter">The delimiter, <c>null</c> means try autodetecting the line break.</param>
+  /// <param name="This">This <see cref="String"/>.</param>
+  /// <param name="delimiter">The delimiter, <see langword="null"/> means try autodetecting the line break.</param>
   /// <param name="count">The maximum number of lines to support, 0 means unlimited.</param>
   /// <param name="options">The options.</param>
   /// <returns>The lines which where identified.</returns>
@@ -3101,11 +3101,11 @@ internal
     var result = count < 1 ? This.Split(new[] { delimiter }, options) : This.Split(new[] { delimiter }, count, options);
     return result;
   }
-  
+
   /// <summary>
-  /// Counts the number of lines in the given text.
+  /// Counts the number of lines in the given <see cref="String"/>.
   /// </summary>
-  /// <param name="this">This string.</param>
+  /// <param name="this">This <see cref="String"/>.</param>
   /// <returns>The number of lines.</returns>
   public static long LineCount(this string @this) {
 #if SUPPORTS_CONTRACTS
@@ -3119,6 +3119,61 @@ internal
   }
 
   #endregion
+
+  /// <summary>
+  /// How to truncate <see cref="String"/>s that are too long
+  /// </summary>
+  public enum TruncateMode {
+    KeepStart = 0,
+    KeepEnd,
+    KeepStartAndEnd,
+    KeepMiddle,
+  }
+
+  /// <summary>
+  /// Truncates a given <see cref="String"/> if it is too long.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="count">The maximum allowed number of <see cref="Char"/>s; must be &gt; 0</param>
+  /// <param name="mode">How to truncate; optional, defaults to <see cref="TruncateMode.KeepStart"/></param>
+  /// <param name="ellipse">What to replace the trimmed parts with; optional, defaults to "..."</param>
+  /// <returns>A string that is no longer than the given count</returns>
+  /// <exception cref="NotImplementedException"></exception>
+  public static string Truncate(this string @this, int count, TruncateMode mode = TruncateMode.KeepStart, string ellipse = "...") {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(mode);
+    Against.ArgumentIsNull(ellipse);
+    
+    var length = @this.Length;
+    if (length <= count)
+      return @this;
+
+    var ellipseLength = ellipse.Length;
+    var availableChars = count - ellipseLength;
+    var hasAvailableChars = availableChars > 0;
+
+    return mode switch {
+      TruncateMode.KeepStart => hasAvailableChars ? @this[..availableChars] + ellipse : @this[0] + ellipse[^--count..],
+      TruncateMode.KeepEnd => hasAvailableChars ? ellipse + @this[^availableChars..] : ellipse[..--count] + @this[^1],
+      TruncateMode.KeepStartAndEnd => hasAvailableChars ? @this[..((availableChars >> 1) + (availableChars & 1))] + ellipse + @this[^(availableChars >> 1)..] : @this[0] + ellipse[..(count - 2)] + @this[^1],
+      TruncateMode.KeepMiddle => KeepMiddle(@this, ellipse, availableChars, count),
+      _ => throw new NotImplementedException()
+    };
+
+    static string KeepMiddle(string original, string ellipse, int availableChars, int count) {
+      availableChars -= ellipse.Length; // because we need two ellipses, we have to substract another one
+      var hasAvailableCharsLeft = availableChars > 0;
+      if (hasAvailableCharsLeft)
+        return ellipse + original.Substring((original.Length - availableChars) >> 1, availableChars) + ellipse;
+
+      --count; // one character for the original string
+      var charsFromStartEllipse = (count >> 1) + (count & 1);
+      var charsFromEndEllipse = count >> 1;
+      return ellipse[..charsFromStartEllipse] + original[original.Length >> 1] + ellipse[^charsFromEndEllipse..];
+    }
+
+  }
 
   /// <summary>
   /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
