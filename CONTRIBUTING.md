@@ -553,6 +553,12 @@ public static void DoRandomStuff(this string @this, int startAt, int count) {
 
 ### Null-Checking and validation
 
+* always throw the [most concise](https://stackoverflow.com/questions/774104/what-exceptions-should-be-thrown-for-invalid-or-unexpected-parameters-in-net) [exception](https://learn.microsoft.com/en-us/dotnet/api/system.exception)
+* throw [ArgumentException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentexception) when something is wrong with a given argument
+* throw [ArgumentNullException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentnullexception) when a given argument is null but it shouldn't
+* throw [ArgumentOutOfRangeException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentoutofrangeexception) when an indexer, number or count is simply not within a valid range
+* throw [InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception) when an argument might be valid but the object is currently in a state where that value is not accepted
+* throw [NotSupportedException](https://learn.microsoft.com/en-us/dotnet/api/system.notsupportedexception) when an argument is technically valid, but the code to handle it was not (yet) implemented
 * use [Guard](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.cs)-clauses instead of checking yourself (they are already tuned for performance in most cases)
 
 ``` cs
@@ -744,7 +750,7 @@ while ( (c = 20) < 100 ) { ... }
   - [Loop Optimization](https://en.wikipedia.org/wiki/Loop_optimization) and [Unrolling](https://en.wikipedia.org/wiki/Loop_unrolling) (T4 can assist here)
   - [Out-of-order execution](https://en.wikipedia.org/wiki/Register_renaming)
   - [Non-Blocking](https://en.wikipedia.org/wiki/Non-blocking_algorithm)
-  - [Pre-Allocation](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.-ctor?view=net-7.0#system-collections-generic-list-1-ctor(system-int32)) and [Object-Pooling](https://en.wikipedia.org/wiki/Object_pool_pattern)
+  - [Pre-Allocation](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.-ctor#system-collections-generic-list-1-ctor(system-int32)) and [Object-Pooling](https://en.wikipedia.org/wiki/Object_pool_pattern)
   - [Spans](https://www.codemag.com/Article/2207031/Writing-High-Performance-Code-Using-SpanT-and-MemoryT-in-C)
   - how to turn [Recursion to Iteration](https://www.baeldung.com/cs/convert-recursion-to-iteration) using [Stacks](https://www.cs.odu.edu/~zeil/cs361/latest/Public/recursionConversion/index.html), [Queues](https://stackoverflow.com/questions/159590/way-to-go-from-recursion-to-iteration) and [Tail-Calls](https://thomaslevesque.com/2011/09/02/tail-recursion-in-c/)
   - [Tail-Calls](https://github.com/dotnet/runtime/issues/2191) in general
@@ -755,6 +761,9 @@ while ( (c = 20) < 100 ) { ... }
 
 * use [design-patterns](https://en.wikipedia.org/wiki/Software_design_pattern)
 * use [SOLID](https://en.wikipedia.org/wiki/SOLID)
+* [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it) does not apply here, you are enabling people to do more than you know right now
+* however [KISS](https://en.wikipedia.org/wiki/KISS_principle) for the public interface is totally welcomed
+* [over-engineering](https://en.wikipedia.org/wiki/Overengineering) is OK for performance and memory usage because you don't know the context in which this code is gonna be used later on
 * when you violate stuff on purpose, comment why you did so
 
 ### Try to have fun
