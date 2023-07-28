@@ -3067,41 +3067,196 @@ internal
     };
   }
 
-  /// <summary>
-  /// Breaks the given <see cref="String"/> down into lines.
-  /// </summary>
-  /// <param name="This">This <see cref="String"/>.</param>
-  /// <param name="delimiter">The delimiter, <see langword="null"/> means try autodetecting the line break.</param>
-  /// <param name="count">The maximum number of lines to support, 0 means unlimited.</param>
-  /// <param name="options">The options.</param>
-  /// <returns>The lines which where identified.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string[] Lines(this string This, string delimiter = null, int count = 0, StringSplitOptions options = StringSplitOptions.None) {
-    if (This == null)
-      return null;
+  public static IEnumerable<string> EnumerateLines(this string @this, StringSplitOptions options = StringSplitOptions.None) => _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, 0);
 
-    // if no delimtier given, try auto-detection
-    if (delimiter == null) {
-      if (This.Contains("\r\n"))
-        delimiter = "\r\n";
-      else if (This.Contains("\n\r"))
-        delimiter = "\n\r";
-      else if (This.Contains("\n"))
-        delimiter = "\n";
-      else if (This.Contains("\r"))
-        delimiter = "\r";
-    }
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<string> EnumerateLines(this string @this, LineBreakMode mode, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+    Against.UnknownEnumValues(options);
 
-    // if no delimiter could be found, just return one line
-    if (delimiter == null)
-      return new[] { This };
-
-    var result = count < 1 ? This.Split(new[] { delimiter }, options) : This.Split(new[] { delimiter }, count, options);
-    return result;
+    return _EnumerateLines(@this, mode, 0, options);
   }
 
+  private static IEnumerable<string> _EnumerateLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
+    for (;;)
+      switch (mode) {
+        case LineBreakMode.All:
+          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
+        case LineBreakMode.AutoDetect:
+          mode = DetectLineBreakMode(@this);
+          continue;
+        case LineBreakMode.None:
+          static IEnumerable<string> EnumerateOneLine(string line) {
+            yield return line;
+          }
+
+          return EnumerateOneLine(@this);
+        case LineBreakMode.CrLf:
+          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
+        case LineBreakMode.LfCr:
+          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
+        case LineBreakMode.CarriageReturn:
+        case LineBreakMode.LineFeed:
+        case LineBreakMode.FormFeed:
+        case LineBreakMode.NextLine:
+        case LineBreakMode.LineSeparator:
+        case LineBreakMode.ParagraphSeparator:
+        case LineBreakMode.NegativeAcknowledge:
+          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
+        default:
+          throw new NotImplementedException();
+      }
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<string> EnumerateLines(this string @this, LineBreakMode mode, int count, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(options);
+    return _EnumerateLines(@this, mode, count, options);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<string> EnumerateLines(this string @this, string delimiter, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(delimiter);
+    Against.UnknownEnumValues(options);
+    return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, 0);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static IEnumerable<string> EnumerateLines(this string @this, string delimiter, int count, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(delimiter);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(options);
+    return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
+  }
+
+  // TODO: don't use the array call, do something with less memory and better performance
+  private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, int count)
+    => _GetLines(text, removeEmpty, count)
+    ;
+
+  private static string[] _GetLines(string text, bool removeEmpty, int count) {
+    return count == 0
+        ? text.Split(_POSSIBLE_SPLITTERS, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        : text.Split(_POSSIBLE_SPLITTERS, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+      ;
+  }
+
+  // TODO: don't use the array call, do something with less memory and better performance
+  private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, char delimiter, int count)
+    => _GetLines(text, removeEmpty, delimiter, count)
+    ;
+
+  private static string[] _GetLines(string text, bool removeEmpty, char delimiter, int count) {
+    return count == 0
+        ? text.Split(new[] { delimiter }, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        : text.Split(new[] { delimiter }, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+      ;
+  }
+
+  // TODO: don't use the array call, do something with less memory and better performance
+  private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, string delimiter, int count)
+    => _GetLines(text, removeEmpty, delimiter, count)
+    ;
+
+  private static string[] _GetLines(string text, bool removeEmpty, string delimiter, int count) {
+    return count == 0
+        ? text.Split(delimiter, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        : text.Split(new[] { delimiter }, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+      ;
+  }
+  
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string[] Lines(this string @this, StringSplitOptions options = StringSplitOptions.None) => _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, 0);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string[] Lines(this string @this, LineBreakMode mode, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+    Against.UnknownEnumValues(options);
+
+    return _GetLines(@this, mode, 0, options);
+  }
+
+  private static string[] _GetLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
+    for (;;)
+      switch (mode) {
+        case LineBreakMode.All:
+          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
+        case LineBreakMode.AutoDetect:
+          mode = DetectLineBreakMode(@this);
+          continue;
+        case LineBreakMode.None:
+          return new[] { @this };
+        case LineBreakMode.CrLf:
+          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
+        case LineBreakMode.LfCr:
+          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
+        case LineBreakMode.CarriageReturn:
+        case LineBreakMode.LineFeed:
+        case LineBreakMode.FormFeed:
+        case LineBreakMode.NextLine:
+        case LineBreakMode.LineSeparator:
+        case LineBreakMode.ParagraphSeparator:
+        case LineBreakMode.NegativeAcknowledge:
+          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
+        default:
+          throw new NotImplementedException();
+      }
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string[] Lines(this string @this, LineBreakMode mode, int count, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.UnknownEnumValues(mode);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(options);
+    return _GetLines(@this, mode, count, options);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string[] Lines(this string @this, string delimiter, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(delimiter);
+    Against.UnknownEnumValues(options);
+    return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, 0);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string[] Lines(this string @this, string delimiter, int count, StringSplitOptions options = StringSplitOptions.None) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(delimiter);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(options);
+    return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
+  }
+  
   /// <summary>
   /// Counts the number of lines in the given <see cref="String"/>.
   /// </summary>
@@ -3120,6 +3275,8 @@ internal
 
   #endregion
 
+  #region Truncation
+
   /// <summary>
   /// How to truncate <see cref="String"/>s that are too long
   /// </summary>
@@ -3130,6 +3287,10 @@ internal
     KeepMiddle,
   }
 
+  public static string Truncate(this string @this, int count) => Truncate(@this, count, TruncateMode.KeepStart, "...");
+  public static string Truncate(this string @this, int count, TruncateMode mode) => Truncate(@this, count, mode, "...");
+  public static string Truncate(this string @this, int count, string ellipse) => Truncate(@this, count, TruncateMode.KeepStart, ellipse);
+
   /// <summary>
   /// Truncates a given <see cref="String"/> if it is too long.
   /// </summary>
@@ -3139,7 +3300,7 @@ internal
   /// <param name="ellipse">What to replace the trimmed parts with; optional, defaults to "..."</param>
   /// <returns>A string that is no longer than the given count</returns>
   /// <exception cref="NotImplementedException"></exception>
-  public static string Truncate(this string @this, int count, TruncateMode mode = TruncateMode.KeepStart, string ellipse = "...") {
+  public static string Truncate(this string @this, int count, TruncateMode mode, string ellipse) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(mode);
@@ -3174,6 +3335,8 @@ internal
     }
 
   }
+
+  #endregion
 
   /// <summary>
   /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
@@ -3460,7 +3623,7 @@ internal
     return result.ToString();
   }
 
-  private static readonly byte[] _CHAR_TO_HEX_LOOKUP ={
+  private static readonly byte[] _CHAR_TO_HEX_LOOKUP = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -3477,6 +3640,18 @@ internal
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+  };
+
+  private static readonly string[] _POSSIBLE_SPLITTERS = {
+    "\r\n",
+    "\n\r",
+    "\n",
+    "\r",
+    "\x15",
+    "\x0C",
+    "\x85",
+    "\u2028",
+    "\u2029"
   };
 
   /// <summary>

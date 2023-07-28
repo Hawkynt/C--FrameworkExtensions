@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
+using static System.StringExtensions;
 
 namespace Corlib.Tests.System;
 
@@ -993,27 +994,27 @@ public class StringTests {
   }
 
   [Test]
-  [TestCase(null,StringExtensions.LineBreakMode.None,typeof(NullReferenceException))]
-  [TestCase("",StringExtensions.LineBreakMode.None)]
-  [TestCase("\r", StringExtensions.LineBreakMode.CarriageReturn)]
-  [TestCase("\n", StringExtensions.LineBreakMode.LineFeed)]
-  [TestCase("\x0c", StringExtensions.LineBreakMode.FormFeed)]
-  [TestCase("\x85", StringExtensions.LineBreakMode.NextLine)]
-  [TestCase("\x15", StringExtensions.LineBreakMode.NegativeAcknowledge)]
-  [TestCase("\u2028", StringExtensions.LineBreakMode.LineSeparator)]
-  [TestCase("\u2029", StringExtensions.LineBreakMode.ParagraphSeparator)]
-  [TestCase("\r\n", StringExtensions.LineBreakMode.CrLf)]
-  [TestCase("\n\r", StringExtensions.LineBreakMode.LfCr)]
-  [TestCase("\r\r", StringExtensions.LineBreakMode.CarriageReturn)]
-  [TestCase("\n\n", StringExtensions.LineBreakMode.LineFeed)]
-  [TestCase("a\r", StringExtensions.LineBreakMode.CarriageReturn)]
-  [TestCase("a\n", StringExtensions.LineBreakMode.LineFeed)]
-  [TestCase("a\x0c", StringExtensions.LineBreakMode.FormFeed)]
-  [TestCase("a\x85", StringExtensions.LineBreakMode.NextLine)]
-  [TestCase("a\x15", StringExtensions.LineBreakMode.NegativeAcknowledge)]
-  [TestCase("a\u2028", StringExtensions.LineBreakMode.LineSeparator)]
-  [TestCase("a\u2029", StringExtensions.LineBreakMode.ParagraphSeparator)]
-  public void DetectLineBreakMode(string? input, StringExtensions.LineBreakMode expected, Type? exception = null)
+  [TestCase(null,LineBreakMode.None,typeof(NullReferenceException))]
+  [TestCase("",LineBreakMode.None)]
+  [TestCase("\r", LineBreakMode.CarriageReturn)]
+  [TestCase("\n", LineBreakMode.LineFeed)]
+  [TestCase("\x0c", LineBreakMode.FormFeed)]
+  [TestCase("\x85", LineBreakMode.NextLine)]
+  [TestCase("\x15", LineBreakMode.NegativeAcknowledge)]
+  [TestCase("\u2028", LineBreakMode.LineSeparator)]
+  [TestCase("\u2029", LineBreakMode.ParagraphSeparator)]
+  [TestCase("\r\n", LineBreakMode.CrLf)]
+  [TestCase("\n\r", LineBreakMode.LfCr)]
+  [TestCase("\r\r", LineBreakMode.CarriageReturn)]
+  [TestCase("\n\n", LineBreakMode.LineFeed)]
+  [TestCase("a\r", LineBreakMode.CarriageReturn)]
+  [TestCase("a\n", LineBreakMode.LineFeed)]
+  [TestCase("a\x0c", LineBreakMode.FormFeed)]
+  [TestCase("a\x85", LineBreakMode.NextLine)]
+  [TestCase("a\x15", LineBreakMode.NegativeAcknowledge)]
+  [TestCase("a\u2028", LineBreakMode.LineSeparator)]
+  [TestCase("a\u2029", LineBreakMode.ParagraphSeparator)]
+  public void DetectLineBreakMode(string? input, LineBreakMode expected, Type? exception = null)
     => ExecuteTest(input.DetectLineBreakMode, expected, exception)
     ;
 
@@ -1021,24 +1022,39 @@ public class StringTests {
   [TestCase(null,0,0,null,null,typeof(NullReferenceException))]
   [TestCase("", 0, 0, null, null, typeof(ArgumentOutOfRangeException))]
   [TestCase("", 1, 65535, null, null, typeof(ArgumentException))]
-  [TestCase("", 2, StringExtensions.TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
-  [TestCase("", 2, StringExtensions.TruncateMode.KeepStart, "123", "")]
-  [TestCase("ab", 2, StringExtensions.TruncateMode.KeepStart, "123", "ab")]
-  [TestCase("abcde", 4, StringExtensions.TruncateMode.KeepStart, "123", "a123")]
-  [TestCase("abcde", 4, StringExtensions.TruncateMode.KeepEnd, "123", "123e")]
-  [TestCase("abc", 2, StringExtensions.TruncateMode.KeepStart, "123", "a3")]
-  [TestCase("abc", 2, StringExtensions.TruncateMode.KeepEnd, "123", "1c")]
-  [TestCase("abcdef", 5, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "a123f")]
-  [TestCase("abcdefg", 6, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "ab123g")]
-  [TestCase("abcdef", 4, StringExtensions.TruncateMode.KeepStartAndEnd, "123", "a123")]
-  [TestCase("abcdefghijklmno", 7, StringExtensions.TruncateMode.KeepMiddle, "123", "123h123")]
-  [TestCase("abcdefghijklmnop", 7, StringExtensions.TruncateMode.KeepMiddle, "123", "123h123")]
-  [TestCase("abcdefghijklmno", 5, StringExtensions.TruncateMode.KeepMiddle, "123", "12h23")]
-  [TestCase("abcdefghijklmno", 4, StringExtensions.TruncateMode.KeepMiddle, "123", "12h3")]
-  [TestCase("abcdefghijklmnop", 5, StringExtensions.TruncateMode.KeepMiddle, "123", "12i23")]
-  [TestCase("abcdefghijklmnop", 4, StringExtensions.TruncateMode.KeepMiddle, "123", "12i3")]
-  public void Truncate(string? input, int count, StringExtensions.TruncateMode mode, string? ellipse, string? expected, Type? exception = null)
+  [TestCase("", 2, TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
+  [TestCase("", 2, TruncateMode.KeepStart, "123", "")]
+  [TestCase("ab", 2, TruncateMode.KeepStart, "123", "ab")]
+  [TestCase("abcde", 4, TruncateMode.KeepStart, "123", "a123")]
+  [TestCase("abcde", 4, TruncateMode.KeepEnd, "123", "123e")]
+  [TestCase("abc", 2, TruncateMode.KeepStart, "123", "a3")]
+  [TestCase("abc", 2, TruncateMode.KeepEnd, "123", "1c")]
+  [TestCase("abcdef", 5, TruncateMode.KeepStartAndEnd, "123", "a123f")]
+  [TestCase("abcdefg", 6, TruncateMode.KeepStartAndEnd, "123", "ab123g")]
+  [TestCase("abcdef", 4, TruncateMode.KeepStartAndEnd, "123", "a123")]
+  [TestCase("abcdefghijklmno", 7, TruncateMode.KeepMiddle, "123", "123h123")]
+  [TestCase("abcdefghijklmnop", 7, TruncateMode.KeepMiddle, "123", "123h123")]
+  [TestCase("abcdefghijklmno", 5, TruncateMode.KeepMiddle, "123", "12h23")]
+  [TestCase("abcdefghijklmno", 4, TruncateMode.KeepMiddle, "123", "12h3")]
+  [TestCase("abcdefghijklmnop", 5, TruncateMode.KeepMiddle, "123", "12i23")]
+  [TestCase("abcdefghijklmnop", 4, TruncateMode.KeepMiddle, "123", "12i3")]
+  public void Truncate(string? input, int count, TruncateMode mode, string? ellipse, string? expected, Type? exception = null)
     => ExecuteTest(() => input.Truncate(count, mode, ellipse), expected, exception)
     ;
 
+  [Test]
+  [TestCase(null, 0, 0, 0, null, typeof(NullReferenceException))]
+  [TestCase("", -1000, 0, 0, null, typeof(ArgumentException))]
+  [TestCase("", LineBreakMode.CarriageReturn, 0, 0, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("", LineBreakMode.CarriageReturn, 2, -1, null, typeof(ArgumentException))]
+  [TestCase("", LineBreakMode.CarriageReturn, 2, StringSplitOptions.None, "")]
+  [TestCase("a\nb", LineBreakMode.LineFeed, 2, StringSplitOptions.None, "a|b")]
+  [TestCase("a\nb", LineBreakMode.CarriageReturn, 2, StringSplitOptions.None, "a\nb")]
+  [TestCase("a\n\nb", LineBreakMode.LineFeed, 2, StringSplitOptions.None, "a|\nb")]
+  [TestCase("a\n\rb", LineBreakMode.AutoDetect, 2, StringSplitOptions.None, "a|b")]
+  [TestCase("a\n\rb", LineBreakMode.All, 20, StringSplitOptions.None, "a|b")]
+  [TestCase("a\n\r\rb", LineBreakMode.All, 20, StringSplitOptions.None, "a||b")]
+  [TestCase("a\n\r\rb", LineBreakMode.All, 20, StringSplitOptions.RemoveEmptyEntries, "a|b")]
+  public void Lines(string? input, LineBreakMode mode, int count, StringSplitOptions options, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.Lines(mode, count, options)?.Join("|"), expected, exception);
 }
