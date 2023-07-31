@@ -219,35 +219,6 @@ internal
 
   #endregion
 
-  #region IsIn/IsNotIn
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsIn(this string @this, IEnumerable<string> values) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-    return _IsInUnchecked(@this, values);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  [DebuggerHidden]
-  [StackTraceHidden]
-  private static bool _IsInUnchecked(this string @this, IEnumerable<string> values) => values.Contains(@this);
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNotIn(this string @this, IEnumerable<string> values) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-    return !_IsInUnchecked(@this, values);
-  }
-
-  #endregion
-
   /// <summary>
   /// Repeats the specified string a certain number of times.
   /// </summary>
