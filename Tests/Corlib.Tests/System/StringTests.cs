@@ -328,26 +328,6 @@ public class StringTests {
     => ExecuteTest(() => input.ExchangeAt(index, length, replacement), expected, exception);
 
   [Test]
-  [TestCase(null, null, false, typeof(NullReferenceException))]
-  [TestCase("a", null, false, typeof(ArgumentNullException))]
-  [TestCase("a", "", false)]
-  [TestCase("a", "a|b", true)]
-  [TestCase("a", "b|c", false)]
-  public void IsIn(string needle, string? haystack, bool expected, Type? exception = null) 
-    => ExecuteTest(() => needle.IsIn(ConvertFromStringToTestArray(haystack)), expected, exception)
-    ;
-
-  [Test]
-  [TestCase(null, null, false, typeof(NullReferenceException))]
-  [TestCase("a", null, false, typeof(ArgumentNullException))]
-  [TestCase("a", "", true)]
-  [TestCase("a", "a|b", false)]
-  [TestCase("a", "b|c", true)]
-  public void IsNotIn(string needle, string? haystack, bool expected, Type? exception = null) 
-    => ExecuteTest(() => needle.IsNotIn(ConvertFromStringToTestArray(haystack)), expected, exception)
-    ;
-
-  [Test]
   [TestCase(null, 0, null, typeof(NullReferenceException))]
   [TestCase("a", -1, null, typeof(ArgumentOutOfRangeException))]
   [TestCase("a", 0, null, typeof(ArgumentOutOfRangeException))]
@@ -947,6 +927,26 @@ public class StringTests {
   [TestCase("a", "a", StringComparison.Ordinal, true)]
   [TestCase("a", "A", StringComparison.Ordinal, false)]
   [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "b|a", StringComparison.Ordinal, false)]
+  [TestCase("ab", "b|a", StringComparison.Ordinal, true)]
+  [TestCase("ab", "B|a", StringComparison.Ordinal, false)]
+  [TestCase("ab", "B|a", StringComparison.OrdinalIgnoreCase, true)]
+  [TestCase("a", "", StringComparison.Ordinal, true)]
+  [TestCase("a", "|", StringComparison.Ordinal, true)]
+  [TestCase("a", "!", StringComparison.Ordinal, true)]
+  public void ContainsAll(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
+    ExecuteTest(() => input.ContainsAll(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAll(ConvertFromStringToTestArray(needles), comparison), expected, exception);
+    ExecuteTest(() => input.ContainsAll(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAll(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), expected, exception);
+  }
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, false, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, false, typeof(ArgumentNullException))]
+  [TestCase("a", "a", StringComparison.Ordinal, true)]
+  [TestCase("a", "A", StringComparison.Ordinal, false)]
+  [TestCase("a", "A", StringComparison.OrdinalIgnoreCase, true)]
   [TestCase("a", "b|a", StringComparison.Ordinal, true)]
   [TestCase("a", "", StringComparison.Ordinal, false)]
   [TestCase("a", "|", StringComparison.Ordinal, true)]
@@ -955,8 +955,12 @@ public class StringTests {
   public void ContainsAnyOfString(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
     ExecuteTest(() => input.ContainsAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
     ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), comparison), expected, exception);
+    ExecuteTest(() => input.ContainsAny(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), expected, exception);
     ExecuteTest(() => input.ContainsNotAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
     ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), comparison), !expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), !expected, exception);
   }
 
   [Test]
@@ -1019,9 +1023,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,(TruncateMode)0,null,null,typeof(NullReferenceException))]
-  [TestCase("", 0, (TruncateMode)0, null, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("", 1, (TruncateMode)65535, null, null, typeof(ArgumentException))]
+  [TestCase(null,0,0,null,null,typeof(NullReferenceException))]
+  [TestCase("", 0, 0, null, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("", 1, 65535, null, null, typeof(ArgumentException))]
   [TestCase("", 2, TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
   [TestCase("", 2, TruncateMode.KeepStart, "123", "")]
   [TestCase("ab", 2, TruncateMode.KeepStart, "123", "ab")]
@@ -1043,8 +1047,8 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null, (LineBreakMode)0, 0, 0, null, typeof(NullReferenceException))]
-  [TestCase("", (LineBreakMode)(-32768), 0, 0, null, typeof(ArgumentException))]
+  [TestCase(null, 0, 0, 0, null, typeof(NullReferenceException))]
+  [TestCase("", -1000, 0, 0, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 0, 0, null, typeof(ArgumentOutOfRangeException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, -1, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, StringSplitOptions.None, "")]
@@ -1060,9 +1064,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,(LineJoinMode)65535,null,typeof(NullReferenceException))]
-  [TestCase("", 0, (LineJoinMode)65535, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("abc", 5, (LineJoinMode)65535, null, typeof(ArgumentException))]
+  [TestCase(null,0,-1,null,typeof(NullReferenceException))]
+  [TestCase("", 0, -1, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("abc", 5, -1, null, typeof(ArgumentException))]
   [TestCase("abc", 5, LineJoinMode.CarriageReturn, "abc")]
   [TestCase("abc def", 5, LineJoinMode.LineFeed, "abc\ndef")]
   [TestCase("abc             def", 5, LineJoinMode.LineFeed, "abc\ndef")]

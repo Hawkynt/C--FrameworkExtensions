@@ -2633,7 +2633,57 @@ internal
 
   #endregion
 
-  #region ContainsAny/ContainsNotAny
+  #region ContainsAll/ContainsAny/ContainsNotAny
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAll(this string @this, params string[] other) => ContainsAll(@this, other, StringComparison.CurrentCulture);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAll(this string @this, StringComparison comparison, params string[] other) => ContainsAll(@this, other, comparison);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAll(this string @this, StringComparer comparer, params string[] other) => ContainsAll(@this, other, comparer);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsAll(this string @this, IEnumerable<string> values) => ContainsAll(@this, values, StringComparison.CurrentCulture);
+
+  /// <summary>
+  /// Whether the given <see cref="String"/> contains all the given values or not.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="values">The values that should be included</param>
+  /// <param name="comparison">The type of <see cref="StringComparison"/> to use</param>
+  /// <returns><see langword="true"/> if the given <see cref="String"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparison comparison) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+    Against.UnknownEnumValues(comparison);
+
+    return values.All(v => @this.Contains(v ?? string.Empty, comparison));
+  }
+
+  /// <summary>
+  /// Whether the given <see cref="String"/> contains all the given values or not.
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="values">The values that should be included</param>
+  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <returns><see langword="true"/> if the given <see cref="String"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(values);
+    Against.ArgumentIsNull(comparer);
+    
+    return values.All(v => @this.Contains(v ?? string.Empty, comparer));
+  }
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3268,6 +3318,9 @@ internal
   /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static int LineCount(this string @this, LineBreakMode mode = LineBreakMode.All, bool ignoreEmptyLines = false) {
     Against.ThisIsNull(@this);
     Against.UnknownEnumValues(mode);
@@ -3282,6 +3335,9 @@ internal
   /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long LongLineCount(this string @this, LineBreakMode mode = LineBreakMode.All, bool ignoreEmptyLines = false) {
     Against.ThisIsNull(@this);
     Against.UnknownEnumValues(mode);
@@ -3396,8 +3452,19 @@ internal
     KeepMiddle,
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string Truncate(this string @this, int count) => Truncate(@this, count, TruncateMode.KeepStart, "...");
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string Truncate(this string @this, int count, TruncateMode mode) => Truncate(@this, count, mode, "...");
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string Truncate(this string @this, int count, string ellipse) => Truncate(@this, count, TruncateMode.KeepStart, ellipse);
 
   /// <summary>
@@ -3673,6 +3740,9 @@ internal
   /// <param name="pattern">The pattern to find.</param>
   /// <param name="comparison">The comparison mode.</param>
   /// <returns>All characters left to the given text or the original string if text was not found.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string LeftUntil(this string @this, string pattern, StringComparison comparison = StringComparison.CurrentCulture) {
     if (@this == null)
       return null;
@@ -3689,6 +3759,9 @@ internal
   /// <param name="this">The text to search.</param>
   /// <param name="toFind">The text to find.</param>
   /// <returns>True if the LIKE matched.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool Like(this string @this, string toFind)
     => new Regex(@"\A"
                  + _SQL_LIKE_ESCAPING
