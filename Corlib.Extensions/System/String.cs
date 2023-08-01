@@ -561,71 +561,7 @@ internal
   }
 
 #endif
-
-  #region needed consts for converting filename patterns into regexes
-
-  private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
-  private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-
-  #endregion
-
-  /// <summary>
-  /// Converts a given filename pattern into a regular expression.
-  /// </summary>
-  /// <param name="pattern">The pattern.</param>
-  /// <returns>The regex.</returns>
-  private static Regex _ConvertFilePatternToRegex(string pattern) {
-
-    const string nonDotCharacters = "[^.]*";
-
-    if (pattern == null)
-      throw new ArgumentNullException();
-
-    pattern = pattern.Trim();
-    if (pattern.Length == 0)
-      throw new ArgumentException("Pattern is empty.");
-
-    if (_ILLEGAL_FILENAME_CHARACTERS.IsMatch(pattern))
-      throw new ArgumentException("Patterns contains ilegal characters.");
-
-    var hasExtension = _CATCH_FILENAME_EXTENSION.IsMatch(pattern);
-    var matchExact = false;
-
-    if (pattern.IndexOf('?') >= 0)
-      matchExact = true;
-    else if (hasExtension)
-      matchExact = _CATCH_FILENAME_EXTENSION.Match(pattern).Groups[1].Length != 3;
-
-    var regexString = Regex.Escape(pattern);
-    regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
-    regexString = Regex.Replace(regexString, @"\\\?", ".");
-
-    if (!matchExact && hasExtension)
-      regexString += nonDotCharacters;
-
-    regexString += "$";
-    return new(regexString, RegexOptions.IgnoreCase);
-  }
-
-  /// <summary>
-  /// Determines if the given string matches a given file pattern or not.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="pattern">The pattern to apply.</param>
-  /// <returns><c>true</c> if the string matches the file pattern; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool MatchesFilePattern(this string @this, string pattern) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(pattern);
-
-    return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
-  }
-
+  
   #region Matching Regexes
 
   /// <summary>
@@ -3513,7 +3449,7 @@ internal
   }
 
   #endregion
-
+  
   /// <summary>
   /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
   /// </summary>
@@ -3751,6 +3687,71 @@ internal
     return index < 0 ? @this : @this.Substring(0, index);
   }
 
+  #region Similarities
+
+
+  #region needed consts for converting filename patterns into regexes
+
+  // TODO: use GeneratedRegex when available (.Net7+)
+  private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
+  private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+
+  /// <summary>
+  /// Converts a given filename pattern into a regular expression.
+  /// </summary>
+  /// <param name="pattern">The pattern.</param>
+  /// <returns>The regex.</returns>
+  private static Regex _ConvertFilePatternToRegex(string pattern) {
+
+    const string nonDotCharacters = "[^.]*";
+
+    if (pattern == null)
+      throw new ArgumentNullException();
+
+    pattern = pattern.Trim();
+    if (pattern.Length == 0)
+      throw new ArgumentException("Pattern is empty.");
+
+    if (_ILLEGAL_FILENAME_CHARACTERS.IsMatch(pattern))
+      throw new ArgumentException("Patterns contains ilegal characters.");
+
+    var hasExtension = _CATCH_FILENAME_EXTENSION.IsMatch(pattern);
+    var matchExact = false;
+
+    if (pattern.IndexOf('?') >= 0)
+      matchExact = true;
+    else if (hasExtension)
+      matchExact = _CATCH_FILENAME_EXTENSION.Match(pattern).Groups[1].Length != 3;
+
+    var regexString = Regex.Escape(pattern);
+    regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
+    regexString = Regex.Replace(regexString, @"\\\?", ".");
+
+    if (!matchExact && hasExtension)
+      regexString += nonDotCharacters;
+
+    regexString += "$";
+    return new(regexString, RegexOptions.IgnoreCase);
+  }
+
+  #endregion
+
+  /// <summary>
+  /// Determines if the given string matches a given file pattern or not.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="pattern">The pattern to apply.</param>
+  /// <returns><c>true</c> if the string matches the file pattern; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool MatchesFilePattern(this string @this, string pattern) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(pattern);
+
+    return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
+  }
+  
   private static readonly Regex _SQL_LIKE_ESCAPING = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
 
   /// <summary>
@@ -3770,6 +3771,219 @@ internal
                    .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
       .IsMatch(@this)
   ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentation(this string @this)
+    => GetSoundexRepresentation(@this, CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? 5 : 4, CultureInfo.CurrentCulture)
+    ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="maxLength">The length of the soundex string</param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentation(this string @this, int maxLength)
+    => GetSoundexRepresentation(@this, maxLength, CultureInfo.CurrentCulture)
+    ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentationInvariant(this string @this)
+    => GetSoundexRepresentation(@this, 4, CultureInfo.InvariantCulture)
+  ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="maxLength">The length of the soundex string</param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentationInvariant(this string @this, int maxLength)
+    => GetSoundexRepresentation(@this, maxLength, CultureInfo.InvariantCulture)
+  ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="culture">The culture to use for phonetic matchings</param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentation(this string @this, CultureInfo culture)
+    => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de"? 5 : 4, culture)
+    ;
+
+  /// <summary>
+  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  /// </summary>
+  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="maxLength">The length of the soundex string</param>
+  /// <param name="culture">The culture to use for phonetic matchings</param>
+  /// <returns>The soundex result (phonetic representation)</returns>
+  public static string GetSoundexRepresentation(this string @this, int maxLength, CultureInfo culture) {
+    Against.ThisIsNull(@this);
+    Against.ValuesBelow(maxLength, 4);
+    Against.ArgumentIsNull(culture);
+
+    if (@this.Length == 0)
+      return new('0', maxLength);
+
+    static char GetGermanSoundexCode(char letter, char next) {
+      switch (letter) {
+        case 'C' when next == 'H':
+          return '7';
+        case 'B':
+        case 'P':
+        case 'F':
+        case 'V':
+        case 'W':
+          return '1';
+        case 'C':
+        case 'G':
+        case 'K':
+        case 'Q':
+        case 'X':
+        case 'S':
+        case 'Z':
+        case 'ß':
+          return '2';
+        case 'D':
+        case 'T':
+          return '3';
+        case 'L':
+          return '4';
+        case 'M':
+        case 'N':
+          return '5';
+        case 'R':
+          return '6';
+        default:
+          return '0';
+      }
+    }
+    static char GetGermanReplacer(char letter) => letter switch {
+      'Ä' => 'A',
+      'Ö' => 'O',
+      'Ü' => 'U',
+      _ => letter
+    };
+
+    static char GetEnglishSoundexCode(char letter, char next) {
+      switch (letter) {
+        case 'B':
+        case 'F':
+        case 'P':
+        case 'V':
+          return '1';
+        case 'C':
+        case 'G':
+        case 'J':
+        case 'K':
+        case 'Q':
+        case 'S':
+        case 'X':
+        case 'Z':
+          return '2';
+        case 'D':
+        case 'T':
+          return '3';
+        case 'L':
+          return '4';
+        case 'M':
+        case 'N':
+          return '5';
+        case 'R':
+          return '6';
+        default:
+          return '0';
+      }
+    }
+    static char GetEnglishReplacer(char letter) => letter;
+
+    Func<char, char, char> GetSoundexCode = culture.TwoLetterISOLanguageName == "de" ? GetGermanSoundexCode : GetEnglishSoundexCode;
+    Func<char, char> DiacriticsReplacer = culture.TwoLetterISOLanguageName == "de" ? GetGermanReplacer : GetEnglishReplacer;
+    
+    var firstChar = char.MinValue;
+    var previousChar = char.MinValue;
+    
+    var nextUnseenIndex = -1;
+    for (var i = 0; i < @this.Length; ++i) {
+      var currentChar = @this[i];
+      if (!char.IsLetter(currentChar))
+        continue;
+
+      nextUnseenIndex = i + 1;
+      if (firstChar == char.MinValue)
+        firstChar = DiacriticsReplacer(char.ToUpper(currentChar, culture));
+      else {
+        previousChar = char.ToUpper(currentChar, culture);
+        break;
+      }
+    }
+
+    const char ZERO = '0';
+
+    // no letters found
+    if (nextUnseenIndex < 0)
+      return new(ZERO, maxLength);
+
+    // only one letter found
+    if (previousChar == char.MinValue)
+      return firstChar + new string(ZERO, maxLength - 1);
+
+    var result = new char[maxLength];
+    result[0] = firstChar;
+    var resultIndex = 1;
+    var previousResultChar = char.MinValue;
+
+    for (var i = nextUnseenIndex; i < @this.Length; ++i) {
+      var currentChar = @this[i];
+      
+      // only take letters into account
+      if (!char.IsLetter(currentChar))
+        continue;
+
+      currentChar = char.ToUpper(currentChar, culture);
+      var soundexCode = GetSoundexCode(previousChar, currentChar);
+      previousChar = currentChar;
+
+      // no duplicate characters in soundex
+      if (soundexCode == previousResultChar)
+        continue;
+
+      // no inside zeroes
+      if (soundexCode == ZERO)
+        continue;
+      
+      result[resultIndex++] = previousResultChar = soundexCode;
+      
+      // if we already got enough soundex letters, return
+      if (resultIndex >= maxLength)
+        return new(result);
+    }
+
+    // last soundex letter
+    var lastSoundex = GetSoundexCode(previousChar, char.MinValue);
+
+    // still no duplicate characters in soundex
+    if (lastSoundex != previousResultChar)
+      result[resultIndex++] = lastSoundex;
+
+    // fill rest with zeroes
+    for (var i = resultIndex; i < maxLength; ++i)
+      result[i] = ZERO;
+
+    return new(result);
+  }
+
+  #endregion
 
   /// <summary>
   /// Converts a string to a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> version of it.

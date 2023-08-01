@@ -1023,9 +1023,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,0,null,null,typeof(NullReferenceException))]
-  [TestCase("", 0, 0, null, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("", 1, 65535, null, null, typeof(ArgumentException))]
+  [TestCase(null, 0, (TruncateMode)0, null, null, typeof(NullReferenceException))]
+  [TestCase("", 0, (TruncateMode)0, null, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("", 1, (TruncateMode)65535, null, null, typeof(ArgumentException))]
   [TestCase("", 2, TruncateMode.KeepStart, null, null, typeof(ArgumentNullException))]
   [TestCase("", 2, TruncateMode.KeepStart, "123", "")]
   [TestCase("ab", 2, TruncateMode.KeepStart, "123", "ab")]
@@ -1047,8 +1047,8 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null, 0, 0, 0, null, typeof(NullReferenceException))]
-  [TestCase("", -1000, 0, 0, null, typeof(ArgumentException))]
+  [TestCase(null, (LineBreakMode)0, 0, 0, null, typeof(NullReferenceException))]
+  [TestCase("", (LineBreakMode)(-32768), 0, 0, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 0, 0, null, typeof(ArgumentOutOfRangeException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, -1, null, typeof(ArgumentException))]
   [TestCase("", LineBreakMode.CarriageReturn, 2, StringSplitOptions.None, "")]
@@ -1064,9 +1064,9 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,0,-1,null,typeof(NullReferenceException))]
-  [TestCase("", 0, -1, null, typeof(ArgumentOutOfRangeException))]
-  [TestCase("abc", 5, -1, null, typeof(ArgumentException))]
+  [TestCase(null, 0, (LineJoinMode)65535, null, typeof(NullReferenceException))]
+  [TestCase("", 0, (LineJoinMode)65535, null, typeof(ArgumentOutOfRangeException))]
+  [TestCase("abc", 5, (LineJoinMode)65535, null, typeof(ArgumentException))]
   [TestCase("abc", 5, LineJoinMode.CarriageReturn, "abc")]
   [TestCase("abc def", 5, LineJoinMode.LineFeed, "abc\ndef")]
   [TestCase("abc             def", 5, LineJoinMode.LineFeed, "abc\ndef")]
@@ -1074,6 +1074,41 @@ public class StringTests {
   [TestCase("abcdef", 5, LineJoinMode.LineFeed, "abcd\nef")]
   public void WordWrap(string? input, int count, LineJoinMode mode, string? expected, Type? exception = null)
     => ExecuteTest(() => input.WordWrap(count, mode), expected, exception)
+    ;
+
+  [Test]
+  [TestCase(null,-1,null,null,typeof(NullReferenceException))]
+  [TestCase("", -1, "de", "00000")]
+  [TestCase("", -1, "en", "0000")]
+  [TestCase("   ", 4, "en", "0000")]
+  [TestCase("!@#$%", 4, "en", "0000")]
+  [TestCase("A", 4, "en", "A000")]
+  [TestCase("", 0, "de", "00000",typeof(ArgumentOutOfRangeException))]
+  [TestCase("A", -1, "de", "A0000")]
+  [TestCase("", 4, "de", "0000")]
+  [TestCase("Lee", -1, "en", "L000")]
+  [TestCase("Britney", -1, "en", "B635")]
+  [TestCase("Spears", -1, "en", "S162")]
+  [TestCase("Superzicke", -1, "en", "S162")]
+  [TestCase("Supercalifragilisticexpialidocious", 4, "en", "S162")]
+  [TestCase("Hello123", 4, "en", "H400")]
+  [TestCase("über", 4, "de", "U160")]
+  [TestCase("Rhythms", 4, "en", "R352")]
+  [TestCase("Apple", 4, "en", "A140")]
+  [TestCase("aPPle", 4, "en", "A140")]
+  [TestCase("APPLE", 4, "en", "A140")]
+  [TestCase("English", 4, "en", "E524")]
+  [TestCase("Deutsch", 4, "de", "D327")]
+  public void GetSoundexRepresentation(string? input, int length, string? culture, string? expected, Type? exception = null)
+    => ExecuteTest(() => 
+      length == -1
+      ? culture == null
+        ? input.GetSoundexRepresentation()
+        : input.GetSoundexRepresentation(CultureInfo.GetCultureInfoByIetfLanguageTag(culture))
+      : culture == null
+        ? input.GetSoundexRepresentation(length)
+        : input.GetSoundexRepresentation(length, CultureInfo.GetCultureInfoByIetfLanguageTag(culture))
+      , expected, exception)
     ;
 
 }
