@@ -3832,8 +3832,58 @@ internal
     Against.ValuesBelow(maxLength, 4);
     Against.ArgumentIsNull(culture);
 
+    const char ZERO = '0';
+
     if (@this.Length == 0)
-      return new('0', maxLength);
+      return new(ZERO, maxLength);
+    
+    static string CalculateSoundexRepresentation(string text, int maxLength, char firstCharacter, char previousCharacter, int lastLetterSeenPlusOne, Func<char, char, char> getSoundexCode, CultureInfo cultureInfo) {
+      var result = new char[maxLength];
+      result[0] = firstCharacter;
+
+      var resultIndex = 1;
+      var previousResultChar = char.MinValue;
+
+      for (var i = lastLetterSeenPlusOne; i < text.Length; ++i) {
+        var currentCharacter = text[i];
+
+        // only take letters into account
+        if (!char.IsLetter(currentCharacter))
+          continue;
+
+        currentCharacter = char.ToUpper(currentCharacter, cultureInfo);
+
+        var soundexCode = getSoundexCode(previousCharacter, currentCharacter);
+        previousCharacter = currentCharacter;
+
+        // no duplicate characters in soundex
+        if (soundexCode == previousResultChar)
+          continue;
+
+        // no inside zeroes
+        if (soundexCode == ZERO)
+          continue;
+
+        result[resultIndex++] = previousResultChar = soundexCode;
+
+        // if we already got enough soundex letters, return
+        if (resultIndex >= maxLength)
+          return new(result);
+      }
+
+      // last soundex letter
+      var lastSoundex = getSoundexCode(previousCharacter, char.MinValue);
+
+      // still no duplicate characters in soundex
+      if (lastSoundex != previousResultChar)
+        result[resultIndex++] = lastSoundex;
+
+      // fill rest with zeroes
+      for (var i = resultIndex; i < maxLength; ++i)
+        result[i] = ZERO;
+
+      return new(result);
+    }
 
     static char GetGermanSoundexCode(char letter, char next) {
       switch (letter) {
@@ -3906,12 +3956,12 @@ internal
       }
     }
     static char GetEnglishReplacer(char letter) => letter;
-
-    Func<char, char, char> GetSoundexCode = culture.TwoLetterISOLanguageName == "de" ? GetGermanSoundexCode : GetEnglishSoundexCode;
-    Func<char, char> DiacriticsReplacer = culture.TwoLetterISOLanguageName == "de" ? GetGermanReplacer : GetEnglishReplacer;
     
+    var isGermanCulture = culture.TwoLetterISOLanguageName == "de";
+    Func<char, char, char> GetSoundexCode = isGermanCulture ? GetGermanSoundexCode : GetEnglishSoundexCode;
+    Func<char, char> DiacriticsReplacer = isGermanCulture ? GetGermanReplacer : GetEnglishReplacer;
+
     var firstChar = char.MinValue;
-    var previousChar = char.MinValue;
     
     var nextUnseenIndex = -1;
     for (var i = 0; i < @this.Length; ++i) {
@@ -3920,67 +3970,22 @@ internal
         continue;
 
       nextUnseenIndex = i + 1;
-      if (firstChar == char.MinValue)
-        firstChar = DiacriticsReplacer(char.ToUpper(currentChar, culture));
-      else {
-        previousChar = char.ToUpper(currentChar, culture);
-        break;
-      }
-    }
+      currentChar = char.ToUpper(currentChar, culture);
+      
+      // when first character already known, calculate soundex
+      if (firstChar != char.MinValue)
+        return CalculateSoundexRepresentation(@this, maxLength, firstChar, currentChar, nextUnseenIndex, GetSoundexCode, culture);
 
-    const char ZERO = '0';
+      // assign the first letter and continue searching a second one
+      firstChar = DiacriticsReplacer(currentChar);
+    }
 
     // no letters found
     if (nextUnseenIndex < 0)
       return new(ZERO, maxLength);
 
     // only one letter found
-    if (previousChar == char.MinValue)
-      return firstChar + new string(ZERO, maxLength - 1);
-
-    var result = new char[maxLength];
-    result[0] = firstChar;
-    var resultIndex = 1;
-    var previousResultChar = char.MinValue;
-
-    for (var i = nextUnseenIndex; i < @this.Length; ++i) {
-      var currentChar = @this[i];
-      
-      // only take letters into account
-      if (!char.IsLetter(currentChar))
-        continue;
-
-      currentChar = char.ToUpper(currentChar, culture);
-      var soundexCode = GetSoundexCode(previousChar, currentChar);
-      previousChar = currentChar;
-
-      // no duplicate characters in soundex
-      if (soundexCode == previousResultChar)
-        continue;
-
-      // no inside zeroes
-      if (soundexCode == ZERO)
-        continue;
-      
-      result[resultIndex++] = previousResultChar = soundexCode;
-      
-      // if we already got enough soundex letters, return
-      if (resultIndex >= maxLength)
-        return new(result);
-    }
-
-    // last soundex letter
-    var lastSoundex = GetSoundexCode(previousChar, char.MinValue);
-
-    // still no duplicate characters in soundex
-    if (lastSoundex != previousResultChar)
-      result[resultIndex++] = lastSoundex;
-
-    // fill rest with zeroes
-    for (var i = resultIndex; i < maxLength; ++i)
-      result[i] = ZERO;
-
-    return new(result);
+    return firstChar + new string(ZERO, maxLength - 1);
   }
 
   #endregion
