@@ -5,8 +5,9 @@ name: Build
 
 on:
   schedule:
-    - cron: '00 12 * * *'
-
+    - cron: '59 23 * * 0'
+  workflow_dispatch:
+  
 #  push:
 #    branches: [ "master" ]
 #  pull_request:
