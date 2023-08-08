@@ -33,13 +33,13 @@ namespace System.Linq {
   static partial class IQueryableExtensions {
     
     /// <summary>
-    /// Modifies the resultset to include filtering based on the given query string.
+    /// Modifies the result-set to include filtering based on the given query string.
     /// Multiple filters may be present, split by whitespaces, combined with AND.
     /// </summary>
-    /// <typeparam name="TRow">The type of rows</typeparam>
-    /// <param name="this">This IQueryable</param>
-    /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white")</param>
-    /// <param name="selector">Which column of the record to filter</param>
+    /// <typeparam name="TRow">The type of rows.</typeparam>
+    /// <param name="this">This IQueryable.</param>
+    /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white").</param>
+    /// <param name="selector">Which column of the record to filter.</param>
     public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query) {
       if (@this == null)
         throw new ArgumentNullException(nameof(@this));
@@ -64,6 +64,42 @@ namespace System.Linq {
       }
 
       return results;
+    }
+
+    /// <summary>Sorts the elements of a sequence in ascending order according to a property.</summary>
+    /// <typeparam name="TElement">The type of the elements of <paramref name="this" />.</typeparam>
+    /// <param name="this">A sequence of values to order.</param>
+    /// <param name="propertyPath">Path to the property to order by e.g. <c>nameof(<typeparamref name="TElement"/>.PropertyName)</c>.</param>
+    /// <returns>An <see cref="T:System.Linq.IOrderedQueryable`1" /> whose elements are sorted according to a property.</returns>
+    public static IOrderedQueryable<TElement> OrderByPropertyName<TElement>(this IQueryable<TElement> @this, string propertyPath)
+      => _OrderByPropertyNameUsing(@this, propertyPath, nameof(Queryable.OrderBy));
+
+    /// <inheritdoc cref="OrderByPropertyName{T}"/>
+    /// <summary>Sorts the elements of a sequence in descending order according to a property.</summary>
+    public static IOrderedQueryable<T> OrderByPropertyNameDescending<T>(this IQueryable<T> @this, string propertyPath)
+      => _OrderByPropertyNameUsing(@this, propertyPath, nameof(Queryable.OrderByDescending));
+
+    /// <summary>Performs a subsequent ordering of the elements in a sequence in ascending order according to a property.</summary>
+    /// <inheritdoc cref="OrderByPropertyName{T}"/>
+    public static IOrderedQueryable<T> ThenByPropertyName<T>(this IOrderedQueryable<T> @this, string propertyPath)
+      => _OrderByPropertyNameUsing(@this, propertyPath, nameof(Queryable.ThenBy));
+
+    /// <summary>Performs a subsequent ordering of the elements in a sequence in descending order according to a property.</summary>
+    /// <inheritdoc cref="OrderByPropertyName{T}"/>
+    public static IOrderedQueryable<T> ThenByPropertyNameDescending<T>(this IOrderedQueryable<T> @this, string propertyPath)
+      => _OrderByPropertyNameUsing(@this, propertyPath, nameof(Queryable.ThenByDescending));
+
+    private static IOrderedQueryable<T> _OrderByPropertyNameUsing<T>(this IQueryable<T> @this, string propertyPath, string method) {
+      var parameter = Expression.Parameter(typeof(T), "item");
+      var member = propertyPath.Split('.')
+        .Aggregate((Expression)parameter, Expression.PropertyOrField);
+
+      var keySelector = Expression.Lambda(member, parameter);
+      var methodCall = Expression.Call(typeof(Queryable), method, new[]
+          { parameter.Type, member.Type },
+        @this.Expression, Expression.Quote(keySelector));
+
+      return (IOrderedQueryable<T>)@this.Provider.CreateQuery(methodCall);
     }
   }
 }
