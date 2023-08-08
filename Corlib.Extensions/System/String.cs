@@ -3919,9 +3919,13 @@ internal
       }
     }
     static char GetGermanReplacer(char letter) => letter switch {
-      'Ä' => 'A',
-      'Ö' => 'O',
-      'Ü' => 'U',
+      '\u00c4' or
+        '\u00e4' => 'A',
+      '\u00d6' or
+        '\u00f6' => 'O',
+      '\u00dc' or 
+        '\u00fc' => 'U',
+      '\u00df' => 'S',
       _ => letter
     };
 
