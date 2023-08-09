@@ -669,6 +669,7 @@ internal
 #endif
   public static string FormatWith(this string @this, params object[] parameters) {
     Against.ThisIsNull(@this);
+
     return string.Format(@this, parameters);
   }
 
@@ -682,8 +683,9 @@ internal
   public static string FormatWithEx(this string @this, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(fields);
+
     var fieldCache = fields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, comparer);
-    return FormatWithEx(@this, f => fieldCache.ContainsKey(f) ? fieldCache[f] : null);
+    return FormatWithEx(@this, f => fieldCache.TryGetValue(f, out var result) ? result : null);
   }
 
   /// <summary>
@@ -700,10 +702,9 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string FormatWithEx(this string @this, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fields != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fields);
+
     return FormatWithEx(@this, fields, comparer);
   }
 
@@ -720,10 +721,9 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string FormatWithEx(this string @this, params KeyValuePair<string, object>[] fields) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fields != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fields);
+
     return FormatWithEx(@this, fields, null);
   }
 
@@ -740,10 +740,9 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string FormatWithEx(this string @this, IDictionary<string, string> fields) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fields != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fields);
+
     return FormatWithEx(@this, f => fields[f]);
   }
 
@@ -760,10 +759,9 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string FormatWithEx(this string @this, Hashtable fields) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fields != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fields);
+
     return FormatWithEx(@this, f => fields[f]);
   }
 
@@ -783,6 +781,8 @@ internal
 
     var cache = new Dictionary<string, Func<object>>();
     var type = @object.GetType();
+
+    return @this.FormatWithEx(Getter);
 
     object Getter(string field) {
       if (cache.TryGetValue(field, out var call))
@@ -828,8 +828,6 @@ internal
       cache.Add(field, call);
       return call();
     }
-
-    return @this.FormatWithEx(Getter);
   }
 
   /// <summary>
