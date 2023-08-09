@@ -53,7 +53,7 @@ static partial class <#=type#>Extensions {
   /// <param name="action">What to execute</param>
   public static void Times(this <#=type#> @this, Action action) {
     Against.ArgumentIsNull(action);
-    <# if (IsSigned(type)) {#>Against.NegativeValues(@this);<#}#>
+    Against.ValuesBelow(@this,  <#=GetOne(type)#>);
 
     while (@this-- > 0)
       action();
@@ -66,7 +66,7 @@ static partial class <#=type#>Extensions {
   /// <param name="action">What to execute</param>
   public static void Times(this <#=type#> @this, Action<<#=type#>> action) {
     Against.ArgumentIsNull(action);
-    <# if (IsSigned(type)) {#>Against.NegativeValues(@this);<#}#>
+    Against.ValuesBelow(@this,  <#=GetOne(type)#>);
 
     <#=type#> i = 0;
     while (i < @this)
@@ -79,8 +79,9 @@ static partial class <#=type#>Extensions {
   /// <param name="this">How often the string should be repeated</param>
   /// <param name="text">The text to repeat</param>
   /// <returns>The concatenated <see cref="string"/></returns>
+  <# if (NeedsCast(type)) {#>
   public static string Times(this <#=type#> @this, string text) {
-    <# if (IsSigned(type)) {#>Against.NegativeValues(@this);<#}#>
+    Against.ValuesBelow(@this,  <#=GetOne(type)#>);
 
     if (text == null)
       return null;
@@ -91,6 +92,14 @@ static partial class <#=type#>Extensions {
 
     return result.ToString();
   }
+  <#} else {#>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static string Times(this <#=type#> @this, string text)
+    => text.Repeat(@this)
+    ;
+  <#}#>
 
   /// <summary>
   /// Repeats the given <see cref="char"/> multiple times
@@ -101,16 +110,11 @@ static partial class <#=type#>Extensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  <#if (IsSigned(type)) {#>
-  
   public static string Times(this <#=type#> @this, char character) {
-    Against.NegativeValues(@this);
+    Against.ValuesBelow(@this,  <#=GetOne(type)#>);
 
     return new(character, <#if (NeedsCast(type)) {#>(int)<#}#>@this);
   }
-  <#} else {#>
-  public static string Times(this <#=type#> @this, char character) => new(character, <#if (NeedsCast(type)) {#>(int)<#}#>@this);
-  <#}#>
 
 }
 <#}#>
@@ -119,4 +123,5 @@ static partial class <#=type#>Extensions {
   bool IsSigned(string typeName) => typeName == "SByte" || typeName == "Int16" || typeName == "Int32" || typeName == "Int64";
   bool CanComputeCapacity(string typeName) => typeName != "UInt32" && typeName != "UInt64" && typeName != "Int64";
   bool NeedsCast(string typeName) => typeName == "UInt32" || typeName == "UInt64" || typeName == "Int64";
+  string GetOne(string typeName) => NeedsCast(typeName) || typeName == "Int32" ? "1" : "(" + typeName + ")1";
 #>
