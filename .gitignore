@@ -294,6 +294,7 @@ Corlib.Extensions/Guard/Against.T4.cs
 Corlib.Extensions/System/Action.cs
 Corlib.Extensions/System/Array.FastBlocks.cs
 Corlib.Extensions/System/Math.T4.cs
+Corlib.Extensions/System/Numerics.T4.cs
 Corlib.Extensions/System/String.Parsers.cs
 Corlib.Extensions/System/TimeSpan.cs
 Corlib.Extensions/System/Type.cs
