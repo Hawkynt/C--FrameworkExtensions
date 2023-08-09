@@ -23,16 +23,29 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Guard;
 
 namespace System;
 
+/// <summary>
+/// Allows methods to have a private local value that is kept during method invocations
+/// </summary>
+/// <remarks>
+/// All methods within the same source file and the same name share the same value.
+/// To make overloads with the same name of different source files share the same name, use the owner parameter.
+/// If a source file implements several classes with the same method name, values are shared across classes.
+/// </remarks>
+/// <typeparam name="TValue">The type of value to keep</typeparam>
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
 internal
 #endif
-static class StaticMethodLocal {
+static class StaticMethodLocal<TValue> {
 
+  /// <summary>
+  /// The internal key to distinguish values.
+  /// </summary>
   private readonly struct MethodKey : IEquatable<MethodKey> {
     private readonly Type _owner;
     private readonly string _filePath;
@@ -70,39 +83,132 @@ static class StaticMethodLocal {
     
   }
   
-  private static readonly Dictionary<MethodKey, object> _VALUES = new();
+  private static readonly Dictionary<MethodKey, TValue> _VALUES = new();
 
-  public static TValue Get<TOwner, TValue>(TValue startValue = default, [CallerMemberName] string memberName = null)
-    => _Get(typeof(TOwner), memberName, startValue);
-
-  public static TValue Get<TValue>(Type owner, TValue startValue = default, [CallerMemberName] string memberName = null)
-    => _Get(owner, memberName, startValue);
-
-  public static TValue Get<TValue>(TValue startValue = default, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
-    => _Get(null, filePath + memberName, startValue);
-  
-  private static TValue _Get<TValue>(Type owner, string methodName, TValue startValue) {
-    var key = new MethodKey(owner,null, methodName);
-    lock (StaticMethodLocal._VALUES)
-      if (StaticMethodLocal._VALUES.TryGetValue(key, out var result))
-        return (TValue)result;
+  private static TValue _Get(Type owner, string methodName, TValue startValue) {
+    var key = new MethodKey(owner, null, methodName);
+    lock (StaticMethodLocal<TValue>._VALUES)
+      if (StaticMethodLocal<TValue>._VALUES.TryGetValue(key, out var result))
+        return result;
 
     return startValue;
   }
 
-  private static void _Set<TValue>(Type owner, string methodName, TValue value) {
+  private static TValue _Get(Type owner, string methodName, Func<TValue> startValueFactory) {
     var key = new MethodKey(owner, null, methodName);
-    lock (StaticMethodLocal._VALUES)
-      StaticMethodLocal._VALUES[key] = value;
+    lock (StaticMethodLocal<TValue>._VALUES) {
+      if (StaticMethodLocal<TValue>._VALUES.TryGetValue(key, out var result))
+        return (TValue)result;
+
+      StaticMethodLocal<TValue>._VALUES.Add(key, result = startValueFactory());
+      return result;
+    }
   }
 
-  public static void Set<TOwner, TValue>(TValue value, [CallerMemberName] string memberName = null)
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <typeparam name="TOwner">The method owner</typeparam>
+  /// <param name="startValue">The initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get<TOwner>(TValue startValue = default, [CallerMemberName] string memberName = null)
+    => _Get(typeof(TOwner), memberName, startValue);
+
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <param name="owner">The method owner</param>
+  /// <param name="startValue">The initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get(Type owner, TValue startValue = default, [CallerMemberName] string memberName = null)
+    => _Get(owner, memberName, startValue);
+
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <param name="startValue">The initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get(TValue startValue = default, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
+    => _Get(null, filePath + memberName, startValue);
+
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <typeparam name="TOwner">The method owner</typeparam>
+  /// <param name="startValueFactory">The factory that generates the initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get<TOwner>(Func<TValue> startValueFactory, [CallerMemberName] string memberName = null) {
+    Against.ArgumentIsNull(startValueFactory);
+
+    return _Get(typeof(TOwner), memberName, startValueFactory);
+  }
+
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <param name="owner">The method owner</param>
+  /// <param name="startValueFactory">The factory that generates the initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get(Type owner, Func<TValue> startValueFactory, [CallerMemberName] string memberName = null) {
+    Against.ArgumentIsNull(startValueFactory);
+
+    return _Get(owner, memberName, startValueFactory);
+  }
+
+  /// <summary>
+  /// Gets the method local static value
+  /// </summary>
+  /// <param name="startValueFactory">The factory that generates the initial value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
+  /// <returns>The current/initial value</returns>
+  public static TValue Get(
+    Func<TValue> startValueFactory,
+    [CallerMemberName] string memberName = null,
+    [CallerFilePath] string filePath = null
+  ) {
+    Against.ArgumentIsNull(startValueFactory);
+    
+    return _Get(null, filePath + memberName, startValueFactory);
+  }
+
+  private static void _Set(Type owner, string methodName, TValue value) {
+    var key = new MethodKey(owner, null, methodName);
+    lock (StaticMethodLocal<TValue>._VALUES)
+      StaticMethodLocal<TValue>._VALUES[key] = value;
+  }
+
+  /// <summary>
+  /// Sets the method local static to a new value.
+  /// </summary>
+  /// <typeparam name="TOwner">The method owner</typeparam>
+  /// <param name="value">The new value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  public static void Set<TOwner>(TValue value, [CallerMemberName] string memberName = null)
     => _Set(typeof(TOwner), memberName, value);
 
-  public static void Set<TValue>(Type owner, TValue value, [CallerMemberName] string memberName = null)
+  /// <summary>
+  /// Sets the method local static to a new value.
+  /// </summary>
+  /// <param name="owner">The method owner</param>
+  /// <param name="value">The new value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  public static void Set(Type owner, TValue value, [CallerMemberName] string memberName = null)
     => _Set(owner, memberName, value);
 
-  public static void Set<TValue>(TValue value, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
+  /// <summary>
+  /// Sets the method local static to a new value.
+  /// </summary>
+  /// <param name="value">The new value</param>
+  /// <param name="memberName">The name of the method; let the compiler fill this</param>
+  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
+  public static void Set(TValue value, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
     => _Set(null, filePath + memberName, value);
 
 }
