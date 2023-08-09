@@ -21,18 +21,17 @@
 
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace MethodLocalStaticValue;
+namespace System;
 
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
 internal
 #endif
-static class MethodLocal {
+static class StaticMethodLocal {
 
   private readonly struct MethodKey : IEquatable<MethodKey> {
     private readonly Type _owner;
@@ -84,8 +83,8 @@ static class MethodLocal {
   
   private static TValue _Get<TValue>(Type owner, string methodName, TValue startValue) {
     var key = new MethodKey(owner,null, methodName);
-    lock (MethodLocal._VALUES)
-      if (MethodLocal._VALUES.TryGetValue(key, out var result))
+    lock (StaticMethodLocal._VALUES)
+      if (StaticMethodLocal._VALUES.TryGetValue(key, out var result))
         return (TValue)result;
 
     return startValue;
@@ -93,8 +92,8 @@ static class MethodLocal {
 
   private static void _Set<TValue>(Type owner, string methodName, TValue value) {
     var key = new MethodKey(owner, null, methodName);
-    lock (MethodLocal._VALUES)
-      MethodLocal._VALUES[key] = value;
+    lock (StaticMethodLocal._VALUES)
+      StaticMethodLocal._VALUES[key] = value;
   }
 
   public static void Set<TOwner, TValue>(TValue value, [CallerMemberName] string memberName = null)
