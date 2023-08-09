@@ -1,9 +1,8 @@
 ﻿using NUnit.Framework;
-using System.Diagnostics;
 using System.Linq;
 using static Corlib.Tests.NUnit.TestUtilities;
 
-namespace Corlib.Tests.System.Diagnostics;
+namespace System.Diagnostics;
 
 [TestFixture]
 public class ProcessTests {

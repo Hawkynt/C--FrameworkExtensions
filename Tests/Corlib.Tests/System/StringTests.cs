@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +7,7 @@ using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 using static System.StringExtensions;
 
-namespace Corlib.Tests.System;
+namespace System;
 
 [TestFixture]
 public class StringTests {
@@ -434,7 +433,8 @@ public class StringTests {
   [TestCase("abc.mp3", "*mp3", true)]
   [TestCase("a.abc.mp3", "*?mp3", true)]
   [TestCase("a.mp3", "a.mp3", true)]
-  [TestCase("a.mp3abc", "a.mp3", true)]
+  [TestCase("a.mp3abc", "a.mp3", false)]
+  [TestCase("a.mp3abc", "a.mp3*", true)]
   [TestCase("abc.mp", "*.mp", true)]
   [TestCase("abc.mp3", "?mp3", false)]
   [TestCase("abc.mp3", "*.mp", false)]

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-using static Corlib.Tests.NUnit.TestUtilities;
+﻿using static Corlib.Tests.NUnit.TestUtilities;
 using NUnit.Framework;
 using System.Linq;
 
-namespace Corlib.Tests.System.Collections.Generic;
+namespace System.Collections.Generic;
 
 [TestFixture]
 public class EnumerableTests {

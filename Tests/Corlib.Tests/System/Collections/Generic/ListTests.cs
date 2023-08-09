@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿using System.Linq;
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
-namespace Corlib.Tests.System.Collections.Generic;
+namespace System.Collections.Generic;
 
 [TestFixture]
 public class ListTests {

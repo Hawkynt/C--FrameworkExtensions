@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
-namespace System.Tests; 
+namespace System; 
 
 [TestFixture]
 public class ArrayTests {

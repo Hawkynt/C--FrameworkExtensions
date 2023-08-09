@@ -1,8 +1,6 @@
-﻿using System;
-using System.ComponentModel;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Corlib.Tests.System.ComponentModel;
+namespace System.ComponentModel;
 
 [TestFixture]
 public class SortableBindingListTest {
@@ -26,14 +24,12 @@ public class SortableBindingListTest {
 
   #endregion
 
-  private static Item _GetItemById(int id) {
-    return new Item(
-      id.ToString(),
-      id,
-      id,
-      id.IsEven()
-    );
-  }
+  private static Item _GetItemById(int id) => new(
+    id.ToString(),
+    id,
+    id,
+    id.IsEven()
+  );
 
   [Test]
   [TestCase(ListSortDirection.Ascending, 1, 0)]
