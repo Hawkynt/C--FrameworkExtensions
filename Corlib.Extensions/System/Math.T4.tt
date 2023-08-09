@@ -490,7 +490,7 @@ namespace System {
   #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
   #endif
-    public static <#=type#> MultiplFusedMultiplyAddyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => @this * mul + add;
+    public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => @this * mul + add;
   <#}#>
 
 #endif
