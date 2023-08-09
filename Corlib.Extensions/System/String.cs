@@ -24,7 +24,7 @@
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if SUPPORTS_ARRAYPOOL
+#if SUPPORTS_ARRAYPOOL && !UNSAFE
 using Buffers;
 #endif
 using Collections;
@@ -3615,23 +3615,23 @@ internal
     /// </summary>
     public int Port { get; }
 
-    public static explicit operator IPEndPoint(HostEndPoint This) => new(Dns.GetHostEntry(This.Host).AddressList[0], This.Port);
+    public static explicit operator IPEndPoint(HostEndPoint @this) => new(Dns.GetHostEntry(@this.Host).AddressList[0], @this.Port);
   }
 #endregion
 
   /// <summary>
   /// Parses the host and port from a given string.
   /// </summary>
-  /// <param name="This">This String, e.g. 172.17.4.3:http .</param>
+  /// <param name="this">This String, e.g. 172.17.4.3:http .</param>
   /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
-  public static HostEndPoint ParseHostAndPort(this string This) {
-    if (This.IsNullOrWhiteSpace())
+  public static HostEndPoint ParseHostAndPort(this string @this) {
+    if (@this.IsNullOrWhiteSpace())
       return null;
 
-    var host = This;
+    var host = @this;
     ushort port = 0;
     var index = host.IndexOf(':');
     if (index < 0)
@@ -3647,21 +3647,21 @@ internal
   /// <summary>
   /// Replaces any of the given characters in the string.
   /// </summary>
-  /// <param name="This">This String.</param>
+  /// <param name="this">This String.</param>
   /// <param name="chars">The chars to replace.</param>
   /// <param name="replacement">The replacement.</param>
   /// <returns>The new string with replacements done.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
-  public static string ReplaceAnyOf(this string This, string chars, string replacement) {
+  public static string ReplaceAnyOf(this string @this, string chars, string replacement) {
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
+    Contract.Requires(@this != null);
     Contract.Requires(chars != null);
 #endif
     return string.Join(
       string.Empty, (
-        from c in This
+        from c in @this
         select chars.IndexOf(c) >= 0 ? replacement ?? string.Empty : c.ToString()
       ).ToArray()
     );
@@ -3690,9 +3690,6 @@ internal
 
   #region needed consts for converting filename patterns into regexes
 
-  // TODO: use GeneratedRegex when available (.Net7+)
-  private static readonly Regex _ILLEGAL_FILENAME_CHARACTERS = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
-  private static readonly Regex _CATCH_FILENAME_EXTENSION = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
 
   /// <summary>
   /// Converts a given filename pattern into a regular expression.
@@ -3700,26 +3697,17 @@ internal
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
   private static Regex _ConvertFilePatternToRegex(string pattern) {
-
+    
     const string nonDotCharacters = "[^.]*";
-
-    if (pattern == null)
-      throw new ArgumentNullException();
-
-    pattern = pattern.Trim();
-    if (pattern.Length == 0)
-      throw new ArgumentException("Pattern is empty.");
-
-    if (_ILLEGAL_FILENAME_CHARACTERS.IsMatch(pattern))
-      throw new ArgumentException("Patterns contains ilegal characters.");
-
-    var hasExtension = _CATCH_FILENAME_EXTENSION.IsMatch(pattern);
+    
+    var match = CatchFilenameExtension().Match(pattern);
+    var hasExtension = match.Success;
     var matchExact = false;
 
     if (pattern.IndexOf('?') >= 0)
       matchExact = true;
     else if (hasExtension)
-      matchExact = _CATCH_FILENAME_EXTENSION.Match(pattern).Groups[1].Length != 3;
+      matchExact = match.Groups[1].Length != 3;
 
     var regexString = Regex.Escape(pattern);
     regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
@@ -3730,6 +3718,12 @@ internal
 
     regexString += "$";
     return new(regexString, RegexOptions.IgnoreCase);
+
+    // TODO: use GeneratedRegex when available (.Net7+)
+    static Regex CatchFilenameExtension() => StaticMethodLocal<Regex>.Get(
+      () => new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled | RegexOptions.ExplicitCapture)
+    );
+
   }
 
   #endregion
@@ -3745,11 +3739,20 @@ internal
 #endif
   public static bool MatchesFilePattern(this string @this, string pattern) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(pattern);
+    Against.ArgumentIsNullOrEmpty(pattern);
+    
+    if (IllegalFilenameCharacters().IsMatch(pattern))
+      throw new ArgumentException("Patterns contains ilegal characters.");
 
     return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
+
+    // TODO: use GeneratedRegex when available (.Net7+)
+    static Regex IllegalFilenameCharacters() => StaticMethodLocal<Regex>.Get(
+      () => new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture)
+    );
+
   }
-  
+
   private static readonly Regex _SQL_LIKE_ESCAPING = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
 
   /// <summary>
