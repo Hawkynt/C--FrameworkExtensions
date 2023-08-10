@@ -290,6 +290,7 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 Backports/System/FuncAction.cs
+Backports/System/NumericsHelpers.T4.cs
 Corlib.Extensions/Guard/Against.T4.cs
 Corlib.Extensions/System/Action.cs
 Corlib.Extensions/System/Array.FastBlocks.cs
