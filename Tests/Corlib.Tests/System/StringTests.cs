@@ -1111,4 +1111,19 @@ public class StringTests {
       , expected, exception)
     ;
 
+  [Test]
+  [TestCase(null,null,null,null,typeof(NullReferenceException))]
+  [TestCase("", null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", "", null, null, typeof(ArgumentException))]
+  [TestCase("", "a", null, "")]
+  [TestCase("a", "a", null, "")]
+  [TestCase("a", "b", null, "a")]
+  [TestCase("abc", "a", "x", "xbc")]
+  [TestCase("abc", "aa", "x", "xbc")]
+  [TestCase("abc", "ab", "x", "xxc")]
+  [TestCase("abc", "ab", "xy", "xyxyc")]
+  public void ReplaceAnyOf(string? input, string? chars, string? replacement, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.ReplaceAnyOf(chars, replacement), expected, exception)
+    ;
+
 }

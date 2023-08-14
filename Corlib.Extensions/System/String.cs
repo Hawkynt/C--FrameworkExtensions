@@ -3655,16 +3655,22 @@ internal
   [Pure]
 #endif
   public static string ReplaceAnyOf(this string @this, string chars, string replacement) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(chars != null);
-#endif
-    return string.Join(
-      string.Empty, (
-        from c in @this
-        select chars.IndexOf(c) >= 0 ? replacement ?? string.Empty : c.ToString()
-      ).ToArray()
-    );
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(chars);
+
+    if (@this.Length == 0)
+      return @this;
+
+    var charSet = new HashSet<char>(chars);
+    var result = new StringBuilder(@this.Length);
+
+    foreach (var c in @this)
+      if (charSet.Contains(c))
+        result.Append(replacement);
+      else
+        result.Append(c);
+
+    return result.ToString();
   }
 
   /// <summary>
