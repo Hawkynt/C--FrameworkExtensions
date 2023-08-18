@@ -36,4 +36,4 @@ This is the folder where all extensions to .NET classes go.
 
 ## Rules
 
-See [CONTRIBUTING](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/CONTRIBUTING.md)
+See [CONTRIBUTING](CONTRIBUTING.md)
