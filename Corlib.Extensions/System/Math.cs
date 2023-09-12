@@ -96,8 +96,7 @@ static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static float Round(this float @this, int digits)
-  {
+  public static float Round(this float @this, int digits) {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(digits >= 0 && digits <= 15);
 #endif
@@ -126,8 +125,7 @@ static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static float Round(this float @this, int digits, MidpointRounding method)
-  {
+  public static float Round(this float @this, int digits, MidpointRounding method) {
 #if SUPPORTS_CONTRACTS
     Contract.Requires(digits >= 0 && digits <= 15);
 #endif
@@ -183,8 +181,7 @@ static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static double Coth(this double @this)
-  {
+  public static double Coth(this double @this) {
     var ex = Math.Exp(@this);
     var em = 1 / ex;
     return (ex + em) / (ex - em);
@@ -214,8 +211,7 @@ static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static double Csch(this double @this)
-  {
+  public static double Csch(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex - 1 / ex);
   }
@@ -244,8 +240,7 @@ static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static double Sech(this double @this)
-  {
+  public static double Sech(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex + 1 / ex);
   }
@@ -410,16 +405,16 @@ static partial class MathEx {
   /// Enumerates all primes in the ulong value space.
   /// </summary>
   public static IEnumerable<ulong> EnumeratePrimes => _EnumeratePrimes();
-  
+
   private readonly struct PrimeSieve {
     private readonly ulong[] _values;
     public PrimeSieve(ulong[] values) => this._values = values;
 
     public IEnumerable<ulong> Enumerate() {
-      ulong prime=3;
+      ulong prime = 3;
       var values = this._values;
-      for (var i = 0; i < values.Length; ++i,prime+=2) {
-        if (values[i]!=0)
+      for (var i = 0; i < values.Length; ++i, prime += 2) {
+        if (values[i] != 0)
           continue;
 
 #if SUPPORTS_ASYNC
@@ -427,8 +422,8 @@ static partial class MathEx {
         yield return prime;
         task.Wait();
 #else
-        this._FillSieveAction(prime);
         yield return prime;
+        this._FillSieveAction(prime);
 #endif
       }
     }
@@ -445,7 +440,7 @@ static partial class MathEx {
       for (var j = prime * prime; j < maxNumberInSieve; j += doublePrime)
         values[(int)((j - 3) >> 1)] = j;
     }
-    
+
   }
 
   private struct KnownPrimesStorage {
@@ -473,7 +468,7 @@ static partial class MathEx {
     }
 
     private IEnumerable<ulong> _GenerateAndFillBuffer() {
-      
+
       // array always valid
       var primes = this._primes;
 
@@ -543,10 +538,10 @@ static partial class MathEx {
         }
       }
 #else
-    for (var candidate = lastKnownPrime + 2; candidate <= upperPrimeSquare; candidate += 2) {
+      for (var candidate = lastKnownPrime + 2; candidate <= upperPrimeSquare; candidate += 2) {
         if (this._IsPrimeWithFullBuffer(candidate))
-            yield return candidate;
-    }
+          yield return candidate;
+      }
 #endif
     }
 
@@ -581,14 +576,14 @@ static partial class MathEx {
 
     var buffer = new ulong[128];
     var sieve = new PrimeSieve(buffer);
-    var knownPrimes=new KnownPrimesStorage(buffer);
+    var knownPrimes = new KnownPrimesStorage(buffer);
 
 #if COLOR_PRIME_GENERATION
     Console.ForegroundColor = ConsoleColor.Cyan;
 #endif
     foreach (var prime in sieve.Enumerate()) {
-      knownPrimes.Add(prime);
       yield return prime;
+      knownPrimes.Add(prime);
     }
 
 #if COLOR_PRIME_GENERATION
@@ -622,7 +617,7 @@ static partial class MathEx {
         task = Task.Factory.StartNew( _IsPrimeWithBufferAndBeyondT,candidate);
       }
 #else
-      for (;;) {
+      for (; ; ) {
         var isPrime = _IsPrimeWithBufferAndBeyond(candidate);
 
         if (isPrime)
