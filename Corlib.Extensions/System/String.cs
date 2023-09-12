@@ -511,9 +511,9 @@ internal
   public static string SanitizeForFileName(this string @this, char sanitation = '_') {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(@this);
-    
+
     var result = @this;
-    
+
     for (var i = 0; i < @this.Length; ++i) {
       if (!_IsInvalidCharacter(@this[i]))
         continue;
@@ -561,7 +561,7 @@ internal
   }
 
 #endif
-  
+
   #region Matching Regexes
 
   /// <summary>
@@ -1324,7 +1324,7 @@ internal
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
-  /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+  /// <param name="count">The maximum count of returned parts, 0 means unlimited.</param>
   /// <returns>The parts.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -1332,11 +1332,11 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static string[] Split(this string @this, char splitter, int max) {
+  public static string[] Split(this string @this, char splitter, int count) {
     Against.ThisIsNull(@this);
-    Against.NegativeValues(max);
+    Against.NegativeValues(count);
 
-    return Split(@this, splitter.ToString(), (ulong)max).ToArray();
+    return Split(@this, splitter.ToString(), (ulong)count).ToArray();
   }
 
   /// <summary>
@@ -1355,12 +1355,12 @@ internal
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
-  /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+  /// <param name="count">The maximum number of splits, 0 means unlimited.</param>
   /// <returns>The parts.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<string> Split(this string @this, char splitter, ulong max) => Split(@this, splitter.ToString(), max);
+  public static IEnumerable<string> Split(this string @this, char splitter, ulong count) => Split(@this, splitter.ToString(), count);
 
   /// <summary>
   /// Splits the specified string by another one.
@@ -1382,18 +1382,18 @@ internal
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
-  /// <param name="max">The maximum number of splits, 0 means as often as possible.</param>
+  /// <param name="count">The maximum count of returned parts, 0 means unlimited.</param>
   /// <returns>The parts.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<string> Split(this string @this, string splitter, ulong max) {
+  public static IEnumerable<string> Split(this string @this, string splitter, ulong count) {
     Against.ThisIsNull(@this);
 
-    return _Split(@this, splitter, max);
+    return _Split(@this, splitter, count);
   }
 
-  private static IEnumerable<string> _Split(this string @this, string splitter, ulong max) {
+  private static IEnumerable<string> _Split(this string @this, string splitter, ulong count) {
     splitter ??= string.Empty;
 
     var splitterLength = splitter.Length;
@@ -1403,12 +1403,12 @@ internal
     }
 
     int nextIndex;
-    if (max == 0)
-      max = ulong.MaxValue;
+    if (count == 0)
+      count = ulong.MaxValue;
 
     var startIndex = 0;
 
-    while (max-- > 0 && (nextIndex = @this.IndexOf(splitter, startIndex, StringComparison.Ordinal)) >= 0) {
+    while (--count > 0 && (nextIndex = @this.IndexOf(splitter, startIndex, StringComparison.Ordinal)) >= 0) {
       yield return @this[startIndex..nextIndex];
       startIndex = nextIndex + splitterLength;
     }
@@ -2438,17 +2438,17 @@ internal
 #endif
     this string @this) => string.IsNullOrWhiteSpace(@this);
 #else
-    public static bool IsNullOrWhiteSpace(
+  public static bool IsNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
       [NotNullWhen(false)] 
 #endif
-      this string @this) {
+    this string @this) {
     if (@this == null)
       return true;
-    
+
     // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-    foreach(var chr in @this)
-      if(!chr.IsWhiteSpace())
+    foreach (var chr in @this)
+      if (!chr.IsWhiteSpace())
         return false;
 
     return true;
@@ -2473,11 +2473,11 @@ internal
 #endif
     this string @this) => !string.IsNullOrWhiteSpace(@this);
 #else
-    public static bool IsNotNullOrWhiteSpace(
+  public static bool IsNotNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
       [NotNullWhen(true)] 
 #endif
-      this string @this) => !IsNullOrWhiteSpace(@this);
+    this string @this) => !IsNullOrWhiteSpace(@this);
 #endif
 
   #endregion
@@ -2615,7 +2615,7 @@ internal
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(values);
     Against.ArgumentIsNull(comparer);
-    
+
     return values.All(v => @this.Contains(v ?? string.Empty, comparer));
   }
 
@@ -2774,7 +2774,7 @@ internal
 
     switch (@this) {
       case null: {
-      
+
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in needles)
           if (value == null)
@@ -2831,7 +2831,7 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles) => !IsAnyOf(@this, needles); 
+  public static bool IsNotAnyOf(this string @this, IEnumerable<string> needles) => !IsAnyOf(@this, needles);
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2872,7 +2872,7 @@ internal
 #endif
   public static string DefaultIfNull(this string @this, Func<string> factory) {
     Against.ArgumentIsNull(factory);
-    
+
     return @this ?? factory();
   }
 
@@ -2941,7 +2941,7 @@ internal
   /// <summary>
   /// The type of line-break
   /// </summary>
-  public enum LineBreakMode: short {
+  public enum LineBreakMode : short {
     All = -2,
     AutoDetect = -1,
     None = 0,
@@ -2959,7 +2959,7 @@ internal
   /// <summary>
   /// The type of delimiter to use when joining lines
   /// </summary>
-  public enum LineJoinMode: ushort {
+  public enum LineJoinMode : ushort {
     CarriageReturn = 0x0D,
     LineFeed = 0x0A,
     CrLf = 0x0D0A,
@@ -3054,7 +3054,7 @@ internal
   }
 
   private static IEnumerable<string> _EnumerateLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
-    for (;;)
+    for (; ; )
       switch (mode) {
         case LineBreakMode.All:
           return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
@@ -3123,7 +3123,7 @@ internal
   private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, int count)
     => _GetLines(text, removeEmpty, count)
     ;
-  
+
   private static readonly string[] _POSSIBLE_SPLITTERS = {
     "\r\n",
     "\n\r",
@@ -3166,7 +3166,7 @@ internal
         : text.Split(new[] { delimiter }, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
       ;
   }
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -3184,7 +3184,7 @@ internal
   }
 
   private static string[] _GetLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
-    for (;;)
+    for (; ; )
       switch (mode) {
         case LineBreakMode.All:
           return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
@@ -3218,7 +3218,7 @@ internal
     Against.UnknownEnumValues(mode);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
-    
+
     return _GetLines(@this, mode, count, options);
   }
 
@@ -3229,7 +3229,7 @@ internal
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.UnknownEnumValues(options);
-    
+
     return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, 0);
   }
 
@@ -3241,7 +3241,7 @@ internal
     Against.ArgumentIsNullOrEmpty(delimiter);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(options);
-    
+
     return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
 
@@ -3311,9 +3311,9 @@ internal
 
     var length = @this.Length;
     var joinerLength = joiner.Length;
-    var result=new StringBuilder(length + (length / count + 1) * joinerLength);
-    
-    for (var lineStart = 0;;) {
+    var result = new StringBuilder(length + (length / count + 1) * joinerLength);
+
+    for (var lineStart = 0; ;) {
       var nextBreakAt = lineStart + count - joinerLength;
       if (nextBreakAt >= length) {
         result.Append(@this, lineStart, length - lineStart);
@@ -3322,14 +3322,14 @@ internal
 
       var proposedBreakAt = nextBreakAt;
       if (char.IsWhiteSpace(@this[nextBreakAt])) {
-        
+
         // backtrack till last non whitespace
         do {
           --nextBreakAt;
         } while (nextBreakAt > lineStart && char.IsWhiteSpace(@this[nextBreakAt]));
 
         if (nextBreakAt > lineStart) {
-        
+
           // found at least one character, add it
           result.Append(@this, lineStart, nextBreakAt - lineStart + 1);
           result.Append(joiner);
@@ -3346,7 +3346,7 @@ internal
         } while (nextBreakAt > lineStart && !char.IsWhiteSpace(@this[nextBreakAt]));
 
         if (nextBreakAt > lineStart) {
-        
+
           // found at least one character, add it
           result.Append(@this, lineStart, nextBreakAt - lineStart);
           result.Append(joiner);
@@ -3366,8 +3366,8 @@ internal
         // if only whitespace left
         if (proposedBreakAt >= length)
           return result.ToString();
-      } 
-      
+      }
+
       lineStart = proposedBreakAt;
     }
   }
@@ -3415,7 +3415,7 @@ internal
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(mode);
     Against.ArgumentIsNull(ellipse);
-    
+
     var length = @this.Length;
     if (length <= count)
       return @this;
@@ -3447,7 +3447,7 @@ internal
   }
 
   #endregion
-  
+
   /// <summary>
   /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
   /// </summary>
@@ -3595,7 +3595,7 @@ internal
       yield return currentPart.ToString();
   }
 
-#region nested HostEndPoint
+  #region nested HostEndPoint
   /// <summary>
   /// A host endpoint with port.
   /// </summary>
@@ -3617,7 +3617,7 @@ internal
 
     public static explicit operator IPEndPoint(HostEndPoint @this) => new(Dns.GetHostEntry(@this.Host).AddressList[0], @this.Port);
   }
-#endregion
+  #endregion
 
   /// <summary>
   /// Parses the host and port from a given string.
@@ -3703,9 +3703,9 @@ internal
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
   private static Regex _ConvertFilePatternToRegex(string pattern) {
-    
+
     const string nonDotCharacters = "[^.]*";
-    
+
     var match = CatchFilenameExtension().Match(pattern);
     var hasExtension = match.Success;
     var matchExact = false;
@@ -3746,7 +3746,7 @@ internal
   public static bool MatchesFilePattern(this string @this, string pattern) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(pattern);
-    
+
     if (IllegalFilenameCharacters().IsMatch(pattern))
       throw new ArgumentException("Patterns contains ilegal characters.");
 
@@ -3824,7 +3824,7 @@ internal
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, CultureInfo culture)
-    => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de"? 5 : 4, culture)
+    => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de" ? 5 : 4, culture)
     ;
 
   /// <summary>
@@ -3843,7 +3843,7 @@ internal
 
     if (@this.Length == 0)
       return new(ZERO, maxLength);
-    
+
     static string CalculateSoundexRepresentation(string text, int maxLength, char firstCharacter, char previousCharacter, int lastLetterSeenPlusOne, Func<char, char, char> getSoundexCode, CultureInfo cultureInfo) {
       var result = new char[maxLength];
       result[0] = firstCharacter;
@@ -3930,7 +3930,7 @@ internal
         '\u00e4' => 'A',
       '\u00d6' or
         '\u00f6' => 'O',
-      '\u00dc' or 
+      '\u00dc' or
         '\u00fc' => 'U',
       '\u00df' => 'S',
       _ => letter
@@ -3967,13 +3967,13 @@ internal
       }
     }
     static char GetEnglishReplacer(char letter) => letter;
-    
+
     var isGermanCulture = culture.TwoLetterISOLanguageName == "de";
     Func<char, char, char> GetSoundexCode = isGermanCulture ? GetGermanSoundexCode : GetEnglishSoundexCode;
     Func<char, char> DiacriticsReplacer = isGermanCulture ? GetGermanReplacer : GetEnglishReplacer;
 
     var firstChar = char.MinValue;
-    
+
     var nextUnseenIndex = -1;
     for (var i = 0; i < @this.Length; ++i) {
       var currentChar = @this[i];
@@ -3982,7 +3982,7 @@ internal
 
       nextUnseenIndex = i + 1;
       currentChar = char.ToUpper(currentChar, culture);
-      
+
       // when first character already known, calculate soundex
       if (firstChar != char.MinValue)
         return CalculateSoundexRepresentation(@this, maxLength, firstChar, currentChar, nextUnseenIndex, GetSoundexCode, culture);
