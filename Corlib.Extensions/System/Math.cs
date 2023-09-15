@@ -1,4 +1,4 @@
-﻿#region (c)2010-2042 Hawkynt
+#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -605,7 +605,7 @@ static partial class MathEx {
       var candidate = largestKnownPrime * largestKnownPrime + 2;
 
 #if SUPPORTS_ASYNC
-      var task = Task.Factory.StartNew(_IsPrimeWithBufferAndBeyondT,candidate);
+      var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT,candidate);
       for (;;) {
         task.Wait();
         var isPrime = task.Result;
@@ -614,11 +614,11 @@ static partial class MathEx {
           yield return candidate;
 
         candidate += 2; // Ensure we only check odd numbers
-        task = Task.Factory.StartNew( _IsPrimeWithBufferAndBeyondT,candidate);
+        task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT,candidate);
       }
 #else
       for (; ; ) {
-        var isPrime = _IsPrimeWithBufferAndBeyond(candidate);
+        var isPrime = IsPrimeWithBufferAndBeyond(candidate);
 
         if (isPrime)
           yield return candidate;
@@ -629,10 +629,10 @@ static partial class MathEx {
     }
 
 #if SUPPORTS_ASYNC
-    bool _IsPrimeWithBufferAndBeyondT(object state) => _IsPrimeWithBufferAndBeyond((ulong)state);
+    bool IsPrimeWithBufferAndBeyondT(object state) => IsPrimeWithBufferAndBeyond((ulong)state);
 #endif
 
-    bool _IsPrimeWithBufferAndBeyond(ulong candidate) {
+    bool IsPrimeWithBufferAndBeyond(ulong candidate) {
       // 1. Check divisibility with all primes in the buffer
       foreach (var prime in buffer)
         if (candidate % prime == 0)
