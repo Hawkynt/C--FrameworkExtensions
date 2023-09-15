@@ -91,8 +91,8 @@ public class StringTests {
     yield return new("abc", "b", null, new[] { "a", "c" });
     yield return new("abc", "d", null, new[] { "abc" });
     yield return new("abcbdbe", "b", null, new[] { "a", "c", "d", "e" });
-    yield return new("abcbdbe", "b", 2, new[] { "a", "c", "dbe" });
-    yield return new("abcbdbe", "b", 1, new[] { "a", "cbdbe" });
+    yield return new("abcbdbe", "b", 2, new[] { "a", "cbdbe" });
+    yield return new("abcbdbe", "b", 1, new[] { "abcbdbe" });
   }
 
   private static IEnumerable<MultipleReplaceTestData> _TestMultipleReplaceTestData() {
