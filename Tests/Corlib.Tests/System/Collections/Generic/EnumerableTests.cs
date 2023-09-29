@@ -256,8 +256,8 @@ public class EnumerableTests {
     ;
 
   [Test]
-  [TestCase(null,null,null,typeof(NullReferenceException))]
-  [TestCase(null, null, StringComparison.OrdinalIgnoreCase, typeof(NullReferenceException))]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase(null, null, StringComparison.OrdinalIgnoreCase, typeof(ArgumentNullException))]
   [TestCase("", "")]
   [TestCase("", "", StringComparison.OrdinalIgnoreCase)]
   [TestCase("a", "a")]
@@ -268,13 +268,13 @@ public class EnumerableTests {
   [TestCase("a|a", "a", StringComparison.OrdinalIgnoreCase)]
   [TestCase("a|A", "a|A")]
   [TestCase("a|A", "a", StringComparison.OrdinalIgnoreCase)]
-  public void ToHashSet(string? input,string? expected,StringComparison? comparison=null,Type? exception=null)
-    =>ExecuteTest(()=>
+  public void ToHashSet(string? input, string? expected, StringComparison? comparison = null, Type? exception = null)
+    => ExecuteTest(() =>
       (
         comparison==null
-          ? ConvertFromStringToTestArray(input)
+          ? ConvertFromStringToTestArray(input)!
         .ToHashSet()
-          : ConvertFromStringToTestArray(input)
+          : ConvertFromStringToTestArray(input)!
             .ToHashSet(FromComparison(comparison.Value))
         )
         .OrderBy()
@@ -283,5 +283,5 @@ public class EnumerableTests {
       exception
       )
   ;
-
+  
 }

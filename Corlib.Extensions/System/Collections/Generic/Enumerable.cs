@@ -343,6 +343,8 @@ public
     }
   }
 
+#if !SUPPORTS_TO_HASHSET
+
   /// <summary>
   /// Creates a hash set from the given enumeration.
   /// </summary>
@@ -354,7 +356,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
       
     return new(@this);
   }
@@ -373,10 +375,12 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
 
     return new(@this, comparer);
   }
+
+#endif
 
   /// <summary>
   /// Creates a hash set from the given enumeration.
@@ -389,7 +393,7 @@ public
   /// </returns>
   [DebuggerStepThrough]
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, int initialCapacity) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.NegativeValues(initialCapacity);
       
     var items = new List<TItem>(initialCapacity);
@@ -413,7 +417,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, IEqualityComparer<TResult> comparer = null) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(selector);
 
     return comparer == null ? new(@this.Select(selector)) : new HashSet<TResult>(@this.Select(selector), comparer);
