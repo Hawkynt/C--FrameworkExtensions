@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.Globalization;
@@ -71,17 +71,6 @@ public class StringTests {
     string? Expected,
     Type? Exception = null
   );
-
-  private static StringComparer _FromComparison(StringComparison comparison) 
-    => comparison switch {
-      StringComparison.InvariantCulture => StringComparer.InvariantCulture,
-      StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
-      StringComparison.Ordinal => StringComparer.Ordinal,
-      StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
-      StringComparison.CurrentCulture => StringComparer.CurrentCulture,
-      StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
-      _ => throw new NotSupportedException($"Unknown comparison mode {comparison}")
-    };
 
   private static IEnumerable<SplitParametersTestData> _TestSplitTestData() {
     yield return new(null, null, null, null, typeof(NullReferenceException));
@@ -698,8 +687,8 @@ public class StringTests {
 #pragma warning disable CS8604
     ExecuteTest(() => input.Contains(what, comparison), expected, exception);
     ExecuteTest(() => input.ContainsNot(what, comparison), !expected, exception);
-    ExecuteTest(() => input.Contains(what, _FromComparison(comparison)), expected, exception);
-    ExecuteTest(() => input.ContainsNot(what, _FromComparison(comparison)), !expected, exception);
+    ExecuteTest(() => input.Contains(what, FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.ContainsNot(what, FromComparison(comparison)), !expected, exception);
 #pragma warning restore CS8604
 #pragma warning restore CS8602
   }
@@ -729,12 +718,12 @@ public class StringTests {
   public void IsAnyOfWithComparer(string? input, string? needlesSeparatedByPipes, StringComparison comparison, bool expected, Type? exception = null) {
     ExecuteTest(() => input.IsAnyOf(comparison, ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), expected, exception);
     ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), expected, exception);
-    ExecuteTest(() => input.IsAnyOf(_FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), expected, exception);
-    ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), _FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.IsAnyOf(FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.IsAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), FromComparison(comparison)), expected, exception);
     ExecuteTest(() => input.IsNotAnyOf(comparison, ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), !expected, exception);
     ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), comparison), !expected, exception);
-    ExecuteTest(() => input.IsNotAnyOf(_FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), !expected, exception);
-    ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), _FromComparison(comparison)), !expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(FromComparison(comparison), ConvertFromStringToTestArray(needlesSeparatedByPipes)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.IsNotAnyOf(ConvertFromStringToTestArray(needlesSeparatedByPipes), FromComparison(comparison)), !expected, exception);
   }
 
   [Test]
@@ -937,8 +926,8 @@ public class StringTests {
   public void ContainsAll(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
     ExecuteTest(() => input.ContainsAll(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
     ExecuteTest(() => input.ContainsAll(ConvertFromStringToTestArray(needles), comparison), expected, exception);
-    ExecuteTest(() => input.ContainsAll(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
-    ExecuteTest(() => input.ContainsAll(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.ContainsAll(FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAll(ConvertFromStringToTestArray(needles), FromComparison(comparison)), expected, exception);
   }
 
   [Test]
@@ -955,12 +944,12 @@ public class StringTests {
   public void ContainsAnyOfString(string? input, string? needles, StringComparison comparison, bool expected, Type? exception = null) {
     ExecuteTest(() => input.ContainsAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
     ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), comparison), expected, exception);
-    ExecuteTest(() => input.ContainsAny(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
-    ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), expected, exception);
+    ExecuteTest(() => input.ContainsAny(FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), expected, exception);
+    ExecuteTest(() => input.ContainsAny(ConvertFromStringToTestArray(needles), FromComparison(comparison)), expected, exception);
     ExecuteTest(() => input.ContainsNotAny(comparison, ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
     ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), comparison), !expected, exception);
-    ExecuteTest(() => input.ContainsNotAny(_FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
-    ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), _FromComparison(comparison)), !expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(FromComparison(comparison), ConvertFromStringToTestArray(needles)?.ToArray()), !expected, exception);
+    ExecuteTest(() => input.ContainsNotAny(ConvertFromStringToTestArray(needles), FromComparison(comparison)), !expected, exception);
   }
 
   [Test]

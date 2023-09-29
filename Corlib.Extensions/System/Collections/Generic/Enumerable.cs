@@ -1027,7 +1027,7 @@ public
       result.Append(converter(item));
 #pragma warning restore CC0031 // Check for null before calling a delegate
     }
-    return gotElements ? result.ToString() : null;
+    return gotElements ? result.ToString() : string.Empty;
   }
 
   /// <summary>

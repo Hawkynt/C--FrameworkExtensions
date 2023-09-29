@@ -1,4 +1,4 @@
-﻿using static Corlib.Tests.NUnit.TestUtilities;
+using static Corlib.Tests.NUnit.TestUtilities;
 using NUnit.Framework;
 using System.Linq;
 
@@ -241,6 +241,47 @@ public class EnumerableTests {
   [TestCase("a", "b", "a|b")]
   public void AppendEnumerable(string? input, string? data, string? expected, Type? exception = null)
     => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)).Join("|"), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null,null,null,typeof(NullReferenceException))]
+  [TestCase("", "", null)]
+  [TestCase("", "", "")]
+  [TestCase("a", "a", null)]
+  [TestCase("a|b", "ab", null)]
+  [TestCase("a|b", "ab", "")]
+  [TestCase("a|b", "a,b", ",")]
+  public void Join(string? input,string? expected,string delimiter=",",Type?exception=null)
+    => ExecuteTest(()=>ConvertFromStringToTestArray(input).Join(delimiter),expected,exception)
+    ;
+
+  [Test]
+  [TestCase(null,null,null,typeof(NullReferenceException))]
+  [TestCase(null, null, StringComparison.OrdinalIgnoreCase, typeof(NullReferenceException))]
+  [TestCase("", "")]
+  [TestCase("", "", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("a", "a")]
+  [TestCase("a", "a", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("a|b", "a|b")]
+  [TestCase("a|b", "a|b", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("a|a", "a")]
+  [TestCase("a|a", "a", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("a|A", "a|A")]
+  [TestCase("a|A", "a", StringComparison.OrdinalIgnoreCase)]
+  public void ToHashSet(string? input,string? expected,StringComparison? comparison=null,Type? exception=null)
+    =>ExecuteTest(()=>
+      (
+        comparison==null
+          ? ConvertFromStringToTestArray(input)
+        .ToHashSet()
+          : ConvertFromStringToTestArray(input)
+            .ToHashSet(FromComparison(comparison.Value))
+        )
+        .OrderBy()
+        .Join("|"),
+      expected,
+      exception
+      )
   ;
 
 }

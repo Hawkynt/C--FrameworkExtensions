@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
@@ -43,4 +43,20 @@ internal class TestUtilities {
     => Environment.OSVersion.Platform is PlatformID.Win32Windows or PlatformID.Win32NT or PlatformID.Win32S or PlatformID.WinCE or PlatformID.Xbox
     ;
 
+  /// <summary>
+  /// Gets a <see cref="StringComparer"/> from a <see cref="StringComparison"/>.
+  /// </summary>
+  /// <param name="comparison">The comparison mode</param>
+  /// <returns>The comparer for the requested mode</returns>
+  /// <exception cref="NotSupportedException">When the mode is unknown</exception>
+  public static StringComparer FromComparison(StringComparison comparison) 
+    => comparison switch {
+      StringComparison.InvariantCulture => StringComparer.InvariantCulture,
+      StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
+      StringComparison.Ordinal => StringComparer.Ordinal,
+      StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+      StringComparison.CurrentCulture => StringComparer.CurrentCulture,
+      StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
+      _ => throw new NotSupportedException($"Unknown comparison mode {comparison}")
+    };
 }
