@@ -93,64 +93,61 @@ namespace System.Net {
       const int ttl = 128;
       const bool dontFragment = true;
 
-      if (options == null)
-        options = new PingOptions(ttl, dontFragment);
-
-      if (timeout == null)
-        timeout = TimeSpan.FromSeconds(5);
+      options ??= new(ttl, dontFragment);
+      timeout ??= TimeSpan.FromSeconds(5);
 
       var receiveBuffer = new byte[32];
 
       Tuple<bool, string, PingReply, Exception> result;
-      using (var ping = new Ping()) {
-        do {
-          try {
-            var pingReply = ping.Send(@this, (int)timeout.Value.TotalMilliseconds, receiveBuffer, options);
-            //make sure we dont have a null reply
-            if (pingReply == null) {
-              result = Tuple.Create(false, "Got empty packet.", (PingReply)null, (Exception)null);
-              continue;
-            }
-
-            switch (pingReply.Status) {
-              case IPStatus.Success:
-                return Tuple.Create(true, (string)null, pingReply, (Exception)null);
-              case IPStatus.TimedOut: {
-                  result = Tuple.Create(false, "Remote connection timed out.", pingReply, (Exception)null);
-                  break;
-                }
-              case IPStatus.DestinationHostUnreachable: {
-                  result = Tuple.Create(false, "Destination host unreachable.", pingReply, (Exception)null);
-                  break;
-                }
-              case IPStatus.DestinationNetworkUnreachable: {
-                  result = Tuple.Create(false, "Destination network unreachable.", pingReply, (Exception)null);
-                  break;
-                }
-              case IPStatus.DestinationPortUnreachable: {
-                  result = Tuple.Create(false, "Destination port unreachable.", pingReply, (Exception)null);
-                  break;
-                }
-              case IPStatus.DestinationUnreachable: {
-                  result = Tuple.Create(false, "Destination unreachable.", pingReply, (Exception)null);
-                  break;
-                }
-              case IPStatus.TtlExpired: {
-                  result = Tuple.Create(false, "Too many hops.", pingReply, (Exception)null);
-                  break;
-                }
-              default: {
-                  result = Tuple.Create(false, pingReply.Status.ToString(), pingReply, (Exception)null);
-                  break;
-                }
-            }
-          } catch (PingException e) {
-            result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
-          } catch (SocketException e) {
-            result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
+      using Ping ping = new();
+      do {
+        try {
+          var pingReply = ping.Send(@this, (int)timeout.Value.TotalMilliseconds, receiveBuffer, options);
+          //make sure we dont have a null reply
+          if (pingReply == null) {
+            result = Tuple.Create(false, "Got empty packet.", (PingReply)null, (Exception)null);
+            continue;
           }
-        } while (retryCount-- > 0);
-      }
+
+          switch (pingReply.Status) {
+            case IPStatus.Success:
+              return Tuple.Create(true, (string)null, pingReply, (Exception)null);
+            case IPStatus.TimedOut: {
+              result = Tuple.Create(false, "Remote connection timed out.", pingReply, (Exception)null);
+              break;
+            }
+            case IPStatus.DestinationHostUnreachable: {
+              result = Tuple.Create(false, "Destination host unreachable.", pingReply, (Exception)null);
+              break;
+            }
+            case IPStatus.DestinationNetworkUnreachable: {
+              result = Tuple.Create(false, "Destination network unreachable.", pingReply, (Exception)null);
+              break;
+            }
+            case IPStatus.DestinationPortUnreachable: {
+              result = Tuple.Create(false, "Destination port unreachable.", pingReply, (Exception)null);
+              break;
+            }
+            case IPStatus.DestinationUnreachable: {
+              result = Tuple.Create(false, "Destination unreachable.", pingReply, (Exception)null);
+              break;
+            }
+            case IPStatus.TtlExpired: {
+              result = Tuple.Create(false, "Too many hops.", pingReply, (Exception)null);
+              break;
+            }
+            default: {
+              result = Tuple.Create(false, pingReply.Status.ToString(), pingReply, (Exception)null);
+              break;
+            }
+          }
+        } catch (PingException e) {
+          result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
+        } catch (SocketException e) {
+          result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
+        }
+      } while (retryCount-- > 0);
+
       return result;
     }
 

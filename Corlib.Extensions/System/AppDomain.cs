@@ -95,7 +95,7 @@ static partial class AppDomainExtensions {
     /// <param name="handle">The process handle.</param>
     /// <returns>An instance of the Process class or null if an error occurred.</returns>
     public static Process GetParentProcess(IntPtr handle) {
-      var pbi = new ParentProcessUtilities();
+      ParentProcessUtilities pbi = new();
       var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
       if (status != 0)
         return null;
@@ -121,13 +121,13 @@ static partial class AppDomainExtensions {
   /// <param name="domain">The domain.</param>
   // ReSharper disable once SuggestBaseTypeForParameter
   private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
-    var environment = new Dictionary<string, string> {
+    Dictionary<string, string> environment = new() {
       { "baseDirectory", domain.BaseDirectory },
       { "configurationFile", domain.SetupInformation.ConfigurationFile },
       { "deleteOnExit", targetDirectory.FullName }
     };
 
-    var formatter = new BinaryFormatter();
+    BinaryFormatter formatter = new();
     formatter.Serialize(stream, environment);
   }
 
@@ -137,12 +137,12 @@ static partial class AppDomainExtensions {
   /// <param name="stream">The stream.</param>
   /// <param name="domain">The domain.</param>
   private static void _LoadEnvironmentFrom(Stream stream, AppDomain domain) {
-    var formatter = new BinaryFormatter();
+    BinaryFormatter formatter = new();
     var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
 
     // var baseDirectory = environment["baseDirectory"];
     var configurationFile = environment["configurationFile"];
-    var directoryToDeleteOnExit = new DirectoryInfo(environment["deleteOnExit"]);
+    DirectoryInfo directoryToDeleteOnExit = new(environment["deleteOnExit"]);
 
     domain.SetupInformation.ConfigurationFile = configurationFile;
 
@@ -181,7 +181,7 @@ static partial class AppDomainExtensions {
     if (batchFile == null)
       return;
 
-    var process = new Process {
+    Process process = new(){
       StartInfo = {
         FileName = batchFile.FullName,
         WindowStyle = ProcessWindowStyle.Hidden,
@@ -200,7 +200,7 @@ static partial class AppDomainExtensions {
   /// <param name="directoryToDelete">The directory to delete.</param>
   /// <returns>The generated batch file</returns>
   private static FileInfo _WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
-    var result = new FileInfo(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
+    FileInfo result = new(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
     if (result.Exists)
       return null;
 
@@ -242,7 +242,7 @@ del ""%~0""
     var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
 
     // try to connect to parent pipe
-    using (var parentSemaphore = new NamedPipeClientStream(".", parentSemaphoreName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
+    using (NamedPipeClientStream parentSemaphore = new(".", parentSemaphoreName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
       try {
         parentSemaphore.Connect(0);
       } catch {
@@ -258,7 +258,7 @@ del ""%~0""
 
     // we are the parent process, so acquire a new pipe for ourselves
     var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-    using (var mySemaphore = new NamedPipeServerStream(mySemaphoreName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
+    using (NamedPipeServerStream mySemaphore = new(mySemaphoreName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
       var directory = _CreateTempDirectory();
       var newTarget = _CopyExecutableAndAllAssemblies(executable, directory);
 
@@ -273,7 +273,7 @@ del ""%~0""
       }
 
       // start a child process
-      var startInfo = new ProcessStartInfo(newTarget.FullName, cmd) { UseShellExecute = false };
+      ProcessStartInfo startInfo = new(newTarget.FullName, cmd) { UseShellExecute = false };
       Process.Start(startInfo);
 
       // wait till the child release the semaphore
@@ -373,7 +373,7 @@ del ""%~0""
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
 
-    var semaphore = new Semaphore(0, 1, semaphoreName, out var createNew);
+    Semaphore semaphore = new(0, 1, semaphoreName, out var createNew);
     if (createNew)
       @this.DomainUnload += delegate { semaphore.Dispose(); };
     else
@@ -398,7 +398,7 @@ del ""%~0""
     bool createNew;
 
     // try to get parent semaphore first
-    using (var parentSemaphore = new Semaphore(0, 1, parentSemaphoreName, out createNew))
+    using (Semaphore parentSemaphore = new(0, 1, parentSemaphoreName, out createNew))
       if (!createNew) {
 
         // we couldn't create it, because we're a child process
@@ -408,7 +408,7 @@ del ""%~0""
 
     // we are the parent process, so acquire a new semaphore for ourselves
     var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-    using (var mySemaphore = new Semaphore(0, 1, mySemaphoreName, out createNew)) {
+    using (Semaphore mySemaphore = new(0, 1, mySemaphoreName, out createNew)) {
       if (!createNew)
         throw new("Semaphore already present?");
 
@@ -423,7 +423,7 @@ del ""%~0""
       }
 
       // start a child process
-      var startInfo = new ProcessStartInfo(executable.FullName, cmd);
+      ProcessStartInfo startInfo = new(executable.FullName, cmd);
       Process.Start(startInfo);
 
       // wait till the child release the semaphore
@@ -451,9 +451,9 @@ del ""%~0""
   /// <returns>The temporary directory.</returns>
   [DebuggerStepThrough]
   private static DirectoryInfo _CreateTempDirectory() {
-    var file = new FileInfo(Path.GetTempFileName());
+    FileInfo file = new(Path.GetTempFileName());
     var directory = file.Directory;
-    var result = new DirectoryInfo(Path.Combine(directory?.FullName ?? ".", file.Name));
+    DirectoryInfo result = new(Path.Combine(directory?.FullName ?? ".", file.Name));
     file.Delete();
     result.Create();
     return result;
@@ -471,7 +471,7 @@ del ""%~0""
     if (!target.Exists)
       target.Create();
 
-    var result = new FileInfo(Path.Combine(target.FullName, source.Name));
+    FileInfo result = new(Path.Combine(target.FullName, source.Name));
     if (source.Exists)
       source.CopyTo(result.FullName, overwrite);
 
@@ -526,7 +526,7 @@ del ""%~0""
   [DebuggerStepThrough]
   private static FileInfo _GetDebuggingInformationFile(FileInfo assemblyFile) {
     var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
-    var result = new FileInfo(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
+    FileInfo result = new(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
     return result;
   }
 

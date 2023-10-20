@@ -98,7 +98,7 @@ namespace System.IO {
       var srcArray = srcPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar).Split(Path.DirectorySeparatorChar);
 
       var caseSensitive = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
-      var result = new List<string>();
+      List<string> result = new();
       var i = 0;
 
       // find out how many parts match
@@ -107,7 +107,7 @@ namespace System.IO {
 
       // if no match was found at all, both paths do not have the same base so we return the target path
       if (i == 0)
-        return (tgtPath);
+        return tgtPath;
 
       // walk up till we are at the match
       for (var j = 0; j < srcArray.Length - i; j++)

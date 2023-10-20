@@ -72,7 +72,7 @@ namespace System.Reflection {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      return (new StreamReader(This.GetResourceFileStream(fileName)));
+      return (new(This.GetResourceFileStream(fileName)));
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ namespace System.Reflection {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      return (new BinaryReader(This.GetResourceFileStream(fileName)));
+      return (new(This.GetResourceFileStream(fileName)));
     }
 
     /// <summary>

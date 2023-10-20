@@ -51,7 +51,7 @@ namespace System.Runtime.Serialization.Formatters.Binary {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      using var memStream = new MemoryStream();
+      using MemoryStream memStream = new();
       @this.Serialize(memStream, value);
       return memStream.ToArray();
     }
@@ -81,7 +81,7 @@ namespace System.Runtime.Serialization.Formatters.Binary {
       Contract.Requires(@this != null);
       Contract.Requires(data != null);
 #endif
-      using var memStream = new MemoryStream(data);
+      using MemoryStream memStream = new(data);
       return @this.Deserialize(memStream);
     }
 

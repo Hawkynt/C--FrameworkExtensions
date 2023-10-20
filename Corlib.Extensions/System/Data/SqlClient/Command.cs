@@ -115,7 +115,7 @@ namespace System.Data.SqlClient {
       Debug.Assert(values != null);
 
       // TODO: conflicts with existing parameters
-      var sqlCommand = new StringBuilder();
+      StringBuilder sqlCommand = new();
       sqlCommand.Append("UPDATE " + tableName.MsSqlIdentifierEscape());
       var realValues = (
         from i in values
@@ -174,8 +174,8 @@ namespace System.Data.SqlClient {
       Debug.Assert(This != null);
       Debug.Assert(!tableName.IsNullOrWhiteSpace());
 
-      var sqlCommandTextWithParameters = new StringBuilder();
-      var sqlCommandTextWithoutParameters = new StringBuilder();
+      StringBuilder sqlCommandTextWithParameters = new();
+      StringBuilder sqlCommandTextWithoutParameters = new();
       _AppendToBuilders($"INSERT INTO {tableName.MsSqlIdentifierEscape()}", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
 
       var realValues = values == null ? null : (
@@ -349,7 +349,7 @@ namespace System.Data.SqlClient {
     /// <summary>
     /// Adds the column to an existing table.
     /// </summary>
-    /// <param name="This">This SqlCommand.</param>
+    /// <param name="this">This SqlCommand.</param>
     /// <param name="tableName">Name of the table.</param>
     /// <param name="columnName">Name of the column.</param>
     /// <param name="dbType">Type of the column.</param>
@@ -359,13 +359,13 @@ namespace System.Data.SqlClient {
     /// <param name="charLength">Length of the char/varchar/text column, 0=max, &lt;0 means use database default.</param>
     /// <param name="totalDigits">The total digits in a decimal datatype.</param>
     /// <param name="decimalDigits">The decimal digits in a decimal datatype.</param>
-    public static void AddColumnToTable(this SqlCommand This, string tableName, string columnName, SqlDbType dbType, bool isNotNull = false, object defaultValue = null, bool useDefaultValueForExistingRecords = false, int charLength = 0, uint totalDigits = 0, uint decimalDigits = 0) {
-      Debug.Assert(This != null);
+    public static void AddColumnToTable(this SqlCommand @this, string tableName, string columnName, SqlDbType dbType, bool isNotNull = false, object defaultValue = null, bool useDefaultValueForExistingRecords = false, int charLength = 0, uint totalDigits = 0, uint decimalDigits = 0) {
+      Debug.Assert(@this != null);
       Debug.Assert(!tableName.IsNullOrWhiteSpace());
       Debug.Assert(!columnName.IsNullOrWhiteSpace());
       Debug.Assert(decimalDigits <= totalDigits);
       Debug.Assert(!isNotNull || defaultValue != null);
-      var sql = new StringBuilder();
+      StringBuilder sql = new();
       sql.Append("ALTER TABLE ");
       sql.Append(tableName.MsSqlIdentifierEscape());
       sql.Append(" ADD ");
@@ -373,10 +373,10 @@ namespace System.Data.SqlClient {
       sql.Append(" ");
       sql.Append(dbType.ToString());
 
-      if (charLength >= 0 && (dbType == SqlDbType.Char || dbType == SqlDbType.VarChar || dbType == SqlDbType.NChar || dbType == SqlDbType.NVarChar)) {
+      if (charLength >= 0 && dbType is SqlDbType.Char or SqlDbType.VarChar or SqlDbType.NChar or SqlDbType.NVarChar) {
 
         if (charLength == 0) {
-          var version = This.Connection.ServerVersion == null ? null : This.Connection.ServerVersion.Split('.');
+          var version = @this.Connection.ServerVersion?.Split('.');
 
           // HACK: work-around for sql server <2005(<v9.0.0), limit string columns to 1024 chars
           sql.Append(version == null || version.Length < 1 || int.Parse(version[0]) < 9 ? "(1024)" : "(MAX)");
@@ -396,7 +396,7 @@ namespace System.Data.SqlClient {
       if (useDefaultValueForExistingRecords)
         sql.Append(" WITH VALUE");
 
-      This.ExecuteNonQuery(sql.ToString());
+      @this.ExecuteNonQuery(sql.ToString());
     }
   }
 }

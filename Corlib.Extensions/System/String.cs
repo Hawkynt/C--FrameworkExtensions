@@ -250,7 +250,7 @@ internal
       case 4:
         return string.Concat(@this, @this, @this, @this);
       default: {
-        var result = new StringBuilder(length * count);
+        StringBuilder result = new(length * count);
         for (var i = count; i > 0; --i)
           result.Append(@this);
 
@@ -846,7 +846,7 @@ internal
     var length = @this.Length;
 
     // we will store parts of the newly generated string here
-    var result = new StringBuilder(length);
+    StringBuilder result = new(length);
 
     var i = 0;
     var lastStartPos = 0;
@@ -1008,7 +1008,7 @@ internal
 
     var list = replacements.OrderByDescending(kvp => kvp.Key.Length).ToArray();
     var length = @this.Length;
-    var result = new StringBuilder(length);
+    StringBuilder result = new(length);
     for (var i = 0; i < length; ++i) {
       var found = false;
       foreach (var kvp in list) {
@@ -1493,7 +1493,7 @@ internal
 
   private static string _ChangeCasing(string input, CultureInfo culture, bool pascalCase) {
 
-    var result = new StringBuilder(input.Length);
+    StringBuilder result = new(input.Length);
 
     var isFirstLetter = true;
     var hump = pascalCase;
@@ -1541,7 +1541,7 @@ internal
 #if SUPPORTS_CONTRACTS
     Contract.Requires(@this != null);
 #endif
-    var regex = new Regex(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+    Regex regex = new(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
     return regex.Replace(@this, string.Empty);
   }
 
@@ -3311,7 +3311,7 @@ internal
 
     var length = @this.Length;
     var joinerLength = joiner.Length;
-    var result = new StringBuilder(length + (length / count + 1) * joinerLength);
+    StringBuilder result = new(length + (length / count + 1) * joinerLength);
 
     for (var lineStart = 0; ;) {
       var nextBreakAt = lineStart + count - joinerLength;
@@ -3475,7 +3475,7 @@ internal
     var currentlyEscaping = false;
     var currentlyInSingleQuote = false;
     var currentlyInDoubleQuote = false;
-    var currentPart = new StringBuilder();
+    StringBuilder currentPart = new();
 
     while (pos < length) {
       var chr = @this[pos++];
@@ -3549,7 +3549,7 @@ internal
     var currentlyEscaping = false;
     var currentlyInSingleQuote = false;
     var currentlyInDoubleQuote = false;
-    var currentPart = new StringBuilder();
+    StringBuilder currentPart = new();
 
     while (pos < length) {
       var chr = @this[pos++];
@@ -3661,8 +3661,8 @@ internal
     if (@this.Length == 0)
       return @this;
 
-    var charSet = new HashSet<char>(chars);
-    var result = new StringBuilder(@this.Length);
+    HashSet<char> charSet = new(chars);
+    StringBuilder result = new(@this.Length);
 
     foreach (var c in @this)
       if (charSet.Contains(c))
@@ -4022,9 +4022,9 @@ internal
     }
 
     var bytes = Encoding.UTF8.GetBytes(@this);
-    var result = new StringBuilder(bytes.Length * 2);
+    StringBuilder result = new(bytes.Length * 2);
     foreach (var ch in bytes)
-      if (ch < 32 || ch > 126 || ch == '=') {
+      if (ch is < 32 or > 126 || ch == '=') {
         ByteToHex2(ch, out var high, out var low);
         result.Append('=');
         result.Append(high);
@@ -4079,7 +4079,7 @@ internal
     [MethodImpl(MethodImplOptions.NoInlining)]
     void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
 
-    var bytes = new List<byte>(@this.Length);
+    List<byte> bytes = new(@this.Length);
     for (var index = 0; index < @this.Length; ++index)
       if (@this[index] == '=')
         bytes.Add((byte)Hex2Short(@this[++index], @this[++index]));

@@ -150,28 +150,19 @@ namespace System.Net.NetworkInformation {
         var entries = Marshal.ReadInt32(buffer);
 
         // Increment the memory pointer by the size of the int.
-        var currentBuffer = new IntPtr(buffer.ToInt64() + Marshal.SizeOf(typeof(int)));
+        IntPtr currentBuffer = new(buffer.ToInt64() + Marshal.SizeOf(typeof(int)));
 
         // Cycle through the entries.
         for (var index = 0; index < entries; index++) {
 
           // Call PtrToStructure, getting the structure information.
           var row = (NativeMethods.MIB_IPNETROW)Marshal.PtrToStructure(
-            new IntPtr(currentBuffer.ToInt64() + index * Marshal.SizeOf(typeof(NativeMethods.MIB_IPNETROW))),
+            new(currentBuffer.ToInt64() + index * Marshal.SizeOf(typeof(NativeMethods.MIB_IPNETROW))),
             typeof(NativeMethods.MIB_IPNETROW)
           );
 
-          var ip = new IPAddress(BitConverter.GetBytes(row.dwAddr));
-          var physicalAddress = new PhysicalAddress(new[] {
-            row.mac0,
-            row.mac1,
-            row.mac2,
-            row.mac3,
-            row.mac4,
-            row.mac5,
-            //row.mac6,
-            //row.mac7,
-          });
+          IPAddress ip = new(BitConverter.GetBytes(row.dwAddr));
+          PhysicalAddress physicalAddress = new(new[] { row.mac0, row.mac1, row.mac2, row.mac3, row.mac4, row.mac5 });
 
           if (physicalAddress.GetAddressBytes().Any(b => b != 0))
             yield return Tuple.Create(physicalAddress, ip);

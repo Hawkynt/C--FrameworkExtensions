@@ -36,7 +36,7 @@ namespace System.Globalization {
     /// <returns>The RegionInfo for the given culture.</returns>
     public static RegionInfo GetRegionInfo(this CultureInfo This) {
       Debug.Assert(This != null);
-      return (new RegionInfo(This.LCID));
+      return (new(This.LCID));
     }
 
     /// <summary>

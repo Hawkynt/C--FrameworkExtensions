@@ -35,7 +35,7 @@ public
   public static void Invert<TItem>(this Stack<TItem> @this) {
     Guard.Against.ThisIsNull(@this);
 
-    var helpStack = new Queue<TItem>(@this.Count);
+    Queue<TItem> helpStack = new(@this.Count);
     while (@this.Count > 0)
       helpStack.Enqueue(@this.Pop());
 

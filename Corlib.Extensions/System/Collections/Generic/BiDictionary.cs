@@ -48,7 +48,7 @@ namespace System.Collections.Generic {
     private readonly ReverseDictionary _reverseDictionary;
 
     public BiDictionary() {
-      this._reverseDictionary = new ReverseDictionary(this);
+      this._reverseDictionary = new(this);
     }
 
     public IDictionary<TSecond, TFirst> Reverse
@@ -399,8 +399,7 @@ namespace System.Collections.Generic {
   internal
 #endif
   static partial class KeyValuePairExtensions {
-    public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this)
-      => new KeyValuePair<TValue, TKey>(@this.Value, @this.Key)
+    public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) => new(@this.Value, @this.Key)
       ;
   }
 

@@ -31,7 +31,7 @@ namespace System.Threading {
   internal
 #endif
   class Future<TValue> {
-    private readonly ManualResetEventSlim _HasValueAlready = new ManualResetEventSlim(false);
+    private readonly ManualResetEventSlim _HasValueAlready = new(false);
     private Exception _exception;
     private TValue _value;
     private Func<TValue> _getter;
@@ -118,7 +118,7 @@ namespace System.Threading {
   class Future {
     private readonly Future<byte> _future;
     public Future(Action action, Action callback = null) {
-      this._future = new Future<byte>(() => {
+      this._future = new(() => {
         action();
         return (byte.MaxValue);
       }, _ => {

@@ -193,7 +193,7 @@ namespace System.Reflection {
           _SINGLE_BYTE_OP_CODES[num2] = code1;
         else {
           if ((num2 & 0xff00) != 0xfe00)
-            throw new Exception("Invalid OpCode.");
+            throw new("Invalid OpCode.");
 
           _MULTI_BYTE_OP_CODES[num2 & 0xff] = code1;
         }
@@ -221,9 +221,9 @@ namespace System.Reflection {
       var module = This.Module;
       var il = body.GetILAsByteArray();
       var position = 0;
-      var result = new List<ILInstruction>();
+      List<ILInstruction> result = new();
       while (position < il.Length) {
-        var instruction = new ILInstruction();
+        ILInstruction instruction = new();
 
         // get the operation code of the current instruction
         OpCode code;
@@ -348,7 +348,7 @@ namespace System.Reflection {
             break;
           }
         default: {
-            throw new Exception("Unknown operand type.");
+            throw new("Unknown operand type.");
           }
       }
       return position;

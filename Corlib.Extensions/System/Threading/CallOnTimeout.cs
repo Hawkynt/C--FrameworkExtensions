@@ -52,7 +52,7 @@ namespace System.Threading {
 #endif
       this.Timeout = timeout;
       this._timeoutAction = timeoutAction;
-      this._timer = new Timer(this._CheckTimeout);
+      this._timer = new(this._CheckTimeout);
       Action<object> action = this._CheckTimeout;
       action.BeginInvoke(null, action.EndInvoke, null);
     }

@@ -177,7 +177,7 @@ namespace System.IO {
         if (_utf8NoBom != null)
           return _utf8NoBom;
 
-        var utF8Encoding = new UTF8Encoding(false, true);
+        UTF8Encoding utF8Encoding = new(false, true);
         return _utf8NoBom = utF8Encoding;
       }
     }
@@ -362,24 +362,23 @@ namespace System.IO {
 #endif
 
       // copy file and delete source, retry during timeout
-      using (var scope = new TransactionScope()) {
-        This.CopyTo(destFileName, overwrite);
-        var delay = TimeSpan.FromSeconds(1);
-        var tries = (int)((timeout ?? TimeSpan.FromSeconds(30)).Ticks / delay.Ticks);
-        while (true) {
-          try {
-            This.Delete();
-            break;
+      using TransactionScope scope = new ();
+      This.CopyTo(destFileName, overwrite);
+      var delay = TimeSpan.FromSeconds(1);
+      var tries = (int)((timeout ?? TimeSpan.FromSeconds(30)).Ticks / delay.Ticks);
+      while (true) {
+        try {
+          This.Delete();
+          break;
 
-          } catch (IOException) {
-            if (tries-- < 1)
-              throw;
+        } catch (IOException) {
+          if (tries-- < 1)
+            throw;
 
-            Thread.Sleep(delay);
-          }
+          Thread.Sleep(delay);
         }
-        scope.Complete();
       }
+      scope.Complete();
     }
     #endregion
 
@@ -398,8 +397,8 @@ namespace System.IO {
       Contract.Requires(@this != null);
 #endif
 
-      using var provider = new THashAlgorithm();
-      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+      using THashAlgorithm provider = new();
+      using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
       return provider.ComputeHash(stream);
     }
     
@@ -417,7 +416,7 @@ namespace System.IO {
       Contract.Requires(@this != null);
 #endif
 
-      using var provider = new THashAlgorithm();
+      using THashAlgorithm provider = new();
       return ComputeHash(@this, provider, blockSize);
     }
 
@@ -434,7 +433,7 @@ namespace System.IO {
       Contract.Requires(@this != null);
       Contract.Requires(provider != null);
 #endif
-      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+      using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
       return provider.ComputeHash(stream);
     }
     
@@ -452,7 +451,7 @@ namespace System.IO {
       Contract.Requires(@this != null);
       Contract.Requires(provider != null);
 #endif
-      using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, blockSize);
+      using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, blockSize);
 
       provider.Initialize();
       var lastBlock = new byte[blockSize];
@@ -553,7 +552,7 @@ namespace System.IO {
     public static Encoding GetEncoding(this FileInfo @this) {
       // Read the BOM
       var bom = new byte[4];
-      using (var file = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read))
+      using (FileStream file = new(@this.FullName, FileMode.Open, FileAccess.Read))
       {
         var bytesRead = file.Read(bom, 0, 4);
         if(bytesRead == 0)
@@ -673,7 +672,7 @@ namespace System.IO {
     public static IEnumerable<string> ReadLines(this FileInfo @this, FileShare share) {
       const int bufferSize = 4096;
       using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
-      using var reader = new StreamReader(stream);
+      using StreamReader reader = new(stream);
       while(!reader.EndOfStream){
         var line=reader.ReadLine();
         if(line==null)
@@ -686,7 +685,7 @@ namespace System.IO {
     public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding,FileShare share) {
       const int bufferSize = 4096;
       using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
-      using var reader = new StreamReader(stream,encoding);
+      using StreamReader reader = new(stream, encoding);
       while (!reader.EndOfStream) {
         var line = reader.ReadLine();
         if (line == null)
@@ -851,12 +850,12 @@ namespace System.IO {
 
       FileInfo tempFile = null;
       try {
-        tempFile = new FileInfo(Path.GetTempFileName());
+        tempFile = new(Path.GetTempFileName());
 
         using (var inputFile = This.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (var inputReader = new StreamReader(inputFile, encoding))
+        using (StreamReader inputReader = new(inputFile, encoding))
         using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
-        using (var outputWriter = new StreamWriter(outputFile, encoding))
+        using (StreamWriter outputWriter = new(outputFile, encoding))
           for (var i = 0; i < count && !inputReader.EndOfStream; ++i)
             outputWriter.WriteLine(inputReader.ReadLine());
 
@@ -917,7 +916,7 @@ namespace System.IO {
             return;
           
           inputReader.Seek(filePosition+1, SeekOrigin.Begin);
-          tmpFile = new FileInfo(Path.GetTempFileName());
+          tmpFile = new(Path.GetTempFileName());
           using (var tmpFileWriter = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
             inputReader.CopyTo(tmpFileWriter);
             tmpFileWriter.Flush(true);
@@ -954,12 +953,12 @@ namespace System.IO {
 
       FileInfo tempFile = null;
       try {
-        tempFile = new FileInfo(Path.GetTempFileName());
+        tempFile = new(Path.GetTempFileName());
 
         using (var inputFile = This.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (var inputReader = new StreamReader(inputFile, encoding))
+        using (StreamReader inputReader = new(inputFile, encoding))
         using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
-        using (var outputWriter = new StreamWriter(outputFile, encoding)) {
+        using (StreamWriter outputWriter = new(outputFile, encoding)) {
 
           // skip lines
           for (var i = 0; i < count && !inputReader.EndOfStream; ++i)
@@ -989,7 +988,7 @@ namespace System.IO {
     /// <param name="share">The share.</param>
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize) => new FileStream(This.FullName, mode, access, share, bufferSize);
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize) => new(This.FullName, mode, access, share, bufferSize);
 
     /// <summary>
     /// Opens the specified file.
@@ -1001,7 +1000,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="options">The options.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options) => new FileStream(This.FullName, mode, access, share, bufferSize, options);
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options) => new(This.FullName, mode, access, share, bufferSize, options);
 
     /// <summary>
     /// Opens the specified file.
@@ -1013,7 +1012,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="useAsync">if set to <c>true</c> [use async].</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, bool useAsync) => new FileStream(This.FullName, mode, access, share, bufferSize, useAsync);
+    public static FileStream Open(this FileInfo This, FileMode mode, FileAccess access, FileShare share, int bufferSize, bool useAsync) => new(This.FullName, mode, access, share, bufferSize, useAsync);
 
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 
@@ -1027,7 +1026,7 @@ namespace System.IO {
     /// <param name="bufferSize">Size of the buffer.</param>
     /// <param name="options">The options.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new FileStream(This.FullName, mode, rights, share, bufferSize, options);
+    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new(This.FullName, mode, rights, share, bufferSize, options);
 
     /// <summary>
     /// Opens the specified file.
@@ -1040,7 +1039,7 @@ namespace System.IO {
     /// <param name="options">The options.</param>
     /// <param name="security">The security.</param>
     /// <returns></returns>
-    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new FileStream(This.FullName, mode, rights, share, bufferSize, options, security);
+    public static FileStream Open(this FileInfo This, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new(This.FullName, mode, rights, share, bufferSize, options, security);
 
 #endif
 
@@ -1067,7 +1066,7 @@ namespace System.IO {
     /// <param name="this">This FileInfo.</param>
     /// <param name="extension">The extension.</param>
     /// <returns>A new FileInfo instance with given extension.</returns>
-    public static FileInfo WithNewExtension(this FileInfo @this, string extension) => new FileInfo(Path.ChangeExtension(@this.FullName, extension));
+    public static FileInfo WithNewExtension(this FileInfo @this, string extension) => new(Path.ChangeExtension(@this.FullName, extension));
 
 #endregion
 
@@ -1170,8 +1169,8 @@ namespace System.IO {
     public static bool NotExists(this FileInfo This) => !This.Exists;
 
 #region needed consts for converting filename patterns into regexes
-    private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new Regex("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
-    private static readonly Regex _CATCH_EXTENSION_REGEX = new Regex(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+    private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
+    private static readonly Regex _CATCH_EXTENSION_REGEX = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
 #endregion
 
     /// <summary>
@@ -1237,8 +1236,8 @@ namespace System.IO {
       if (myLength == 0)
         return true;
 
-      using (var sourceStream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
-      using (var comparisonStream = new FileStream(other.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+      using (FileStream sourceStream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+      using (FileStream comparisonStream = new(other.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 
         // NOTE: we're going to compare buffers (A, A') while reading the next blocks (B, B') in already
         var sourceBufferA = new byte[bufferSize];

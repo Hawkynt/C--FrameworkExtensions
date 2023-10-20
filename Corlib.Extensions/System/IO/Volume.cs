@@ -53,23 +53,23 @@ namespace System.IO {
       /// <value>
       /// The name.
       /// </value>
-      public string Name { get { return (this._name); } }
+      public string Name { get { return this._name; } }
       /// <summary>
       /// Gets the path names.
       /// </summary>
       /// <value>
       /// The path names.
       /// </value>
-      public IEnumerable<string> PathNames { get { return (GetVolumePathNames(this._name)); } }
+      public IEnumerable<string> PathNames { get { return GetVolumePathNames(this._name); } }
       /// <summary>
       /// Gets the mount points.
       /// </summary>
       /// <value>
       /// The mount points.
       /// </value>
-      public IEnumerable<string> MountPoints { get { return (GetVolumeMountPoints(this._name)); } }
+      public IEnumerable<string> MountPoints { get { return GetVolumeMountPoints(this._name); } }
       public override string ToString() {
-        return (this.Name);
+        return this.Name;
       }
     }
 
@@ -78,7 +78,7 @@ namespace System.IO {
     /// </summary>
     private static class NativeMethods {
       public const int _MAX_PATH = 124;
-      public static readonly IntPtr INVALID_PTR = new IntPtr(-1);
+      public static readonly IntPtr INVALID_PTR = new(-1);
       public const int ERROR_MORE_DATA = 234;
 
       [DllImport("kernel32.dll", EntryPoint = "FindFirstVolume", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
@@ -125,7 +125,7 @@ namespace System.IO {
       mask = mask.Replace("+", "\\+");
       mask = mask.Replace("?", ".");
       mask = mask.Replace("*", ".*?");
-      return (new Regex(mask, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline));
+      return new(mask, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ namespace System.IO {
     /// <param name="filterMask">The filter mask.</param>
     /// <returns></returns>
     public static IEnumerable<Volume> GetVolumes(string filterMask) {
-      return (GetVolumes(_ConvertMaskToRegex(filterMask)));
+      return GetVolumes(_ConvertMaskToRegex(filterMask));
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ namespace System.IO {
     /// <param name="regex">The regex.</param>
     /// <returns></returns>
     public static IEnumerable<Volume> GetVolumes(Regex regex) {
-      return (GetVolumes().Where(v => regex.IsMatch(v.Name)));
+      return GetVolumes().Where(v => regex.IsMatch(v.Name));
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ namespace System.IO {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<Volume> GetVolumes() {
-      var cVolumeName = new StringBuilder(NativeMethods._MAX_PATH);
+      StringBuilder cVolumeName = new(NativeMethods._MAX_PATH);
       var volumeHandle = NativeMethods.INVALID_PTR;
       try {
         volumeHandle = NativeMethods.FindFirstVolume(cVolumeName, NativeMethods._MAX_PATH);
@@ -159,7 +159,7 @@ namespace System.IO {
           yield break;
 
         do {
-          yield return new Volume(cVolumeName.ToString());
+          yield return new(cVolumeName.ToString());
         } while (NativeMethods.FindNextVolume(volumeHandle, cVolumeName, NativeMethods._MAX_PATH));
       } finally {
         if (volumeHandle != NativeMethods.INVALID_PTR)
@@ -176,13 +176,13 @@ namespace System.IO {
     public static IEnumerable<string> GetVolumePathNames(string volumeName) {
       uint bufferSize = 0;
       if (NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, new char[0], 0, ref bufferSize))
-        return (new string[0]);
+        return new string[0];
 
       var result = new char[bufferSize];
       if (!NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, result, bufferSize, ref bufferSize))
         throw new Win32Exception();
 
-      return (new string(result).Split('\0').Where(t => t.Length > 0));
+      return new string(result).Split('\0').Where(t => t.Length > 0);
     }
 
     /// <summary>
@@ -193,13 +193,13 @@ namespace System.IO {
     public static IEnumerable<string> GetVolumeMountPoints(string volumeName) {
       var mountHandle = NativeMethods.INVALID_PTR;
       try {
-        var cVolumeName = new StringBuilder(NativeMethods._MAX_PATH);
+        StringBuilder cVolumeName = new(NativeMethods._MAX_PATH);
         mountHandle = NativeMethods.FindFirstVolumeMountPoint(volumeName, cVolumeName, NativeMethods._MAX_PATH);
         if (mountHandle == NativeMethods.INVALID_PTR)
           yield break;
 
         do {
-          yield return (cVolumeName.ToString());
+          yield return cVolumeName.ToString();
         } while (NativeMethods.FindNextVolumeMountPoint(mountHandle, cVolumeName, NativeMethods._MAX_PATH));
       } finally {
         if (mountHandle != NativeMethods.INVALID_PTR)

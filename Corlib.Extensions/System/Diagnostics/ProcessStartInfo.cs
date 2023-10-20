@@ -93,9 +93,9 @@ namespace System.Diagnostics {
 
       #endregion
 
-      private readonly ManualResetEvent _isExited = new ManualResetEvent(false);
-      private readonly StringBuilder _stderr = new StringBuilder();
-      private readonly StringBuilder _stdout = new StringBuilder();
+      private readonly ManualResetEvent _isExited = new(false);
+      private readonly StringBuilder _stderr = new();
+      private readonly StringBuilder _stdout = new();
       private readonly ConsoleOutputHandler _stdoutCallback;
       private readonly ConsoleOutputHandler _stderrCallback;
       private readonly AsyncCallback _callback;
@@ -114,7 +114,7 @@ namespace System.Diagnostics {
         info.CreateNoWindow = true;
         info.WindowStyle = ProcessWindowStyle.Hidden;
 
-        var process = this.Process = new Process { StartInfo = info, EnableRaisingEvents = true };
+        var process = this.Process = new() { StartInfo = info, EnableRaisingEvents = true };
         process.OutputDataReceived += this._process_OutputDataReceived;
         process.ErrorDataReceived += this._process_ErrorDataReceived;
         process.Exited += this._process_Exited;

@@ -699,7 +699,7 @@ namespace System.Security.Cryptography {
 
     protected override byte[] HashFinal() {
       while (!this._isFinished) {
-        var buffer = new List<byte>(this.intermediateBuffer ?? new byte[0]);
+        List<byte> buffer = new(this.intermediateBuffer ?? new byte[0]);
 
         /* convert length of the message to bits */
         var len = this.length << 3;

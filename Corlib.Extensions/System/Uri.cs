@@ -108,7 +108,7 @@ namespace System {
 
         // Create a StringBuilder with an initial capacity based on the original string's length
         // ReSharper disable once VariableHidesOuterVariable
-        var result = new StringBuilder(s.Length + 5);
+        StringBuilder result = new(s.Length + 5);
         
         // first character is uppercase in all cases
         result.Append(s[0] + ('a' - 'A'));
@@ -173,7 +173,7 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client,headers);
       var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
       return _Execute(() => {
@@ -187,12 +187,12 @@ namespace System {
 
 #else
 
-      using var client = new WebClient();
+      using WebClient client = new();
       _SetClientHeaders(client, headers);
       if (encoding != null)
         client.Encoding = encoding;
 
-      var nameValCollection = new NameValueCollection();
+      NameValueCollection nameValCollection = new();
       if (postValues != null)
         foreach (var kvp in postValues)
           nameValCollection.Add(kvp.Key, kvp.Value);
@@ -226,7 +226,7 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client, headers);
       var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
       return _Execute(() => {
@@ -237,10 +237,10 @@ namespace System {
 
 #else
 
-      using var client = new WebClientFake();
+      using WebClientFake client = new();
       _SetClientHeaders(client, headers);
 
-      var nameValCollection = new NameValueCollection();
+      NameValueCollection nameValCollection = new();
       if (postValues != null)
         foreach (var kvp in postValues)
           nameValCollection.Add(kvp.Key, kvp.Value);
@@ -305,7 +305,7 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client, headers);
       return await _Execute(async() => {
         var response = await client.GetAsync(@this);
@@ -318,7 +318,7 @@ namespace System {
 
 #else
 
-      using var client = new WebClient();
+      using WebClient client = new();
       _SetClientHeaders(client, headers);
       if (encoding != null)
         client.Encoding = encoding;
@@ -347,7 +347,7 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client, headers);
       var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
       return _Execute(() => {
@@ -358,10 +358,10 @@ namespace System {
 
 #else
 
-      using var client = new WebClient();
+      using WebClient client = new();
       _SetClientHeaders(client, headers);
 
-      var nameValCollection = new NameValueCollection();
+      NameValueCollection nameValCollection = new();
       if (postValues != null)
         foreach (var kvp in postValues)
           nameValCollection.Add(kvp.Key, kvp.Value);
@@ -397,11 +397,11 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client, headers);
       var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
       _Execute(() => {
-        using var fileStream = new FileStream(file.FullName, overwrite ? FileMode.Create : FileMode.CreateNew);
+        using FileStream fileStream = new(file.FullName, overwrite ? FileMode.Create : FileMode.CreateNew);
         var response = (postValues == null ? client.GetAsync(@this) : client.PostAsync(@this, content)).Result;
         response.EnsureSuccessStatusCode();
         response.Content.CopyToAsync(fileStream).Wait();
@@ -409,17 +409,17 @@ namespace System {
 
 #else
 
-      using var client = new WebClient();
+      using WebClient client = new();
       _SetClientHeaders(client, headers);
 
-      var nameValCollection = new NameValueCollection();
+      NameValueCollection nameValCollection = new();
       if (postValues != null)
         foreach (var kvp in postValues)
           nameValCollection.Add(kvp.Key, kvp.Value);
 
       _Execute(() => {
         if (file.Exists && !overwrite)
-          throw new Exception("Target file already exists");
+          throw new("Target file already exists");
 
         if (postValues == null)
           client.DownloadFile(@this, file.FullName);
@@ -451,7 +451,7 @@ namespace System {
 
 #if SUPPORTS_HTTPCLIENT
 
-      using var client = new HttpClient();
+      using HttpClient client = new();
       _SetClientHeaders(client, headers);
       return await _Execute(async () => {
         var response = await client.GetAsync(@this);
@@ -461,7 +461,7 @@ namespace System {
 
 #else
 
-      using var client = new WebClient();
+      using WebClient client = new();
       _SetClientHeaders(client, headers);
 
       return await _Execute(async () => await client.DownloadDataTaskAsync(@this), retryCount);
@@ -498,7 +498,7 @@ namespace System {
       return path.IsNullOrWhiteSpace()
         ? @this
         : path.StartsWith(SLASH)
-          ? new Uri(@this.BaseUri().AbsoluteUri.TrimEnd(SLASH) + path)
+          ? new(@this.BaseUri().AbsoluteUri.TrimEnd(SLASH) + path)
           : new Uri(@this.AbsoluteUri.TrimEnd(SLASH) + SLASH + path)
           ;
     }

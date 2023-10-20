@@ -265,7 +265,7 @@ namespace System {
     #endregion
     #region decimal
     public static decimal ToDecimal(byte[] arrBytes, int intOffset = 0) {
-      return (new decimal(new[]{
+      return (new(new[]{
         ((arrBytes[intOffset+0] | (arrBytes[intOffset+1] << 8)) | (arrBytes[intOffset+2] << 0x10)) | (arrBytes[intOffset+3] << 0x18), //lo
         ((arrBytes[intOffset+4] | (arrBytes[intOffset+5] << 8)) | (arrBytes[intOffset+6] << 0x10)) | (arrBytes[intOffset+7] << 0x18), //mid
         ((arrBytes[intOffset+8] | (arrBytes[intOffset+9] << 8)) | (arrBytes[intOffset+10] << 0x10)) | (arrBytes[intOffset+11] << 0x18), //hi
@@ -324,7 +324,7 @@ namespace System {
     #endregion
     #region DateTime
     public static DateTime ToDateTime(byte[] arrBytes, int intOffset = 0) {
-      return (new DateTime(BitConverter.ToInt64(arrBytes, intOffset)));
+      return (new(BitConverter.ToInt64(arrBytes, intOffset)));
     }
     public static byte[] GetBytes(DateTime dtVal) {
       return (BitConverter.GetBytes(dtVal.Ticks));

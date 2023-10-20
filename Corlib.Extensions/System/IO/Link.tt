@@ -389,7 +389,7 @@ namespace System.IO {
         if (handle != NativeMethods.InvalidHandle)
           return (handle);
 
-        var exception = new Win32Exception();
+        Win32Exception exception = new();
 
         // if something other than a more data request occured, throw
         if (exception.NativeErrorCode != NativeMethods.ERROR_MORE_DATA)
@@ -416,7 +416,7 @@ namespace System.IO {
         if (NativeMethods.FindNextFileName(handle, ref size, buffer))
           return (true);
 
-        var exception = new Win32Exception();
+        Win32Exception exception = new();
 
         // end of list
         if (exception.NativeErrorCode == NativeMethods.ERROR_HANDLE_EOF)
@@ -463,7 +463,7 @@ namespace System.IO {
           const uint ERROR_INVALID_FUNCTION = 0x1;
 
           if (!success) {
-            var exception = new Win32Exception();
+            Win32Exception exception = new();
 
             if (exception.NativeErrorCode == ERROR_NOT_A_REPARSE_POINT)
               return (null);
@@ -520,7 +520,7 @@ namespace System.IO {
           const uint ERROR_INVALID_FUNCTION = 0x1;
 
           if (!success) {
-            var exception = new Win32Exception();
+            Win32Exception exception = new();
 
             if (exception.NativeErrorCode == ERROR_NOT_A_REPARSE_POINT)
               return (null);

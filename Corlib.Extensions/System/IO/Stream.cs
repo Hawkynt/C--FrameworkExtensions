@@ -168,7 +168,7 @@ namespace System.IO {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      using var data = new MemoryStream();
+      using MemoryStream data = new();
       This.CopyTo(data);
       return data.ToArray();
     }

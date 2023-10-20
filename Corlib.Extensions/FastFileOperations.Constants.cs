@@ -1,4 +1,4 @@
-﻿#region (c)2010-2020 Hawkynt
+#region (c)2010-2020 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -65,7 +65,7 @@ namespace System.IO {
     private const string _EX_SOURCE_FILE_DOES_NOT_EXIST = "Source file \"{0}\" does not exist.";
     private const string _EX_TARGET_FILE_ALREADY_EXISTS = "Target file \"{0}\" already exists.";
     private const string _EX_SOURCE_DIRECTORY_DOES_NOT_EXIST = "Source directory \"{0}\" does not exist.";
-    private const string _EX_TARGET_DIRECTORY_ALREADY_EXISTS = "Target file \"{0}\" already exists.";
+    private const string _EX_TARGET_DIRECTORY_ALREADY_EXISTS = "Target directory \"{0}\" already exists.";
     private const string _EX_COULD_NOT_CREATE_TARGET_DIR = "Could not create target directory \"{0}\".";
   }
 }

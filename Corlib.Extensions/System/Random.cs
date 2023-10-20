@@ -81,7 +81,7 @@ namespace System {
       // find out which chars are allowed
       var allowedChars = string.Empty;
       if (string.IsNullOrEmpty(allowedCharset)) {
-        var builder = new StringBuilder(256);
+        StringBuilder builder = new(256);
 
         if (useLetters)
           builder.Append(allowCaseSensitive ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -98,7 +98,7 @@ namespace System {
       }
 
       // build a password
-      var result = new StringBuilder((int)length);
+      StringBuilder result = new((int)length);
       var charCount = allowedChars.Length;
       for (var i = length; i > 0; --i) {
         var index = This.Next(charCount);

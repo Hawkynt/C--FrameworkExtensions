@@ -32,7 +32,7 @@ namespace System {
     /// <summary>
     /// Can be locked to make console color transactions like lines with different colored words.
     /// </summary>
-    public static readonly object Lock = new object();
+    public static readonly object Lock = new();
     private static ConsoleColor _foreground = ConsoleColor.Gray;
     private static ConsoleColor _background = ConsoleColor.Black;
 

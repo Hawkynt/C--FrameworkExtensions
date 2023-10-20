@@ -65,7 +65,7 @@ static partial class ProcessExtensions {
     private static extern int _NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ProcessBasicInformation processInformation, int processInformationLength, out int returnLength);
 
     public static ProcessBasicInformation NtQueryInformationProcess(IntPtr processHandle, int processInformationClass = 0) {
-      var result = new ProcessBasicInformation();
+      ProcessBasicInformation result = new();
       var status = _NtQueryInformationProcess(processHandle, processInformationClass, ref result, Marshal.SizeOf(result), out _);
       if (status != 0)
         throw new Win32Exception();
@@ -150,8 +150,8 @@ static partial class ProcessExtensions {
         .ToDictionary(g => g.Key, g => g.Select(p=>p.Process).ToArray())
       ;
 
-    var stack = new Stack<Process>();
-    var tempList = new List<Process>();
+    Stack<Process> stack = new();
+    List<Process> tempList = new();
     var result = @this;
     for (;;) {
       FillList(result, tempList, allProcessIdsWithChildren);

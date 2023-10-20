@@ -44,122 +44,122 @@ namespace System {
     public static explicit operator UnsignedDouble(double value) {
       if (value < 0)
         throw new ArgumentOutOfRangeException(_errExceptionText);
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
     #endregion
 
     #region arithmetic
     #region byte
     public static implicit operator UnsignedDouble(byte value) {
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
 
     public static UnsignedDouble operator +(UnsignedDouble a, byte b) {
-      return (new UnsignedDouble(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDouble operator +(byte a, UnsignedDouble b) {
-      return (new UnsignedDouble(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDouble operator *(UnsignedDouble a, byte b) {
-      return (new UnsignedDouble(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDouble operator *(byte a, UnsignedDouble b) {
-      return (new UnsignedDouble(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region char
     public static implicit operator UnsignedDouble(char value) {
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
 
     public static UnsignedDouble operator +(UnsignedDouble a, char b) {
-      return (new UnsignedDouble(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDouble operator +(char a, UnsignedDouble b) {
-      return (new UnsignedDouble(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDouble operator *(UnsignedDouble a, char b) {
-      return (new UnsignedDouble(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDouble operator *(char a, UnsignedDouble b) {
-      return (new UnsignedDouble(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ushort
     public static implicit operator UnsignedDouble(ushort value) {
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
 
     public static UnsignedDouble operator +(UnsignedDouble a, ushort b) {
-      return (new UnsignedDouble(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDouble operator +(ushort a, UnsignedDouble b) {
-      return (new UnsignedDouble(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDouble operator *(UnsignedDouble a, ushort b) {
-      return (new UnsignedDouble(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDouble operator *(ushort a, UnsignedDouble b) {
-      return (new UnsignedDouble(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region uint
     public static implicit operator UnsignedDouble(uint value) {
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
 
     public static UnsignedDouble operator +(UnsignedDouble a, uint b) {
-      return (new UnsignedDouble(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDouble operator +(uint a, UnsignedDouble b) {
-      return (new UnsignedDouble(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDouble operator *(UnsignedDouble a, uint b) {
-      return (new UnsignedDouble(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDouble operator *(uint a, UnsignedDouble b) {
-      return (new UnsignedDouble(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ulong
     public static implicit operator UnsignedDouble(ulong value) {
-      return (new UnsignedDouble(value));
+      return (new(value));
     }
 
     public static UnsignedDouble operator +(UnsignedDouble a, ulong b) {
-      return (new UnsignedDouble(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDouble operator +(ulong a, UnsignedDouble b) {
-      return (new UnsignedDouble(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDouble operator *(UnsignedDouble a, ulong b) {
-      return (new UnsignedDouble(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDouble operator *(ulong a, UnsignedDouble b) {
-      return (new UnsignedDouble(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region UnsignedDouble
     public static UnsignedDouble operator +(UnsignedDouble a, UnsignedDouble b) {
-      return (new UnsignedDouble(a._value + b._value));
+      return (new(a._value + b._value));
     }
     public static UnsignedDouble operator *(UnsignedDouble a, UnsignedDouble b) {
-      return (new UnsignedDouble(a._value * b._value));
+      return (new(a._value * b._value));
     }
     #endregion
     #endregion

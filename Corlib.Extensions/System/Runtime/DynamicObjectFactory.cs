@@ -51,7 +51,7 @@ namespace System.Runtime {
 
     private delegate object delCreateObject();
     private static readonly Type tpDelegate=typeof(delCreateObject);
-    private static readonly ConcurrentDictionary<Type, delCreateObject> _hashILCache = new ConcurrentDictionary<Type, delCreateObject>();
+    private static readonly ConcurrentDictionary<Type, delCreateObject> _hashILCache = new();
     // create a class by calling an empty constructur
     private static TClass _varCreateInstanceRaw<TClass>() {
       // this is fast for up to 6 different classes

@@ -121,7 +121,7 @@ namespace System.ComponentModel {
       base.AddRange(results);
 
       this.RaiseListChangedEvents = ignoreEvents;
-      this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, 0));
+      this.OnListChanged(new(ListChangedType.Reset, 0));
     }
   }
 }

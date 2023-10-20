@@ -575,8 +575,8 @@ static partial class MathEx {
     yield return 2;
 
     var buffer = new ulong[128];
-    var sieve = new PrimeSieve(buffer);
-    var knownPrimes = new KnownPrimesStorage(buffer);
+    PrimeSieve sieve = new(buffer);
+    KnownPrimesStorage knownPrimes = new(buffer);
 
 #if COLOR_PRIME_GENERATION
     Console.ForegroundColor = ConsoleColor.Cyan;

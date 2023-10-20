@@ -129,7 +129,7 @@ namespace System.ComponentModel {
 
         var pairs = new SortValueWithSourceIndex[input.Count];
         for (var i = 0; i < pairs.Length; ++i)
-          pairs[i] = new SortValueWithSourceIndex(i, input[i], getter(input[i]));
+          pairs[i] = new(i, input[i], getter(input[i]));
 
         Array.Sort(
           pairs,
@@ -230,13 +230,13 @@ namespace System.ComponentModel {
 
     protected override void OnListChanged(ListChangedEventArgs e) {
       if (this._ReApplySortIfNeeded()) {
-        base.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
-        this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        base.OnListChanged(new(ListChangedType.Reset, -1));
+        this.OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
       } else {
         base.OnListChanged(e);
 
         // TODO: only fire whats needed
-        this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        this.OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
       }
     }
     
@@ -293,7 +293,7 @@ namespace System.ComponentModel {
       if (@this == null)
         throw new NullReferenceException();
 
-      return new SortableBindingList<TItem>(@this);
+      return new(@this);
     }
   }
 }

@@ -86,21 +86,21 @@ static class StaticMethodLocal<TValue> {
   private static readonly Dictionary<MethodKey, TValue> _VALUES = new();
 
   private static TValue _Get(Type owner, string methodName, TValue startValue) {
-    var key = new MethodKey(owner, null, methodName);
-    lock (StaticMethodLocal<TValue>._VALUES)
-      if (StaticMethodLocal<TValue>._VALUES.TryGetValue(key, out var result))
+    MethodKey key = new(owner, null, methodName);
+    lock (_VALUES)
+      if (_VALUES.TryGetValue(key, out var result))
         return result;
 
     return startValue;
   }
 
   private static TValue _Get(Type owner, string methodName, Func<TValue> startValueFactory) {
-    var key = new MethodKey(owner, null, methodName);
-    lock (StaticMethodLocal<TValue>._VALUES) {
-      if (StaticMethodLocal<TValue>._VALUES.TryGetValue(key, out var result))
-        return (TValue)result;
+    MethodKey key = new(owner, null, methodName);
+    lock (_VALUES) {
+      if (_VALUES.TryGetValue(key, out var result))
+        return result;
 
-      StaticMethodLocal<TValue>._VALUES.Add(key, result = startValueFactory());
+      _VALUES.Add(key, result = startValueFactory());
       return result;
     }
   }
@@ -179,9 +179,9 @@ static class StaticMethodLocal<TValue> {
   }
 
   private static void _Set(Type owner, string methodName, TValue value) {
-    var key = new MethodKey(owner, null, methodName);
-    lock (StaticMethodLocal<TValue>._VALUES)
-      StaticMethodLocal<TValue>._VALUES[key] = value;
+    MethodKey key = new(owner, null, methodName);
+    lock (_VALUES)
+      _VALUES[key] = value;
   }
 
   /// <summary>

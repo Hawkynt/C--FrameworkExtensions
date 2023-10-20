@@ -249,7 +249,7 @@ namespace System.Collections.Generic {
 #else
       Contract.Requires(This != null);
 #endif
-      return new TimeSpan((long)This.Average(i => i.Ticks));
+      return new((long)This.Average(i => i.Ticks));
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ namespace System.Collections.Generic {
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
 #endif
-      return new TimeSpan((long)This.Average(i => selector(i).Ticks));
+      return new((long)This.Average(i => selector(i).Ticks));
     }
     #endregion
     #endregion

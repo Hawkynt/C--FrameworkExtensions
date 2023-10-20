@@ -51,7 +51,7 @@ namespace System {
     private readonly Func<SlowProperty<TValue, TIntermediateValue>, TValue> _valueGetter;
     private readonly Action<SlowProperty<TValue, TIntermediateValue>> _valueGeneratedCallback;
     private readonly Func<TValue, TIntermediateValue> _valueConverter;
-    private ManualResetEventSlim _valueWaiter = new ManualResetEventSlim();
+    private ManualResetEventSlim _valueWaiter = new();
     private readonly SynchronizationContext _context;
 
     #endregion
@@ -74,7 +74,7 @@ namespace System {
       var vtype = typeof(TValue);
       this._valueConverter =
         itype.IsGenericType && itype.GetGenericTypeDefinition() == typeof(Nullable<>) && itype.GetGenericArguments()[0] == vtype
-        ? new Func<TValue, TIntermediateValue>(v => (TIntermediateValue)(object)v)
+        ? new(v => (TIntermediateValue)(object)v)
         : new Func<TValue, TIntermediateValue>(v => (TIntermediateValue)Convert.ChangeType(v, itype))
         ;
 

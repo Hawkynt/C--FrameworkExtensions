@@ -60,43 +60,41 @@ namespace System.IO {
 
         // same file
         if (x.FullName == y.FullName)
-          return (true);
+          return true;
 
         // unequal lengths
         var length = x.Length;
         if (length != y.Length)
-          return (false);
+          return false;
 
         const int __COMPARE_BUFFER_LENGTH = 8 * 1024 * 1024;
         var bufferX = new byte[__COMPARE_BUFFER_LENGTH];
         var bufferY = new byte[__COMPARE_BUFFER_LENGTH];
         var chunks = length / __COMPARE_BUFFER_LENGTH;
-        var scanFirstChunks = new List<long> { 0 };
+        List<long> scanFirstChunks = new() { 0 };
         if (chunks > 1)
           scanFirstChunks.Insert(0, (chunks - 1) * __COMPARE_BUFFER_LENGTH);
         if (chunks > 2)
           scanFirstChunks.Add((chunks >> 1) * __COMPARE_BUFFER_LENGTH);
 
-        using (var xStream = new FileStream(x.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH))
-        using (var yStream = new FileStream(y.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH)) {
+        using FileStream xStream = new(x.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH);
+        using FileStream yStream = new(y.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, __COMPARE_BUFFER_LENGTH);
+        
+        // first direct scan
+        if (scanFirstChunks.Any(offset => _ReadAndCompareTrueWhenDifferent(xStream, yStream, offset, bufferX, bufferY, __COMPARE_BUFFER_LENGTH)))
+          return false;
 
-          // first direct scan
-          if (scanFirstChunks.Any(offset => _ReadAndCompareTrueWhenDifferent(xStream, yStream, offset, bufferX, bufferY, __COMPARE_BUFFER_LENGTH)))
-            return (false);
+        // full scan
+        for (long offset = __COMPARE_BUFFER_LENGTH; offset < length; offset += __COMPARE_BUFFER_LENGTH) {
+          if (scanFirstChunks.Contains(offset))
+            continue;
 
-          // full scan
-          for (long offset = __COMPARE_BUFFER_LENGTH; offset < length; offset += __COMPARE_BUFFER_LENGTH) {
-            if (scanFirstChunks.Contains(offset))
-              continue;
-
-            if (_ReadAndCompareTrueWhenDifferent(xStream, yStream, offset, bufferX, bufferY, __COMPARE_BUFFER_LENGTH))
-              return (false);
-          }
-
-          // scanned every byte, they must be equal here
-          return (true);
+          if (_ReadAndCompareTrueWhenDifferent(xStream, yStream, offset, bufferX, bufferY, __COMPARE_BUFFER_LENGTH))
+            return false;
         }
 
+        // scanned every byte, they must be equal here
+        return true;
       }
 
       /// <summary>
@@ -114,7 +112,7 @@ namespace System.IO {
         yStream.Position = offset;
         var len = xStream.Read(bufferX, 0, compareBufferLength);
         yStream.Read(bufferY, 0, compareBufferLength);
-        return (NativeMethods.memcmp(bufferX, bufferY, len) != 0);
+        return NativeMethods.memcmp(bufferX, bufferY, len) != 0;
       }
 
       public int GetHashCode(FileInfo obj) {
@@ -134,7 +132,7 @@ namespace System.IO {
 #if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
-        return (x.Length == y.Length);
+        return x.Length == y.Length;
       }
 
       public int GetHashCode(FileInfo obj) {
@@ -155,7 +153,7 @@ namespace System.IO {
         Contract.Requires(x != null && y != null);
 #endif
         const FileAttributes MASK = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.ReadOnly | FileAttributes.System;
-        return ((x.Attributes & MASK) == (y.Attributes & MASK));
+        return (x.Attributes & MASK) == (y.Attributes & MASK);
       }
 
       public int GetHashCode(FileInfo obj) {
@@ -175,7 +173,7 @@ namespace System.IO {
 #if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
-        return (x.CreationTimeUtc == y.CreationTimeUtc);
+        return x.CreationTimeUtc == y.CreationTimeUtc;
       }
 
       public int GetHashCode(FileInfo obj) {
@@ -195,7 +193,7 @@ namespace System.IO {
 #if SUPPORTS_CONTRACTS
         Contract.Requires(x != null && y != null);
 #endif
-        return (x.LastWriteTimeUtc == y.LastWriteTimeUtc);
+        return x.LastWriteTimeUtc == y.LastWriteTimeUtc;
       }
 
       public int GetHashCode(FileInfo obj) {

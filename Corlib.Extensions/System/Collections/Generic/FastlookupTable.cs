@@ -26,7 +26,7 @@ namespace System.Collections.Generic {
   internal
 #endif
   class FastLookupTable<TItem> : ICollection<TItem>, ICloneable {
-    private readonly Dictionary<TItem, bool> _table = new Dictionary<TItem, bool>();
+    private readonly Dictionary<TItem, bool> _table = new();
 
     #region Implementation of IEnumerable<TItem>
     public IEnumerator<TItem> GetEnumerator() {
@@ -137,7 +137,7 @@ namespace System.Collections.Generic {
     /// </returns>
     /// <filterpriority>2</filterpriority>
     public object Clone() {
-      var result = new FastLookupTable<TItem>();
+      FastLookupTable<TItem> result = new();
       foreach (var kvp in this._table)
         result._table.Add(kvp.Key, kvp.Value);
       return (result);

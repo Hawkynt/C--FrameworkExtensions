@@ -61,7 +61,7 @@ namespace System.ComponentModel {
       }
     }
 
-    private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new Dictionary<Type, Type[]> {
+    private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
       { typeof(decimal), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
       { typeof(double), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char) , typeof(float)  } },
       { typeof(float), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },

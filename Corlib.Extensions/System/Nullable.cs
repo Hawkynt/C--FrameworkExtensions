@@ -101,7 +101,7 @@ readonly struct NullableEx<TType> {
   }
 
   public static implicit operator NullableEx<TType>(TType value) {
-    return (new NullableEx<TType>(value));
+    return (new(value));
   }
 
   public static explicit operator TType(NullableEx<TType> This) {

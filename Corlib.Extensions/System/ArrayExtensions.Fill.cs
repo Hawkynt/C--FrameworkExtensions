@@ -181,7 +181,7 @@ static partial class ArrayExtensions {
       var localCount = count >> 6;
       var localSource = (Block64*)source;
 
-      _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+      _Fill64ByteBlocks(ref localSource, localCount, new(value));
       count &= 0b111111;
       source = (byte*)localSource;
     }
@@ -207,7 +207,7 @@ static partial class ArrayExtensions {
     if (count >= 64) {
       var localCount = count >> 5;
       var localSource = (Block64*)source;
-      _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+      _Fill64ByteBlocks(ref localSource, localCount, new(value));
       count &= 0b11111;
       source = (ushort*)localSource;
     }
@@ -233,7 +233,7 @@ static partial class ArrayExtensions {
     if (count >= 64) {
       var localCount = count >> 4;
       var localSource = (Block64*)source;
-      _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+      _Fill64ByteBlocks(ref localSource, localCount, new(value));
       count &= 0b1111;
       source = (uint*)localSource;
     }
@@ -259,7 +259,7 @@ static partial class ArrayExtensions {
     if (count >= 64) {
       var localCount = count >> 3;
       var localSource = (Block64*)source;
-      _Fill64ByteBlocks(ref localSource, localCount, new Block64(value));
+      _Fill64ByteBlocks(ref localSource, localCount, new(value));
       count &= 0b111;
       source = (ulong*)localSource;
     }

@@ -252,7 +252,7 @@ namespace System.Timers {
     /// <value><c>true</c> if enabled; otherwise, <c>false</c>.</value>
     public bool Enabled { get; private set; }
 
-    private readonly object syncLock = new object();
+    private readonly object syncLock = new();
 
     /// <summary>
     /// Gets or sets the interval at which to raise the    
@@ -307,7 +307,7 @@ namespace System.Timers {
 
         id = timeSetEvent(Interval, 0, timerCallback, UIntPtr.Zero, (uint)f);
         if (id == 0)
-          throw new Exception("timeSetEvent error");
+          throw new("timeSetEvent error");
 
         Debug.WriteLine("HighPrecisionTimer " + this.id + " started");
         Enabled = true;
@@ -338,7 +338,7 @@ namespace System.Timers {
       var onElapsed = Elapsed;
       if (onElapsed == null)
         return;
-      onElapsed(this, new HighPrecisionTimerElapsedEventArgs());
+      onElapsed(this, new());
     }
 
     /// <summary>

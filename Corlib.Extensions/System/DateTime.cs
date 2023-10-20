@@ -82,7 +82,7 @@ namespace System {
     public static DateTime LastDayOfMonth(this DateTime @this) {
       var monthDays = DateTime.DaysInMonth(@this.Year, @this.Month);
 
-      return new DateTime(@this.Year, @this.Month, monthDays);
+      return new(@this.Year, @this.Month, monthDays);
     }
 
     /// <summary>

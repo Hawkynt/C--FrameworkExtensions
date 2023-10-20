@@ -233,8 +233,8 @@ namespace System.Net {
       internal Connection(ConnectionProtocol protocol, IPAddress localAdress, int localPort, IPAddress remoteAdress, int remotePort, ConnectionState state, Process sourceProcess)
         : this(
           protocol,
-          new IPEndPoint(localAdress, localPort),
-          new IPEndPoint(remoteAdress, remotePort),
+          new(localAdress, localPort),
+          new(remoteAdress, remotePort),
           state,
           sourceProcess
           ) {
@@ -318,9 +318,9 @@ namespace System.Net {
       return (_GetTable<NativeMethods.MIB_TCPROW>(
         (pointer, size) => {
           var status = NativeMethods.GetTcpTable(pointer, ref size, false);
-          return (new BufferSizeAndWin32Status(status, size));
+          return (new(status, size));
         },
-        row => new Connection(ConnectionProtocol.Tcp, new IPAddress(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new IPAddress(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, null)
+        row => new(ConnectionProtocol.Tcp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, null)
       ));
     }
 
@@ -332,9 +332,9 @@ namespace System.Net {
       return (_GetTable<NativeMethods.MIB_UDPROW>(
         (pointer, size) => {
           var status = NativeMethods.GetUdpTable(pointer, ref size, false);
-          return (new BufferSizeAndWin32Status(status, size));
+          return (new(status, size));
         },
-        row => new Connection(ConnectionProtocol.Udp, new IPAddress(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, null)
+        row => new(ConnectionProtocol.Udp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, null)
       ));
     }
 
@@ -346,7 +346,7 @@ namespace System.Net {
       return (_GetTable<NativeMethods.MIB_TCPROW_OWNER_PID>(
         (pointer, size) => {
           var status = NativeMethods.GetExtendedTcpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.TcpTableClass.OwnerPidAll);
-          return (new BufferSizeAndWin32Status(status, size));
+          return (new(status, size));
         },
         row => {
           Process process;
@@ -355,7 +355,7 @@ namespace System.Net {
           } catch {
             process = null;
           }
-          return new Connection(ConnectionProtocol.Tcp, new IPAddress(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new IPAddress(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, process);
+          return new(ConnectionProtocol.Tcp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, process);
         }));
     }
 
@@ -367,7 +367,7 @@ namespace System.Net {
       return (_GetTable<NativeMethods.MIB_UDPROW_OWNER_PID>(
         (pointer, size) => {
           var status = NativeMethods.GetExtendedUdpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.UdpTableClass.OwnerPid);
-          return (new BufferSizeAndWin32Status(status, size));
+          return (new(status, size));
         },
         row => {
           Process process;
@@ -376,7 +376,7 @@ namespace System.Net {
           } catch {
             process = null;
           }
-          return new Connection(ConnectionProtocol.Udp, new IPAddress(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, process);
+          return new(ConnectionProtocol.Udp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, process);
         }));
     }
 

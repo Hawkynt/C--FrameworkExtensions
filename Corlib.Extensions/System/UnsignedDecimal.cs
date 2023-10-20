@@ -44,121 +44,121 @@ namespace System {
     public static explicit operator UnsignedDecimal(decimal value) {
       if (value < 0)
         throw new ArgumentOutOfRangeException(_errExceptionText);
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     #region arithmetic
     #region byte
     public static implicit operator UnsignedDecimal(byte value) {
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     public static UnsignedDecimal operator +(UnsignedDecimal a, byte b) {
-      return (new UnsignedDecimal(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDecimal operator +(byte a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDecimal operator *(UnsignedDecimal a, byte b) {
-      return (new UnsignedDecimal(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDecimal operator *(byte a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region char
     public static implicit operator UnsignedDecimal(char value) {
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     public static UnsignedDecimal operator +(UnsignedDecimal a, char b) {
-      return (new UnsignedDecimal(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDecimal operator +(char a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDecimal operator *(UnsignedDecimal a, char b) {
-      return (new UnsignedDecimal(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDecimal operator *(char a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ushort
     public static implicit operator UnsignedDecimal(ushort value) {
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     public static UnsignedDecimal operator +(UnsignedDecimal a, ushort b) {
-      return (new UnsignedDecimal(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDecimal operator +(ushort a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDecimal operator *(UnsignedDecimal a, ushort b) {
-      return (new UnsignedDecimal(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDecimal operator *(ushort a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region uint
     public static implicit operator UnsignedDecimal(uint value) {
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     public static UnsignedDecimal operator +(UnsignedDecimal a, uint b) {
-      return (new UnsignedDecimal(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDecimal operator +(uint a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDecimal operator *(UnsignedDecimal a, uint b) {
-      return (new UnsignedDecimal(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDecimal operator *(uint a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ulong
     public static implicit operator UnsignedDecimal(ulong value) {
-      return (new UnsignedDecimal(value));
+      return (new(value));
     }
 
     public static UnsignedDecimal operator +(UnsignedDecimal a, ulong b) {
-      return (new UnsignedDecimal(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedDecimal operator +(ulong a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedDecimal operator *(UnsignedDecimal a, ulong b) {
-      return (new UnsignedDecimal(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedDecimal operator *(ulong a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region UnsignedDecimal
     public static UnsignedDecimal operator +(UnsignedDecimal a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a._value + b._value));
+      return (new(a._value + b._value));
     }
     public static UnsignedDecimal operator *(UnsignedDecimal a, UnsignedDecimal b) {
-      return (new UnsignedDecimal(a._value * b._value));
+      return (new(a._value * b._value));
     }
     #endregion
 

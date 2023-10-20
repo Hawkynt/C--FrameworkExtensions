@@ -44,121 +44,121 @@ namespace System {
     public static explicit operator UnsignedFloat(float value) {
       if (value < 0)
         throw new ArgumentOutOfRangeException(_errExceptionText);
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     #region arithmetic
     #region byte
     public static implicit operator UnsignedFloat(byte value) {
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     public static UnsignedFloat operator +(UnsignedFloat a, byte b) {
-      return (new UnsignedFloat(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedFloat operator +(byte a, UnsignedFloat b) {
-      return (new UnsignedFloat(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedFloat operator *(UnsignedFloat a, byte b) {
-      return (new UnsignedFloat(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedFloat operator *(byte a, UnsignedFloat b) {
-      return (new UnsignedFloat(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region char
     public static implicit operator UnsignedFloat(char value) {
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     public static UnsignedFloat operator +(UnsignedFloat a, char b) {
-      return (new UnsignedFloat(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedFloat operator +(char a, UnsignedFloat b) {
-      return (new UnsignedFloat(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedFloat operator *(UnsignedFloat a, char b) {
-      return (new UnsignedFloat(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedFloat operator *(char a, UnsignedFloat b) {
-      return (new UnsignedFloat(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ushort
     public static implicit operator UnsignedFloat(ushort value) {
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     public static UnsignedFloat operator +(UnsignedFloat a, ushort b) {
-      return (new UnsignedFloat(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedFloat operator +(ushort a, UnsignedFloat b) {
-      return (new UnsignedFloat(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedFloat operator *(UnsignedFloat a, ushort b) {
-      return (new UnsignedFloat(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedFloat operator *(ushort a, UnsignedFloat b) {
-      return (new UnsignedFloat(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region uint
     public static implicit operator UnsignedFloat(uint value) {
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     public static UnsignedFloat operator +(UnsignedFloat a, uint b) {
-      return (new UnsignedFloat(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedFloat operator +(uint a, UnsignedFloat b) {
-      return (new UnsignedFloat(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedFloat operator *(UnsignedFloat a, uint b) {
-      return (new UnsignedFloat(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedFloat operator *(uint a, UnsignedFloat b) {
-      return (new UnsignedFloat(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region ulong
     public static implicit operator UnsignedFloat(ulong value) {
-      return (new UnsignedFloat(value));
+      return (new(value));
     }
 
     public static UnsignedFloat operator +(UnsignedFloat a, ulong b) {
-      return (new UnsignedFloat(a._value + b));
+      return (new(a._value + b));
     }
 
     public static UnsignedFloat operator +(ulong a, UnsignedFloat b) {
-      return (new UnsignedFloat(a + b._value));
+      return (new(a + b._value));
     }
 
     public static UnsignedFloat operator *(UnsignedFloat a, ulong b) {
-      return (new UnsignedFloat(a._value * b));
+      return (new(a._value * b));
     }
 
     public static UnsignedFloat operator *(ulong a, UnsignedFloat b) {
-      return (new UnsignedFloat(a * b._value));
+      return (new(a * b._value));
     }
     #endregion
     #region UnsignedFloat
     public static UnsignedFloat operator +(UnsignedFloat a, UnsignedFloat b) {
-      return (new UnsignedFloat(a._value + b._value));
+      return (new(a._value + b._value));
     }
     public static UnsignedFloat operator *(UnsignedFloat a, UnsignedFloat b) {
-      return (new UnsignedFloat(a._value * b._value));
+      return (new(a._value * b._value));
     }
     #endregion
 

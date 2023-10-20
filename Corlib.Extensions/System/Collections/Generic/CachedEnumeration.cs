@@ -42,7 +42,7 @@ public
 
   private IEnumerator<TItem> _enumerator;
   private bool _enumerationEnded;
-  private readonly List<TItem> _cachedItems = new List<TItem>();
+  private readonly List<TItem> _cachedItems = new();
   private readonly IEnumerable<TItem> _sourceEnumeration;
 
   /// <summary>

@@ -42,7 +42,7 @@ namespace System.Threading.Tasks {
     private readonly Action<TValue> _action;
     private readonly int _deferredTime;
     private readonly bool _waitUntilTaskReturnedBeforeNextSchedule;
-    private readonly object _lock = new object();
+    private readonly object _lock = new();
     private int _taskIsRunning;
     private int _dataAvailable;
 
@@ -85,7 +85,7 @@ namespace System.Threading.Tasks {
         this._allowThreadSleep = true;
       } else {
         this._allowThreadSleep = false;
-        this._timer = new Timer(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
+        this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
       }
 #endif
     }
@@ -221,7 +221,7 @@ namespace System.Threading.Tasks {
     private readonly Timer _timer;
 #endif
 
-    public ManualResetEventSlim WaitHandle { get; } = new ManualResetEventSlim(true);
+    public ManualResetEventSlim WaitHandle { get; } = new(true);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
@@ -256,7 +256,7 @@ namespace System.Threading.Tasks {
         this._allowThreadSleep = true;
       } else {
         this._allowThreadSleep = false;
-        this._timer = new Timer(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
+        this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
       }
 #endif
     }
@@ -355,11 +355,11 @@ namespace System.Threading.Tasks {
   internal
 #endif
   class ScheduledCombinedTask<TValue> {
-    private readonly ConcurrentBag<TValue> _scheduledValues = new ConcurrentBag<TValue>();
+    private readonly ConcurrentBag<TValue> _scheduledValues = new();
     private readonly Action<TValue[]> _action;
     private readonly int _deferredTime;
     private readonly bool _waitUntilTaskReturnedBeforeNextSchedule;
-    private readonly object _lock = new object();
+    private readonly object _lock = new();
     private int _taskIsRunning;
     private int _taskIsAborted;
 
@@ -402,7 +402,7 @@ namespace System.Threading.Tasks {
         this._allowThreadSleep = true;
       } else {
         this._allowThreadSleep = false;
-        this._timer = new Timer(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
+        this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
       }
 #endif
     }

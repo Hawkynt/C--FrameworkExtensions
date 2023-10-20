@@ -457,7 +457,7 @@ static partial class ObjectExtensions {
   }
 
 #if SUPPORTS_CONCURRENT_COLLECTIONS
-  private static readonly ConcurrentDictionary<Type, XmlSerializer> _CACHE = new ConcurrentDictionary<Type, XmlSerializer>();
+  private static readonly ConcurrentDictionary<Type, XmlSerializer> _CACHE = new();
 #endif
 
   /// <summary>
@@ -487,8 +487,8 @@ static partial class ObjectExtensions {
   public static T DeepClone<T>(this T objectToClone) where T : class => DeepClone((object)objectToClone) as T;
 
   public static object DeepClone(this object objectToClone) {
-    using var ms = new MemoryStream();
-    var bf = new BinaryFormatter();
+    using MemoryStream ms = new();
+    BinaryFormatter bf = new();
     bf.Serialize(ms, objectToClone);
     ms.Position = 0;
     return bf.Deserialize(ms);
@@ -515,7 +515,7 @@ static partial class ObjectExtensions {
       return;
     }
 
-    using var ds = new DeflateStream(fs, CompressionMode.Compress);
+    using DeflateStream ds = new(fs, CompressionMode.Compress);
     Formatter.Serialize(ds, @this);
   }
 
@@ -525,7 +525,7 @@ static partial class ObjectExtensions {
       return (T) Formatter.Deserialize(stream);
 
     using var fs = file.OpenRead();
-    using var ds = new DeflateStream(fs, CompressionMode.Decompress);
+    using DeflateStream ds = new(fs, CompressionMode.Decompress);
     return (T)Formatter.Deserialize(ds);
   }
 

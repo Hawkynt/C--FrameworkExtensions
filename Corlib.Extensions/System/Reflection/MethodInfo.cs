@@ -142,7 +142,7 @@ namespace System.Reflection {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      var sb = new StringBuilder();
+      StringBuilder sb = new();
 
       if (This.IsPublic)
         sb.Append("public ");

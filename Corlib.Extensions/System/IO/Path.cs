@@ -64,7 +64,7 @@ namespace System.IO {
 
       }
 
-      private readonly ConcurrentDictionary<string, Entry> _entries = new ConcurrentDictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
+      private readonly ConcurrentDictionary<string, Entry> _entries = new(StringComparer.OrdinalIgnoreCase);
 
       #endregion
 
@@ -72,8 +72,8 @@ namespace System.IO {
 
       private static readonly Lazy<TemporaryTokenCleaner> _instance;
       public static TemporaryTokenCleaner Instance => _instance.Value;
-      static TemporaryTokenCleaner() => _instance = new Lazy<TemporaryTokenCleaner>(_Factory);
-      private static TemporaryTokenCleaner _Factory() => new TemporaryTokenCleaner();
+      static TemporaryTokenCleaner() => _instance = new(_Factory);
+      private static TemporaryTokenCleaner _Factory() => new();
 
       #endregion
 
@@ -87,7 +87,7 @@ namespace System.IO {
           entry.MinimumLifeTimeLeft = value;
       }
 
-      public void Add(FileSystemInfo target) => this._entries.GetOrAdd(target.FullName, _ => new Entry(target)).IsAlive = true;
+      public void Add(FileSystemInfo target) => this._entries.GetOrAdd(target.FullName, _ => new(target)).IsAlive = true;
 
       public void Delete(FileSystemInfo target) {
         if (!this._entries.TryGetValue(target.FullName, out var entry))
@@ -150,7 +150,7 @@ namespace System.IO {
 
         // TODO: we need a way to ensure stuff is deleted even when a debugger kills our process - eg external batch or whatever
         AppDomain.CurrentDomain.ProcessExit += this.CurrentDomain_ProcessExit;
-        var timer = this._cleaner = new Timer(this.Timer_Elapsed);
+        var timer = this._cleaner = new(this.Timer_Elapsed);
         timer.Change(_CLEANER_TIMEOUT, _CLEANER_TIMEOUT);
       }
 
@@ -268,7 +268,7 @@ namespace System.IO {
     /// <param name="name">The name.</param>
     /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
     /// <returns>A <see cref="FileInfo">FileInfo</see> instance pointing to the file.</returns>
-    public static FileInfo GetTempFile(string name = null, string baseDirectory = null) => new FileInfo(GetTempFileName(name, baseDirectory));
+    public static FileInfo GetTempFile(string name = null, string baseDirectory = null) => new(GetTempFileName(name, baseDirectory));
 
     /// <summary>
     /// Generates a temporary filename which is most like the given one in the temporary folder.
@@ -343,7 +343,7 @@ namespace System.IO {
     /// <param name="name">The name.</param>
     /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
     /// <returns>A <see cref="DirectoryInfo">DirectoryInfo</see> instance pointint to the directory.</returns>
-    public static DirectoryInfo GetTempDirectory(string name = null, string baseDirectory = null) => new DirectoryInfo(GetTempDirectoryName(name, baseDirectory));
+    public static DirectoryInfo GetTempDirectory(string name = null, string baseDirectory = null) => new(GetTempDirectoryName(name, baseDirectory));
 
     /// <summary>
     /// Generates a temporary directory which is most like the given one in the temporary folder.
@@ -360,13 +360,13 @@ namespace System.IO {
         const int LENGTH = 4;
         const string SUFFIX = ".tmp";
         string result;
-        var random = new Random();
+        Random random = new();
 
         // loop until the temporarely generated name does not exist
         do {
 
           // generate a temporary name
-          var tempName = new StringBuilder(PREFIX, LENGTH + PREFIX.Length);
+          StringBuilder tempName = new(PREFIX, LENGTH + PREFIX.Length);
           for (var j = LENGTH; j > 0; --j)
             tempName.Append(random.Next(0, 16).ToString("X"));
 
@@ -377,7 +377,7 @@ namespace System.IO {
 #endif
         } while (!TryCreateDirectory(result));
 
-        return (result);
+        return result;
       }
 
       // a name is given, so try to accommodate this
@@ -392,12 +392,12 @@ namespace System.IO {
       Contract.Assume(!string.IsNullOrEmpty(fullName));
 #endif
       if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
-        return (fullName);
+        return fullName;
 
       // otherwise count up
       var i = 1;
       while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed)) { }
-      return (fullName);
+      return fullName;
     }
 
     /// <summary>
@@ -413,15 +413,15 @@ namespace System.IO {
       Contract.Requires(!string.IsNullOrEmpty(pathName));
 #endif
       if (Directory.Exists(pathName))
-        return (false);
+        return false;
 
       try {
         Directory.CreateDirectory(pathName);
-        var directory = new DirectoryInfo(pathName);
+        DirectoryInfo directory = new(pathName);
         directory.Attributes = attributes;
-        return (true);
+        return true;
       } catch (IOException) {
-        return (false);
+        return false;
       }
     }
 

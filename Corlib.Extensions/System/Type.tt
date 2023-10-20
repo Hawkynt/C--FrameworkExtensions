@@ -286,7 +286,7 @@ namespace System {
             return this.__customAttributes = new object[0];
 
           var name=info.Name;
-          var results=new List<object>();
+          List<object> results=new();
           
           // walk inheritance chain
           var type=info.DeclaringType;
@@ -802,7 +802,7 @@ namespace System {
       if (ctor == null)
         return () => Activator.CreateInstance(@this);
 
-      var method = new DynamicMethod("Ctor_" + @this.Name,@this,parameterTypes,@this);
+      DynamicMethod method = new("Ctor_" + @this.Name,@this,parameterTypes,@this);
       var ilgen = method.GetILGenerator();
       ilgen.Emit(OpCodes.Newobj,ctor);
       ilgen.Emit(OpCodes.Ret);
@@ -1001,7 +1001,7 @@ namespace System {
         foreach(var result in @this.GetCustomAttributes(typeof(TAttribute),false))
           yield return (TAttribute)result;
 
-      var alreadyReturned=new HashSet<TAttribute>();
+      HashSet<TAttribute> alreadyReturned=new();
       var baseType=@this;
       do{
         foreach(var result in baseType.GetCustomAttributes(true)){

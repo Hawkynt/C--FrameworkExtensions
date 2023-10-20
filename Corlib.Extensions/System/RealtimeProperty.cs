@@ -42,7 +42,7 @@ namespace System {
     private TType _lastKnownValue;
     private readonly bool _isAsyncSetter;
     private int _isGettingValue = _IS_IDLE;
-    private readonly ManualResetEventSlim _manualResetEventSlim = new ManualResetEventSlim(false);
+    private readonly ManualResetEventSlim _manualResetEventSlim = new(false);
     private bool _gotValueAtLeastOnce;
 
     public RealtimeProperty(Func<TType> getter, Action<TType> setter = null, TimeSpan? timeout = null, bool isAsyncSetter = false) {

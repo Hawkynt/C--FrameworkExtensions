@@ -38,7 +38,7 @@
   const int UNSAFE_NOT_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe not
   const int UNSAFE_AND_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe and/xor/or
     
-  var typeDatas = new List<TypeData>();
+  List<TypeData> typeDatas = new();
   typeDatas.Add(new TypeData{ name = "sbyte"  , size = 1, useBlockCopyInsteadOfArrayCopy = true, allowByteConversion = true});
   typeDatas.Add(new TypeData{ name = "byte"   , size = 1, useBlockCopyInsteadOfArrayCopy = true, allowByteConversion = true});
   typeDatas.Add(new TypeData{ name = "short"  , size = 2, useBlockCopyInsteadOfArrayCopy = true, allowByteConversion = true});

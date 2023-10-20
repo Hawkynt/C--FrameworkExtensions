@@ -40,7 +40,7 @@ public
   private readonly ReaderWriterLockSlim _readerWriterLockSlim = new();
 
   private void _ProcessAll(Action<int> callback) {
-    var processedAll = new ManualResetEventSlim(false);
+    ManualResetEventSlim processedAll = new(false);
     var count = this._items.Count;
 
     void CallBack(object index) {
@@ -151,7 +151,7 @@ public
       var matches = new bool[this._items.Count];
       this._ProcessAll(index => matches[index] = selector(this._items[index]));
 
-      var results = new List<T>();
+      List<T> results = new();
       for (var i = this._items.Count - 1; i >= 0; --i) {
         if (!matches[i])
           continue;

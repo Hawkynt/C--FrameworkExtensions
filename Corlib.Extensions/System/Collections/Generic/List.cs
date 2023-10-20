@@ -384,7 +384,7 @@ static partial class ListExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(items);
 
-    var removeables = new List<TItem>(items);
+    List<TItem> removeables = new(items);
     foreach (var item in removeables)
       @this.Remove(item);
   }
@@ -416,7 +416,7 @@ static partial class ListExtensions {
 #if SUPPORTS_RANDOM_SHARED
     var random = Random.Shared;
 #else
-    var random = new Random();
+    Random random = new();
 #endif
     while (i-- > 1)
       @this.Swap(random.Next(i + 1), i);
@@ -683,7 +683,7 @@ static partial class ListExtensions {
       while (true) {
 
         // increment as long as there are matching slots
-        var slotsBefore = new HashSet<int>(state.Take(index));
+        HashSet<int> slotsBefore = new(state.Take(index));
         do {
           ++state[index];
         } while (slotsBefore.Contains(state[index]));
@@ -707,7 +707,7 @@ static partial class ListExtensions {
       for (var i = index + 1; i < length; ++i) {
         state[i] = 0;
 
-        var slotsBefore = new HashSet<int>(state.Take(i));
+        HashSet<int> slotsBefore = new(state.Take(i));
         while (slotsBefore.Contains(state[i]))
           ++state[i];
 

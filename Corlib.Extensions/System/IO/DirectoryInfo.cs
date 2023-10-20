@@ -160,7 +160,7 @@ namespace System.IO {
 
       // otherwise, use MT approach
       long[] itemsLeftAndResult = { 1L, 0L };
-      using var pushNotification = new AutoResetEvent(false);
+      using AutoResetEvent pushNotification = new(false);
 
       void ExecuteAsync(DirectoryInfo directory) {
         if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
@@ -204,31 +204,31 @@ namespace System.IO {
     /// are raised by this function directly). For example, "P:\2008-02-29"
     /// might return: "\\networkserver\Shares\Photos\2008-02-09"
     /// </summary>
-    /// <param name="This">The path to convert to a UNC Path</param>
+    /// <param name="this">The path to convert to a UNC Path</param>
     /// <returns>A UNC path. If a network drive letter is specified, the
     /// drive letter is converted to a UNC or network path. If the
     /// originalPath cannot be converted, it is returned unchanged.</returns>
-    public static DirectoryInfo GetRealPath(this DirectoryInfo This) {
-      var originalPath = This.FullName;
+    public static DirectoryInfo GetRealPath(this DirectoryInfo @this) {
+      var originalPath = @this.FullName;
 
       // look for the {LETTER}: combination ...
       if (originalPath.Length < 2 || originalPath[1] != ':')
-        return (This);
+        return @this;
 
       // don't use char.IsLetter here - as that can be misleading
       // the only valid drive letters are a-z && A-Z.
       var c = originalPath[0];
-      if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z'))
-        return (This);
+      if (c is (< 'a' or > 'z') and (< 'A' or > 'Z'))
+        return @this;
 
-      var sb = new StringBuilder(512);
+      StringBuilder sb = new(512);
       var size = sb.Capacity;
       var error = NativeMethods.WNetGetConnection(originalPath.Substring(0, 2), sb, ref size);
       if (error != 0)
-        return (This);
+        return @this;
 
-      var path = originalPath.Substring(This.Root.FullName.Length);
-      return (new(Path.Combine(sb.ToString().TrimEnd(), path)));
+      var path = originalPath.Substring(@this.Root.FullName.Length);
+      return new(Path.Combine(sb.ToString().TrimEnd(), path));
     }
 
     /// <summary>
@@ -256,19 +256,18 @@ namespace System.IO {
       switch (mode) {
         case RecursionMode.ToplevelOnly: {
           foreach (var result in This.EnumerateFileSystemInfos())
-              yield return (result);
+              yield return result;
 
           break;
         }
         case RecursionMode.ShortestPathFirst: {
-            var results = new Queue<DirectoryInfo>();
+          Queue<DirectoryInfo> results = new();
             results.Enqueue(This);
             while (results.Any()) {
               var result = results.Dequeue();
               foreach (var fsi in result.EnumerateFileSystemInfos()) {
-                yield return (fsi);
-                var di = fsi as DirectoryInfo;
-                if (di == null)
+                yield return fsi;
+                if (fsi is not DirectoryInfo di)
                   continue;
 
                 if (recursionFilter == null || recursionFilter(di))
@@ -278,14 +277,13 @@ namespace System.IO {
             break;
           }
         case RecursionMode.DeepestPathFirst: {
-            var results = new Stack<DirectoryInfo>();
+          Stack<DirectoryInfo> results = new();
             results.Push(This);
             while (results.Any()) {
               var result = results.Pop();
               foreach (var fsi in result.EnumerateFileSystemInfos()) {
-                yield return (fsi);
-                var di = fsi as DirectoryInfo;
-                if (di == null)
+                yield return fsi;
+                if (fsi is not DirectoryInfo di)
                   continue;
 
                 if (recursionFilter == null || recursionFilter(di))
@@ -339,16 +337,16 @@ namespace System.IO {
       This.Refresh();
 
       if (!This.Exists)
-        return (false);
+        return false;
 
       if (This.CreationTimeUtc == creationTimeUtc)
-        return (true);
+        return true;
 
       try {
         This.CreationTimeUtc = creationTimeUtc;
-        return (true);
+        return true;
       } catch (Exception) {
-        return (This.CreationTimeUtc == creationTimeUtc);
+        return This.CreationTimeUtc == creationTimeUtc;
       }
     }
 
@@ -365,16 +363,16 @@ namespace System.IO {
       This.Refresh();
 
       if (!This.Exists)
-        return (false);
+        return false;
 
       if (This.Attributes == attributes)
-        return (true);
+        return true;
 
       try {
         This.Attributes = attributes;
-        return (true);
+        return true;
       } catch (Exception) {
-        return (This.Attributes == attributes);
+        return This.Attributes == attributes;
       }
     }
 
@@ -419,15 +417,15 @@ namespace System.IO {
       Contract.Requires(@this != null);
 #endif
       if (!@this.Exists)
-        return (true);
+        return true;
 
       try {
         @this.Delete(recursive);
         @this.Refresh();
-        return (true);
+        return true;
       } catch (Exception) {
         @this.Refresh();
-        return (!@this.Exists);
+        return !@this.Exists;
       }
     }
 
@@ -522,7 +520,7 @@ namespace System.IO {
       Against.ThisIsNull(@this);
       Against.ArgumentIsNull(target);
 
-      var stack = new Stack<SubdirectoryInfo>();
+      Stack<SubdirectoryInfo> stack = new();
       stack.Push(new(@this, "."));
       while (stack.Count > 0) {
         var (directory, relativePath) = stack.Pop();
@@ -595,16 +593,16 @@ namespace System.IO {
     /// <returns><c>true</c> if it exists and has matching files; otherwise, <c>false</c>.</returns>
     public static bool ExistsAndHasFiles(this DirectoryInfo This, string fileMask = "*.*") {
       if (!This.Exists)
-        return (false);
+        return false;
 
       try {
         if (This.HasFile(fileMask, SearchOption.AllDirectories))
-          return (true);
+          return true;
 
       } catch (IOException) {
-        return (false);
+        return false;
       }
-      return (false);
+      return false;
     }
 
     /// <summary>
@@ -622,7 +620,7 @@ namespace System.IO {
       static string Generator(Random random,string ext) {
         const int LENGTH = 4;
         const string PREFIX = "tmp";
-        var result = new StringBuilder(16);
+        StringBuilder result = new(16);
         result.Append(PREFIX);
         for (var i = 0; i < LENGTH; ++i)
           result.Append(random.Next(0, 16).ToString("X"));
@@ -631,7 +629,7 @@ namespace System.IO {
         return result.ToString();
       }
 
-      var random = new Random();
+      Random random = new();
 
       while (true) {
         var result = This.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
@@ -655,21 +653,21 @@ namespace System.IO {
 
       var fullFileName = Path.Combine(This.FullName, fileName);
       if (IO.File.Exists(fullFileName))
-        return (null);
+        return null;
 
       try {
         var fileHandle = IO.File.Open(fullFileName, FileMode.CreateNew, FileAccess.Write);
         fileHandle.Close();
         IO.File.SetAttributes(fullFileName, attributes);
-        return (new(fullFileName));
+        return new(fullFileName);
       } catch (UnauthorizedAccessException) {
 
         // in case multiple threads try to create the same file, this gets fired
-        return (null);
+        return null;
       } catch (IOException) {
 
         // file already exists
-        return (null);
+        return null;
       }
     }
 

@@ -103,11 +103,11 @@ namespace System.IO {
       private readonly FileInfo _source;
       private readonly FileInfo _target;
       private readonly FileReportCallback _callback;
-      private readonly ManualResetEventSlim _finishEvent = new ManualResetEventSlim();
+      private readonly ManualResetEventSlim _finishEvent = new();
       private readonly bool _canReadDuringWrite;
       private readonly int _chunkSize;
       private readonly long _maxReadAheadSize;
-      private readonly ConcurrentQueue<Chunk> _readAheadCache = new ConcurrentQueue<Chunk>();
+      private readonly ConcurrentQueue<Chunk> _readAheadCache = new();
       private Exception _exception;
       private int _streamCount = 1;
       private long _bytesRead;
@@ -177,7 +177,7 @@ namespace System.IO {
           return null;
 
         this._CreateReport(ReportType.StartRead, 0, offset, size);
-        return new Chunk(offset, size);
+        return new(offset, size);
       }
 
       private void _ReleaseReadChunk(Chunk chunk) {
@@ -258,7 +258,7 @@ namespace System.IO {
       #region generate reports
 
       private FileCopyReport _CreateReport(ReportType reportType, int streamIndex, long offset, long size) {
-        var result = new FileCopyReport(reportType, this, streamIndex, offset, size);
+        FileCopyReport result = new(reportType, this, streamIndex, offset, size);
         this._callback(result);
         return result;
       }
@@ -517,7 +517,7 @@ namespace System.IO {
 
         // if target file is already a hard link of the source, don't copy
         if (targets.Any(t => t.FullName == target.FullName)) {
-          var operation = new FileCopyOperation(This, target, callback, false);
+          FileCopyOperation operation = new(This, target, callback, false);
           operation.OperationStarted();
           return operation.OperationFinished();
         }
@@ -537,7 +537,7 @@ namespace System.IO {
           return copySymlink;
       }
 
-      var mainToken = new FileCopyOperation(This, target, callback, !This.IsOnSamePhysicalDrive(target), bufferSize);
+      FileCopyOperation mainToken = new(This, target, callback, !This.IsOnSamePhysicalDrive(target), bufferSize);
 
       // create link if possible and allowed
       if (allowHardLinks && This.TryCreateHardLinkAt(target)) {
@@ -553,12 +553,12 @@ namespace System.IO {
 
       // open streams
       try {
-        mainToken.SourceStream = new FileStream(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, mainToken.ChunkSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        mainToken.SourceStream = new(This.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, mainToken.ChunkSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
 
         // set target size first to avoid fragmentation
         _SetFileSize(target, Math.Min(mainToken.TotalSize, _MAX_PREALLOCATION_SIZE));
 
-        mainToken.TargetStream = new FileStream(target.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, mainToken.ChunkSize, FileOptions.Asynchronous | (mainToken.TotalSize < _MAX_CACHED_SIZE ? FileOptions.None : FileOptions.WriteThrough));
+        mainToken.TargetStream = new(target.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, mainToken.ChunkSize, FileOptions.Asynchronous | (mainToken.TotalSize < _MAX_CACHED_SIZE ? FileOptions.None : FileOptions.WriteThrough));
       } catch (Exception e) {
         return mainToken.OperationAborted(e);
       }
@@ -582,7 +582,7 @@ namespace System.IO {
       if (!source.IsSymbolicLink())
         return null;
 
-      var operation = new FileCopyOperation(source, target, callback, false);
+      FileCopyOperation operation = new(source, target, callback, false);
       operation.OperationStarted();
       try {
         var targets = source.GetSymbolicLinkTarget();
@@ -600,8 +600,8 @@ namespace System.IO {
     /// <param name="target">The target.</param>
     /// <param name="length">The length.</param>
     private static void _SetFileSize(FileInfo target, long length) {
-      using (var targetStream = new FileStream(target.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 8, FileOptions.WriteThrough))
-        targetStream.SetLength(length);
+      using FileStream targetStream = new(target.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 8, FileOptions.WriteThrough);
+      targetStream.SetLength(length);
     }
 
     #endregion

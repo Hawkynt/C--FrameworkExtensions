@@ -36,11 +36,11 @@ namespace System {
   static partial class ConvertExtensions {
     private const string _QP_CHARS = @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<\>?@[]^_-{|}~""";
     private static readonly byte[] _QP_ENCODING_TABLE = new byte[256];
-    private static readonly Dictionary<char, byte> _QP_DECODING_TABLE = new Dictionary<char, byte>();
+    private static readonly Dictionary<char, byte> _QP_DECODING_TABLE = new();
 
     private const string _BASE91_CHARS = @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_'{|}~""";
     private static readonly char[] _BASE91_ENCODING_TABLE;
-    private static readonly Dictionary<char, byte> _BASE91_DECODING_TABLE = new Dictionary<char, byte>();
+    private static readonly Dictionary<char, byte> _BASE91_DECODING_TABLE = new();
 
     static ConvertExtensions() {
       #region quoted printable
@@ -72,7 +72,7 @@ namespace System {
 #else
       Diagnostics.Debug.Assert(data!=null);
 #endif
-      var result = new StringBuilder();
+      StringBuilder result = new();
       foreach (var b in data) {
         var c = _QP_ENCODING_TABLE[b];
         if (c > 0)
@@ -89,7 +89,7 @@ namespace System {
 #else
       Diagnostics.Debug.Assert(data!=null);
 #endif
-      var result = new List<byte>();
+      List<byte> result = new();
       for (var i = 0; i < data.Length; i++) {
         var c = data[i];
         if (c == '=') {
@@ -114,7 +114,7 @@ namespace System {
 #else
       Diagnostics.Debug.Assert(data!=null);
 #endif
-      var result = new StringBuilder();
+      StringBuilder result = new();
       int b;
       var n = b = 0;
       foreach (var t in data) {
@@ -153,7 +153,7 @@ namespace System {
 #else
       Diagnostics.Debug.Assert(encoded!=null);
 #endif
-      var result = new List<byte>();
+      List<byte> result = new();
       int b, n;
       var v = (b = n = 0) - 1;
       foreach (var i in encoded) {

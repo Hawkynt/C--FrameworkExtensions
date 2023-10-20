@@ -396,7 +396,7 @@ public
     Against.ArgumentIsNull(@this);
     Against.NegativeValues(initialCapacity);
       
-    var items = new List<TItem>(initialCapacity);
+    List<TItem> items = new(initialCapacity);
     items.AddRange(@this);
     return new(items);
   }
@@ -701,7 +701,7 @@ public
     Against.ArgumentIsNull(list);
 
     // we'll cache all visited values from the list, so we don't have to enumerate more than once
-    var itemCache = new List<TItem>();
+    List<TItem> itemCache = new();
 
     equalityComparer ??= EqualityComparer<TItem>.Default;
 
@@ -1014,7 +1014,7 @@ public
   public static string Join<TIn>(this IEnumerable<TIn> @this, string join = ", ", bool skipDefaults = false, Func<TIn, string> converter = null) {
     Against.ThisIsNull(@this);
 
-    var result = new StringBuilder();
+    StringBuilder result = new();
     var gotElements = false;
     var defaultValue = default(TIn);
 

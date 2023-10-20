@@ -49,8 +49,8 @@ namespace System.Threading.Tasks {
         this.createDate = createDate;
       }
 
-      public static Item Now(TValue value) => new Item(value, DateTime.MinValue);
-      public static Item Schedule(TValue value) => new Item(value, DateTime.UtcNow);
+      public static Item Now(TValue value) => new(value, DateTime.MinValue);
+      public static Item Schedule(TValue value) => new(value, DateTime.UtcNow);
 
     }
 
@@ -65,7 +65,7 @@ namespace System.Threading.Tasks {
     private Thread _currentThread;
     private int _threadCount;
 
-    public ManualResetEventSlim WaitHandle { get; } = new ManualResetEventSlim(true);
+    public ManualResetEventSlim WaitHandle { get; } = new(true);
 
     public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
 #if SUPPORTS_CONTRACTS
@@ -125,7 +125,7 @@ namespace System.Threading.Tasks {
       if (this._currentValue == null)
         return;
 
-      var thread = new Thread(this._thread) {
+      Thread thread = new(this._thread) {
         IsBackground = true,
         Name = "Deferred Task #" + this.GetHashCode()
       };

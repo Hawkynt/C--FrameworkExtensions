@@ -138,7 +138,7 @@ namespace System {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator FastLazy<TValue>(TValue This) => new FastLazy<TValue>(This);
+    public static implicit operator FastLazy<TValue>(TValue This) => new(This);
 
     /// <summary>
     /// Performs an implicit conversion from <see cref="System.Func&lt;TValue&gt;"/> to <see cref="System.FastLazy&lt;TValue&gt;"/>.
@@ -147,6 +147,6 @@ namespace System {
     /// <returns>
     /// The result of the conversion.
     /// </returns>
-    public static implicit operator FastLazy<TValue>(Func<TValue> This) => new FastLazy<TValue>(This);
+    public static implicit operator FastLazy<TValue>(Func<TValue> This) => new(This);
   }
 }

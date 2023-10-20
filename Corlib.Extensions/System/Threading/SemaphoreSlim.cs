@@ -43,7 +43,7 @@ namespace System.Threading {
 
       public SemaphoreAcquired(SemaphoreSlim semaphore) {
         this._semaphore = semaphore;
-        this._entered = this._semaphore.Wait(-1, new CancellationToken());
+        this._entered = this._semaphore.Wait(-1, new());
 #if DEBUG
         Trace.WriteLine($"SemaphoreSlim({this._semaphore.GetHashCode():X8}): {this._semaphore.CurrentCount} free");
 #endif
@@ -77,7 +77,7 @@ namespace System.Threading {
     /// </summary>
     /// <param name="this">This <see cref="SemaphoreSlim">SemaphoreSlim</see></param>
     /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryWait(this SemaphoreSlim @this) => @this.Wait(-1, new CancellationToken());
+    public static bool TryWait(this SemaphoreSlim @this) => @this.Wait(-1, new());
 
     /// <summary>
     /// Wait to enter the semaphore.

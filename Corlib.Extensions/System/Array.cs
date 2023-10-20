@@ -241,7 +241,7 @@ static partial class ArrayExtensions {
       if (start + length > this.Length)
         throw new ArgumentException("Exceeding source length", nameof(length));
 
-      return new ArraySlice<TItem>(this._source, start + this._start, length);
+      return new(this._source, start + this._start, length);
     }
   }
 
@@ -362,7 +362,7 @@ static partial class ArrayExtensions {
     comparer ??= EqualityComparer<TItem>.Default;
 
     var targetIndex = 0;
-    var currentSourceBuffer = new Queue<int>();
+    Queue<int> currentSourceBuffer = new();
 
     for (var i = 0; i < @this.Length; ++i) {
       var item = @this[i];
@@ -635,7 +635,7 @@ static partial class ArrayExtensions {
   public static string Join<TItem>(this TItem[] @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
     Against.ThisIsNull(@this);
 
-    var result = new StringBuilder();
+    StringBuilder result = new();
     var gotElements = false;
     var defaultValue = default(TItem);
 
@@ -702,7 +702,7 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
 
     var index = @this.Length;
-    var random = new Random();
+    Random random = new();
     while (index > 1)
       @this.Swap(random.Next(index), --index);
   }
@@ -1742,7 +1742,7 @@ static partial class ArrayExtensions {
     RandomNumberGenerator.Fill(@this);
 #else
 #if NEEDS_RNG_DISPOSE
-    using var provider = new RNGCryptoServiceProvider();
+    using RNGCryptoServiceProvider provider = new();
     provider.GetBytes(@this);
 #else
     new RNGCryptoServiceProvider().GetBytes(@this);
@@ -1809,8 +1809,8 @@ static partial class ArrayExtensions {
   public static byte[] GZip(this byte[] @this) {
     Against.ThisIsNull(@this);
 
-    using var targetStream = new MemoryStream();
-    using (var gZipStream = new GZipStream(targetStream, CompressionMode.Compress, false))
+    using MemoryStream targetStream = new();
+    using (GZipStream gZipStream = new(targetStream, CompressionMode.Compress, false))
       gZipStream.Write(@this, 0, @this.Length);
 
     return targetStream.ToArray();
@@ -1825,9 +1825,9 @@ static partial class ArrayExtensions {
   public static byte[] UnGZip(this byte[] @this) {
     Against.ThisIsNull(@this);
 
-    using var targetStream = new MemoryStream();
-    using (var sourceStream = new MemoryStream(@this))
-    using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress, false)) {
+    using MemoryStream targetStream = new();
+    using (MemoryStream sourceStream = new(@this))
+    using (GZipStream gZipStream = new(sourceStream, CompressionMode.Decompress, false)) {
 
       // decompress all bytes
       var buffer = new byte[64 * 1024];
@@ -1986,7 +1986,7 @@ static partial class ArrayExtensions {
     var searchStringLength = needle.Length;
     var dataStringLength = haystack.Length;
 
-    var dictComparisonBytes = new Dictionary<byte, int>();
+    Dictionary<byte, int> dictComparisonBytes = new();
     for (var j = 0; j < searchStringLength; ++j) {
       var value = searchStringLength - j - 1;
       if (dictComparisonBytes.ContainsKey(needle[j]))
@@ -2036,7 +2036,7 @@ static partial class ArrayExtensions {
   public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
 
-    using var provider = new THashAlgorithm();
+    using THashAlgorithm provider = new();
     return provider.ComputeHash(@this);
   }
 

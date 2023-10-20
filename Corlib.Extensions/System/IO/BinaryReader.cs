@@ -43,16 +43,14 @@ namespace System.IO {
       Contract.Requires(@this != null);
       Contract.Requires(bufferSize > 0);
 #endif
-      using (var result = new MemoryStream()) {
-        var buffer = new byte[bufferSize];
+      using MemoryStream result = new();
+      var buffer = new byte[bufferSize];
 
-        int count;
-        while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
-          result.Write(buffer, 0, count);
+      int count;
+      while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
+        result.Write(buffer, 0, count);
 
-        return (result.ToArray());
-      }
-
+      return (result.ToArray());
     }
   }
 }

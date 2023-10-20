@@ -51,22 +51,21 @@ namespace System.Data.Linq {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      using (var memStream = new MemoryStream())
-      using (var textWriter = new StreamWriter(memStream) { AutoFlush = true }) {
-        using (new TransactionScope()) {
-          @this.Log = textWriter;
-          try {
-            @this.SubmitChanges();
-          } catch {
-            return null;
-          }
-          Transaction.Current.Rollback();
+      using MemoryStream memStream = new();
+      using StreamWriter textWriter = new(memStream) { AutoFlush = true };
+      using (new TransactionScope()) {
+        @this.Log = textWriter;
+        try {
+          @this.SubmitChanges();
+        } catch {
+          return null;
         }
-        return Encoding.UTF8.GetString(memStream.ToArray());
+        Transaction.Current.Rollback();
       }
+      return Encoding.UTF8.GetString(memStream.ToArray());
     }
 
-    private static readonly ConcurrentDictionary<Type, MethodInfo> _initializeMethods = new ConcurrentDictionary<Type, MethodInfo>();
+    private static readonly ConcurrentDictionary<Type, MethodInfo> _initializeMethods = new();
 
     /// <summary>
     /// Detaches an entity from its existing connection.
