@@ -144,6 +144,22 @@ static partial class MathEx {
 #endif
   public static double Log(this double @this, double @base) => Math.Log(@this, @base);
 
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static double Log2(this double @this) => Math.Log(@this, 2);
+
+#if SUPPORTS_CONTRACTS
+  [Pure]
+#endif
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static double Exp(this double @this) => Math.Exp(@this);
+
   /// <summary>
   /// Calculates the cubic root.
   /// </summary>
