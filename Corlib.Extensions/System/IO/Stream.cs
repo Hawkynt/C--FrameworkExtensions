@@ -93,6 +93,8 @@ namespace System.IO {
       return bytesGot == length ? result : result.Take(bytesGot).ToArray();
     }
 
+    public static void Write(this Stream This, int value) => Write(This, value, false);
+
     /// <summary>
     ///   Writes the given int value to a stream.
     /// </summary>
@@ -102,7 +104,7 @@ namespace System.IO {
     ///   if set to <c>true</c> the int gets written in big-endian format; otherwise little-endian is
     ///   used (default).
     /// </param>
-    public static void Write(this Stream This, int value, bool bigEndian = false) {
+    public static void Write(this Stream This, int value, bool bigEndian) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(This.CanWrite);
