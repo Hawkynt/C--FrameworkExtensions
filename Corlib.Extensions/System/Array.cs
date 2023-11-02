@@ -1097,17 +1097,54 @@ static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="value">The value.</param>
+  /// <returns>
+  /// The index of the item in the array or -1.
+  /// </returns>
+
+  public static int IndexOf<TItem>(this TItem[] @this, TItem value) => IndexOf(@this, value, 0, EqualityComparer<TItem>.Default);
+
+  /// <summary>
+  /// Gets the index of the first item matching the given, if any or -1.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This Array.</param>
+  /// <param name="value">The value.</param>
+  /// <param name="offset">The index to start searching</param>
+  /// <returns>
+  /// The index of the item in the array or -1.
+  /// </returns>
+  public static int IndexOf<TItem>(this TItem[] @this, TItem value,int offset) => IndexOf(@this, value, offset, EqualityComparer<TItem>.Default);
+
+  /// <summary>
+  /// Gets the index of the first item matching the given, if any or -1.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This Array.</param>
+  /// <param name="value">The value.</param>
   /// <param name="comparer">The comparer.</param>
   /// <returns>
   /// The index of the item in the array or -1.
   /// </returns>
-  public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer = null) {
+  public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer) => IndexOf(@this, value, 0, comparer);
+  
+  /// <summary>
+  /// Gets the index of the first item matching the given, if any or -1.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="this">This Array.</param>
+  /// <param name="value">The value.</param>
+  /// <param name="offset">The index to start searching</param>
+  /// <param name="comparer">The comparer.</param>
+  /// <returns>
+  /// The index of the item in the array or -1.
+  /// </returns>
+  public static int IndexOf<TItem>(this TItem[] @this, TItem value, int offset, IEqualityComparer<TItem> comparer) {
     Against.ThisIsNull(@this);
-
-    comparer ??= EqualityComparer<TItem>.Default;
-
-    for (var i = 0; i < @this.Length; ++i)
-      if (comparer.Equals(value, @this[i]))
+    Against.IndexBelowZero(offset);
+    Against.ArgumentIsNull(comparer);
+    
+    for (var i = offset; i < @this.Length; ++i)
+      if (ReferenceEquals(value, @this[i]) || comparer.Equals(value, @this[i]))
         return i;
 
     return _INDEX_WHEN_NOT_FOUND;
