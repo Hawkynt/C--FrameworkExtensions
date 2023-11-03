@@ -2,7 +2,10 @@
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
-namespace System; 
+namespace System;
+
+using Collections.Generic;
+using Diagnostics;
 
 [TestFixture]
 public class ArrayTests {
@@ -215,8 +218,7 @@ public class ArrayTests {
     Assert.IsTrue(shouldBeTrue, $"Unequals for length {size}");
   }
 
-
-  [Test]
+[Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
@@ -253,6 +255,46 @@ public class ArrayTests {
       var r = input == null ? ((string?[])null!).TryGetItem(index, out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetItem(index, out v);
       return (r, v);
     }, (result, expected), exception);
+  }
+
+  [Test]
+  [TestCase(null, null, null, typeof(NullReferenceException))]
+  [TestCase("", null, null, typeof(ArgumentNullException))]
+  [TestCase("", "", "")]
+  [TestCase("a", "a", "0,=,0")]
+  [TestCase("a", "b", "0,*,0")]
+  [TestCase("", "a", "-1,-,0")]
+  [TestCase("a", "", "0,+,-1")]
+  [TestCase("a|b", "b", "0,+,-1|1,=,0")]
+  [TestCase("b|a", "b", "0,=,0|1,+,-1")]
+  public void CompareTo(string? input, string? other, string? expected, Type? exception = null) {
+    var a = ConvertFromStringToTestArray(input)?.ToArray();
+    var b = ConvertFromStringToTestArray(other)?.ToArray();
+    ArrayExtensions.IChangeSet<string?>[] Provider() => ArrayExtensions.CompareTo(a, b).ToArray();
+
+    if (exception != null) {
+      Assert.That(Provider, Throws.TypeOf(exception));
+      return;
+    }
+
+    var ex = ConvertFromStringToTestArray(expected)!.Select(i => i!.Split(',')).Select(t => new {
+      CurrentIndex = int.Parse(t[0]), OtherIndex = int.Parse(t[2]), Type = t[1] switch {
+        "+" => ArrayExtensions.ChangeType.Added,
+        "-" => ArrayExtensions.ChangeType.Removed,
+        "=" => ArrayExtensions.ChangeType.Equal,
+        "*" => ArrayExtensions.ChangeType.Changed,
+        _ => throw new ArgumentOutOfRangeException()
+      }
+    }).ToArray();
+
+    var c = Provider();
+    Assert.That(c.Length, Is.EqualTo(ex.Length));
+    for (var i = 0; i < ex.Length; ++i) {
+      Assert.That(c[i].Type, Is.EqualTo(ex[i].Type));
+      Assert.That(c[i].CurrentIndex, Is.EqualTo(ex[i].CurrentIndex));
+      Assert.That(c[i].OtherIndex, Is.EqualTo(ex[i].OtherIndex));
+    }
+
   }
 
 }

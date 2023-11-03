@@ -360,13 +360,29 @@ static partial class ArrayExtensions {
     Against.ArgumentIsNull(other);
 
     comparer ??= EqualityComparer<TItem>.Default;
+    
+    var thisElements=@this.Length;
+    var otherElements=other.Length;
 
-    var targetIndex = 0;
+    const int _SMALL_THRESHOLD = 10_000;
+    const int _MID_THRESHOLD = 1_000_000;
+
+    if (thisElements < _SMALL_THRESHOLD && otherElements < _SMALL_THRESHOLD)
+      return _CompareToLCS(@this, other, comparer);
+    if (thisElements < _MID_THRESHOLD && otherElements < _MID_THRESHOLD)
+      return _CompareToLookupTable(@this, other, comparer);
+
+    return _CompareToNaïve(@this, other, comparer);
+  }
+
+  private static IEnumerable<IChangeSet<TItem>> _CompareToNaïve<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
+    
+    var oldStateIndex = 0;
     Queue<int> currentSourceBuffer = new();
 
-    for (var i = 0; i < @this.Length; ++i) {
-      var item = @this[i];
-      var foundAt = _IndexOf(other, item, targetIndex, comparer);
+    for (var i = 0; i < currentState.Length; ++i) {
+      var item = currentState[i];
+      var foundAt = oldState.IndexOf(item, oldStateIndex, comparer);
       if (foundAt < 0) {
         // does not exist in target
         currentSourceBuffer.Enqueue(i);
@@ -374,51 +390,239 @@ static partial class ArrayExtensions {
       }
 
       // found
-      while (targetIndex <= foundAt) {
-        if (targetIndex == foundAt) {
+      while (oldStateIndex <= foundAt) {
+        if (oldStateIndex == foundAt) {
           // last iteration
           while (currentSourceBuffer.Count > 0) {
             var index = currentSourceBuffer.Dequeue();
-            yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default(TItem));
+            yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
           }
 
-          yield return new ChangeSet<TItem>(ChangeType.Equal, i, @this[i], targetIndex, other[targetIndex]);
+          yield return new ChangeSet<TItem>(ChangeType.Equal, i, currentState[i], oldStateIndex, oldState[oldStateIndex]);
         } else {
           if (currentSourceBuffer.Count > 0) {
             var index = currentSourceBuffer.Dequeue();
-            yield return new ChangeSet<TItem>(ChangeType.Changed, index, @this[index], targetIndex, other[targetIndex]);
+            yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
           } else
-            yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default(TItem), targetIndex, other[targetIndex]);
+            yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
         }
 
-        ++targetIndex;
+        ++oldStateIndex;
       }
     }
 
-    var targetLen = other.Length;
+    var targetLen = oldState.Length;
     while (currentSourceBuffer.Count > 0) {
-      if (targetIndex < targetLen) {
+      if (oldStateIndex < targetLen) {
         var index = currentSourceBuffer.Dequeue();
-        yield return new ChangeSet<TItem>(ChangeType.Changed, index, @this[index], targetIndex, other[targetIndex]);
-        ++targetIndex;
+        yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
+        ++oldStateIndex;
       } else {
         var index = currentSourceBuffer.Dequeue();
-        yield return new ChangeSet<TItem>(ChangeType.Added, index, @this[index], _INDEX_WHEN_NOT_FOUND, default);
+        yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
       }
     }
 
-    while (targetIndex < targetLen) {
-      yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, targetIndex, other[targetIndex]);
-      ++targetIndex;
+    while (oldStateIndex < targetLen) {
+      yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
+      ++oldStateIndex;
     }
   }
 
-  private static int _IndexOf<TValue>(TValue[] values, TValue item, int startIndex, IEqualityComparer<TValue> comparer) {
-    for (var i = startIndex; i < values.Length; ++i)
-      if (ReferenceEquals(values[i], item) || comparer.Equals(values[i], item))
-        return i;
+  private static IEnumerable<IChangeSet<TItem>> _CompareToLookupTable<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
 
-    return _INDEX_WHEN_NOT_FOUND;
+    // 'indexes' contains all indices where a value was found in ascending order without duplicates
+    // 'start' is the first index we would accept, higher or equal is OK if present, lower is not
+    int LookupIndex(IList<int> indexes, int start) {
+      var right = indexes.Count-1;
+      switch (right) {
+        case < 0:
+          return _INDEX_WHEN_NOT_FOUND;
+        case 0:
+          // Only one element present
+          return indexes[0] >= start ? indexes[0] : _INDEX_WHEN_NOT_FOUND;
+        case <= 8:
+          // When the list is small, a linear search is sufficient and can be faster.
+          foreach (var i in indexes)
+            if (i >= start)
+              return i;
+
+          return _INDEX_WHEN_NOT_FOUND;
+      }
+
+      var left = 0;
+      while (left <= right) {
+        var middle = left + (right - left) / 2;
+        var i = indexes[middle];
+        if (i < start)
+          left = middle + 1;
+        if (i > start)
+          right = middle - 1;
+        else
+          return start;
+      }
+
+      return left < indexes.Count && indexes[left] >= start ? indexes[left] : _INDEX_WHEN_NOT_FOUND;
+    }
+
+    Dictionary<TItem, List<int>> oldPositions = new(comparer);
+    List<int> nullPositions = new();
+    for (var i = 0; i < oldState.Length; ++i) {
+      var current = oldState[i];
+      if(current==null)
+        nullPositions.Add(i);
+      else
+        oldPositions.GetOrAdd(current,()=>new()).Add(i);
+    }
+
+    var oldStateIndex = 0;
+    Queue<int> currentSourceBuffer = new();
+
+    for (var i = 0; i < currentState.Length; ++i) {
+      var item = currentState[i];
+
+      // use the oldPositions and nullPositions and call LookupIndex to find the item
+      var foundAt = 
+        item == null 
+          ? LookupIndex(nullPositions, oldStateIndex) 
+          : oldPositions.TryGetValue(item, out var indexes) 
+            ? LookupIndex(indexes, oldStateIndex) 
+            : _INDEX_WHEN_NOT_FOUND
+            ;
+
+      if (foundAt < 0) {
+        // does not exist in target
+        currentSourceBuffer.Enqueue(i);
+        continue;
+      }
+
+      // found
+      while (oldStateIndex <= foundAt) {
+        if (oldStateIndex == foundAt) {
+          // last iteration
+          while (currentSourceBuffer.Count > 0) {
+            var index = currentSourceBuffer.Dequeue();
+            yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
+          }
+
+          yield return new ChangeSet<TItem>(ChangeType.Equal, i, currentState[i], oldStateIndex, oldState[oldStateIndex]);
+        } else {
+          if (currentSourceBuffer.Count > 0) {
+            var index = currentSourceBuffer.Dequeue();
+            yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
+          } else
+            yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
+        }
+
+        ++oldStateIndex;
+      }
+    }
+
+    var targetLen = oldState.Length;
+    while (currentSourceBuffer.Count > 0) {
+      if (oldStateIndex < targetLen) {
+        var index = currentSourceBuffer.Dequeue();
+        yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
+        ++oldStateIndex;
+      } else {
+        var index = currentSourceBuffer.Dequeue();
+        yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
+      }
+    }
+
+    while (oldStateIndex < targetLen) {
+      yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
+      ++oldStateIndex;
+    }
+  }
+
+  private static IEnumerable<IChangeSet<TItem>> _CompareToLCS<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
+
+    static List<T> LongestCommonSubsequence<T>(T[] seq1, T[] seq2, IEqualityComparer<T> comparer) {
+      var seq1Length = seq1.Length;
+      var seq2Length = seq2.Length;
+      var lcsTable = new int[seq1Length + 1, seq2Length + 1];
+
+      // Build the LCS table
+      for (var i = 0; i <= seq1Length; ++i)
+      for (var j = 0; j <= seq2Length; ++j) {
+        if (i == 0 || j == 0)
+          lcsTable[i, j] = 0;
+        else if (comparer.Equals(seq1[i - 1], seq2[j - 1]))
+          lcsTable[i, j] = lcsTable[i - 1, j - 1] + 1;
+        else
+          lcsTable[i, j] = Math.Max(lcsTable[i - 1, j], lcsTable[i, j - 1]);
+      }
+
+      // Recover the LCS from the table
+      var lcsList = new List<T>();
+      for (int k = seq1Length, l = seq2Length; k > 0 && l > 0;) {
+        if (comparer.Equals(seq1[k - 1], seq2[l - 1])) {
+          lcsList.Add(seq1[k - 1]);
+          --k;
+          --l;
+        } else if (lcsTable[k - 1, l] > lcsTable[k, l - 1])
+          --k;
+        else
+          --l;
+      }
+
+      lcsList.Reverse();
+      return lcsList;
+    }
+
+
+    // Calculate the LCS between currentState and oldState
+    var lcs = LongestCommonSubsequence(currentState, oldState, comparer);
+
+    var currentIndex = 0; 
+    var oldIndex = 0;
+    for (var lcsIndex = 0;currentIndex < currentState.Length && oldIndex < oldState.Length;) {
+      var itemsInLcsLeft = lcsIndex < lcs.Count;
+      switch (itemsInLcsLeft) {
+        // If the current item in both currentState and oldState matches the item in LCS, it is unchanged
+        case true 
+          when comparer.Equals(currentState[currentIndex], lcs[lcsIndex]) 
+               && comparer.Equals(oldState[oldIndex], lcs[lcsIndex]):
+          yield return new ChangeSet<TItem>(ChangeType.Equal, currentIndex, currentState[currentIndex], oldIndex, oldState[oldIndex]);
+          ++currentIndex;
+          ++oldIndex;
+          ++lcsIndex;
+
+          continue;
+      
+        // If the current item in currentState matches the item in LCS, but the oldState does not, it was removed
+        case true 
+          when comparer.Equals(currentState[currentIndex], lcs[lcsIndex]):
+          yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldIndex, oldState[oldIndex]);
+          ++oldIndex;
+
+          continue;
+        
+        // If the current item in oldState matches the item in LCS, but the currentState does not, it was added
+        case true 
+          when comparer.Equals(oldState[oldIndex], lcs[lcsIndex]):
+          yield return new ChangeSet<TItem>(ChangeType.Added, currentIndex, currentState[currentIndex], _INDEX_WHEN_NOT_FOUND, default);
+          ++currentIndex;
+
+          continue;
+
+        // Otherwise, the current items in both currentState and oldState do not match the LCS, it was changed
+        default:
+          yield return new ChangeSet<TItem>(ChangeType.Changed, currentIndex, currentState[currentIndex], oldIndex, oldState[oldIndex]);
+          ++currentIndex;
+          ++oldIndex;
+          continue;
+      }
+    }
+
+    // If there are remaining items in currentState, they were added
+    for (; currentIndex < currentState.Length; ++currentIndex)
+      yield return new ChangeSet<TItem>(ChangeType.Added, currentIndex, currentState[currentIndex], _INDEX_WHEN_NOT_FOUND, default);
+
+    // If there are remaining items in oldState, they were removed
+    for (; oldIndex < oldState.Length; ++oldIndex)
+      yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldIndex, oldState[oldIndex]);
   }
 
   /// <summary>
