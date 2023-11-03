@@ -53,5 +53,17 @@ public class ListTests {
   public void Any(string? input, bool expected, Type? exception = null)
     => ExecuteTest(() => input == null ? ((List<string?>)null!).Any() : ConvertFromStringToTestArray(input)?.ToList().Any(), expected, exception)
     ;
-  
+
+  [Test]
+  [TestCase(null,null,false,null,typeof(NullReferenceException))]
+  [TestCase("",null,false,-1)]
+  [TestCase("!", null, false, 0)]
+  [TestCase("1", "1", false, 0)]
+  [TestCase("1|2", "2", false, 1)]
+  [TestCase("1|3", "2", false, -1)]
+  [TestCase("1|3", "2", true, 1)]
+  [TestCase("1|3", null, true, 0)]
+  public void BinarySearchIndex(string? input,string? value,bool allowGreater, int expected,Type? exception=null) 
+    => ExecuteTest(()=> input == null ? ((List<string?>)null!).BinarySearchIndex(value,allowGreater) : ConvertFromStringToTestArray(input)?.ToList().BinarySearchIndex(value, allowGreater), expected,exception)
+    ;
 }

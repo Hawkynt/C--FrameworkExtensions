@@ -809,4 +809,141 @@ static partial class ListExtensions {
   }
 #endif
 
+  /// <summary>
+  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  /// </summary>
+  /// <remarks>
+  /// If no such item exists, -1 is returned.
+  /// </remarks>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <param name="item">The item to search for.</param>
+  /// <returns> The index of the item in the list that matches the searched item or -1.</returns>
+  public static int BinarySearchIndex<T>(this IList<T> @this, T item) where T : IComparable<T> {
+    Against.ThisIsNull(@this);
+
+    return _BinarySearchIndex(@this, item, 0, @this.Count, false);
+  }
+
+  /// <summary>
+  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  /// </summary>
+  /// <remarks>
+  /// If no such item exists, -1 is returned.
+  /// </remarks>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <param name="item">The item to search for.</param>
+  /// <param name="startAt">The index of the first element in the section to search.</param>
+  /// <param name="count">The number of elements in the section to search.</param>
+  /// <returns> The index of the item in the list that matches the searched item or -1.</returns>
+
+  public static int BinarySearchIndex<T>(this IList<T> @this, T item, int startAt, int count) where T : IComparable<T> {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(startAt);
+    Against.CountBelowZero(count);
+
+    return _BinarySearchIndex(@this, item, startAt, count, false);
+  }
+
+  /// <summary>
+  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  /// </summary>
+  /// <remarks>
+  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  /// </remarks>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <param name="item">The item to search for.</param>
+  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <returns>
+  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  /// </returns>
+  public static int BinarySearchIndex<T>(this IList<T> @this, T item, bool returnNextGreater) where T : IComparable<T> {
+    Against.ThisIsNull(@this);
+
+    return _BinarySearchIndex(@this, item, 0, @this.Count, returnNextGreater);
+  }
+
+  /// <summary>
+  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  /// </summary>
+  /// <remarks>
+  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  /// </remarks>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <param name="item">The item to search for.</param>
+  /// <param name="startAt">The index of the first element in the section to search.</param>
+  /// <param name="count">The number of elements in the section to search.</param>
+  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <returns>
+  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  /// </returns>
+  public static int BinarySearchIndex<T>(this IList<T> @this, T item, int startAt, int count, bool returnNextGreater) where T : IComparable<T> {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(startAt);
+    Against.CountBelowZero(count);
+
+    return _BinarySearchIndex(@this, item, startAt, count, returnNextGreater);
+  }
+
+  /// <summary>
+  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  /// </summary>
+  /// <remarks>
+  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  /// </remarks>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <param name="item">The item to search for.</param>
+  /// <param name="startAt">The index of the first element in the section to search.</param>
+  /// <param name="count">The number of elements in the section to search.</param>
+  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <returns>
+  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  /// </returns>
+  private static int _BinarySearchIndex<T>(this IList<T> @this, T item,int startAt,int count, bool returnNextGreater) where T : IComparable<T> {
+    const int INDEX_WHEN_NOT_FOUND = -1;
+
+    var left = startAt;
+    var right = startAt + count - 1;
+    var foundIndex = INDEX_WHEN_NOT_FOUND;
+    var isSearchingForNull = item == null;
+
+    while (left <= right) {
+      var mid = left + ((right - left) >> 1);
+      var midItem = @this[mid];
+
+      var comparison = midItem switch {
+        null when isSearchingForNull => 0,
+        null => -1,
+        not null when isSearchingForNull => 1,
+        not null => midItem.CompareTo(item)
+      };
+      
+      switch (comparison) {
+        case 0:
+          // Found an item, continue to search towards the left for the first occurrence.
+          foundIndex = mid;
+          right = mid - 1;
+          continue;
+        case < 0:
+          left = mid + 1;
+          continue;
+        case >0:
+          // If we are looking for the next greater item, store this index.
+          if (returnNextGreater && (foundIndex < 0 || mid < foundIndex))
+            foundIndex = mid;
+
+          right = mid - 1;
+          continue;
+      }
+    }
+
+    // If returnNextGreater is true and no exact match is found, return the index of the next greater item.
+    // foundIndex will be -1 if no such item exists.
+    return foundIndex;
+  }
+
 }
