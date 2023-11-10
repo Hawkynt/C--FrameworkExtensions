@@ -382,9 +382,11 @@ static partial class FileInfoExtensions {
     Contract.Requires(@this != null);
 #endif
 
-    // copy file and delete source, retry during timeout
+    // copy file 
     using TransactionScope scope = new ();
     @this.CopyTo(destFileName, overwrite);
+
+    // delete source, retry during timeout
     var delay = TimeSpan.FromSeconds(1);
     var tries = (int)(timeout.Ticks / delay.Ticks);
     while (true) {
@@ -1399,4 +1401,62 @@ static partial class FileInfoExtensions {
   }
 
 #endif
+
+  public static void ReplaceWith(this FileInfo @this, FileInfo other)
+    => ReplaceWith(@this, other, null, false)
+  ;
+
+  public static void ReplaceWith(this FileInfo @this, FileInfo other, bool ignoreMetaDataErrors)
+    => ReplaceWith(@this, other, null, ignoreMetaDataErrors)
+  ;
+
+  public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile)
+    => ReplaceWith(@this, other, backupFile, false)
+  ;
+
+  public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile, bool ignoreMetaDataErrors) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+
+    var targetDir = @this.DirectoryName;
+    var sourceDir = other.DirectoryName;
+    Against.ValuesAreNotEqual(targetDir,sourceDir,StringComparison.OrdinalIgnoreCase);
+
+    if (backupFile != null) {
+      var backupDir = backupFile.DirectoryName;
+      Against.ValuesAreNotEqual(targetDir, backupDir, StringComparison.OrdinalIgnoreCase);
+    }
+
+    try {
+      other.MoveTo(@this);
+      @this.Refresh();
+      return;
+    } catch (IOException) when(File.Exists(@this.FullName) /* NOTE: we need actual state so don't use @this.Exists here */) {
+      // target file exists - continue below
+    }
+
+    try {
+      other.Replace(@this.FullName, backupFile?.FullName, ignoreMetaDataErrors);
+      @this.Refresh();
+      return;
+    } catch (FileNotFoundException) {
+      // The destination file does not exist, which is needed for Replace
+    } catch (PlatformNotSupportedException) {
+      // Replace method isn't supported on this platform
+    }
+
+    // If Replace isn't available or fails, handle the backup file manually
+    if (backupFile != null)
+      /* NOTE: we don't use the @this.MoveTo because this changes the inner state of the @this object */
+#if SUPPORTS_MOVETO_OVERWRITE
+      File.Move(@this.FullName, backupFile.FullName, true);
+#else
+      new FileInfo(@this.FullName).MoveTo(backupFile, true);
+#endif
+
+    // Move the source file to the destination - overwrite whats there
+    other.MoveTo(@this, true);
+    @this.Refresh();
+  }
+
 }
