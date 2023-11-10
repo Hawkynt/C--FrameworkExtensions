@@ -101,6 +101,70 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void ValuesAreNotEqual<T>(T value, T other, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) {
+    if (ReferenceEquals(value, other))
+      return;
+
+    if (value is null || other is null)
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should be equal to ""{expression ?? nameof(value)}""", caller);
+
+    if (EqualityComparer<T>.Default.Equals(value, other))
+      return;
+
+    AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should be equal to ""{expression ?? nameof(value)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesAreNotEqual(string value, string other, StringComparison comparisonType, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) {
+    if (ReferenceEquals(value, other))
+      return;
+
+    if (value is null || other is null)
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should be equal to ""{expression ?? nameof(value)}""", caller);
+
+    if (string.Equals(value, other, comparisonType))
+      return;
+
+    AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should be equal to ""{expression ?? nameof(value)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesAreEqual<T>(T value, T other, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) {
+    if (ReferenceEquals(value, other))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should not be equal to ""{expression ?? nameof(value)}""", caller);
+
+    if (value is null || other is null)
+      return;
+
+    if (EqualityComparer<T>.Default.Equals(value, other))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should not be equal to ""{expression ?? nameof(value)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesAreEqual(string value, string other, StringComparison comparisonType, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) {
+    if (ReferenceEquals(value, other))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should not be equal to ""{expression ?? nameof(value)}""", caller);
+
+    if (value is null || other is null)
+      return;
+
+    if (string.Equals(value, other, comparisonType))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should not be equal to ""{expression ?? nameof(value)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void IndexBelowZero(int value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value < 0)
       AlwaysThrow.IndexTooLowException(expression ?? nameof(value), value, caller);
