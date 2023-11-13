@@ -50,8 +50,12 @@ namespace System.IO {
       [DebuggerDisplay("{" + nameof(_DebuggerDisplay) + "}")]
       private class Entry {
         private long _timeToKill;
-        public Entry(FileSystemInfo target) => this.Target = target;
-        public FileSystemInfo Target { get; }
+        private Entry(FileSystemInfo target) => this.Target = target.FullName;
+        public Entry(FileInfo target) : this((FileSystemInfo)target) => this.IsFile = true;
+        public Entry(DirectoryInfo target) : this((FileSystemInfo)target) => this.IsFile = false;
+
+        public string Target { get; }
+        public bool IsFile { get; }
         public TimeSpan MinimumLifeTimeLeft {
           get => TimeSpan.FromSeconds(this.TicksLeft / (double)Stopwatch.Frequency);
           set => this._timeToKill = (long)(Stopwatch.GetTimestamp() + value.TotalSeconds * Stopwatch.Frequency);
@@ -60,7 +64,7 @@ namespace System.IO {
         public long TicksLeft => this._timeToKill == 0 ? 0L : Math.Max(0, this._timeToKill - Stopwatch.GetTimestamp());
         public bool IsAlive { get; set; }
 
-        private string _DebuggerDisplay => $"{(this.Target is FileInfo ? "File" : this.Target is DirectoryInfo ? "Directory" : "???")} {this.Target.FullName} ({(this.IsAlive ? "alive" : "dead")}, {this.MinimumLifeTimeLeft:g} time left)";
+        private string _DebuggerDisplay => $"{(this.IsFile ? "File" : "Directory")} {this.Target} ({(this.IsAlive ? "alive" : "dead")}, {this.MinimumLifeTimeLeft:g} time left)";
 
       }
 
@@ -87,7 +91,8 @@ namespace System.IO {
           entry.MinimumLifeTimeLeft = value;
       }
 
-      public void Add(FileSystemInfo target) => this._entries.GetOrAdd(target.FullName, _ => new(target)).IsAlive = true;
+      public void Add(FileInfo target) => this._entries.GetOrAdd(target.FullName, _ => new(target)).IsAlive = true;
+      public void Add(DirectoryInfo target) => this._entries.GetOrAdd(target.FullName, _ => new(target)).IsAlive = true;
 
       public void Delete(FileSystemInfo target) {
         if (!this._entries.TryGetValue(target.FullName, out var entry))
@@ -103,36 +108,27 @@ namespace System.IO {
 
         var target = entry.Target;
         try {
-          switch (target) {
-            case FileInfo file:
-              file.Refresh();
-              if (file.Exists) {
-                file.Delete();
-                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target.FullName} sucessfully deleted");
-              } else
-                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target.FullName} is already gone");
-              break;
-            case DirectoryInfo directory:
-              directory.Refresh();
-              if (directory.Exists) {
-                directory.Delete(true);
-                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target.FullName} sucessfully deleted");
-              } else
-                Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target.FullName} is already gone");
-              break;
-            default:
-              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Unknown FileSystemInfo {target.FullName}");
-              return;
+          if (entry.IsFile) {
+            if (File.Exists(target)) {
+              File.Delete(target);
+              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target} sucessfully deleted");
+            } else
+              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target} is already gone");
+          } else {
+            if (Directory.Exists(target)) {
+              Directory.Delete(target, true);
+              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target} sucessfully deleted");
+            } else
+              Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Directory {target} is already gone");
           }
 
-          this._entries.TryRemove(target.FullName, out _);
+          this._entries.TryRemove(target, out _);
         } catch (Exception e) {
-          Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Unable to delete {target.FullName}, {e.Message} - registering handler for later deletion");
+          Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]Unable to delete {target}, {e.Message} - registering handler for later deletion");
           this._RegisterDeleteHandler();
         }
       }
-
-
+      
       #region make sure stuff gets deleted - even if it doesn't want to
 
       private const int _STATE_YES = -1;
@@ -211,9 +207,7 @@ namespace System.IO {
         GC.SuppressFinalize(this);
       }
 
-      ~TemporaryFileToken() {
-        this.Dispose();
-      }
+      ~TemporaryFileToken() => this.Dispose();
     }
 
     private class TemporaryDirectoryToken : ITemporaryDirectoryToken {
@@ -239,9 +233,7 @@ namespace System.IO {
         GC.SuppressFinalize(this);
       }
 
-      ~TemporaryDirectoryToken() {
-        this.Dispose();
-      }
+      ~TemporaryDirectoryToken() => this.Dispose();
     }
 
     #endregion
