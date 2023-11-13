@@ -1402,60 +1402,78 @@ static partial class FileInfoExtensions {
 
 #endif
 
+  /// <summary>
+  /// Replaces the contents of the file with that from another file.
+  /// </summary>
+  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="other">The file that should replace this file</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other)
     => ReplaceWith(@this, other, null, false)
   ;
 
+  /// <summary>
+  /// Replaces the contents of the file with that from another file.
+  /// </summary>
+  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="other">The file that should replace this file</param>
+  /// <param name="ignoreMetaDataErrors"><see langword="true"/> when metadata errors should be ignored; otherwise, <see langword="false"/>.</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, bool ignoreMetaDataErrors)
     => ReplaceWith(@this, other, null, ignoreMetaDataErrors)
   ;
 
+  /// <summary>
+  /// Replaces the contents of the file with that from another file.
+  /// </summary>
+  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="other">The file that should replace this file</param>
+  /// <param name="backupFile">The file that gets a backup from this file; optional</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile)
     => ReplaceWith(@this, other, backupFile, false)
   ;
 
+  /// <summary>
+  /// Replaces the contents of the file with that from another file.
+  /// </summary>
+  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="other">The file that should replace this file</param>
+  /// <param name="backupFile">The file that gets a backup from this file; optional</param>
+  /// <param name="ignoreMetaDataErrors"><see langword="true"/> when metadata errors should be ignored; otherwise, <see langword="false"/>.</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile, bool ignoreMetaDataErrors) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(other);
 
     var targetDir = @this.DirectoryName;
     var sourceDir = other.DirectoryName;
-    Against.ValuesAreNotEqual(targetDir,sourceDir,StringComparison.OrdinalIgnoreCase);
+    Against.ValuesAreNotEqual(targetDir, sourceDir, StringComparison.OrdinalIgnoreCase);
 
     if (backupFile != null) {
       var backupDir = backupFile.DirectoryName;
       Against.ValuesAreNotEqual(targetDir, backupDir, StringComparison.OrdinalIgnoreCase);
     }
 
+    // NOTE: we don't use the FileInfo method of other and @this directly to avoid them being updated to a new path internally and to always get the actual state without caching
     try {
-      other.MoveTo(@this);
+      File.Move(other.FullName, @this.FullName);
       @this.Refresh();
       return;
-    } catch (IOException) when(File.Exists(@this.FullName) /* NOTE: we need actual state so don't use @this.Exists here */) {
+    } catch (IOException) when (File.Exists(@this.FullName)) {
       // target file exists - continue below
     }
 
     try {
-      other.Replace(@this.FullName, backupFile?.FullName, ignoreMetaDataErrors);
+      File.Replace(other.FullName, @this.FullName, backupFile?.FullName, ignoreMetaDataErrors);
       @this.Refresh();
       return;
-    } catch (FileNotFoundException) {
-      // The destination file does not exist, which is needed for Replace
     } catch (PlatformNotSupportedException) {
       // Replace method isn't supported on this platform
     }
 
     // If Replace isn't available or fails, handle the backup file manually
     if (backupFile != null)
-      /* NOTE: we don't use the @this.MoveTo because this changes the inner state of the @this object */
-#if SUPPORTS_MOVETO_OVERWRITE
-      File.Move(@this.FullName, backupFile.FullName, true);
-#else
       new FileInfo(@this.FullName).MoveTo(backupFile, true);
-#endif
 
     // Move the source file to the destination - overwrite whats there
-    other.MoveTo(@this, true);
+    new FileInfo(other.FullName).MoveTo(@this, true);
     @this.Refresh();
   }
 

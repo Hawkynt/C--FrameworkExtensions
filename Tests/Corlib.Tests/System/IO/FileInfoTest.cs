@@ -5,71 +5,70 @@ using NUnit.Framework;
 namespace Corlib.Tests.System.IO;
 
 internal class FileInfoTest {
-  private string testDirectory;
-  private FileInfo sourceFile;
-  private FileInfo destinationFile;
-  private FileInfo backupFile;
+  private string? _testDirectory;
+  private FileInfo? _sourceFile;
+  private FileInfo? _destinationFile;
+  private FileInfo? _backupFile;
 
   [SetUp]
   public void Setup() {
     // Create a temporary directory for testing
-    testDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-    Directory.CreateDirectory(testDirectory);
+    this._testDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+    Directory.CreateDirectory(this._testDirectory);
 
     // Setup initial file states for each test
-    sourceFile = new FileInfo(Path.Combine(testDirectory, "source.txt"));
-    File.WriteAllText(sourceFile.FullName, "Source file content");
+    this._sourceFile = new(Path.Combine(this._testDirectory, "source.txt"));
+    File.WriteAllText(this._sourceFile.FullName, "Source file content");
 
-    destinationFile = new FileInfo(Path.Combine(testDirectory, "destination.txt"));
-    backupFile = new FileInfo(Path.Combine(testDirectory, "backup.txt"));
+    this._destinationFile = new(Path.Combine(this._testDirectory, "destination.txt"));
+    this._backupFile = new(Path.Combine(this._testDirectory, "backup.txt"));
   }
 
   [TearDown]
   public void TearDown() {
     // Cleanup the test directory after each test
-    if (Directory.Exists(testDirectory)) {
-      Directory.Delete(testDirectory, true);
-    }
+    if (Directory.Exists(this._testDirectory))
+      Directory.Delete(this._testDirectory, true);
   }
 
   [Test]
   public void ReplaceWith_WhenDestinationDoesNotExist_ShouldMoveFile() {
-    destinationFile.ReplaceWith(this.sourceFile, null, false);
-    this.sourceFile.Refresh();
-    this.destinationFile.Refresh();
-    this.backupFile.Refresh();
+    this._destinationFile.ReplaceWith(this._sourceFile, null, false);
+    this._sourceFile!.Refresh();
+    this._destinationFile!.Refresh();
+    this._backupFile!.Refresh();
 
-    Assert.IsFalse(sourceFile.Exists);
-    Assert.IsTrue(destinationFile.Exists);
-    Assert.AreEqual("Source file content", File.ReadAllText(destinationFile.FullName));
+    Assert.IsFalse(this._sourceFile.Exists);
+    Assert.IsTrue(this._destinationFile.Exists);
+    Assert.AreEqual("Source file content", File.ReadAllText(this._destinationFile.FullName));
   }
 
   [Test]
   public void ReplaceWith_WhenDestinationExists_ShouldReplaceFile() {
-    File.WriteAllText(destinationFile.FullName, "Original destination content");
-    destinationFile.ReplaceWith(this.sourceFile, null, false);
-    this.sourceFile.Refresh();
-    this.destinationFile.Refresh();
-    this.backupFile.Refresh();
+    File.WriteAllText(this._destinationFile!.FullName, "Original destination content");
+    this._destinationFile.ReplaceWith(this._sourceFile, null, false);
+    this._sourceFile!.Refresh();
+    this._destinationFile.Refresh();
+    this._backupFile!.Refresh();
 
-    Assert.IsFalse(sourceFile.Exists);
-    Assert.IsTrue(destinationFile.Exists);
-    Assert.AreEqual("Source file content", File.ReadAllText(destinationFile.FullName));
+    Assert.IsFalse(this._sourceFile.Exists);
+    Assert.IsTrue(this._destinationFile.Exists);
+    Assert.AreEqual("Source file content", File.ReadAllText(this._destinationFile.FullName));
   }
 
   [Test]
   public void ReplaceWith_WhenBackupIsProvided_ShouldBackupDestination() {
-    File.WriteAllText(destinationFile.FullName, "Original destination content");
-    destinationFile.ReplaceWith(this.sourceFile, backupFile, false);
-    this.sourceFile.Refresh();
-    this.destinationFile.Refresh();
-    this.backupFile.Refresh();
+    File.WriteAllText(this._destinationFile!.FullName, "Original destination content");
+    this._destinationFile.ReplaceWith(this._sourceFile, this._backupFile, false);
+    this._sourceFile!.Refresh();
+    this._destinationFile.Refresh();
+    this._backupFile!.Refresh();
 
-    Assert.IsTrue(this.destinationFile.Exists);
-    Assert.IsFalse(this.sourceFile.Exists);
-    Assert.IsTrue(backupFile.Exists);
-    Assert.AreEqual("Original destination content", File.ReadAllText(backupFile.FullName));
-    Assert.AreEqual("Source file content", File.ReadAllText(destinationFile.FullName));
+    Assert.IsTrue(this._destinationFile.Exists);
+    Assert.IsFalse(this._sourceFile.Exists);
+    Assert.IsTrue(this._backupFile.Exists);
+    Assert.AreEqual("Original destination content", File.ReadAllText(this._backupFile.FullName));
+    Assert.AreEqual("Source file content", File.ReadAllText(this._destinationFile.FullName));
   }
 
 }
