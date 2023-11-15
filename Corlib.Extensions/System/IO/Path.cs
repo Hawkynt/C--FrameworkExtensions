@@ -33,6 +33,7 @@ using System.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace System.IO {
+  using Guard;
 
 #if COMPILE_TO_EXTENSION_DLL
   public
@@ -110,6 +111,7 @@ namespace System.IO {
         try {
           if (entry.IsFile) {
             if (File.Exists(target)) {
+              File.SetAttributes(target, File.GetAttributes(target) & ~(FileAttributes.ReadOnly | FileAttributes.System | FileAttributes.Hidden));
               File.Delete(target);
               Trace.WriteLine($"[{nameof(TemporaryTokenCleaner)}]File {target} sucessfully deleted");
             } else
@@ -302,9 +304,8 @@ namespace System.IO {
     ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
     /// </returns>
     public static bool TryCreateFile(string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(fileName != null);
-#endif
+      Against.ArgumentIsNull(fileName);
+
       if (File.Exists(fileName))
         return false;
 
