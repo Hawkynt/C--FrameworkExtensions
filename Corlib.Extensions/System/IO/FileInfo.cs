@@ -1477,4 +1477,58 @@ static partial class FileInfoExtensions {
     @this.Refresh();
   }
 
+  public interface IFileInProgress:IDisposable {
+    FileInfo TemporaryFile { get; }
+    bool CancelChanges { get; set; }
+  }
+
+  private class FileInProgress : IFileInProgress {
+
+    private readonly FileInfo _sourceFile;
+    private readonly PathExtensions.ITemporaryFileToken _token;
+    private bool _isDisposed;
+
+    public FileInProgress(FileInfo sourceFile) {
+      this._sourceFile = sourceFile;
+      this._token = PathExtensions.GetTempFileToken(sourceFile.Name + ".$$$", sourceFile.DirectoryName);
+    }
+
+    ~FileInProgress() => this.Dispose();
+
+    #region Implementation of IDisposable
+
+    public void Dispose() {
+      if (this._isDisposed)
+        return;
+
+      this._isDisposed = true;
+      GC.SuppressFinalize(this);
+
+      if (!this.CancelChanges)
+        this._sourceFile.ReplaceWith(this.TemporaryFile);
+
+      this._token.Dispose();
+    }
+
+    #endregion
+
+    #region Implementation of IFileInProgress
+
+    public FileInfo TemporaryFile => this._token.File;
+
+    public bool CancelChanges { get; set; }
+
+    #endregion
+  }
+
+  public static IFileInProgress StartWorkInProgress(this FileInfo @this, bool copyContents = false) {
+    Against.ThisIsNull(@this);
+
+    var result = new FileInProgress(@this);
+    if (copyContents)
+      @this.CopyTo(result.TemporaryFile, true);
+
+    return result;
+  }
+
 }
