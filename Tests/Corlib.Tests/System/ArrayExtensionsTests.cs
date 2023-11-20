@@ -4,9 +4,6 @@ using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System;
 
-using Collections.Generic;
-using Diagnostics;
-
 [TestFixture]
 public class ArrayTests {
 
@@ -270,7 +267,7 @@ public class ArrayTests {
   public void CompareTo(string? input, string? other, string? expected, Type? exception = null) {
     var a = ConvertFromStringToTestArray(input)?.ToArray();
     var b = ConvertFromStringToTestArray(other)?.ToArray();
-    ArrayExtensions.IChangeSet<string?>[] Provider() => ArrayExtensions.CompareTo(a, b).ToArray();
+    ArrayExtensions.IChangeSet<string?>[] Provider() => a.CompareTo(b).ToArray();
 
     if (exception != null) {
       Assert.That(Provider, Throws.TypeOf(exception));
@@ -295,6 +292,17 @@ public class ArrayTests {
       Assert.That(c[i].OtherIndex, Is.EqualTo(ex[i].OtherIndex));
     }
 
+  }
+
+  [Test]
+  [TestCase(null,null)]
+  [TestCase("a", "a")]
+  [TestCase("!", "!")]
+  [TestCase("a|b", "a|b")]
+  [TestCase("!|b", "!|b")]
+  [TestCase("a|!", "a|!")]
+  public void SafelyClone(string? input, string? output) {
+    ExecuteTest(()=>ConvertFromStringToTestArray(input)?.ToArray().SafelyClone(),ConvertFromStringToTestArray(output)?.ToArray(),null);
   }
 
 }

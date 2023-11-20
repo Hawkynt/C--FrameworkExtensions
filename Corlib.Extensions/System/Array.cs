@@ -814,17 +814,8 @@ static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
   /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
-  [DebuggerStepThrough]
-  public static TItem[] SafelyClone<TItem>(this TItem[] @this) {
-    Against.ThisIsNull(@this);
-
-    var len = @this.Length;
-    var result = new TItem[len];
-    if (len > 0)
-      @this.CopyTo(result, len);
-
-    return result;
-  }
+  //[DebuggerStepThrough]
+  public static TItem[] SafelyClone<TItem>(this TItem[] @this) => (TItem[])@this?.Clone();
 
   /// <summary>
   /// Joins the specified elements into a string.
