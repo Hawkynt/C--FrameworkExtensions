@@ -636,7 +636,7 @@ static partial class FileInfoExtensions {
   /// <summary>
   /// Reads all lines.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
+  /// <param name="this">This <see cref="FileInfo"/>.</param>
   /// <param name="encoding">The encoding.</param>
   /// <returns></returns>
   public static string[] ReadAllLines(this FileInfo @this, Encoding encoding) => File.ReadAllLines(@this.FullName, encoding);
@@ -644,7 +644,7 @@ static partial class FileInfoExtensions {
   /// <summary>
   /// Tries to read all lines.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
+  /// <param name="this">This <see cref="FileInfo"/>.</param>
   /// <param name="encoding">The encoding.</param>
   /// <param name="result">This file contents.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
@@ -659,16 +659,27 @@ static partial class FileInfoExtensions {
   }
 
   /// <summary>
+  /// Reads bytes from the file.
+  /// </summary>
+  /// <param name="this">This <see cref="FileInfo"/>.</param>
+  /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="Byte"/></returns>
+  public static IEnumerable<byte> ReadBytes(this FileInfo @this) {
+    using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+    while (!stream.IsAtEndOfStream())
+      yield return (byte)stream.ReadByte();
+  }
+
+  /// <summary>
   /// Reads all bytes.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
+  /// <param name="this">This <see cref="FileInfo"/>.</param>
   /// <returns></returns>
   public static byte[] ReadAllBytes(this FileInfo @this) => File.ReadAllBytes(@this.FullName);
 
   /// <summary>
   /// Tries to read all bytes.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
+  /// <param name="this">This <see cref="FileInfo"/>.</param>
   /// <param name="result">This file contents.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool TryReadAllBytes(this FileInfo @this, out byte[] result){
