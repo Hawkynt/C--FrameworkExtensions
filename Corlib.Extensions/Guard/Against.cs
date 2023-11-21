@@ -101,6 +101,24 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void False(bool value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if(!value)
+      AlwaysThrow.InvalidOperationException(@$"Value ""{expression ?? nameof(value)}"" should not be FALSE", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void True(bool value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value)
+      AlwaysThrow.InvalidOperationException(@$"Value ""{expression ?? nameof(value)}"" should not be TRUE", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void ValuesAreNotEqual<T>(T value, T other, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) {
     if (ReferenceEquals(value, other))
       return;
