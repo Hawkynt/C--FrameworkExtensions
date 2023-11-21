@@ -21,15 +21,15 @@ internal class FileInfoTest {
     [Test]
     public void ShouldCreateTemporaryFile() {
       using var fileInProgress = this._sourceFile.StartWorkInProgress();
-      Assert.IsTrue(fileInProgress.TemporaryFile.Exists);
+      Assert.IsTrue(File.Exists(this._sourceFile!.FullName+".$$$"));
     }
 
     [Test]
     public void ShouldApplyChangesOnDisposeIfNotCancelled() {
       string? tempFileName;
       using (var fileInProgress = this._sourceFile.StartWorkInProgress()) {
-        fileInProgress.TemporaryFile.WriteAllText(_NEW_CONTENT);
-        tempFileName = fileInProgress.TemporaryFile.FullName;
+        fileInProgress.WriteAllText(_NEW_CONTENT);
+        tempFileName = this._sourceFile!.FullName + ".$$$";
         fileInProgress.CancelChanges = false;
       }
 
@@ -41,7 +41,7 @@ internal class FileInfoTest {
     [Test]
     public void ShouldNotApplyChangesOnDisposeIfCancelled() {
       using (var fileInProgress = this._sourceFile.StartWorkInProgress()) {
-        fileInProgress.TemporaryFile.WriteAllText(_NEW_CONTENT);
+        fileInProgress.WriteAllText(_NEW_CONTENT);
         fileInProgress.CancelChanges = true;
       }
 
@@ -52,13 +52,13 @@ internal class FileInfoTest {
     [Test]
     public void ShouldCopyContentsIfRequested() {
       using var fileInProgress = this._sourceFile.StartWorkInProgress(true);
-      Assert.AreEqual(_TEST_CONTENT, fileInProgress.TemporaryFile.ReadAllText());
+      Assert.AreEqual(_TEST_CONTENT, fileInProgress.ReadAllText());
     }
 
     [Test]
     public void ShouldNotCopyContentsIfRequested() {
       using var fileInProgress = this._sourceFile.StartWorkInProgress(false);
-      Assert.AreEqual(string.Empty, fileInProgress.TemporaryFile.ReadAllText());
+      Assert.AreEqual(string.Empty, fileInProgress.ReadAllText());
     }
 
     [TearDown]

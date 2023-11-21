@@ -1489,18 +1489,42 @@ static partial class FileInfoExtensions {
   }
 
   public interface IFileInProgress:IDisposable {
-    FileInfo TemporaryFile { get; }
+    FileInfo OriginalFile { get; }
     bool CancelChanges { get; set; }
+    void CopyFrom(FileInfo source);
+    Encoding GetEncoding();
+    string ReadAllText();
+    string ReadAllText(Encoding encoding);
+    IEnumerable<string> ReadLines();
+    IEnumerable<string> ReadLines(Encoding encoding);
+    void WriteAllText(string text);
+    void WriteAllText(string text, Encoding encoding);
+    void WriteAllLines(IEnumerable<string> lines);
+    void WriteAllLines(IEnumerable<string> lines,Encoding encoding);
+    void AppendLine(string line);
+    void AppendLine(string line,Encoding encoding);
+    void AppendAllLines(IEnumerable<string> lines);
+    void AppendAllLines(IEnumerable<string> lines, Encoding encoding);
+    void AppendAllText(string text);
+    void AppendAllText(string text, Encoding encoding);
+    FileStream Open(FileAccess access);
+    byte[] ReadAllBytes();
+    void WriteAllBytes(byte[] data);
+    IEnumerable<byte> ReadBytes();
+    void KeepFirstLines(int count);
+    void KeepFirstLines(int count, Encoding encoding);
+    void KeepLastLines(int count);
+    void KeepLastLines(int count, Encoding encoding);
+    void RemoveFirstLines(int count, Encoding encoding);
+    void RemoveFirstLines(int count);
   }
 
   private class FileInProgress : IFileInProgress {
-
-    private readonly FileInfo _sourceFile;
     private readonly PathExtensions.ITemporaryFileToken _token;
     private bool _isDisposed;
 
     public FileInProgress(FileInfo sourceFile) {
-      this._sourceFile = sourceFile;
+      this.OriginalFile = sourceFile;
       this._token = PathExtensions.GetTempFileToken(sourceFile.Name + ".$$$", sourceFile.DirectoryName);
     }
 
@@ -1516,18 +1540,45 @@ static partial class FileInfoExtensions {
       GC.SuppressFinalize(this);
 
       if (!this.CancelChanges)
-        this._sourceFile.ReplaceWith(this.TemporaryFile);
+        this.OriginalFile.ReplaceWith(this._TemporaryFile);
 
       this._token.Dispose();
     }
 
     #endregion
 
+    private FileInfo _TemporaryFile => this._token.File;
+
     #region Implementation of IFileInProgress
 
-    public FileInfo TemporaryFile => this._token.File;
-
+    public FileInfo OriginalFile { get; }
     public bool CancelChanges { get; set; }
+    public void CopyFrom(FileInfo source) => source.CopyTo(this._TemporaryFile, true);
+    public Encoding GetEncoding() => this._TemporaryFile.GetEncoding();
+    public string ReadAllText() => this._TemporaryFile.ReadAllText();
+    public string ReadAllText(Encoding encoding) => this._TemporaryFile.ReadAllText(encoding);
+    public IEnumerable<string> ReadLines() => this._TemporaryFile.ReadLines();
+    public IEnumerable<string> ReadLines(Encoding encoding) => this._TemporaryFile.ReadLines(encoding);
+    public void WriteAllText(string text) => this._TemporaryFile.WriteAllText(text);
+    public void WriteAllText(string text, Encoding encoding) => this._TemporaryFile.WriteAllText(text, encoding);
+    public void WriteAllLines(IEnumerable<string> lines) => this._TemporaryFile.WriteAllLines(lines);
+    public void WriteAllLines(IEnumerable<string> lines, Encoding encoding) => this._TemporaryFile.WriteAllLines(lines, encoding);
+    public void AppendLine(string line) => this._TemporaryFile.AppendLine(line);
+    public void AppendLine(string line, Encoding encoding) => this._TemporaryFile.AppendLine(line, encoding);
+    public void AppendAllLines(IEnumerable<string> lines) => this._TemporaryFile.AppendAllLines(lines);
+    public void AppendAllLines(IEnumerable<string> lines, Encoding encoding) => this._TemporaryFile.AppendAllLines(lines, encoding);
+    public void AppendAllText(string text) => this._TemporaryFile.AppendAllText(text);
+    public void AppendAllText(string text, Encoding encoding) => this._TemporaryFile.AppendAllText(text, encoding);
+    public FileStream Open(FileAccess access) => this._TemporaryFile.Open(FileMode.OpenOrCreate, access, FileShare.None);
+    public byte[] ReadAllBytes() => this._TemporaryFile.ReadAllBytes();
+    public void WriteAllBytes(byte[] data) => this._TemporaryFile.WriteAllBytes(data);
+    public IEnumerable<byte> ReadBytes() => this._TemporaryFile.ReadBytes();
+    public void KeepFirstLines(int count) => this._TemporaryFile.KeepFirstLines(count);
+    public void KeepFirstLines(int count, Encoding encoding) => this._TemporaryFile.KeepFirstLines(count, encoding);
+    public void KeepLastLines(int count) => this._TemporaryFile.KeepLastLines(count);
+    public void KeepLastLines(int count, Encoding encoding) => this._TemporaryFile.KeepLastLines(count, encoding);
+    public void RemoveFirstLines(int count, Encoding encoding) => this._TemporaryFile.RemoveFirstLines(count, encoding);
+    public void RemoveFirstLines(int count) => this._TemporaryFile.RemoveFirstLines(count);
 
     #endregion
   }
@@ -1537,7 +1588,7 @@ static partial class FileInfoExtensions {
 
     var result = new FileInProgress(@this);
     if (copyContents)
-      @this.CopyTo(result.TemporaryFile, true);
+      result.CopyFrom(@this);
 
     return result;
   }
