@@ -336,7 +336,13 @@ internal
 
     var size = Marshal.SizeOf(typeof(TStruct));
     var buffer = new byte[size];
-    @this.Read(buffer, 0, size);
+    var offset = 0;
+    while (size > 0 && !@this.IsAtEndOfStream()) {
+      var read = @this.Read(buffer, offset, size);
+      size -= read;
+      offset += read;
+    }
+
     return BytesToStruct(buffer);
   }
 
@@ -392,7 +398,11 @@ internal
     Against.False(@this.CanRead);
 
     _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-    @this.Read(buffer, offset, count);
+    while (count > 0 && !@this.IsAtEndOfStream()) {
+      var read = @this.Read(buffer, offset, count);
+      count -= read;
+      offset += read;
+    }
   }
 
 #if SUPPORTS_STREAM_ASYNC
