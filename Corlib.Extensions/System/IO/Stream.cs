@@ -22,9 +22,6 @@
 #endregion
 
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Net.Sockets;
@@ -96,6 +93,24 @@ static partial class StreamExtensions {
   }
 
   #region Reading/Writing primitives
+
+  #region bool
+
+  public static void Write(this Stream @this, bool value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    @this.WriteByte(value? (byte)255 : (byte)0);
+  }
+
+  public static bool ReadBool(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return @this.ReadByte() != 0;
+  }
+
+  #endregion
 
   #region byte
 
@@ -247,6 +262,41 @@ static partial class StreamExtensions {
     Against.False(@this.CanRead);
 
     return (short)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
+  }
+
+  #endregion
+
+  #region char
+
+  public static void Write(this Stream @this, char value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU16(@this, value);
+  }
+
+  public static void Write(this Stream @this, char value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU16(@this, value);
+    else
+      _WriteLittleEndianU16(@this, value);
+  }
+
+  public static char ReadChar(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (char)_ReadLittleEndianU16(@this);
+  }
+
+  public static char ReadChar(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (char)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
   }
 
   #endregion
@@ -836,6 +886,33 @@ static partial class StreamExtensions {
       }
       return result;
     }
+
+    if (typeof(TStruct) == typeof(byte))
+      return (TStruct)(object)(byte)@this.ReadByte();
+    if (typeof(TStruct) == typeof(bool))
+      return (TStruct)(object)(@this.ReadByte() != 0);
+    if (typeof(TStruct) == typeof(sbyte))
+      return (TStruct)(object)(sbyte)@this.ReadByte();
+    if (typeof(TStruct) == typeof(ushort))
+      return (TStruct)(object)_ReadLittleEndianU16(@this);
+    if (typeof(TStruct) == typeof(short))
+      return (TStruct)(object)(short)_ReadLittleEndianU16(@this);
+    if (typeof(TStruct) == typeof(char))
+      return (TStruct)(object)(char)_ReadLittleEndianU16(@this);
+    if (typeof(TStruct) == typeof(uint))
+      return (TStruct)(object)_ReadLittleEndianU32(@this);
+    if (typeof(TStruct) == typeof(int))
+      return (TStruct)(object)(int)_ReadLittleEndianU32(@this);
+    if (typeof(TStruct) == typeof(ulong))
+      return (TStruct)(object)_ReadLittleEndianU64(@this);
+    if (typeof(TStruct) == typeof(long))
+      return (TStruct)(object)(long)_ReadLittleEndianU64(@this);
+    if (typeof(TStruct) == typeof(float))
+      return (TStruct)(object)_ReadLittleEndianF32(@this);
+    if (typeof(TStruct) == typeof(double))
+      return (TStruct)(object)_ReadLittleEndianF64(@this);
+    if (typeof(TStruct) == typeof(decimal))
+      return (TStruct)(object)_ReadLittleEndianM128(@this);
     
     return BytesToStruct(ReadEnoughBytes(@this, Marshal.SizeOf(typeof(TStruct))));
   }
@@ -864,8 +941,35 @@ static partial class StreamExtensions {
           Marshal.FreeHGlobal(unmanagedMemory);
       }
     }
-
-    @this.Write(StructToBytes(value));
+    
+    if (typeof(TStruct) == typeof(byte))
+      @this.WriteByte((byte)(object)value);
+    else if (typeof(TStruct) == typeof(bool))
+      @this.WriteByte((bool)(object)value ? (byte)255 : (byte)0);
+    else if (typeof(TStruct) == typeof(sbyte))
+      @this.WriteByte((byte)(sbyte)(object)value);
+    else if (typeof(TStruct) == typeof(ushort))
+      _WriteLittleEndianU16(@this, (ushort)(object)value);
+    else if (typeof(TStruct) == typeof(short))
+      _WriteLittleEndianU16(@this, (ushort)(short)(object)value);
+    else if (typeof(TStruct) == typeof(char))
+      _WriteLittleEndianU16(@this, (char)(object)value);
+    else if (typeof(TStruct) == typeof(uint))
+      _WriteLittleEndianU32(@this, (uint)(object)value);
+    else if (typeof(TStruct) == typeof(int))
+      _WriteLittleEndianU32(@this, (uint)(int)(object)value);
+    else if (typeof(TStruct) == typeof(ulong))
+      _WriteLittleEndianU64(@this, (ulong)(object)value);
+    else if (typeof(TStruct) == typeof(long))
+      _WriteLittleEndianU64(@this, (ulong)(long)(object)value);
+    else if (typeof(TStruct) == typeof(float))
+      _WriteLittleEndianF32(@this, (float)(object)value);
+    else if (typeof(TStruct) == typeof(double))
+      _WriteLittleEndianF64(@this, (double)(object)value);
+    else if (typeof(TStruct) == typeof(decimal))
+      _WriteLittleEndianM128(@this, (decimal)(object)value);
+    else
+      @this.Write(StructToBytes(value));
   }
 
   /// <summary>
