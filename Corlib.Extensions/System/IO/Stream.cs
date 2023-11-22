@@ -27,6 +27,7 @@ using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Net.Sockets;
 using System.Text;
 #if SUPPORTS_ASYNC
 using System.Threading;
@@ -49,7 +50,7 @@ public
 #else
 internal
 #endif
-  static partial class StreamExtensions {
+static partial class StreamExtensions {
 
   /// <summary>
   ///   Writes a whole array of bytes to a stream.
@@ -93,181 +94,672 @@ internal
     var bytesGot = @this.Read(result, 0, count);
     return bytesGot == count ? result : result.Take(bytesGot).ToArray();
   }
-  
+
   #region Reading/Writing primitives
+
+  #region byte
+
+  public static void Write(this Stream @this, byte value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    @this.WriteByte(value);
+  }
+
+  public static byte ReadUInt8(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (byte)@this.ReadByte();
+  }
+
+  #endregion
+
+  #region sbyte
+
+  public static void Write(this Stream @this, sbyte value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    @this.WriteByte((byte)value);
+  }
+
+  public static sbyte ReadInt8(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (sbyte)@this.ReadByte();
+  }
+
+  #endregion
+
+  #region ushort
 
 #if UNSAFE
 
-  /// <summary>
-  /// Write a <see cref="int"/> value to the <see cref="Stream"/> in Little-Endian (LE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="value">The value to write.</param>
-  public static unsafe void Write(this Stream @this, int value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
+  private static unsafe void _WriteLittleEndianU16(Stream stream, ushort value) {
     var ptr = (byte*)&value;
-    @this.WriteByte(*ptr);
-    @this.WriteByte(ptr[1]);
-    @this.WriteByte(ptr[2]);
-    @this.WriteByte(ptr[3]);
+    stream.WriteByte(*ptr);
+    stream.WriteByte(ptr[1]);
   }
 
-  /// <summary>
-  /// Write a <see cref="int"/> value to the <see cref="Stream"/> in Big-Endian (BE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="value">The value to write.</param>
-  private static unsafe void _Write(this Stream @this, int value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
+  private static unsafe void _WriteBigEndianU16(Stream stream, ushort value) {
     var ptr = (byte*)&value;
-    @this.WriteByte(ptr[3]);
-    @this.WriteByte(ptr[2]);
-    @this.WriteByte(ptr[1]);
-    @this.WriteByte(*ptr);
+    stream.WriteByte(ptr[1]);
+    stream.WriteByte(*ptr);
+  }
+
+  private static unsafe ushort _ReadLittleEndianU16(Stream stream) {
+    var result = (ushort)0;
+    var bytePtr = (byte*)&result;
+    *bytePtr = (byte)stream.ReadByte();
+    bytePtr[1] = (byte)stream.ReadByte();
+    return result;
+  }
+
+  private static unsafe ushort _ReadBigEndianU16(Stream stream) {
+    var result = (ushort)0;
+    var bytePtr = (byte*)&result;
+    bytePtr[1] = (byte)stream.ReadByte();
+    *bytePtr = (byte)stream.ReadByte();
+    return result;
   }
 
 #else
 
-  /// <summary>
-  /// Write a <see cref="int"/> value to the <see cref="Stream"/> in Little-Endian (LE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="value">The value to write.</param>
+  private static void _WriteLittleEndianU16(Stream stream, ushort value) {
+    stream.WriteByte((byte)value);
+    stream.WriteByte((byte)(value >> 8));
+  }
+
+  private static void _WriteBigEndianU16(Stream stream, ushort value) {
+    stream.WriteByte((byte)(value >> 8));
+    stream.WriteByte((byte)value);
+  }
+
+  private static ushort _ReadLittleEndianU16(Stream stream) => (ushort)(stream.ReadByte() | (stream.ReadByte() << 8));
+
+  private static ushort _ReadBigEndianU16(Stream stream) => (ushort)((stream.ReadByte() << 8) | stream.ReadByte());
+
+#endif
+
+  public static void Write(this Stream @this, ushort value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU16(@this, value);
+  }
+
+  public static void Write(this Stream @this, ushort value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU16(@this, value);
+    else
+      _WriteLittleEndianU16(@this, value);
+  }
+
+  public static ushort ReadUInt16(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianU16(@this);
+  }
+
+  public static ushort ReadUInt16(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this);
+  }
+
+  #endregion
+
+  #region short
+
+  public static void Write(this Stream @this, short value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU16(@this, (ushort)value);
+  }
+
+  public static void Write(this Stream @this, short value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU16(@this, (ushort)value);
+    else
+      _WriteLittleEndianU16(@this, (ushort)value);
+  }
+
+  public static short ReadInt16(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (short)_ReadLittleEndianU16(@this);
+  }
+
+  public static short ReadInt16(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (short)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
+  }
+
+  #endregion
+
+  #region uint
+
+
+#if UNSAFE
+
+  private static unsafe void _WriteLittleEndianU32(Stream stream, uint value) {
+    var ptr = (byte*)&value;
+    stream.WriteByte(*ptr);
+    stream.WriteByte(ptr[1]);
+    stream.WriteByte(ptr[2]);
+    stream.WriteByte(ptr[3]);
+  }
+
+  private static unsafe void _WriteBigEndianU32(Stream stream, uint value) {
+    var ptr = (byte*)&value;
+    stream.WriteByte(ptr[3]);
+    stream.WriteByte(ptr[2]);
+    stream.WriteByte(ptr[1]);
+    stream.WriteByte(*ptr);
+  }
+
+  private static unsafe uint _ReadLittleEndianU32(Stream stream) {
+    var result = (uint)0;
+    var bytePtr = (byte*)&result;
+    *bytePtr = (byte)stream.ReadByte();
+    bytePtr[1] = (byte)stream.ReadByte();
+    bytePtr[2] = (byte)stream.ReadByte();
+    bytePtr[3] = (byte)stream.ReadByte();
+    return result;
+  }
+
+  private static unsafe uint _ReadBigEndianU32(Stream stream) {
+    var result = (uint)0;
+    var bytePtr = (byte*)&result;
+    bytePtr[3] = (byte)stream.ReadByte();
+    bytePtr[2] = (byte)stream.ReadByte();
+    bytePtr[1] = (byte)stream.ReadByte();
+    *bytePtr = (byte)stream.ReadByte();
+    return result;
+  }
+
+#else
+
+  private static void _WriteLittleEndianU32(Stream @this, uint value) {
+    @this.WriteByte((byte)value);
+    @this.WriteByte((byte)(value >> 8));
+    @this.WriteByte((byte)(value >> 16));
+    @this.WriteByte((byte)(value >> 24));
+  }
+
+  private static void _WriteBigEndianU32(Stream @this, uint value) {
+    @this.WriteByte((byte)(value >> 24));
+    @this.WriteByte((byte)(value >> 16));
+    @this.WriteByte((byte)(value >> 8));
+    @this.WriteByte((byte)value);
+  }
+
+  private static uint _ReadLittleEndianU32(Stream @this) => (uint)(@this.ReadByte() | (@this.ReadByte() << 8) | (@this.ReadByte() << 16) | (@this.ReadByte() << 24));
+
+  private static uint _ReadBigEndianU32(Stream @this) => (uint)((@this.ReadByte() << 24) | (@this.ReadByte() << 16) | (@this.ReadByte() << 8) | @this.ReadByte());
+
+#endif
+
+  public static void Write(this Stream @this, uint value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU32(@this, value);
+  }
+
+  public static void Write(this Stream @this, uint value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU32(@this, value);
+    else
+      _WriteLittleEndianU32(@this, value);
+  }
+
+  public static uint ReadUInt32(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianU32(@this);
+  }
+
+  public static uint ReadUInt32(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this);
+  }
+
+
+  #endregion
+
+  #region int
+
   public static void Write(this Stream @this, int value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
-    @this.WriteByte((byte)value);
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 24));
+    _WriteLittleEndianU32(@this, (uint)value);
   }
 
-  /// <summary>
-  /// Write a <see cref="int"/> value to the <see cref="Stream"/> in Big-Endian (BE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="value">The value to write.</param>
-  private static void _Write(this Stream @this, int value) {
+  public static void Write(this Stream @this, int value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
-    @this.WriteByte((byte)(value >> 24));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)value);
-  }
-
-#endif
-
-  /// <summary>
-  /// Write a <see cref="int"/> value to the <see cref="Stream"/>.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="value">The value.</param>
-  /// <param name="bigEndian">If set to <see langword="true"/> the int gets written in Big-Endian format; otherwise Little-Endian is used.</param>
-  public static void Write(this Stream @this, int value, bool bigEndian) {
     if (bigEndian)
-      @this._Write(value);
+      _WriteBigEndianU32(@this, (uint)value);
     else
-      @this.Write(value);
+      _WriteLittleEndianU32(@this, (uint)value);
   }
+
+  public static int ReadInt32(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (int)_ReadLittleEndianU32(@this);
+  }
+
+  public static int ReadInt32(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (int)(bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this));
+  }
+
+  #endregion
+
+
+  #region ulong
+
 
 #if UNSAFE
 
-  /// <summary>
-  /// Reads an <see cref="int"/> value from the <see cref="Stream"/> in Little-Endian (LE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <returns>The value or garbage when the <see cref="Stream"/> ended prematurely.</returns>
-  public static unsafe int ReadInt(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+  private static unsafe void _WriteLittleEndianU64(Stream stream, ulong value) {
+    var ptr = (byte*)&value;
+    stream.WriteByte(*ptr);
+    stream.WriteByte(ptr[1]);
+    stream.WriteByte(ptr[2]);
+    stream.WriteByte(ptr[3]);
+    stream.WriteByte(ptr[4]);
+    stream.WriteByte(ptr[5]);
+    stream.WriteByte(ptr[6]);
+    stream.WriteByte(ptr[7]);
+  }
 
-    var result = 0;
+  private static unsafe void _WriteBigEndianU64(Stream stream, ulong value) {
+    var ptr = (byte*)&value;
+    stream.WriteByte(ptr[7]);
+    stream.WriteByte(ptr[6]);
+    stream.WriteByte(ptr[5]);
+    stream.WriteByte(ptr[4]);
+    stream.WriteByte(ptr[3]);
+    stream.WriteByte(ptr[2]);
+    stream.WriteByte(ptr[1]);
+    stream.WriteByte(*ptr);
+  }
+
+  private static unsafe ulong _ReadLittleEndianU64(Stream stream) {
+    var result = (ulong)0;
     var bytePtr = (byte*)&result;
-
-    *bytePtr = (byte)@this.ReadByte();
-    bytePtr[1] = (byte)@this.ReadByte();
-    bytePtr[2] = (byte)@this.ReadByte();
-    bytePtr[3] = (byte)@this.ReadByte();
-    
+    *bytePtr = (byte)stream.ReadByte();
+    bytePtr[1] = (byte)stream.ReadByte();
+    bytePtr[2] = (byte)stream.ReadByte();
+    bytePtr[3] = (byte)stream.ReadByte();
+    bytePtr[4] = (byte)stream.ReadByte();
+    bytePtr[5] = (byte)stream.ReadByte();
+    bytePtr[6] = (byte)stream.ReadByte();
+    bytePtr[7] = (byte)stream.ReadByte();
     return result;
   }
 
-  /// <summary>
-  /// Reads an <see cref="int"/> value from the <see cref="Stream"/> in Big-Endian (BE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <returns>The value or garbage when the <see cref="Stream"/> ended prematurely.</returns>
-  private static unsafe int _ReadInt(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    var result = 0;
+  private static unsafe ulong _ReadBigEndianU64(Stream stream) {
+    var result = (ulong)0;
     var bytePtr = (byte*)&result;
-
-    bytePtr[3] = (byte)@this.ReadByte();
-    bytePtr[2] = (byte)@this.ReadByte();
-    bytePtr[1] = (byte)@this.ReadByte();
-    *bytePtr = (byte)@this.ReadByte();
-
+    bytePtr[7] = (byte)stream.ReadByte();
+    bytePtr[6] = (byte)stream.ReadByte();
+    bytePtr[5] = (byte)stream.ReadByte();
+    bytePtr[4] = (byte)stream.ReadByte();
+    bytePtr[3] = (byte)stream.ReadByte();
+    bytePtr[2] = (byte)stream.ReadByte();
+    bytePtr[1] = (byte)stream.ReadByte();
+    *bytePtr = (byte)stream.ReadByte();
     return result;
   }
 
 #else
 
-  /// <summary>
-  /// Reads an <see cref="int"/> value from the <see cref="Stream"/> in Little-Endian (LE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <returns>The value or garbage when the <see cref="Stream"/> ended prematurely.</returns>
-  public static int ReadInt(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    return @this.ReadByte() | (@this.ReadByte() << 8) | (@this.ReadByte() << 16) | (@this.ReadByte() << 24);
+  private static void _WriteLittleEndianU64(Stream @this, ulong value) {
+    @this.WriteByte((byte)value);
+    @this.WriteByte((byte)(value >> 8));
+    @this.WriteByte((byte)(value >> 16));
+    @this.WriteByte((byte)(value >> 24));
+    @this.WriteByte((byte)(value >> 32));
+    @this.WriteByte((byte)(value >> 40));
+    @this.WriteByte((byte)(value >> 48));
+    @this.WriteByte((byte)(value >> 56));
   }
 
-  /// <summary>
-  /// Reads an <see cref="int"/> value from the <see cref="Stream"/> in Big-Endian (BE) mode.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <returns>The value or garbage when the <see cref="Stream"/> ended prematurely.</returns>
-  private static int _ReadInt(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    return (@this.ReadByte() << 24) | (@this.ReadByte() << 16) | (@this.ReadByte() << 8) | @this.ReadByte();
+  private static void _WriteBigEndianU64(Stream @this, ulong value) {
+    @this.WriteByte((byte)(value >> 56));
+    @this.WriteByte((byte)(value >> 48));
+    @this.WriteByte((byte)(value >> 40));
+    @this.WriteByte((byte)(value >> 32));
+    @this.WriteByte((byte)(value >> 24));
+    @this.WriteByte((byte)(value >> 16));
+    @this.WriteByte((byte)(value >> 8));
+    @this.WriteByte((byte)value);
   }
+
+  private static ulong _ReadLittleEndianU64(Stream @this) => _ReadLittleEndianU32(@this) | ((ulong)_ReadLittleEndianU32(@this) << 32);
+
+  private static ulong _ReadBigEndianU64(Stream @this) => ((ulong)_ReadBigEndianU32(@this) << 32) | _ReadBigEndianU32(@this);
 
 #endif
 
-  /// <summary>
-  ///   Reads an <see cref="int"/> value from the <see cref="Stream"/>.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="bigEndian">If set to <see langword="true"/> the value gets read in Big-Endian format; otherwise Little-Endian is used.</param>
-  /// <returns>The value or garbage when the <see cref="Stream"/> ended prematurely.</returns>
-  public static int ReadInt(this Stream @this, bool bigEndian) => bigEndian ? _ReadInt(@this) : ReadInt(@this);
+  public static void Write(this Stream @this, ulong value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU64(@this, value);
+  }
+
+  public static void Write(this Stream @this, ulong value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU64(@this, value);
+    else
+      _WriteLittleEndianU64(@this, value);
+  }
+
+  public static ulong ReadUInt64(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianU64(@this);
+  }
+
+  public static ulong ReadUInt64(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this);
+  }
+
+
+  #endregion
+
+  #region long
+
+  public static void Write(this Stream @this, long value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianU64(@this, (ulong)value);
+  }
+
+  public static void Write(this Stream @this, long value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianU64(@this, (ulong)value);
+    else
+      _WriteLittleEndianU64(@this, (ulong)value);
+  }
+
+  public static long ReadInt64(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (long)_ReadLittleEndianU64(@this);
+  }
+
+  public static long ReadInt64(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return (long)(bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this));
+  }
+
+  #endregion
+
+  #region single
+
+  private static void _WriteLittleEndianF32(Stream stream, float value) {
+    var bytes = BitConverter.GetBytes(value);
+    stream.Write(bytes, 0, sizeof(float));
+  }
+
+  private static void _WriteBigEndianF32(Stream stream, float value) {
+    var bytes = BitConverter.GetBytes(value);
+    (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
+    stream.Write(bytes, 0, sizeof(float));
+  }
+
+  private static float _ReadLittleEndianF32(Stream stream) {
+    var bytes = new byte[sizeof(float)];
+    var got = stream.Read(bytes, 0, sizeof(float));
+    return got != sizeof(float) ? float.NaN : BitConverter.ToSingle(bytes, 0);
+  }
+
+  private static float _ReadBigEndianF32(Stream stream) {
+    var bytes = new byte[sizeof(float)];
+    var got = stream.Read(bytes, 0, sizeof(float));
+    if (got != sizeof(float))
+      return float.NaN;
+
+    (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
+    return BitConverter.ToSingle(bytes, 0);
+  }
+
+  public static void Write(this Stream @this, float value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianF32(@this, value);
+  }
+
+  public static void Write(this Stream @this, float value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianF32(@this, value);
+    else
+      _WriteLittleEndianF32(@this, value);
+  }
+
+  public static float ReadFloat16(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianF32(@this);
+  }
+
+  public static float ReadFloat16(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianF32(@this) : _ReadLittleEndianF32(@this);
+  }
+
+  #endregion
+
+  #region double
+
+  private static void _WriteLittleEndianF64(Stream stream, double value) {
+    var bytes = BitConverter.GetBytes(value);
+    stream.Write(bytes, 0, sizeof(double));
+  }
+
+  private static void _WriteBigEndianF64(Stream stream, double value) {
+    var bytes = BitConverter.GetBytes(value);
+    (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+    stream.Write(bytes, 0, sizeof(double));
+  }
+
+  private static double _ReadLittleEndianF64(Stream stream) {
+    var bytes = new byte[sizeof(double)];
+    var got = stream.Read(bytes, 0, sizeof(double));
+    return got != sizeof(double) ? double.NaN : BitConverter.ToDouble(bytes, 0);
+  }
+
+  private static double _ReadBigEndianF64(Stream stream) {
+    var bytes = new byte[sizeof(double)];
+    var got = stream.Read(bytes, 0, sizeof(double));
+    if (got != sizeof(double))
+      return double.NaN;
+
+    (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+    return BitConverter.ToSingle(bytes, 0);
+  }
+
+  public static void Write(this Stream @this, double value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianF64(@this, value);
+  }
+
+  public static void Write(this Stream @this, double value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianF64(@this, value);
+    else
+      _WriteLittleEndianF64(@this, value);
+  }
+
+  public static double ReadFloat32(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianF64(@this);
+  }
+
+  public static double ReadFloat32(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianF64(@this) : _ReadLittleEndianF64(@this);
+  }
+
+  #endregion
+
+  #region decimal
+
+  private static void _WriteLittleEndianM128(Stream stream, decimal value) {
+    var blocks = decimal.GetBits(value);
+    foreach (var block in blocks)
+      _WriteLittleEndianU32(stream, (uint)block);
+  }
+
+  private static void _WriteBigEndianM128(Stream stream, decimal value) {
+    var blocks = decimal.GetBits(value);
+    for (var i = blocks.Length - 1; i >= 0; --i)
+      _WriteBigEndianU32(stream, (uint)blocks[i]);
+  }
+
+  private static decimal _ReadLittleEndianM128(Stream stream) {
+    var blocks = new int[4];
+    for (var i = 0; i < blocks.Length; ++i)
+      blocks[i] = (int)_ReadLittleEndianU32(stream);
+
+    return new(blocks);
+  }
+
+  private static decimal _ReadBigEndianM128(Stream stream) {
+    var blocks = new int[4];
+    for (var i = blocks.Length - 1; i >= 0; --i)
+      blocks[i] = (int)_ReadBigEndianU32(stream);
+
+    return new(blocks);
+  }
+
+  public static void Write(this Stream @this, decimal value) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    _WriteLittleEndianM128(@this, value);
+  }
+
+  public static void Write(this Stream @this, decimal value, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+
+    if (bigEndian)
+      _WriteBigEndianM128(@this, value);
+    else
+      _WriteLittleEndianM128(@this, value);
+  }
+
+  public static decimal ReadMoney128(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return _ReadLittleEndianM128(@this);
+  }
+
+  public static decimal ReadMoney128(this Stream @this, bool bigEndian) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
+  }
+
+  #endregion
 
   #endregion
 
   /// <summary>
-  ///   Determines whether the current stream position pointer is at end of the stream or not.
+  /// Determines whether the current <see cref="Stream"/> position pointer is at the end of the <see cref="Stream"/>.
+  /// This method is applicable to streams that support seeking and specific <see cref="Stream"/> types like <see cref="NetworkStream"/>.
+  /// For other non-seekable streams, the method throws an <see cref="InvalidOperationException"/>, as checking for the end-of-stream
+  /// without altering the <see cref="Stream"/> state may not be possible.
   /// </summary>
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <returns>
-  ///   <see langword="true"/> if the stream was read/written to its end; otherwise, <see langword="false"/>.
+  /// <see langword="true"/> if the <see cref="Stream"/> position is at the end for seekable streams or if no more data is available in a <see cref="NetworkStream"/>;
+  /// otherwise, <see langword="false"/>.
   /// </returns>
+  /// <exception cref="InvalidOperationException">
+  /// Thrown when the <see cref="Stream"/> does not support seeking or is not a recognized type (like <see cref="NetworkStream"/>) that allows safe EOF checking.
+  /// </exception>
+  /// <remarks>
+  /// For seekable streams, this method checks if the current position is at or beyond the end of the <see cref="Stream"/>.
+  /// For <see cref="NetworkStream"/>, it checks the availability of data to read.
+  /// For other non-seekable stream types, the caller should ensure an appropriate method to check for the end of the <see cref="Stream"/>, 
+  /// as this method will throw an <see cref="InvalidOperationException"/>.
+  /// </remarks>
   public static bool IsAtEndOfStream(this Stream @this) {
     Against.ThisIsNull(@this);
 
-    return @this.Position >= @this.Length;
+    if (@this.CanSeek)
+      return @this.Position >= @this.Length;
+
+    if (@this is NetworkStream n)
+      return !n.DataAvailable;
+
+    AlwaysThrow.InvalidOperationException("Stream doesn't support EOF-checking");
+    return true;
   }
 
   /// <summary>
@@ -319,7 +811,7 @@ internal
   public static TStruct Read<TStruct>(this Stream @this) where TStruct : struct {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
-
+    
     static TStruct BytesToStruct(byte[] buffer) {
       var size = buffer.Length;
       var unmanagedMemory = IntPtr.Zero;
@@ -334,16 +826,18 @@ internal
       }
     }
 
-    var size = Marshal.SizeOf(typeof(TStruct));
-    var buffer = new byte[size];
-    var offset = 0;
-    while (size > 0 && !@this.IsAtEndOfStream()) {
-      var read = @this.Read(buffer, offset, size);
-      size -= read;
-      offset += read;
+    static byte[] ReadEnoughBytes(Stream stream, int size) {
+      var result = new byte[size];
+      var offset = 0;
+      while (size > 0 && !stream.IsAtEndOfStream()) {
+        var read = stream.Read(result, offset, size);
+        size -= read;
+        offset += read;
+      }
+      return result;
     }
-
-    return BytesToStruct(buffer);
+    
+    return BytesToStruct(ReadEnoughBytes(@this, Marshal.SizeOf(typeof(TStruct))));
   }
 
   /// <summary>
@@ -415,9 +909,8 @@ internal
   /// <param name="buffer">The buffer where the result is written in</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer,SeekOrigin seekOrigin = SeekOrigin.Begin)
-    =>await AsyncReadBytes( @this, position, buffer,0,buffer.Length, seekOrigin)
-  ;
+  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
+    => await AsyncReadBytes(@this, position, buffer, 0, buffer.Length, seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -429,13 +922,13 @@ internal
   /// <param name="count">The amount of bytes you want to read</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset,int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     await Task.Run(async () => {
-      _SeekToPositionAndCheck(@this,position,count,seekOrigin);
+      _SeekToPositionAndCheck(@this, position, count, seekOrigin);
       await @this.ReadAsync(buffer, offset, count);
     });
   }
-  
+
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
   /// </summary>
@@ -446,8 +939,7 @@ internal
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
   public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    =>await AsyncReadBytes(@this, position, buffer,0,buffer.Length, token, seekOrigin ) 
-  ;
+    => await AsyncReadBytes(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -460,9 +952,9 @@ internal
   /// <param name="token">The Cancellation Token</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset,int count,CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     await Task.Run(async () => {
-      _SeekToPositionAndCheck(@this,position,count,seekOrigin);
+      _SeekToPositionAndCheck(@this, position, count, seekOrigin);
       await @this.ReadAsync(buffer, offset, count, token);
     }, token);
   }
