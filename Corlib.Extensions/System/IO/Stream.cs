@@ -26,8 +26,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Net.Sockets;
 using System.Text;
-#if SUPPORTS_ASYNC
 using System.Threading;
+#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
 
@@ -48,6 +48,40 @@ public
 internal
 #endif
 static partial class StreamExtensions {
+
+  #region nested types
+
+  private struct BufferHandle : IDisposable {
+    public readonly byte[] Buffer;
+    public BufferHandle(byte[] buffer) => this.Buffer = buffer;
+    public void Dispose() => BufferManager.ReleaseBuffer(this.Buffer);
+  }
+
+  private static class BufferManager {
+    private const int BufferSize = 64; // Fixed buffer size
+    private static readonly byte[] sharedBuffer = new byte[BufferSize];
+
+    private const int _FREE = 0;
+    private const int _USED = -1;
+    private static int isSharedBufferInUse = _FREE;
+
+    [ThreadStatic]
+    private static byte[] threadLocalBuffer;
+
+    public static BufferHandle GetBuffer() {
+      if (Interlocked.CompareExchange(ref isSharedBufferInUse, _USED, _FREE) == _FREE)
+        return new(sharedBuffer);
+
+      return new(threadLocalBuffer ??= new byte[BufferSize]);
+    }
+
+    public static void ReleaseBuffer(byte[] buffer) {
+      if (buffer == sharedBuffer)
+        Interlocked.Exchange(ref isSharedBufferInUse, _FREE);
+    }
+  }
+
+  #endregion
 
   /// <summary>
   ///   Writes a whole array of bytes to a stream.
@@ -153,9 +187,11 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU16(Stream stream, ushort value) {
-    var ptr = (byte*)&value;
-    stream.WriteByte(*ptr);
-    stream.WriteByte(ptr[1]);
+    using var handle = BufferManager.GetBuffer();
+    fixed (byte* bytes = handle.Buffer)
+      *(ushort*)bytes = value;
+    
+    stream.Write(handle.Buffer,0,sizeof(ushort));
   }
 
   private static unsafe void _WriteBigEndianU16(Stream stream, ushort value) {
@@ -165,36 +201,50 @@ static partial class StreamExtensions {
   }
 
   private static unsafe ushort _ReadLittleEndianU16(Stream stream) {
-    var result = (ushort)0;
-    var bytePtr = (byte*)&result;
-    *bytePtr = (byte)stream.ReadByte();
-    bytePtr[1] = (byte)stream.ReadByte();
-    return result;
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    fixed (byte* bytes = handle.Buffer)
+      return *(ushort*)bytes;
   }
-
+  
   private static unsafe ushort _ReadBigEndianU16(Stream stream) {
-    var result = (ushort)0;
-    var bytePtr = (byte*)&result;
-    bytePtr[1] = (byte)stream.ReadByte();
-    *bytePtr = (byte)stream.ReadByte();
-    return result;
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    fixed (byte* bytes = handle.Buffer)
+      return (ushort)(bytes[1] | (bytes[0] << 8));
   }
 
 #else
 
   private static void _WriteLittleEndianU16(Stream stream, ushort value) {
-    stream.WriteByte((byte)value);
-    stream.WriteByte((byte)(value >> 8));
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[0] = (byte)value;
+    handle.Buffer[1] = (byte)(value >> 8);
+    stream.Write(handle.Buffer, 0, sizeof(ushort));
   }
 
   private static void _WriteBigEndianU16(Stream stream, ushort value) {
-    stream.WriteByte((byte)(value >> 8));
-    stream.WriteByte((byte)value);
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[1] = (byte)value;
+    handle.Buffer[0] = (byte)(value >> 8);
+    stream.Write(handle.Buffer, 0, sizeof(ushort));
   }
 
-  private static ushort _ReadLittleEndianU16(Stream stream) => (ushort)(stream.ReadByte() | (stream.ReadByte() << 8));
+  private static ushort _ReadLittleEndianU16(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    return (ushort)(handle.Buffer[0] | (handle.Buffer[1] << 8));
+  }
 
-  private static ushort _ReadBigEndianU16(Stream stream) => (ushort)((stream.ReadByte() << 8) | stream.ReadByte());
+  private static ushort _ReadBigEndianU16(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    return (ushort)(handle.Buffer[1] | (handle.Buffer[0] << 8));
+  }
 
 #endif
 
@@ -307,11 +357,11 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU32(Stream stream, uint value) {
-    var ptr = (byte*)&value;
-    stream.WriteByte(*ptr);
-    stream.WriteByte(ptr[1]);
-    stream.WriteByte(ptr[2]);
-    stream.WriteByte(ptr[3]);
+    using var handle = BufferManager.GetBuffer();
+    fixed (byte* bytes = handle.Buffer)
+      *(uint*)bytes = value;
+
+    stream.Write(handle.Buffer, 0, sizeof(uint));
   }
 
   private static unsafe void _WriteBigEndianU32(Stream stream, uint value) {
@@ -323,13 +373,11 @@ static partial class StreamExtensions {
   }
 
   private static unsafe uint _ReadLittleEndianU32(Stream stream) {
-    var result = (uint)0;
-    var bytePtr = (byte*)&result;
-    *bytePtr = (byte)stream.ReadByte();
-    bytePtr[1] = (byte)stream.ReadByte();
-    bytePtr[2] = (byte)stream.ReadByte();
-    bytePtr[3] = (byte)stream.ReadByte();
-    return result;
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(uint));
+    fixed (byte* bytes = handle.Buffer)
+      return *(uint*)bytes;
   }
 
   private static unsafe uint _ReadBigEndianU32(Stream stream) {
@@ -344,23 +392,37 @@ static partial class StreamExtensions {
 
 #else
 
-  private static void _WriteLittleEndianU32(Stream @this, uint value) {
-    @this.WriteByte((byte)value);
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 24));
+  private static void _WriteLittleEndianU32(Stream stream, uint value) {
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[0] = (byte)value;
+    handle.Buffer[1] = (byte)(value >> 8);
+    handle.Buffer[2] = (byte)(value >> 16);
+    handle.Buffer[3] = (byte)(value >> 24);
+    stream.Write(handle.Buffer, 0, sizeof(uint));
   }
 
-  private static void _WriteBigEndianU32(Stream @this, uint value) {
-    @this.WriteByte((byte)(value >> 24));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)value);
+  private static void _WriteBigEndianU32(Stream stream, uint value) {
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[3] = (byte)value;
+    handle.Buffer[2] = (byte)(value >> 8);
+    handle.Buffer[1] = (byte)(value >> 16);
+    handle.Buffer[0] = (byte)(value >> 24);
+    stream.Write(handle.Buffer, 0, sizeof(uint));
   }
 
-  private static uint _ReadLittleEndianU32(Stream @this) => (uint)(@this.ReadByte() | (@this.ReadByte() << 8) | (@this.ReadByte() << 16) | (@this.ReadByte() << 24));
+  private static uint _ReadLittleEndianU32(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(uint));
+    return (uint)(handle.Buffer[0] | (handle.Buffer[1] << 8) | (handle.Buffer[2] << 16) | (handle.Buffer[3] << 24));
+  }
 
-  private static uint _ReadBigEndianU32(Stream @this) => (uint)((@this.ReadByte() << 24) | (@this.ReadByte() << 16) | (@this.ReadByte() << 8) | @this.ReadByte());
+  private static uint _ReadBigEndianU32(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(uint));
+    return (uint)(handle.Buffer[3] | (handle.Buffer[2] << 8) | (handle.Buffer[1] << 16) | (handle.Buffer[0] << 24));
+  }
 
 #endif
 
@@ -440,15 +502,11 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU64(Stream stream, ulong value) {
-    var ptr = (byte*)&value;
-    stream.WriteByte(*ptr);
-    stream.WriteByte(ptr[1]);
-    stream.WriteByte(ptr[2]);
-    stream.WriteByte(ptr[3]);
-    stream.WriteByte(ptr[4]);
-    stream.WriteByte(ptr[5]);
-    stream.WriteByte(ptr[6]);
-    stream.WriteByte(ptr[7]);
+    using var handle = BufferManager.GetBuffer();
+    fixed (byte* bytes = handle.Buffer)
+      *(ulong*)bytes = value;
+
+    stream.Write(handle.Buffer, 0, sizeof(ulong));
   }
 
   private static unsafe void _WriteBigEndianU64(Stream stream, ulong value) {
@@ -464,17 +522,11 @@ static partial class StreamExtensions {
   }
 
   private static unsafe ulong _ReadLittleEndianU64(Stream stream) {
-    var result = (ulong)0;
-    var bytePtr = (byte*)&result;
-    *bytePtr = (byte)stream.ReadByte();
-    bytePtr[1] = (byte)stream.ReadByte();
-    bytePtr[2] = (byte)stream.ReadByte();
-    bytePtr[3] = (byte)stream.ReadByte();
-    bytePtr[4] = (byte)stream.ReadByte();
-    bytePtr[5] = (byte)stream.ReadByte();
-    bytePtr[6] = (byte)stream.ReadByte();
-    bytePtr[7] = (byte)stream.ReadByte();
-    return result;
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ulong));
+    fixed (byte* bytes = handle.Buffer)
+      return *(ulong*)bytes;
   }
 
   private static unsafe ulong _ReadBigEndianU64(Stream stream) {
@@ -493,31 +545,45 @@ static partial class StreamExtensions {
 
 #else
 
-  private static void _WriteLittleEndianU64(Stream @this, ulong value) {
-    @this.WriteByte((byte)value);
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 24));
-    @this.WriteByte((byte)(value >> 32));
-    @this.WriteByte((byte)(value >> 40));
-    @this.WriteByte((byte)(value >> 48));
-    @this.WriteByte((byte)(value >> 56));
+  private static void _WriteLittleEndianU64(Stream stream, ulong value) {
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[0] = (byte)value;
+    handle.Buffer[1] = (byte)(value >> 8);
+    handle.Buffer[2] = (byte)(value >> 16);
+    handle.Buffer[3] = (byte)(value >> 24);
+    handle.Buffer[4] = (byte)(value >> 32);
+    handle.Buffer[5] = (byte)(value >> 40);
+    handle.Buffer[6] = (byte)(value >> 48);
+    handle.Buffer[7] = (byte)(value >> 56);
+    stream.Write(handle.Buffer, 0, sizeof(ulong));
   }
 
-  private static void _WriteBigEndianU64(Stream @this, ulong value) {
-    @this.WriteByte((byte)(value >> 56));
-    @this.WriteByte((byte)(value >> 48));
-    @this.WriteByte((byte)(value >> 40));
-    @this.WriteByte((byte)(value >> 32));
-    @this.WriteByte((byte)(value >> 24));
-    @this.WriteByte((byte)(value >> 16));
-    @this.WriteByte((byte)(value >> 8));
-    @this.WriteByte((byte)value);
+  private static void _WriteBigEndianU64(Stream stream, ulong value) {
+    using var handle = BufferManager.GetBuffer();
+    handle.Buffer[7] = (byte)value;
+    handle.Buffer[6] = (byte)(value >> 8);
+    handle.Buffer[5] = (byte)(value >> 16);
+    handle.Buffer[4] = (byte)(value >> 24);
+    handle.Buffer[3] = (byte)(value >> 32);
+    handle.Buffer[2] = (byte)(value >> 40);
+    handle.Buffer[1] = (byte)(value >> 48);
+    handle.Buffer[0] = (byte)(value >> 56);
+    stream.Write(handle.Buffer, 0, sizeof(ulong));
   }
 
-  private static ulong _ReadLittleEndianU64(Stream @this) => _ReadLittleEndianU32(@this) | ((ulong)_ReadLittleEndianU32(@this) << 32);
+  private static ulong _ReadLittleEndianU64(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ulong));
+    return _ReadLittleEndianU32(stream) | ((ulong)_ReadLittleEndianU32(stream) << 32);
+  }
 
-  private static ulong _ReadBigEndianU64(Stream @this) => ((ulong)_ReadBigEndianU32(@this) << 32) | _ReadBigEndianU32(@this);
+  private static ulong _ReadBigEndianU64(Stream stream) {
+    using var handle = BufferManager.GetBuffer();
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(handle.Buffer, 0, sizeof(ulong));
+    return _ReadBigEndianU32(stream) | ((ulong)_ReadBigEndianU32(stream) << 32);
+  }
 
 #endif
 
