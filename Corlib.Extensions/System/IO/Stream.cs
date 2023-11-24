@@ -30,6 +30,9 @@ using System.Threading;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -54,6 +57,10 @@ static partial class StreamExtensions {
   private readonly struct BufferHandle : IDisposable {
     public readonly byte[] Buffer;
     public BufferHandle(byte[] buffer) => this.Buffer = buffer;
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public void Dispose() => PrimitiveConversionBufferManager.ReleaseBuffer(this.Buffer);
   }
 
@@ -68,6 +75,9 @@ static partial class StreamExtensions {
     [ThreadStatic]
     private static byte[] threadLocalBuffer;
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public static BufferHandle GetBuffer() {
       if (Interlocked.CompareExchange(ref isSharedBufferInUse, _USED, _FREE) == _FREE)
         return new(sharedBuffer);
@@ -75,6 +85,10 @@ static partial class StreamExtensions {
       return new(threadLocalBuffer ??= new byte[BufferSize]);
     }
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    // ReSharper disable once SuggestBaseTypeForParameter
     public static void ReleaseBuffer(byte[] buffer) {
       if (buffer == sharedBuffer)
         Interlocked.Exchange(ref isSharedBufferInUse, _FREE);
