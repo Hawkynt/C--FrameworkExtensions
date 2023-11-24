@@ -92,6 +92,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadChar();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadChar(true));
   }
 
   [Test]
@@ -116,6 +129,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadUInt16();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadUInt16(true));
   }
 
   [Test]
@@ -139,6 +165,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadInt16();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadInt16(true));
   }
 
   [Test]
@@ -166,6 +205,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadUInt32();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadUInt32(true));
   }
 
   [Test]
@@ -193,6 +245,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadInt32();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadInt32(true));
   }
 
   [Test]
@@ -222,6 +287,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadUInt64();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadUInt64(true));
   }
   
   [Test]
@@ -257,6 +335,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadInt64();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadInt64(true));
   }
 
   [Test]
@@ -289,6 +380,23 @@ internal class StreamTest {
       Assert.IsTrue(float.IsNaN(readBack));
     } else {
       Assert.AreEqual(value, readBack);
+    }
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    if (float.IsNaN(value)) {
+      Assert.IsTrue(float.IsNaN(memoryStream.ReadFloat32(true)));
+    } else {
+      Assert.AreEqual(value, memoryStream.ReadFloat32(true));
     }
   }
 
@@ -323,6 +431,24 @@ internal class StreamTest {
     } else {
       Assert.AreEqual(value, readBack);
     }
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    if (double.IsNaN(value)) {
+      Assert.IsTrue(double.IsNaN(memoryStream.ReadFloat64(true)));
+    } else {
+      Assert.AreEqual(value, memoryStream.ReadFloat64(true));
+    }
+
   }
 
   [Test]
@@ -354,6 +480,19 @@ internal class StreamTest {
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadMoney128();
     Assert.AreEqual(value, readBack);
+
+    // test writing big endian
+    memoryStream.SetLength(0);
+    memoryStream.Write(value, true);
+    Assert.AreEqual(result.Length, memoryStream.Length);
+
+    memoryStream.Position = 0;
+    for (var i = 0; i < result.Length; ++i)
+      Assert.AreEqual(result[result.Length - 1 - i], memoryStream.ReadByte());
+
+    // test readin big endian
+    memoryStream.Position = 0;
+    Assert.AreEqual(value, memoryStream.ReadMoney128(true));
   }
 
 }
