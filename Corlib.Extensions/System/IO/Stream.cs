@@ -51,7 +51,7 @@ static partial class StreamExtensions {
 
   #region nested types
 
-  private struct BufferHandle : IDisposable {
+  private readonly struct BufferHandle : IDisposable {
     public readonly byte[] Buffer;
     public BufferHandle(byte[] buffer) => this.Buffer = buffer;
     public void Dispose() => BufferManager.ReleaseBuffer(this.Buffer);
@@ -656,6 +656,23 @@ static partial class StreamExtensions {
 
   #region single
 
+#if UNSAFE
+
+  private static unsafe void _WriteLittleEndianF32(Stream stream, float value) => _WriteLittleEndianU32(stream, *(uint*)&value);
+  private static unsafe void _WriteBigEndianF32(Stream stream, float value) => _WriteBigEndianU32(stream, *(uint*)&value);
+  
+  private static unsafe float _ReadLittleEndianF32(Stream stream) {
+    var result = _ReadLittleEndianU32(stream);
+    return *(float*)&result;
+  }
+
+  private static unsafe float _ReadBigEndianF32(Stream stream) {
+    var result = _ReadBigEndianU32(stream);
+    return *(float*)&result;
+  }
+
+#else
+
   private static void _WriteLittleEndianF32(Stream stream, float value) {
     var bytes = BitConverter.GetBytes(value);
     stream.Write(bytes, 0, sizeof(float));
@@ -666,22 +683,23 @@ static partial class StreamExtensions {
     (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
     stream.Write(bytes, 0, sizeof(float));
   }
-
+  
   private static float _ReadLittleEndianF32(Stream stream) {
     var bytes = new byte[sizeof(float)];
-    var got = stream.Read(bytes, 0, sizeof(float));
-    return got != sizeof(float) ? float.NaN : BitConverter.ToSingle(bytes, 0);
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(bytes, 0, sizeof(float));
+    return BitConverter.ToSingle(bytes, 0);
   }
 
   private static float _ReadBigEndianF32(Stream stream) {
     var bytes = new byte[sizeof(float)];
-    var got = stream.Read(bytes, 0, sizeof(float));
-    if (got != sizeof(float))
-      return float.NaN;
-
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(bytes, 0, sizeof(float));
     (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
     return BitConverter.ToSingle(bytes, 0);
   }
+
+#endif
 
   public static void Write(this Stream @this, float value) {
     Against.ThisIsNull(@this);
@@ -700,14 +718,14 @@ static partial class StreamExtensions {
       _WriteLittleEndianF32(@this, value);
   }
 
-  public static float ReadFloat16(this Stream @this) {
+  public static float ReadFloat32(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
     return _ReadLittleEndianF32(@this);
   }
 
-  public static float ReadFloat16(this Stream @this, bool bigEndian) {
+  public static float ReadFloat32(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
@@ -717,6 +735,23 @@ static partial class StreamExtensions {
   #endregion
 
   #region double
+
+#if UNSAFE
+
+  private static unsafe void _WriteLittleEndianF64(Stream stream, double value) => _WriteLittleEndianU64(stream, *(ulong*)&value);
+  private static unsafe void _WriteBigEndianF64(Stream stream, double value) => _WriteBigEndianU64(stream, *(ulong*)&value);
+
+  private static unsafe double _ReadLittleEndianF64(Stream stream) {
+    var result = _ReadLittleEndianU64(stream);
+    return *(double*)&result;
+  }
+
+  private static unsafe double _ReadBigEndianF64(Stream stream) {
+    var result = _ReadBigEndianU64(stream);
+    return *(double*)&result;
+  }
+
+#else
 
   private static void _WriteLittleEndianF64(Stream stream, double value) {
     var bytes = BitConverter.GetBytes(value);
@@ -731,19 +766,20 @@ static partial class StreamExtensions {
 
   private static double _ReadLittleEndianF64(Stream stream) {
     var bytes = new byte[sizeof(double)];
-    var got = stream.Read(bytes, 0, sizeof(double));
-    return got != sizeof(double) ? double.NaN : BitConverter.ToDouble(bytes, 0);
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(bytes, 0, sizeof(double));
+    return BitConverter.ToDouble(bytes, 0);
   }
 
   private static double _ReadBigEndianF64(Stream stream) {
     var bytes = new byte[sizeof(double)];
-    var got = stream.Read(bytes, 0, sizeof(double));
-    if (got != sizeof(double))
-      return double.NaN;
-
+    // ReSharper disable once MustUseReturnValue
+    stream.Read(bytes, 0, sizeof(double));
     (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
     return BitConverter.ToSingle(bytes, 0);
   }
+
+#endif
 
   public static void Write(this Stream @this, double value) {
     Against.ThisIsNull(@this);
@@ -762,23 +798,23 @@ static partial class StreamExtensions {
       _WriteLittleEndianF64(@this, value);
   }
 
-  public static double ReadFloat32(this Stream @this) {
+  public static double ReadFloat64(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
     return _ReadLittleEndianF64(@this);
   }
 
-  public static double ReadFloat32(this Stream @this, bool bigEndian) {
+  public static double ReadFloat64(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
     return bigEndian ? _ReadBigEndianF64(@this) : _ReadLittleEndianF64(@this);
   }
 
-  #endregion
+#endregion
 
-  #region decimal
+#region decimal
 
   private static void _WriteLittleEndianM128(Stream stream, decimal value) {
     var blocks = decimal.GetBits(value);
@@ -839,9 +875,9 @@ static partial class StreamExtensions {
     return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
   }
 
-  #endregion
+#endregion
 
-  #endregion
+#endregion
 
   /// <summary>
   /// Determines whether the current <see cref="Stream"/> position pointer is at the end of the <see cref="Stream"/>.
