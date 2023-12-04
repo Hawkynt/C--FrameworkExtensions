@@ -54,7 +54,7 @@ static partial class StreamExtensions {
 
   #region nested types
 
-#if !SUPPORTS_SPAN
+#if !SUPPORTS_SPAN || !UNSAFE
 
   private readonly struct BufferHandle : IDisposable {
     public readonly byte[] Buffer;
@@ -68,7 +68,7 @@ static partial class StreamExtensions {
 
   private static class PrimitiveConversionBufferManager {
     private const int BufferSize = 64; // Fixed buffer size, enough to keep the largest primitive datatype
-    private static readonly byte[] sharedBuffer = new byte[BufferSize];
+    private static readonly byte[] _sharedBuffer = new byte[BufferSize];
 
     private const int _FREE = 0;
     private const int _USED = -1;
@@ -82,7 +82,7 @@ static partial class StreamExtensions {
 #endif
     public static BufferHandle GetBuffer() {
       if (Interlocked.CompareExchange(ref isSharedBufferInUse, _USED, _FREE) == _FREE)
-        return new(sharedBuffer);
+        return new(_sharedBuffer);
 
       return new(threadLocalBuffer ??= new byte[BufferSize]);
     }
@@ -92,7 +92,7 @@ static partial class StreamExtensions {
 #endif
     // ReSharper disable once SuggestBaseTypeForParameter
     public static void ReleaseBuffer(byte[] buffer) {
-      if (buffer == sharedBuffer)
+      if (buffer == _sharedBuffer)
         Interlocked.Exchange(ref isSharedBufferInUse, _FREE);
     }
   }
