@@ -54,6 +54,8 @@ static partial class StreamExtensions {
 
   #region nested types
 
+#if !SUPPORTS_SPAN
+
   private readonly struct BufferHandle : IDisposable {
     public readonly byte[] Buffer;
     public BufferHandle(byte[] buffer) => this.Buffer = buffer;
@@ -95,7 +97,9 @@ static partial class StreamExtensions {
     }
   }
 
-  #endregion
+#endif
+
+#endregion
 
   /// <summary>
   ///   Writes a whole array of bytes to a stream.
@@ -201,39 +205,64 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU16(Stream stream, ushort value) {
+#if SUPPORTS_SPAN
+    var bytes = new ReadOnlySpan<byte>(&value, sizeof(ushort));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       *(ushort*)bytes = value;
     
     stream.Write(handle.Buffer,0,sizeof(ushort));
+#endif
   }
 
   private static unsafe void _WriteBigEndianU16(Stream stream, ushort value) {
     var ptr = (byte*)&value;
+
+#if SUPPORTS_SPAN
+    (*ptr, ptr[1]) = (ptr[1], *ptr);
+    var bytes = new ReadOnlySpan<byte>(ptr, sizeof(ushort));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       (*bytes, bytes[1]) = (ptr[1], *ptr);
 
     stream.Write(handle.Buffer, 0, sizeof(ushort));
+#endif
   }
 
   private static unsafe ushort _ReadLittleEndianU16(Stream stream) {
+#if SUPPORTS_SPAN
+    ushort result = 0;
+    var bytes = new Span<byte>(&result, sizeof(ushort));
+    stream.Read(bytes);
+    return result;
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(ushort));
     fixed (byte* bytes = handle.Buffer)
       return *(ushort*)bytes;
+#endif
   }
   
   private static unsafe ushort _ReadBigEndianU16(Stream stream) {
-    var result = (ushort)0;
+    ushort result = 0;
     var ptr = (byte*)&result;
 
+#if SUPPORTS_SPAN
+    var bytes = new Span<byte>(ptr, sizeof(ushort));
+    stream.Read(bytes);
+    (*ptr, ptr[1]) = (ptr[1], *ptr);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(ushort));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1]) = (bytes[1], *bytes);
+#endif
 
     return result;
   }
@@ -270,7 +299,7 @@ static partial class StreamExtensions {
 
 #endif
 
-  public static void Write(this Stream @this, ushort value) {
+    public static void Write(this Stream @this, ushort value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
@@ -379,39 +408,64 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU32(Stream stream, uint value) {
+#if SUPPORTS_SPAN
+    var bytes = new ReadOnlySpan<byte>(&value, sizeof(uint));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       *(uint*)bytes = value;
 
     stream.Write(handle.Buffer, 0, sizeof(uint));
+#endif
   }
 
   private static unsafe void _WriteBigEndianU32(Stream stream, uint value) {
     var ptr = (byte*)&value;
+    
+#if SUPPORTS_SPAN
+    (*ptr, ptr[1], ptr[2], ptr[3]) = (ptr[3], ptr[2], ptr[1], *ptr);
+    var bytes = new ReadOnlySpan<byte>(ptr, sizeof(uint));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       (*bytes, bytes[1], bytes[2], bytes[3]) = (ptr[3], ptr[2], ptr[1], *ptr);
 
     stream.Write(handle.Buffer, 0, sizeof(uint));
+#endif
   }
 
   private static unsafe uint _ReadLittleEndianU32(Stream stream) {
+#if SUPPORTS_SPAN
+    var result = 0U;
+    var bytes = new Span<byte>(&result, sizeof(uint));
+    stream.Read(bytes);
+    return result;
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(uint));
     fixed (byte* bytes = handle.Buffer)
       return *(uint*)bytes;
+#endif
   }
 
   private static unsafe uint _ReadBigEndianU32(Stream stream) {
-    var result = (uint)0;
+    var result = 0U;
     var ptr = (byte*)&result;
 
+#if SUPPORTS_SPAN
+    var bytes = new Span<byte>(ptr, sizeof(uint));
+    stream.Read(bytes);
+    (*ptr, ptr[1], ptr[2], ptr[3]) = (ptr[3], ptr[2], ptr[1], *ptr);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(uint));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1], ptr[2], ptr[3]) = (bytes[3], bytes[2], bytes[1], *bytes);
+#endif
 
     return result;
   }
@@ -452,7 +506,7 @@ static partial class StreamExtensions {
 
 #endif
 
-  public static void Write(this Stream @this, uint value) {
+    public static void Write(this Stream @this, uint value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
@@ -528,39 +582,64 @@ static partial class StreamExtensions {
 #if UNSAFE
 
   private static unsafe void _WriteLittleEndianU64(Stream stream, ulong value) {
+#if SUPPORTS_SPAN
+    var bytes = new ReadOnlySpan<byte>(&value, sizeof(ulong));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       *(ulong*)bytes = value;
 
     stream.Write(handle.Buffer, 0, sizeof(ulong));
+#endif
   }
 
   private static unsafe void _WriteBigEndianU64(Stream stream, ulong value) {
     var ptr = (byte*)&value;
+
+#if SUPPORTS_SPAN
+    (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (ptr[7], ptr[6], ptr[5], ptr[4], ptr[3], ptr[2], ptr[1], *ptr);
+    var bytes = new ReadOnlySpan<byte>(ptr, sizeof(ulong));
+    stream.Write(bytes);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       (*bytes, bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (ptr[7], ptr[6], ptr[5], ptr[4], ptr[3], ptr[2], ptr[1], *ptr);
     
     stream.Write(handle.Buffer, 0, sizeof(ulong));
+#endif
   }
 
   private static unsafe ulong _ReadLittleEndianU64(Stream stream) {
+#if SUPPORTS_SPAN
+    var result = 0UL;
+    var bytes = new Span<byte>(&result, sizeof(ulong));
+    stream.Read(bytes);
+    return result;
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(ulong));
     fixed (byte* bytes = handle.Buffer)
       return *(ulong*)bytes;
+#endif
   }
 
   private static unsafe ulong _ReadBigEndianU64(Stream stream) {
-    var result = (ulong)0;
+    var result = 0UL;
     var ptr = (byte*)&result;
-    
+
+#if SUPPORTS_SPAN
+    var bytes = new Span<byte>(ptr, sizeof(ulong));
+    stream.Read(bytes);
+    (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (ptr[7], ptr[6], ptr[5], ptr[4], ptr[3], ptr[2], ptr[1], *ptr);
+#else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
     stream.Read(handle.Buffer, 0, sizeof(ulong));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], *bytes);
+#endif
     
     return result;
   }
@@ -599,7 +678,7 @@ static partial class StreamExtensions {
 
 #endif
 
-  public static void Write(this Stream @this, ulong value) {
+    public static void Write(this Stream @this, ulong value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
