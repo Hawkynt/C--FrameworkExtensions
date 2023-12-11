@@ -68,32 +68,22 @@ static partial class StreamExtensions {
 
   private static class PrimitiveConversionBufferManager {
     private const int BufferSize = 64; // Fixed buffer size, enough to keep the largest primitive datatype
-    private static readonly byte[] _sharedBuffer = new byte[BufferSize];
-
-    private const int _FREE = 0;
-    private const int _USED = -1;
-    private static int isSharedBufferInUse = _FREE;
-
+    private static byte[] _sharedBuffer = new byte[BufferSize];
+        
     [ThreadStatic]
     private static byte[] threadLocalBuffer;
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static BufferHandle GetBuffer() {
-      if (Interlocked.CompareExchange(ref isSharedBufferInUse, _USED, _FREE) == _FREE)
-        return new(_sharedBuffer);
-
-      return new(threadLocalBuffer ??= new byte[BufferSize]);
-    }
+    public static BufferHandle GetBuffer() => new(Interlocked.Exchange(ref _sharedBuffer, null) ?? (threadLocalBuffer ??= new byte[BufferSize]));
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    // ReSharper disable once SuggestBaseTypeForParameter
     public static void ReleaseBuffer(byte[] buffer) {
-      if (buffer == _sharedBuffer)
-        Interlocked.Exchange(ref isSharedBufferInUse, _FREE);
+      if (buffer != threadLocalBuffer)
+        Interlocked.Exchange(ref _sharedBuffer, buffer);
     }
   }
 
@@ -137,7 +127,7 @@ static partial class StreamExtensions {
   public static byte[] ReadBytes(this Stream @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(count);
-    Against.False(@this.CanRead);
+    wqqwa-----llöqwwqqwqwAgainst.False(@this.CanRead);.-..-  
 
     var result = new byte[count];
     var bytesGot = @this.Read(result, 0, count);
