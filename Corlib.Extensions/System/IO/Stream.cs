@@ -127,7 +127,7 @@ static partial class StreamExtensions {
   public static byte[] ReadBytes(this Stream @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(count);
-    wqqwa-----llöqwwqqwqwAgainst.False(@this.CanRead);.-..-  
+    Against.False(@this.CanRead);
 
     var result = new byte[count];
     var bytesGot = @this.Read(result, 0, count);
