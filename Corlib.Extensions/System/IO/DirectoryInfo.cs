@@ -690,6 +690,74 @@ namespace System.IO {
 
 #endif
 
+    /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
+    /// <param name="this">This <see cref="DirectoryInfo"/></param>
+    public static IEnumerable<DirectoryInfo> SafelyEnumerateDirectories(this DirectoryInfo @this) {
+      IEnumerator<DirectoryInfo> enumerator = null;
+      try {
+        enumerator = @this.EnumerateDirectories().GetEnumerator();
+      } catch {
+        ;
+      }
+      if (enumerator == null)
+        yield break;
+      
+      for (;;) {
+        try {
+          if (!enumerator.MoveNext())
+            break;
+        } catch {
+          continue;
+        }
+        
+        DirectoryInfo result = null;
+        try {
+          result = enumerator.Current;
+        } catch {
+          ;
+        }
+        
+        if(result != null)
+          yield return result;
+      }
+      
+      enumerator.Dispose();
+    }
+
+    /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
+    /// <param name="this">This <see cref="DirectoryInfo"/></param>
+    public static IEnumerable<FileInfo> SafelyEnumerateFiles(this DirectoryInfo @this) {
+      IEnumerator<FileInfo> enumerator = null;
+      try {
+        enumerator = @this.EnumerateFiles().GetEnumerator();
+      } catch {
+        ;
+      }
+      if (enumerator == null)
+        yield break;
+      
+      for (;;) {
+        try {
+          if (!enumerator.MoveNext())
+            break;
+        } catch {
+          continue;
+        }
+        
+        FileInfo result = null;
+        try {
+          result = enumerator.Current;
+        } catch {
+          ;
+        }
+        
+        if(result != null)
+          yield return result;
+      }
+      
+      enumerator.Dispose();
+    }
+
   }
 }
 
