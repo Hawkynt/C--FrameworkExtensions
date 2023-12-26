@@ -678,6 +678,16 @@ namespace System.IO {
         yield return entry;
     }
 
+    public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this) {
+      foreach (var entry in @this.GetFiles())
+        yield return entry;
+    }
+
+    public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this) {
+      foreach (var entry in @this.GetDirectories())
+        yield return entry;
+    }
+
     public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
       foreach (var entry in @this.GetFiles(searchPattern,searchOption))
         yield return entry;
