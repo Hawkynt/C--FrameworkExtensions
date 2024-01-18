@@ -101,6 +101,24 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void ArgumentIsNotOfType<T>(object value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value is not T)
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must be of type ""{typeof(T)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ArgumentIsOfType<T>(object value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value is T)
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be of type ""{typeof(T)}""", caller);
+  }
+  
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void False(bool value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if(!value)
       AlwaysThrow.InvalidOperationException(@$"Value ""{expression ?? nameof(value)}"" should not be FALSE", caller);
@@ -113,6 +131,24 @@ internal static partial class Against {
   public static void True(bool value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value)
       AlwaysThrow.InvalidOperationException(@$"Value ""{expression ?? nameof(value)}"" should not be TRUE", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void DifferentInstances<T>(T value, T other, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) where T : class {
+    if (!ReferenceEquals(value, other))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" should be equal to ""{expression ?? nameof(value)}""", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void SameInstance<T>(T value, T other, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null, [CallerArgumentExpression(nameof(other))] string otherExpression = null) where T : class {
+    if (ReferenceEquals(value, other))
+      AlwaysThrow.InvalidOperationException(@$"Value ""{otherExpression ?? nameof(other)}"" must not be equal to ""{expression ?? nameof(value)}""", caller);
   }
 
   [DebuggerHidden]
