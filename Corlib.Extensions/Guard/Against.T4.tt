@@ -48,6 +48,26 @@ partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void ValuesOutOfRange(<#=type#> value, <#=type#> minimum, <#=type#> maximum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value < minimum)
+      AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
+    if (value > maximum)
+      AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, maximum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ValuesInRange(<#=type#> value, <#=type#> minimum, <#=type#> maximum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value >= minimum && value <=maximum)
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be {value} < {minimum} or {value} > {maximum}.", caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void ValuesBelow(<#=type#> value, <#=type#> minimum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value < minimum)
       AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
