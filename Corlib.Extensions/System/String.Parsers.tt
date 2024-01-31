@@ -653,49 +653,114 @@ namespace System {
     #endregion
 
     #region Parsing Color
-    private static readonly Regex _COLOR_MATCH = new Regex(@"^(?:#(?<eightdigit>[0-9a-z]{8}))|(?:#(?<sixdigit>[0-9a-z]{6}))|(?:#(?<fourdigit>[0-9a-z]{4}))|(?:#(?<threedigit>[0-9a-z]{3}))|(?<knowncolor>[a-z]+)|(?:'(?<systemcolor>[a-z]+)')$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
-      Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16),
-        Convert.ToByte(string.Empty+v[6]+v[7],16)
+    
+    private const string _hexNum = "[0-9a-f]";
+    private const string _byteNum = "(?:0*?(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))";
+    private const string _floatNum = @"(?:0|0\.[0-9]+|1\.0)";
+    private const string _comma = @"\s*,\s*";
+    private const string _hex3 = _hexNum + _hexNum + _hexNum;
+    private const string _hex4 = _hexNum + _hex3;
+    private const string _hex6 = _hex3 + _hex3;
+    private const string _hex8 = _hex4 + _hex4;
+    private const string _byte3 = _byteNum + _comma + _byteNum + _comma + _byteNum;
+    private const string _byte4 = _byteNum + _comma + _byte3;
+    private const string _float3 = _floatNum + _comma + _floatNum + _comma + _floatNum;
+    private const string _float4 = _floatNum + _comma + _float3;
+    private const string _freeText = "[a-z]+";
+
+    private const string _pattern =
+      @"^\s*(?:" +
+      "|(?:#(?<eightdigit>" + _hex8 + "))" +
+      "|(?:#(?<sixdigit>" + _hex6 + "))" +
+      "|(?:#(?<fourdigit>" + _hex4 + "))" +
+      "|(?:#(?<threedigit>" + _hex3 + "))" +
+      "|(?:'(?<systemcolor>" + _freeText + "'))" +
+      "|(?<argbbytes>" + _byte4 + ")" +
+      "|(?<rgbbytes>" + _byte3 + ")" +
+      "|(?<argbfloats>" + _float4 + ")" +
+      "|(?<rgbfloats>" + _float3 + ")" +
+      "|(?<knowncolor>" + _freeText + ")" +
+      @")\s*$"
+      ;
+
+    private readonly struct ParserHandler {
+      private readonly string _groupName;
+      private readonly Func<string, Color> _parser;
+
+      public ParserHandler(string groupName, Func<string, Color> parser) {
+        this._groupName = groupName;
+        this._parser = parser;
+      }
+
+      public bool TryParse(Match match, out Color result) {
+        var group = match.Groups[this._groupName];
+        switch (group.Success) {
+          case true:
+            result = this._parser(group.Value);
+            return true;
+          default:
+            result = default;
+            return false;
+        }
+      }
+    }
+
+    private static readonly Regex _COLOR_MATCH = new(_pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private static readonly ParserHandler[] _COLOR_PARSERS = {
+      new("eightdigit", v => Color.FromArgb(
+        Convert.ToByte(string.Empty + v[0] + v[1], 16),
+        Convert.ToByte(string.Empty + v[2] + v[3], 16),
+        Convert.ToByte(string.Empty + v[4] + v[5], 16),
+        Convert.ToByte(string.Empty + v[6] + v[7], 16)
       )),
-      Tuple.Create<string, Func<string, Color>>("sixdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16)
+      new("sixdigit", v => Color.FromArgb(
+        Convert.ToByte(string.Empty + v[0] + v[1], 16),
+        Convert.ToByte(string.Empty + v[2] + v[3], 16),
+        Convert.ToByte(string.Empty + v[4] + v[5], 16)
       )),
-      Tuple.Create<string, Func<string, Color>>("fourdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16),
-        Convert.ToByte(string.Empty+v[3]+v[3],16)
+      new("fourdigit", v => Color.FromArgb(
+        Convert.ToByte(string.Empty + v[0] + v[0], 16),
+        Convert.ToByte(string.Empty + v[1] + v[1], 16),
+        Convert.ToByte(string.Empty + v[2] + v[2], 16),
+        Convert.ToByte(string.Empty + v[3] + v[3], 16)
       )),
-      Tuple.Create<string, Func<string, Color>>("threedigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16)
+      new("threedigit", v => Color.FromArgb(
+        Convert.ToByte(string.Empty + v[0] + v[0], 16),
+        Convert.ToByte(string.Empty + v[1] + v[1], 16),
+        Convert.ToByte(string.Empty + v[2] + v[2], 16)
       )),
-      Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
-      Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
+      new("knowncolor", Color.FromName),
+      new("systemcolor", Color.FromName),
+      new("argbbytes", v => {
+        var parts = v.Split(',');
+        return Color.FromArgb(int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture), int.Parse(parts[2], CultureInfo.InvariantCulture), int.Parse(parts[3], CultureInfo.InvariantCulture));
+      }),
+      new("rgbbytes", v => {
+        var parts = v.Split(',');
+        return Color.FromArgb(int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture), int.Parse(parts[2], CultureInfo.InvariantCulture));
+      }),
+      new("argbfloats", v => {
+        var parts = v.Split(',');
+        return Color.FromArgb((int)(255 * double.Parse(parts[0], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[1], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[2], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[3], CultureInfo.InvariantCulture)));
+      }),
+      new("rgbfloats", v => {
+        var parts = v.Split(',');
+        return Color.FromArgb((int)(255 * double.Parse(parts[0], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[1], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[2], CultureInfo.InvariantCulture)));
+      }),
     };
 
     #region Parse
 
     public static Color ParseColor(this string @this) {
       var match = _COLOR_MATCH.Match(@this);
-      if (!match.Success)
-        throw new ArgumentException("Unknown color", nameof(@this));
+      // ReSharper disable once InvertIf
+      if (match.Success)
+        foreach (var parserHandler in _COLOR_PARSERS)
+          if (parserHandler.TryParse(match, out var color))
+            return color;
 
-      foreach (var parser in _COLOR_PARSERS) {
-        var group = match.Groups[parser.Item1];
-        if (group.Success)
-          return parser.Item2(@group.Value);
-
-      }
-
-      throw new ArgumentException("Unknown color", nameof(@this));
+      throw new ArgumentException("Unknown color, expecting #AARRGGBB, #RRGGBB, #ARGB, #RGB, knowncolorname, r,g,b (0-255), a,r,g,b (0-255), rgb (0.0-1.0), argb (0.0-1.0) or 'systemcolorname'", nameof(@this));
     }
 
     #endregion
