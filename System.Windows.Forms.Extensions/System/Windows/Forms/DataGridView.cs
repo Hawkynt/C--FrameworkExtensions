@@ -2799,8 +2799,8 @@ namespace System.Windows.Forms {
   sealed class DataGridViewFullMergedRowAttribute : Attribute {
     public DataGridViewFullMergedRowAttribute(string headingTextPropertyName, string foreColor = null, float textSize = -1) {
       this.HeadingTextPropertyName = headingTextPropertyName;
-      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
-      this.TextSize = textSize < 0 ? (float?)null : textSize;
+    this.ForeColor = foreColor?.ParseColor();
+    this.TextSize = textSize < 0 ? null : textSize;
     }
 
     public Color? ForeColor { get; }
@@ -2841,8 +2841,8 @@ namespace System.Windows.Forms {
     public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet,
       DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null,
       string wrapModePropertyName = null) {
-      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
-      this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
+    this.ForeColor = foreColor?.ParseColor();
+    this.BackColor = backColor?.ParseColor();
       this.ConditionalPropertyName = conditionalPropertyName;
       this.Format = format;
       this.WrapMode = wrapMode;
@@ -2944,8 +2944,8 @@ namespace System.Windows.Forms {
   sealed class DataGridViewRowStyleAttribute : Attribute {
 
     public DataGridViewRowStyleAttribute(string foreColor = null, string backColor = null, string format = null, string conditionalPropertyName = null, string foreColorPropertyName = null, string backColorPropertyName = null, bool isBold = false, bool isItalic = false, bool isStrikeout = false, bool isUnderline = false) {
-      this.ForeColor = foreColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(foreColor);
-      this.BackColor = backColor == null ? (Color?)null : DataGridViewExtensions._ParseColor(backColor);
+    this.ForeColor = foreColor?.ParseColor();
+    this.BackColor = backColor?.ParseColor();
       this.ConditionalPropertyName = conditionalPropertyName;
       this.Format = format;
       this.ForeColorPropertyName = foreColorPropertyName;
@@ -4748,96 +4748,4 @@ namespace System.Windows.Forms {
 
 #endregion
 
-#region parsing colors
-
-    private const string _hexNum = "[0-9a-f]";
-    private const string _byteNum = "(?:0*?(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))";
-    private const string _floatNum = @"(?:0|0\.[0-9]+|1\.0)";
-    private const string _comma = @"\s*,\s*";
-    private const string _hex3 = _hexNum + _hexNum + _hexNum;
-    private const string _hex4 = _hexNum + _hex3;
-    private const string _hex6 = _hex3 + _hex3;
-    private const string _hex8 = _hex4 + _hex4;
-    private const string _byte3 = _byteNum + _comma + _byteNum + _comma + _byteNum;
-    private const string _byte4 = _byteNum + _comma + _byte3;
-    private const string _float3 = _floatNum + _comma + _floatNum + _comma + _floatNum;
-    private const string _float4 = _floatNum + _comma + _float3;
-    private const string _freeText = "[a-z]+";
-
-    private const string _pattern =
-      @"^\s*(?:" +
-      "|(?:#(?<eightdigit>" + _hex8 + "))" +
-      "|(?:#(?<sixdigit>" + _hex6 + "))" +
-      "|(?:#(?<fourdigit>" + _hex4 + "))" +
-      "|(?:#(?<threedigit>" + _hex3 + "))" +
-      "|(?:'(?<systemcolor>" + _freeText + "'))" +
-      "|(?<argbbytes>" + _byte4 + ")" +
-      "|(?<rgbbytes>" + _byte3 + ")" +
-      "|(?<argbfloats>" + _float4 + ")" +
-      "|(?<rgbfloats>" + _float3 + ")" +
-      "|(?<knowncolor>" + _freeText + ")" +
-      @")\s*$"
-      ;
-
-    private static readonly Regex _COLOR_MATCH = new Regex(_pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    private static readonly Tuple<string, Func<string, Color>>[] _COLOR_PARSERS = {
-      Tuple.Create<string, Func<string, Color>>("eightdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16),
-        Convert.ToByte(string.Empty+v[6]+v[7],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("sixdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[3],16),
-        Convert.ToByte(string.Empty+v[4]+v[5],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("fourdigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16),
-        Convert.ToByte(string.Empty+v[3]+v[3],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("threedigit",v=>Color.FromArgb(
-        Convert.ToByte(string.Empty+v[0]+v[0],16),
-        Convert.ToByte(string.Empty+v[1]+v[1],16),
-        Convert.ToByte(string.Empty+v[2]+v[2],16)
-      )),
-      Tuple.Create<string, Func<string, Color>>("knowncolor",Color.FromName),
-      Tuple.Create<string, Func<string, Color>>("systemcolor",Color.FromName),
-      Tuple.Create<string, Func<string, Color>>("argbbytes",v=> {
-        var parts = v.Split(',');
-        return Color.FromArgb(int.Parse(parts[0],CultureInfo.InvariantCulture),int.Parse(parts[1],CultureInfo.InvariantCulture),int.Parse(parts[2],CultureInfo.InvariantCulture),int.Parse(parts[3],CultureInfo.InvariantCulture));
-      }),
-      Tuple.Create<string, Func<string, Color>>("rgbbytes",v=> {
-        var parts = v.Split(',');
-        return Color.FromArgb(int.Parse(parts[0],CultureInfo.InvariantCulture),int.Parse(parts[1],CultureInfo.InvariantCulture),int.Parse(parts[2],CultureInfo.InvariantCulture));
-      }),
-      Tuple.Create<string, Func<string, Color>>("argbfloats",v=> {
-        var parts = v.Split(',');
-        return Color.FromArgb((int)(255*double.Parse(parts[0],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[1],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[2],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[3],CultureInfo.InvariantCulture)));
-      }),
-      Tuple.Create<string, Func<string, Color>>("rgbfloats",v=> {
-        var parts = v.Split(',');
-        return Color.FromArgb((int)(255*double.Parse(parts[0],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[1],CultureInfo.InvariantCulture)),(int)(255*double.Parse(parts[2],CultureInfo.InvariantCulture)));
-      }),
-    };
-
-    internal static Color _ParseColor(string @this) {
-      var match = _COLOR_MATCH.Match(@this);
-      // ReSharper disable once InvertIf
-      if (match.Success)
-        foreach (var parser in _COLOR_PARSERS) {
-          var group = match.Groups[parser.Item1];
-          if (group.Success)
-            return parser.Item2(group.Value);
-        }
-
-      throw new ArgumentException("Unknown color, expecting #AARRGGBB, #RRGGBB, #ARGB, #RGB, knowncolorname, r,g,b (0-255), a,r,g,b (0-255), rgb (0.0-1.0), argb (0.0-1.0) or 'systemcolorname'", nameof(@this));
-    }
-
-#endregion
-
-  }
 }
