@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
+    <ProjectReference Include="..\Corlib.Extensions\Corlib.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
