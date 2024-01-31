@@ -444,16 +444,17 @@ internal
 
   #endregion
 
-  private static readonly Lazy<HashSet<char>> _INVALID_FILE_NAME_CHARS = new(() =>
-    Path.GetInvalidFileNameChars()
+  private static HashSet<char> _invalidFileNameChars;
+  private static HashSet<char> _InvalidFileNameChars =>
+    _invalidFileNameChars ??= Path.GetInvalidFileNameChars()
       .Union("<>|:?*/\\\"")
       .ToHashSet(c => c)
-  );
+    ;
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  private static bool _IsInvalidCharacter(char c) => c < 32 || c >= 127 || _INVALID_FILE_NAME_CHARS.Value.Contains(c);
+  private static bool _IsInvalidCharacter(char c) => c < 32 || c >= 127 || _InvalidFileNameChars.Contains(c);
 
   /// <summary>
   /// Sanitizes the text to use as a filename.
