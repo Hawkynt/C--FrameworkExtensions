@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.ComponentModel;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
@@ -1038,7 +1039,7 @@ namespace System.Windows.Forms {
     /// </summary>
     /// <param name="this">The control on which to check if it's in DesignMode.</param>
     /// <returns>True if DesignMode.</returns>
-    public static bool IsDesignMode(this Control @this) => IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this);
+    public static bool IsDesignMode(this Control @this) => LicenseManager.UsageMode == LicenseUsageMode.Designtime || IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this);
 
   }
 }
