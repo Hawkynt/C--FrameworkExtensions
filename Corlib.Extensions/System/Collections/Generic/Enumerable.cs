@@ -312,7 +312,7 @@ public
     }
   }
 
-  private static int _IndexOf<TValue>(TValue[] values, TValue item, int startIndex, IEqualityComparer<TValue> comparer) {
+  private static int _IndexOf<TItem>(TItem[] values, TItem item, int startIndex, IEqualityComparer<TItem> comparer) {
     for (var i = startIndex; i < values.Length; ++i)
       if (ReferenceEquals(values[i], item) || comparer.Equals(values[i], item))
         return i;
@@ -814,8 +814,8 @@ public
   /// <summary>
   /// Converts all.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
-  /// <typeparam name="TOut">The type of the output.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <typeparam name="TResult">The type of the output.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
@@ -823,7 +823,7 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, TOut> converter) {
+  public static IEnumerable<TResult> ConvertAll<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> converter) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(converter);
 
@@ -833,8 +833,8 @@ public
   /// <summary>
   /// Converts all.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
-  /// <typeparam name="TOut">The type of the output.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <typeparam name="TResult">The type of the output.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
@@ -842,7 +842,7 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<TOut> ConvertAll<TIn, TOut>(this IEnumerable<TIn> @this, Func<TIn, int, TOut> converter) {
+  public static IEnumerable<TResult> ConvertAll<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, int, TResult> converter) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(converter);
       
@@ -852,49 +852,49 @@ public
   /// <summary>
   /// Reports the progress while walking through the enumerable.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="progressCallback">The progress callback.</param>
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>
   /// A new enumeration which automatically calls the progress callback when items are pulled.
   /// </returns>
-  public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<double> progressCallback, bool delayed = false) {
+  public static IEnumerable<TItem> AsProgressReporting<TItem>(this IEnumerable<TItem> @this, Action<double> progressCallback, bool delayed = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(progressCallback);
 
-    var collection = @this as ICollection<TIn> ?? @this.ToList();
+    var collection = @this as ICollection<TItem> ?? @this.ToList();
     return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
   }
 
   /// <summary>
   /// Reports the progress while walking through the enumerable.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="progressCallback">The progress callback.</param>
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>
   /// A new enumeration which automatically calls the progress callback when items are pulled.
   /// </returns>
-  public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, Action<long, long> progressCallback, bool delayed = false) {
+  public static IEnumerable<TItem> AsProgressReporting<TItem>(this IEnumerable<TItem> @this, Action<long, long> progressCallback, bool delayed = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(progressCallback);
 
-    var collection = @this as ICollection<TIn> ?? @this.ToList();
+    var collection = @this as ICollection<TItem> ?? @this.ToList();
     return AsProgressReporting(collection, collection.Count, progressCallback, delayed);
   }
 
   /// <summary>
   /// Reports the progress while walking through the enumerable.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="length">The length of the enumeration.</param>
   /// <param name="progressCallback">The progress callback.</param>
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
-  public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<double> progressCallback, bool delayed = false) {
+  public static IEnumerable<TItem> AsProgressReporting<TItem>(this IEnumerable<TItem> @this, int length, Action<double> progressCallback, bool delayed = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(progressCallback);
 
@@ -904,13 +904,13 @@ public
   /// <summary>
   /// Reports the progress while walking through the enumerable.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="length">The length of the enumeration.</param>
   /// <param name="progressCallback">The progress callback.</param>
   /// <param name="delayed">if set to <c>true</c> the progress will be set delayed (when the next item is fetched).</param>
   /// <returns>A new enumeration which automatically calls the progress callback when items are pulled.</returns>
-  public static IEnumerable<TIn> AsProgressReporting<TIn>(this IEnumerable<TIn> @this, int length, Action<long, long> progressCallback, bool delayed = false) {
+  public static IEnumerable<TItem> AsProgressReporting<TItem>(this IEnumerable<TItem> @this, int length, Action<long, long> progressCallback, bool delayed = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(progressCallback);
 
@@ -940,11 +940,11 @@ public
   /// <summary>
   /// Tests whether the given condition applies to all elements or not.
   /// </summary>
-  /// <typeparam name="TSource">The type of the source.</typeparam>
+  /// <typeparam name="TItem">The type of the source.</typeparam>
   /// <param name="this">This Enumeration.</param>
   /// <param name="condition">The condition.</param>
   /// <returns></returns>
-  public static bool All<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> condition) {
+  public static bool All<TItem>(this IEnumerable<TItem> @this, Func<TItem, int, bool> condition) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(condition);
 
@@ -964,12 +964,12 @@ public
   /// <summary>
   /// Distinct the specified enumeration by the specified selector.
   /// </summary>
-  /// <typeparam name="TIn">The type of the input elements.</typeparam>
+  /// <typeparam name="TItem">The type of the input elements.</typeparam>
   /// <typeparam name="TCompare">The type of the comparison elements.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <returns>An enumeration with distinct elements.</returns>
-  public static IEnumerable<TIn> Distinct<TIn, TCompare>(this IEnumerable<TIn> @this, Func<TIn, TCompare> selector) {
+  public static IEnumerable<TItem> Distinct<TItem, TCompare>(this IEnumerable<TItem> @this, Func<TItem, TCompare> selector) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
@@ -1036,23 +1036,23 @@ public
   /// <summary>
   /// Joins the specified elements into a string.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="join">The delimiter.</param>
   /// <param name="skipDefaults">if set to <c>true</c> all default values will be skipped.</param>
   /// <param name="converter">The converter.</param>
   /// <returns>The joined string.</returns>
-  public static string Join<TIn>(this IEnumerable<TIn> @this, string join = ", ", bool skipDefaults = false, Func<TIn, string> converter = null) {
+  public static string Join<TItem>(this IEnumerable<TItem> @this, string join = ", ", bool skipDefaults = false, Func<TItem, string> converter = null) {
     Against.ThisIsNull(@this);
 
     StringBuilder result = new();
     var gotElements = false;
-    var defaultValue = default(TIn);
+    var defaultValue = default(TItem);
 
     // if no converter was given, use the default toString if not null
     converter ??= i => i?.ToString();
       
-    foreach (var item in skipDefaults ? @this.Where(item => !EqualityComparer<TIn>.Default.Equals(item, defaultValue)) : @this) {
+    foreach (var item in skipDefaults ? @this.Where(item => !EqualityComparer<TItem>.Default.Equals(item, defaultValue)) : @this) {
       if (gotElements)
         result.Append(join);
       else
@@ -1068,13 +1068,13 @@ public
   /// <summary>
   /// Gets the index of the first item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, int defaultValue = -1) {
+  public static int IndexOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, int defaultValue = -1) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
@@ -1091,13 +1091,13 @@ public
   /// <summary>
   /// Gets the index of the first item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<int> defaultValue) {
+  public static int IndexOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<int> defaultValue) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValue);
@@ -1115,13 +1115,13 @@ public
   /// <summary>
   /// Gets the index of the first item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns>The index of the matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static int IndexOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, int> defaultValue) {
+  public static int IndexOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, int> defaultValue) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValue);
@@ -1141,7 +1141,7 @@ public
   /// <summary>
   /// Gets the index of the given value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the elements.</typeparam>
+  /// <typeparam name="TItem">The type of the elements.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="item">The item.</param>
   /// <returns>The position of the item in the enumeration or -1</returns>
@@ -1149,16 +1149,16 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static int IndexOf<TIn>(this IEnumerable<TIn> @this, TIn item) => IndexOrDefault(@this, a => Equals(a, item), -1);
+  public static int IndexOf<TItem>(this IEnumerable<TItem> @this, TItem item) => IndexOrDefault(@this, a => Equals(a, item), -1);
 
   /// <summary>
   /// Tries to get the first item.
   /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This <see cref="IEnumerable{T}"/></param>
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
-  public static bool TryGetFirst<T>(this IEnumerable<T> @this, out T result) {
+  public static bool TryGetFirst<TItem>(this IEnumerable<TItem> @this, out TItem result) {
     Against.ThisIsNull(@this);
 
     foreach (var item in @this) {
@@ -1173,11 +1173,11 @@ public
   /// <summary>
   /// Tries to get the last item.
   /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This <see cref="IEnumerable{T}"/></param>
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
-  public static bool TryGetLast<T>(this IEnumerable<T> @this, out T result) {
+  public static bool TryGetLast<TItem>(this IEnumerable<TItem> @this, out TItem result) {
     Against.ThisIsNull(@this);
 
     result = default;
@@ -1193,12 +1193,12 @@ public
   /// <summary>
   /// Tries to get the item at the given index.
   /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
+  /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This <see cref="IEnumerable{T}"/></param>
   /// <param name="index">The items' position</param>
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
-  public static bool TryGetItem<T>(this IEnumerable<T> @this, int index, out T result) {
+  public static bool TryGetItem<TItem>(this IEnumerable<TItem> @this, int index, out TItem result) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
 
@@ -1318,13 +1318,13 @@ public
   /// <summary>Returns the maximum value in a generic sequence according to a specified key selector function.</summary>
   /// <param name="this">A sequence of values to determine the maximum value of.</param>
   /// <param name="keySelector">A function to extract the key for each element.</param>
-  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TItem">The type of the elements of <paramref name="this" />.</typeparam>
   /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
   /// <exception cref="T:System.ArgumentNullException">
   /// <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
   /// <returns>The value with the maximum key in the sequence.</returns>
-  public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) 
+  public static TItem MaxBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector) 
     => MaxBy(@this, keySelector, null)
     ;
 
@@ -1332,20 +1332,20 @@ public
   /// <param name="this">A sequence of values to determine the maximum value of.</param>
   /// <param name="keySelector">A function to extract the key for each element.</param>
   /// <param name="comparer">The <see cref="T:System.Collections.Generic.IComparer{T}" /> to compare keys.</param>
-  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TItem">The type of the elements of <paramref name="this" />.</typeparam>
   /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
   /// <exception cref="T:System.ArgumentNullException">
   /// <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
   /// <returns>The value with the maximum key in the sequence.</returns>
-  public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
+  public static TItem MaxBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(keySelector);
 
     comparer ??= Comparer<TKey>.Default;
     using var enumerator = @this.GetEnumerator();
     if (!enumerator.MoveNext()) {
-      if (default(TSource) == null)
+      if (default(TItem) == null)
         return default;
       
       AlwaysThrow.NoElements();
@@ -1400,13 +1400,13 @@ public
   /// <summary>Returns the minimum value in a generic sequence according to a specified key selector function.</summary>
   /// <param name="this">A sequence of values to determine the minimum value of.</param>
   /// <param name="keySelector">A function to extract the key for each element.</param>
-  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TItem">The type of the elements of <paramref name="this" />.</typeparam>
   /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
   /// <exception cref="T:System.ArgumentNullException">
   /// <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
   /// <returns>The value with the minimum key in the sequence.</returns>
-  public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) 
+  public static TItem MinBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector) 
     => MinBy(@this, keySelector, null)
     ;
 
@@ -1414,20 +1414,20 @@ public
   /// <param name="this">A sequence of values to determine the minimum value of.</param>
   /// <param name="keySelector">A function to extract the key for each element.</param>
   /// <param name="comparer">The <see cref="T:System.Collections.Generic.IComparer{T}" /> to compare keys.</param>
-  /// <typeparam name="TSource">The type of the elements of <paramref name="this" />.</typeparam>
+  /// <typeparam name="TItem">The type of the elements of <paramref name="this" />.</typeparam>
   /// <typeparam name="TKey">The type of key to compare elements by.</typeparam>
   /// <exception cref="T:System.ArgumentNullException">
   /// <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.ArgumentException">No key extracted from <paramref name="this" /> implements the <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.</exception>
   /// <returns>The value with the minimum key in the sequence.</returns>
-  public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
+  public static TItem MinBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(keySelector);
 
     comparer ??= Comparer<TKey>.Default;
     using var enumerator = @this.GetEnumerator();
     if (!enumerator.MoveNext()) {
-      if (default(TSource) == null)
+      if (default(TItem) == null)
         return default;
 
       AlwaysThrow.NoElements();
@@ -1560,12 +1560,12 @@ public
   /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">The this.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue) {
     Against.ThisIsNull(@this);
 
     foreach (var item in @this)
@@ -1577,12 +1577,12 @@ public
   /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">The this.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
@@ -1595,12 +1595,12 @@ public
   /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">The this.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
@@ -1636,13 +1636,13 @@ public
   /// <summary>
   /// Gets the first item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, TItem defaultValue) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
@@ -1656,13 +1656,13 @@ public
   /// <summary>
   /// Gets the first item matching the condition or the result of the default value factory.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValueFactory">The default value.</param>
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<TItem> defaultValueFactory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValueFactory);
@@ -1677,13 +1677,13 @@ public
   /// <summary>
   /// Gets the first item matching the condition or the result of the default value factory.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValueFactory">The default value.</param>
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
-  public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory) {
+  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValueFactory);
@@ -1717,7 +1717,7 @@ public
   /// <summary>
   /// Gets the last item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -1726,14 +1726,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, TIn defaultValue)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, TItem defaultValue)
     => FirstOrDefault(@this.Reverse(), selector, defaultValue)
   ;
 
   /// <summary>
   /// Gets the last item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -1742,14 +1742,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<TIn> defaultValueFactory)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory)
   ;
 
   /// <summary>
   /// Gets the last item matching the condition or the given default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the items.</typeparam>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="selector">The selector.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -1758,7 +1758,7 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory)
   ;
 
@@ -1842,7 +1842,7 @@ public
   /// <summary>
   /// Gets the last item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns></returns>
@@ -1850,14 +1850,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, TIn defaultValue)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue)
     => FirstOrDefault(@this.Reverse(), defaultValue)
   ;
 
   /// <summary>
   /// Gets the last item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
@@ -1865,14 +1865,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn> defaultValueFactory)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), defaultValueFactory)
   ;
 
   /// <summary>
   /// Gets the last item or the default value.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
@@ -1880,21 +1880,21 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
+  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), defaultValueFactory)
   ;
 
   /// <summary>
   /// Orders the collection by its elements itself.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<TIn> OrderBy<TIn>(this IEnumerable<TIn> @this) {
+  public static IEnumerable<TItem> OrderBy<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
       
     return @this.OrderBy(i => i);
@@ -1903,14 +1903,14 @@ public
   /// <summary>
   /// Orders the collection by its elements itself.
   /// </summary>
-  /// <typeparam name="TIn">The type of the in.</typeparam>
+  /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">This enumeration.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<TIn> OrderByDescending<TIn>(this IEnumerable<TIn> @this) {
+  public static IEnumerable<TItem> OrderByDescending<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
 
     return @this.OrderByDescending(i => i);
@@ -2017,9 +2017,9 @@ public
   /// This method is designed to return <see langword="true"/> if the collection contains exactly one element. 
   /// If the collection contains no elements or more than one element, it returns <see langword="false"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
-  /// <param name="result">The single item from the collection if it contains exactly one element; otherwise, the default value for the type <typeparamref name="TValue"/>.</param>
+  /// <param name="result">The single item from the collection if it contains exactly one element; otherwise, the default value for the type <typeparamref name="TItem"/>.</param>
   /// <returns>
   /// <see langword="true"/> if the collection contains exactly one element; otherwise, <see langword="false"/>. When this method returns <see langword="false"/>, the <paramref name="result"/> parameter is set to its default value.
   /// </returns>
@@ -2045,23 +2045,23 @@ public
   /// </code>
   /// </example>
   [DebuggerStepThrough]
-  public static bool TryGetSingle<TValue>(this IEnumerable<TValue> @this, out TValue result) {
+  public static bool TryGetSingle<TItem>(this IEnumerable<TItem> @this, out TItem result) {
     Against.ThisIsNull(@this);
 
     switch (@this) {
-      case TValue[] { Length: 1 } array: {
+      case TItem[] { Length: 1 } array: {
         result = array[0];
         return true;
       }
-      case TValue[]: {
+      case TItem[]: {
         result = default;
         return false;
       }
-      case IList<TValue> { Count: 1 } list: {
+      case IList<TItem> { Count: 1 } list: {
         result = list[0];
         return true;
       }
-      case IList<TValue>: {
+      case IList<TItem>: {
         result = default;
         return false;
       }
@@ -2082,7 +2082,7 @@ public
   /// <summary>
   /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or returns <see langword="null"/> if the collection does not contain exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection. This type must be a reference type, not a value type.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a reference type, not a value type.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
   /// <param name="_">An optional parameter used to force the method's type argument to be a reference type. This parameter is not used in the method body and must be omitted when calling the method.</param>
   /// <returns>
@@ -2090,7 +2090,7 @@ public
   /// </returns>
   /// <remarks>
   /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
-  /// The generic type parameter <typeparamref name="TValue"/> is constrained to reference types to ensure that the return value can be <see langword="null"/>.
+  /// The generic type parameter <typeparamref name="TItem"/> is constrained to reference types to ensure that the return value can be <see langword="null"/>.
   /// </remarks>
   /// <example>
   /// Here is an example of using the method:
@@ -2112,14 +2112,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TValue SingleOrNull<TValue>(this IEnumerable<TValue> @this,__ClassForcingTag<TValue> _=null) where TValue : class 
+  public static TItem SingleOrNull<TItem>(this IEnumerable<TItem> @this,__ClassForcingTag<TItem> _=null) where TItem : class 
     => TryGetSingle(@this, out var result) ? result : null
   ;
 
   /// <summary>
   /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection of value types, or returns <see langword="null"/> if the collection does not contain exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection. This type must be a value type.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a value type.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
   /// <param name="_">An optional parameter used to force the method's type argument to be a value type. This parameter is not used in the method body and must be omitted when calling the method.</param>
   /// <returns>
@@ -2127,7 +2127,7 @@ public
   /// </returns>
   /// <remarks>
   /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
-  /// The generic type parameter <typeparamref name="TValue"/> is constrained to structs to ensure the method correctly handles value types, with the return type being a nullable <typeparamref name="TValue"/> to allow for null returns.
+  /// The generic type parameter <typeparamref name="TItem"/> is constrained to structs to ensure the method correctly handles value types, with the return type being a nullable <typeparamref name="TItem"/> to allow for null returns.
   /// </remarks>
   /// <example>
   /// Here is an example of using the method with a collection of value types:
@@ -2149,14 +2149,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TValue? SingleOrNull<TValue>(this IEnumerable<TValue> @this,__StructForcingTag<TValue> _=null) where TValue : struct 
+  public static TItem? SingleOrNull<TItem>(this IEnumerable<TItem> @this,__StructForcingTag<TItem> _=null) where TItem : struct 
     => TryGetSingle(@this, out var result) ? result : null
   ;
 
   /// <summary>
   /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or returns the specified default value if the collection does not contain exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
   /// <param name="defaultValue">The default value to return if the collection does not contain exactly one element.</param>
   /// <returns>
@@ -2185,14 +2185,14 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, TValue defaultValue)
+  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue)
     => TryGetSingle(@this, out var result) ? result : defaultValue
   ;
 
   /// <summary>
   /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or invokes a function to return a default value if the collection does not contain exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
   /// <param name="defaultValueFactory">A function that produces the default value to return if the collection does not contain exactly one element.</param>
   /// <returns>
@@ -2223,7 +2223,7 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, Func<TValue> defaultValueFactory) {
+  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
     Against.ArgumentIsNull(defaultValueFactory);
 
     return TryGetSingle(@this, out var result) ? result : defaultValueFactory();
@@ -2232,7 +2232,7 @@ public
   /// <summary>
   /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or invokes a function with the collection as its argument to return a default value if the collection does not contain exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <typeparam name="TItem">The type of the items in the collection.</typeparam>
   /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
   /// <param name="defaultValueFactory">A function that takes the entire collection as its parameter and produces the default value to return if the collection does not contain exactly one element.</param>
   /// <returns>
@@ -2263,7 +2263,7 @@ public
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, Func<IEnumerable<TValue>,TValue> defaultValueFactory) {
+  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>,TItem> defaultValueFactory) {
     Against.ArgumentIsNull(defaultValueFactory);
 
     // ReSharper disable PossibleMultipleEnumeration
@@ -2274,15 +2274,15 @@ public
   /// <summary>
   /// Determines whether a given <see cref="Enumerable"/> contains exactly one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has one element; otherwise, <see langword="false"/>.</returns>
-  public static bool IsSingle<TValue>(this IEnumerable<TValue> @this) {
+  public static bool IsSingle<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
 
     switch (@this) {
-      case TValue[] array: return array.Length == 1;
-      case ICollection<TValue> collection: return collection.Count == 1;
+      case TItem[] array: return array.Length == 1;
+      case ICollection<TItem> collection: return collection.Count == 1;
       default: {
         var found = false;
         foreach (var _ in @this) {
@@ -2300,29 +2300,29 @@ public
   /// <summary>
   /// Determines whether the given <see cref="Enumerable"/> contains more or less than one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has less or more than one element; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNoSingle<TValue>(this IEnumerable<TValue> @this)
+  public static bool IsNoSingle<TItem>(this IEnumerable<TItem> @this)
     => !IsSingle(@this)
   ;
 
   /// <summary>
   /// Determines whether a given <see cref="Enumerable"/> has more than one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has at least two elements; otherwise, <see langword="false"/>.</returns>
-  public static bool IsMultiple<TValue>(this IEnumerable<TValue> @this) {
+  public static bool IsMultiple<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
 
     switch (@this) {
-      case TValue[] array:
+      case TItem[] array:
         return array.Length > 1;
-      case ICollection<TValue> collection:
+      case ICollection<TItem> collection:
         return collection.Count > 1;
       default: {
         var found = false;
@@ -2341,24 +2341,24 @@ public
   /// <summary>
   /// Determines whether a given <see cref="Enumerable"/> has no more than one element.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <returns><see langword="true"/> if the <see cref="Enumerable"/> has zero or one element; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 # endif
-  public static bool IsNoMultiple<TValue>(this IEnumerable<TValue> @this)
+  public static bool IsNoMultiple<TItem>(this IEnumerable<TItem> @this)
     => !IsMultiple(@this)
   ;
 
   /// <summary>
   /// Determines whether a given value is exactly once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item is exactly one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
-  public static bool HasSingle<TValue>(this IEnumerable<TValue> @this, TValue value) {
+  public static bool HasSingle<TItem>(this IEnumerable<TItem> @this, TItem value) {
     Against.ThisIsNull(@this);
 
     var found = false;
@@ -2376,25 +2376,25 @@ public
   /// <summary>
   /// Determines whether a given value is not exactly once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item not or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, TValue value)
+  public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasSingle(@this, value)
   ;
 
   /// <summary>
   /// Determines whether a given value is more than once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item is found more one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
-  public static bool HasMultiple<TValue>(this IEnumerable<TValue> @this, TValue value) {
+  public static bool HasMultiple<TItem>(this IEnumerable<TItem> @this, TItem value) {
     Against.ThisIsNull(@this);
 
     var found = false;
@@ -2412,14 +2412,14 @@ public
   /// <summary>
   /// Determines whether a given value is not more than once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="value">The value to look for</param>
   /// <returns><see langword="true"/> if the item is found less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, TValue value)
+  public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasMultiple(@this, value)
     ;
 
@@ -2427,11 +2427,11 @@ public
   /// <summary>
   /// Determines whether a given predicate matches exactly once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches exactly one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
-  public static bool HasSingle<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate) {
+  public static bool HasSingle<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate) {
     Against.ThisIsNull(@this);
 
     var found = false;
@@ -2449,25 +2449,25 @@ public
   /// <summary>
   /// Determines whether a given predicate matches not exactly once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches not at all or more than once in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool HasNoSingle<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
+  public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasSingle(@this, predicate)
   ;
 
   /// <summary>
   /// Determines whether a given predicate matches more than once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches more than one time in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
-  public static bool HasMultiple<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate) {
+  public static bool HasMultiple<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate) {
     Against.ThisIsNull(@this);
 
     var found = false;
@@ -2485,14 +2485,14 @@ public
   /// <summary>
   /// Determines whether a given predicate matches no more than once in the given <see cref="Enumerable"/>.
   /// </summary>
-  /// <typeparam name="TValue">The type of items</typeparam>
+  /// <typeparam name="TItem">The type of items</typeparam>
   /// <param name="this">This <see cref="Enumerable"/></param>
   /// <param name="predicate">The predicate to match</param>
   /// <returns><see langword="true"/> if the predicate matches less than two times in the <see cref="Enumerable"/>; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool HasNoMultiple<TValue>(this IEnumerable<TValue> @this, Predicate<TValue> predicate)
+  public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasMultiple(@this, predicate)
   ;
 
