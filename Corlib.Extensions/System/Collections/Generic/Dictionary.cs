@@ -41,17 +41,6 @@ static partial class DictionaryExtensions {
 
   #region nested types
 
-  /// <summary>
-  /// Used to force the compiler to chose a method-overload with a class constraint on a generic type.
-  /// </summary>
-  /// <typeparam name="T"></typeparam>
-  public abstract class ClassForcingTag<T> where T : class { private ClassForcingTag() { } }
-  /// <summary>
-  /// Used to force the compiler to chose a method-overload with a struct constraint on a generic type.
-  /// </summary>
-  /// <typeparam name="T"></typeparam>
-  public abstract class StructForcingTag<T> where T : struct { private StructForcingTag() { } }
-
   public enum ChangeType {
     Equal = 0,
     Changed = 1,
@@ -348,7 +337,7 @@ static partial class DictionaryExtensions {
   /// </returns>
   /// <exception cref="NullReferenceException"></exception>
   [DebuggerStepThrough]
-  public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, ClassForcingTag<TValue> _ = null) where TValue : class {
+  public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __ClassForcingTag<TValue> _ = null) where TValue : class {
     Guard.Against.ThisIsNull(@this);
 
     return @this.TryGetValue(key, out var result) ? result : null;
@@ -367,7 +356,7 @@ static partial class DictionaryExtensions {
   /// </returns>
   /// <exception cref="NullReferenceException"></exception>
   [DebuggerStepThrough]
-  public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, StructForcingTag<TValue> _ = null) where TValue : struct {
+  public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __StructForcingTag<TValue> _ = null) where TValue : struct {
     Guard.Against.ThisIsNull(@this);
 
     return @this.TryGetValue(key, out var result) ? result : null;
