@@ -987,19 +987,50 @@ public
   }
 
   /// <summary>
-  /// Combines all sub-elements of the elements into one result set.
+  /// Flattens a sequence of sequences (<see cref="IEnumerable{TItem}"/> of <see cref="IEnumerable{TItem}"/>) into a single sequence by concatenating each sub-sequence.
   /// </summary>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">The source.</param>
-  /// <returns>A list of items.</returns>
+  /// <typeparam name="TItem">The type of the elements in the sequences.</typeparam>
+  /// <param name="this">The sequence of sequences to flatten.</param>
+  /// <returns>A single <see cref="IEnumerable{TItem}"/> sequence containing all the elements from each sub-sequence in the original sequence.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if the source sequence is <see langword="null"/>.</exception>
+  /// <remarks>
+  /// This method uses deferred execution, meaning that the input sequence is not iterated until the returned sequence is itself iterated.
+  /// </remarks>
+  /// <example>
+  /// Here's how to use the <c>SelectMany</c> extension method:
+  /// <code>
+  /// var listOfLists = new List&lt;List&lt;int&gt;&gt;
+  /// {
+  ///     new List&lt;int&gt; { 1, 2, 3 },
+  ///     new List&lt;int&gt; { 4, 5, 6 },
+  ///     new List&lt;int&gt; { 7, 8, 9 }
+  /// };
+  /// 
+  /// foreach(var item in listOfLists.SelectMany())
+  /// {
+  ///     Console.WriteLine(item);
+  /// }
+  /// </code>
+  /// This code will output:
+  /// <code>
+  /// 1
+  /// 2
+  /// 3
+  /// 4
+  /// 5
+  /// 6
+  /// 7
+  /// 8
+  /// 9
+  /// </code>
+  /// </example>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> @this) {
     Against.ThisIsNull(@this);
       
-    return @this.SelectMany(s => s as TItem[] ?? s.ToArray());
+    foreach(var enumeration in @this)
+    foreach (var item in enumeration)
+      yield return item;
   }
 
   /// <summary>
