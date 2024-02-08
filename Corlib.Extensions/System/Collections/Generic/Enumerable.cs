@@ -1451,6 +1451,82 @@ public
 #endif
 
   /// <summary>
+  /// Retrieves the first element from the specified <see cref="IEnumerable{TItem}"/> collection of reference types, or returns <see langword="null"/> if the collection is empty.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a reference type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TItem}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to enforce that the method's type argument is a reference type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The first element from the collection if it is not empty; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TItem}"/>.
+  /// It is particularly useful in scenarios where it is acceptable for the collection to be empty and the caller needs to safely handle such a case <c>without throwing an exception</c>.
+  /// The <typeparamref name="TItem"/> constraint ensures that this method can only be used with reference types, aligning with the possibility of returning <see langword="null"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the <c>FirstOrNull</c> method:
+  /// <code>
+  /// var strings = new List&lt;string&gt; { "Hello", "World" };
+  /// var firstString = strings.FirstOrNull();
+  /// Console.WriteLine(firstString);
+  /// 
+  /// var emptyStrings = new List&lt;string&gt;();
+  /// var firstEmpty = emptyStrings.FirstOrNull();
+  /// Console.WriteLine(firstEmpty ?? "No element");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// Hello
+  /// No element
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TItem FirstOrNull<TItem>(this IEnumerable<TItem> @this, __ClassForcingTag<TItem> _ = null) where TItem : class
+    => @this.TryGetFirst(out var result) ? result : null
+  ;
+
+  /// <summary>
+  /// Retrieves the first element from the specified <see cref="IEnumerable{TItem}"/> collection of value types, or returns <see langword="null"/> if the collection is empty.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a value type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TItem}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to enforce that the method's type argument is a value type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The first element from the collection if it is not empty, wrapped in a nullable type; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TItem}"/>.
+  /// It is particularly useful for collections of value types where a distinction between 'no items' and 'default value item' is necessary. By returning a nullable value type, this method provides a clear indication of an empty collection.
+  /// The <typeparamref name="TItem"/> constraint ensures that this method can only be used with structs, aligning with the method's return type of a nullable <typeparamref name="TItem"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the <c>FirstOrNull</c> method with a collection of value types:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 1, 2, 3 };
+  /// var firstNumber = numbers.FirstOrNull();
+  /// Console.WriteLine(firstNumber.HasValue ? firstNumber.ToString() : "No element");
+  /// 
+  /// var emptyNumbers = new List&lt;int&gt;();
+  /// var firstEmpty = emptyNumbers.FirstOrNull();
+  /// Console.WriteLine(firstEmpty.HasValue ? firstEmpty.ToString() : "No element");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 1
+  /// No element
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TItem? FirstOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
+    => @this.TryGetFirst(out var result) ? result : null
+  ;
+
+  /// <summary>
   /// Gets the first item or the default value.
   /// </summary>
   /// <typeparam name="TIn">The type of the in.</typeparam>
@@ -1653,6 +1729,83 @@ public
 #endif
   public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector, Func<IEnumerable<TIn>, TIn> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory)
+  ;
+
+
+  /// <summary>
+  /// Retrieves the last element from the specified <see cref="IEnumerable{TItem}"/> collection of reference types, or returns <see langword="null"/> if the collection is empty.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a reference type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TItem}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to enforce that the method's type argument is a reference type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The last element from the collection if it is not empty; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TItem}"/>.
+  /// It is particularly useful in scenarios where it is acceptable for the collection to be empty and the caller needs to safely handle such a case <c>without throwing an exception</c>.
+  /// The <typeparamref name="TItem"/> constraint ensures that this method can only be used with reference types, aligning with the possibility of returning <see langword="null"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the <c>LastOrNull</c> method:
+  /// <code>
+  /// var strings = new List&lt;string&gt; { "Hello", "World" };
+  /// var lastString = strings.LastOrNull();
+  /// Console.WriteLine(lastString);
+  /// 
+  /// var emptyStrings = new List&lt;string&gt;();
+  /// var lastEmpty = emptyStrings.LastOrNull();
+  /// Console.WriteLine(lastEmpty ?? "No element");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// World
+  /// No element
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TItem LastOrNull<TItem>(this IEnumerable<TItem> @this, __ClassForcingTag<TItem> _ = null) where TItem : class
+    => @this.TryGetLast(out var result) ? result : null
+  ;
+
+  /// <summary>
+  /// Retrieves the last element from the specified <see cref="IEnumerable{TItem}"/> collection of value types, or returns <see langword="null"/> if the collection is empty.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items in the collection. This type must be a value type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TItem}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to enforce that the method's type argument is a value type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The last element from the collection if it is not empty, wrapped in a nullable type; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TItem}"/>.
+  /// It is particularly useful for collections of value types where a distinction between 'no items' and 'default value item' is necessary. By returning a nullable value type, this method provides a clear indication of an empty collection.
+  /// The <typeparamref name="TItem"/> constraint ensures that this method can only be used with structs, aligning with the method's return type of a nullable <typeparamref name="TItem"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the <c>LastOrNull</c> method with a collection of value types:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 1, 2, 3 };
+  /// var lastNumber = numbers.LastOrNull();
+  /// Console.WriteLine(lastNumber.HasValue ? lastNumber.ToString() : "No element");
+  /// 
+  /// var emptyNumbers = new List&lt;int&gt;();
+  /// var lastEmpty = emptyNumbers.LastOrNull();
+  /// Console.WriteLine(lastEmpty.HasValue ? lastEmpty.ToString() : "No element");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 3
+  /// No element
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TItem? LastOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
+    => @this.TryGetLast(out var result) ? result : null
   ;
 
   /// <summary>
