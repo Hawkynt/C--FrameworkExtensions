@@ -1829,6 +1829,265 @@ public
 #endif
 
   /// <summary>
+  /// Tries to get a single element from the specified <see cref="IEnumerable{T}"/> collection. 
+  /// This method is designed to return <see langword="true"/> if the collection contains exactly one element. 
+  /// If the collection contains no elements or more than one element, it returns <see langword="false"/>.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="result">The single item from the collection if it contains exactly one element; otherwise, the default value for the type <typeparamref name="TValue"/>.</param>
+  /// <returns>
+  /// <see langword="true"/> if the collection contains exactly one element; otherwise, <see langword="false"/>. When this method returns <see langword="false"/>, the <paramref name="result"/> parameter is set to its default value.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// It is designed to be a safe way to attempt to retrieve a single item from a collection <c>without throwing exceptions</c>
+  /// if the collection does not contain exactly one element. This method internally checks the provided collection for the number of elements
+  /// and sets the <paramref name="result"/> parameter accordingly.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 42 };
+  /// if(numbers.TryGetSingle(out int singleValue)) {
+  ///     Console.WriteLine($"Single value: {singleValue}");
+  /// } else {
+  ///     Console.WriteLine("The collection does not contain exactly one element.");
+  /// }
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// Single value: 42
+  /// </code>
+  /// </example>
+  [DebuggerStepThrough]
+  public static bool TryGetSingle<TValue>(this IEnumerable<TValue> @this, out TValue result) {
+    Against.ThisIsNull(@this);
+
+    switch (@this) {
+      case TValue[] { Length: 1 } array: {
+        result = array[0];
+        return true;
+      }
+      case TValue[]: {
+        result = default;
+        return false;
+      }
+      case IList<TValue> { Count: 1 } list: {
+        result = list[0];
+        return true;
+      }
+      case IList<TValue>: {
+        result = default;
+        return false;
+      }
+      default: {
+        using var enumerator = @this.GetEnumerator();
+        if (enumerator.MoveNext()) {
+          result = enumerator.Current;
+          if (!enumerator.MoveNext())
+            return true;
+        }
+
+        result = default;
+        return false;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or returns <see langword="null"/> if the collection does not contain exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection. This type must be a reference type, not a value type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to force the method's type argument to be a reference type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The single element from the collection if it contains exactly one element; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// The generic type parameter <typeparamref name="TValue"/> is constrained to reference types to ensure that the return value can be <see langword="null"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method:
+  /// <code>
+  /// var numbers = new List&lt;string&gt; { "example" };
+  /// var result = numbers.SingleOrNull();
+  /// Console.WriteLine(result ?? "No single item");
+  /// 
+  /// var emptyList = new List&lt;string&gt;();
+  /// var emptyResult = emptyList.SingleOrNull();
+  /// Console.WriteLine(emptyResult ?? "No single item");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// example
+  /// No single item
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TValue SingleOrNull<TValue>(this IEnumerable<TValue> @this,__ClassForcingTag<TValue> _=null) where TValue : class 
+    => TryGetSingle(@this, out var result) ? result : null
+  ;
+
+  /// <summary>
+  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection of value types, or returns <see langword="null"/> if the collection does not contain exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection. This type must be a value type.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="_">An optional parameter used to force the method's type argument to be a value type. This parameter is not used in the method body and must be omitted when calling the method.</param>
+  /// <returns>
+  /// The single element from the collection if it contains exactly one element, wrapped in a nullable type; otherwise, <see langword="null"/>.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// The generic type parameter <typeparamref name="TValue"/> is constrained to structs to ensure the method correctly handles value types, with the return type being a nullable <typeparamref name="TValue"/> to allow for null returns.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method with a collection of value types:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 42 };
+  /// var result = numbers.SingleOrNull();
+  /// Console.WriteLine(result.HasValue ? result.ToString() : "No single item");
+  /// 
+  /// var emptyList = new List&lt;int&gt;();
+  /// var emptyResult = emptyList.SingleOrNull();
+  /// Console.WriteLine(emptyResult.HasValue ? emptyResult.ToString() : "No single item");
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 42
+  /// No single item
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TValue? SingleOrNull<TValue>(this IEnumerable<TValue> @this,__StructForcingTag<TValue> _=null) where TValue : struct 
+    => TryGetSingle(@this, out var result) ? result : null
+  ;
+
+  /// <summary>
+  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or returns the specified default value if the collection does not contain exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="defaultValue">The default value to return if the collection does not contain exactly one element.</param>
+  /// <returns>
+  /// The single element from the collection if it contains exactly one element; otherwise, the specified default value.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 42 };
+  /// var singleValue = numbers.SingleOrDefault(-1);
+  /// Console.WriteLine(singleValue);
+  /// 
+  /// var emptyList = new List&lt;int&gt;();
+  /// var defaultValue = emptyList.SingleOrDefault(-1);
+  /// Console.WriteLine(defaultValue);
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 42
+  /// -1
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, TValue defaultValue)
+    => TryGetSingle(@this, out var result) ? result : defaultValue
+  ;
+
+  /// <summary>
+  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or invokes a function to return a default value if the collection does not contain exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="defaultValueFactory">A function that produces the default value to return if the collection does not contain exactly one element.</param>
+  /// <returns>
+  /// The single element from the collection if it contains exactly one element; otherwise, the value produced by the <paramref name="defaultValueFactory"/> function.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// Using a function to provide a default value allows for lazy evaluation of the default value, which can be beneficial if the default value is expensive to compute or should only be created if necessary.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method with a default value factory function:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 42 };
+  /// var singleValue = numbers.SingleOrDefault(() =&gt; ComputeExpensiveDefaultValue());
+  /// Console.WriteLine(singleValue);
+  /// 
+  /// var emptyList = new List&lt;int&gt;();
+  /// var defaultValue = emptyList.SingleOrDefault(() =&gt; ComputeExpensiveDefaultValue());
+  /// Console.WriteLine(defaultValue);
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 42
+  /// // The result of ComputeExpensiveDefaultValue()
+  /// </code>
+  /// Assume <c>ComputeExpensiveDefaultValue</c> is a method defined elsewhere that computes and returns an expensive default value.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, Func<TValue> defaultValueFactory) {
+    Against.ArgumentIsNull(defaultValueFactory);
+
+    return TryGetSingle(@this, out var result) ? result : defaultValueFactory();
+  }
+
+  /// <summary>
+  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or invokes a function with the collection as its argument to return a default value if the collection does not contain exactly one element.
+  /// </summary>
+  /// <typeparam name="TValue">The type of the items in the collection.</typeparam>
+  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
+  /// <param name="defaultValueFactory">A function that takes the entire collection as its parameter and produces the default value to return if the collection does not contain exactly one element.</param>
+  /// <returns>
+  /// The single element from the collection if it contains exactly one element; otherwise, the value produced by the <paramref name="defaultValueFactory"/> function using the entire collection.
+  /// </returns>
+  /// <remarks>
+  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
+  /// This variant of the SingleOrDefault method is particularly useful when the default value is dependent on the entire collection, allowing for dynamic computation of the default value based on the collection's current state.
+  /// </remarks>
+  /// <example>
+  /// Here is an example of using the method with a default value factory function that depends on the collection:
+  /// <code>
+  /// var numbers = new List&lt;int&gt; { 42 };
+  /// var singleValue = numbers.SingleOrDefault(collection => collection.Average());
+  /// Console.WriteLine(singleValue);
+  /// 
+  /// var emptyList = new List&lt;int&gt;();
+  /// var defaultValue = emptyList.SingleOrDefault(collection => collection.AverageOrDefault() ?? -1);
+  /// Console.WriteLine(defaultValue);
+  /// </code>
+  /// This example will output:
+  /// <code>
+  /// 42
+  /// -1
+  /// </code>
+  /// The default value factory function uses the collection to determine the default value, showcasing the method's flexibility in handling collections that do not contain exactly one item.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static TValue SingleOrDefault<TValue>(this IEnumerable<TValue> @this, Func<IEnumerable<TValue>,TValue> defaultValueFactory) {
+    Against.ArgumentIsNull(defaultValueFactory);
+
+    // ReSharper disable PossibleMultipleEnumeration
+    return TryGetSingle(@this, out var result) ? result : defaultValueFactory(@this);
+    // ReSharper restore PossibleMultipleEnumeration
+  }
+
+  /// <summary>
   /// Determines whether a given <see cref="Enumerable"/> contains exactly one element.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>
