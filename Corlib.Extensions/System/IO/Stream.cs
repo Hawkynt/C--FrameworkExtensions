@@ -1196,8 +1196,8 @@ static partial class StreamExtensions {
   /// <param name="buffer">The buffer where the result is written in</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => await AsyncReadBytes(@this, position, buffer, 0, buffer.Length, seekOrigin);
+  public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
+    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -1209,10 +1209,10 @@ static partial class StreamExtensions {
   /// <param name="count">The amount of bytes you want to read</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
-    await Task.Run(async () => {
+  public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+    return await Task.Run(async () => {
       _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-      await @this.ReadAsync(buffer, offset, count);
+      return await @this.ReadAsync(buffer, offset, count);
     });
   }
 
@@ -1225,8 +1225,8 @@ static partial class StreamExtensions {
   /// <param name="token">The Cancellation Token</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => await AsyncReadBytes(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
+  public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
+    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -1239,10 +1239,10 @@ static partial class StreamExtensions {
   /// <param name="token">The Cancellation Token</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
-  public static async Task AsyncReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
-    await Task.Run(async () => {
+  public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+    return await Task.Run(async () => {
       _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-      await @this.ReadAsync(buffer, offset, count, token);
+      return await @this.ReadAsync(buffer, offset, count, token);
     }, token);
   }
 
