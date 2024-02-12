@@ -2224,6 +2224,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
+    Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
     return TryGetSingle(@this, out var result) ? result : defaultValueFactory();
@@ -2264,6 +2265,7 @@ public
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>,TItem> defaultValueFactory) {
+    Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
     // ReSharper disable PossibleMultipleEnumeration

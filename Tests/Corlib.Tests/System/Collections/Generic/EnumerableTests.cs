@@ -303,4 +303,19 @@ public class EnumerableTests {
   public void SingleOrNull(string? input, string? expected, Type? exception = null)
     => ExecuteTest(() => ConvertFromStringToTestArray(input).SingleOrNull(), expected, exception);
 
+  [Test]
+  [TestCase(null, null, null, typeof(NullReferenceException))]
+  [TestCase("", "a", "a")]
+  [TestCase("b", "a", "b")]
+  [TestCase("b|c", "a", "a")]
+  [TestCase("!", "a", null)]
+  public void SingleOrDefault(string? input, string? @default, string? expected, Type? exception = null) {
+    var self = ConvertFromStringToTestArray(input);
+    ExecuteTest(() => self.SingleOrDefault(@default), expected, exception);
+    ExecuteTest(() => self.SingleOrDefault(() => @default), expected, exception);
+    ExecuteTest(() => self.SingleOrDefault(_ => @default), expected, exception);
+    ExecuteTest(() => self.SingleOrDefault((Func<string?>)null!), expected, exception ?? typeof(ArgumentNullException));
+    ExecuteTest(() => self.SingleOrDefault((Func<IEnumerable<string?>, string?>)null!), expected, exception ?? typeof(ArgumentNullException));
+  }
+
 }
