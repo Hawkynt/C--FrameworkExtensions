@@ -102,7 +102,7 @@ public class EnumerableTests {
   [TestCase("a|a", "a", false)]
   public void HasNoMultiplePredicate(string? input, string? search, bool expected, Type? exception = null)
     => ExecuteTest(() => ConvertFromStringToTestArray(input).HasNoMultiple(s => s == search), expected, exception);
-  
+
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
@@ -170,7 +170,7 @@ public class EnumerableTests {
   [TestCase("ba|ab", true, "ab")]
   public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null) {
     ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i=>i![1], out var v);
+      var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i => i![1], out var v);
       return (r, v);
     }, (result, expected), exception);
   }
@@ -192,26 +192,23 @@ public class EnumerableTests {
   [TestCase("", "a", "a")]
   [TestCase("a", "b", "b|a")]
   public void Prepend(string? input, string data, string? expected, Type? exception = null)
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(data).Join("|"), expected, exception)
-  ;
-
-  [Test]
-  [TestCase(null,null,null,typeof(ArgumentNullException))]
-  [TestCase("", "a", "a")]
-  [TestCase("a", "b", "a|b")]
-  public void Append(string? input, string data, string? expected, Type? exception = null) 
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(data).Join("|"), expected, exception)
-    ;
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(data).Join("|"), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
-  [TestCase("", null, "",typeof(ArgumentNullException))]
+  [TestCase("", "a", "a")]
+  [TestCase("a", "b", "a|b")]
+  public void Append(string? input, string data, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(data).Join("|"), expected, exception);
+
+  [Test]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", null, "", typeof(ArgumentNullException))]
   [TestCase("", "a", "a")]
   [TestCase("", "a|b", "a|b")]
   [TestCase("a", "b", "b|a")]
   public void PrependArray(string? input, string? data, string? expected, Type? exception = null)
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception)
-  ;
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -220,8 +217,7 @@ public class EnumerableTests {
   [TestCase("", "a|b", "a|b")]
   [TestCase("a", "b", "a|b")]
   public void AppendArray(string? input, string? data, string? expected, Type? exception = null)
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception)
-  ;
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)?.ToArray()).Join("|"), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -230,8 +226,7 @@ public class EnumerableTests {
   [TestCase("", "a|b", "a|b")]
   [TestCase("a", "b", "b|a")]
   public void PrependEnumerable(string? input, string? data, string? expected, Type? exception = null)
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)).Join("|"), expected, exception)
-  ;
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Prepend(ConvertFromStringToTestArray(data)).Join("|"), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -240,20 +235,18 @@ public class EnumerableTests {
   [TestCase("", "a|b", "a|b")]
   [TestCase("a", "b", "a|b")]
   public void AppendEnumerable(string? input, string? data, string? expected, Type? exception = null)
-    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)).Join("|"), expected, exception)
-  ;
+    => ExecuteTest(() => ConvertFromStringToTestArray(input)!.Append(ConvertFromStringToTestArray(data)).Join("|"), expected, exception);
 
   [Test]
-  [TestCase(null,null,null,typeof(NullReferenceException))]
+  [TestCase(null, null, null, typeof(NullReferenceException))]
   [TestCase("", "", null)]
   [TestCase("", "", "")]
   [TestCase("a", "a", null)]
   [TestCase("a|b", "ab", null)]
   [TestCase("a|b", "ab", "")]
   [TestCase("a|b", "a,b", ",")]
-  public void Join(string? input,string? expected,string delimiter=",",Type?exception=null)
-    => ExecuteTest(()=>ConvertFromStringToTestArray(input).Join(delimiter),expected,exception)
-    ;
+  public void Join(string? input, string? expected, string delimiter = ",", Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).Join(delimiter), expected, exception);
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -270,18 +263,44 @@ public class EnumerableTests {
   [TestCase("a|A", "a", StringComparison.OrdinalIgnoreCase)]
   public void ToHashSet(string? input, string? expected, StringComparison? comparison = null, Type? exception = null)
     => ExecuteTest(() =>
-      (
-        comparison==null
-          ? ConvertFromStringToTestArray(input)!
-        .ToHashSet()
-          : ConvertFromStringToTestArray(input)!
-            .ToHashSet(FromComparison(comparison.Value))
+        (
+          comparison == null
+            ? ConvertFromStringToTestArray(input)!
+              .ToHashSet()
+            : ConvertFromStringToTestArray(input)!
+              .ToHashSet(FromComparison(comparison.Value))
         )
         .OrderBy()
         .Join("|"),
       expected,
       exception
-      )
-  ;
-  
+    );
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", null)]
+  [TestCase("a", "a")]
+  [TestCase("a|b", "a")]
+  [TestCase("!|b", null)]
+  public void FirstOrNull(string? input, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).FirstOrNull(), expected, exception);
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", null)]
+  [TestCase("a", "a")]
+  [TestCase("a|b", "b")]
+  [TestCase("a|!", null)]
+  public void LastOrNull(string? input, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).LastOrNull(), expected, exception);
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", null)]
+  [TestCase("a", "a")]
+  [TestCase("a|b", null)]
+  [TestCase("!", null)]
+  public void SingleOrNull(string? input, string? expected, Type? exception = null)
+    => ExecuteTest(() => ConvertFromStringToTestArray(input).SingleOrNull(), expected, exception);
+
 }
