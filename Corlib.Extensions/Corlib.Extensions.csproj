@@ -24,11 +24,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
 
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
-  </ItemGroup>
-
+  
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
   
   <PropertyGroup><!-- allow exporting all extensions to other loaded assemblies -->
@@ -47,13 +43,9 @@
 
   <ItemGroup>
     <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.Reflection.Emit.Lightweight" Version="*" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
     <ProjectReference Include="..\Backports\Backports.csproj" />
-  </ItemGroup>
 
-  <ItemGroup>
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
