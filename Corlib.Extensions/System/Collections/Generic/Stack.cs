@@ -24,9 +24,9 @@ namespace System.Collections.Generic;
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
-  internal
+internal
 #endif
-  static partial class StackExtensions {
+static partial class StackExtensions {
   /// <summary>
   /// Inverts the specified stack.
   /// </summary>
@@ -80,4 +80,47 @@ public
 
     return @this.Pop();
   }
+  
+#if !SUPPORTS_STACK_TRYPOP
+  /// <summary>
+  /// Returns a value that indicates whether there is an object at the top of the <see cref="Stack{T}"/>, and if one is present, copies it to the <paramref name="result"/> parameter, and removes it from the <see cref="Stack{T}"/>.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This <see cref="Stack{T}"/></param>
+  /// <param name="result">If present, the object at the top of the <see cref="Stack{T}"/>; otherwise, the default value of T.</param>
+  /// <returns><see langword="true"/> if there is an object at the top of the <see cref="Stack{T}"/>; <see langword="false"/> if the <see cref="Stack{T}"/> is empty.</returns>
+  public static bool TryPop<TItem>(this Stack<TItem> @this, out TItem result) {
+    Guard.Against.ThisIsNull(@this);
+    
+    if(@this.Count<1) {
+      result = default;
+      return false;
+    }
+    
+    result = @this.Pop();
+    return true;
+  }
+#endif
+  
+#if !SUPPORTS_STACK_TRYPEEK
+  /// <summary>
+  /// Returns a value that indicates whether there is an object at the top of the <see cref="Stack{T}"/>, and if one is present, copies it to the <paramref name="result"/> parameter. The object is not removed from the <see cref="Stack{T}"/>.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This <see cref="Stack{T}"/></param>
+  /// <param name="result">If present, the object at the top of the <see cref="Stack{T}"/>; otherwise, the default value of T.</param>
+  /// <returns><see langword="true"/> if there is an object at the top of the <see cref="Stack{T}"/>; <see langword="false"/> if the <see cref="Stack{T}"/> is empty.</returns>
+  public static bool TryPeek<TItem>(this Stack<TItem> @this, out TItem result) {
+    Guard.Against.ThisIsNull(@this);
+    
+    if(@this.Count<1) {
+      result = default;
+      return false;
+    }
+    
+    result = @this.Pop();
+    return true;
+  }
+#endif
+  
 }
