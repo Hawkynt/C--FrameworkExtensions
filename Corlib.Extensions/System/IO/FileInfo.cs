@@ -843,8 +843,6 @@ static partial class FileInfoExtensions {
 
   #region hash computation
 
-#if !NET6_0_OR_GREATER
-
   /// <summary>
   /// Computes and returns the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm.
   /// </summary>
@@ -861,7 +859,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
-  public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm,new() {
+  public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
 
     using THashAlgorithm provider = new();
@@ -884,8 +882,6 @@ static partial class FileInfoExtensions {
     using THashAlgorithm provider = new();
     return ComputeHash(@this, provider, blockSize);
   }
-
-#endif
 
   /// <summary>
   /// Computes the hash.
@@ -921,18 +917,13 @@ static partial class FileInfoExtensions {
     var currentBlock = new byte[blockSize];
 
     var lastBlockSize = stream.Read(lastBlock, 0, blockSize);
-    while (true) {
+    for (;;) {
       var currentBlockSize = stream.Read(currentBlock, 0, blockSize);
       if (currentBlockSize < 1)
         break;
 
       provider.TransformBlock(lastBlock, 0, lastBlockSize, null, 0);
-
-      // ReSharper disable once SwapViaDeconstruction
-      var temp = lastBlock;
-      lastBlock = currentBlock;
-      currentBlock = temp;
-
+      (currentBlock, lastBlock) = (lastBlock, currentBlock);
       lastBlockSize = currentBlockSize;
     }
 
@@ -1015,8 +1006,7 @@ static partial class FileInfoExtensions {
   public static Encoding GetEncoding(this FileInfo @this) {
     // Read the BOM
     var bom = new byte[4];
-    using (FileStream file = new(@this.FullName, FileMode.Open, FileAccess.Read))
-    {
+    using (FileStream file = new(@this.FullName, FileMode.Open, FileAccess.Read)) {
       var bytesRead = file.Read(bom, 0, 4);
       if(bytesRead == 0)
         return null;
@@ -1024,7 +1014,7 @@ static partial class FileInfoExtensions {
 
     // Analyze the BOM
 #if DEPRECATED_UTF7
-      if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.Default;
+    if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.Default;
 #else
     if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
 #endif
@@ -1140,7 +1130,7 @@ static partial class FileInfoExtensions {
 #if SUPPORTS_ENUMERATING_IO
   public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadLines(@this.FullName);
 #else
-    public static IEnumerable<string> ReadLines(this FileInfo @this) => ReadLines(@this, FileShare.Read);
+  public static IEnumerable<string> ReadLines(this FileInfo @this) => ReadLines(@this, FileShare.Read);
 #endif
 
   public static IEnumerable<string> ReadLines(this FileInfo @this, FileShare share) {
@@ -1388,11 +1378,11 @@ static partial class FileInfoExtensions {
           return;
           
         inputReader.Seek(filePosition+1, SeekOrigin.Begin);
+        
         tmpFile = new(Path.GetTempFileName());
-        using (var tmpFileWriter = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None)) {
-          inputReader.CopyTo(tmpFileWriter);
-          tmpFileWriter.Flush(true);
-        }
+        using var tmpFileWriter = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None);
+        inputReader.CopyTo(tmpFileWriter);
+        tmpFileWriter.Flush(true);
       }
 
       tmpFile.Attributes = @this.Attributes;
@@ -1595,7 +1585,7 @@ static partial class FileInfoExtensions {
   /// Changes the last write time of the given file to the current date/time.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
-  public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc=DateTime.UtcNow;
+  public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc = DateTime.UtcNow;
     
   /// <summary>
   /// Tries to change the last write time of the given file to the current date/time.
@@ -1652,7 +1642,7 @@ static partial class FileInfoExtensions {
     pattern = pattern.Trim();
 
     if (pattern.Length == 0) throw new ArgumentException("Pattern is empty.", nameof(pattern));
-    if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern)) throw new ArgumentException("Patterns contains ilegal characters.", nameof(pattern));
+    if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern)) throw new ArgumentException("Patterns contains illegal characters.", nameof(pattern));
 
     const string nonDotCharacters = "[^.]*";
 
@@ -1690,11 +1680,9 @@ static partial class FileInfoExtensions {
   /// <param name="bufferSize">The number of bytes to compare in each step (Beware of the 85KB-LOH limit).</param>
   /// <returns><c>true</c> if both are bytewise equal; otherwise, <c>false</c>.</returns>
   public static bool IsContentEqualTo(this FileInfo @this, FileInfo other, int bufferSize = 65536) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (other == null)
-      throw new ArgumentNullException(nameof(other));
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+    
     if (@this.FullName == other.FullName)
       return true;
 
@@ -1731,8 +1719,9 @@ static partial class FileInfoExtensions {
       var blockIndex = enumerator.Current;
 
       // start reading buffers into A and A'
-      var sourceAsync = ReadBlockFromStream(sourceStream, blockIndex, sourceBufferA);
-      var comparisonAsync = ReadBlockFromStream(comparisonStream, blockIndex, comparisonBufferA);
+      var position = blockIndex * bufferSize;
+      var sourceAsync =  sourceStream.ReadBytesAsync(position, sourceBufferA);
+      var comparisonAsync = comparisonStream.ReadBytesAsync(position, comparisonBufferA);
       int sourceBytes;
       int comparisonBytes;
 
@@ -1742,32 +1731,24 @@ static partial class FileInfoExtensions {
 
         // start reading next buffers into B and B'
         blockIndex = enumerator.Current;
-        sourceAsync = ReadBlockFromStream(sourceStream, blockIndex, sourceBufferB);
-        comparisonAsync = ReadBlockFromStream(comparisonStream, blockIndex, comparisonBufferB);
+        position = blockIndex * bufferSize;
+        sourceAsync = sourceStream.ReadBytesAsync(position, sourceBufferB);
+        comparisonAsync = comparisonStream.ReadBytesAsync(position, comparisonBufferB);
 
         // compare A and A' and return false upon difference
-        if (sourceBytes != comparisonBytes || !AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes))
+        if (sourceBytes != comparisonBytes || !sourceBufferA.SequenceEqual(0, comparisonBufferA, 0, sourceBytes))
           return false;
 
         // switch A and B and A' and B'
-        Swap(ref sourceBufferA, ref sourceBufferB);
-        Swap(ref comparisonBufferA, ref comparisonBufferB);
+        (sourceBufferA, sourceBufferB, comparisonBufferA, comparisonBufferB) = (sourceBufferB, sourceBufferA, comparisonBufferB, comparisonBufferA);
       }
 
       // compare A and A'
       sourceBytes = sourceAsync.Result;
       comparisonBytes = comparisonAsync.Result;
-      return sourceBytes == comparisonBytes && AreBytesEqual(sourceBufferA, comparisonBufferA, sourceBytes);
+      return sourceBytes == comparisonBytes && sourceBufferA.SequenceEqual(0, comparisonBufferA, 0, sourceBytes);
     }
-
-    static void Swap(ref byte[] bufferA, ref byte[] bufferB) => (bufferA, bufferB) = (bufferB, bufferA);
-
-    static Task<int> ReadBlockFromStream(Stream stream, long blockIndex, byte[] buffer) {
-      var blockSize = buffer.Length;
-      stream.Seek(blockIndex * blockSize, SeekOrigin.Begin);
-      return stream.ReadAsync(buffer, 0, blockSize);
-    }
-
+    
     static IEnumerable<long> BlockIndexShuffler(long blockCount) {
       var lowerBlockIndex = 0;
       var upperBlockIndex = blockCount - 1;
@@ -1782,67 +1763,7 @@ static partial class FileInfoExtensions {
         yield return lowerBlockIndex;
 
     }
-
-#if UNSAFE
-
-    static unsafe bool AreBytesEqual(byte[] source, byte[] comparand, int length) {
-      if (ReferenceEquals(source, comparand))
-        return true;
-
-      if (source == null || comparand == null)
-        return false;
-
-      if (source.Length != comparand.Length)
-        return false;
-
-      fixed (byte* sourcePin = source, comparisonPin = comparand) {
-        var sourcePointer = (long*)sourcePin;
-        var comparisonPointer = (long*)comparisonPin;
-        while (length >= 8) {
-          if (*sourcePointer != *comparisonPointer)
-            return false;
-
-          ++sourcePointer;
-          ++comparisonPointer;
-          length -= 8;
-        }
-
-        var byteSourcePointer = (byte*)sourcePointer;
-        var byteComparisonPointer = (byte*)comparisonPointer;
-        while (length > 0) {
-          if (*byteSourcePointer != *byteComparisonPointer)
-            return false;
-
-          ++byteSourcePointer;
-          ++byteComparisonPointer;
-          --length;
-        }
-      }
-
-      return true;
-    }
-
-#else
-
-    static bool AreBytesEqual(byte[] source, byte[] comparand, int length) {
-      if (ReferenceEquals(source, comparand))
-        return true;
-
-      if (source == null || comparand == null)
-        return false;
-
-      if (source.Length != comparand.Length)
-        return false;
-
-      for (var i = 0; i < length; ++i)
-        if (source[i] != comparand[i])
-          return false;
-
-      return true;
-    }
-
-#endif
-
+    
   }
 
 #endif
@@ -1953,7 +1874,7 @@ static partial class FileInfoExtensions {
     void RemoveFirstLines(int count);
   }
 
-  private class FileInProgress : IFileInProgress {
+  private sealed class FileInProgress : IFileInProgress {
     private readonly PathExtensions.ITemporaryFileToken _token;
     private bool _isDisposed;
 
