@@ -22,9 +22,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -199,9 +196,7 @@ static partial class FileInfoExtensions {
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   public static void EnableCompression(this FileInfo @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     @this.Refresh();
     if (!@this.Exists)
@@ -219,7 +214,7 @@ static partial class FileInfoExtensions {
         sizeof(short),
         IntPtr.Zero,
         0,
-        out var lpBytesReturned,
+        out _,
         IntPtr.Zero
       );
     }
@@ -234,12 +229,9 @@ static partial class FileInfoExtensions {
   /// <param name="this">This FileInfo.</param>
   /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
   public static bool TryEnableCompression(this FileInfo @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     @this.Refresh();
-
     if (!@this.Exists)
       return false;
 
@@ -256,7 +248,7 @@ static partial class FileInfoExtensions {
         sizeof(short),
         IntPtr.Zero,
         0,
-        out var lpBytesReturned,
+        out _,
         IntPtr.Zero
       );
       return result >= 0;
@@ -276,9 +268,7 @@ static partial class FileInfoExtensions {
   /// <param name="this">This FileInfo.</param>
   /// <returns>The description shown in the windows explorer under filetype.</returns>
   public static string GetTypeDescription(this FileInfo @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     var shinfo = new NativeMethods.SHFILEINFO();
     NativeMethods.SHGetFileInfo(@this.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.ShellFileInfoFlags.Typename);
@@ -378,9 +368,7 @@ static partial class FileInfoExtensions {
   /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
   /// <param name="timeout">The timeout.</param>
   public static void MoveTo(this FileInfo @this, string destFileName, bool overwrite, TimeSpan timeout) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     // copy file 
     using TransactionScope scope = new ();
@@ -416,9 +404,7 @@ static partial class FileInfoExtensions {
   /// <param name="this">This FileInfo.</param>
   /// <returns>The result of the hash algorithm</returns>
   public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm,new() {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     using THashAlgorithm provider = new();
     using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -435,9 +421,7 @@ static partial class FileInfoExtensions {
   /// The result of the hash algorithm
   /// </returns>
   public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     using THashAlgorithm provider = new();
     return ComputeHash(@this, provider, blockSize);
@@ -452,10 +436,9 @@ static partial class FileInfoExtensions {
   /// <param name="provider">The type of the hash algorithm.</param>
   /// <returns>The result of the hash algorithm</returns>
   public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(provider != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(provider);
+
     using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
     return provider.ComputeHash(stream);
   }
@@ -470,10 +453,9 @@ static partial class FileInfoExtensions {
   /// The result of the hash algorithm
   /// </returns>
   public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider, int blockSize) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(provider != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(provider);
+
     using FileStream stream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, blockSize);
 
     provider.Initialize();
@@ -877,10 +859,8 @@ static partial class FileInfoExtensions {
   /// <param name="count">The count.</param>
   /// <param name="encoding">The encoding.</param>
   public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(encoding != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(encoding);
 
     FileInfo tempFile = null;
     try {
@@ -980,10 +960,8 @@ static partial class FileInfoExtensions {
   /// <param name="count">The count.</param>
   /// <param name="encoding">The encoding.</param>
   public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(encoding != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(encoding);
 
     FileInfo tempFile = null;
     try {
@@ -1110,10 +1088,10 @@ static partial class FileInfoExtensions {
   /// <param name="this">This FileInfo.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool TryDelete(this FileInfo @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    try {
+    Against.ThisIsNull(@this);
+
+    try
+    {
       var fullName = @this.FullName;
       if (File.Exists(fullName))
         File.Delete(fullName);
@@ -1134,9 +1112,7 @@ static partial class FileInfoExtensions {
   ///   <c>true</c> if the file didn't exist and was successfully created; otherwise, <c>false</c>.
   /// </returns>
   public static bool TryCreate(this FileInfo @this, FileAttributes attributes = FileAttributes.Normal) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     if (@this.Exists)
       return false;
