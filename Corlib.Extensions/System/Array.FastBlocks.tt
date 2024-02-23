@@ -59,6 +59,7 @@
 
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using Guard;
 
 using Block1 = System.Byte;
 using Block2 = System.UInt16;
@@ -73,722 +74,716 @@ using SBlock8 = System.Int64;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System {
+namespace System;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class ArrayExtensions {
+static partial class ArrayExtensions {
     
-    #region nested types
+  #region nested types
 
 #if PLATFORM_X86
 <#  for(var i = 3;i <= LINEAR_BLOCK_COUNTX86; ++i) {#>
 <#    if(i == 1 || i == 2 || i == 4 || i == 8 || i == 32 || i == 64) continue;#>
-    [StructLayout(LayoutKind.Sequential, Size=<#=i#>)] private struct Block<#=i#>{ }
+  [StructLayout(LayoutKind.Sequential, Size=<#=i#>)] private struct Block<#=i#>{ }
 <#  }#>
 #else
 <#  for(var i = 3;i <= LINEAR_BLOCK_COUNTX64; ++i) {#>
 <#    if(i == 1 || i == 2 || i == 4 || i == 8 || i == 32 || i == 64) continue;#>
-    [StructLayout(LayoutKind.Sequential, Size=<#=i#>)] private struct Block<#=i#>{ }
+  [StructLayout(LayoutKind.Sequential, Size=<#=i#>)] private struct Block<#=i#>{ }
 <#  }#>
 #endif
 
-    #endregion
+  #endregion
 
-    // TODO: Clear for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
-    // TODO: Fill for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
-    // TODO: SequenceEquals for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
-    // TODO: unchecked versions
+  // TODO: Clear for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
+  // TODO: Fill for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
+  // TODO: SequenceEquals for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
+  // TODO: unchecked versions
 
-    #region Copy
+  #region Copy
 <#  foreach(var typeData in typeDatas) {#>
 <#    var typeName = typeData.name;#>
-    #region Type: <#=typeName#>
+  #region Type: <#=typeName#>
 <#    if(typeData.isUnsafeOnly) {#>
 #if UNSAFE
 <#    }#>
 <#    if(!typeData.noArraySupport) {#>
 
-    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>) {
-      if (@this == null)
-        return null;
+  <#=string.Join("\n  ", EmitMethodHeader2("Copy", typeData))#>) {
+    <#=EmitThisNullCheck()#>
 
-      var length = @this.Length;
-      var result = new <#=typeName#>[length];
-      _CopyTo(@this, 0, result, 0, length);
-      return result;
-    }
+    var length = @this.Length;
+    var result = new <#=typeName#>[length];
+    _CopyTo(@this, 0, result, 0, length);
+    return result;
+  }
 
-    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>, int index) {
-      if (@this == null)
-        return null;
+  <#=string.Join("\n  ", EmitMethodHeader2("Copy", typeData))#>, int index) {
+    <#=EmitThisNullCheck()#>
+    <#=EmitOffsetTooSmallCheck()#>
+    var length = @this.Length;
+    <#=EmitOffsetTooLargeCheck()#>
+    var count = length - index;
+    var result = new <#=typeName#>[count];
+    _CopyTo(@this, index, result, 0, count);
+    return result;
+  }
 
-      <#=EmitOffsetTooSmallCheck()#>
-      var length = @this.Length;
-      <#=EmitOffsetTooLargeCheck()#>
-      var count = length - index;
-      var result = new <#=typeName#>[count];
-      _CopyTo(@this, index, result, 0, count);
-      return result;
-    }
+  <#=string.Join("\n  ", EmitMethodHeader2("Copy", typeData))#>, int index, int count) {
+    <#=EmitThisNullCheck()#>
+    <#=EmitOffsetTooSmallCheck()#>
+    var length = @this.Length;
+    <#=EmitOffsetTooLargeCheck()#>
+    <#=EmitCountTooSmallCheck()#>
+    <#=EmitCountTooLargeCheck("length - index")#>
 
-    <#=string.Join("\n    ", EmitMethodHeader2("Copy", typeData))#>, int index, int count) {
-      if (@this == null)
-        return null;
-
-      <#=EmitOffsetTooSmallCheck()#>
-      var length = @this.Length;
-      <#=EmitOffsetTooLargeCheck()#>
-      <#=EmitCountTooSmallCheck()#>
-      <#=EmitCountTooLargeCheck("length - index")#>
-
-      var result = new <#=typeName#>[count];
-      _CopyTo(@this, index, result, 0, count);
-      return result;
-    }
+    var result = new <#=typeName#>[count];
+    _CopyTo(@this, index, result, 0, count);
+    return result;
+  }
 <#    }#>
 
 <#    if(!typeData.NeedsCount) {#>
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      var count = @this.Length;
-      <#=EmitCountTooLargeCheck("count", "target.Length", "target")#>
-      _CopyTo(@this, 0 , target, 0, count);
-    }
+    var count = @this.Length;
+    <#=EmitCountTooLargeCheck("count", "target.Length", "target")#>
+    _CopyTo(@this, 0 , target, 0, count);
+  }
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      <#=EmitOffsetTooSmallCheck("srcIndex")#>
-      var length = @this.Length;
-      <#=EmitOffsetTooLargeCheck("srcIndex", "length")#>
-      var count = length - srcIndex;
-      <#=EmitCountTooLargeCheck("count", "target.Length", "target")#>
-      _CopyTo(@this, srcIndex , target, 0, count);
-    }
+    <#=EmitOffsetTooSmallCheck("srcIndex")#>
+    var length = @this.Length;
+    <#=EmitOffsetTooLargeCheck("srcIndex", "length")#>
+    var count = length - srcIndex;
+    <#=EmitCountTooLargeCheck("count", "target.Length", "target")#>
+    _CopyTo(@this, srcIndex , target, 0, count);
+  }
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      <#=EmitOffsetTooSmallCheck("tgtIndex")#>
-      var length = target.Length;
-      <#=EmitOffsetTooLargeCheck("tgtIndex", "length")#>
-      var count = @this.Length;
-      <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "@this")#>
-      _CopyTo(@this, 0 , target, tgtIndex, count);
-    }
+    <#=EmitOffsetTooSmallCheck("tgtIndex")#>
+    var length = target.Length;
+    <#=EmitOffsetTooLargeCheck("tgtIndex", "length")#>
+    var count = @this.Length;
+    <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "@this")#>
+    _CopyTo(@this, 0 , target, tgtIndex, count);
+  }
 <#    } else {#>
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      <#=EmitCountTooSmallCheck()#>
-      _CopyTo(@this, 0 , target, 0, count);
-    }
+    <#=EmitCountTooSmallCheck()#>
+    _CopyTo(@this, 0 , target, 0, count);
+  }
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, int srcIndex, <#=EmitTypeDef(typeData)#> target) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      <#=EmitOffsetTooSmallCheck("srcIndex")#>
-      <#=EmitCountTooSmallCheck()#>
-      _CopyTo(@this, srcIndex , target, 0, count);
-    }
+    <#=EmitOffsetTooSmallCheck("srcIndex")#>
+    <#=EmitCountTooSmallCheck()#>
+    _CopyTo(@this, srcIndex , target, 0, count);
+  }
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int count, <#=EmitTypeDef(typeData)#> target, int tgtIndex) {
 <#      if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#      }#>
-      <#=EmitOffsetTooSmallCheck("tgtIndex")#>
-      <#=EmitCountTooSmallCheck()#>
-      _CopyTo(@this, 0 , target, tgtIndex, count);
-    }
+    <#=EmitOffsetTooSmallCheck("tgtIndex")#>
+    <#=EmitCountTooSmallCheck()#>
+    _CopyTo(@this, 0 , target, tgtIndex, count);
+  }
 <#    }#>
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target, int tgtIndex, int count) {
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(typeData)#> target, int tgtIndex, int count) {
 <#    if(typeData.CanBeNull)  {#>
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
 <#    }#>
-      <#=EmitOffsetTooSmallCheck("srcIndex")#>
-      <#=EmitOffsetTooSmallCheck("tgtIndex")#>
-      <#=EmitCountTooSmallCheck()#>
+    <#=EmitOffsetTooSmallCheck("srcIndex")#>
+    <#=EmitOffsetTooSmallCheck("tgtIndex")#>
+    <#=EmitCountTooSmallCheck()#>
 <#    if(typeData.SupportsLength) {#>
-      <#=EmitOffsetTooLargeCheck("srcIndex", "@this.Length")#>
-      <#=EmitOffsetTooLargeCheck("tgtIndex", "target.Length")#>
-      <#=EmitCountTooLargeCheck("count", "@this.Length - srcIndex")#>
-      <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex")#>
+    <#=EmitOffsetTooLargeCheck("srcIndex", "@this.Length")#>
+    <#=EmitOffsetTooLargeCheck("tgtIndex", "target.Length")#>
+    <#=EmitCountTooLargeCheck("count", "@this.Length - srcIndex")#>
+    <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex")#>
 <#    }#>
-      _CopyTo(@this, srcIndex , target, tgtIndex, count);
-    }
+    _CopyTo(@this, srcIndex , target, tgtIndex, count);
+  }
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
 
-    <#=string.Join("\n    ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count) {
-      <#=EmitThisNullCheck()#>
-      <#=EmitArgNullCheck("target")#>
-      <#=EmitOffsetTooSmallCheck("srcIndex")#>
-      <#=EmitOffsetTooSmallCheck("tgtIndex")#>
-      <#=EmitOffsetTooLargeCheck("srcIndex", "@this.Length")#>
-      <#=EmitOffsetTooLargeCheck("tgtIndex", "target.Length")#>
-      <#=EmitCountTooLargeCheck("count", "@this.Length - srcIndex")#>
+  <#=string.Join("\n  ", EmitMethodHeader2("void", "CopyTo", typeData))#>, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count) {
+    <#=EmitThisNullCheck()#>
+    <#=EmitArgNullCheck("target")#>
+    <#=EmitOffsetTooSmallCheck("srcIndex")#>
+    <#=EmitOffsetTooSmallCheck("tgtIndex")#>
+    <#=EmitOffsetTooLargeCheck("srcIndex", "@this.Length")#>
+    <#=EmitOffsetTooLargeCheck("tgtIndex", "target.Length")#>
+    <#=EmitCountTooLargeCheck("count", "@this.Length - srcIndex")#>
 <#        if(tgtTypeData.size != typeData.size) {#>
-      var bytesNeeded = count<#=EmitFastIntegerMultiply(typeData.size)#>;
-      var bytesAvailable = (target.Length - tgtIndex)<#=EmitFastIntegerMultiply(tgtTypeData.size)#>;
-      <#=EmitCountTooLargeCheck("bytesNeeded", "bytesAvailable", "count")#>
-      if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) Guard.AlwaysThrow.CountNotMultipleOfException(nameof(target), count<#=EmitFastIntegerMultiply(typeData.size / tgtTypeData.size)#>, target.Length - tgtIndex);
+    var bytesNeeded = count<#=EmitFastIntegerMultiply(typeData.size)#>;
+    var bytesAvailable = (target.Length - tgtIndex)<#=EmitFastIntegerMultiply(tgtTypeData.size)#>;
+    <#=EmitCountTooLargeCheck("bytesNeeded", "bytesAvailable", "count")#>
+    if ((bytesNeeded<#=EmitFastIntegerModulo(tgtTypeData.size)#>) != 0) AlwaysThrow.CountNotMultipleOfException(nameof(target), count<#=EmitFastIntegerMultiply(typeData.size / tgtTypeData.size)#>, target.Length - tgtIndex);
 <#        } else {#>
-      <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "count")#>
+    <#=EmitCountTooLargeCheck("count", "target.Length - tgtIndex", "count")#>
 <#        }#>
-      _CopyTo(@this, srcIndex, target, tgtIndex, count);
-    }
+    _CopyTo(@this, srcIndex, target, tgtIndex, count);
+  }
 <#      }#>
 <#    }#>
 <#    if(typeData.isUnsafeOnly) {#>
 
 #endif
 <#    }#>
-    #endregion
+  #endregion
 <#  }#>
 <#  foreach(var typeData in typeDatas.Where(i=>!i.hasHandcraftedCopyToMethod)) {#>
 <#    var typeName = typeData.name;#>
     
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
-      for (;;) {
-        switch(count){
-          case 0: return;
+  private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
+    for (;;) {
+      switch(count){
+        case 0: return;
 <#      for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-          case <#=i#>:
+        case <#=i#>:
 <#          for(var j = 0; j < i; ++j) {#>
-            <#=EmitIndexCopy(j)#><#}#>
-            return;
+          <#=EmitIndexCopy(j)#><#}#>
+          return;
 <#      }#>
-        }
+      }
 
 <#      if(BYTE_COUNT_POINTER > 0 && typeData.size > 0 && typeData.useBlockCopyInsteadOfArrayCopy) {#>
-        if( count > <#=(BYTE_COUNT_POINTER / typeData.size)#>) {
+      if( count > <#=(BYTE_COUNT_POINTER / typeData.size)#>) {
 #if UNSAFE
-          unsafe {
-            fixed(<#=typeData.name#>* sourceFixedPointer = &source[srcIndex])
-            fixed(<#=typeData.name#>* targetFixedPointer = &target[tgtIndex])
-              _CopyTo(<#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>sourceFixedPointer, <#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>targetFixedPointer, count<#=EmitFastIntegerMultiply(typeData.size)#>);
-          }
+        unsafe {
+          fixed(<#=typeData.name#>* sourceFixedPointer = &source[srcIndex])
+          fixed(<#=typeData.name#>* targetFixedPointer = &target[tgtIndex])
+            _CopyTo(<#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>sourceFixedPointer, <#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>targetFixedPointer, count<#=EmitFastIntegerMultiply(typeData.size)#>);
+        }
 #else
-          using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-          using (var targetFixedPointer = DisposableGCHandle.Pin(target))
-            _CopyTo(sourceFixedPointer.AddrOfPinnedObject(), srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, targetFixedPointer.AddrOfPinnedObject(), tgtIndex<#=EmitFastIntegerMultiply(typeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>);
+        using var sourceFixedPointer = DisposableGCHandle.Pin(source);
+        using var targetFixedPointer = DisposableGCHandle.Pin(target);
+        _CopyTo(sourceFixedPointer.AddrOfPinnedObject(), srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, targetFixedPointer.AddrOfPinnedObject(), tgtIndex<#=EmitFastIntegerMultiply(typeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>);
 #endif
 
-          return;
-        }
+        return;
+      }
 
 <#      }#>
 <#      if(ELEMENT_COUNT_BLOCK > 0) {#>
-        if(count > <#=ELEMENT_COUNT_BLOCK#>) {
-          <#=(typeData.useBlockCopyInsteadOfArrayCopy ? "Buffer.BlockCopy" : "Array.Copy")#>(source, srcIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, target, tgtIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, count<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>);
-          return;
-        }
+      if(count > <#=ELEMENT_COUNT_BLOCK#>) {
+        <#=(typeData.useBlockCopyInsteadOfArrayCopy ? "Buffer.BlockCopy" : "Array.Copy")#>(source, srcIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, target, tgtIndex<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>, count<#=(typeData.useBlockCopyInsteadOfArrayCopy ? EmitFastIntegerMultiply(typeData.size) : string.Empty)#>);
+        return;
+      }
 
 <#      }#>
-        while(count >= <#=INDEX_LOOP_UNROLL#>) {
+      while(count >= <#=INDEX_LOOP_UNROLL#>) {
 <#      for(var i = 0; i < INDEX_LOOP_UNROLL; ++i) {#>
-          <#=EmitIndexCopy(i)#><#}#>
+        <#=EmitIndexCopy(i)#><#}#>
           
-          srcIndex += <#=INDEX_LOOP_UNROLL#>;
-          tgtIndex += <#=INDEX_LOOP_UNROLL#>;
-          count -= <#=INDEX_LOOP_UNROLL#>;
-        }
-
+        srcIndex += <#=INDEX_LOOP_UNROLL#>;
+        tgtIndex += <#=INDEX_LOOP_UNROLL#>;
+        count -= <#=INDEX_LOOP_UNROLL#>;
       }
+
     }
+  }
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
 
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count)
-      => Buffer.BlockCopy(source, srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, target, tgtIndex<#=EmitFastIntegerMultiply(tgtTypeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>)
-    ;
+  private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count)
+    => Buffer.BlockCopy(source, srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, target, tgtIndex<#=EmitFastIntegerMultiply(tgtTypeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>)
+  ;
 <#      }#>
 <#    }#>
 <#  }#>
 
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private static void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count) {
+  private static void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count) {
 #if UNSAFE
-      unsafe { _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count); }
+    unsafe { _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count); }
 #else
-      for (;;) {
-        switch(count) {
-          case 0: return;
+    for (;;) {
+      switch(count) {
+        case 0: return;
 <#        for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-          case <#=i#>:
-            <#=string.Join("\n            ",EmitMarshalCopyBytes(i))#>
-            return;
+        case <#=i#>:
+          <#=string.Join("\n          ",EmitMarshalCopyBytes(i))#>
+          return;
 <#        }#>
-        }
+      }
 
 <#  if(MARSHALL_LOOP_UNROLL>1){#>
 
-        <#=string.Join("\n        ",EmitMarshalCopyBytes(MARSHALL_SWITCH_COUNT))#>
-        count -= <#=MARSHALL_SWITCH_COUNT#>;
-        srcIndex += <#=MARSHALL_SWITCH_COUNT#>;
-        tgtIndex += <#=MARSHALL_SWITCH_COUNT#>;
+      <#=string.Join("\n      ",EmitMarshalCopyBytes(MARSHALL_SWITCH_COUNT))#>
+      count -= <#=MARSHALL_SWITCH_COUNT#>;
+      srcIndex += <#=MARSHALL_SWITCH_COUNT#>;
+      tgtIndex += <#=MARSHALL_SWITCH_COUNT#>;
     
-        var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-        count = count<#=EmitFastIntegerModulo(8)#>;
+      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
+      count = count<#=EmitFastIntegerModulo(8)#>;
 
-        while (qwordCount > 0) {
-          switch (qwordCount) {
+      while (qwordCount > 0) {
+        switch (qwordCount) {
 <#          for(var i = 1; i <= MARSHALL_LOOP_UNROLL; ++i) {#>
-            case <#=i#>: goto qwordDuff<#=(MARSHALL_LOOP_UNROLL - i)#>;<#}#>
-            default: goto qwordDuffOut;
-          }
+          case <#=i#>: goto qwordDuff<#=(MARSHALL_LOOP_UNROLL - i)#>;<#}#>
+          default: goto qwordDuffOut;
+        }
 
 <#      for(var i = 0; i < MARSHALL_LOOP_UNROLL; ++i) {#>
 qwordDuff<#=i#>: <#=EmitMarshalCopyQWord((MARSHALL_LOOP_UNROLL - i - 1) * 8)#><#}#>
 
-          var processed = qwordCount<#=EmitFastIntegerMultiply(8)#>;
-          srcIndex += processed;
-          tgtIndex += processed;
-          break;
+        var processed = qwordCount<#=EmitFastIntegerMultiply(8)#>;
+        srcIndex += processed;
+        tgtIndex += processed;
+        break;
 
 qwordDuffOut:
 
-          do {
-            <#=string.Join("\n            ",EmitMarshalCopyBytes(MARSHALL_LOOP_UNROLL * 8))#>
-            srcIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-            tgtIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-            qwordCount -= <#=MARSHALL_LOOP_UNROLL#>;
-          } while (qwordCount >= <#=MARSHALL_LOOP_UNROLL#>);
-
-        }
-<#  } else {#>
-        var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-        count = count<#=EmitFastIntegerModulo(8)#>;
         do {
-          <#=string.Join("\n          ",EmitMarshalCopyBytes(8))#>
-          srcIndex += 8;
-          tgtIndex += 8;
-          --qwordCount;
-        } while (qwordCount > 0);
-<#  }#>
+          <#=string.Join("\n          ",EmitMarshalCopyBytes(MARSHALL_LOOP_UNROLL * 8))#>
+          srcIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
+          tgtIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
+          qwordCount -= <#=MARSHALL_LOOP_UNROLL#>;
+        } while (qwordCount >= <#=MARSHALL_LOOP_UNROLL#>);
+
       }
-#endif
+<#  } else {#>
+      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
+      count = count<#=EmitFastIntegerModulo(8)#>;
+      do {
+        <#=string.Join("\n        ",EmitMarshalCopyBytes(8))#>
+        srcIndex += 8;
+        tgtIndex += 8;
+        --qwordCount;
+      } while (qwordCount > 0);
+<#  }#>
     }
+#endif
+  }
 
-    #endregion
+  #endregion
 
-    #region Fill
+  #region Fill
 
 #if UNSAFE
 
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static unsafe void Fill(this IntPtr @this, int count, byte value)
-      => Fill((byte*)@this, count, value)
-    ;
+  public static unsafe void Fill(this IntPtr @this, int count, byte value)
+    => Fill((byte*)@this, count, value)
+  ;
 
-    public static unsafe void Fill(byte* @this, int count, byte value) {
-      <#=EmitCountTooSmallCheck()#>
+  public static unsafe void Fill(byte* @this, int count, byte value) {
+    <#=EmitCountTooSmallCheck()#>
 
-      for(;;)
-        switch (count) {
-          case 0: return;
+    for(;;)
+      switch (count) {
+        case 0: return;
 <#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
-          case <#=i#>:
-            <#=string.Join("\n            ",EmitSetBytes(i, "value"))#>
-            return;
+        case <#=i#>:
+          <#=string.Join("\n          ",EmitSetBytes(i, "value"))#>
+          return;
 <#    }#>
-          default: {
-            var blocks = count >> 3;
-            var block8 = 0x0101010101010101UL * value;
+        default: {
+          var blocks = count >> 3;
+          var block8 = 0x0101010101010101UL * value;
 
 #if !PLATFORM_X86
-            const int MAX_MANAGED_BLOCKS = 16;
+          const int MAX_MANAGED_BLOCKS = 16;
 #else
-            const int MAX_MANAGED_BLOCKS = 50;
+          const int MAX_MANAGED_BLOCKS = 50;
 #endif
-            if (blocks < MAX_MANAGED_BLOCKS) {
-              count &= 0b111;
-              for (;;)
-                switch (blocks) {
+          if (blocks < MAX_MANAGED_BLOCKS) {
+            count &= 0b111;
+            for (;;)
+              switch (blocks) {
 <#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                  case <#=i#>: goto blockCount<#=i#>;
+                case <#=i#>: goto blockCount<#=i#>;
 <#    }#>
-                  default: {
-                    do {
-                      *(ulong*) @this = block8;
+                default: {
+                  do {
+                    *(ulong*) @this = block8;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                      ((ulong*) @this)[<#=i#>] = block8;
+                    ((ulong*) @this)[<#=i#>] = block8;
 <#    }#>
-                      @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-                      blocks -= <#=INDEX_LOOP_UNROLL#>;
-                    } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
+                    @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+                    blocks -= <#=INDEX_LOOP_UNROLL#>;
+                  } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
 
-                    continue; // next blocks
-                  }
+                  continue; // next blocks
                 }
+              }
 
 <#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-              blockCount<#=i#>: *(ulong*) @this = block8;
+            blockCount<#=i#>: ((ulong*) @this)[<#=i#>] = block8;
 <#    }#>
-              @this += blocks << 3;
-              blockCount0:
-              continue; // copy single bytes left
-            } // medium-sized blocks
+            @this += blocks << 3;
+            blockCount0:
+            continue; // copy single bytes left
+          } // medium-sized blocks
 
-            // large blocks
-            var start = @this;
+          // large blocks
+          var start = @this;
 
-            *(ulong*)@this = block8;
+          *(ulong*)@this = block8;
 <#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-            ((ulong*)@this)[<#=i#>] = block8;
+          ((ulong*)@this)[<#=i#>] = block8;
 <#    }#>
-            @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-            count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
+          @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+          count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
 
 #if !PLATFORM_X86
 
-            var block64 = *(Block64*)start;
+          var block64 = *(Block64*)start;
 <#    var lastBlockCount = int.MaxValue;#>
 <#    foreach(var blockCount in new[]{16, 8, 1}){#>
 <#      var bytesPerLoop = 64 * blockCount;#>
 <#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
 <#      lastBlockCount = blockCount;#>
-              count -= <#=bytesPerLoop#>;
-              *(Block64*)@this = block64;
+            count -= <#=bytesPerLoop#>;
+            *(Block64*)@this = block64;
 <#      for(var i = 1; i < blockCount; ++i) {#>
-              ((Block64*)@this)[<#=i#>] = block64;
+            ((Block64*)@this)[<#=i#>] = block64;
 <#      }#>
-              @this += <#=bytesPerLoop#>;
-            }
+            @this += <#=bytesPerLoop#>;
+          }
 <#    }#>
             
-            if (count != 0)
-              continue;
+          if (count != 0)
+            continue;
 
 #else
 
-            block8 = *(Block8*)start;
+          block8 = *(Block8*)start;
 <#    lastBlockCount = int.MaxValue;#>
 <#    foreach(var blockCount in new[]{8, 1}){#>
 <#      var bytesPerLoop = 8 * blockCount;#>
 <#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
 <#      lastBlockCount = blockCount;#>
-              count -= <#=bytesPerLoop#>;
-              *(Block8*)@this = block8;
+            count -= <#=bytesPerLoop#>;
+            *(Block8*)@this = block8;
 <#      for(var i = 1; i < blockCount; ++i) {#>
-              ((Block8*)@this)[<#=i#>] = block8;
+            ((Block8*)@this)[<#=i#>] = block8;
 <#      }#>
-              @this += <#=bytesPerLoop#>;
-            }
+            @this += <#=bytesPerLoop#>;
+          }
 <#    }#>
             
-            if (count != 0)
-              continue;
+          if (count != 0)
+            continue;
             
 #endif
 
-            return;
-
-            } // single-byte default
-        } // single-byte switch
-    }
-
-#else
-
-    public static void Fill(this IntPtr @this, int count, byte value) {
-      <#=EmitCountTooSmallCheck()#>
-      
-      for (;;)
-        switch (count) {
-          case 0: return;
-<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-          case <#=i#>: 
-            <#=string.Join("\n            ", EmitMarshalSetBytes(i, "value"))#>
-            return;
-<#    }#>
-          default: {
-            var block8 = (long) (0x0101010101010101UL * value);
-            var blocks = count >> 3;
-            
-            count &= 0b111;
-            for (;;)
-              switch (blocks) {
-<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-                case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-                default: {
-                  var block64=(object)new Block64((ulong)block8);
-
-                  do {
-                    Marshal.StructureToPtr(block64, @this, false);
-#if SUPPORTS_POINTER_ARITHMETIC
-                    @this += 64;
-#else
-                    _Add(ref @this, 64);
-#endif
-                    blocks -= 8;
-                  } while (blocks >= 8);
-
-                  continue; // next blocks
-                }
-              }
-              
-<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-            blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
-<#    }#>
-            blockCount1: Marshal.WriteInt64(@this, block8);
-#if SUPPORTS_POINTER_ARITHMETIC
-            @this += blocks << 3;
-#else
-            _Add(ref @this, blocks << 3);
-#endif
-            blockCount0: continue; // copy single bytes left
+          return;
 
           } // single-byte default
-        } // single-byte switch
-    }
+      } // single-byte switch
+  }
+
+#else
+
+  public static void Fill(this IntPtr @this, int count, byte value) {
+    <#=EmitCountTooSmallCheck()#>
+      
+    for (;;)
+      switch (count) {
+        case 0: return;
+<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+        case <#=i#>: 
+          <#=string.Join("\n          ", EmitMarshalSetBytes(i, "value"))#>
+          return;
+<#    }#>
+        default: {
+          var block8 = (long) (0x0101010101010101UL * value);
+          var blocks = count >> 3;
+            
+          count &= 0b111;
+          for (;;)
+            switch (blocks) {
+<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+              case <#=i#>: goto blockCount<#=i#>;
+<#    }#>
+              default: {
+                var block64=(object)new Block64((ulong)block8);
+
+                do {
+                  Marshal.StructureToPtr(block64, @this, false);
+#if SUPPORTS_POINTER_ARITHMETIC
+                  @this += 64;
+#else
+                  _Add(ref @this, 64);
+#endif
+                  blocks -= 8;
+                } while (blocks >= 8);
+
+                continue; // next blocks
+              }
+            }
+              
+<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
+          blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
+<#    }#>
+          blockCount1: Marshal.WriteInt64(@this, block8);
+#if SUPPORTS_POINTER_ARITHMETIC
+          @this += blocks << 3;
+#else
+          _Add(ref @this, blocks << 3);
+#endif
+          blockCount0: continue; // copy single bytes left
+
+        } // single-byte default
+      } // single-byte switch
+  }
 
 #endif
 
-    #endregion
+  #endregion
 
-    #region Clear
+  #region Clear
 
 #if UNSAFE
 
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static unsafe void Clear(this IntPtr @this, int count)
-      => Clear((byte*)@this, count)
-    ;
+  public static unsafe void Clear(this IntPtr @this, int count)
+    => Clear((byte*)@this, count)
+  ;
 
-    public static unsafe void Clear(byte* @this, int count) {
-      <#=EmitCountTooSmallCheck()#>
+  public static unsafe void Clear(byte* @this, int count) {
+    <#=EmitCountTooSmallCheck()#>
 
-      for(;;)
-        switch (count) {
-          case 0: return;
+    for(;;)
+      switch (count) {
+        case 0: return;
 <#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
-          case <#=i#>:
-            <#=string.Join("\n            ",EmitSetBytes(i))#>
-            return;
+        case <#=i#>:
+          <#=string.Join("\n          ",EmitSetBytes(i))#>
+          return;
 <#    }#>
-          default: {
-            var blocks = count >> 3;
+        default: {
+          var blocks = count >> 3;
 
 #if !PLATFORM_X86
-            const int MAX_MANAGED_BLOCKS = 16;
+          const int MAX_MANAGED_BLOCKS = 16;
 #else
-            const int MAX_MANAGED_BLOCKS = 50;
+          const int MAX_MANAGED_BLOCKS = 50;
 #endif
-            if (blocks < MAX_MANAGED_BLOCKS) {
-              count &= 0b111;
-              for (;;)
-                switch (blocks) {
-<#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                  case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-                  default: {
-                    do {
-                      *(ulong*) @this = 0;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                      ((ulong*) @this)[<#=i#>] = 0;
-<#    }#>
-                      @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-                      blocks -= <#=INDEX_LOOP_UNROLL#>;
-                    } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
-
-                    continue; // next blocks
-                  }
-                }
-
-<#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-              blockCount<#=i#>: *(ulong*) @this = 0;
-<#    }#>
-              @this += blocks << 3;
-              blockCount0:
-              continue; // copy single bytes left
-            } // medium-sized blocks
-
-            // large blocks
-            var start = @this;
-
-            *(ulong*)@this = 0;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-            ((ulong*)@this)[<#=i#>] = 0;
-<#    }#>
-            @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-            count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
-
-#if !PLATFORM_X86
-
-            var block64 = *(Block64*)start;
-<#    lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{16, 8, 1}){#>
-<#      var bytesPerLoop = 64 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-              count -= <#=bytesPerLoop#>;
-              *(Block64*)@this = block64;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-              ((Block64*)@this)[<#=i#>] = block64;
-<#      }#>
-              @this += <#=bytesPerLoop#>;
-            }
-<#    }#>
-            
-            if (count != 0)
-              continue;
-
-#else
-
-           var block8 = *(Block8*)start;
-<#    lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{8, 1}){#>
-<#      var bytesPerLoop = 8 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-            <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-              count -= <#=bytesPerLoop#>;
-              *(Block8*)@this = block8;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-              ((Block8*)@this)[<#=i#>] = block8;
-<#      }#>
-              @this += <#=bytesPerLoop#>;
-            }
-<#    }#>
-            
-            if (count != 0)
-              continue;
-
-            
-#endif
-
-            return;
-
-            } // single-byte default
-        } // single-byte switch
-    }
-
-#else
-
-    public static void Clear(this IntPtr @this, int count) {
-      <#=EmitCountTooSmallCheck()#>
-      
-      for (;;)
-        switch (count) {
-          case 0: return;
-<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-          case <#=i#>: 
-            <#=string.Join("\n            ", EmitMarshalSetBytes(i))#>
-            return;
-<#    }#>
-          default: {
-            var blocks = count >> 3;
-            
+          if (blocks < MAX_MANAGED_BLOCKS) {
             count &= 0b111;
             for (;;)
               switch (blocks) {
-<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+<#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
                 case <#=i#>: goto blockCount<#=i#>;
 <#    }#>
                 default: {
-                  var block64=(object)new Block64();
-
                   do {
-                    Marshal.StructureToPtr(block64, @this, false);
-#if SUPPORTS_POINTER_ARITHMETIC
-                    @this += 64;
-#else
-                    _Add(ref @this, 64);
-#endif
-                    blocks -= 8;
-                  } while (blocks >= 8);
+                    *(ulong*) @this = 0;
+<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
+                    ((ulong*) @this)[<#=i#>] = 0;
+<#    }#>
+                    @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+                    blocks -= <#=INDEX_LOOP_UNROLL#>;
+                  } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
 
                   continue; // next blocks
                 }
               }
-              
-<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-            blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
+
+<#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
+            blockCount<#=i#>: *(ulong*) @this = 0;
 <#    }#>
-            blockCount1: Marshal.WriteInt64(@this, 0);
-#if SUPPORTS_POINTER_ARITHMETIC
             @this += blocks << 3;
+            blockCount0:
+            continue; // copy single bytes left
+          } // medium-sized blocks
+
+          // large blocks
+          var start = @this;
+
+          *(ulong*)@this = 0;
+<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
+          ((ulong*)@this)[<#=i#>] = 0;
+<#    }#>
+          @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
+          count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
+
+#if !PLATFORM_X86
+
+          var block64 = *(Block64*)start;
+<#    lastBlockCount = int.MaxValue;#>
+<#    foreach(var blockCount in new[]{16, 8, 1}){#>
+<#      var bytesPerLoop = 64 * blockCount;#>
+<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
+          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+<#      lastBlockCount = blockCount;#>
+            count -= <#=bytesPerLoop#>;
+            *(Block64*)@this = block64;
+<#      for(var i = 1; i < blockCount; ++i) {#>
+            ((Block64*)@this)[<#=i#>] = block64;
+<#      }#>
+            @this += <#=bytesPerLoop#>;
+          }
+<#    }#>
+            
+          if (count != 0)
+            continue;
+
 #else
-            _Add(ref @this, blocks << 3);
+
+          var block8 = *(Block8*)start;
+<#    lastBlockCount = int.MaxValue;#>
+<#    foreach(var blockCount in new[]{8, 1}){#>
+<#      var bytesPerLoop = 8 * blockCount;#>
+<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
+          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
+<#      lastBlockCount = blockCount;#>
+            count -= <#=bytesPerLoop#>;
+            *(Block8*)@this = block8;
+<#      for(var i = 1; i < blockCount; ++i) {#>
+            ((Block8*)@this)[<#=i#>] = block8;
+<#      }#>
+            @this += <#=bytesPerLoop#>;
+          }
+<#    }#>
+            
+          if (count != 0)
+            continue;
+
+            
 #endif
-            blockCount0: continue; // copy single bytes left
+
+          return;
 
           } // single-byte default
-        } // single-byte switch
-    }
+      } // single-byte switch
+  }
+
+#else
+
+  public static void Clear(this IntPtr @this, int count) {
+    <#=EmitCountTooSmallCheck()#>
+      
+    for (;;)
+      switch (count) {
+        case 0: return;
+<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+        case <#=i#>: 
+          <#=string.Join("\n          ", EmitMarshalSetBytes(i))#>
+          return;
+<#    }#>
+        default: {
+          var blocks = count >> 3;
+            
+          count &= 0b111;
+          for (;;)
+            switch (blocks) {
+<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
+              case <#=i#>: goto blockCount<#=i#>;
+<#    }#>
+              default: {
+                var block64=(object)new Block64();
+
+                do {
+                  Marshal.StructureToPtr(block64, @this, false);
+#if SUPPORTS_POINTER_ARITHMETIC
+                  @this += 64;
+#else
+                  _Add(ref @this, 64);
+#endif
+                  blocks -= 8;
+                } while (blocks >= 8);
+
+                continue; // next blocks
+              }
+            }
+              
+<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
+          blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
+<#    }#>
+          blockCount1: Marshal.WriteInt64(@this, 0);
+#if SUPPORTS_POINTER_ARITHMETIC
+          @this += blocks << 3;
+#else
+          _Add(ref @this, blocks << 3);
+#endif
+          blockCount0: continue; // copy single bytes left
+
+        } // single-byte default
+      } // single-byte switch
+  }
 
 #endif
 
-    #endregion
+  #endregion
 
-    #region Copy-blocks
+  #region Copy-blocks
 
-    #if UNSAFE
+  #if UNSAFE
 
-    #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    #endif
-    private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
-      => _CopyTo(source + srcIndex, target + tgtIndex, count)
-    ;
+  #if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  #endif
+  private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
+    => _CopyTo(source + srcIndex, target + tgtIndex, count)
+  ;
 
-    #if PLATFORM_X86
+  #if PLATFORM_X86
     
-    <#=string.Join("\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX86, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX86)))#>
+  <#=string.Join("\n  ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX86, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX86, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX86)))#>
     
-    #else
+  #else
     
-    <#=string.Join("\n    ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX64, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX64)))#>
+  <#=string.Join("\n  ", EmitUnsafeProcessor("_CopyTo(byte* source, byte* target, int count)", LINEAR_BLOCK_COUNTX64, INDEX_LOOP_UNROLL, new[]{ "source", "target" }, LINEAR_BLOCK_COUNTX64, c => EmitCopyBlock(c, LINEAR_BLOCK_COUNTX64)))#>
     
-    #endif
+  #endif
         
-    #endif
+  #endif
 
-    #endregion
+  #endregion
 
-    <#=string.Join("\n    ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
+  <#=string.Join("\n  ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
 
-    <#=string.Join("\n    ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
+  <#=string.Join("\n  ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
 
-    <#=string.Join("\n    ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
+  <#=string.Join("\n  ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
 
-    <#=string.Join("\n    ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
+  <#=string.Join("\n  ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
 
-  }
 }
 
 <#+
@@ -1189,20 +1184,20 @@ IEnumerable<string> EmitBlockProcess(int size, int unrollCount, Func<int, IEnume
   yield return "}";
 }
 
-string EmitThisNullCheck() => @"Guard.Against.ThisIsNull(@this);";
-string EmitArgNullCheck(string paramName) => string.Format(@"Guard.Against.ArgumentIsNull({0});", paramName);
+string EmitThisNullCheck() => @"Against.ThisIsNull(@this);";
+string EmitArgNullCheck(string paramName) => string.Format(@"Against.ArgumentIsNull({0});", paramName);
 
-string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) Guard.AlwaysThrow.IndexTooLowException(nameof({0}), {0});", paramName);
+string EmitOffsetTooSmallCheck(string paramName) => string.Format(@"Against.IndexBelowZero({0});", paramName);
 string EmitOffsetTooSmallCheck() => EmitOffsetTooSmallCheck("index");
 
-string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"if ({0} >= {1}) Guard.AlwaysThrow.IndexTooHighException(nameof({0}), {0}, {1});", paramName, limit);
+string EmitOffsetTooLargeCheck(string paramName, string limit) => string.Format(@"Against.IndexOutOfRange({0}, {1});", paramName, limit);
 string EmitOffsetTooLargeCheck(string limit) => EmitOffsetTooLargeCheck("index", limit);
 string EmitOffsetTooLargeCheck() => EmitOffsetTooLargeCheck("length");
 
-string EmitCountTooSmallCheck(string paramName) => string.Format(@"if ({0} < 0) Guard.AlwaysThrow.CountTooLowException(nameof({0}), {0});", paramName);
+string EmitCountTooSmallCheck(string paramName) => string.Format(@"Against.CountBelowZero({0});", paramName);
 string EmitCountTooSmallCheck() => EmitCountTooSmallCheck("count");
 
-string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"if ({0} > {1}) Guard.AlwaysThrow.CountTooHighException(nameof({2}), {0}, {1});", source, length, paramName);
+string EmitCountTooLargeCheck(string source, string length, string paramName) => string.Format(@"Against.CountOutOfRange({0}, {1}, expression: nameof({2}));", source, length, paramName);
 string EmitCountTooLargeCheck(string source, string length) => EmitCountTooLargeCheck(source, length, source);
 string EmitCountTooLargeCheck(string length) => EmitCountTooLargeCheck("count", length);
 string EmitCountTooLargeCheck() => EmitCountTooLargeCheck("length");
