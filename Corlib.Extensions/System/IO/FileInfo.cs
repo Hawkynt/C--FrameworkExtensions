@@ -55,85 +55,314 @@ internal
 static partial class FileInfoExtensions {
 
   /// <summary>
-  /// The native methods.
+  /// Provides access to native Windows API functions and constants, facilitating operations such as file system control and shell file information retrieval.
   /// </summary>
   private static class NativeMethods {
-
-#pragma warning disable CC0021 // Use nameof
-#pragma warning disable CC0074 // Make field readonly
     // ReSharper disable UnusedMember.Local
     // ReSharper disable MemberCanBePrivate.Local
     // ReSharper disable InconsistentNaming
 
-#region consts
+    #region consts
 
+    /// <summary>
+    /// Defines control codes for file system operations.
+    /// </summary>
     public enum FileSystemControl {
+      /// <summary>
+      /// Control code to set file or directory compression.
+      /// </summary>
       SetCompression = 0x9C040,
     }
 
+    /// <summary>
+    /// Flags for specifying the information to retrieve with <see cref="SHGetFileInfo"/>.
+    /// </summary>
+    /// <summary>
+    /// Flags that specify the file information to retrieve with SHGetFileInfo.
+    /// </summary>
     [Flags]
     public enum ShellFileInfoFlags : uint {
+      /// <summary>
+      /// Add overlay icons to the file's icon. The overlay is typically used to indicate shortcuts and shared items.
+      /// </summary>
       AddOverlays = 0x20,
+
+      /// <summary>
+      /// Indicates that the caller specified file attributes (dwFileAttributes parameter of SHGetFileInfo is valid).
+      /// </summary>
       AttributesSpecified = 0x20000,
+
+      /// <summary>
+      /// Retrieve the file attributes.
+      /// </summary>
       Attributes = 0x800,
+
+      /// <summary>
+      /// Retrieve the display name of the file. The display name is the name as it appears in Windows Explorer.
+      /// </summary>
       DisplayName = 0x200,
+
+      /// <summary>
+      /// Retrieve the type of the executable file if the file is executable (e.g., .exe, .dll, .com).
+      /// </summary>
       ExecutableType = 0x2000,
+
+      /// <summary>
+      /// Retrieve the file's icon.
+      /// </summary>
       Icon = 0x100,
+
+      /// <summary>
+      /// Retrieve the location of the file's icon.
+      /// </summary>
       IconLocation = 0x1000,
+
+      /// <summary>
+      /// Retrieve the file's large icon. This is the default behavior.
+      /// </summary>
       LargeIcon = 0x00,
+
+      /// <summary>
+      /// Put a link overlay on the file's icon to indicate it's a shortcut.
+      /// </summary>
       LinkOverlay = 0x8000,
+
+      /// <summary>
+      /// Retrieve the file's open icon. An open icon is typically shown when the application associated with the file is running.
+      /// </summary>
       OpenIcon = 0x02,
+
+      /// <summary>
+      /// Retrieve the index of the overlay icon. The overlay index is returned in the upper eight bits of the iIcon member of the SHFILEINFO structure.
+      /// </summary>
       OverlayIndex = 0x40,
+
+      /// <summary>
+      /// Retrieve the pointer to the item identifier list (PIDL) of the file's parent folder.
+      /// </summary>
       PointerToItemList = 0x08,
+
+      /// <summary>
+      /// Modify the file's icon, indicating that the file is selected. The selection is typically shown by a background color change.
+      /// </summary>
       Selected = 0x10000,
+
+      /// <summary>
+      /// Retrieve the shell-sized icon for the file rather than the size specified by the system metrics.
+      /// </summary>
       ShellIconSize = 0x04,
+
+      /// <summary>
+      /// Retrieve the file's small icon.
+      /// </summary>
       SmallIcon = 0x01,
+
+      /// <summary>
+      /// Retrieve the system icon index for the file. The system icon index is the index of the file's icon in the system image list.
+      /// </summary>
       SystemIconIndex = 0x4000,
+
+      /// <summary>
+      /// Retrieve the file type name. For example, for a .txt file, the file type name is "Text Document".
+      /// </summary>
       Typename = 0x400,
+
+      /// <summary>
+      /// Indicates that the caller wants to retrieve information about a file type based on the file attributes. This flag cannot be specified with the Icon flag.
+      /// </summary>
       UseFileAttributes = 0x10,
     }
 
+
+    /// <summary>
+    /// Defines file attributes for use with <see cref="SHGetFileInfo"/>.
+    /// </summary>
     [Flags]
     public enum FileAttribute : uint {
       Normal = 0x80,
     }
 
+    /// <summary>
+    /// Specifies the attributes of the shell object.
+    /// </summary>
+    [Flags]
     public enum SFGAO : uint {
+      /// <summary>
+      /// The object can be copied.
+      /// </summary>
       CanCopy = 0x01,
+
+      /// <summary>
+      /// The object can be moved.
+      /// </summary>
       CanMove = 0x02,
+
+      /// <summary>
+      /// The object can be linked.
+      /// </summary>
       CanLink = 0x04,
+
+      /// <summary>
+      /// The object supports storage.
+      /// </summary>
       Storage = 0x08,
+
+      /// <summary>
+      /// The object can be renamed.
+      /// </summary>
       CanRename = 0x10,
+
+      /// <summary>
+      /// The object can be deleted.
+      /// </summary>
       CanDelete = 0x20,
+
+      /// <summary>
+      /// The object has a property sheet.
+      /// </summary>
       HasPropertySheet = 0x40,
+
+      /// <summary>
+      /// The object is a drop target.
+      /// </summary>
       IsDropTarget = 0x100,
+
+      /// <summary>
+      /// Mask for capability flags.
+      /// </summary>
       CapabilityMask = CanCopy | CanMove | CanLink | CanRename | CanDelete | HasPropertySheet | IsDropTarget,
+
+      /// <summary>
+      /// The object is part of the operating system.
+      /// </summary>
       IsSystem = 0x1000,
+
+      /// <summary>
+      /// The object is encrypted.
+      /// </summary>
       IsEncrypted = 0x2000,
+
+      /// <summary>
+      /// Accessing the object is slow.
+      /// </summary>
       IsSlow = 0x4000,
+
+      /// <summary>
+      /// The object is ghosted.
+      /// </summary>
       IsGhosted = 0x8000,
+
+      /// <summary>
+      /// The object is a shortcut.
+      /// </summary>
       IsShortcut = 0x10000,
+
+      /// <summary>
+      /// The object is shared.
+      /// </summary>
       IsShared = 0x20000,
+
+      /// <summary>
+      /// The object is read-only.
+      /// </summary>
       IsReadOnly = 0x40000,
+
+      /// <summary>
+      /// The object is hidden.
+      /// </summary>
       IsHidden = 0x80000,
+
+      /// <summary>
+      /// The object should not be enumerated.
+      /// </summary>
       IsNonEnumerated = 0x100000,
+
+      /// <summary>
+      /// The object contains new content.
+      /// </summary>
       IsNewContent = 0x200000,
+
+      /// <summary>
+      /// The object has an associated stream.
+      /// </summary>
       HasStream = 0x400000,
+
+      /// <summary>
+      /// Indicates that the object has a storage ancestor.
+      /// </summary>
       HasStorageAncestor = 0x800000,
+
+      /// <summary>
+      /// Validates that the object is a shell item.
+      /// </summary>
       Validate = 0x1000000,
+
+      /// <summary>
+      /// The object is removable.
+      /// </summary>
       IsRemovable = 0x2000000,
+
+      /// <summary>
+      /// The object is compressed.
+      /// </summary>
       IsCompressed = 0x4000000,
+
+      /// <summary>
+      /// The object is browseable.
+      /// </summary>
       IsBrowseable = 0x8000000,
+
+      /// <summary>
+      /// The object has a filesystem ancestor.
+      /// </summary>
       HasFilesystemAncestor = 0x10000000,
+
+      /// <summary>
+      /// The object is a folder.
+      /// </summary>
       IsFolder = 0x20000000,
+
+      /// <summary>
+      /// The object is a filesystem item (file/folder).
+      /// </summary>
       IsFilesystemItem = 0x40000000,
+
+      /// <summary>
+      /// Mask for storage capability flags.
+      /// </summary>
       StorageCapabilityMask = Storage | IsShortcut | IsReadOnly | HasStream | HasStorageAncestor | HasFilesystemAncestor | IsFolder | IsFilesystemItem,
+
+      /// <summary>
+      /// The folder or object has subfolders or objects. This attribute is advisory only and does not guarantee the presence of subfolders or objects.
+      /// </summary>
       HasSubFolder = 0x80000000,
     }
 
-#endregion
+    #endregion
 
-#region imports
+    #region imports
+
+    /// <summary>
+    /// Sends a control code directly to a specified device driver, causing the corresponding device to perform the corresponding operation.
+    /// </summary>
+    /// <param name="hDevice">A handle to the device on which the operation is to be performed. The device is typically a volume, directory, file, or stream. To retrieve a device handle, use the CreateFile function.</param>
+    /// <param name="dwIoControlCode">The control code for the operation. This value identifies the specific operation to be performed and the type of device on which to perform it.</param>
+    /// <param name="lpInBuffer">A pointer to the input buffer that contains the data required to perform the operation. The format of this data depends on the value of the <paramref name="dwIoControlCode"/> parameter.</param>
+    /// <param name="nInBufferSize">The size, in bytes, of the input buffer pointed to by <paramref name="lpInBuffer"/>.</param>
+    /// <param name="lpOutBuffer">A pointer to the output buffer that is to receive the data returned by the operation. The format of this data depends on the value of the <paramref name="dwIoControlCode"/> parameter.</param>
+    /// <param name="nOutBufferSize">The size, in bytes, of the output buffer pointed to by <paramref name="lpOutBuffer"/>.</param>
+    /// <param name="lpBytesReturned">A pointer to a variable that receives the size, in bytes, of the data stored into the output buffer.</param>
+    /// <param name="lpOverlapped">A pointer to an OVERLAPPED structure. This structure is required if the <paramref name="hDevice"/> was opened with FILE_FLAG_OVERLAPPED. If <paramref name="hDevice"/> was opened with FILE_FLAG_OVERLAPPED, <paramref name="lpOverlapped"/> cannot be null. Otherwise, <paramref name="lpOverlapped"/> can be null.</param>
+    /// <returns>If the operation completes successfully, the return value is nonzero (true). If the operation fails or is pending, the return value is zero (false). To get extended error information, call GetLastError.</returns>
+    /// <remarks>
+    /// The <see cref="DeviceIoControl"/> function allows you to perform an operation on a specified device or a volume. The specific operation is determined by <paramref name="dwIoControlCode"/>, which is generally defined in the Windows API and MSDN documentation. It's essential to ensure that the buffers passed to DeviceIoControl are appropriately sized according to the requirements of the specific control code being used.
+    /// <para>
+    /// For certain control codes, the operation might be asynchronous. In such cases, <paramref name="lpOverlapped"/> must point to a valid OVERLAPPED structure. This structure allows for simultaneous I/O operations on the device or file.
+    /// </para>
+    /// <para>
+    /// This method requires that the caller have the necessary privileges to communicate with the device. It's also important that handles are opened with the correct flags (e.g., FILE_FLAG_OVERLAPPED) as required by the operation.
+    /// </para>
+    /// </remarks>
     [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Auto)]
     public static extern int DeviceIoControl(
       IntPtr hDevice,
@@ -146,39 +375,90 @@ static partial class FileInfoExtensions {
       IntPtr lpOverlapped
     );
 
+    /// <summary>
+    /// Retrieves information about an object in the file system, such as a file, folder, directory, or drive root.
+    /// </summary>
+    /// <param name="pszPath">The path of the file object.</param>
+    /// <param name="dwFileAttributes">A combination of <see cref="FileAttribute"/> flags that specify the file attributes.</param>
+    /// <param name="psfi">A pointer to a <see cref="SHFILEINFO"/> structure to receive the file information.</param>
+    /// <param name="cbSizeFileInfo">The size, in bytes, of the <see cref="SHFILEINFO"/> structure pointed to by the <paramref name="psfi"/> parameter.</param>
+    /// <param name="uFlags">The flags that specify the file information to retrieve.</param>
+    /// <returns>A handle to the function that retrieves the file information.</returns>
+
     [DllImport("shell32.dll", EntryPoint = "SHGetFileInfo")]
     public static extern IntPtr SHGetFileInfo(string pszPath, [MarshalAs(UnmanagedType.U4)] FileAttribute dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, [MarshalAs(UnmanagedType.U4)] ShellFileInfoFlags uFlags);
 
-#endregion
+    #endregion
 
-#region nested types
+    #region nested types
+
+    /// <summary>
+    /// Contains information about a file object.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct SHFILEINFO {
       private const int _MAX_TYPE_NAME_SIZE = 80;
       private const int _MAX_DISPLAY_NAME_SIZE = 260;
+
+      /// <summary>
+      /// A handle to the icon that represents the file.
+      /// </summary>
       public IntPtr hIcon;
+
+      /// <summary>
+      /// The index of the icon image within the system image list.
+      /// </summary>
       public int iIcon;
+
+      /// <summary>
+      /// The attributes of the file.
+      /// </summary>
       public SFGAO dwAttributes;
+
+      /// <summary>
+      /// The display name of the file as it appears in the Windows shell, or the path and file name of the file that contains the icon representing the file.
+      /// </summary>
+      /// <remarks>
+      /// This string is of a fixed size (MAX_PATH, 260 characters). If the path or file name is longer than this limit, it is truncated.
+      /// </remarks>
       [MarshalAs(UnmanagedType.ByValTStr, SizeConst = _MAX_DISPLAY_NAME_SIZE)]
       public string szDisplayName;
+
+      /// <summary>
+      /// The string that describes the file's type.
+      /// </summary>
+      /// <remarks>
+      /// This string is of a fixed size (80 characters). If the file type description is longer than this limit, it is truncated.
+      /// </remarks>
       [MarshalAs(UnmanagedType.ByValTStr, SizeConst = _MAX_TYPE_NAME_SIZE)]
       public string szTypeName;
-    };
+
+    }
+
 #endregion
 
     // ReSharper restore InconsistentNaming
     // ReSharper restore MemberCanBePrivate.Local
     // ReSharper restore UnusedMember.Local
-#pragma warning restore CC0074 // Make field readonly
-#pragma warning restore CC0021 // Use nameof
-
   }
 
 #region consts
 
   private static Encoding _utf8NoBom;
+
+  /// <summary>
+  /// Gets a UTF-8 encoding instance without a Byte Order Mark (BOM).
+  /// </summary>
+  /// <remarks>
+  /// This property provides a thread-safe, lazy-initialized UTF-8 encoding object that does not emit a Byte Order Mark (BOM).
+  /// It is useful for text operations requiring UTF-8 encoding format without the presence of a BOM, such as generating text files
+  /// that are compliant with systems or specifications that do not recognize or require a BOM.
+  /// </remarks>
+  /// <value>
+  /// A <see cref="System.Text.UTF8Encoding"/> instance configured to not emit a Byte Order Mark (BOM).
+  /// </value>
   internal static Encoding Utf8NoBom {
-    get {
+  get {
       if (_utf8NoBom != null)
         return _utf8NoBom;
 
@@ -187,14 +467,25 @@ static partial class FileInfoExtensions {
     }
   }
 
-#endregion
+  #endregion
 
-#region native file compression
+  #region native file compression
 
   /// <summary>
-  /// Enables the file compression on NTFS volumes.
+  /// Enables NTFS file compression on the specified file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
+  /// <param name="this">The file on which to enable compression.</param>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is null.</exception>
+  /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
+  /// <exception cref="Win32Exception">Thrown if the compression operation fails.</exception>
+  /// <example>
+  /// Here is how to use <see cref="EnableCompression"/> to compress a file:
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
+  /// fileInfo.EnableCompression();
+  /// </code>
+  /// This example compresses "file.txt" using NTFS compression.
+  /// </example>
   public static void EnableCompression(this FileInfo @this) {
     Against.ThisIsNull(@this);
 
@@ -224,10 +515,19 @@ static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Tries to enable the file compression on NTFS volumes.
+  /// Attempts to enable NTFS file compression on the specified <see cref="FileInfo"/> instance.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <returns><c>true</c> on success; otherwise <c>false</c>.</returns>
+  /// <param name="this">The file on which to attempt to enable compression.</param>
+  /// <returns><see langword="true"/> if compression was successfully enabled; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo(@"path\to\your\file.txt");
+  /// bool isCompressionEnabled = fileInfo.TryEnableCompression();
+  /// Console.WriteLine(isCompressionEnabled ? "Compression enabled." : "Compression not enabled.");
+  /// </code>
+  /// This example demonstrates checking if NTFS file compression can be enabled for a specified file, 
+  /// and prints the outcome.
+  /// </example>
   public static bool TryEnableCompression(this FileInfo @this) {
     Against.ThisIsNull(@this);
 
@@ -259,114 +559,261 @@ static partial class FileInfoExtensions {
     }
   }
 
-#endregion
+  #endregion
 
-#region shell information
+  #region shell information
+
   /// <summary>
-  /// Gets the type description.
+  /// Retrieves the description of the file type for the specified <see cref="FileInfo"/> instance.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <returns>The description shown in the windows explorer under filetype.</returns>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file for which to retrieve the type description.</param>
+  /// <returns>A <see cref="string"/> containing the description of the file type, such as "Text Document" for a .txt file.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if the provided <see cref="FileInfo"/> instance is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo(@"C:\path\to\file.txt");
+  /// string fileTypeDescription = fileInfo.GetTypeDescription();
+  /// Console.WriteLine($"The file type is: {fileTypeDescription}");
+  /// </code>
+  /// This example retrieves the file type description of "file.txt" and prints it to the console.
+  /// </example>
   public static string GetTypeDescription(this FileInfo @this) {
     Against.ThisIsNull(@this);
 
-    var shinfo = new NativeMethods.SHFILEINFO();
-    NativeMethods.SHGetFileInfo(@this.FullName, 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), NativeMethods.ShellFileInfoFlags.Typename);
-    return shinfo.szTypeName.Trim();
+    NativeMethods.SHFILEINFO shellFileInfo = new();
+    NativeMethods.SHGetFileInfo(@this.FullName, 0, ref shellFileInfo, (uint)Marshal.SizeOf(shellFileInfo), NativeMethods.ShellFileInfoFlags.Typename);
+    return shellFileInfo.szTypeName.Trim();
   }
-#endregion
 
-#region file copy/move/rename
+  #endregion
+
+  #region file copy/move/rename
 
   /// <summary>
-  /// Copies the file to the target directory.
+  /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, maintaining the original file name.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="targetDirectory">The destination directory.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
+  /// <param name="targetDirectory">The target <see cref="DirectoryInfo"/> where the file should be copied.</param>
+  /// <remarks>
+  /// This method copies the file to the target directory without overwriting existing files with the same name.
+  /// If a file with the same name already exists in the target directory, this method will throw an <see cref="IOException"/>.
+  /// </remarks>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\document.txt");
+  /// DirectoryInfo targetDir = new DirectoryInfo(@"C:\target");
+  /// sourceFile.CopyTo(targetDir);
+  /// Console.WriteLine("File copied successfully.");
+  /// </code>
+  /// This example demonstrates copying a file from a source directory to a target directory.
+  /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory)
     => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), false)
   ;
 
   /// <summary>
-  /// Copies the file to the target directory.
+  /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, 
+  /// maintaining the original file name, with an option to overwrite the existing file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="targetDirectory">The destination directory.</param>
-  /// <param name="overwrite"><c>true</c> if existing files shall be overwritten; otherwise, <c>false</c>; default to <c>false</c>.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
+  /// <param name="targetDirectory">The target <see cref="DirectoryInfo"/> where the file should be copied.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file with the same name. 
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown 
+  /// if a file with the same name already exists.</param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/>.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\document.txt");
+  /// DirectoryInfo targetDir = new DirectoryInfo(@"C:\target");
+  /// sourceFile.CopyTo(targetDir, true); // Overwrite existing file if it exists
+  /// Console.WriteLine("File copied successfully.");
+  /// </code>
+  /// This example demonstrates copying a file from a source directory to a target directory with the option to overwrite existing files.
+  /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
     => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), overwrite)
   ;
 
   /// <summary>
-  /// Copies the file to the target directory.
+  /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object, 
+  /// without overwriting an existing file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="targetFile">The target file.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
+  /// <param name="targetFile">The target <see cref="FileInfo"/> object that specifies the destination path and name of the file.</param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists at the target location.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo targetFile = new FileInfo(@"D:\destination\example.txt");
+  /// sourceFile.CopyTo(targetFile);
+  /// Console.WriteLine("File copied successfully.");
+  /// </code>
+  /// This example demonstrates copying a file from one location to another without overwriting an existing file at the destination.
+  /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile)
     => @this.CopyTo(targetFile.FullName, false)
   ;
 
   /// <summary>
-  /// Copies the file to the target directory.
+  /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object,
+  /// with an option to overwrite an existing file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="targetFile">The target file.</param>
-  /// <param name="overwrite"><c>true</c> if existing files shall be overwritten; otherwise, <c>false</c>; default to <c>false</c>.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
+  /// <param name="targetFile">The target <see cref="FileInfo"/> object that specifies the destination path and name of the file.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file with the same name at the target location.
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
+  /// if a file with the same name already exists.</param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists at the target location and <paramref name="overwrite"/> is <see langword="false"/>.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo targetFile = new FileInfo(@"D:\destination\example.txt");
+  /// sourceFile.CopyTo(targetFile, true); // Overwrite existing file if it exists
+  /// Console.WriteLine("File copied successfully.");
+  /// </code>
+  /// This example demonstrates copying a file from one location to another with the option to overwrite an existing file at the destination.
+  /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile, bool overwrite)
     => @this.CopyTo(targetFile.FullName, overwrite)
   ;
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, without overwriting an existing file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFile">The destination file.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
+  /// sourceFile.MoveTo(destFile);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, without the risk of overwriting an existing file at the destination.
+  /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile) => @this.MoveTo(destFile.FullName, false);
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, without overwriting an existing file,
+  /// and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFile">The destination file.</param>
-  /// <param name="timeout">The timeout.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
+  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
+  /// TimeSpan timeout = TimeSpan.FromSeconds(5);
+  /// sourceFile.MoveTo(destFile, timeout);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, without overwriting an existing file
+  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, TimeSpan timeout) => @this.MoveTo(destFile.FullName, false, timeout);
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, with an option to overwrite an existing file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFile">The destination file.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
+  /// if a file with the same name already exists at the destination.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
+  /// sourceFile.MoveTo(destFile, true);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, with the option to overwrite an existing file
+  /// at the destination.
+  /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, bool overwrite) => @this.MoveTo(destFile.FullName, overwrite);
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, with an option to overwrite an existing file,
+  /// and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFile">The destination file.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
-  /// <param name="timeout">The timeout.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
+  /// if a file with the same name already exists at the destination.</param>
+  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
+  /// TimeSpan timeout = TimeSpan.FromSeconds(5);
+  /// sourceFile.MoveTo(destFile, true, timeout);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, with the option to overwrite an existing file
+  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, bool overwrite, TimeSpan timeout) => @this.MoveTo(destFile.FullName, overwrite, timeout);
 
 #if !SUPPORTS_MOVETO_OVERWRITE
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location with an option to overwrite an existing file,
+  /// using a default timeout period for retrying the deletion of the source file if it is locked or cannot be deleted immediately.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFileName">Name of the destination file.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFileName">The path to the destination file. This cannot be a directory.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
+  /// if a file with the same name already exists at the destination.</param>
+  /// <remarks>
+  /// This method delegates to <see cref="MoveTo(FileInfo, string, bool, TimeSpan)"/>, specifying a default timeout of 30 seconds
+  /// for retrying the deletion of the source file.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// string destinationPath = @"D:\destination\example.txt";
+  /// sourceFile.MoveTo(destinationPath, true);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, with the option to overwrite an existing file
+  /// at the destination and a default timeout of 30 seconds for retrying deletion of the source file if necessary.
+  /// </example>
   public static void MoveTo(this FileInfo @this, string destFileName, bool overwrite) => MoveTo(@this, destFileName, overwrite, TimeSpan.FromSeconds(30));
 
 #endif
 
   /// <summary>
-  /// Moves the file to the target directory.
+  /// Moves the specified <see cref="FileInfo"/> instance to a new location with an option to overwrite an existing file,
+  /// and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="destFileName">Name of the destination file.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites any existing file; otherwise, it won't.</param>
-  /// <param name="timeout">The timeout.</param>
+  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="destFileName">The path to the destination file. This cannot be a directory.</param>
+  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
+  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
+  /// if a file with the same name already exists at the destination.</param>
+  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the file cannot be moved, typically because the source or destination cannot be accessed,
+  /// or the deletion of the source file exceeds the specified timeout.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
+  /// string destinationPath = @"D:\destination\example.txt";
+  /// TimeSpan timeout = TimeSpan.FromSeconds(5);
+  /// sourceFile.MoveTo(destinationPath, true, timeout);
+  /// Console.WriteLine("File moved successfully.");
+  /// </code>
+  /// This example demonstrates moving a file from one location to another, with the option to overwrite an existing file
+  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  /// </example>
   public static void MoveTo(this FileInfo @this, string destFileName, bool overwrite, TimeSpan timeout) {
     Against.ThisIsNull(@this);
 
@@ -391,18 +838,29 @@ static partial class FileInfoExtensions {
     }
     scope.Complete();
   }
-#endregion
 
-#region hash computation
+  #endregion
+
+  #region hash computation
 
 #if !NET6_0_OR_GREATER
 
   /// <summary>
-  /// Computes the hash.
+  /// Computes and returns the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm.
   /// </summary>
-  /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
-  /// <param name="this">This FileInfo.</param>
-  /// <returns>The result of the hash algorithm</returns>
+  /// <typeparam name="THashAlgorithm">The type of the hash algorithm to use, derived from <see cref="HashAlgorithm"/>.</typeparam>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the hash for.</param>
+  /// <returns>A byte array containing the computed hash of the file.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
+  /// byte[] hash = fileInfo.ComputeHash&lt;SHA256Managed&gt;();
+  /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
+  /// </code>
+  /// This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
+  /// </example>
   public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm,new() {
     Against.ThisIsNull(@this);
 
