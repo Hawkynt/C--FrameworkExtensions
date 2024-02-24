@@ -1527,11 +1527,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example writes two lines to "lines.txt", overwriting any existing content.
   /// </example>
-#if SUPPORTS_ENUMERATING_IO
-  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents) => File.WriteAllLines(@this.FullName, contents);
-#else
-  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents) => File.WriteAllLines(@this.FullName, contents.ToArray());
-#endif
+  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents) {
+    using var writer = new StreamWriter(@this.FullName);
+    foreach (var line in contents)
+      writer.WriteLine(line);
+  }
 
   /// <summary>
   /// Writes a sequence of strings to a file using the specified encoding, overwriting the file if it already exists.
@@ -1548,11 +1548,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example writes two lines to "lines.txt" using UTF-8 encoding, overwriting any existing content.
   /// </example>
-#if SUPPORTS_ENUMERATING_IO
-  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(@this.FullName, contents, encoding);
-#else
-  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents, Encoding encoding) => File.WriteAllLines(@this.FullName, contents.ToArray(), encoding);
-#endif
+  public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents, Encoding encoding) {
+    using var writer = new StreamWriter(@this.FullName, false, encoding);
+    foreach (var line in contents)
+      writer.WriteLine(line);
+  }
 
   #endregion
 
