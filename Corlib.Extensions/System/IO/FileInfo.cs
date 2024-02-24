@@ -21,13 +21,14 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
+using Encoding = System.Text.Encoding;
 #if !SUPPORTS_ENUMERATING_IO
 using System.Linq;
 #endif
@@ -37,6 +38,7 @@ using System.Security.AccessControl;
 #if SUPPORTS_STREAM_ASYNC
 using System.Threading.Tasks;
 #endif
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -44,8 +46,8 @@ using System.Threading.Tasks;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace System.IO;
-
-using Guard;
+using LineJoinMode = StringExtensions.LineJoinMode;
+using LineBreakMode = StringExtensions.LineBreakMode;
 
 #if COMPILE_TO_EXTENSION_DLL
 public
@@ -1687,7 +1689,7 @@ static partial class FileInfoExtensions {
   public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(encoding);
-
+    // TODO: in-place
     FileInfo tempFile = null;
     try {
       tempFile = new(Path.GetTempFileName());
@@ -1722,9 +1724,9 @@ static partial class FileInfoExtensions {
   /// <param name="count">The count.</param>
   /// <param name="encoding">The encoding.</param>
   public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding) {
-    Debug.Assert(@this != null);
-    Debug.Assert(encoding != null);
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(encoding);
+    // TODO: in-place
     const int _LINE_FEED_CHAR = 10;
     const int BUFFER_SIZE = 8192;
 
@@ -1788,7 +1790,7 @@ static partial class FileInfoExtensions {
   public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(encoding);
-
+    // TODO: in-place
     FileInfo tempFile = null;
     try {
       tempFile = new(Path.GetTempFileName());
@@ -1815,9 +1817,305 @@ static partial class FileInfoExtensions {
     }
   }
 
-#endregion
+  public static void RemoveLastLines(this FileInfo @this, int count) => @this.RemoveLastLines(count, Utf8NoBom, LineBreakMode.AutoDetect);
 
-#region opening
+  public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(encoding);
+    Against.CountBelowOrEqualZero(count);
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var linePositions = new long[count];
+    var index = 0;
+
+    var reader = new CustomTextReader(stream, encoding, newLine);
+    while (reader.ReadLine() != null) {
+      // Store the position right after the end of each line
+      linePositions[index] = stream.Position + 1; // Offset by +1 to distinguish from uninitialized positions
+      index = (index + 1) % count; // Move to the next position in the ring buffer
+    }
+
+    var truncate = Math.Max(0, linePositions[index] - 1);
+    stream.SetLength(truncate);
+  }
+
+  private class CustomTextReader {
+    private readonly Stream _stream;
+    private readonly bool _detectEncodingFromBOM;
+    private Encoding _encoding;
+    private LineBreakMode _lineBreakMode;
+
+    private bool _isInitialized;
+    private Decoder _decoder;
+    private long _startPosition;
+    private readonly HashSet<string> _possibleLineEndings=new();
+    private readonly char[] _oneChar=new char[1];
+    private byte[] _oneCharBuffer;
+
+    private CustomTextReader(Stream stream, bool detectEncodingFromBOM, Encoding encoding, LineBreakMode lineBreakMode) {
+      this._stream = stream;
+      this._detectEncodingFromBOM = detectEncodingFromBOM;
+      this._encoding = encoding;
+      this._lineBreakMode = lineBreakMode;
+    }
+
+    public CustomTextReader(Stream stream, bool detectEncodingFromBOM) : this(stream, detectEncodingFromBOM, null, LineBreakMode.AutoDetect) { }
+    public CustomTextReader(Stream stream, bool detectEncodingFromBOM, LineBreakMode lineBreakMode) : this(stream, detectEncodingFromBOM, null, lineBreakMode) { }
+    public CustomTextReader(Stream stream, LineBreakMode lineBreakMode) : this(stream, true, null, lineBreakMode) { }
+    public CustomTextReader(Stream stream, Encoding encoding, LineBreakMode lineBreakMode=LineBreakMode.AutoDetect) : this(stream, false, encoding, lineBreakMode) { }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private void _CheckInit() {
+      if (this._isInitialized)
+        return;
+
+      this._Initialize();
+      this._isInitialized = true;
+    }
+
+    private void _Initialize() {
+      if (this._detectEncodingFromBOM)
+        _DetectFromBOM();
+
+      this._encoding ??= Utf8NoBom;
+      this._decoder = this._encoding.GetDecoder();
+      this._oneCharBuffer = new byte[this._encoding.GetMaxByteCount(1)];
+      _HandlePreamble();
+      this._startPosition = this._stream.Position;
+      _HandleLineEnding();
+
+      return;
+
+      void _HandlePreamble() {
+        var preamble = this._encoding.GetPreamble();
+        var checkPreamble = preamble.Length > 0;
+        if (!checkPreamble)
+          return;
+
+        var buffer = new byte[preamble.Length];
+        var read = this._stream.Read(buffer, 0, buffer.Length);
+        if (read == preamble.Length && buffer.SequenceEqual(preamble))
+          return;
+
+        // missing matching preamble, continue without it and reset stream position
+        this._stream.Position = 0;
+      }
+
+      void _DetectFromBOM() {
+        var buffer = new byte[4];
+        var bytesRead = this._stream.Read(buffer, 0, buffer.Length);
+
+        switch (bytesRead) {
+          // UTF-32, big-endian
+          case >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF:
+            this._encoding = new UTF32Encoding(bigEndian: true, byteOrderMark: true);
+            break;
+          // UTF-32, little-endian
+          case >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00:
+            this._encoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
+            break;
+          // UTF-8
+          case >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF:
+            this._encoding = Encoding.UTF8;
+            break;
+          // UTF-16, big-endian
+          case >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF:
+            this._encoding = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
+            break;
+          // UTF-16, little-endian
+          case >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE:
+            this._encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
+            break;
+          default:
+            // No BOM found
+            break;
+        }
+
+        // reset stream position
+        this._stream.Position = 0;
+      }
+
+      void _HandleLineEnding() {
+        for (;;)
+          switch (this._lineBreakMode) {
+            case LineBreakMode.None:
+              return;
+            case LineBreakMode.AutoDetect:
+              this._lineBreakMode = _DetectLineBreakMode(this);
+              break;
+            case LineBreakMode.All:
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
+              return;
+            case LineBreakMode.CarriageReturn:
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
+              return;
+            case LineBreakMode.CrLf:
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
+              return;
+            case LineBreakMode.FormFeed:
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
+              return;
+            case LineBreakMode.LineFeed:
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
+              return;
+            case LineBreakMode.LfCr:
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
+              return;
+            case LineBreakMode.LineSeparator:
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
+              return;
+            case LineBreakMode.ParagraphSeparator:
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
+              return;
+            case LineBreakMode.NextLine:
+              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
+              return;
+            case LineBreakMode.NegativeAcknowledge:
+              this._possibleLineEndings.Add(
+                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
+              return;
+            default:
+              throw new NotImplementedException($"Unknown LineBreakMode: {this._lineBreakMode}");
+          }
+      }
+    }
+
+    public int Read() {
+      this._CheckInit();
+
+      var byteBuffer = this._oneCharBuffer;
+      var charBuffer = this._oneChar;
+
+      // Attempt to read enough bytes for at least one character
+      var bytesRead = this._stream.Read(byteBuffer, 0, byteBuffer.Length);
+
+      // End of stream
+      if (bytesRead == 0)
+        return -1;
+
+      // Use the decoder to decode the bytes into the char buffer
+      this._decoder.Convert(byteBuffer, 0, bytesRead, charBuffer, 0, 1, true, out var bytesUsed, out var charsUsed,
+        out var completed);
+
+      // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
+      if (!completed || charsUsed <= 0)
+        return -1;
+
+      // Successfully decoded at least one character
+      var bytesReadPastCharacter = bytesRead - bytesUsed;
+      if (bytesReadPastCharacter > 0)
+        this._stream.Position -= bytesReadPastCharacter;
+
+      return charBuffer[0];
+    }
+
+    public string ReadLine() {
+      // TODO: call Read in a loop, filling the line buffer, until the end of the line buffer looks like something from the this._possibleLineEndings HashSet
+      // TODO: but beware that the longest possiblelinenending has highest priority (e.g. when we already match the end to another one, but this is shorter, we need to read more)
+      // TODO: and if we read too much because we come to the conclusion that it's only the short line-ending, we need to set the streams position back
+      throw new NotImplementedException();
+    }
+
+  }
+
+  #endregion
+
+  private static LineBreakMode _DetectLineBreakMode(CustomTextReader stream) {
+    const char CR = (char)LineBreakMode.CarriageReturn;
+    const char LF = (char)LineBreakMode.LineFeed;
+    const char FF = (char)LineBreakMode.FormFeed;
+    const char NEL = (char)LineBreakMode.NextLine;
+    const char LS = (char)LineBreakMode.LineSeparator;
+    const char PS = (char)LineBreakMode.ParagraphSeparator;
+    const char NL = (char)LineBreakMode.NegativeAcknowledge;
+
+    var previousChar = stream.Read();
+    switch (previousChar) {
+      case -1:
+        return LineBreakMode.None;
+      case FF:
+        return LineBreakMode.FormFeed;
+      case NEL:
+        return LineBreakMode.NextLine;
+      case LS:
+        return LineBreakMode.LineSeparator;
+      case PS:
+        return LineBreakMode.ParagraphSeparator;
+      case NL:
+        return LineBreakMode.NegativeAcknowledge;
+    }
+
+    for (;;) {
+      var currentChar = stream.Read();
+      if (currentChar == -1)
+        break;
+
+      switch (currentChar) {
+        case CR when previousChar == LF:
+          return LineBreakMode.LfCr;
+        case CR when previousChar == CR:
+          return LineBreakMode.CarriageReturn;
+        case LF when previousChar == LF:
+          return LineBreakMode.LineFeed;
+        case LF when previousChar == CR:
+          return LineBreakMode.CrLf;
+        case FF:
+          return LineBreakMode.FormFeed;
+        case NEL:
+          return LineBreakMode.NextLine;
+        case LS:
+          return LineBreakMode.LineSeparator;
+        case PS:
+          return LineBreakMode.ParagraphSeparator;
+        case NL:
+          return LineBreakMode.NegativeAcknowledge;
+      }
+
+      previousChar = currentChar;
+    }
+
+    return previousChar switch {
+      CR => LineBreakMode.CarriageReturn,
+      LF => LineBreakMode.LineFeed,
+      _ => LineBreakMode.None
+    };
+  }
+
+  public static LineBreakMode DetectLineBreakMode(this FileInfo @this) {
+    Against.ThisIsNull(@this);
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+    var reader = new CustomTextReader(stream, true, LineBreakMode.None);
+    return _DetectLineBreakMode(reader);
+  }
+
+  public static LineBreakMode DetectLineBreakMode(this FileInfo @this, Encoding encoding) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(encoding);
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+    var reader = new CustomTextReader(stream, encoding, LineBreakMode.None);
+    return _DetectLineBreakMode(reader);
+  }
+
+  #region opening
 
   /// <summary>
   /// Opens the specified file.
