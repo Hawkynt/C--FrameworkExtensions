@@ -3281,6 +3281,46 @@ internal
   }
 
   /// <summary>
+  /// Retrieves the string representation of a line joiner based on the specified line joining mode.
+  /// </summary>
+  /// <param name="mode">The line joining mode, represented by the <see cref="LineJoinMode"/> enumeration.</param>
+  /// <returns>The string used to join lines according to the specified mode.</returns>
+  /// <exception cref="NotImplementedException">Thrown if the provided <paramref name="mode"/> is not implemented.</exception>
+  /// <example>
+  /// <code>
+  /// var joiner = GetLineJoiner(LineJoinMode.CarriageReturn);
+  /// Console.WriteLine($"CarriageReturn joiner: '{joiner}'"); // Output: '\r'
+  /// 
+  /// joiner = GetLineJoiner(LineJoinMode.CrLf);
+  /// Console.WriteLine($"CrLf joiner: '{joiner}'"); // Output: '\r\n'
+  /// 
+  /// joiner = GetLineJoiner(LineJoinMode.LineFeed);
+  /// Console.WriteLine($"LineFeed joiner: '{joiner}'"); // Output: '\n'
+  /// </code>
+  /// This example demonstrates how to get the string representation for different line joining modes.
+  /// </example>
+  /// <remarks>
+  /// This method supports various line joining modes, including single-character modes like CarriageReturn (`\r`) and
+  /// multi-character sequences like CrLf (`\r\n`). It leverages the <see cref="LineJoinMode"/> enumeration values directly
+  /// for single-character joiners, converting the enumeration value to its corresponding character representation.
+  /// </remarks>
+  public static string GetLineJoiner(LineJoinMode mode) =>
+    mode switch {
+      LineJoinMode.CarriageReturn or
+        LineJoinMode.LineFeed or
+        LineJoinMode.FormFeed or
+        LineJoinMode.NextLine or
+        LineJoinMode.LineSeparator or
+        LineJoinMode.ParagraphSeparator or
+        LineJoinMode.NegativeAcknowledge
+        => ((char)mode).ToString(),
+      LineJoinMode.CrLf => "\r\n",
+      LineJoinMode.LfCr => "\n\r",
+      _ => throw new NotImplementedException()
+    }
+  ;
+
+  /// <summary>
   /// Does word-wrapping if needed
   /// </summary>
   /// <param name="this">This <see cref="String"/></param>
@@ -3296,19 +3336,7 @@ internal
     if (@this.Length <= count)
       return @this;
 
-    var joiner = mode switch {
-      LineJoinMode.CarriageReturn or
-      LineJoinMode.LineFeed or
-      LineJoinMode.FormFeed or
-      LineJoinMode.NextLine or
-      LineJoinMode.LineSeparator or
-      LineJoinMode.ParagraphSeparator or
-      LineJoinMode.NegativeAcknowledge
-        => ((char)mode).ToString(),
-      LineJoinMode.CrLf => "\r\n",
-      LineJoinMode.LfCr => "\n\r",
-      _ => throw new NotImplementedException()
-    };
+    var joiner = GetLineJoiner(mode);
 
     var length = @this.Length;
     var joinerLength = joiner.Length;
