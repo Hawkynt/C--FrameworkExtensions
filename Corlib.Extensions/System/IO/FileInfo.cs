@@ -1827,8 +1827,8 @@ static partial class FileInfoExtensions {
     var index = 0;
 
     var reader = encoding == null
-        ? new CustomTextReader(stream, true, newLine)
-        : new CustomTextReader(stream, encoding, newLine)
+        ? new CustomTextReader.Initialized(stream, true, newLine)
+        : new CustomTextReader.Initialized(stream, encoding, newLine)
       ;
 
     for (;;) {
@@ -1847,329 +1847,320 @@ static partial class FileInfoExtensions {
   }
 
   private class CustomTextReader {
-    private class LineEndingNode {
-      private Dictionary<char, LineEndingNode> _children;
-      private LineEndingNode(int pathLength) => this.PathLength = pathLength;
-
-      public bool IsTerminal { get; private set; }
-      public int PathLength { get; }
-
-      public int Depth {
-        get {
-          if (this._children == null)
-            return 0;
-
-          return this._children.Values.Select(n => n.Depth).Max() + 1;
-        }
-      }
-
-      public LineEndingNode GetNodeOrNull(char current) => this._children?.TryGetValue(current, out var result) ?? false ? result : null;
-
-      private static void _UpdateTree(LineEndingNode root, string lineEnding) {
-        var current = root;
-        foreach (var character in lineEnding) {
-          current._children ??= new();
-          var parentNode = current;
-          current = current._children.GetOrAdd(character, () => new(parentNode.PathLength + 1));
-        }
-
-        current.IsTerminal = true;
-      }
-
-      public static LineEndingNode BuildTree(string lineEnding) {
-        LineEndingNode root = new(0);
-        _UpdateTree(root, lineEnding);
-        return root;
-      }
-
-      public static LineEndingNode BuildTree(params string[] lineEndings) {
-        LineEndingNode root = new(0);
-        foreach (var lineEnding in lineEndings)
-          _UpdateTree(root,lineEnding);
-
-        return root;
-      }
-    }
-
-    private readonly Stream _stream;
     private readonly bool _detectEncodingFromByteOrderMark;
     private readonly Encoding _encoding;
     private readonly LineBreakMode _lineBreakMode;
 
-    private Func<int> _singleCharacterReader;
-    private Func<string> _fullLineReader;
-
-    private CustomTextReader(Stream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, LineBreakMode lineBreakMode) {
-      this._stream = stream;
+    private CustomTextReader(bool detectEncodingFromByteOrderMark, Encoding encoding, LineBreakMode lineBreakMode) {
       this._detectEncodingFromByteOrderMark = detectEncodingFromByteOrderMark;
       this._encoding = encoding;
       this._lineBreakMode = lineBreakMode;
     }
 
-    public CustomTextReader(Stream stream, bool detectEncodingFromByteOrderMark, LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
-    public CustomTextReader(Stream stream, Encoding encoding, LineBreakMode lineBreakMode=LineBreakMode.AutoDetect) : this(stream, false, encoding, lineBreakMode) { }
+    public class Initialized : CustomTextReader {
+      private class LineEndingNode {
+        private Dictionary<char, LineEndingNode> _children;
+        private LineEndingNode(int pathLength) => this.PathLength = pathLength;
 
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private void _CheckInit() {
-      if (this._singleCharacterReader != null)
+        public bool IsTerminal { get; private set; }
+        public int PathLength { get; }
+
+        public int Depth {
+          get {
+            if (this._children == null)
+              return 0;
+
+            return this._children.Values.Select(n => n.Depth).Max() + 1;
+          }
+        }
+
+        public LineEndingNode GetNodeOrNull(char current) => this._children?.TryGetValue(current, out var result) ?? false ? result : null;
+
+        private static void _UpdateTree(LineEndingNode root, string lineEnding) {
+          var current = root;
+          foreach (var character in lineEnding) {
+            current._children ??= new();
+            var parentNode = current;
+            current = current._children.GetOrAdd(character, () => new(parentNode.PathLength + 1));
+          }
+
+          current.IsTerminal = true;
+        }
+
+        public static LineEndingNode BuildTree(string lineEnding) {
+          LineEndingNode root = new(0);
+          _UpdateTree(root, lineEnding);
+          return root;
+        }
+
+        public static LineEndingNode BuildTree(params string[] lineEndings) {
+          LineEndingNode root = new(0);
+          foreach (var lineEnding in lineEndings)
+            _UpdateTree(root, lineEnding);
+
+          return root;
+        }
+      }
+
+      private readonly Func<int> _singleCharacterReader;
+      private readonly Func<string> _fullLineReader;
+
+      private Initialized(Stream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
+        long startPosition;
+
+        SaveStartPosition();
+
+        var usedEncoding = this._encoding;
+        if (this._detectEncodingFromByteOrderMark) {
+          usedEncoding = DetectFromByteOrderMark(stream);
+          Reset();
+        }
+
+        usedEncoding ??= Encoding.GetEncoding("ISO-8859-1");
+        var decoder = usedEncoding.GetDecoder();
+        var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
+        var oneCharacterOnly = new char[1];
+        this._singleCharacterReader = ReadOneChar;
+
+        if (!HasValidPreamble(stream, usedEncoding))
+          Reset();
+
+        SaveStartPosition();
+
+        var possibleLineEndings = BuildLineEndingStateMachine(this, this._lineBreakMode);
+        if (this._lineBreakMode == LineBreakMode.AutoDetect)
+          Reset();
+
+        this._fullLineReader = possibleLineEndings == null 
+          ? ReadToEnd 
+          : possibleLineEndings.Depth <= 1 
+            ? ReadOneLineForOneCharacterTerminals 
+            : ReadOneLine
+        ;
+
         return;
 
-      this._Initialize(this._stream);
-    }
-
-    private void _Initialize(Stream stream) {
-      long startPosition;
-
-      SaveStartPosition();
-
-      var usedEncoding = this._encoding;
-      if (this._detectEncodingFromByteOrderMark) {
-        usedEncoding = DetectFromByteOrderMark(stream);
-        Reset();
-      }
-
-      usedEncoding ??= Encoding.GetEncoding("ISO-8859-1");
-      var decoder = usedEncoding.GetDecoder();
-      var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
-      var oneCharacterOnly = new char[1];
-      this._singleCharacterReader = ReadOneChar;
-
-      if (!HasValidPreamble(stream, usedEncoding))
-        Reset();
-
-      SaveStartPosition();
-
-      var possibleLineEndings = BuildLineEndingStateMachine(this, this._lineBreakMode);
-      if (this._lineBreakMode == LineBreakMode.AutoDetect)
-        Reset();
-
-      this._fullLineReader = possibleLineEndings == null ? ReadToEnd :
-        possibleLineEndings.Depth <= 1 ? ReadOneLineForOneCharacterTerminals : ReadOneLine;
-
-      return;
+#if SUPPORTS_INLINING
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        void SaveStartPosition() => startPosition = stream.Position;
 
 #if SUPPORTS_INLINING
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      void SaveStartPosition() => startPosition = stream.Position;
+        void Reset() => stream.Position = startPosition;
 
 #if SUPPORTS_INLINING
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      void Reset() => stream.Position = startPosition;
+        static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
+          var preamble = usedEncoding.GetPreamble();
+          var checkPreamble = preamble.Length > 0;
+          if (!checkPreamble)
+            return true;
+
+          var buffer = new byte[preamble.Length];
+          var read = stream.Read(buffer, 0, buffer.Length);
+          return read == preamble.Length && buffer.SequenceEqual(preamble);
+        }
 
 #if SUPPORTS_INLINING
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
-        var preamble = usedEncoding.GetPreamble();
-        var checkPreamble = preamble.Length > 0;
-        if (!checkPreamble)
-          return true;
-
-        var buffer = new byte[preamble.Length];
-        var read = stream.Read(buffer, 0, buffer.Length);
-        return read == preamble.Length && buffer.SequenceEqual(preamble);
-      }
-
-#if SUPPORTS_INLINING
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-      static Encoding DetectFromByteOrderMark(Stream stream) {
-        var buffer = new byte[4];
-        return stream.Read(buffer, 0, buffer.Length) switch {
-          // UTF-32, big-endian
-          >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF => new UTF32Encoding(bigEndian: true, byteOrderMark: true),
-          // UTF-32, little-endian
-          >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00 => new UTF32Encoding(bigEndian: false, byteOrderMark: true),
-          // UTF-8
-          >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
-          // UTF-16, big-endian
-          >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
-          // UTF-16, little-endian
-          >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE => new UnicodeEncoding(bigEndian: false, byteOrderMark: true),
-          _ => null
-        };
-      }
+        static Encoding DetectFromByteOrderMark(Stream stream) {
+          var buffer = new byte[4];
+          return stream.Read(buffer, 0, buffer.Length) switch {
+            // UTF-32, big-endian
+            >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF => new UTF32Encoding(bigEndian: true, byteOrderMark: true),
+            // UTF-32, little-endian
+            >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00 => new UTF32Encoding(bigEndian: false, byteOrderMark: true),
+            // UTF-8
+            >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
+            // UTF-16, big-endian
+            >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
+            // UTF-16, little-endian
+            >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE => new UnicodeEncoding(bigEndian: false, byteOrderMark: true),
+            _ => null
+          };
+        }
 
 #if SUPPORTS_INLINING
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      static LineEndingNode BuildLineEndingStateMachine(CustomTextReader reader, LineBreakMode lineBreakMode) {
-        for (;;)
-          switch (lineBreakMode) {
-            case LineBreakMode.None:
-              return null;
-            case LineBreakMode.AutoDetect:
-              lineBreakMode = _DetectLineBreakMode(reader);
-              break;
-            case LineBreakMode.All:
-              return LineEndingNode.BuildTree(
-                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn),
-                StringExtensions.GetLineJoiner(LineJoinMode.CrLf),
-                StringExtensions.GetLineJoiner(LineJoinMode.FormFeed),
-                StringExtensions.GetLineJoiner(LineJoinMode.LineFeed),
-                StringExtensions.GetLineJoiner(LineJoinMode.LfCr),
-                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator),
-                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator),
-                StringExtensions.GetLineJoiner(LineJoinMode.NextLine),
-                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge)
-              );
-            case LineBreakMode.CarriageReturn:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
-            case LineBreakMode.CrLf:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
-            case LineBreakMode.FormFeed:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
-            case LineBreakMode.LineFeed:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
-            case LineBreakMode.LfCr:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
-            case LineBreakMode.LineSeparator:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
-            case LineBreakMode.ParagraphSeparator:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
-            case LineBreakMode.NextLine:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
-            case LineBreakMode.NegativeAcknowledge:
-              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
-            default:
-              throw new NotImplementedException($"Unknown LineBreakMode: {lineBreakMode}");
+        static LineEndingNode BuildLineEndingStateMachine(Initialized reader, LineBreakMode lineBreakMode) {
+          for (;;)
+            switch (lineBreakMode) {
+              case LineBreakMode.None:
+                return null;
+              case LineBreakMode.AutoDetect:
+                lineBreakMode = _DetectLineBreakMode(reader);
+                break;
+              case LineBreakMode.All:
+                return LineEndingNode.BuildTree(
+                  StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn),
+                  StringExtensions.GetLineJoiner(LineJoinMode.CrLf),
+                  StringExtensions.GetLineJoiner(LineJoinMode.FormFeed),
+                  StringExtensions.GetLineJoiner(LineJoinMode.LineFeed),
+                  StringExtensions.GetLineJoiner(LineJoinMode.LfCr),
+                  StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator),
+                  StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator),
+                  StringExtensions.GetLineJoiner(LineJoinMode.NextLine),
+                  StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge)
+                );
+              case LineBreakMode.CarriageReturn:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
+              case LineBreakMode.CrLf:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
+              case LineBreakMode.FormFeed:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
+              case LineBreakMode.LineFeed:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
+              case LineBreakMode.LfCr:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
+              case LineBreakMode.LineSeparator:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
+              case LineBreakMode.ParagraphSeparator:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
+              case LineBreakMode.NextLine:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
+              case LineBreakMode.NegativeAcknowledge:
+                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
+              default:
+                throw new NotImplementedException($"Unknown LineBreakMode: {lineBreakMode}");
+            }
+        }
+
+        int ReadOneChar() {
+
+          // Attempt to read enough bytes for at least one character
+          var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
+
+          // End of stream
+          if (bytesRead <= 0)
+            return -1;
+
+          // Use the decoder to decode the bytes into the char buffer
+          decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out _);
+
+          // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
+          if (charsUsed <= 0)
+            return -1;
+
+          // Successfully decoded at least one character
+          var bytesReadPastCharacter = bytesRead - bytesUsed;
+          if (bytesReadPastCharacter > 0)
+            stream.Position -= bytesReadPastCharacter;
+
+          return oneCharacterOnly[0];
+        }
+
+        string ReadToEnd() {
+          StringBuilder result = new(1024);
+          for (;;) {
+            var read = ReadOneChar();
+            if (read < 0)
+              return result.Length > 0 ? result.ToString() : null;
+
+            result.Append((char)read);
           }
-      }
-
-      int ReadOneChar() {
-
-        // Attempt to read enough bytes for at least one character
-        var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
-
-        // End of stream
-        if (bytesRead <= 0)
-          return -1;
-
-        // Use the decoder to decode the bytes into the char buffer
-        decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out _);
-
-        // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
-        if (charsUsed <= 0)
-          return -1;
-
-        // Successfully decoded at least one character
-        var bytesReadPastCharacter = bytesRead - bytesUsed;
-        if (bytesReadPastCharacter > 0)
-          stream.Position -= bytesReadPastCharacter;
-
-        return oneCharacterOnly[0];
-      }
-
-      string ReadToEnd() {
-        StringBuilder result = new(1024);
-        for (;;) {
-          var read = ReadOneChar();
-          if (read < 0)
-            return result.Length > 0 ? result.ToString() : null;
-
-          result.Append((char)read);
         }
-      }
 
-      string ReadOneLineForOneCharacterTerminals() {
-        StringBuilder result = new(1024);
-        var hadContent = false;
-        for (;;) {
-          var read = ReadOneChar();
+        string ReadOneLineForOneCharacterTerminals() {
+          StringBuilder result = new(1024);
+          var hadContent = false;
+          for (;;) {
+            var read = ReadOneChar();
 
-          // End of stream handling
-          if (read < 0)
-            return hadContent ? result.ToString() : null;
+            // End of stream handling
+            if (read < 0)
+              return hadContent ? result.ToString() : null;
 
-          hadContent = true;
-          var currentChar = (char)read;
+            hadContent = true;
+            var currentChar = (char)read;
 
-          // Check if the current character matches any line ending
-          var currentNode = possibleLineEndings.GetNodeOrNull(currentChar);
-          if (currentNode != null)
-            return result.ToString();
-
-          // If it's not a line ending character, append it to the result and continue reading
-          result.Append(currentChar);
-        }
-      }
-
-      string ReadOneLine() {
-        StringBuilder result = new(1024);
-        var hadContent = false;
-        long lastTerminalPosition = -1; // Position of the last terminal node encountered
-        LineEndingNode lastTerminalNode = null; // Last terminal node encountered
-        var currentNode = possibleLineEndings;
-
-        for (;;) {
-          var read = ReadOneChar();
-
-          // End of stream handling
-          if (read < 0) {
-
-            // If there was a pending terminal node, rollback to its position
-            if (lastTerminalNode != null) {
-              stream.Position = lastTerminalPosition;
-
-              // we need to strip parts of the result to not include the current line ending
-              result.Remove(result.Length - lastTerminalNode.PathLength, lastTerminalNode.PathLength);
+            // Check if the current character matches any line ending
+            var currentNode = possibleLineEndings.GetNodeOrNull(currentChar);
+            if (currentNode != null)
               return result.ToString();
+
+            // If it's not a line ending character, append it to the result and continue reading
+            result.Append(currentChar);
+          }
+        }
+
+        string ReadOneLine() {
+          StringBuilder result = new(1024);
+          var hadContent = false;
+          long lastTerminalPosition = -1; // Position of the last terminal node encountered
+          LineEndingNode lastTerminalNode = null; // Last terminal node encountered
+          var currentNode = possibleLineEndings;
+
+          for (;;) {
+            var read = ReadOneChar();
+
+            // End of stream handling
+            if (read < 0) {
+
+              // If there was a pending terminal node, rollback to its position
+              if (lastTerminalNode != null) {
+                stream.Position = lastTerminalPosition;
+
+                // we need to strip parts of the result to not include the current line ending
+                result.Remove(result.Length - lastTerminalNode.PathLength, lastTerminalNode.PathLength);
+                return result.ToString();
+              }
+
+              // Return whatever is in the buffer if it's not empty, or null to indicate the end of the stream
+              return hadContent ? result.ToString() : null;
             }
 
-            // Return whatever is in the buffer if it's not empty, or null to indicate the end of the stream
-            return hadContent ? result.ToString() : null;
-          }
+            hadContent = true;
+            var currentPosition = stream.Position;
+            var currentChar = (char)read;
+            result.Append(currentChar);
 
-          hadContent = true;
-          var currentPosition = stream.Position;
-          var currentChar = (char)read;
-          result.Append(currentChar);
+            currentNode = currentNode.GetNodeOrNull(currentChar);
+            if (currentNode == null) {
 
-          currentNode = currentNode.GetNodeOrNull(currentChar);
-          if (currentNode == null) {
+              // If a terminal node was previously encountered but the current character does not continue a valid line ending
+              if (lastTerminalNode != null) {
+                stream.Position = lastTerminalPosition;
 
-            // If a terminal node was previously encountered but the current character does not continue a valid line ending
-            if (lastTerminalNode != null) {
-              stream.Position = lastTerminalPosition;
+                // we need to strip parts of the result to not include the current line ending
+                result.Remove(result.Length - lastTerminalNode.PathLength - 1 /* because the last added char is not part of the tree */, lastTerminalNode.PathLength);
+                return result.ToString();
+              }
 
-              // we need to strip parts of the result to not include the current line ending
-              result.Remove(result.Length - lastTerminalNode.PathLength - 1 /* because the last added char is not part of the tree */, lastTerminalNode.PathLength);
-              return result.ToString();
+              currentNode = possibleLineEndings;
+              continue;
             }
 
-            currentNode = possibleLineEndings;
-            continue;
+            if (!currentNode.IsTerminal)
+              continue;
+
+            lastTerminalNode = currentNode;
+            lastTerminalPosition = currentPosition;
           }
-
-          if (!currentNode.IsTerminal)
-            continue;
-
-          lastTerminalNode = currentNode;
-          lastTerminalPosition = currentPosition;
         }
       }
 
-    }
+      public Initialized(Stream stream, bool detectEncodingFromByteOrderMark, LineBreakMode lineBreakMode) : this(
+        stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
-    public int Read() {
-      this._CheckInit();
-      return this._singleCharacterReader();
-    }
-    
-    public string ReadLine() {
-      this._CheckInit();
-      return this._fullLineReader();
+      public Initialized(Stream stream, Encoding encoding, LineBreakMode lineBreakMode = LineBreakMode.AutoDetect)
+        : this(stream, false, encoding, lineBreakMode) { }
+
+      public int Read() => this._singleCharacterReader();
+
+      public string ReadLine() => this._fullLineReader();
+
     }
 
   }
 
   #endregion
 
-  private static LineBreakMode _DetectLineBreakMode(CustomTextReader stream) {
+  private static LineBreakMode _DetectLineBreakMode(CustomTextReader.Initialized stream) {
     const char CR = (char)LineBreakMode.CarriageReturn;
     const char LF = (char)LineBreakMode.LineFeed;
     const char FF = (char)LineBreakMode.FormFeed;
@@ -2235,7 +2226,7 @@ static partial class FileInfoExtensions {
     Against.ThisIsNull(@this);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-    var reader = new CustomTextReader(stream, true, LineBreakMode.None);
+    var reader = new CustomTextReader.Initialized(stream, true, LineBreakMode.None);
     return _DetectLineBreakMode(reader);
   }
 
@@ -2244,7 +2235,7 @@ static partial class FileInfoExtensions {
     Against.ArgumentIsNull(encoding);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-    var reader = new CustomTextReader(stream, encoding, LineBreakMode.None);
+    var reader = new CustomTextReader.Initialized(stream, encoding, LineBreakMode.None);
     return _DetectLineBreakMode(reader);
   }
 
