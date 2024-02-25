@@ -30,9 +30,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
 using Encoding = System.Text.Encoding;
-#if !SUPPORTS_ENUMERATING_IO
-using System.Linq;
-#endif
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 using System.Security.AccessControl;
 #endif
@@ -1818,22 +1815,31 @@ static partial class FileInfoExtensions {
     }
   }
 
-  public static void RemoveLastLines(this FileInfo @this, int count) => @this.RemoveLastLines(count, Utf8NoBom, LineBreakMode.AutoDetect);
-
+  public static void RemoveLastLines(this FileInfo @this, int count) => @this.RemoveLastLines(count, null, LineBreakMode.AutoDetect);
+  public static void RemoveLastLines(this FileInfo @this, int count,Encoding encoding) => @this.RemoveLastLines(count, encoding, LineBreakMode.AutoDetect);
+  public static void RemoveLastLines(this FileInfo @this, int count, LineBreakMode newLine) => @this.RemoveLastLines(count, null, newLine);
   public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(encoding);
     Against.CountBelowOrEqualZero(count);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var linePositions = new long[count];
     var index = 0;
 
-    var reader = new CustomTextReader(stream, encoding, newLine);
-    while (reader.ReadLine() != null) {
-      // Store the position right after the end of each line
-      linePositions[index] = stream.Position + 1; // Offset by +1 to distinguish from uninitialized positions
-      index = (index + 1) % count; // Move to the next position in the ring buffer
+    var reader = encoding == null
+        ? new CustomTextReader(stream, true, newLine)
+        : new CustomTextReader(stream, encoding, newLine)
+      ;
+
+    for (;;) {
+      
+      // Store the position right at the start of each line
+      var startOfLine = stream.Position;
+      if (reader.ReadLine() == null)
+        break;
+
+      linePositions[index] = ++startOfLine;  // Offset by +1 to distinguish from uninitialized positions
+      index = ++index % linePositions.Length; // Move to the next position in the ring buffer
     }
 
     var truncate = Math.Max(0, linePositions[index] - 1);
@@ -1886,21 +1892,21 @@ static partial class FileInfoExtensions {
     }
 
     private readonly Stream _stream;
-    private readonly bool _detectEncodingFromBOM;
+    private readonly bool _detectEncodingFromByteOrderMark;
     private readonly Encoding _encoding;
     private readonly LineBreakMode _lineBreakMode;
 
     private Func<int> _singleCharacterReader;
     private Func<string> _fullLineReader;
 
-    private CustomTextReader(Stream stream, bool detectEncodingFromBOM, Encoding encoding, LineBreakMode lineBreakMode) {
+    private CustomTextReader(Stream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, LineBreakMode lineBreakMode) {
       this._stream = stream;
-      this._detectEncodingFromBOM = detectEncodingFromBOM;
+      this._detectEncodingFromByteOrderMark = detectEncodingFromByteOrderMark;
       this._encoding = encoding;
       this._lineBreakMode = lineBreakMode;
     }
 
-    public CustomTextReader(Stream stream, bool detectEncodingFromBOM, LineBreakMode lineBreakMode) : this(stream, detectEncodingFromBOM, null, lineBreakMode) { }
+    public CustomTextReader(Stream stream, bool detectEncodingFromByteOrderMark, LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
     public CustomTextReader(Stream stream, Encoding encoding, LineBreakMode lineBreakMode=LineBreakMode.AutoDetect) : this(stream, false, encoding, lineBreakMode) { }
 
 #if SUPPORTS_INLINING
@@ -1919,23 +1925,31 @@ static partial class FileInfoExtensions {
       SaveStartPosition();
 
       var usedEncoding = this._encoding;
-      if (this._detectEncodingFromBOM)
-        DetectFromByteOrderMark();
+      if (this._detectEncodingFromByteOrderMark) {
+        usedEncoding = DetectFromByteOrderMark(stream);
+        Reset();
+      }
 
-      usedEncoding ??= Utf8NoBom;
+      usedEncoding ??= Encoding.GetEncoding("ISO-8859-1");
       var decoder = usedEncoding.GetDecoder();
       var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
       var oneCharacterOnly = new char[1];
       this._singleCharacterReader = ReadOneChar;
 
-      HandlePreamble();
+      if (!HasValidPreamble(stream, usedEncoding))
+        Reset();
+
       SaveStartPosition();
 
-      var possibleLineEndings = BuildLineEndingStateMachine(this._lineBreakMode);
-      this._fullLineReader = possibleLineEndings == null ? ReadToEnd : possibleLineEndings.Depth <= 1 ? ReadOneLineForOneCharacterTerminals :  ReadOneLine;
+      var possibleLineEndings = BuildLineEndingStateMachine(this, this._lineBreakMode);
+      if (this._lineBreakMode == LineBreakMode.AutoDetect)
+        Reset();
+
+      this._fullLineReader = possibleLineEndings == null ? ReadToEnd :
+        possibleLineEndings.Depth <= 1 ? ReadOneLineForOneCharacterTerminals : ReadOneLine;
 
       return;
-      
+
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1949,67 +1963,47 @@ static partial class FileInfoExtensions {
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      void HandlePreamble() {
+      static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
         var preamble = usedEncoding.GetPreamble();
         var checkPreamble = preamble.Length > 0;
         if (!checkPreamble)
-          return;
+          return true;
 
         var buffer = new byte[preamble.Length];
         var read = stream.Read(buffer, 0, buffer.Length);
-        if (read == preamble.Length && buffer.SequenceEqual(preamble))
-          return;
-
-        // missing matching preamble, continue without it and reset stream position
-        Reset();
+        return read == preamble.Length && buffer.SequenceEqual(preamble);
       }
 
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      void DetectFromByteOrderMark() {
+      static Encoding DetectFromByteOrderMark(Stream stream) {
         var buffer = new byte[4];
-        var bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-        switch (bytesRead) {
+        return stream.Read(buffer, 0, buffer.Length) switch {
           // UTF-32, big-endian
-          case >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF:
-            usedEncoding = new UTF32Encoding(bigEndian: true, byteOrderMark: true);
-            break;
+          >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF => new UTF32Encoding(bigEndian: true, byteOrderMark: true),
           // UTF-32, little-endian
-          case >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00:
-            usedEncoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
-            break;
+          >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00 => new UTF32Encoding(bigEndian: false, byteOrderMark: true),
           // UTF-8
-          case >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF:
-            usedEncoding = Encoding.UTF8;
-            break;
+          >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
           // UTF-16, big-endian
-          case >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF:
-            usedEncoding = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
-            break;
+          >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
           // UTF-16, little-endian
-          case >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE:
-            usedEncoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
-            break;
-          default:
-            // No BOM found
-            break;
-        }
-
-        Reset();
+          >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE => new UnicodeEncoding(bigEndian: false, byteOrderMark: true),
+          _ => null
+        };
       }
 
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-      LineEndingNode BuildLineEndingStateMachine(LineBreakMode lineBreakMode) {
+      static LineEndingNode BuildLineEndingStateMachine(CustomTextReader reader, LineBreakMode lineBreakMode) {
         for (;;)
           switch (lineBreakMode) {
             case LineBreakMode.None:
               return null;
             case LineBreakMode.AutoDetect:
-              lineBreakMode = _DetectLineBreakMode(this);
+              lineBreakMode = _DetectLineBreakMode(reader);
               break;
             case LineBreakMode.All:
               return LineEndingNode.BuildTree(
@@ -2045,9 +2039,9 @@ static partial class FileInfoExtensions {
               throw new NotImplementedException($"Unknown LineBreakMode: {lineBreakMode}");
           }
       }
-      
+
       int ReadOneChar() {
-        
+
         // Attempt to read enough bytes for at least one character
         var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
 
@@ -2056,10 +2050,10 @@ static partial class FileInfoExtensions {
           return -1;
 
         // Use the decoder to decode the bytes into the char buffer
-        decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out var completed);
+        decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out _);
 
         // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
-        if (!completed || charsUsed <= 0)
+        if (charsUsed <= 0)
           return -1;
 
         // Successfully decoded at least one character
@@ -2072,27 +2066,26 @@ static partial class FileInfoExtensions {
 
       string ReadToEnd() {
         StringBuilder result = new(1024);
-
         for (;;) {
           var read = ReadOneChar();
           if (read < 0)
-            break;
+            return result.Length > 0 ? result.ToString() : null;
 
           result.Append((char)read);
         }
-
-        return result.ToString();
       }
 
       string ReadOneLineForOneCharacterTerminals() {
         StringBuilder result = new(1024);
+        var hadContent = false;
         for (;;) {
           var read = ReadOneChar();
 
           // End of stream handling
           if (read < 0)
-            return result.Length > 0 ? result.ToString() : null;
+            return hadContent ? result.ToString() : null;
 
+          hadContent = true;
           var currentChar = (char)read;
 
           // Check if the current character matches any line ending
@@ -2107,6 +2100,7 @@ static partial class FileInfoExtensions {
 
       string ReadOneLine() {
         StringBuilder result = new(1024);
+        var hadContent = false;
         long lastTerminalPosition = -1; // Position of the last terminal node encountered
         LineEndingNode lastTerminalNode = null; // Last terminal node encountered
         var currentNode = possibleLineEndings;
@@ -2127,9 +2121,10 @@ static partial class FileInfoExtensions {
             }
 
             // Return whatever is in the buffer if it's not empty, or null to indicate the end of the stream
-            return result.Length > 0 ? result.ToString() : null;
+            return hadContent ? result.ToString() : null;
           }
 
+          hadContent = true;
           var currentPosition = stream.Position;
           var currentChar = (char)read;
           result.Append(currentChar);
