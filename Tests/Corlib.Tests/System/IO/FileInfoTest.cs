@@ -1,7 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
+using Corlib.Tests.NUnit;
 using NUnit.Framework;
 
 namespace Corlib.Tests.System.IO;
+using static TestUtilities;
+using LineBreakMode=StringExtensions.LineBreakMode;
 
 internal class FileInfoTest {
 
@@ -135,5 +140,82 @@ internal class FileInfoTest {
 
   }
 
+  private class CustomTextReaderTests {
+
+    public enum TestEncoding {
+      AutoDetectFromBom = -1,
+      Utf8NoBOM,
+      Utf8,
+      UnicodeLittleEndianNoBOM,
+      UnicodeBigEndian,
+      ASCII,
+    }
+
+    [Test]
+    [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
+    [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
+    [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
+    [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\ndef\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "abc\r\n")]
+    [TestCase("abc\r\ndef\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "abc\r\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.AutoDetect, "abc\r\n")]
+    [TestCase("abc\rdef\r", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.CarriageReturn, "abc\r")]
+    [TestCase("abc\x000cdef", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.FormFeed, "abc\x0c")]
+    [TestCase("abc\x0085def", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.NextLine, "abc\x85")]
+    [TestCase("abc\x0015def", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "abc\x15")]
+    [TestCase("abc\x2028def", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "abc\x2028")]
+    [TestCase("abc\x2029def", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "abc\x2029")]
+    public void RemoveLastLines(string? input,int count, TestEncoding testEncoding, LineBreakMode newLine,string expected, Type? exception=null) {
+
+      Encoding writeEncoding;
+      Encoding? readEncoding;
+      switch (testEncoding) {
+        case TestEncoding.AutoDetectFromBom:
+          readEncoding = null;
+          writeEncoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
+          break;
+        case TestEncoding.Utf8NoBOM:
+          readEncoding = writeEncoding = new UTF8Encoding(false);
+          break;
+        case TestEncoding.Utf8:
+          readEncoding = writeEncoding = new UTF8Encoding(true);
+          break;
+        case TestEncoding.UnicodeLittleEndianNoBOM:
+          readEncoding = writeEncoding = new UnicodeEncoding(false,false);
+          break;
+        case TestEncoding.UnicodeBigEndian:
+          readEncoding = writeEncoding = new UnicodeEncoding(true, true);
+          break;
+        case TestEncoding.ASCII:
+          readEncoding = writeEncoding = Encoding.ASCII;
+          break;
+        default:
+          throw new ArgumentOutOfRangeException(nameof(testEncoding), testEncoding, null);
+      }
+      
+      FileInfo? file;
+      if (input == null) {
+        file = null;
+        ExecuteTest(() => {
+          file.RemoveLastLines(count, readEncoding, newLine);
+          return file.ReadAllText(writeEncoding);
+        }, expected, exception);
+      } else {
+        using var token = PathExtensions.GetTempFileToken();
+        file = token.File;
+        file.WriteAllText(input, writeEncoding);
+        ExecuteTest(() => {
+          file.RemoveLastLines(count, readEncoding, newLine);
+          return file.ReadAllText(writeEncoding);
+        }, expected, exception);
+      }
+
+    }
+
+
+  }
 
 }
