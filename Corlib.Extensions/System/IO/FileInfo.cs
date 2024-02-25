@@ -21,6 +21,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -1840,17 +1841,57 @@ static partial class FileInfoExtensions {
   }
 
   private class CustomTextReader {
+    private class LineEndingNode {
+      private Dictionary<char, LineEndingNode> _children;
+      private LineEndingNode(int pathLength) => this.PathLength = pathLength;
+
+      public bool IsTerminal { get; private set; }
+      public int PathLength { get; }
+
+      public int Depth {
+        get {
+          if (this._children == null)
+            return 0;
+
+          return this._children.Values.Select(n => n.Depth).Max() + 1;
+        }
+      }
+
+      public LineEndingNode GetNodeOrNull(char current) => this._children?.TryGetValue(current, out var result) ?? false ? result : null;
+
+      private static void _UpdateTree(LineEndingNode root, string lineEnding) {
+        var current = root;
+        foreach (var character in lineEnding) {
+          current._children ??= new();
+          var parentNode = current;
+          current = current._children.GetOrAdd(character, () => new(parentNode.PathLength + 1));
+        }
+
+        current.IsTerminal = true;
+      }
+
+      public static LineEndingNode BuildTree(string lineEnding) {
+        LineEndingNode root = new(0);
+        _UpdateTree(root, lineEnding);
+        return root;
+      }
+
+      public static LineEndingNode BuildTree(params string[] lineEndings) {
+        LineEndingNode root = new(0);
+        foreach (var lineEnding in lineEndings)
+          _UpdateTree(root,lineEnding);
+
+        return root;
+      }
+    }
+
     private readonly Stream _stream;
     private readonly bool _detectEncodingFromBOM;
-    private Encoding _encoding;
-    private LineBreakMode _lineBreakMode;
+    private readonly Encoding _encoding;
+    private readonly LineBreakMode _lineBreakMode;
 
-    private bool _isInitialized;
-    private Decoder _decoder;
-    private long _startPosition;
-    private readonly HashSet<string> _possibleLineEndings=new();
-    private readonly char[] _oneChar=new char[1];
-    private byte[] _oneCharBuffer;
+    private Func<int> _singleCharacterReader;
+    private Func<string> _fullLineReader;
 
     private CustomTextReader(Stream stream, bool detectEncodingFromBOM, Encoding encoding, LineBreakMode lineBreakMode) {
       this._stream = stream;
@@ -1859,178 +1900,274 @@ static partial class FileInfoExtensions {
       this._lineBreakMode = lineBreakMode;
     }
 
-    public CustomTextReader(Stream stream, bool detectEncodingFromBOM) : this(stream, detectEncodingFromBOM, null, LineBreakMode.AutoDetect) { }
     public CustomTextReader(Stream stream, bool detectEncodingFromBOM, LineBreakMode lineBreakMode) : this(stream, detectEncodingFromBOM, null, lineBreakMode) { }
-    public CustomTextReader(Stream stream, LineBreakMode lineBreakMode) : this(stream, true, null, lineBreakMode) { }
     public CustomTextReader(Stream stream, Encoding encoding, LineBreakMode lineBreakMode=LineBreakMode.AutoDetect) : this(stream, false, encoding, lineBreakMode) { }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     private void _CheckInit() {
-      if (this._isInitialized)
+      if (this._singleCharacterReader != null)
         return;
 
-      this._Initialize();
-      this._isInitialized = true;
+      this._Initialize(this._stream);
     }
 
-    private void _Initialize() {
-      if (this._detectEncodingFromBOM)
-        _DetectFromBOM();
+    private void _Initialize(Stream stream) {
+      long startPosition;
 
-      this._encoding ??= Utf8NoBom;
-      this._decoder = this._encoding.GetDecoder();
-      this._oneCharBuffer = new byte[this._encoding.GetMaxByteCount(1)];
-      _HandlePreamble();
-      this._startPosition = this._stream.Position;
-      _HandleLineEnding();
+      SaveStartPosition();
+
+      var usedEncoding = this._encoding;
+      if (this._detectEncodingFromBOM)
+        DetectFromByteOrderMark();
+
+      usedEncoding ??= Utf8NoBom;
+      var decoder = usedEncoding.GetDecoder();
+      var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
+      var oneCharacterOnly = new char[1];
+      this._singleCharacterReader = ReadOneChar;
+
+      HandlePreamble();
+      SaveStartPosition();
+
+      var possibleLineEndings = BuildLineEndingStateMachine(this._lineBreakMode);
+      this._fullLineReader = possibleLineEndings == null ? ReadToEnd : possibleLineEndings.Depth <= 1 ? ReadOneLineForOneCharacterTerminals :  ReadOneLine;
 
       return;
+      
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      void SaveStartPosition() => startPosition = stream.Position;
 
-      void _HandlePreamble() {
-        var preamble = this._encoding.GetPreamble();
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      void Reset() => stream.Position = startPosition;
+
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      void HandlePreamble() {
+        var preamble = usedEncoding.GetPreamble();
         var checkPreamble = preamble.Length > 0;
         if (!checkPreamble)
           return;
 
         var buffer = new byte[preamble.Length];
-        var read = this._stream.Read(buffer, 0, buffer.Length);
+        var read = stream.Read(buffer, 0, buffer.Length);
         if (read == preamble.Length && buffer.SequenceEqual(preamble))
           return;
 
         // missing matching preamble, continue without it and reset stream position
-        this._stream.Position = 0;
+        Reset();
       }
 
-      void _DetectFromBOM() {
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      void DetectFromByteOrderMark() {
         var buffer = new byte[4];
-        var bytesRead = this._stream.Read(buffer, 0, buffer.Length);
+        var bytesRead = stream.Read(buffer, 0, buffer.Length);
 
         switch (bytesRead) {
           // UTF-32, big-endian
           case >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF:
-            this._encoding = new UTF32Encoding(bigEndian: true, byteOrderMark: true);
+            usedEncoding = new UTF32Encoding(bigEndian: true, byteOrderMark: true);
             break;
           // UTF-32, little-endian
           case >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00:
-            this._encoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
+            usedEncoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
             break;
           // UTF-8
           case >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF:
-            this._encoding = Encoding.UTF8;
+            usedEncoding = Encoding.UTF8;
             break;
           // UTF-16, big-endian
           case >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF:
-            this._encoding = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
+            usedEncoding = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
             break;
           // UTF-16, little-endian
           case >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE:
-            this._encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
+            usedEncoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
             break;
           default:
             // No BOM found
             break;
         }
 
-        // reset stream position
-        this._stream.Position = 0;
+        Reset();
       }
 
-      void _HandleLineEnding() {
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      LineEndingNode BuildLineEndingStateMachine(LineBreakMode lineBreakMode) {
         for (;;)
-          switch (this._lineBreakMode) {
+          switch (lineBreakMode) {
             case LineBreakMode.None:
-              return;
+              return null;
             case LineBreakMode.AutoDetect:
-              this._lineBreakMode = _DetectLineBreakMode(this);
+              lineBreakMode = _DetectLineBreakMode(this);
               break;
             case LineBreakMode.All:
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
-              return;
+              return LineEndingNode.BuildTree(
+                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn),
+                StringExtensions.GetLineJoiner(LineJoinMode.CrLf),
+                StringExtensions.GetLineJoiner(LineJoinMode.FormFeed),
+                StringExtensions.GetLineJoiner(LineJoinMode.LineFeed),
+                StringExtensions.GetLineJoiner(LineJoinMode.LfCr),
+                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator),
+                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator),
+                StringExtensions.GetLineJoiner(LineJoinMode.NextLine),
+                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge)
+              );
             case LineBreakMode.CarriageReturn:
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
             case LineBreakMode.CrLf:
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
             case LineBreakMode.FormFeed:
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
             case LineBreakMode.LineFeed:
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
             case LineBreakMode.LfCr:
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
             case LineBreakMode.LineSeparator:
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
             case LineBreakMode.ParagraphSeparator:
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
             case LineBreakMode.NextLine:
-              this._possibleLineEndings.Add(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
             case LineBreakMode.NegativeAcknowledge:
-              this._possibleLineEndings.Add(
-                StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
-              return;
+              return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
             default:
-              throw new NotImplementedException($"Unknown LineBreakMode: {this._lineBreakMode}");
+              throw new NotImplementedException($"Unknown LineBreakMode: {lineBreakMode}");
           }
       }
+      
+      int ReadOneChar() {
+        
+        // Attempt to read enough bytes for at least one character
+        var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
+
+        // End of stream
+        if (bytesRead <= 0)
+          return -1;
+
+        // Use the decoder to decode the bytes into the char buffer
+        decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out var completed);
+
+        // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
+        if (!completed || charsUsed <= 0)
+          return -1;
+
+        // Successfully decoded at least one character
+        var bytesReadPastCharacter = bytesRead - bytesUsed;
+        if (bytesReadPastCharacter > 0)
+          stream.Position -= bytesReadPastCharacter;
+
+        return oneCharacterOnly[0];
+      }
+
+      string ReadToEnd() {
+        StringBuilder result = new(1024);
+
+        for (;;) {
+          var read = ReadOneChar();
+          if (read < 0)
+            break;
+
+          result.Append((char)read);
+        }
+
+        return result.ToString();
+      }
+
+      string ReadOneLineForOneCharacterTerminals() {
+        StringBuilder result = new(1024);
+        for (;;) {
+          var read = ReadOneChar();
+
+          // End of stream handling
+          if (read < 0)
+            return result.Length > 0 ? result.ToString() : null;
+
+          var currentChar = (char)read;
+
+          // Check if the current character matches any line ending
+          var currentNode = possibleLineEndings.GetNodeOrNull(currentChar);
+          if (currentNode != null)
+            return result.ToString();
+
+          // If it's not a line ending character, append it to the result and continue reading
+          result.Append(currentChar);
+        }
+      }
+
+      string ReadOneLine() {
+        StringBuilder result = new(1024);
+        long lastTerminalPosition = -1; // Position of the last terminal node encountered
+        LineEndingNode lastTerminalNode = null; // Last terminal node encountered
+        var currentNode = possibleLineEndings;
+
+        for (;;) {
+          var read = ReadOneChar();
+
+          // End of stream handling
+          if (read < 0) {
+
+            // If there was a pending terminal node, rollback to its position
+            if (lastTerminalNode != null) {
+              stream.Position = lastTerminalPosition;
+
+              // we need to strip parts of the result to not include the current line ending
+              result.Remove(result.Length - lastTerminalNode.PathLength, lastTerminalNode.PathLength);
+              return result.ToString();
+            }
+
+            // Return whatever is in the buffer if it's not empty, or null to indicate the end of the stream
+            return result.Length > 0 ? result.ToString() : null;
+          }
+
+          var currentPosition = stream.Position;
+          var currentChar = (char)read;
+          result.Append(currentChar);
+
+          currentNode = currentNode.GetNodeOrNull(currentChar);
+          if (currentNode == null) {
+
+            // If a terminal node was previously encountered but the current character does not continue a valid line ending
+            if (lastTerminalNode != null) {
+              stream.Position = lastTerminalPosition;
+
+              // we need to strip parts of the result to not include the current line ending
+              result.Remove(result.Length - lastTerminalNode.PathLength - 1 /* because the last added char is not part of the tree */, lastTerminalNode.PathLength);
+              return result.ToString();
+            }
+
+            currentNode = possibleLineEndings;
+            continue;
+          }
+
+          if (!currentNode.IsTerminal)
+            continue;
+
+          lastTerminalNode = currentNode;
+          lastTerminalPosition = currentPosition;
+        }
+      }
+
     }
 
     public int Read() {
       this._CheckInit();
-
-      var byteBuffer = this._oneCharBuffer;
-      var charBuffer = this._oneChar;
-
-      // Attempt to read enough bytes for at least one character
-      var bytesRead = this._stream.Read(byteBuffer, 0, byteBuffer.Length);
-
-      // End of stream
-      if (bytesRead == 0)
-        return -1;
-
-      // Use the decoder to decode the bytes into the char buffer
-      this._decoder.Convert(byteBuffer, 0, bytesRead, charBuffer, 0, 1, true, out var bytesUsed, out var charsUsed,
-        out var completed);
-
-      // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
-      if (!completed || charsUsed <= 0)
-        return -1;
-
-      // Successfully decoded at least one character
-      var bytesReadPastCharacter = bytesRead - bytesUsed;
-      if (bytesReadPastCharacter > 0)
-        this._stream.Position -= bytesReadPastCharacter;
-
-      return charBuffer[0];
+      return this._singleCharacterReader();
     }
-
+    
     public string ReadLine() {
-      // TODO: call Read in a loop, filling the line buffer, until the end of the line buffer looks like something from the this._possibleLineEndings HashSet
-      // TODO: but beware that the longest possiblelinenending has highest priority (e.g. when we already match the end to another one, but this is shorter, we need to read more)
-      // TODO: and if we read too much because we come to the conclusion that it's only the short line-ending, we need to set the streams position back
-      throw new NotImplementedException();
+      this._CheckInit();
+      return this._fullLineReader();
     }
 
   }
@@ -2046,10 +2183,11 @@ static partial class FileInfoExtensions {
     const char PS = (char)LineBreakMode.ParagraphSeparator;
     const char NL = (char)LineBreakMode.NegativeAcknowledge;
 
-    var previousChar = stream.Read();
-    switch (previousChar) {
-      case -1:
-        return LineBreakMode.None;
+    var previousCharacter = stream.Read();
+    if(previousCharacter < 0)
+      return LineBreakMode.None;
+
+    switch (previousCharacter) {
       case FF:
         return LineBreakMode.FormFeed;
       case NEL:
@@ -2063,18 +2201,18 @@ static partial class FileInfoExtensions {
     }
 
     for (;;) {
-      var currentChar = stream.Read();
-      if (currentChar == -1)
+      var currentCharacter = stream.Read();
+      if (currentCharacter < 0)
         break;
 
-      switch (currentChar) {
-        case CR when previousChar == LF:
+      switch (currentCharacter) {
+        case CR when previousCharacter == LF:
           return LineBreakMode.LfCr;
-        case CR when previousChar == CR:
+        case CR when previousCharacter == CR:
           return LineBreakMode.CarriageReturn;
-        case LF when previousChar == LF:
+        case LF when previousCharacter == LF:
           return LineBreakMode.LineFeed;
-        case LF when previousChar == CR:
+        case LF when previousCharacter == CR:
           return LineBreakMode.CrLf;
         case FF:
           return LineBreakMode.FormFeed;
@@ -2088,10 +2226,10 @@ static partial class FileInfoExtensions {
           return LineBreakMode.NegativeAcknowledge;
       }
 
-      previousChar = currentChar;
+      previousCharacter = currentCharacter;
     }
 
-    return previousChar switch {
+    return previousCharacter switch {
       CR => LineBreakMode.CarriageReturn,
       LF => LineBreakMode.LineFeed,
       _ => LineBreakMode.None
