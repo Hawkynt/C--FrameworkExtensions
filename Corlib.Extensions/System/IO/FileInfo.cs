@@ -1815,9 +1815,77 @@ static partial class FileInfoExtensions {
     }
   }
 
+  /// <summary>
+  /// Removes a specified number of lines from the end of the file.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the end of the file.</param>
+  /// <note>
+  /// Line-Endings used and encoding is automatically detected.
+  /// </note>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveLastLines(2);
+  /// Console.WriteLine("Last two lines removed.");
+  /// </code>
+  /// This example removes the last two lines from "example.txt".
+  /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count) => @this.RemoveLastLines(count, null, LineBreakMode.AutoDetect);
+
+  /// <summary>
+  /// Removes a specified number of lines from the end of the file using the provided encoding.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the end of the file.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <note>
+  /// Line-Endings used are automatically detected.
+  /// </note>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveLastLines(2, Encoding.UTF8);
+  /// Console.WriteLine("Last two lines removed using UTF-8 encoding.");
+  /// </code>
+  /// This example removes the last two lines from "example.txt" using UTF-8 encoding.
+  /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count,Encoding encoding) => @this.RemoveLastLines(count, encoding, LineBreakMode.AutoDetect);
+
+  /// <summary>
+  /// Removes a specified number of lines from the end of the file, recognizing line breaks based on the specified mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the end of the file.</param>
+  /// <param name="newLine">The line break mode to use for identifying line endings.</param>
+  /// <note>
+  /// Encoding is automatically detected.
+  /// </note>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveLastLines(2, LineBreakMode.CrLf);
+  /// Console.WriteLine("Last two lines removed using CrLf line breaks.");
+  /// </code>
+  /// This example removes the last two lines from "example.txt", identifying lines based on carriage return and line feed (CrLf).
+  /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, LineBreakMode newLine) => @this.RemoveLastLines(count, null, newLine);
+
+  /// <summary>
+  /// Removes a specified number of lines from the end of the file using the provided encoding and recognizing line breaks based on the specified mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the end of the file.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <param name="newLine">The line break mode to use for identifying line endings.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveLastLines(2, Encoding.UTF8, LineBreakMode.CrLf);
+  /// Console.WriteLine("Last two lines removed using UTF-8 encoding and CrLf line breaks.");
+  /// </code>
+  /// This example removes the last two lines from "example.txt" using UTF-8 encoding and identifying lines based on carriage return and line feed (CrLf).
+  /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
