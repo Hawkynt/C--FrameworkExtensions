@@ -8,7 +8,7 @@ namespace System;
 public class ArrayTests {
 
   [Test]
-  [TestCase(0)]
+  [TestCase(0,typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -34,20 +34,18 @@ public class ArrayTests {
   [TestCase(1 << 22)]
   [TestCase(1 << 23 - 1)]
   [TestCase(1 << 24 + 1)]
-  public void CopyBytes_Test(int size) {
+  public void CopyBytes_Test(int size, Type? exception = null) {
     var source = new byte[size];
     var target = new byte[size];
     var expected = new byte[size];
     for (var i = 0; i < target.Length; ++i)
       expected[i] = source[i] = (byte)~i;
 
-    source.CopyTo(target);
-
-    CollectionAssert.AreEqual(target, expected);
+    ExecuteTest(() => source.CopyTo(target),()=> CollectionAssert.AreEqual(target, expected), exception);
   }
 
   [Test]
-  [TestCase(0)]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -62,19 +60,17 @@ public class ArrayTests {
   [TestCase(2048)]
   [TestCase(4096)]
   [TestCase(8192)]
-  public void Not_Test(int size) {
+  public void Not_Test(int size, Type? exception = null) {
     var inout = new byte[size];
     var expected = new byte[size];
     for (var i = 0; i < inout.Length; ++i)
       expected[i] = (byte)~(inout[i] = (byte)i);
 
-    inout.Not();
-
-    CollectionAssert.AreEqual(inout,expected);
+    ExecuteTest(inout.Not, () => CollectionAssert.AreEqual(inout, expected), exception);
   }
 
   [Test]
-  [TestCase(0)]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -89,7 +85,7 @@ public class ArrayTests {
   [TestCase(2048)]
   [TestCase(4096)]
   [TestCase(8192)]
-  public void And_Test(int size) {
+  public void And_Test(int size, Type? exception = null) {
     var inout = new byte[size];
     var operand = new byte[size];
     var expected = new byte[size];
@@ -99,13 +95,11 @@ public class ArrayTests {
       expected[i] = (byte)(inout[i] & operand[i]);
     }
 
-    inout.And(operand);
-
-    CollectionAssert.AreEqual(inout, expected);
+    ExecuteTest(() => inout.And(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
   }
 
   [Test]
-  [TestCase(0)]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -120,7 +114,7 @@ public class ArrayTests {
   [TestCase(2048)]
   [TestCase(4096)]
   [TestCase(8192)]
-  public void Or_Test(int size) {
+  public void Or_Test(int size, Type? exception = null) {
     var inout = new byte[size];
     var operand = new byte[size];
     var expected = new byte[size];
@@ -130,13 +124,11 @@ public class ArrayTests {
       expected[i] = (byte)(inout[i] | operand[i]);
     }
 
-    inout.Or(operand);
-
-    CollectionAssert.AreEqual(inout, expected);
+    ExecuteTest(() => inout.Or(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
   }
 
   [Test]
-  [TestCase(0)]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -151,7 +143,7 @@ public class ArrayTests {
   [TestCase(2048)]
   [TestCase(4096)]
   [TestCase(8192)]
-  public void Xor_Test(int size) {
+  public void Xor_Test(int size, Type? exception = null) {
     var inout = new byte[size];
     var operand = new byte[size];
     var expected = new byte[size];
@@ -161,9 +153,7 @@ public class ArrayTests {
       expected[i] = (byte)(inout[i] ^ operand[i]);
     }
 
-    inout.Xor(operand);
-
-    CollectionAssert.AreEqual(inout, expected);
+    ExecuteTest(() => inout.Xor(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
   }
 
   [Test]

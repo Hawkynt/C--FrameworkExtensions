@@ -20,6 +20,20 @@ internal class TestUtilities {
       Assert.That(resultProvider, Throws.TypeOf(exception));
   }
 
+  /// <summary>
+  /// Executes a given lambda function for testing.
+  /// </summary>
+  /// <param name="resultGenerator">The system under test</param>
+  /// <param name="assertion">The assertion to check the results.</param>
+  /// <param name="exception">The exception type is expected to be thrown, if applicable</param>
+  public static void ExecuteTest(Action resultGenerator, Action assertion, Type? exception) {
+    if (exception == null) {
+      resultGenerator();
+      assertion();
+    } else
+      Assert.That(resultGenerator, Throws.TypeOf(exception));
+  }
+
   // ReSharper disable once UseArrayEmptyMethod
 #pragma warning disable CA1825
   private static readonly string?[] _EMPTY_ARRAY= new string?[0];
