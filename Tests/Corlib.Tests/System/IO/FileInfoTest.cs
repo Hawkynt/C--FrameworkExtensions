@@ -187,6 +187,37 @@ internal class FileInfoTest {
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "abc")]
+    [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "def")]
+    [TestCase("abc\ndef\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "def\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "def")]
+    [TestCase("abc\r\ndef\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "def\r\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "def")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.AutoDetect, "def")]
+    [TestCase("abc\rdef\r", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.CarriageReturn, "def\r")]
+    [TestCase("abc\x000cdef", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.FormFeed, "def")]
+    [TestCase("abc\x0085de\ff", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.NextLine, "de\ff")]
+    [TestCase("abc\x0015de\u0085f", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "de\u0085f")]
+    [TestCase("abc\x2028de\rf", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "de\rf")]
+    [TestCase("abc\x2029de\nf", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "de\nf")]
+    [TestCase("abc\x009Bde\nf", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "de\nf")]
+    [TestCase("abc\x0076de\nf", 1, TestEncoding.Utf8, LineBreakMode.Zx, "de\nf")]
+    [TestCase("abc\0de\nf", 1, TestEncoding.Utf8, LineBreakMode.Null, "de\nf")]
+    public void KeepLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
+      => this._ExecuteTest((f, c, e, l, a) => {
+        if (a)
+          f.KeepLastLines(c, l);
+        else
+          f.KeepLastLines(c, e, l);
+      }, input, count, testEncoding, newLine, expected, exception)
+    ;
+
+    [Test]
+    [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
+    [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
+    [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "",typeof(ArgumentException))]
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]

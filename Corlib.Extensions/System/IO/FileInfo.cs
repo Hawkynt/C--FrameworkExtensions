@@ -1768,67 +1768,127 @@ static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps the last lines of a text file.
+  /// Keeps only the specified number of last lines in the file, discarding the rest.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  public static void KeepLastLines(this FileInfo @this, int count) => @this.KeepLastLines(count, Utf8NoBom);
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the end of the file to keep.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepLastLines(5);
+  /// Console.WriteLine("Last 5 lines kept, others removed.");
+  /// </code>
+  /// This example keeps the last 5 lines of "example.txt" and removes all other preceding lines.
+  /// </example>
+  public static void KeepLastLines(this FileInfo @this, int count) => _KeepLastLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
-  /// Keeps the last lines of a text file.
+  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  /// <param name="encoding">The encoding.</param>
-  public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding) {
-    Against.ThisIsNull(@this);
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the end of the file to keep.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepLastLines(5, Encoding.UTF8);
+  /// Console.WriteLine("Last 5 lines kept using UTF-8 encoding, others removed.");
+  /// </code>
+  /// This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and removes all other preceding lines.
+  /// </example>
+  public static void KeepLastLines(this FileInfo @this, int count,Encoding encoding) {
     Against.ArgumentIsNull(encoding);
-    // TODO: in-place
-    const int _LINE_FEED_CHAR = 10;
-    const int BUFFER_SIZE = 8192;
 
-    long GetFilePosition(Stream file) {
-      var buffer = new byte[BUFFER_SIZE];
-      var currentFilePosition = file.Length - 1;
-      while (currentFilePosition > 0) {
-        var bytesToRead = buffer.Length > currentFilePosition ? (int) currentFilePosition : buffer.Length;
-        currentFilePosition -= bytesToRead;
+    _KeepLastLines(@this, count, encoding, LineBreakMode.AutoDetect);
+  }
 
-        file.Seek(currentFilePosition, SeekOrigin.Begin);
-        var bytesRead = file.Read(buffer, 0, bytesToRead);
+  /// <summary>
+  /// Keeps only the specified number of last lines in the file, discarding the rest, based on the specified line break mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the end of the file to keep.</param>
+  /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepLastLines(5, LineBreakMode.CrLf);
+  /// Console.WriteLine("Last 5 lines kept using CrLf line breaks, others removed.");
+  /// </code>
+  /// This example keeps the last 5 lines of "example.txt" based on CrLf line breaks and removes all other preceding lines.
+  /// </example>
+  public static void KeepLastLines(this FileInfo @this, int count,LineBreakMode newLine) => _KeepLastLines(@this, count, null, newLine);
 
-        var j = bytesRead - 1;
-        for (; j > 0; --j)
-          if (buffer[j] == _LINE_FEED_CHAR)
-            if (--count <= 0)
-              return currentFilePosition + j;
-      }
+  /// <summary>
+  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line break mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the end of the file to keep.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepLastLines(5, Encoding.UTF8, LineBreakMode.CrLf);
+  /// Console.WriteLine("Last 5 lines kept using UTF-8 encoding and CrLf line breaks, others removed.");
+  /// </code>
+  /// This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing all other preceding lines.
+  /// </example>
+  public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    Against.ArgumentIsNull(encoding);
 
-      return 0;
+    _KeepLastLines(@this,count,encoding,newLine);
+  }
+
+  private static void _KeepLastLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(newLine);
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var linePositions = new long[count];
+    var index = 0;
+
+    CustomTextReader.Initialized reader = 
+      encoding == null
+        ? new(stream, true, newLine)
+        : new(stream, encoding, newLine)
+      ;
+
+    for (; ; ) {
+      var startOfLine = stream.Position;
+      if (reader.ReadLine() == null)
+        break;
+
+      linePositions[index] = ++startOfLine;
+      index = ++index % linePositions.Length;
     }
 
-    FileInfo tmpFile = null;
-    try {
-      using (var inputReader = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read,BUFFER_SIZE)) {
-        var filePosition = GetFilePosition(inputReader);
-        if (filePosition <= 0)
-          return;
-          
-        inputReader.Seek(filePosition+1, SeekOrigin.Begin);
-        
-        tmpFile = new(Path.GetTempFileName());
-        using var tmpFileWriter = tmpFile.Open(FileMode.Open, FileAccess.Write, FileShare.None);
-        inputReader.CopyTo(tmpFileWriter);
-        tmpFileWriter.Flush(true);
-      }
+    var readPosition = linePositions[index];
+    if (readPosition <= 1)
+      return;
 
-      tmpFile.Attributes = @this.Attributes;
-      tmpFile.MoveTo(@this.FullName, true);
+    --readPosition;
+    var writePosition = 0L;
 
-    } finally {
-      if (tmpFile != null && File.Exists(tmpFile.FullName))
-        tmpFile.Delete();
+    
+    const int bufferSize = 64 * 1024;
+    var buffer = new byte[bufferSize];
+
+    // Shift the content to the beginning of the file.
+    for(;;) {
+      stream.Position = readPosition;
+      var bytesRead = stream.Read(buffer, 0, bufferSize);
+      if (bytesRead == 0)
+        break;
+
+      stream.Position = writePosition;
+      stream.Write(buffer, 0, bytesRead);
+
+      readPosition += bytesRead;
+      writePosition += bytesRead;
     }
+
+    stream.SetLength(writePosition);
   }
 
   /// <summary>
@@ -1970,14 +2030,12 @@ static partial class FileInfoExtensions {
       ;
 
     for (;;) {
-      
-      // Store the position right at the start of each line
       var startOfLine = stream.Position;
       if (reader.ReadLine() == null)
         break;
 
-      linePositions[index] = ++startOfLine;  // Offset by +1 to distinguish from uninitialized positions
-      index = ++index % linePositions.Length; // Move to the next position in the ring buffer
+      linePositions[index] = ++startOfLine;
+      index = ++index % linePositions.Length;
     }
 
     var truncate = Math.Max(0, linePositions[index] - 1);
