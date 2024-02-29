@@ -1868,17 +1868,15 @@ internal
       return;
 
     --readPosition;
-    var writePosition = 0L;
-
-
+    var writePosition = reader.PreambleSize;
+    
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
 
-    // Shift the content to the beginning of the file.
     for (;;) {
       stream.Position = readPosition;
       var bytesRead = stream.Read(buffer, 0, bufferSize);
-      if (bytesRead == 0)
+      if (bytesRead <= 0)
         break;
 
       stream.Position = writePosition;
@@ -1892,47 +1890,123 @@ internal
   }
 
   /// <summary>
-  /// Removes the first n lines from a file.
+  /// Removes a specified number of lines from the beginning of the file.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  public static void RemoveFirstLines(this FileInfo @this, int count) => @this.RemoveFirstLines(count, Utf8NoBom);
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the beginning of the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveFirstLines(3);
+  /// Console.WriteLine("First 3 lines removed.");
+  /// </code>
+  /// This example removes the first 3 lines from "example.txt".
+  /// </example>
+  public static void RemoveFirstLines(this FileInfo @this, int count) => _RemoveFirstLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
-  /// Removes the first n lines from a file.
+  /// Removes a specified number of lines from the beginning of the file using the provided encoding.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  /// <param name="encoding">The encoding.</param>
-  public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding) {
-    Against.ThisIsNull(@this);
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the beginning of the file.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveFirstLines(3, Encoding.UTF8);
+  /// Console.WriteLine("First 3 lines removed using UTF-8 encoding.");
+  /// </code>
+  /// This example removes the first 3 lines from "example.txt" using UTF-8 encoding.
+  /// </example>
+  public static void RemoveFirstLines(this FileInfo @this, int count,Encoding encoding) {
     Against.ArgumentIsNull(encoding);
-    // TODO: in-place
-    FileInfo tempFile = null;
-    try {
-      tempFile = new(Path.GetTempFileName());
 
-      using (var inputFile = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-      using (StreamReader inputReader = new(inputFile, encoding))
-      using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
-      using (StreamWriter outputWriter = new(outputFile, encoding)) {
+    _RemoveFirstLines(@this, count, encoding, LineBreakMode.AutoDetect);
+  }
 
-        // skip lines
-        for (var i = 0; i < count && !inputReader.EndOfStream; ++i)
-          inputReader.ReadLine();
+  /// <summary>
+  /// Removes a specified number of lines from the beginning of the file, recognizing line breaks based on the specified mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the beginning of the file.</param>
+  /// <param name="newLine">The line break mode to use for identifying line endings.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveFirstLines(3, LineBreakMode.CrLf);
+  /// Console.WriteLine("First 3 lines removed using CrLf line breaks.");
+  /// </code>
+  /// This example removes the first 3 lines from "example.txt", identifying lines based on carriage return and line feed (CrLf).
+  /// </example>
+  public static void RemoveFirstLines(this FileInfo @this, int count, LineBreakMode newLine) => _RemoveFirstLines(@this, count, null, newLine);
 
-        // write rest
-        while (!inputReader.EndOfStream)
-          outputWriter.WriteLine(inputReader.ReadLine());
-      }
+  /// <summary>
+  /// Removes a specified number of lines from the beginning of the file using the provided encoding and recognizing line breaks based on the specified mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines to remove from the beginning of the file.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.RemoveFirstLines(3, Encoding.UTF8, LineBreakMode.CrLf);
+  /// Console.WriteLine("First 3 lines removed using UTF-8 encoding and CrLf line breaks.");
+  /// </code>
+  /// This example removes the first 3 lines from "example.txt" using UTF-8 encoding and CrLf line breaks.
+  /// </example>
+  public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    Against.ArgumentIsNull(encoding);
+    _RemoveFirstLines(@this, count, encoding, newLine);
+  }
 
-      tempFile.Attributes = @this.Attributes;
-      tempFile.MoveTo(@this.FullName, true);
+  private static void _RemoveFirstLines( FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(newLine);
 
-    } finally {
-      if (tempFile is { Exists: true })
-        tempFile.Delete();
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    CustomTextReader.Initialized reader = encoding == null
+      ? new(stream, true, newLine)
+      : new(stream, encoding, newLine)
+      ;
+
+    var readPosition = 0L;
+    var lineCounter = 0;
+
+    while (lineCounter < count) {
+      var line = reader.ReadLine();
+      if (line == null)
+        break;
+
+      readPosition = stream.Position;
+      ++lineCounter;
     }
+
+    if (lineCounter < count) {
+      stream.SetLength(reader.PreambleSize);
+      return;
+    }
+
+    var writePosition = reader.PreambleSize;
+
+    const int bufferSize = 64 * 1024;
+    var buffer = new byte[bufferSize];
+
+    for(;;) {
+      stream.Position = readPosition;
+      var bytesRead = stream.Read(buffer, 0, bufferSize);
+      if (bytesRead <= 0)
+        break;
+
+      stream.Position = writePosition;
+      stream.Write(buffer, 0, bytesRead);
+
+      readPosition += bytesRead;
+      writePosition += bytesRead;
+    }
+
+    stream.SetLength(writePosition);
   }
 
   /// <summary>
@@ -2039,7 +2113,7 @@ internal
       index = ++index % linePositions.Length;
     }
 
-    var truncate = Math.Max(0, linePositions[index] - 1);
+    var truncate = Math.Max(reader.PreambleSize, linePositions[index] - 1);
     stream.SetLength(truncate);
   }
 
@@ -2123,6 +2197,7 @@ internal
           Reset();
 
         SaveStartPosition();
+        this.PreambleSize = startPosition;
 
         var possibleLineEndings = BuildLineEndingStateMachine(this, this._lineBreakMode);
         if (this._lineBreakMode == LineBreakMode.AutoDetect)
@@ -2336,6 +2411,8 @@ internal
         : this(stream, false, encoding, lineBreakMode) {
         Against.ArgumentIsNull(encoding);
       }
+
+      public long PreambleSize { get; }
 
       public int Read() => this._singleCharacterReader();
 
