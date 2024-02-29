@@ -2084,27 +2084,15 @@ static partial class FileInfoExtensions {
                   StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator),
                   StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator),
                   StringExtensions.GetLineJoiner(LineJoinMode.NextLine),
-                  StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge)
+                  StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge),
+                  StringExtensions.GetLineJoiner(LineJoinMode.EndOfLine),
+                  StringExtensions.GetLineJoiner(LineJoinMode.Zx),
+                  StringExtensions.GetLineJoiner(LineJoinMode.Null)
                 );
-              case LineBreakMode.CarriageReturn:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CarriageReturn));
-              case LineBreakMode.CrLf:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.CrLf));
-              case LineBreakMode.FormFeed:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.FormFeed));
-              case LineBreakMode.LineFeed:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineFeed));
-              case LineBreakMode.LfCr:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LfCr));
-              case LineBreakMode.LineSeparator:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.LineSeparator));
-              case LineBreakMode.ParagraphSeparator:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.ParagraphSeparator));
-              case LineBreakMode.NextLine:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NextLine));
-              case LineBreakMode.NegativeAcknowledge:
-                return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner(LineJoinMode.NegativeAcknowledge));
               default:
+                if (lineBreakMode >= 0)
+                  return LineEndingNode.BuildTree(StringExtensions.GetLineJoiner((LineJoinMode)lineBreakMode));
+
                 throw new NotImplementedException($"Unknown LineBreakMode: {lineBreakMode}");
             }
         }
@@ -2249,6 +2237,9 @@ static partial class FileInfoExtensions {
     const char LS = (char)LineBreakMode.LineSeparator;
     const char PS = (char)LineBreakMode.ParagraphSeparator;
     const char NL = (char)LineBreakMode.NegativeAcknowledge;
+    const char EOL = (char)LineBreakMode.EndOfLine;
+    const char ZX = (char)LineBreakMode.Zx;
+    const char NUL = (char)LineBreakMode.Null;
 
     var previousCharacter = stream.Read();
     if(previousCharacter < 0)
@@ -2265,6 +2256,12 @@ static partial class FileInfoExtensions {
         return LineBreakMode.ParagraphSeparator;
       case NL:
         return LineBreakMode.NegativeAcknowledge;
+      case EOL:
+        return LineBreakMode.EndOfLine;
+      case ZX:
+        return LineBreakMode.Zx;
+      case NUL:
+        return LineBreakMode.Null;
     }
 
     for (;;) {
@@ -2291,6 +2288,12 @@ static partial class FileInfoExtensions {
           return LineBreakMode.ParagraphSeparator;
         case NL:
           return LineBreakMode.NegativeAcknowledge;
+        case EOL:
+          return LineBreakMode.EndOfLine;
+        case ZX:
+          return LineBreakMode.Zx;
+        case NUL:
+          return LineBreakMode.Null;
       }
 
       previousCharacter = currentCharacter;

@@ -2943,9 +2943,10 @@ internal
   /// The type of line-break
   /// </summary>
   public enum LineBreakMode : short {
-    All = -2,
-    AutoDetect = -1,
-    None = 0,
+    All = -3,
+    AutoDetect = -2,
+    None = -1,
+
     CarriageReturn = 0x0D,
     LineFeed = 0x0A,
     CrLf = 0x0D0A,
@@ -2954,7 +2955,31 @@ internal
     NextLine = 0x85,
     LineSeparator = 0x2028,
     ParagraphSeparator = 0x2029,
-    NegativeAcknowledge = 0x15
+    NegativeAcknowledge = 0x15,
+    EndOfLine = 0x9B,
+    Zx = 0x76,
+    Null = 0x00,
+
+    OSX = LineFeed,
+    Linux = LineFeed,
+    Posix = LineFeed,
+    Unix = LineFeed,
+    MacOS = LineFeed,
+    BSD = LineFeed,
+    Amiga = LineFeed,
+    ClassicMacOS = CarriageReturn,
+    Commodore = CarriageReturn,
+    ZXSpectrum = CarriageReturn,
+    Dos = CrLf,
+    Windows = CrLf,
+    SymbianOS = CrLf,
+    Cpm = CrLf,
+    PalmOS = CrLf,
+    AmstradCPC = CrLf,
+    AcornBBC = LfCr,
+    IBM = NegativeAcknowledge,
+    Atari = EndOfLine,
+    Zx8 = Zx,
   }
 
   /// <summary>
@@ -2969,7 +2994,31 @@ internal
     NextLine = 0x85,
     LineSeparator = 0x2028,
     ParagraphSeparator = 0x2029,
-    NegativeAcknowledge = 0x15
+    NegativeAcknowledge = 0x15,
+    EndOfLine = 0x9B,
+    Zx = 0x76,
+    Null = 0x00,
+
+    OSX = LineFeed,
+    Linux = LineFeed,
+    Posix = LineFeed,
+    Unix = LineFeed,
+    MacOS = LineFeed,
+    BSD = LineFeed,
+    Amiga = LineFeed,
+    ClassicMacOS = CarriageReturn,
+    Commodore = CarriageReturn,
+    ZXSpectrum = CarriageReturn,
+    Dos = CrLf,
+    Windows = CrLf,
+    SymbianOS = CrLf,
+    Cpm = CrLf,
+    PalmOS = CrLf,
+    AmstradCPC = CrLf,
+    AcornBBC = LfCr,
+    IBM = NegativeAcknowledge,
+    Atari = EndOfLine,
+    Zx8 = Zx,
   }
 
   /// <summary>
@@ -2990,6 +3039,9 @@ internal
     const char LS = (char)LineBreakMode.LineSeparator;
     const char PS = (char)LineBreakMode.ParagraphSeparator;
     const char NL = (char)LineBreakMode.NegativeAcknowledge;
+    const char EOL = (char)LineBreakMode.EndOfLine;
+    const char ZX = (char)LineBreakMode.Zx;
+    const char NUL = (char)LineBreakMode.Null;
 
     var previousChar = @this[0];
     switch (previousChar) {
@@ -3003,6 +3055,12 @@ internal
         return LineBreakMode.ParagraphSeparator;
       case NL:
         return LineBreakMode.NegativeAcknowledge;
+      case EOL:
+        return LineBreakMode.EndOfLine;
+      case ZX:
+        return LineBreakMode.Zx;
+      case NUL:
+        return LineBreakMode.Null;
     }
 
     for (var i = 1; i < @this.Length; ++i) {
@@ -3026,6 +3084,12 @@ internal
           return LineBreakMode.ParagraphSeparator;
         case NL:
           return LineBreakMode.NegativeAcknowledge;
+        case EOL:
+          return LineBreakMode.EndOfLine;
+        case ZX:
+          return LineBreakMode.Zx;
+        case NUL:
+          return LineBreakMode.Null;
       }
 
       previousChar = currentChar;
@@ -3079,6 +3143,9 @@ internal
         case LineBreakMode.LineSeparator:
         case LineBreakMode.ParagraphSeparator:
         case LineBreakMode.NegativeAcknowledge:
+        case LineBreakMode.EndOfLine:
+        case LineBreakMode.Zx:
+        case LineBreakMode.Null:
           return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
         default:
           throw new NotImplementedException();
@@ -3205,6 +3272,9 @@ internal
         case LineBreakMode.LineSeparator:
         case LineBreakMode.ParagraphSeparator:
         case LineBreakMode.NegativeAcknowledge:
+        case LineBreakMode.EndOfLine:
+        case LineBreakMode.Zx:
+        case LineBreakMode.Null:
           return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
         default:
           throw new NotImplementedException();
@@ -3312,7 +3382,10 @@ internal
         LineJoinMode.NextLine or
         LineJoinMode.LineSeparator or
         LineJoinMode.ParagraphSeparator or
-        LineJoinMode.NegativeAcknowledge
+        LineJoinMode.NegativeAcknowledge or
+        LineJoinMode.EndOfLine or
+        LineJoinMode.Zx or
+        LineJoinMode.Null
         => ((char)mode).ToString(),
       LineJoinMode.CrLf => "\r\n",
       LineJoinMode.LfCr => "\n\r",
