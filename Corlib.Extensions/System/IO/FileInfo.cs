@@ -1831,7 +1831,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example removes the last two lines from "example.txt".
   /// </example>
-  public static void RemoveLastLines(this FileInfo @this, int count) => @this.RemoveLastLines(count, null, LineBreakMode.AutoDetect);
+  public static void RemoveLastLines(this FileInfo @this, int count) => _RemoveLastLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
   /// Removes a specified number of lines from the end of the file using the provided encoding.
@@ -1850,7 +1850,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example removes the last two lines from "example.txt" using UTF-8 encoding.
   /// </example>
-  public static void RemoveLastLines(this FileInfo @this, int count,Encoding encoding) => @this.RemoveLastLines(count, encoding, LineBreakMode.AutoDetect);
+  public static void RemoveLastLines(this FileInfo @this, int count,Encoding encoding) {
+    Against.ArgumentIsNull(encoding);
+    
+    _RemoveLastLines(@this, count, encoding, LineBreakMode.AutoDetect);
+  }
 
   /// <summary>
   /// Removes a specified number of lines from the end of the file, recognizing line breaks based on the specified mode.
@@ -1869,7 +1873,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example removes the last two lines from "example.txt", identifying lines based on carriage return and line feed (CrLf).
   /// </example>
-  public static void RemoveLastLines(this FileInfo @this, int count, LineBreakMode newLine) => @this.RemoveLastLines(count, null, newLine);
+  public static void RemoveLastLines(this FileInfo @this, int count, LineBreakMode newLine) => _RemoveLastLines(@this, count, null, newLine);
 
   /// <summary>
   /// Removes a specified number of lines from the end of the file using the provided encoding and recognizing line breaks based on the specified mode.
@@ -1886,17 +1890,24 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example removes the last two lines from "example.txt" using UTF-8 encoding and identifying lines based on carriage return and line feed (CrLf).
   /// </example>
-  public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+  public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    Against.ArgumentIsNull(encoding);
+    
+    _RemoveLastLines(@this,count,encoding,newLine);
+  }
+
+  private static void _RemoveLastLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(newLine);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var linePositions = new long[count];
     var index = 0;
 
-    var reader = encoding == null
-        ? new CustomTextReader.Initialized(stream, true, newLine)
-        : new CustomTextReader.Initialized(stream, encoding, newLine)
+    CustomTextReader.Initialized reader = encoding == null
+        ? new(stream, true, newLine)
+        : new(stream, encoding, newLine)
       ;
 
     for (;;) {

@@ -144,6 +144,7 @@ internal class FileInfoTest {
 
     public enum TestEncoding {
       AutoDetectFromBom = -1,
+      Null=0,
       Utf8NoBOM,
       Utf8,
       UnicodeLittleEndianNoBOM,
@@ -154,6 +155,8 @@ internal class FileInfoTest {
     [Test]
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
+    [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "",typeof(ArgumentException))]
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
@@ -164,12 +167,20 @@ internal class FileInfoTest {
     [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.AutoDetect, "abc\r\n")]
     [TestCase("abc\rdef\r", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.CarriageReturn, "abc\r")]
     [TestCase("abc\x000cdef", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.FormFeed, "abc\x0c")]
-    [TestCase("abc\x0085def", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.NextLine, "abc\x85")]
-    [TestCase("abc\x0015def", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "abc\x15")]
-    [TestCase("abc\x2028def", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "abc\x2028")]
-    [TestCase("abc\x2029def", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "abc\x2029")]
-    public void RemoveLastLines(string? input,int count, TestEncoding testEncoding, LineBreakMode newLine,string expected, Type? exception=null) {
+    [TestCase("ab\fc\x0085def", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.NextLine, "ab\fc\x85")]
+    [TestCase("ab\u0085c\x0015def", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "ab\u0085c\x15")]
+    [TestCase("ab\rc\x2028def", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "ab\rc\x2028")]
+    [TestCase("ab\nc\x2029def", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "ab\nc\x2029")]
+    public void RemoveLastLines(string? input,int count, TestEncoding testEncoding, LineBreakMode newLine,string expected, Type? exception=null) 
+      => this._ExecuteTest((f, c, e, l, a) => {
+        if (a)
+          f.RemoveLastLines(c, l);
+        else
+          f.RemoveLastLines(c, e, l);
+      }, input,count,testEncoding,newLine,expected,exception)
+      ;
 
+    private void _ExecuteTest(Action<FileInfo?,int,Encoding?,LineBreakMode,bool> runner, string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null) {
       Encoding writeEncoding;
       Encoding? readEncoding;
       switch (testEncoding) {
@@ -184,13 +195,17 @@ internal class FileInfoTest {
           readEncoding = writeEncoding = new UTF8Encoding(true);
           break;
         case TestEncoding.UnicodeLittleEndianNoBOM:
-          readEncoding = writeEncoding = new UnicodeEncoding(false,false);
+          readEncoding = writeEncoding = new UnicodeEncoding(false, false);
           break;
         case TestEncoding.UnicodeBigEndian:
           readEncoding = writeEncoding = new UnicodeEncoding(true, true);
           break;
         case TestEncoding.ASCII:
           readEncoding = writeEncoding = Encoding.ASCII;
+          break;
+        case TestEncoding.Null:
+          readEncoding = null;
+          writeEncoding = Encoding.ASCII;
           break;
         default:
           throw new ArgumentOutOfRangeException(nameof(testEncoding), testEncoding, null);
@@ -200,7 +215,7 @@ internal class FileInfoTest {
       if (input == null) {
         file = null;
         ExecuteTest(() => {
-          file.RemoveLastLines(count, readEncoding, newLine);
+          runner(file, count, readEncoding, newLine,false);
           return file.ReadAllText(writeEncoding);
         }, expected, exception);
       } else {
@@ -208,11 +223,10 @@ internal class FileInfoTest {
         file = token.File;
         file.WriteAllText(input, writeEncoding);
         ExecuteTest(() => {
-          file.RemoveLastLines(count, readEncoding, newLine);
+          runner(file, count, readEncoding, newLine,testEncoding==TestEncoding.AutoDetectFromBom);
           return file.ReadAllText(writeEncoding);
         }, expected, exception);
       }
-
     }
 
 
