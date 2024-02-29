@@ -2227,7 +2227,9 @@ static partial class FileInfoExtensions {
         stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
       public Initialized(Stream stream, Encoding encoding, LineBreakMode lineBreakMode = LineBreakMode.AutoDetect)
-        : this(stream, false, encoding, lineBreakMode) { }
+        : this(stream, false, encoding, lineBreakMode) {
+        Against.ArgumentIsNull(encoding);
+      }
 
       public int Read() => this._singleCharacterReader();
 
