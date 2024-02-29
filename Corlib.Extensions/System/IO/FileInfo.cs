@@ -22,7 +22,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
+#endif
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -52,7 +54,7 @@ public
 #else
 internal
 #endif
-static partial class FileInfoExtensions {
+  static partial class FileInfoExtensions {
 
   /// <summary>
   /// Provides access to native Windows API functions and constants, facilitating operations such as file system control and shell file information retrieval.
@@ -366,7 +368,7 @@ static partial class FileInfoExtensions {
     [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Auto)]
     public static extern int DeviceIoControl(
       IntPtr hDevice,
-      [MarshalAs(UnmanagedType.I4)]FileSystemControl dwIoControlCode,
+      [MarshalAs(UnmanagedType.I4)] FileSystemControl dwIoControlCode,
       ref short lpInBuffer,
       int nInBufferSize,
       IntPtr lpOutBuffer,
@@ -435,14 +437,14 @@ static partial class FileInfoExtensions {
 
     }
 
-#endregion
+    #endregion
 
     // ReSharper restore InconsistentNaming
     // ReSharper restore MemberCanBePrivate.Local
     // ReSharper restore UnusedMember.Local
   }
 
-#region consts
+  #region consts
 
   private static Encoding _utf8NoBom;
 
@@ -458,7 +460,7 @@ static partial class FileInfoExtensions {
   /// A <see cref="System.Text.UTF8Encoding"/> instance configured to not emit a Byte Order Mark (BOM).
   /// </value>
   internal static Encoding Utf8NoBom {
-  get {
+    get {
       if (_utf8NoBom != null)
         return _utf8NoBom;
 
@@ -510,6 +512,7 @@ static partial class FileInfoExtensions {
         IntPtr.Zero
       );
     }
+
     if (result < 0)
       throw new Win32Exception();
 
@@ -611,8 +614,7 @@ static partial class FileInfoExtensions {
   /// This example demonstrates copying a file from a source directory to a target directory.
   /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory)
-    => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), false)
-  ;
+    => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), false);
 
   /// <summary>
   /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, 
@@ -635,8 +637,7 @@ static partial class FileInfoExtensions {
   /// This example demonstrates copying a file from a source directory to a target directory with the option to overwrite existing files.
   /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
-    => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), overwrite)
-  ;
+    => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), overwrite);
 
   /// <summary>
   /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object, 
@@ -656,8 +657,7 @@ static partial class FileInfoExtensions {
   /// This example demonstrates copying a file from one location to another without overwriting an existing file at the destination.
   /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile)
-    => @this.CopyTo(targetFile.FullName, false)
-  ;
+    => @this.CopyTo(targetFile.FullName, false);
 
   /// <summary>
   /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object,
@@ -680,8 +680,7 @@ static partial class FileInfoExtensions {
   /// This example demonstrates copying a file from one location to another with the option to overwrite an existing file at the destination.
   /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile, bool overwrite)
-    => @this.CopyTo(targetFile.FullName, overwrite)
-  ;
+    => @this.CopyTo(targetFile.FullName, overwrite);
 
   /// <summary>
   /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, without overwriting an existing file.
@@ -819,7 +818,7 @@ static partial class FileInfoExtensions {
     Against.ThisIsNull(@this);
 
     // copy file 
-    using TransactionScope scope = new ();
+    using TransactionScope scope = new();
     @this.CopyTo(destFileName, overwrite);
 
     // delete source, retry during timeout
@@ -837,6 +836,7 @@ static partial class FileInfoExtensions {
         Thread.Sleep(delay);
       }
     }
+
     scope.Complete();
   }
 
@@ -982,7 +982,7 @@ static partial class FileInfoExtensions {
   /// This example computes the SHA-512 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA512Hash(this FileInfo @this) {
-    using var provider=SHA512.Create();
+    using var provider = SHA512.Create();
     return @this.ComputeHash(provider);
   }
 
@@ -1005,7 +1005,7 @@ static partial class FileInfoExtensions {
   /// </example>
   public static byte[] ComputeSHA512Hash(this FileInfo @this, int blockSize) {
     using var provider = SHA512.Create();
-    return @this.ComputeHash(provider,blockSize);
+    return @this.ComputeHash(provider, blockSize);
   }
 
   /// <summary>
@@ -1110,7 +1110,7 @@ static partial class FileInfoExtensions {
     var bom = new byte[4];
     using (FileStream file = new(@this.FullName, FileMode.Open, FileAccess.Read)) {
       var bytesRead = file.Read(bom, 0, 4);
-      if(bytesRead == 0)
+      if (bytesRead == 0)
         return null;
     }
 
@@ -1198,11 +1198,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example attempts to read and print each line of "example.txt". If unsuccessful, it prints a failure message.
   /// </example>
-  public static bool TryReadAllLines(this FileInfo @this, out string[] result){
-    try{
+  public static bool TryReadAllLines(this FileInfo @this, out string[] result) {
+    try {
       result = File.ReadAllLines(@this.FullName);
       return true;
-    }catch(Exception){
+    } catch (Exception) {
       result = null;
       return true;
     }
@@ -1250,11 +1250,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example attempts to read and print each line of "example.txt" using UTF-8 encoding. If unsuccessful, it prints a failure message.
   /// </example>
-  public static bool TryReadAllLines(this FileInfo @this, Encoding encoding, out string[] result){
-    try{
+  public static bool TryReadAllLines(this FileInfo @this, Encoding encoding, out string[] result) {
+    try {
       result = File.ReadAllLines(@this.FullName, encoding);
       return true;
-    }catch(Exception){
+    } catch (Exception) {
       result = null;
       return true;
     }
@@ -1317,11 +1317,11 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example attempts to read all bytes from "example.bin" and prints them as a hexadecimal string. If unsuccessful, it prints a failure message.
   /// </example>
-  public static bool TryReadAllBytes(this FileInfo @this, out byte[] result){
-    try{
+  public static bool TryReadAllBytes(this FileInfo @this, out byte[] result) {
+    try {
       result = File.ReadAllBytes(@this.FullName);
       return true;
-    }catch(Exception){
+    } catch (Exception) {
       result = null;
       return true;
     }
@@ -1368,9 +1368,9 @@ static partial class FileInfoExtensions {
     const int bufferSize = 4096;
     using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
     using StreamReader reader = new(stream);
-    while(!reader.EndOfStream){
-      var line=reader.ReadLine();
-      if(line==null)
+    while (!reader.EndOfStream) {
+      var line = reader.ReadLine();
+      if (line == null)
         yield break;
 
       yield return line;
@@ -1394,7 +1394,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example reads lines from "shared_example.txt" using UTF-8 encoding, allowing other processes to read the file simultaneously.
   /// </example>
-  public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding,FileShare share) {
+  public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding, FileShare share) {
     const int bufferSize = 4096;
     using var stream = (Stream)new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, share, bufferSize, FileOptions.SequentialScan);
     using StreamReader reader = new(stream, encoding);
@@ -1604,8 +1604,8 @@ static partial class FileInfoExtensions {
   /// This example appends two lines to the end of "example.txt".
   /// </example>
   public static void AppendAllLines(this FileInfo @this, IEnumerable<string> contents) {
-    using var writer=new StreamWriter(@this.FullName, append: true);
-    foreach (var line in contents) 
+    using var writer = new StreamWriter(@this.FullName, append: true);
+    foreach (var line in contents)
       writer.WriteLine(line);
   }
 
@@ -1700,9 +1700,9 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and removes the rest.
   /// </example>
-  public static void KeepFirstLines(this FileInfo @this, int count,Encoding encoding) {
+  public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
-    
+
     _KeepFirstLines(@this, count, encoding, LineBreakMode.AutoDetect);
   }
 
@@ -1720,7 +1720,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example keeps the first 10 lines of "example.txt" based on CrLf line breaks and removes the rest.
   /// </example>
-  public static void KeepFirstLines(this FileInfo @this, int count,LineBreakMode newLine) => _KeepFirstLines(@this, count, null, newLine);
+  public static void KeepFirstLines(this FileInfo @this, int count, LineBreakMode newLine) => _KeepFirstLines(@this, count, null, newLine);
 
   /// <summary>
   /// Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding and line break mode.
@@ -1740,19 +1740,19 @@ static partial class FileInfoExtensions {
   public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
 
-    _KeepFirstLines( @this,  count,  encoding,  newLine);
+    _KeepFirstLines(@this, count, encoding, newLine);
   }
-  
-  private static void _KeepFirstLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+
+  private static void _KeepFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-    CustomTextReader.Initialized reader = 
-      encoding == null 
-        ? new(stream, true, newLine)
-        : new(stream, encoding, newLine)
+    CustomTextReader.Initialized reader =
+        encoding == null
+          ? new(stream, true, newLine)
+          : new(stream, encoding, newLine)
       ;
 
     var lineCounter = 0;
@@ -1763,7 +1763,7 @@ static partial class FileInfoExtensions {
 
     if (lineCounter < count)
       return;
-    
+
     stream.SetLength(stream.Position);
   }
 
@@ -1796,7 +1796,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and removes all other preceding lines.
   /// </example>
-  public static void KeepLastLines(this FileInfo @this, int count,Encoding encoding) {
+  public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
 
     _KeepLastLines(@this, count, encoding, LineBreakMode.AutoDetect);
@@ -1816,7 +1816,7 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example keeps the last 5 lines of "example.txt" based on CrLf line breaks and removes all other preceding lines.
   /// </example>
-  public static void KeepLastLines(this FileInfo @this, int count,LineBreakMode newLine) => _KeepLastLines(@this, count, null, newLine);
+  public static void KeepLastLines(this FileInfo @this, int count, LineBreakMode newLine) => _KeepLastLines(@this, count, null, newLine);
 
   /// <summary>
   /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line break mode.
@@ -1836,10 +1836,10 @@ static partial class FileInfoExtensions {
   public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
 
-    _KeepLastLines(@this,count,encoding,newLine);
+    _KeepLastLines(@this, count, encoding, newLine);
   }
 
-  private static void _KeepLastLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+  private static void _KeepLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
@@ -1848,13 +1848,13 @@ static partial class FileInfoExtensions {
     var linePositions = new long[count];
     var index = 0;
 
-    CustomTextReader.Initialized reader = 
-      encoding == null
-        ? new(stream, true, newLine)
-        : new(stream, encoding, newLine)
+    CustomTextReader.Initialized reader =
+        encoding == null
+          ? new(stream, true, newLine)
+          : new(stream, encoding, newLine)
       ;
 
-    for (; ; ) {
+    for (;;) {
       var startOfLine = stream.Position;
       if (reader.ReadLine() == null)
         break;
@@ -1870,12 +1870,12 @@ static partial class FileInfoExtensions {
     --readPosition;
     var writePosition = 0L;
 
-    
+
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
 
     // Shift the content to the beginning of the file.
-    for(;;) {
+    for (;;) {
       stream.Position = readPosition;
       var bytesRead = stream.Read(buffer, 0, bufferSize);
       if (bytesRead == 0)
@@ -1925,6 +1925,7 @@ static partial class FileInfoExtensions {
         while (!inputReader.EndOfStream)
           outputWriter.WriteLine(inputReader.ReadLine());
       }
+
       tempFile.Attributes = @this.Attributes;
       tempFile.MoveTo(@this.FullName, true);
 
@@ -1969,9 +1970,9 @@ static partial class FileInfoExtensions {
   /// </code>
   /// This example removes the last two lines from "example.txt" using UTF-8 encoding.
   /// </example>
-  public static void RemoveLastLines(this FileInfo @this, int count,Encoding encoding) {
+  public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
-    
+
     _RemoveLastLines(@this, count, encoding, LineBreakMode.AutoDetect);
   }
 
@@ -2011,11 +2012,11 @@ static partial class FileInfoExtensions {
   /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
-    
-    _RemoveLastLines(@this,count,encoding,newLine);
+
+    _RemoveLastLines(@this, count, encoding, newLine);
   }
 
-  private static void _RemoveLastLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+  private static void _RemoveLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
@@ -2127,12 +2128,12 @@ static partial class FileInfoExtensions {
         if (this._lineBreakMode == LineBreakMode.AutoDetect)
           Reset();
 
-        this._fullLineReader = possibleLineEndings == null 
-          ? ReadToEnd 
-          : possibleLineEndings.Depth <= 1 
-            ? ReadOneLineForOneCharacterTerminals 
-            : ReadOneLine
-        ;
+        this._fullLineReader = possibleLineEndings == null
+            ? ReadToEnd
+            : possibleLineEndings.Depth <= 1
+              ? ReadOneLineForOneCharacterTerminals
+              : ReadOneLine
+          ;
 
         return;
 
@@ -2359,7 +2360,7 @@ static partial class FileInfoExtensions {
     const char NUL = (char)LineBreakMode.Null;
 
     var previousCharacter = stream.Read();
-    if(previousCharacter < 0)
+    if (previousCharacter < 0)
       return LineBreakMode.None;
 
     switch (previousCharacter) {
@@ -2479,36 +2480,36 @@ static partial class FileInfoExtensions {
 
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 
-    /// <summary>
-    /// Opens the specified file.
-    /// </summary>
-    /// <param name="this">This FileInfo.</param>
-    /// <param name="mode">The mode.</param>
-    /// <param name="rights">The rights.</param>
-    /// <param name="share">The share.</param>
-    /// <param name="bufferSize">Size of the buffer.</param>
-    /// <param name="options">The options.</param>
-    /// <returns></returns>
-    public static FileStream Open(this FileInfo @this, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new(@this.FullName, mode, rights, share, bufferSize, options);
+  /// <summary>
+  /// Opens the specified file.
+  /// </summary>
+  /// <param name="this">This FileInfo.</param>
+  /// <param name="mode">The mode.</param>
+  /// <param name="rights">The rights.</param>
+  /// <param name="share">The share.</param>
+  /// <param name="bufferSize">Size of the buffer.</param>
+  /// <param name="options">The options.</param>
+  /// <returns></returns>
+  public static FileStream Open(this FileInfo @this, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new(@this.FullName, mode, rights, share, bufferSize, options);
 
-    /// <summary>
-    /// Opens the specified file.
-    /// </summary>
-    /// <param name="this">This FileInfo.</param>
-    /// <param name="mode">The mode.</param>
-    /// <param name="rights">The rights.</param>
-    /// <param name="share">The share.</param>
-    /// <param name="bufferSize">Size of the buffer.</param>
-    /// <param name="options">The options.</param>
-    /// <param name="security">The security.</param>
-    /// <returns></returns>
-    public static FileStream Open(this FileInfo @this, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new(@this.FullName, mode, rights, share, bufferSize, options, security);
+  /// <summary>
+  /// Opens the specified file.
+  /// </summary>
+  /// <param name="this">This FileInfo.</param>
+  /// <param name="mode">The mode.</param>
+  /// <param name="rights">The rights.</param>
+  /// <param name="share">The share.</param>
+  /// <param name="bufferSize">Size of the buffer.</param>
+  /// <param name="options">The options.</param>
+  /// <param name="security">The security.</param>
+  /// <returns></returns>
+  public static FileStream Open(this FileInfo @this, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options, FileSecurity security) => new(@this.FullName, mode, rights, share, bufferSize, options, security);
 
 #endif
 
-#endregion
+  #endregion
 
-#region get part of filename
+  #region get part of filename
 
   /// <summary>
   /// Gets the filename without extension.
@@ -2532,7 +2533,7 @@ static partial class FileInfoExtensions {
   /// <returns>A new FileInfo instance with given extension.</returns>
   public static FileInfo WithNewExtension(this FileInfo @this, string extension) => new(Path.ChangeExtension(@this.FullName, extension));
 
-#endregion
+  #endregion
 
   /// <summary>
   /// Tries to delete the given file.
@@ -2542,8 +2543,7 @@ static partial class FileInfoExtensions {
   public static bool TryDelete(this FileInfo @this) {
     Against.ThisIsNull(@this);
 
-    try
-    {
+    try {
       var fullName = @this.FullName;
       if (File.Exists(fullName))
         File.Delete(fullName);
@@ -2590,7 +2590,7 @@ static partial class FileInfoExtensions {
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc = DateTime.UtcNow;
-    
+
   /// <summary>
   /// Tries to change the last write time of the given file to the current date/time.
   /// </summary>
@@ -2613,8 +2613,8 @@ static partial class FileInfoExtensions {
   /// <param name="repeat">The repeat.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool TryTouch(this FileInfo @this, TimeSpan waitTime, int repeat = 3) {
-    while(--repeat>=0) {
-      if(TryTouch(@this))
+    while (--repeat >= 0) {
+      if (TryTouch(@this))
         return true;
 
       Thread.Sleep(waitTime);
@@ -2630,10 +2630,12 @@ static partial class FileInfoExtensions {
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
   public static bool NotExists(this FileInfo @this) => !@this.Exists;
 
-#region needed consts for converting filename patterns into regexes
+  #region needed consts for converting filename patterns into regexes
+
   private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
   private static readonly Regex _CATCH_EXTENSION_REGEX = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-#endregion
+
+  #endregion
 
   /// <summary>
   /// Converts a given filename pattern into a regular expression.
@@ -2642,7 +2644,7 @@ static partial class FileInfoExtensions {
   /// <returns>The regex.</returns>
   private static string _ConvertFilePatternToRegex(string pattern) {
     Against.ArgumentIsNull(pattern);
-    
+
     pattern = pattern.Trim();
 
     if (pattern.Length == 0) throw new ArgumentException("Pattern is empty.", nameof(pattern));
@@ -2669,8 +2671,8 @@ static partial class FileInfoExtensions {
     return regexString;
   }
 
-  public static bool MatchesFilter(this FileInfo @this,string filter){
-    var regex=_ConvertFilePatternToRegex(filter);
+  public static bool MatchesFilter(this FileInfo @this, string filter) {
+    var regex = _ConvertFilePatternToRegex(filter);
     return Regex.IsMatch(@this.FullName, regex, RegexOptions.IgnoreCase);
   }
 
@@ -2724,7 +2726,7 @@ static partial class FileInfoExtensions {
 
       // start reading buffers into A and A'
       var position = blockIndex * bufferSize;
-      var sourceAsync =  sourceStream.ReadBytesAsync(position, sourceBufferA);
+      var sourceAsync = sourceStream.ReadBytesAsync(position, sourceBufferA);
       var comparisonAsync = comparisonStream.ReadBytesAsync(position, comparisonBufferA);
       int sourceBytes;
       int comparisonBytes;
@@ -2778,8 +2780,7 @@ static partial class FileInfoExtensions {
   /// <param name="this">This <see cref="FileInfo"/></param>
   /// <param name="other">The file that should replace this file</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other)
-    => ReplaceWith(@this, other, null, false)
-  ;
+    => ReplaceWith(@this, other, null, false);
 
   /// <summary>
   /// Replaces the contents of the file with that from another file.
@@ -2788,8 +2789,7 @@ static partial class FileInfoExtensions {
   /// <param name="other">The file that should replace this file</param>
   /// <param name="ignoreMetaDataErrors"><see langword="true"/> when metadata errors should be ignored; otherwise, <see langword="false"/>.</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, bool ignoreMetaDataErrors)
-    => ReplaceWith(@this, other, null, ignoreMetaDataErrors)
-  ;
+    => ReplaceWith(@this, other, null, ignoreMetaDataErrors);
 
   /// <summary>
   /// Replaces the contents of the file with that from another file.
@@ -2798,8 +2798,7 @@ static partial class FileInfoExtensions {
   /// <param name="other">The file that should replace this file</param>
   /// <param name="backupFile">The file that gets a backup from this file; optional</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile)
-    => ReplaceWith(@this, other, backupFile, false)
-  ;
+    => ReplaceWith(@this, other, backupFile, false);
 
   /// <summary>
   /// Replaces the contents of the file with that from another file.
@@ -2850,8 +2849,8 @@ static partial class FileInfoExtensions {
   /// <summary>
   /// Represents a file being modified or processed, with operations to manage changes before finalizing them.
   /// </summary>
-  public interface IFileInProgress:IDisposable {
-    
+  public interface IFileInProgress : IDisposable {
+
     /// <summary>
     /// Gets the original file information.
     /// </summary>
@@ -2871,9 +2870,9 @@ static partial class FileInfoExtensions {
     void WriteAllText(string text);
     void WriteAllText(string text, Encoding encoding);
     void WriteAllLines(IEnumerable<string> lines);
-    void WriteAllLines(IEnumerable<string> lines,Encoding encoding);
+    void WriteAllLines(IEnumerable<string> lines, Encoding encoding);
     void AppendLine(string line);
-    void AppendLine(string line,Encoding encoding);
+    void AppendLine(string line, Encoding encoding);
     void AppendAllLines(IEnumerable<string> lines);
     void AppendAllLines(IEnumerable<string> lines, Encoding encoding);
     void AppendAllText(string text);
