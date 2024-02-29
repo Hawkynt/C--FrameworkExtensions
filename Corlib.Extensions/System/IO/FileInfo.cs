@@ -1667,45 +1667,104 @@ static partial class FileInfoExtensions {
     writer.WriteLine(contents);
   }
 
-#endregion
+  #endregion
 
-#region trimming text files
-
-  /// <summary>
-  /// Keeps the first lines of a text file.
-  /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  public static void KeepFirstLines(this FileInfo @this, int count) => @this.KeepFirstLines(count, Utf8NoBom);
+  #region trimming text files
 
   /// <summary>
-  /// Keeps the first lines of a text file.
+  /// Keeps only the specified number of first lines in the file, discarding the rest.
   /// </summary>
-  /// <param name="this">This FileInfo.</param>
-  /// <param name="count">The count.</param>
-  /// <param name="encoding">The encoding.</param>
-  public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding) {
-    Against.ThisIsNull(@this);
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the beginning of the file to keep.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepFirstLines(10);
+  /// Console.WriteLine("First 10 lines kept, others removed.");
+  /// </code>
+  /// This example keeps the first 10 lines of "example.txt" and removes the rest.
+  /// </example>
+  public static void KeepFirstLines(this FileInfo @this, int count) => _KeepFirstLines(@this, count, null, LineBreakMode.AutoDetect);
+
+  /// <summary>
+  /// Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the beginning of the file to keep.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepFirstLines(10, Encoding.UTF8);
+  /// Console.WriteLine("First 10 lines kept using UTF-8 encoding, others removed.");
+  /// </code>
+  /// This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and removes the rest.
+  /// </example>
+  public static void KeepFirstLines(this FileInfo @this, int count,Encoding encoding) {
     Against.ArgumentIsNull(encoding);
-    // TODO: in-place
-    FileInfo tempFile = null;
-    try {
-      tempFile = new(Path.GetTempFileName());
+    
+    _KeepFirstLines(@this, count, encoding, LineBreakMode.AutoDetect);
+  }
 
-      using (var inputFile = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-      using (StreamReader inputReader = new(inputFile, encoding))
-      using (var outputFile = tempFile.Open(FileMode.Create, FileAccess.Write, FileShare.None))
-      using (StreamWriter outputWriter = new(outputFile, encoding))
-        for (var i = 0; i < count && !inputReader.EndOfStream; ++i)
-          outputWriter.WriteLine(inputReader.ReadLine());
+  /// <summary>
+  /// Keeps only the specified number of first lines in the file, discarding the rest, based on the specified line break mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the beginning of the file to keep.</param>
+  /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepFirstLines(10, LineBreakMode.CrLf);
+  /// Console.WriteLine("First 10 lines kept using CrLf line breaks, others removed.");
+  /// </code>
+  /// This example keeps the first 10 lines of "example.txt" based on CrLf line breaks and removes the rest.
+  /// </example>
+  public static void KeepFirstLines(this FileInfo @this, int count,LineBreakMode newLine) => _KeepFirstLines(@this, count, null, newLine);
 
-      tempFile.Attributes = @this.Attributes;
-      tempFile.MoveTo(@this.FullName, true);
+  /// <summary>
+  /// Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding and line break mode.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="count">The number of lines from the beginning of the file to keep.</param>
+  /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
+  /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
+  /// <example>
+  /// <code>
+  /// FileInfo fileInfo = new FileInfo("example.txt");
+  /// fileInfo.KeepFirstLines(10, Encoding.UTF8, LineBreakMode.CrLf);
+  /// Console.WriteLine("First 10 lines kept using UTF-8 encoding and CrLf line breaks, others removed.");
+  /// </code>
+  /// This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing the rest.
+  /// </example>
+  public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    Against.ArgumentIsNull(encoding);
 
-    } finally {
-      if (tempFile is { Exists: true })
-        tempFile.Delete();
-    }
+    _KeepFirstLines( @this,  count,  encoding,  newLine);
+  }
+  
+  private static void _KeepFirstLines(FileInfo @this, int count, Encoding encoding,LineBreakMode newLine) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    Against.UnknownEnumValues(newLine);
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    CustomTextReader.Initialized reader = 
+      encoding == null 
+        ? new(stream, true, newLine)
+        : new(stream, encoding, newLine)
+      ;
+
+    var lineCounter = 0;
+    do {
+      if (reader.ReadLine() == null)
+        break;
+    } while (++lineCounter < count);
+
+    if (lineCounter < count)
+      return;
+    
+    stream.SetLength(stream.Position);
   }
 
   /// <summary>

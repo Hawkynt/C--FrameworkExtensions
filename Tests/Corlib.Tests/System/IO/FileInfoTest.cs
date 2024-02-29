@@ -156,6 +156,37 @@ internal class FileInfoTest {
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "abc")]
+    [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\ndef\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "abc\r\n")]
+    [TestCase("abc\r\ndef\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "abc\r\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n")]
+    [TestCase("abc\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.AutoDetect, "abc\r\n")]
+    [TestCase("abc\rdef\r", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.CarriageReturn, "abc\r")]
+    [TestCase("abc\x000cdef", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.FormFeed, "abc\x0c")]
+    [TestCase("ab\fc\x0085def", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.NextLine, "ab\fc\x85")]
+    [TestCase("ab\u0085c\x0015def", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "ab\u0085c\x15")]
+    [TestCase("ab\rc\x2028def", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "ab\rc\x2028")]
+    [TestCase("ab\nc\x2029def", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "ab\nc\x2029")]
+    [TestCase("ab\nc\x009Bdef", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "ab\nc\x9B")]
+    [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
+    [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
+    public void KeepFirstLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
+      => this._ExecuteTest((f, c, e, l, a) => {
+        if (a)
+          f.KeepFirstLines(c, l);
+        else
+          f.KeepFirstLines(c, e, l);
+      }, input, count, testEncoding, newLine, expected, exception)
+    ;
+
+    [Test]
+    [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
+    [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
+    [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "",typeof(ArgumentException))]
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
@@ -171,6 +202,9 @@ internal class FileInfoTest {
     [TestCase("ab\u0085c\x0015def", 1, TestEncoding.Utf8, LineBreakMode.NegativeAcknowledge, "ab\u0085c\x15")]
     [TestCase("ab\rc\x2028def", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineSeparator, "ab\rc\x2028")]
     [TestCase("ab\nc\x2029def", 1, TestEncoding.Utf8, LineBreakMode.ParagraphSeparator, "ab\nc\x2029")]
+    [TestCase("ab\nc\x009Bdef", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "ab\nc\x9B")]
+    [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
+    [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
     public void RemoveLastLines(string? input,int count, TestEncoding testEncoding, LineBreakMode newLine,string expected, Type? exception=null) 
       => this._ExecuteTest((f, c, e, l, a) => {
         if (a)
@@ -210,7 +244,7 @@ internal class FileInfoTest {
         default:
           throw new ArgumentOutOfRangeException(nameof(testEncoding), testEncoding, null);
       }
-      
+
       FileInfo? file;
       if (input == null) {
         file = null;
