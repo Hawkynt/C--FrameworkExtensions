@@ -41,11 +41,8 @@ jobs:
       with:
         dotnet-version: 8.x
         
-    - name: Restore dependencies
-      run: dotnet restore "${{ matrix.csproj-file }}"
-      
-    - name: Build
-      run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
+    - run: dotnet restore "${{ matrix.csproj-file }}"
+    - run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
 
   # this is the real job needed to build and publish
   BuildAndPublishExtensions:
@@ -79,16 +76,15 @@ jobs:
       - run: dotnet restore "${{ matrix.csproj-file }}"
       - run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{env.ProjectName}}
           path: ${{env.ProjectDir}}/bin/Release
 
-#      - name: Pack NuGet package
-#        run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
-#      
-#      - name: Publish the package to nuget.org
-#        run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
-#        env:
-#          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      - name: Pack NuGet package
+        run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
+      
+      - name: Publish the package to nuget.org
+        run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
