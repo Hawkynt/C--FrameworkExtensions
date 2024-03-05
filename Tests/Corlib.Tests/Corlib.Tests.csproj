@@ -7,7 +7,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <Nullable>enable</Nullable>
-
+    <SelfContained>false</SelfContained>
     <IsPackable>false</IsPackable>
     <LangVersion>default</LangVersion>
   </PropertyGroup>
