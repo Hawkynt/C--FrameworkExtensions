@@ -4,7 +4,9 @@ on:
     - cron: '59 23 * * 0'
   workflow_dispatch:
 jobs:
-  Init:
+
+  # This job tries to run the prerequisites, just to see if this works
+  TryInit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,60 +21,61 @@ jobs:
       - name: Show Info
         run: dotnet --info
       
-      - name: Receive Version
+      - name: Receive Versions
         run: perl ".github/workflows/UpdateVersions.pl" "."
 
-      - name: Upload entire workspace
-        uses: actions/upload-artifact@v3
-        with:
-          name: workspace-artifacts
-          path: ${{ github.workspace }}
-          if-no-files-found: error
-
-  BuildBackports:
-    needs: Init
+  # This is a job to try to build backports with a garbage version number, just to see if building fails
+  TryBuildBackports:
+    needs: TryInit
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         csproj-file: 
           - 'Backports/Backports.csproj'
+
     steps:
-      - name: Download entire workspace
-        uses: actions/download-artifact@v3
-        with:
-          name: workspace-artifacts
-          path: ${{ github.workspace }}
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - name: Restore dependencies
-        run: dotnet restore "${{ matrix.csproj-file }}"
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.x
+        
+    - name: Restore dependencies
+      run: dotnet restore "${{ matrix.csproj-file }}"
       
-      - name: Build
-        run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
-     
-      - name: Upload entire workspace
-        uses: actions/upload-artifact@v3
-        with:
-          name: workspace-artifacts
-          path: ${{ github.workspace }}
-          if-no-files-found: error
+    - name: Build
+      run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release -p:Version=${{ env.Compile_Version }}
 
-  BuildExtensions:
-    needs: BuildBackports
+  # this is the real job needed to build and publish
+  BuildAndPublishExtensions:
+    needs: TryBuildBackports
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         csproj-file: 
+          - 'Backports/Backports.csproj'
           - 'Corlib.Extensions/Corlib.Extensions.csproj'
           - 'PresentationCore.Extensions/PresentationCore.Extensions.csproj'
           - 'System.Drawing.Extensions/System.Drawing.Extensions.csproj'
           - 'System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj'
           - 'System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj'
     steps:
-      - name: Download entire workspace
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: workspace-artifacts
-          path: ${{ github.workspace }}
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.x
+      
+      - name: Receive Versions
+        run: perl ".github/workflows/UpdateVersions.pl" "."
 
       - name: Restore dependencies
         run: dotnet restore "${{ matrix.csproj-file }}"
@@ -80,26 +83,19 @@ jobs:
       - name: Build
         run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
 
-      - name: Upload entire workspace
+      - name: Zip the bin folder
+        run: |
+          project_dir=$(dirname ${{ matrix.csproj-file }})
+          project_name=$(basename $project_dir)
+          zip -r ${project_name}.zip $project_dir/bin/
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: workspace-artifacts
-          path: ${{ github.workspace }}
-          if-no-files-found: error
-    
-#  PublishNuGet:
-#    needs: BuildExtensions
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        csproj-file: ['Backports/Backports.csproj']
-#    steps:
-#      - name: Download entire workspace
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: workspace-artifacts
-#          path: ${{ github.workspace }}
-#
+          name: ${project_name}-${{ github.run_number }}
+          path: ${{ github.workspace }}/${project_name}.zip
+
 #      - name: Pack NuGet package
 #        run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
 #      
@@ -107,4 +103,3 @@ jobs:
 #        run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
 #        env:
 #          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
-  
