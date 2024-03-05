@@ -4,14 +4,14 @@ using System.Windows.Forms.Design;
 namespace System.Windows.Forms;
 
 // see https://stackoverflow.com/questions/2002170/c-sharp-how-to-implement-databinding-without-control
-[ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.ToolStrip | ToolStripItemDesignerAvailability.StatusStrip)]
+[ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.ToolStrip |
+                                   ToolStripItemDesignerAvailability.StatusStrip)]
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
 internal
 #endif
-class BindableToolStripButton : ToolStripButton, IBindableComponent {
-
+  class BindableToolStripButton : ToolStripButton, IBindableComponent {
   #region IBindableComponent Members
 
   private BindingContext _bindingContext;
@@ -31,5 +31,4 @@ class BindableToolStripButton : ToolStripButton, IBindableComponent {
   public ControlBindingsCollection DataBindings => this._dataBindings ??= new(this);
 
   #endregion
-
 }

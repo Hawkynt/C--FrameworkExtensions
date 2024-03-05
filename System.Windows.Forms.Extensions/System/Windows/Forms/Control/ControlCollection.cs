@@ -1,4 +1,5 @@
 ﻿#region (c)2010-2042 Hawkynt
+
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -17,6 +18,7 @@
     along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
+
 #endregion
 
 
@@ -24,14 +26,14 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace System.Windows.Forms; 
+namespace System.Windows.Forms;
 
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
 internal
 #endif
-static partial class ControlCollectionExtensions {
+  static partial class ControlCollectionExtensions {
   public static Control[] ToArray(this Control.ControlCollection @this) {
     var result = new Control[@this.Count];
     for (var i = 0; i < result.Length; ++i)

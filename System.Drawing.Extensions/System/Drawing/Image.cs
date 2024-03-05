@@ -1,22 +1,24 @@
 ﻿#region (c)2010-2042 Hawkynt
+
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
+
 #endregion
 
 #if SUPPORTS_CONTRACTS
@@ -31,531 +33,525 @@ using System.Linq;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
 
-namespace System.Drawing {
+namespace System.Drawing;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
   internal
 #endif
   static partial class ImageExtensions {
-    /// <summary>
-    /// Gets a single page of a multipage image.
-    /// </summary>
-    /// <param name="this">The image.</param>
-    /// <param name="page">The page.</param>
-    /// <returns>The content of the requested page.</returns>
-    public static Image GetPageAt(this Image @this, int page) {
-      var totalPages = @this.GetPageCount();
-      if (page >= totalPages)
-        return null;
+  /// <summary>
+  ///   Gets a single page of a multipage image.
+  /// </summary>
+  /// <param name="this">The image.</param>
+  /// <param name="page">The page.</param>
+  /// <returns>The content of the requested page.</returns>
+  public static Image GetPageAt(this Image @this, int page) {
+    var totalPages = @this.GetPageCount();
+    if (page >= totalPages)
+      return null;
 
-      if (page < 0)
-        return null;
+    if (page < 0)
+      return null;
 
-      @this.SelectActiveFrame(FrameDimension.Page, page);
-      var result = new Bitmap(@this);
-      return result;
-    }
+    @this.SelectActiveFrame(FrameDimension.Page, page);
+    var result = new Bitmap(@this);
+    return result;
+  }
 
-    /// <summary>
-    /// Gets the number of pages of the given image.
-    /// </summary>
-    /// <param name="this">The image.</param>
-    /// <returns>Number of pages.</returns>
-    public static int GetPageCount(this Image @this) => @this.GetFrameCount(FrameDimension.Page);
+  /// <summary>
+  ///   Gets the number of pages of the given image.
+  /// </summary>
+  /// <param name="this">The image.</param>
+  /// <returns>Number of pages.</returns>
+  public static int GetPageCount(this Image @this) => @this.GetFrameCount(FrameDimension.Page);
 
-    /// <summary>
-    /// Saves an image into a png file.
-    /// </summary>
-    /// <param name="this">This image.</param>
-    /// <param name="file">The file where it should be saved.</param>
-    public static void SaveToPng(this Image @this, FileInfo file) => SaveToPng(@this, file.FullName);
-    
-    /// <summary>
-    /// Saves an image into a png file.
-    /// </summary>
-    /// <param name="this">This image.</param>
-    /// <param name="fileName">The file where it should be saved.</param>
-    public static void SaveToPng(this Image @this, string fileName) {
+  /// <summary>
+  ///   Saves an image into a png file.
+  /// </summary>
+  /// <param name="this">This image.</param>
+  /// <param name="file">The file where it should be saved.</param>
+  public static void SaveToPng(this Image @this, FileInfo file) => SaveToPng(@this, file.FullName);
+
+  /// <summary>
+  ///   Saves an image into a png file.
+  /// </summary>
+  /// <param name="this">This image.</param>
+  /// <param name="fileName">The file where it should be saved.</param>
+  public static void SaveToPng(this Image @this, string fileName) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(fileName != null);
 #endif
-      var encoder = _GetEncoder(ImageFormat.Png);
-      if (encoder == null)
-        throw new NotSupportedException("Png encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Png);
+    if (encoder == null)
+      throw new NotSupportedException("Png encoder not available");
 
-      @this.Save(fileName, ImageFormat.Png);
-    }
+    @this.Save(fileName, ImageFormat.Png);
+  }
 
-    /// <summary>
-    /// Saves an image into a tif file.
-    /// </summary>
-    /// <param name="this">This image.</param>
-    /// <param name="fileName">The file where it should be saved.</param>
-    public static void SaveToTiff(this Image @this, string fileName) {
+  /// <summary>
+  ///   Saves an image into a tif file.
+  /// </summary>
+  /// <param name="this">This image.</param>
+  /// <param name="fileName">The file where it should be saved.</param>
+  public static void SaveToTiff(this Image @this, string fileName) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(fileName != null);
 #endif
-      var encoder = _GetEncoder(ImageFormat.Tiff);
-      if (encoder == null)
-        throw new NotSupportedException("Tiff encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Tiff);
+    if (encoder == null)
+      throw new NotSupportedException("Tiff encoder not available");
 
-      @this.Save(fileName, ImageFormat.Tiff);
-    }
+    @this.Save(fileName, ImageFormat.Tiff);
+  }
 
-    /// <summary>
-    /// Saves an image into a jpeg file.
-    /// </summary>
-    /// <param name="this">This image.</param>
-    /// <param name="fileName">The file where it should be saved.</param>
-    /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
-    public static void SaveToJpeg(this Image @this, string fileName, double quality = 1) {
+  /// <summary>
+  ///   Saves an image into a jpeg file.
+  /// </summary>
+  /// <param name="this">This image.</param>
+  /// <param name="fileName">The file where it should be saved.</param>
+  /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
+  public static void SaveToJpeg(this Image @this, string fileName, double quality = 1) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(fileName != null);
 #endif
-      var encoder = _GetEncoder(ImageFormat.Jpeg);
-      if (encoder == null)
-        throw new NotSupportedException("Jpeg encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Jpeg);
+    if (encoder == null)
+      throw new NotSupportedException("Jpeg encoder not available");
 
-      using var encoderParameters = new EncoderParameters(1);
-      encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
-      @this.Save(fileName, encoder, encoderParameters);
-    }
+    using var encoderParameters = new EncoderParameters(1);
+    encoderParameters.Param[0] = new(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
+    @this.Save(fileName, encoder, encoderParameters);
+  }
 
-    /// <summary>
-    /// Saves an image into a jpeg stream.
-    /// </summary>
-    /// <param name="this">This image.</param>
-    /// <param name="stream">The stream where it should be saved.</param>
-    /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
-    public static void SaveToJpeg(this Image @this, Stream stream, double quality = 1) {
+  /// <summary>
+  ///   Saves an image into a jpeg stream.
+  /// </summary>
+  /// <param name="this">This image.</param>
+  /// <param name="stream">The stream where it should be saved.</param>
+  /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
+  public static void SaveToJpeg(this Image @this, Stream stream, double quality = 1) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
       Contract.Requires(stream != null);
 #endif
-      var encoder = _GetEncoder(ImageFormat.Jpeg);
-      if (encoder == null)
-        throw new NotSupportedException("Jpeg encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Jpeg);
+    if (encoder == null)
+      throw new NotSupportedException("Jpeg encoder not available");
 
-      using var encoderParameters = new EncoderParameters(1);
-      encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
-      @this.Save(stream, encoder, encoderParameters);
-    }
+    using var encoderParameters = new EncoderParameters(1);
+    encoderParameters.Param[0] = new(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
+    @this.Save(stream, encoder, encoderParameters);
+  }
 
-    /// <summary>
-    /// Get a suitable encoder.
-    /// </summary>
-    /// <param name="format">The format to encode.</param>
-    /// <returns>A suitable encoder or <c>null</c>.</returns>
-    private static ImageCodecInfo _GetEncoder(ImageFormat format) {
+  /// <summary>
+  ///   Get a suitable encoder.
+  /// </summary>
+  /// <param name="format">The format to encode.</param>
+  /// <returns>A suitable encoder or <c>null</c>.</returns>
+  private static ImageCodecInfo _GetEncoder(ImageFormat format) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(format != null);
 #endif
-      return (from i in ImageCodecInfo.GetImageEncoders()
-              where i.FormatID == format.Guid
-              select i).FirstOrDefault();
-    }
+    return (from i in ImageCodecInfo.GetImageEncoders()
+      where i.FormatID == format.Guid
+      select i).FirstOrDefault();
+  }
 
-    /// <summary>
-    /// All sizes that are supported for icons.
-    /// </summary>
-    private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = { 16, 24, 32, 48, 64, 128 };
+  /// <summary>
+  ///   All sizes that are supported for icons.
+  /// </summary>
+  private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = { 16, 24, 32, 48, 64, 128 };
 
-    /// <summary>
-    /// Converts a given image to an icon.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="targetRes">The target resolution, values &lt;=0 mean auto-detect.</param>
-    /// <returns>
-    /// The icon.
-    /// </returns>
-    public static Icon ToIcon(this Image @this, int targetRes = 0) {
+  /// <summary>
+  ///   Converts a given image to an icon.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="targetRes">The target resolution, values &lt;=0 mean auto-detect.</param>
+  /// <returns>
+  ///   The icon.
+  /// </returns>
+  public static Icon ToIcon(this Image @this, int targetRes = 0) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
 
-      if (targetRes <= 0) {
+    if (targetRes <= 0) {
+      // auto-detect
+      var width = @this.Width;
+      var height = @this.Height;
 
-        // auto-detect
-        var width = @this.Width;
-        var height = @this.Height;
+      // if width/height different or not in the supported dimensions list
+      if (width != height || !_SUPPORTED_ICON_RESOLUTIONS.Contains(targetRes)) {
+        var longestEdge = Math.Max(width, height);
+        var nextBiggerIconSize = _SUPPORTED_ICON_RESOLUTIONS.FirstOrDefault(r => r > longestEdge);
+        var nextLessIconSize = _SUPPORTED_ICON_RESOLUTIONS.Reverse().FirstOrDefault(r => r < longestEdge);
 
-        // if width/height different or not in the supported dimensions list
-        if (width != height || !_SUPPORTED_ICON_RESOLUTIONS.Contains(targetRes)) {
-          var longestEdge = Math.Max(width, height);
-          var nextBiggerIconSize = _SUPPORTED_ICON_RESOLUTIONS.FirstOrDefault(r => r > longestEdge);
-          var nextLessIconSize = _SUPPORTED_ICON_RESOLUTIONS.Reverse().FirstOrDefault(r => r < longestEdge);
+        if (nextBiggerIconSize == 0)
 
-          if (nextBiggerIconSize == 0)
+          // when source image is bigger than the max support, use max support
+          targetRes = nextLessIconSize;
+        else {
+          if (nextLessIconSize == 0)
 
-            // when source image is bigger than the max support, use max support
-            targetRes = nextLessIconSize;
-          else {
-
-            if (nextLessIconSize == 0)
-
-              // if source image is smaller than min support, use min support
-              targetRes = nextBiggerIconSize;
-            else {
-
-              // if edge length is closer to the next smaller size, take it, otherwise use the next bigger size
-              targetRes = longestEdge - nextLessIconSize < nextBiggerIconSize - longestEdge ? nextLessIconSize : nextBiggerIconSize;
-            }
-          }
+            // if source image is smaller than min support, use min support
+            targetRes = nextBiggerIconSize;
+          else
+            // if edge length is closer to the next smaller size, take it, otherwise use the next bigger size
+            targetRes = longestEdge - nextLessIconSize < nextBiggerIconSize - longestEdge
+              ? nextLessIconSize
+              : nextBiggerIconSize;
         }
       }
-
-      using var bitmap = Resize(@this, targetRes, targetRes, true);
-
-      // create gdi handle
-      var hIcon = bitmap.GetHicon();
-
-      // return icon
-      return Icon.FromHandle(hIcon);
     }
 
-    /// <summary>
-    /// Converts image to grayscale.
-    /// </summary>
-    /// <param name="this">The source.</param>
-    /// <returns></returns>
-    public static Bitmap MakeGrayscale(this Image @this) {
+    using var bitmap = Resize(@this, targetRes, targetRes, true);
+
+    // create gdi handle
+    var hIcon = bitmap.GetHicon();
+
+    // return icon
+    return Icon.FromHandle(hIcon);
+  }
+
+  /// <summary>
+  ///   Converts image to grayscale.
+  /// </summary>
+  /// <param name="this">The source.</param>
+  /// <returns></returns>
+  public static Bitmap MakeGrayscale(this Image @this) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this is Bitmap);
 #endif
-      
-      var result = new Bitmap(@this.Width, @this.Height);
-      using (var graphics = Graphics.FromImage(result)) {
-        var matrix = new ColorMatrix(new[] {
-          new[] { 0.3f, 0.3f, 0.3f, 0, 0},
-          new[] { 0.59f, 0.59f, 0.59f, 0, 0},
-          new[] { 0.11f, 0.11f, 0.11f, 0, 0},
-          new[] { 0, 0, 0, 1f, 0},
-          new[] { 0, 0, 0, 0, 1f}
-        });
-        var attributes = new ImageAttributes();
-        attributes.SetColorMatrix(matrix);
-        graphics.DrawImage(@this, new Rectangle(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, attributes);
-      }
-      
-      return result;
-    }
 
-    /// <summary>
-    /// Converts image to black&amp;white.
-    /// </summary>
-    /// <param name="this">The source.</param>
-    /// <param name="threshold">The threshold under which a pixel is considered black.</param>
-    /// <returns></returns>
-    public static Bitmap Threshold(this Image @this, byte threshold = 127) {
+    var result = new Bitmap(@this.Width, @this.Height);
+    using var graphics = Graphics.FromImage(result);
+    var matrix = new ColorMatrix(new[] {
+      new[] { 0.3f, 0.3f, 0.3f, 0, 0 },
+      new[] { 0.59f, 0.59f, 0.59f, 0, 0 },
+      new[] { 0.11f, 0.11f, 0.11f, 0, 0 },
+      new[] { 0, 0, 0, 1f, 0 },
+      new[] { 0, 0, 0, 0, 1f }
+    });
+    var attributes = new ImageAttributes();
+    attributes.SetColorMatrix(matrix);
+    graphics.DrawImage(@this, new(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, attributes);
+
+    return result;
+  }
+
+  /// <summary>
+  ///   Converts image to black&amp;white.
+  /// </summary>
+  /// <param name="this">The source.</param>
+  /// <param name="threshold">The threshold under which a pixel is considered black.</param>
+  /// <returns></returns>
+  public static Bitmap Threshold(this Image @this, byte threshold = 127) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this is Bitmap);
 #endif
-      return @this.ApplyPixelProcessor(c => {
-        var mean = (c.R + c.G + c.B) / 3.0;
-        var color = mean < threshold ? byte.MinValue : byte.MaxValue;
-        return Color.FromArgb(c.A, color, color, color);
-      });
-    }
+    return @this.ApplyPixelProcessor(c => {
+      var mean = (c.R + c.G + c.B) / 3.0;
+      var color = mean < threshold ? byte.MinValue : byte.MaxValue;
+      return Color.FromArgb(c.A, color, color, color);
+    });
+  }
 
-    /// <summary>
-    /// Applies a pixel processor to the image.
-    /// </summary>
-    /// <param name="this">The source.</param>
-    /// <param name="processor">The processor.</param>
-    /// <returns>The processed image.</returns>
-    public static Bitmap ApplyPixelProcessor(this Image @this, Func<Color, Color> processor) {
+  /// <summary>
+  ///   Applies a pixel processor to the image.
+  /// </summary>
+  /// <param name="this">The source.</param>
+  /// <param name="processor">The processor.</param>
+  /// <returns>The processed image.</returns>
+  public static Bitmap ApplyPixelProcessor(this Image @this, Func<Color, Color> processor) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this is Bitmap);
       Contract.Requires(processor != null);
 #endif
-      var original = (Bitmap)@this;
-      //make an empty bitmap the same size as original
-      var newBitmap = new Bitmap(original.Width, original.Height);
+    var original = (Bitmap)@this;
+    //make an empty bitmap the same size as original
+    var newBitmap = new Bitmap(original.Width, original.Height);
 
-      for (var i = 0; i < original.Width; i++) {
-        for (var j = 0; j < original.Height; j++) {
-          //get the pixel from the original image
-          var originalColor = original.GetPixel(i, j);
+    for (var i = 0; i < original.Width; i++)
+    for (var j = 0; j < original.Height; j++) {
+      //get the pixel from the original image
+      var originalColor = original.GetPixel(i, j);
 
-          //create the color object
-          var newColor = processor(originalColor);
+      //create the color object
+      var newColor = processor(originalColor);
 
-          //set the new image's pixel to the grayscale version
-          newBitmap.SetPixel(i, j, newColor);
-        }
-      }
-
-      return newBitmap;
+      //set the new image's pixel to the grayscale version
+      newBitmap.SetPixel(i, j, newColor);
     }
 
-    /// <summary>
-    /// Mirrors the image along X.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <returns>A mirrored image version</returns>
-    public static Image MirrorAlongX(this Image @this) {
+    return newBitmap;
+  }
+
+  /// <summary>
+  ///   Mirrors the image along X.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <returns>A mirrored image version</returns>
+  public static Image MirrorAlongX(this Image @this) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      var result = (Image)@this.Clone();
-      result.RotateFlip(RotateFlipType.RotateNoneFlipX);
-      return result;
-    }
+    var result = (Image)@this.Clone();
+    result.RotateFlip(RotateFlipType.RotateNoneFlipX);
+    return result;
+  }
 
-    /// <summary>
-    /// Mirrors the image along Y.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <returns>A mirrored image version</returns>
-    public static Image MirrorAlongY(this Image @this) {
+  /// <summary>
+  ///   Mirrors the image along Y.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <returns>A mirrored image version</returns>
+  public static Image MirrorAlongY(this Image @this) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      var result = (Image)@this.Clone();
-      result.RotateFlip(RotateFlipType.RotateNoneFlipY);
-      return result;
-    }
+    var result = (Image)@this.Clone();
+    result.RotateFlip(RotateFlipType.RotateNoneFlipY);
+    return result;
+  }
 
-    /// <summary>
-    /// Resizes the specified Image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="longSide">The width/height in pixels.</param>
-    /// <returns></returns>
-    public static Bitmap Resize(this Image @this, int longSide)
-      => Resize(@this, longSide, longSide, true, null)
-    ;
+  /// <summary>
+  ///   Resizes the specified Image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="longSide">The width/height in pixels.</param>
+  /// <returns></returns>
+  public static Bitmap Resize(this Image @this, int longSide) => Resize(@this, longSide, longSide, true, null);
 
-    /// <summary>
-    /// Resizes the specified Image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="longSide">The width/height in pixels.</param>
-    /// <param name="fillColor">Color of the fill.</param>
-    /// <returns></returns>
-    public static Bitmap Resize(this Image @this, int longSide, Color fillColor)
-      => Resize(@this, longSide, longSide, true, fillColor)
-    ;
+  /// <summary>
+  ///   Resizes the specified Image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="longSide">The width/height in pixels.</param>
+  /// <param name="fillColor">Color of the fill.</param>
+  /// <returns></returns>
+  public static Bitmap Resize(this Image @this, int longSide, Color fillColor) => Resize(@this, longSide, longSide, true, fillColor);
 
-    /// <summary>
-    /// Resizes the specified Image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="width">The width in pixels.</param>
-    /// <param name="height">The height in pixels.</param>
-    /// <param name="keepAspect">if set to <c>true</c> keeps image aspect and fills borders with fillColor.</param>
-    /// <param name="fillColor">Color of the fill.</param>
-    /// <returns></returns>
-    public static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null) {
-      var result = new Bitmap(width, height);
-      using (var graphics = Graphics.FromImage(result)) {
-        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.SmoothingMode = SmoothingMode.HighQuality;
-        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-        graphics.CompositingQuality = CompositingQuality.HighQuality;
+  /// <summary>
+  ///   Resizes the specified Image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="width">The width in pixels.</param>
+  /// <param name="height">The height in pixels.</param>
+  /// <param name="keepAspect">if set to <c>true</c> keeps image aspect and fills borders with fillColor.</param>
+  /// <param name="fillColor">Color of the fill.</param>
+  /// <returns></returns>
+  public static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null) {
+    var result = new Bitmap(width, height);
+    using var graphics = Graphics.FromImage(result);
+    graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+    graphics.SmoothingMode = SmoothingMode.HighQuality;
+    graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+    graphics.CompositingQuality = CompositingQuality.HighQuality;
 
-        if (keepAspect) {
-          var ratioX = (double) result.Width / @this.Width;
-          var ratioY = (double) result.Height / @this.Height;
-          var ratio = ratioX < ratioY ? ratioX : ratioY;
-          var newWidth = (int) (ratio * @this.Width);
-          var newHeight = (int) (ratio * @this.Height);
-          var x = (result.Width - newWidth) >> 1;
-          var y = (result.Height - newHeight) >> 1;
-          graphics.Clear(fillColor ?? Color.Transparent);
-          graphics.DrawImage(@this, x, y, newWidth, newHeight);
-        } else {
-          graphics.DrawImage(@this, 0, 0, result.Width, result.Height);
-        }
-      }
-      return result;
-    }
+    if (keepAspect) {
+      var ratioX = (double)result.Width / @this.Width;
+      var ratioY = (double)result.Height / @this.Height;
+      var ratio = ratioX < ratioY ? ratioX : ratioY;
+      var newWidth = (int)(ratio * @this.Width);
+      var newHeight = (int)(ratio * @this.Height);
+      var x = (result.Width - newWidth) >> 1;
+      var y = (result.Height - newHeight) >> 1;
+      graphics.Clear(fillColor ?? Color.Transparent);
+      graphics.DrawImage(@this, x, y, newWidth, newHeight);
+    } else
+      graphics.DrawImage(@this, 0, 0, result.Width, result.Height);
 
-    /// <summary>
-    /// Resizes the specified Image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="width">The width in pixels.</param>
-    /// <param name="height">The height in pixels.</param>
-    /// <param name="interpolation">The interpolation.</param>
-    /// <returns></returns>
-    public static Bitmap Resize(this Image @this, int width = -1, int height = -1, InterpolationMode interpolation = InterpolationMode.Default) {
+    return result;
+  }
+
+  /// <summary>
+  ///   Resizes the specified Image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="width">The width in pixels.</param>
+  /// <param name="height">The height in pixels.</param>
+  /// <param name="interpolation">The interpolation.</param>
+  /// <returns></returns>
+  public static Bitmap Resize(this Image @this, int width = -1, int height = -1, InterpolationMode interpolation = InterpolationMode.Default) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      if (width < 1 && height < 1)
-        throw new ArgumentException("At least one argument has to be > 0", nameof(width));
-
+    
+    width = width switch {
+      < 1 when height < 1 => throw new ArgumentException("At least one argument has to be > 0", nameof(width)),
       // aspect ratio-preserving resize
-      if (width < 1)
-        width = (int)(@this.Width * height / (double)@this.Height);
-      if (height < 1)
-        height = (int)(@this.Height * width / (double)@this.Width);
+      < 1 => (int)(@this.Width * height / (double)@this.Height),
+      _ => width
+    };
 
-      // set resolution
-      var result = new Bitmap(width, height, @this.PixelFormat);
-      result.SetResolution(@this.HorizontalResolution, @this.VerticalResolution);
+    if (height < 1)
+      height = (int)(@this.Height * width / (double)@this.Width);
 
-      // do resize action
-      using (var graphics = Graphics.FromImage(result)) {
-        graphics.InterpolationMode = interpolation;
-        graphics.DrawImage(@this, new Rectangle(0, 0, width, height), new Rectangle(0, 0, @this.Width, @this.Height), GraphicsUnit.Pixel);
-      }
+    // set resolution
+    var result = new Bitmap(width, height, @this.PixelFormat);
+    result.SetResolution(@this.HorizontalResolution, @this.VerticalResolution);
 
-      return result;
-    }
+    // do resize action
+    using var graphics = Graphics.FromImage(result);
+    graphics.InterpolationMode = interpolation;
+    graphics.DrawImage(@this, new Rectangle(0, 0, width, height), new(0, 0, @this.Width, @this.Height), GraphicsUnit.Pixel);
 
-    /// <summary>
-    /// Rotates the specified image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="angle">The angle.</param>
-    /// <returns></returns>
-    public static Bitmap Rotate(this Image @this, float angle) {
+    return result;
+  }
+
+  /// <summary>
+  ///   Rotates the specified image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="angle">The angle.</param>
+  /// <returns></returns>
+  public static Bitmap Rotate(this Image @this, float angle) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);
 #endif
-      var result = new Bitmap(@this);
+    var result = new Bitmap(@this);
 
-      while (angle < 0)
-        angle += 360;
+    while (angle < 0)
+      angle += 360;
 
-      if (angle >= 360)
-        angle = angle % 360;
+    if (angle >= 360)
+      angle %= 360;
 
-      if (angle == 0)
+    switch (angle) {
+      case 0:
         return result;
-
-      if (angle == 90) {
+      case 90:
         result.RotateFlip(RotateFlipType.Rotate90FlipNone);
         return result;
-      }
-
-      if (angle == 180) {
+      case 180:
         result.RotateFlip(RotateFlipType.Rotate180FlipNone);
         return result;
-      }
-
-      if (angle == 270) {
+      case 270:
         result.RotateFlip(RotateFlipType.Rotate270FlipNone);
         return result;
-      }
-
-      using (var graphics = Graphics.FromImage(result)) {
+      default: {
+        using var graphics = Graphics.FromImage(result);
         graphics.TranslateTransform(result.Width / 2f, result.Height / 2f);
         graphics.RotateTransform(angle);
         graphics.TranslateTransform(-result.Width / 2f, -result.Height / 2f);
         graphics.DrawImage(result, new Point(0, 0));
+
+        return result;
       }
-      return result;
     }
+    
+  }
 
-    /// <summary>
-    /// Gets a rectangular area of the image.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="rect">The rectangle.</param>
-    /// <returns>A new image from the given rectangle</returns>
-    public static Image GetRectangle(this Image @this, Rectangle rect) {
-      var result = new Bitmap(rect.Width, rect.Height);
-      using (var graphics = Graphics.FromImage(result))
-        graphics.DrawImage(@this, new Rectangle(Point.Empty, rect.Size), rect, GraphicsUnit.Pixel);
+  /// <summary>
+  ///   Gets a rectangular area of the image.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="rect">The rectangle.</param>
+  /// <returns>A new image from the given rectangle</returns>
+  public static Image GetRectangle(this Image @this, Rectangle rect) {
+    var result = new Bitmap(rect.Width, rect.Height);
+    using var graphics = Graphics.FromImage(result);
+    graphics.DrawImage(@this, new Rectangle(Point.Empty, rect.Size), rect, GraphicsUnit.Pixel);
 
-      return result;
-    }
+    return result;
+  }
 
-    /// <summary>
-    /// Replaces the given color with transparency.
-    /// </summary>
-    /// <param name="this">This Image.</param>
-    /// <param name="color">The color to replace.</param>
-    /// <returns>A new image</returns>
-    public static Image ReplaceColorWithTransparency(this Image @this, Color color) {
-      var result = new Bitmap(@this.Width, @this.Height);
-      using (var graphics = Graphics.FromImage(result)) {
-        var imageAttributes = new ImageAttributes();
-        imageAttributes.SetRemapTable(new[] { new ColorMap { OldColor = color, NewColor = Color.Transparent } }, ColorAdjustType.Bitmap);
-        graphics.DrawImage(@this, new Rectangle(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, imageAttributes);
+  /// <summary>
+  ///   Replaces the given color with transparency.
+  /// </summary>
+  /// <param name="this">This Image.</param>
+  /// <param name="color">The color to replace.</param>
+  /// <returns>A new image</returns>
+  public static Image ReplaceColorWithTransparency(this Image @this, Color color) {
+    var result = new Bitmap(@this.Width, @this.Height);
+    using var graphics = Graphics.FromImage(result);
+    var imageAttributes = new ImageAttributes();
+    imageAttributes.SetRemapTable(new[] { new ColorMap { OldColor = color, NewColor = Color.Transparent } }, ColorAdjustType.Bitmap);
+    graphics.DrawImage(@this, new(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, imageAttributes);
+
+    return result;
+  }
+
+  /// <summary>
+  ///   Saves an image into a BASE64-encoded data URI
+  /// </summary>
+  /// <param name="this">This Image</param>
+  /// <returns></returns>
+  public static string ToBase64DataUri(this Image @this) {
+    if (@this == null)
+      return string.Empty;
+
+    var rawFormat = @this.RawFormat;
+    string mimeType;
+    for (;;) {
+      var rawGuid = rawFormat.Guid;
+      if (rawGuid == ImageFormat.Bmp.Guid) {
+        mimeType = "image/bmp";
+        break;
       }
-      return result;
-    }
 
-    /// <summary>
-    /// Saves an image into a BASE64-encoded data URI
-    /// </summary>
-    /// <param name="this">This Image</param>
-    /// <returns></returns>
-    public static string ToBase64DataUri(this Image @this) {
-      if (@this == null)
-        return string.Empty;
+      if (rawGuid == ImageFormat.Jpeg.Guid) {
+        mimeType = "image/jpeg";
+        break;
+      }
 
-      var rawFormat = @this.RawFormat;
-      string mimeType;
-      for (; ; ) {
-        var rawGuid = rawFormat.Guid;
-        if (rawGuid == ImageFormat.Bmp.Guid) {
-          mimeType = "image/bmp";
-          break;
-        }
-        if (rawGuid == ImageFormat.Jpeg.Guid) {
-          mimeType = "image/jpeg";
-          break;
-        }
-        if (rawGuid == ImageFormat.Png.Guid) {
-          mimeType = "image/png";
-          break;
-        }
-        if (rawGuid == ImageFormat.Tiff.Guid) {
-          mimeType = "image/tiff";
-          break;
-        }
-        if (rawGuid == ImageFormat.Gif.Guid) {
-          mimeType = "image/gif";
-          break;
-        }
-        if (rawGuid == ImageFormat.Icon.Guid) {
-          mimeType = "image/x-icon";
-          break;
-        }
-        if (rawGuid == ImageFormat.Wmf.Guid) {
-          mimeType = "windows/metafile";
-          break;
-        }
-
-        rawFormat = ImageFormat.Png;
+      if (rawGuid == ImageFormat.Png.Guid) {
         mimeType = "image/png";
         break;
       }
 
-      using var memoryStream = new MemoryStream();
-      @this.Save(memoryStream, rawFormat);
-      return $"data:{mimeType};base64,{Convert.ToBase64String(memoryStream.ToArray())}";
+      if (rawGuid == ImageFormat.Tiff.Guid) {
+        mimeType = "image/tiff";
+        break;
+      }
+
+      if (rawGuid == ImageFormat.Gif.Guid) {
+        mimeType = "image/gif";
+        break;
+      }
+
+      if (rawGuid == ImageFormat.Icon.Guid) {
+        mimeType = "image/x-icon";
+        break;
+      }
+
+      if (rawGuid == ImageFormat.Wmf.Guid) {
+        mimeType = "windows/metafile";
+        break;
+      }
+
+      rawFormat = ImageFormat.Png;
+      mimeType = "image/png";
+      break;
     }
 
-    /// <summary>
-    /// Gets an image from a BASE64-encoded data URI
-    /// </summary>
-    /// <param name="this">This Uri</param>
-    /// <returns></returns>
-    public static Image FromBase64DataUri(this string @this) {
-      if (!@this.StartsWith("data:image/"))
-        return null;
+    using var memoryStream = new MemoryStream();
+    @this.Save(memoryStream, rawFormat);
+    return $"data:{mimeType};base64,{Convert.ToBase64String(memoryStream.ToArray())}";
+  }
 
-      var index = @this.IndexOf("base64,");
-      if (index < 0)
-        return null;
+  /// <summary>
+  ///   Gets an image from a BASE64-encoded data URI
+  /// </summary>
+  /// <param name="this">This Uri</param>
+  /// <returns></returns>
+  public static Image FromBase64DataUri(this string @this) {
+    if (!@this.StartsWith("data:image/"))
+      return null;
 
-      var base64 = @this.Substring(index + 7);
-      
-      var bytes = Convert.FromBase64String(base64);
-      using var ms = new MemoryStream(bytes, 0, bytes.Length);
-      return Image.FromStream(ms, true);
-    }
+    var index = @this.IndexOf("base64,");
+    if (index < 0)
+      return null;
 
+    var base64 = @this[(index + 7)..];
+
+    var bytes = Convert.FromBase64String(base64);
+    using var ms = new MemoryStream(bytes, 0, bytes.Length);
+    return Image.FromStream(ms, true);
   }
 }

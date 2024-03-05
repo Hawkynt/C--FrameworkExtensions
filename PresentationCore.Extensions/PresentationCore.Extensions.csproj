@@ -25,6 +25,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <langversion>default</langversion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,11 +33,11 @@
   </ItemGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

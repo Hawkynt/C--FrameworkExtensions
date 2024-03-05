@@ -1,4 +1,6 @@
-﻿#if !SUPPORTS_READ_ONLY_COLLECTIONS
+﻿using System.Collections.Generic;
+
+#if !SUPPORTS_READ_ONLY_COLLECTIONS
 #region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -20,7 +22,7 @@
 */
 #endregion
 
-namespace System.Collections.Generic;
+namespace System.Collections.ObjectModel;
 
 #if COMPILE_TO_EXTENSION_DLL
 public

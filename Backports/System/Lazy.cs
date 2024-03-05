@@ -117,7 +117,7 @@ namespace System {
   class Lazy {
     private readonly Lazy<byte> _lazy;
     public Lazy(Action action) {
-      this._lazy = new Lazy<byte>(() => {
+      this._lazy = new(() => {
         action();
         return byte.MaxValue;
       });

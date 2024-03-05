@@ -3,12 +3,11 @@
 namespace System.Windows.Forms;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
 internal
 #endif
-class BindableToolStripSpringTextBox : ToolStripSpringTextBox, IBindableComponent {
-
+  class BindableToolStripSpringTextBox : ToolStripSpringTextBox, IBindableComponent {
   #region IBindableComponent Members
 
   private BindingContext _bindingContext;
@@ -28,5 +27,4 @@ class BindableToolStripSpringTextBox : ToolStripSpringTextBox, IBindableComponen
   public ControlBindingsCollection DataBindings => this._dataBindings ??= new(this);
 
   #endregion
-
 }

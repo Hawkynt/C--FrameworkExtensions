@@ -21,7 +21,7 @@
 #endregion
 
 namespace System;
-using System.Runtime.CompilerServices;
+using Runtime.CompilerServices;
 
 #if COMPILE_TO_EXTENSION_DLL
 public

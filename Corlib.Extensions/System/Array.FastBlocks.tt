@@ -271,7 +271,7 @@ static partial class ArrayExtensions {
         case 0: return;
 <#      for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
         case <#=i#>:
-<#          for(var j = 0; j < i; ++j) {#>
+<#      for(var j = 0; j < i; ++j) {#>
           <#=EmitIndexCopy(j)#><#}#>
           return;
 <#      }#>

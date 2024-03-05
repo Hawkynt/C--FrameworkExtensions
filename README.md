@@ -10,6 +10,7 @@
  ![Repo-Size](https://img.shields.io/github/repo-size/Hawkynt/C--FrameworkExtensions?color=red)
 [![Stars](https://img.shields.io/github/stars/Hawkynt/C--FrameworkExtensions?color=yellow)](https://github.com/Hawkynt/C--FrameworkExtensions/stargazers)
 [![NuGet.org](https://img.shields.io/badge/Packages_on-NuGet.org-dodgerblue)](https://www.nuget.org/profiles/Hawkynt)
+
 ![Build History](https://buildstats.info/github/chart/hawkynt/C--FrameworkExtensions)
 
 Extensions to the [.NET Framework](https://en.wikipedia.org/wiki/.NET_Framework) and [.Net Core](https://en.wikipedia.org/wiki/.NET) for use with [C# programming language](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) or any other compatible .[NET language](https://en.wikipedia.org/wiki/List_of_.NET_libraries_and_frameworks).
