@@ -1,0 +1,71 @@
+name: NewBuild
+on:
+  schedule:
+    - cron: '59 23 * * 0'
+  workflow_dispatch:
+jobs:
+  Init:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.x
+        
+      - name: Show Info
+        run: dotnet --info
+      
+      - name: Receive Version
+        run: perl ".github/workflows/UpdateVersions.pl" "."
+
+  BuildBackports:
+    needs: Init
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        csproj-file: 
+          - 'Backports/Backports.csproj'
+    steps:
+     - name: Restore dependencies
+       run: dotnet restore "${{ matrix.csproj-file }}"
+      
+     - name: Build
+       run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
+     
+  BuildExtensions:
+    needs: BuildBackports
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        csproj-file: 
+          - 'Corlib.Extensions/Corlib.Extensions.csproj'
+          - 'PresentationCore.Extensions/PresentationCore.Extensions.csproj'
+          - 'System.Drawing.Extensions/System.Drawing.Extensions.csproj'
+          - 'System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj'
+          - 'System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj'
+    steps:
+     - name: Restore dependencies
+       run: dotnet restore "${{ matrix.csproj-file }}"
+      
+     - name: Build
+       run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
+    
+#  PublishNuGet:
+#    needs: BuildExtensions
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        csproj-file: ['Backports/Backports.csproj']
+#    steps:
+#     - name: Pack NuGet package
+#       run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
+#      
+#     - name: Publish the package to nuget.org
+#       run: dotnet nuget push ./artifacts/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+#       env:
+#         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+  
