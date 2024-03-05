@@ -26,17 +26,17 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            1.0
-            1.1
-            2.0
-            2.1
-            2.2
-            3.0
-            3.1
-            5.x
-            6.x
-            7.x
             8.x
+#            1.0
+#            1.1
+#            2.0
+#            2.1
+#            2.2
+#            3.0
+#            3.1
+#            5.x
+#            6.x
+#            7.x
 
       - name: Test
         run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal
