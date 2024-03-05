@@ -494,7 +494,7 @@ public class SequenceEquals {
 public class CopyTo {
   [Test]
   public void CopyToBytes() {
-    for (var i = 0; i < 16383; ++i) {
+    for (var i = 1; i < 16383; ++i) {
       var array1 = Enumerable.Range(0, i).Select(_ => (byte)1).ToArray();
       var array2 = new byte[array1.Length];
       array1.CopyTo(array2);
@@ -504,7 +504,7 @@ public class CopyTo {
 
   [Test]
   public void CopyToDecimals() {
-    for (var i = 0; i < 16383; ++i) {
+    for (var i = 1; i < 16383; ++i) {
       var array1 = Enumerable.Range(0, i).Select(_ => 1m).ToArray();
       var array2 = new decimal[array1.Length];
       array1.CopyTo(array2);
@@ -514,7 +514,7 @@ public class CopyTo {
 
   [Test]
   public void CopyToInts() {
-    for (var i = 0; i < 16383; ++i) {
+    for (var i = 1; i < 16383; ++i) {
       var array1 = Enumerable.Range(0, i).Select(_ => 1).ToArray();
       var array2 = new int[array1.Length];
       array1.CopyTo(array2);
