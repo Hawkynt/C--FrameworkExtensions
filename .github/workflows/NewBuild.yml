@@ -70,22 +70,24 @@ jobs:
         with:
           dotnet-version: 8.x
       
+      - run: |
+          projectDir=$(dirname ${{ matrix.csproj-file }})
+          projectName=$(basename $projectDir)
+          echo "ProjectDir=$projectDir" >> $GITHUB_ENV
+          echo "ProjectName=$projectName" >> $GITHUB_ENV
       - run: perl ".github/workflows/UpdateVersions.pl" "."
       - run: dotnet restore "${{ matrix.csproj-file }}"
       - run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
 
       - name: Zip the bin folder
-        run: |
-          project_dir=$(dirname ${{ matrix.csproj-file }})
-          project_name=$(basename $project_dir)
-          zip -r ${project_name}.zip $project_dir/bin/
+        run: zip -r ${{env.ProjectName}}.zip ${{env.ProjectDir}}/bin/
         working-directory: ${{ github.workspace }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${project_name}-${{ github.run_number }}
-          path: ${{ github.workspace }}/${project_name}.zip
+          name: ${{env.ProjectName}}-${{ github.run_number }}
+          path: ${{ github.workspace }}/${{env.ProjectName}}.zip
 
 #      - name: Pack NuGet package
 #        run: dotnet pack "${{ matrix.csproj-file }}" --configuration Release --output ./artifacts
