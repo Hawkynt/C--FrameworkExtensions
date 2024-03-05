@@ -41,9 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "Exte
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{91D58AC8-D51A-4C58-B890-8DB59D58E4E3}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\Build.yml = .github\workflows\Build.yml
 		.github\workflows\NewBuild.yml = .github\workflows\NewBuild.yml
-		.github\workflows\ReadVersion.pl = .github\workflows\ReadVersion.pl
 		.github\workflows\Tests.yml = .github\workflows\Tests.yml
 		.github\workflows\UpdateVersions.pl = .github\workflows\UpdateVersions.pl
 	EndProjectSection

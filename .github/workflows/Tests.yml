@@ -1,7 +1,7 @@
 name:  Tests
 on: 
   workflow_run:
-    workflows: ["Build"]
+    workflows: ["NewBuild"]
     types:
       - completed
   workflow_dispatch:
@@ -13,23 +13,30 @@ jobs:
 # Ubuntu fails tests in test-runner code right now, dunno why - it's not my code
 #        os: [ubuntu-latest, windows-latest]
         os: [windows-latest]
-        csproj-file: ['Tests/Corlib.Tests/Corlib.Tests.csproj','Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj']
+        csproj-file: 
+          - 'Tests/Corlib.Tests/Corlib.Tests.csproj'
+          - 'Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj'
         configuration: ['Debug','Release']
         architecture: ['AnyCPU','x86','x64']
 
     runs-on: ${{ matrix.os }}
     
     steps:
-     - uses: actions/checkout@v3
-     - name: Setup .NET 3
-       uses: actions/setup-dotnet@v3
-       with:
-         dotnet-version: 3.1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            1.0
+            1.1
+            2.0
+            2.1
+            2.2
+            3.0
+            3.1
+            5.x
+            6.x
+            7.x
+            8.x
 
-     - name: Setup .NET 7
-       uses: actions/setup-dotnet@v3
-       with:
-         dotnet-version: 7.x
-
-     - name: Test
-       run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal
+      - name: Test
+        run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal
