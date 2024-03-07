@@ -35,7 +35,6 @@ using System.Runtime.CompilerServices;
 #endif
 using System.Security.Cryptography;
 using System.Text;
-using System.Drawing;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -367,12 +366,11 @@ static partial class ArrayExtensions {
     const int _SMALL_THRESHOLD = 10_000;
     const int _MID_THRESHOLD = 1_000_000;
 
-    if (thisElements < _SMALL_THRESHOLD && otherElements < _SMALL_THRESHOLD)
-      return _CompareToLCS(@this, other, comparer);
-    if (thisElements < _MID_THRESHOLD && otherElements < _MID_THRESHOLD)
-      return _CompareToLookupTable(@this, other, comparer);
-
-    return _CompareToNaïve(@this, other, comparer);
+    return thisElements switch {
+      < _SMALL_THRESHOLD when otherElements < _SMALL_THRESHOLD => _CompareToLCS(@this, other, comparer),
+      < _MID_THRESHOLD when otherElements < _MID_THRESHOLD => _CompareToLookupTable(@this, other, comparer),
+      _ => _CompareToNaïve(@this, other, comparer)
+    };
   }
 
   private static IEnumerable<IChangeSet<TItem>> _CompareToNaïve<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
@@ -649,9 +647,9 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   [DebuggerStepThrough]
-  public static ReadOnlyArraySlice<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
+  public static ReadOnlySpan<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
-
+    
     return new(@this, start, length < 0 ? @this.Length - start : length);
   }
 
@@ -686,7 +684,7 @@ static partial class ArrayExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   [DebuggerStepThrough]
-  public static ArraySlice<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
+  public static Span<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
 
     return new(@this, start, length < 0 ? @this.Length - start : length);
