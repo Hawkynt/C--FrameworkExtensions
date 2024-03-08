@@ -264,275 +264,14 @@ internal static class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void And(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Andx32(@this, operand, target)
-#else
-      _Andx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void And(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      And(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Andx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
 <#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} &= {1}", blockSize, 8, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
+    GenerateThreeOperandBitwiseOperation("And", "&", false, blockSize);
+    GenerateThreeOperandBitwiseOperation("Nand", "&", true, blockSize);
+    GenerateThreeOperandBitwiseOperation("Or", "|", false, blockSize);
+    GenerateThreeOperandBitwiseOperation("Nor", "|", true, blockSize);
+    GenerateThreeOperandBitwiseOperation("Xor", "^", false, blockSize);
+    GenerateThreeOperandBitwiseOperation("Xnor", "^", true, blockSize);
 #>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Andx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} &= {1}", blockSize, 4, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
-
-    #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Nand(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Nandx32(@this, operand, target)
-#else
-      _Nandx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Nand(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      Nand(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Nandx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} &= {1}", blockSize, 8, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 8);
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
-#>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Nandx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} &= {1}", blockSize, 4, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 4);
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
-        
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Or(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Orx32(@this, operand, target)
-#else
-      _Orx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Or(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      Or(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Orx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} |= {1}", blockSize, 8, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
-#>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Orx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} |= {1}", blockSize, 4, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
-
-    #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Nor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Norx32(@this, operand, target)
-#else
-      _Norx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Nor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      Nor(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Norx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} |= {1}", blockSize, 8, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 8);
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
-#>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Norx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} |= {1}", blockSize, 4, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 4);
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
-    
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Xor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Xorx32(@this, operand, target)
-#else
-      _Xorx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Xor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      Xor(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Xorx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} ^= {1}", blockSize, 8, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
-#>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Xorx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} ^= {1}", blockSize, 4, "operand");
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
-
-    #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Xnor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
-#if PLATFORM_X86
-      _Xnorx32(@this, operand, target)
-#else
-      _Xnorx64(@this, operand, target)
-#endif
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static unsafe void Xnor(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
-      Xnor(@this, operand, @this)
-      ;
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Xnorx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
-      DoFullLoop("result{0} ^= {1}", blockSize, 8, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 8);
-      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
-    }
-#>
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static unsafe void _Xnorx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
-<#
-    {
-      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
-      DoFullLoop("result{0} ^= {1}", blockSize, 4, "operand");
-      DoFullLoop("result{0} = _Not(result{0})", blockSize, 4);
-      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
-    }
-#>
-    }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -636,6 +375,60 @@ void DoOperationLoop(string operation, ref int bytesLeft, ref int byteOffset, re
     bytesLeft -= size;
     byteOffset += size;
   }
+}
+
+void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool negate, int blockSize) {
+#>
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static unsafe void <#=name#>(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
+#if PLATFORM_X86
+      _<#=name#>x32(@this, operand, target)
+#else
+      _<#=name#>x64(@this, operand, target)
+#endif
+      ;
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static unsafe void <#=name#>(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
+      <#=name#>(@this, operand, @this)
+      ;
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe void _<#=name#>x64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
+<#+
+    {
+      DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
+      DoFullLoop("result{0} " + @operator + "= {1}", blockSize, 8, "operand");
+      if(negate)
+        DoFullLoop("result{0} = _Not(result{0})", blockSize, 8);
+
+      DoFullLoop("{1} = result{0}", blockSize, 8, "target");
+    }
+#>
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe void _<#=name#>x86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
+<#+
+    {
+      DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
+      DoFullLoop("result{0} " + @operator + "= {1}", blockSize, 4, "operand");
+      if(negate)
+        DoFullLoop("result{0} = _Not(result{0})", blockSize, 4);
+
+      DoFullLoop("{1} = result{0}", blockSize, 4, "target");
+    }
+#>
+    }
+<#+
 }
 
 string GetTypeForSize(int size) 

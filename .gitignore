@@ -289,13 +289,10 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+*.T4.cs
 Backports/System/FuncAction.cs
-Backports/System/NumericsHelpers.T4.cs
-Corlib.Extensions/Guard/Against.T4.cs
 Corlib.Extensions/System/Action.cs
 Corlib.Extensions/System/Array.FastBlocks.cs
-Corlib.Extensions/System/Math.T4.cs
-Corlib.Extensions/System/Numerics.T4.cs
 Corlib.Extensions/System/String.Parsers.cs
 Corlib.Extensions/System/TimeSpan.cs
 Corlib.Extensions/System/Type.cs
@@ -305,7 +302,6 @@ Corlib.Extensions/System/ComponentModel/PropertyChanged.cs
 Corlib.Extensions/System/ComponentModel/PropertyChanging.cs
 Corlib.Extensions/System/Runtime/Serialization/SerializationInfo.cs
 Corlib.Extensions/System/Threading/Interlocked.cs
-Corlib.Extensions/System/IO/FileInfo.T4.cs
 Corlib.Extensions/System/IO/Link.cs
 System.Drawing.Extensions/System/Drawing/Image.cs
 System.Drawing.Extensions/System/Drawing/Point.cs
