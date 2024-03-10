@@ -451,7 +451,7 @@ void GenerateOneOperandArbitraryCountOperation(string name) {
   public static unsafe void <#=name#>(byte* @this, int count) {
     for (;;)
       switch (count) {
-        case 0: return;
+        case <= 0: return;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
         case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this); return;
 <#+}#>
@@ -473,7 +473,7 @@ void GenerateTwoOperandArbitraryCountEqual(string name) {
   public static unsafe bool <#=name#>(byte* @this, byte* other, int count) {
     for (;;)
       switch (count) {
-        case 0: return true;
+        case <= 0: return true;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
         case <#=blockSize#>: return Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)other);
 <#+}#>
@@ -498,7 +498,7 @@ void GenerateTwoOperandArbitraryCountFill(string name) {
   public static unsafe void <#=name#>(byte* @this, byte value, int count) {
     for (;;)
       switch (count) {
-        case 0: return;
+        case <= 0: return;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
         case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, value); return;
 <#+}#>
@@ -520,7 +520,7 @@ void GenerateTwoOperandArbitraryCountOperation(string name) {
   public static unsafe void <#=name#>(byte* @this, byte* operand, int count) {
     for (;;)
       switch (count) {
-        case 0: return;
+        case <= 0: return;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
         case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand); return;
 <#+}#>
@@ -543,7 +543,7 @@ void GenerateThreeOperandArbitraryCountOperation(string name) {
   public static unsafe void <#=name#>(byte* @this, byte* operand, byte* target, int count) {
     for (;;)
       switch (count) {
-        case 0: return;
+        case <= 0: return;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
         case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand, (Block<#=blockSize#>*)target); return;
 <#+}#>
