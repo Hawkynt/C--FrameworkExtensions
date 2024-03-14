@@ -93,6 +93,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Math.T4.cs</LastGenOutput>
     </None>
+    <None Update="System\MemoryManipulation.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MemoryManipulation.T4.cs</LastGenOutput>
+    </None>
     <None Update="System\Numerics.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Numerics.T4.cs</LastGenOutput>
