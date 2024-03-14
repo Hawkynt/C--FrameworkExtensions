@@ -96,6 +96,17 @@ class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue
     }
   }
 
+  public TValue this[TKey key] {
+    get {
+      lock (this._items)
+        return this._items[key];
+    }
+    set {
+      lock (this._items)
+        this._items[key] = value;
+    }
+  }
+
   public KeyValuePair<TKey, TValue>[] OrderBy<TSort>(Func<KeyValuePair<TKey, TValue>, TSort> keySelector) {
     lock (this._items)
       return this._items.OrderBy(keySelector).ToArray();
