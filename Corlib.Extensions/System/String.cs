@@ -2431,8 +2431,7 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
   public static bool IsNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(false)]
