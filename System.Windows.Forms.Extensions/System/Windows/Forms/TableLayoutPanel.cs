@@ -38,75 +38,75 @@ public
   /// <summary>
   ///   Removes the given row from a TableLayoutPanel.
   /// </summary>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="row">The row.</param>
-  public static void RemoveRow(this TableLayoutPanel This, int row) {
+  public static void RemoveRow(this TableLayoutPanel @this, int row) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    var rowCount = This.RowCount;
+    var rowCount = @this.RowCount;
     if (row < 0 || row >= rowCount)
       return;
-    var columnCount = This.ColumnCount;
+    var columnCount = @this.ColumnCount;
 
     // delete all controls of the given row
     for (var i = columnCount; i > 0;) {
       --i;
-      var control = This.GetControlFromPosition(i, row);
+      var control = @this.GetControlFromPosition(i, row);
       if (control == null)
         continue;
-      This.Controls.Remove(control);
+      @this.Controls.Remove(control);
     }
 
     // order all controls one up
     for (var i = row + 1; i < rowCount; ++i)
     for (var j = columnCount; j > 0;) {
       --j;
-      var control = This.GetControlFromPosition(j, i);
+      var control = @this.GetControlFromPosition(j, i);
       if (control == null)
         continue;
-      This.SetRow(control, i - 1);
+      @this.SetRow(control, i - 1);
     }
 
     // remove style
-    This.RowStyles.RemoveAt(row);
+    @this.RowStyles.RemoveAt(row);
 
     // decrement total rows
-    This.RowCount--;
+    @this.RowCount--;
   }
 
   /// <summary>
   ///   Copies the last row of a This and all controls in it.
   /// </summary>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="controlCallback">The control callback if any, passing targetRow,targetColumn,sourceControl,targetControl.</param>
   /// <param name="allowSuspendingLayout">
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel This, Action<int, int, Control, Control> controlCallback = null,
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, int, Control, Control> controlCallback = null,
     bool allowSuspendingLayout = true) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
     if (allowSuspendingLayout)
-      This.SuspendLayout();
+      @this.SuspendLayout();
 
-    var lastRow = This.RowCount - 1;
+    var lastRow = @this.RowCount - 1;
 
     // add line
-    This.RowCount++;
+    @this.RowCount++;
 
     // add style
-    var rowStyle = This.RowStyles[lastRow];
-    This.RowStyles.Add(new(rowStyle.SizeType, rowStyle.Height));
+    var rowStyle = @this.RowStyles[lastRow];
+    @this.RowStyles.Add(new(rowStyle.SizeType, rowStyle.Height));
 
     // copy controls
     var alreadyVisitedControls = new Dictionary<Control, bool>();
-    for (var i = This.ColumnCount; i > 0;) {
+    for (var i = @this.ColumnCount; i > 0;) {
       --i;
 
-      var control = This.GetControlFromPositionFixed(i, lastRow);
+      var control = @this.GetControlFromPositionFixed(i, lastRow);
       if (control == null || alreadyVisitedControls.ContainsKey(control))
         continue;
 
@@ -115,47 +115,47 @@ public
       if (controlCallback != null)
         controlCallback(lastRow + 1, i, control, newControl);
 
-      This.Controls.Add(newControl, i, lastRow + 1);
-      This.SetRowSpan(newControl, This.GetRowSpan(control));
-      This.SetColumnSpan(newControl, This.GetColumnSpan(control));
+      @this.Controls.Add(newControl, i, lastRow + 1);
+      @this.SetRowSpan(newControl, @this.GetRowSpan(control));
+      @this.SetColumnSpan(newControl, @this.GetColumnSpan(control));
     }
 
     if (allowSuspendingLayout)
-      This.ResumeLayout(true);
+      @this.ResumeLayout(true);
   }
 
   /// <summary>
   ///   Copies the last row of a This and all controls in it.
   /// </summary>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="controlCallback">The control callback, passing the newly created control.</param>
   /// <param name="allowSuspendingLayout">
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel This, Action<Control> controlCallback,
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<Control> controlCallback,
     bool allowSuspendingLayout = true) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    This.CopyLastRow((row, col, src, tgt) => controlCallback(tgt));
+    @this.CopyLastRow((row, col, src, tgt) => controlCallback(tgt));
   }
 
   /// <summary>
   ///   Copies the last row of a This and all controls in it.
   /// </summary>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="controlCallback">The control callback, passing column and the newly created control.</param>
   /// <param name="allowSuspendingLayout">
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel This, Action<int, Control> controlCallback,
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, Control> controlCallback,
     bool allowSuspendingLayout = true) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    This.CopyLastRow((row, col, src, tgt) => controlCallback(col, tgt));
+    @this.CopyLastRow((row, col, src, tgt) => controlCallback(col, tgt));
   }
 
   /// <summary>
@@ -163,21 +163,23 @@ public
   /// </summary>
   /// <typeparam name="TControl">The type of the control which should be there.</typeparam>
   /// <typeparam name="TType">The type of the value we want to read from it.</typeparam>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="row">The row in which the control should be.</param>
   /// <param name="columnIndex">The column in which the control should be.</param>
   /// <param name="reader">The reader delegate which reads the actual value from the given control and returns it.</param>
   /// <returns>The value that was found.</returns>
-  public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel This, uint row, int columnIndex,
+  public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel @this, uint row, int columnIndex,
     Func<TControl, TType> reader) where TControl : Control {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    if (row >= This.RowCount)
-      throw new ArgumentOutOfRangeException("row", row, "Not Allowed");
-    var control = This.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
+    if (row >= @this.RowCount)
+      throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
+
+    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
     if (control == null)
       throw new NotSupportedException();
+
     return reader(control);
   }
 
@@ -196,11 +198,12 @@ public
       Contract.Requires(This != null);
 #endif
     if (row >= This.RowCount)
-      throw new ArgumentOutOfRangeException("row", row, "Not Allowed");
+      throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
 
     var control = This.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
     if (control == null)
       throw new NotSupportedException();
+
     writer(control);
   }
 
@@ -211,18 +214,18 @@ public
   ///   Microsoft.
   /// </summary>
   /// <typeparam name="TControl">The type of the control.</typeparam>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="column">The column.</param>
   /// <param name="row">The row.</param>
   /// <returns>
   ///   The control or <c>null</c>.
   /// </returns>
-  public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel This, int column, int row)
+  public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel @this, int column, int row)
     where TControl : Control {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    return This.GetControlFromPositionFixed(column, row) as TControl;
+    return @this.GetControlFromPositionFixed(column, row) as TControl;
   }
 
   /// <summary>
@@ -230,28 +233,56 @@ public
   ///   Note: when no control was found, each control is checked on it's own because of bugs in the layout engine from
   ///   Microsoft.
   /// </summary>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="column">The column.</param>
   /// <param name="row">The row.</param>
   /// <returns>The control or <c>null</c>.</returns>
-  public static Control GetControlFromPositionFixed(this TableLayoutPanel This, int column, int row) {
+  public static Control GetControlFromPositionFixed(this TableLayoutPanel @this, int column, int row) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+      Contract.Requires(@this != null);
 #endif
-    var result = This.GetControlFromPosition(column, row);
+    var result = @this.GetControlFromPosition(column, row);
     if (result != null)
       return result;
 
 #if DEBUG
     // This one's for debugging only
-    var allControls = This.Controls.Cast<Control>().Where(c => c != null).ToDictionary(control => control,
-      control => Tuple.Create(This.GetColumn(control), This.GetRow(control)));
+    var allControls = @this.Controls.Cast<Control>().Where(c => c != null).ToDictionary(control => control,
+      control => Tuple.Create(@this.GetColumn(control), @this.GetRow(control)));
 #endif
 
     return (
-      from control in This.Controls.Cast<Control>().Where(c => c != null)
-      where This.GetColumn(control) == column && This.GetRow(control) == row
+      from control in @this.Controls.Cast<Control>().Where(c => c != null)
+      where @this.GetColumn(control) == column && @this.GetRow(control) == row
       select control
     ).FirstOrDefault();
   }
+
+  /// <summary>
+  /// <br>A simple way to use the <see cref="TableLayoutPanel"/> as a table and fill it up with controls.</br>
+  /// <br>Info: The columns and their widths need to be already set, the rows will all be auto-sized.</br>
+  /// </summary>
+  /// <param name="this">This.</param>
+  /// <param name="cellControls">The controls to fill up with, first dimension is the rows, 2nd the columns.</param>
+  public static void UseAsTable(this TableLayoutPanel @this, params Control[][] cellControls) {
+    //init
+    @this.SuspendLayout();
+    @this.RowStyles.Clear();
+    @this.Controls.Clear();
+
+    //add all controls
+    for (var y = 0; y < cellControls.Length; ++y) {
+      var rowControls = cellControls[y];
+      @this.RowStyles.Add(new(SizeType.AutoSize));
+
+      for (var x = 0; x < rowControls.Length; ++x)
+        @this.Controls.Add(rowControls[x], x, y);
+    }
+
+    //add last row for sizing
+    @this.RowStyles.Add(new(SizeType.AutoSize));
+    @this.Controls.Add(new Label { Width = 0, Height = 0 }, 0, cellControls.Length); //hack for correct display
+    @this.ResumeLayout();
+  }
+
 }
