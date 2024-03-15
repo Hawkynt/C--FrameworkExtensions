@@ -233,6 +233,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Math.T4.tt</DependentUpon>
     </Compile>
+    <Compile Update="System\MemoryManipulation.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MemoryManipulation.T4.tt</DependentUpon>
+    </Compile>
     <Compile Update="System\Numerics.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

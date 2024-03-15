@@ -25,13 +25,13 @@
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
   </ItemGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
-
+  
   <ItemGroup Condition="$(IsNetFramework)">
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
@@ -39,8 +39,7 @@
 
   <ItemGroup>
     <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices" Version="*" />
-    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices.AccountManagement"
-                      Version="*" />
+    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices.AccountManagement" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

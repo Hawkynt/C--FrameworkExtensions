@@ -1,43 +1,39 @@
 ﻿#region (c)2010-2042 Hawkynt
-
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
+    Hawkynt's .NET Framework extensions are free software: 
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+    Hawkynt's .NET Framework extensions is distributed in the hope that 
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
+    along with Hawkynt's .NET Framework extensions.  
     If not, see <http://www.gnu.org/licenses/>.
 */
 
 #endregion
 
-#if NET45_OR_GREATER || NETSTANDARD || NETCOREAPP
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Mail;
+#if NET5_0_OR_GREATER
 using System.Runtime.Versioning;
+#endif
 using System.Text;
 using System.Threading;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+// ReSharper disable UnusedMember.Global
 
 namespace System.DirectoryServices.AccountManagement;
-
 /// <summary>
-///   Extensions for the UserPrincipal objects from System.DirectoryServices.AccountManagement
+/// Extensions for the UserPrincipal objects from System.DirectoryServices.AccountManagement
 /// </summary>
 #if NET5_0_OR_GREATER
 [SupportedOSPlatform("windows")]
@@ -47,52 +43,74 @@ public
 #else
 internal
 #endif
-// ReSharper disable once PartialTypeWithSinglePart
 static partial class UserPrincipalExtensions {
+
+  private static bool _FOS_IsNotNullOrWhiteSpace(this string text)
+#if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
+    => !string.IsNullOrWhiteSpace(text)
+#else
+    => text != null && text.Trim().Length > 0
+#endif
+    ;
+
   /// <summary>
-  ///   Gets the full name.
+  /// Gets the full name.
   /// </summary>
   /// <param name="this">This UserPrincipal.</param>
   /// <param name="surnameFirst">if set to <c>true</c> surname goes first, separated by a comma.</param>
   /// <returns>
-  ///   The full name.
+  /// The full name.
   /// </returns>
   public static string GetFullName(this UserPrincipal @this, bool surnameFirst = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-    return surnameFirst
-        ? string.Join(", ",
-          new[] {
-            @this.Surname,
-            string.Join(" ", new[] { @this.GivenName, @this.MiddleName }.Where(t => !string.IsNullOrWhiteSpace(t)))
-          }.Where(t => !string.IsNullOrWhiteSpace(t)))
-        : string.Join(" ",
-          new[] { @this.GivenName, @this.MiddleName, @this.Surname }.Where(t => !string.IsNullOrWhiteSpace(t)))
-      ;
+    var result = new StringBuilder(128);
+
+    if (@this.GivenName._FOS_IsNotNullOrWhiteSpace())
+      result.Append(@this.GivenName);
+
+    if (@this.MiddleName._FOS_IsNotNullOrWhiteSpace()) {
+      if (result.Length > 0)
+        result.Append(' ');
+
+      result.Append(@this.MiddleName);
+    }
+
+    if (@this.Surname._FOS_IsNotNullOrWhiteSpace()) {
+      switch (surnameFirst) {
+        case true when result.Length > 0:
+          result.Insert(0, ", ");
+          result.Insert(0, @this.Surname);
+          break;
+        case true:
+          result.Append(@this.Surname);
+          break;
+        case false when result.Length > 0:
+          result.Append(' ');
+          result.Append(@this.Surname);
+          break;
+        case false:
+          result.Append(@this.Surname);
+          break;
+      }
+    }
+
+    if (result.Length < 1)
+      result.Append(@this.SamAccountName);
+
+    return result.ToString();
   }
 
   public static MailAddress GetEmailAddress(this UserPrincipal @this) => new(@this.EmailAddress, GetFullName(@this), Encoding.UTF8);
-
   public static UserPrincipal FindDomainUserBySamAccountName(string samAccountName) => FindDomainUserBySamAccountName(samAccountName, false);
 
   private static readonly ConcurrentDictionary<string, UserPrincipal> _DOMAIN_USER_CACHE = new(StringComparer.OrdinalIgnoreCase);
 
-  public static UserPrincipal FindDomainUserBySamAccountName(string samAccountName, bool allowCached) => allowCached
-    ? _DOMAIN_USER_CACHE.GetOrAdd(samAccountName, _FindDomainUserBySamAccountName)
-    : _FindDomainUserBySamAccountName(samAccountName);
-
-  public static UserPrincipal FindFirstDomainUserByDisplayName(string fullName, bool allowCached = false) =>
-    allowCached
-      ? _DOMAIN_USER_CACHE.GetOrAdd(fullName, _FindDomainUserByDisplayName)
-      : _FindDomainUserByDisplayName(fullName);
+  public static UserPrincipal FindDomainUserBySamAccountName(string samAccountName, bool allowCached) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(samAccountName, _FindDomainUserBySamAccountName) : _FindDomainUserBySamAccountName(samAccountName);
+  public static UserPrincipal FindFirstDomainUserByDisplayName(string fullName, bool allowCached = false) => allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(fullName, _FindDomainUserByDisplayName) : _FindDomainUserByDisplayName(fullName);
 
   public static UserPrincipal FindFirstDomainUserByAnyName(string name, bool allowCached = false) {
-    UserPrincipal FindDomainUserByName() => _FindDomainUserBySamAccountName(name) ??
-                                            _FindDomainUserByDisplayName(name) ?? 
-                                            _FindDomainUserBySurname(name);
+    UserPrincipal FindDomainUserByName() => _FindDomainUserBySamAccountName(name) ?? _FindDomainUserByDisplayName(name) ?? _FindDomainUserBySurname(name);
 
-    return allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(name, FindDomainUserByName()) : FindDomainUserByName();
+    return allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(name, _=>FindDomainUserByName()) : FindDomainUserByName();
   }
 
   private static UserPrincipal _FindDomainUserBySamAccountName(string samAccountName) {
@@ -103,7 +121,7 @@ static partial class UserPrincipalExtensions {
   private static UserPrincipal _FindDomainUserByDisplayName(string fullName) {
     using var context = new PrincipalContext(ContextType.Domain);
     using var searcher = new PrincipalSearcher();
-    var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim())) };
+    var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim()).ToArray()) };
     searcher.QueryFilter = user;
     return (UserPrincipal)searcher.FindOne();
   }
@@ -111,22 +129,23 @@ static partial class UserPrincipalExtensions {
   private static UserPrincipal _FindDomainUserBySurname(string surname) {
     using var context = new PrincipalContext(ContextType.Domain);
     using var searcher = new PrincipalSearcher();
-    var user = new UserPrincipal(context) { Surname = surname };
+    var user = new UserPrincipal(context) {Surname = surname};
     searcher.QueryFilter = user;
-    return (UserPrincipal)searcher.FindOne();
+    return (UserPrincipal) searcher.FindOne();
   }
 
-  #region LDAP stuff
+#region LDAP stuff 
 
-  #region caching
+#region caching
 
   public interface ILDAPCache {
     int CacheEntryCount { get; set; }
   }
 
   private class LDAPCache : ILDAPCache {
+
     /// <summary>
-    ///   NOTE: Using struct to avoid excessive pressure on the garbage collector
+    /// NOTE: Using struct to avoid excessive pressure on the garbage collector
     /// </summary>
     private readonly struct Entry {
       private readonly DateTime _lastAccessed;
@@ -141,6 +160,7 @@ static partial class UserPrincipalExtensions {
       public Entry MarkUsage() => new(this.item);
 
       public void Destroy() {
+
         // if the item wasn't accessed in the last second, dispose immediately
         var directoryEntry = this.item;
         if (this.Age.TotalSeconds > 1) {
@@ -160,12 +180,12 @@ static partial class UserPrincipalExtensions {
     private readonly ConcurrentDictionary<string, Entry> _entries = new();
 
     /// <summary>
-    ///   Gets or adds the given element to the cache.
+    /// Gets or adds the given element to the cache.
     /// </summary>
     /// <param name="distinguishedName">Distinguished name of the element.</param>
     /// <returns></returns>
     public DirectoryEntry GetOrAdd(string distinguishedName) {
-      var entry = this._entries.GetOrAdd(distinguishedName, d => new(new("LDAP://" + distinguishedName)));
+      var entry = this._entries.GetOrAdd(distinguishedName, _ => new(new("LDAP://" + distinguishedName)));
 
       // update usage
       this._entries[distinguishedName] = entry.MarkUsage();
@@ -177,8 +197,8 @@ static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    ///   Clears this cache entirely.
-    ///   Note: Clearing while adding might leave elements in the cache.
+    /// Clears this cache entirely.
+    /// Note: Clearing while adding might leave elements in the cache.
     /// </summary>
     public void Clear() {
       foreach (var distinguishedName in this._entries.Keys.ToArray())
@@ -186,7 +206,7 @@ static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    ///   Removes the element with the given distinguished name.
+    /// Removes the element with the given distinguished name.
     /// </summary>
     /// <param name="distinguishedName">Distinguished name of the element.</param>
     public void Remove(string distinguishedName) {
@@ -198,38 +218,36 @@ static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    ///   Clear unneeded elements from the cache.
+    /// Clear unneeded elements from the cache.
     /// </summary>
     private void _CheckCache() {
       if (this._entries.Count <= this.CacheEntryCount)
         return;
 
       // find the least accessed n elements and remove them
-      var distinguishedNames =
-        this._entries.OrderByDescending(e => e.Value.Age).Select(e => e.Key)
-          .Take(this._entries.Count - this.CacheEntryCount).ToArray();
+      var distinguishedNames = this._entries.OrderByDescending(e => e.Value.Age).Select(e => e.Key).Take(this._entries.Count - this.CacheEntryCount).ToArray();
       foreach (var distinguishedName in distinguishedNames)
         this.Remove(distinguishedName);
     }
 
-    #region Implementation of ILDAPCache
+#region Implementation of ILDAPCache
 
     public int CacheEntryCount { get; set; }
 
-    #endregion
+#endregion
+
   }
 
   /// <summary>
-  ///   This holds the last 512 used entries, because there is a chance that they will be heavily re-used.
+  /// This holds the last 512 used entries, because there is a chance that they will be heavily re-used.
   /// </summary>
   private static readonly LDAPCache _LDAP_CACHE = new() { CacheEntryCount = 512 };
 
-  #endregion
+#endregion
 
   /// <summary>
-  ///   LDAP Group properties, see http://www.selfadsi.de/group-attributes.htm
+  /// LDAP Group properties, see http://www.selfadsi.de/group-attributes.htm
   /// </summary>
-  [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public interface ILDAPGroup {
     string AdminDescription { get; }
     string AdminDisplayName { get; }
@@ -293,22 +311,26 @@ static partial class UserPrincipalExtensions {
   }
 
   /// <summary>
-  ///   Wraps an LDAP group.
-  ///   Dtor tries to remove the associated cache elements; this is not needed but nice.
-  ///   We don't care if elements are removed twice or removed but still used and stuff,
-  ///   because the cache will re-created them if needed.
+  /// Wraps an LDAP group.
+  /// Dtor tries to remove the associated cache elements; this is not needed but nice.
+  /// We don't care if elements are removed twice or removed but still used and stuff,
+  /// because the cache will re-created them if needed.
   /// </summary>
   private class LDAPGroup : ILDAPGroup {
     private readonly string _distinguishedName;
-    public LDAPGroup(string distinguishedName) => this._distinguishedName = distinguishedName;
+    public LDAPGroup(string distinguishedName) {
+      this._distinguishedName = distinguishedName;
+    }
 
-    ~LDAPGroup() => _LDAP_CACHE.Remove(this._distinguishedName);
+    ~LDAPGroup() {
+      _LDAP_CACHE.Remove(this._distinguishedName);
+    }
 
     private DirectoryEntry _GetEntry() => _LDAP_CACHE.GetOrAdd(this._distinguishedName);
 
     private string _ReadProperty(string propertyName) => this._GetEntry().Properties[propertyName].Cast<string>().FirstOrDefault();
 
-    #region Implementation of ILDAPGroup
+#region Implementation of ILDAPGroup
 
     public string AdminDescription => this._ReadProperty("adminDescription");
     public string AdminDisplayName => this._ReadProperty("adminDisplayName");
@@ -378,7 +400,7 @@ static partial class UserPrincipalExtensions {
     public string WhenChanged => this._ReadProperty("whenChanged");
     public string WhenCreated => this._ReadProperty("whenCreated");
 
-    #endregion
+#endregion
   }
 
   public static IEnumerable<ILDAPGroup> GetLDAPGroups(this UserPrincipal @this) {
@@ -395,15 +417,16 @@ static partial class UserPrincipalExtensions {
       var currentEnumeration = stack.Pop();
       foreach (var group in currentEnumeration) {
         var distinguishedName = group.DistinguishedName;
-        if (!alreadyReturned.Add(distinguishedName))
+        if (alreadyReturned.Contains(distinguishedName))
           continue;
 
+        alreadyReturned.Add(distinguishedName);
         yield return group;
         stack.Push(group.MemberOf);
       }
     }
   }
 
-  #endregion
+#endregion
+
 }
-#endif
