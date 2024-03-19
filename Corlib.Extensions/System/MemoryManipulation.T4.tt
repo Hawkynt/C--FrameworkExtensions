@@ -347,13 +347,13 @@ internal static partial class MemoryManipulation {
   GenerateTwoOperandArbitraryCountEqual("AreEqual");
   GenerateTwoOperandArbitraryCountFill("Fill");
   GenerateOneOperandArbitraryCountOperation("Clear");
-  GenerateTwoOperandArbitraryCountOperation("And");
-  GenerateTwoOperandArbitraryCountOperation("Nand");
-  GenerateTwoOperandArbitraryCountOperation("Or");
-  GenerateTwoOperandArbitraryCountOperation("Nor");
-  GenerateTwoOperandArbitraryCountOperation("Xor");
-  GenerateTwoOperandArbitraryCountOperation("Xnor");
-  GenerateOneOperandArbitraryCountOperation("Not");
+  GenerateThreeOperandArbitraryCountOperation("And");
+  GenerateThreeOperandArbitraryCountOperation("Nand");
+  GenerateThreeOperandArbitraryCountOperation("Or");
+  GenerateThreeOperandArbitraryCountOperation("Nor");
+  GenerateThreeOperandArbitraryCountOperation("Xor");
+  GenerateThreeOperandArbitraryCountOperation("Xnor");
+  GenerateTwoOperandArbitraryCountOperation("Not");
 #>
 
 #endif
@@ -448,116 +448,159 @@ void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool ne
 
 void GenerateOneOperandArbitraryCountOperation(string name) {
 #>
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static unsafe void <#=name#>(byte* @this, int count) {
-    for (;;)
-      switch (count) {
-        case <= 0: return;
+    switch (count) {
+      case <= 0: break;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-        case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this); return;
+      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this); break;
 <#+}#>
-        default: {
-          do {
-            count -= <#=MAX_SIZE#>;
-            Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this);
-            @this += <#=MAX_SIZE#>;
-          } while (count > <#=MAX_SIZE#>);
-          continue;
-        }
-      }
+      default: _<#=name#>(@this, count); break;
+    }
   }
+
+  private static unsafe void _<#=name#>(byte* @this, int count) {
+    do {
+      count -= <#=MAX_SIZE#>;
+      Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this);
+      @this += <#=MAX_SIZE#>;
+    } while (count > <#=MAX_SIZE#>);
+    <#=name#>(@this, count);
+  }
+
 <#+
 }
 
 void GenerateTwoOperandArbitraryCountEqual(string name) {
 #>
-  public static unsafe bool <#=name#>(byte* @this, byte* other, int count) {
-    for (;;)
-      switch (count) {
-        case <= 0: return true;
-<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-        case <#=blockSize#>: return Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)other);
-<#+}#>
-        default: {
-          do {
-            count -= <#=MAX_SIZE#>;
-            if (!Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)other))
-              return false;
 
-            @this += <#=MAX_SIZE#>;
-            other += <#=MAX_SIZE#>;
-          } while (count > <#=MAX_SIZE#>);
-          continue;
-        }
-      }
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static unsafe bool <#=name#>(byte* @this, byte* other, int count) {
+    switch (count) {
+      case <= 0: return true;
+<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
+      case <#=blockSize#>: return Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)other);
+<#+}#>
+      default: return _<#=name#>(@this, other, count);
+    }
   }
+
+  private static unsafe bool _<#=name#>(byte* @this, byte* other, int count) {
+    do {
+      count -= <#=MAX_SIZE#>;
+      if (!Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)other))
+        return false;
+
+      @this += <#=MAX_SIZE#>;
+      other += <#=MAX_SIZE#>;
+    } while (count > <#=MAX_SIZE#>);
+    return <#=name#>(@this, other, count);
+  }
+
 <#+
 }
 
 void GenerateTwoOperandArbitraryCountFill(string name) {
 #>
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static unsafe void <#=name#>(byte* @this, byte value, int count) {
-    for (;;)
-      switch (count) {
-        case <= 0: return;
+    switch (count) {
+      case <= 0: break;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-        case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, value); return;
+      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, value); break;
 <#+}#>
-        default: {
-          do {
-            count -= <#=MAX_SIZE#>;
-            Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, value);
-            @this += <#=MAX_SIZE#>;
-          } while (count > <#=MAX_SIZE#>);
-          continue;
-        }
-      }
+      default: _<#=name#>(@this, value, count); break;
+    }
   }
+
+  private static unsafe void _<#=name#>(byte* @this, byte value, int count) {
+    do {
+      count -= <#=MAX_SIZE#>;
+      Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, value);
+      @this += <#=MAX_SIZE#>;
+    } while (count > <#=MAX_SIZE#>);
+    <#=name#>(@this, value, count);
+  }
+
 <#+
 }
 
 void GenerateTwoOperandArbitraryCountOperation(string name) {
 #>
-  public static unsafe void <#=name#>(byte* @this, byte* operand, int count) {
-    for (;;)
-      switch (count) {
-        case <= 0: return;
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static unsafe void <#=name#>(byte* @this, int count)
+    => <#=name#>(@this, @this, count)
+    ;
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static unsafe void <#=name#>(byte* @this, byte* target, int count) {
+    switch (count) {
+      case <= 0: break;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-        case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand); return;
+      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)target); break;
 <#+}#>
-        default: {
-          do {
-            count -= <#=MAX_SIZE#>;
-            Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)operand);
-            @this += <#=MAX_SIZE#>;
-            operand += <#=MAX_SIZE#>;
-          } while (count > <#=MAX_SIZE#>);
-          continue;
-        }
-      }
+      default: _<#=name#>(@this, target, count); break;
+    }
   }
+
+  private static unsafe void _<#=name#>(byte* @this, byte* target, int count) {
+    do {
+      count -= <#=MAX_SIZE#>;
+      Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)target);
+      @this += <#=MAX_SIZE#>;
+      target += <#=MAX_SIZE#>;
+    } while (count > <#=MAX_SIZE#>);
+    <#=name#>(@this, target, count);
+  }
+
 <#+
 }
 
 void GenerateThreeOperandArbitraryCountOperation(string name) {
 #>
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static unsafe void <#=name#>(byte* @this, byte* operand, int count)
+    => <#=name#>(@this, operand, @this, count)
+    ;
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static unsafe void <#=name#>(byte* @this, byte* operand, byte* target, int count) {
-    for (;;)
-      switch (count) {
-        case <= 0: return;
+    switch (count) {
+      case <= 0: break;
 <#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-        case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand, (Block<#=blockSize#>*)target); return;
+      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand, (Block<#=blockSize#>*)target); break;
 <#+}#>
-        default: {
-          do {
-            count -= <#=MAX_SIZE#>;
-            Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)operand, (Block<#=MAX_SIZE#>*)target);
-            @this += <#=MAX_SIZE#>;
-            operand += <#=MAX_SIZE#>;
-            target += <#=MAX_SIZE#>;
-          } while (count > <#=MAX_SIZE#>);
-          continue;
-        }
-      }
+      default: _<#=name#>(@this, operand, target, count); break;
+    }
+  }
+
+  private static unsafe void _<#=name#>(byte* @this, byte* operand, byte* target, int count) {
+    do {
+      count -= <#=MAX_SIZE#>;
+      Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)operand, (Block<#=MAX_SIZE#>*)target);
+      @this += <#=MAX_SIZE#>;
+      operand += <#=MAX_SIZE#>;
+      target += <#=MAX_SIZE#>;
+    } while (count > <#=MAX_SIZE#>);
+    <#=name#>(@this, operand, target, count);
   }
 <#+
 }
