@@ -68,7 +68,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan MultipliedWith(this TimeSpan @this, <#=type#> multiplier) => TimeSpan.FromTicks((long)(@this.Ticks * <#=(type=="qword"?"(double)":"")#>multiplier));
+    public static TimeSpan MultipliedWith(this TimeSpan @this, <#=type#> multiplier) => TimeSpan.FromTicks((long)(@this.Ticks * <#=(type == "qword" ? "(double)" : "")#>multiplier));
 
     /// <summary>
     /// Divides the time by a divisor.
@@ -82,7 +82,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan DividedBy(this TimeSpan @this, <#=type#> divisor) => TimeSpan.FromTicks((long)(@this.Ticks / (double)divisor));
+    public static TimeSpan DividedBy(this TimeSpan @this, <#=type#> divisor) => TimeSpan.FromTicks((long)(@this.Ticks / <#=(type == "qword" ? "(double)" : "")#>divisor));
     
     /// <summary>
     /// Creates a timespan from the given milliseconds.
@@ -95,7 +95,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Milliseconds(this <#=type#> @this) => TimeSpan.FromMilliseconds(<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Milliseconds(this <#=type#> @this) => TimeSpan.FromMilliseconds(<#=(type == "decimal" ? "(double)" : "")#>@this);
     
     /// <summary>
     /// Creates a timespan from the given seconds.
@@ -108,7 +108,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Seconds(this <#=type#> @this) => TimeSpan.FromSeconds(<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Seconds(this <#=type#> @this) => TimeSpan.FromSeconds(<#=(type == "decimal" ? "(double)" : "")#>@this);
     
     /// <summary>
     /// Creates a timespan from the given minutes.
@@ -121,7 +121,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Minutes(this <#=type#> @this) => TimeSpan.FromMinutes(<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Minutes(this <#=type#> @this) => TimeSpan.FromMinutes(<#=(type == "decimal" ? "(double)" : "")#>@this);
     
     /// <summary>
     /// Creates a timespan from the given hours.
@@ -134,7 +134,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Hours(this <#=type#> @this) => TimeSpan.FromHours(<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Hours(this <#=type#> @this) => TimeSpan.FromHours(<#=(type == "decimal" ? "(double)" : "")#>@this);
     
     /// <summary>
     /// Creates a timespan from the given days.
@@ -147,7 +147,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Days(this <#=type#> @this) => TimeSpan.FromDays(<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Days(this <#=type#> @this) => TimeSpan.FromDays(<#=(type == "decimal" ? "(double)" : "")#>@this);
     
     /// <summary>
     /// Creates a timespan from the given weeks.
@@ -160,7 +160,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TimeSpan Weeks(this <#=type#> @this) => TimeSpan.FromDays(7*<#=(type=="decimal"?"(double)":"")#>@this);
+    public static TimeSpan Weeks(this <#=type#> @this) => TimeSpan.FromDays(7 * <#=(type == "decimal" ? "(double)" : "")#>@this);
     
   <#}#>
 
@@ -228,7 +228,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static double CurrenIteration(this TimeSpan @this) => Stopwatch.GetTimestamp()/(double)Stopwatch.Frequency / @this.TotalSeconds;
+    public static double CurrenIteration(this TimeSpan @this) => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency / @this.TotalSeconds;
     
     /// <summary>
     /// Returns the current iteration of the given timespan.
@@ -242,7 +242,7 @@ namespace System {
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static double CurrenIteration(this TimeSpan @this,ulong maxIterations) => CurrenIteration(@this) % maxIterations;
+    public static double CurrenIteration(this TimeSpan @this, ulong maxIterations) => CurrenIteration(@this) % maxIterations;
     
     /// <summary>
     /// Returns the current drift.
