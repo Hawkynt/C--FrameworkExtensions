@@ -19,67 +19,55 @@
 */
 #endregion
 
-namespace System.ComponentModel {
-  /// <summary>
-  /// Tells the propertygrid what the minimum value for this number is.
-  /// </summary>
-  [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+namespace System.ComponentModel;
+
+/// <summary>
+/// Tells the propertygrid what the minimum value for this number is.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  class MinValueAttribute : Attribute {
-    public decimal Value { get; }
+class MinValueAttribute : Attribute {
+  public decimal Value { get; }
+  public MinValueAttribute(decimal value) => this.Value = value;
+  public MinValueAttribute(int value) : this((decimal)value) { }
+}
 
-    public MinValueAttribute(decimal value) {
-      this.Value = value;
-    }
-    public MinValueAttribute(int value)
-      : this((decimal)value) {
-    }
-  }
-  /// <summary>
-  /// Tells the propertygrid what the maximum value for this number is.
-  /// </summary>
-  [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+/// <summary>
+/// Tells the propertygrid what the maximum value for this number is.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  class MaxValueAttribute : Attribute {
-    public decimal Value { get; }
+class MaxValueAttribute : Attribute {
+  public decimal Value { get; }
+  public MaxValueAttribute(decimal value) => this.Value = value;
+  public MaxValueAttribute(int value) : this((decimal)value) { }
+}
 
-    public MaxValueAttribute(decimal value) {
-      this.Value = value;
-    }
-    public MaxValueAttribute(int value)
-      : this((decimal)value) {
-    }
-  }
-  /// <summary>
-  /// Tells the propertygrid what the maximum value for this number is.
-  /// </summary>
-  [AttributeUsage(AttributeTargets.Field)]
+/// <summary>
+/// Tells the propertygrid what the maximum value for this number is.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field)]
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  class EnumDisplayNameAttribute : DisplayNameAttribute {
-    public override string DisplayName { get; }
-
-    public EnumDisplayNameAttribute(string displayName) {
-      this.DisplayName = displayName;
-    }
-
-    public static string GetDisplayName<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(typeof(TEnum), value);
-    public static string GetDisplayName(Type type, object value) => (type.GetField(value.ToString())?.GetCustomAttributes(typeof(EnumDisplayNameAttribute), true).FirstOrDefault() as EnumDisplayNameAttribute)?.DisplayName;
-    public static string GetDisplayNameOrDefault<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(value) ?? value.ToString();
-    public static string GetDisplayNameOrDefault(Type type, object value) => GetDisplayName(type, value) ?? value.ToString();
-  }
+class EnumDisplayNameAttribute : DisplayNameAttribute {
+  public override string DisplayName { get; }
+  public EnumDisplayNameAttribute(string displayName) => this.DisplayName = displayName;
+  public static string GetDisplayName<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(typeof(TEnum), value);
+  public static string GetDisplayName(Type type, object value) => (type.GetField(value.ToString())?.GetCustomAttributes(typeof(EnumDisplayNameAttribute), true).FirstOrDefault() as EnumDisplayNameAttribute)?.DisplayName;
+  public static string GetDisplayNameOrDefault<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(value) ?? value.ToString();
+  public static string GetDisplayNameOrDefault(Type type, object value) => GetDisplayName(type, value) ?? value.ToString();
 }
