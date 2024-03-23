@@ -295,7 +295,6 @@ Corlib.Extensions/System/Action.cs
 Corlib.Extensions/System/Array.FastBlocks.cs
 Corlib.Extensions/System/String.Parsers.cs
 Corlib.Extensions/System/TimeSpan.cs
-Corlib.Extensions/System/Type.cs
 Corlib.Extensions/System/Collections/Generic/Cache.cs
 Corlib.Extensions/System/Collections/Generic/Enumerable.Statistics.cs
 Corlib.Extensions/System/ComponentModel/PropertyChanged.cs

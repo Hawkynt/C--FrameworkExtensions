@@ -49,6 +49,7 @@
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+
     <None Update="Guard\Against.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Against.T4.cs</LastGenOutput>
@@ -117,9 +118,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>TimeSpan.cs</LastGenOutput>
     </None>
-    <None Update="System\Type.tt">
+    <None Update="System\Type.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Type.cs</LastGenOutput>
+      <LastGenOutput>Type.T4.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
@@ -263,10 +264,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>TimeSpan.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Type.cs">
+    <Compile Update="System\Type.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Type.tt</DependentUpon>
+      <DependentUpon>Type.T4.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>
