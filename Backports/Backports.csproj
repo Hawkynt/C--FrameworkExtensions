@@ -35,9 +35,9 @@
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="System\FuncAction.tt">
+    <None Update="System\FuncAction.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FuncAction.cs</LastGenOutput>
+      <LastGenOutput>FuncAction.T4.cs</LastGenOutput>
     </None>
     <None Update="System\NumericsHelpers.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -50,10 +50,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="System\FuncAction.cs">
+    <Compile Update="System\FuncAction.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>FuncAction.tt</DependentUpon>
+      <DependentUpon>FuncAction.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\NumericsHelpers.T4.cs">
       <DesignTime>True</DesignTime>

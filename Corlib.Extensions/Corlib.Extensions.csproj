@@ -62,33 +62,33 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FileInfo.cs</LastGenOutput>
     </None>
-    <None Update="System\Action.tt">
+    <None Update="System\Action.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Action.cs</LastGenOutput>
+      <LastGenOutput>Action.T4.cs</LastGenOutput>
     </None>
     <None Update="System\Array.FastBlocks.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Array.FastBlocks.cs</LastGenOutput>
     </None>
-    <None Update="System\Collections\Generic\Cache.tt">
+    <None Update="System\Collections\Generic\Cache.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Cache.cs</LastGenOutput>
+      <LastGenOutput>Cache.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\Collections\Generic\Enumerable.Statistics.tt">
+    <None Update="System\Collections\Generic\Enumerable.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Enumerable.Statistics.cs</LastGenOutput>
+      <LastGenOutput>Enumerable.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\ComponentModel\PropertyChanged.tt">
+    <None Update="System\ComponentModel\PropertyChanged.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>PropertyChanged.cs</LastGenOutput>
+      <LastGenOutput>PropertyChanged.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\ComponentModel\PropertyChanging.tt">
+    <None Update="System\ComponentModel\PropertyChanging.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>PropertyChanging.cs</LastGenOutput>
+      <LastGenOutput>PropertyChanging.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\IO\Link.tt">
+    <None Update="System\IO\Link.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Link.cs</LastGenOutput>
+      <LastGenOutput>Link.T4.cs</LastGenOutput>
     </None>
     <None Update="System\Math.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -102,21 +102,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Numerics.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\Runtime\Serialization\SerializationInfo.tt">
+    <None Update="System\Runtime\Serialization\SerializationInfo.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>SerializationInfo.cs</LastGenOutput>
+      <LastGenOutput>SerializationInfo.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\String.Parsers.tt">
+    <None Update="System\String.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>String.Parsers.cs</LastGenOutput>
+      <LastGenOutput>String.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\Threading\Interlocked.tt">
+    <None Update="System\Threading\Interlocked.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Interlocked.cs</LastGenOutput>
+      <LastGenOutput>Interlocked.T4.cs</LastGenOutput>
     </None>
-    <None Update="System\TimeSpan.tt">
+    <None Update="System\TimeSpan.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TimeSpan.cs</LastGenOutput>
+      <LastGenOutput>TimeSpan.T4.cs</LastGenOutput>
     </None>
     <None Update="System\Type.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -189,45 +189,45 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Against.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Action.cs">
+    <Compile Update="System\Action.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Action.tt</DependentUpon>
+      <DependentUpon>Action.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Array.FastBlocks.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Array.FastBlocks.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Collections\Generic\Cache.cs">
+    <Compile Update="System\Collections\Generic\Cache.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Cache.tt</DependentUpon>
+      <DependentUpon>Cache.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Collections\Generic\Enumerable.Statistics.cs">
+    <Compile Update="System\Collections\Generic\Enumerable.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Enumerable.Statistics.tt</DependentUpon>
+      <DependentUpon>Enumerable.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\ComponentModel\PropertyChanged.cs">
+    <Compile Update="System\ComponentModel\PropertyChanged.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>PropertyChanged.tt</DependentUpon>
+      <DependentUpon>PropertyChanged.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\ComponentModel\PropertyChanging.cs">
+    <Compile Update="System\ComponentModel\PropertyChanging.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>PropertyChanging.tt</DependentUpon>
+      <DependentUpon>PropertyChanging.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\IO\FileInfo.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>FileInfo.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\IO\Link.cs">
+    <Compile Update="System\IO\Link.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Link.tt</DependentUpon>
+      <DependentUpon>Link.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Math.T4.cs">
       <DesignTime>True</DesignTime>
@@ -244,25 +244,25 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Numerics.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Runtime\Serialization\SerializationInfo.cs">
+    <Compile Update="System\Runtime\Serialization\SerializationInfo.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>SerializationInfo.tt</DependentUpon>
+      <DependentUpon>SerializationInfo.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\String.Parsers.cs">
+    <Compile Update="System\String.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>String.Parsers.tt</DependentUpon>
+      <DependentUpon>String.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\Threading\Interlocked.cs">
+    <Compile Update="System\Threading\Interlocked.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Interlocked.tt</DependentUpon>
+      <DependentUpon>Interlocked.T4.tt</DependentUpon>
     </Compile>
-    <Compile Update="System\TimeSpan.cs">
+    <Compile Update="System\TimeSpan.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>TimeSpan.tt</DependentUpon>
+      <DependentUpon>TimeSpan.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Type.T4.cs">
       <DesignTime>True</DesignTime>

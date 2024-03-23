@@ -44,19 +44,19 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Image.cs</LastGenOutput>
     </None>
-    <None Update="System\Drawing\Point.tt">
+    <None Update="System\Drawing\Point.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Point.cs</LastGenOutput>
+      <LastGenOutput>Point.T4.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="System\Drawing\Point.cs">
+    <Compile Update="System\Drawing\Point.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Point.tt</DependentUpon>
+      <DependentUpon>Point.T4.tt</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
