@@ -19,40 +19,41 @@
 */
 #endregion
 
-namespace System.Threading {
+namespace System.Threading;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class EventExtensions {
-    /// <summary>
-    /// Invoke all handlers in parallel.
-    /// </summary>
-    /// <typeparam name="T">Type of event handlers.</typeparam>
-    /// <param name="evtA">The event.</param>
-    /// <param name="objSender">The sender.</param>
-    /// <param name="objArgs">The args.</param>
-    public static void AsyncInvoke<T>(this EventHandler<T> evtA, object objSender, T objArgs) where T : EventArgs {
-      EventHandler<T> evtCopy = evtA;
-      evtCopy.GetInvocationList().ForEach(ptrDel => {
-        Action ptrT = () => ptrDel.DynamicInvoke(objSender, objArgs);
-        ptrT.BeginInvoke(ptrT.EndInvoke, null);
-      });
-    }
+// ReSharper disable UnusedMember.Global
+// ReSharper disable once PartialTypeWithSinglePart
+static partial class EventExtensions {
+  /// <summary>
+  /// Invoke all handlers in parallel.
+  /// </summary>
+  /// <typeparam name="T">Type of event handlers.</typeparam>
+  /// <param name="this">The event.</param>
+  /// <param name="sender">The sender.</param>
+  /// <param name="eventArgs">The args.</param>
+  public static void AsyncInvoke<T>(this EventHandler<T> @this, object sender, T eventArgs) where T : EventArgs {
+    var copy = @this;
+    copy.GetInvocationList().ForEach(@delegate => {
+      Action action = () => @delegate.DynamicInvoke(sender, eventArgs);
+      action.BeginInvoke(action.EndInvoke, null);
+    });
+  }
 
-    /// <summary>
-    /// Invoke all handlers in parallel.
-    /// </summary>
-    /// <param name="evtA">The event.</param>
-    /// <param name="arrArgs">The args.</param>
-    public static void AsyncInvoke(this MulticastDelegate evtA, params object[] arrArgs) {
-      MulticastDelegate evtCopy = evtA;
-      evtCopy.GetInvocationList().ForEach(ptrDel => {
-        Action ptrT = () => ptrDel.DynamicInvoke(arrArgs);
-        ptrT.BeginInvoke(ptrT.EndInvoke, null);
-      });
-    }
+  /// <summary>
+  /// Invoke all handlers in parallel.
+  /// </summary>
+  /// <param name="this">The event.</param>
+  /// <param name="arguments">The args.</param>
+  public static void AsyncInvoke(this MulticastDelegate @this, params object[] arguments) {
+    var copy = @this;
+    copy.GetInvocationList().ForEach(@delegate => {
+      Action action = () => @delegate.DynamicInvoke(arguments);
+      action.BeginInvoke(action.EndInvoke, null);
+    });
   }
 }

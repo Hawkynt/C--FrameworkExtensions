@@ -19,81 +19,76 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
-namespace System.Threading {
-  /// <summary>
-  /// Allows a block of code to be flagged with a timeout callback.
-  /// Note: The executed code will not be aborted, only the timeout gets called.
-  /// </summary>
+namespace System.Threading;
+
+/// <summary>
+/// Allows a block of code to be flagged with a timeout callback.
+/// Note: The executed code will not be aborted, only the timeout gets called.
+/// </summary>
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  class CallOnTimeout : IDisposable {
+class CallOnTimeout : IDisposable {
 
-    private static readonly TimeSpan _TIME_BEFORE_CHECKS = TimeSpan.FromMilliseconds(100);
-    private readonly DateTime _creationTime = DateTime.UtcNow;
-    private readonly Timer _timer;
-    private readonly Action<CallOnTimeout> _timeoutAction;
+  private static readonly TimeSpan _TIME_BEFORE_CHECKS = TimeSpan.FromMilliseconds(100);
+  private readonly DateTime _creationTime = DateTime.UtcNow;
+  private readonly Timer _timer;
+  private readonly Action<CallOnTimeout> _timeoutAction;
 
-    public TimeSpan Timeout { get; }
-    public TimeSpan TimeLeft => this.Timeout - this.ElapsedTime;
-    public TimeSpan ElapsedTime => DateTime.UtcNow - this._creationTime;
+  public TimeSpan Timeout { get; }
+  public TimeSpan TimeLeft => this.Timeout - this.ElapsedTime;
+  public TimeSpan ElapsedTime => DateTime.UtcNow - this._creationTime;
 
-    #region ctor,dtor
-    public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(timeoutAction!=null);
-#endif
-      this.Timeout = timeout;
-      this._timeoutAction = timeoutAction;
-      this._timer = new(this._CheckTimeout);
-      Action<object> action = this._CheckTimeout;
-      action.BeginInvoke(null, action.EndInvoke, null);
-    }
+  #region ctor,dtor
+  public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
+    Against.ArgumentIsNull(timeoutAction);
 
-    #region Implementation of IDisposable
-
-    private volatile bool _isDisposed;
-    public void Dispose() {
-      if (this._isDisposed)
-        return;
-
-      this._isDisposed = true;
-      this._timer.Change(Threading.Timeout.Infinite, Threading.Timeout.Infinite);
-      this._timer.Dispose();
-    }
-
-    ~CallOnTimeout() {
-      this.Dispose();
-    }
-
-#endregion
-#endregion
-
-    private void _CheckTimeout(object _) {
-      while (!this._isDisposed) {
-
-        var timeLeft = this.TimeLeft;
-        if (timeLeft.TotalMilliseconds <= 0) {
-          this._timeoutAction(this);
-          return;
-        }
-
-        if (timeLeft > _TIME_BEFORE_CHECKS) {
-          this._CallbackIn(timeLeft - _TIME_BEFORE_CHECKS);
-          return;
-        }
-
-      }
-    }
-
-    private void _CallbackIn(TimeSpan when) => this._timer.Change((long)when.TotalMilliseconds, Threading.Timeout.Infinite);
-
+    this.Timeout = timeout;
+    this._timeoutAction = timeoutAction;
+    var action = this._CheckTimeout;
+    this._timer = new(this._CheckTimeout);
+    action.BeginInvoke(null, action.EndInvoke, null);
   }
+
+  #region Implementation of IDisposable
+
+  private volatile bool _isDisposed;
+  public void Dispose() {
+    if (this._isDisposed)
+      return;
+
+    this._isDisposed = true;
+    this._timer.Change(Threading.Timeout.Infinite, Threading.Timeout.Infinite);
+    this._timer.Dispose();
+  }
+
+  ~CallOnTimeout() => this.Dispose();
+
+  #endregion
+  #endregion
+
+  private void _CheckTimeout(object _) {
+    while (!this._isDisposed) {
+
+      var timeLeft = this.TimeLeft;
+      if (timeLeft.TotalMilliseconds <= 0) {
+        this._timeoutAction(this);
+        return;
+      }
+
+      if (timeLeft <= _TIME_BEFORE_CHECKS)
+        continue;
+      
+      this._CallbackIn(timeLeft - _TIME_BEFORE_CHECKS);
+      return;
+    }
+  }
+
+  private void _CallbackIn(TimeSpan when) => this._timer.Change((long)when.TotalMilliseconds, Threading.Timeout.Infinite);
+
 }
