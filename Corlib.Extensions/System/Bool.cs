@@ -65,20 +65,16 @@ namespace System {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void When(this bool @this, Action @true = null, Action @false = null) {
-      if (@this)
-        @true?.Invoke();
-      else
-        @false?.Invoke();
+      var action = @this ? @true : @false;
+      action?.Invoke();
     }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public static void When(this bool @this, Action<bool> @true = null, Action<bool> @false = null) {
-      if (@this)
-        @true?.Invoke(true);
-      else
-        @false?.Invoke(false);
+      var action = @this ? @true : @false;
+      action?.Invoke(@this);
     }
 
 #if SUPPORTS_INLINING
