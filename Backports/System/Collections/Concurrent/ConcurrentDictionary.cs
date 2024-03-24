@@ -1,6 +1,4 @@
-﻿#if !SUPPORTS_CONCURRENT_COLLECTIONS
-
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 
 /*
   This file is part of Hawkynt's .NET Framework extensions.
@@ -22,6 +20,8 @@
 */
 
 #endregion
+
+#if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
 using System.Linq;
@@ -107,6 +107,8 @@ class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue
     }
   }
 
+#if SUPPORTS_LINQ
+
   public KeyValuePair<TKey, TValue>[] OrderBy<TSort>(Func<KeyValuePair<TKey, TValue>, TSort> keySelector) {
     lock (this._items)
       return this._items.OrderBy(keySelector).ToArray();
@@ -116,6 +118,8 @@ class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue
     lock (this._items)
       return this._items.OrderByDescending(keySelector).ToArray();
   }
+
+#endif
 
   #region Implementation of IEnumerable
 
