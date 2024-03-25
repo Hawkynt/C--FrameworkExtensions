@@ -521,18 +521,17 @@ GenerationEnvironment = fileManager;
 
 <#
   GenerateTwoOperandArbitraryCountEqual("AreEqual");
-  GenerateTwoOperandArbitraryCountFill("Fill", 1);
-  GenerateTwoOperandArbitraryCountFill("Fill", 2);
-  GenerateTwoOperandArbitraryCountFill("Fill", 4);
-  GenerateTwoOperandArbitraryCountFill("Fill", 8);
-  GenerateOneOperandArbitraryCountOperation("Clear");
-  GenerateThreeOperandArbitraryCountOperation("And");
-  GenerateThreeOperandArbitraryCountOperation("Nand");
-  GenerateThreeOperandArbitraryCountOperation("Or");
-  GenerateThreeOperandArbitraryCountOperation("Nor");
-  GenerateThreeOperandArbitraryCountOperation("Xor");
-  GenerateThreeOperandArbitraryCountOperation("Xnor");
-  GenerateTwoOperandArbitraryCountOperation("Not");
+  foreach(var size in new[]{1, 2, 4, 8}){
+    GenerateTwoOperandArbitraryCountFill("Fill", size);
+    GenerateOneOperandArbitraryCountOperation("Clear", size);
+    GenerateThreeOperandArbitraryCountOperation("And", size);
+    GenerateThreeOperandArbitraryCountOperation("Nand", size);
+    GenerateThreeOperandArbitraryCountOperation("Or", size);
+    GenerateThreeOperandArbitraryCountOperation("Nor", size);
+    GenerateThreeOperandArbitraryCountOperation("Xor", size);
+    GenerateThreeOperandArbitraryCountOperation("Xnor", size);
+    GenerateTwoOperandArbitraryCountOperation("Not", size);
+  }
 #>
 
 #if SUPPORTS_INLINING
@@ -670,28 +669,29 @@ void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool ne
 <#+
 }
 
-void GenerateOneOperandArbitraryCountOperation(string name) {
+void GenerateOneOperandArbitraryCountOperation(string name, int size) {
+  var dataType = GetDataTypeForByteCount(size);
 #>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, int count) {
+  public static unsafe void <#=name#>(<#=dataType#>* @this, int count) {
     switch (count) {
       case <= 0: break;
-<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this); break;
+<#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
+      case <#=blockSize / size#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this); break;
 <#+}#>
       default: _<#=name#>Many(@this, count); break;
     }
   }
 
-  private static unsafe void _<#=name#>Many(byte* @this, int count) {
+  private static unsafe void _<#=name#>Many(<#=dataType#>* @this, int count) {
     do {
-      count -= <#=MAX_SIZE#>;
       Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this);
-      @this += <#=MAX_SIZE#>;
-    } while (count > <#=MAX_SIZE#>);
+      count -= <#=MAX_SIZE / size#>;
+      @this += <#=MAX_SIZE / size#>;
+    } while (count > <#=MAX_SIZE / size#>);
     <#=name#>(@this, count);
   }
 
@@ -715,10 +715,10 @@ void GenerateTwoOperandArbitraryCountEqual(string name) {
 
   private static unsafe bool _<#=name#>Many(byte* @this, byte* other, int count) {
     do {
-      count -= <#=MAX_SIZE#>;
       if (!Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)other))
         return false;
 
+      count -= <#=MAX_SIZE#>;
       @this += <#=MAX_SIZE#>;
       other += <#=MAX_SIZE#>;
     } while (count > <#=MAX_SIZE#>);
@@ -729,12 +729,13 @@ void GenerateTwoOperandArbitraryCountEqual(string name) {
 }
 
 void GenerateTwoOperandArbitraryCountFill(string name, int size) {
+  var dataType = GetDataTypeForByteCount(size);
 #>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, <#=GetDataTypeForByteCount(size)#> value, int count) {
+  public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#> value, int count) {
     switch (count) {
       case <= 0: break;
 <#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
@@ -744,11 +745,11 @@ void GenerateTwoOperandArbitraryCountFill(string name, int size) {
     }
   }
 
-  private static unsafe void _<#=name#>Many(byte* @this, <#=GetDataTypeForByteCount(size)#> value, int count) {
+  private static unsafe void _<#=name#>Many(<#=dataType#>* @this, <#=dataType#> value, int count) {
     do {
-      count -= <#=MAX_SIZE / size#>;
       Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, value);
-      @this += <#=MAX_SIZE#>;
+      count -= <#=MAX_SIZE / size#>;
+      @this += <#=MAX_SIZE / size#>;
     } while (count > <#=MAX_SIZE / size#>);
     <#=name#>(@this, value, count);
   }
@@ -756,73 +757,75 @@ void GenerateTwoOperandArbitraryCountFill(string name, int size) {
 <#+
 }
 
-void GenerateTwoOperandArbitraryCountOperation(string name) {
+void GenerateTwoOperandArbitraryCountOperation(string name, int size) {
+  var dataType = GetDataTypeForByteCount(size);
 #>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, int count)
+  public static unsafe void <#=name#>(<#=dataType#>* @this, int count)
     => <#=name#>(@this, @this, count)
     ;
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, byte* target, int count) {
+  public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* target, int count) {
     switch (count) {
       case <= 0: break;
-<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)target); break;
+<#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
+      case <#=blockSize / size#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)target); break;
 <#+}#>
       default: _<#=name#>Many(@this, target, count); break;
     }
   }
 
-  private static unsafe void _<#=name#>Many(byte* @this, byte* target, int count) {
+  private static unsafe void _<#=name#>Many(<#=dataType#>* @this, <#=dataType#>* target, int count) {
     do {
-      count -= <#=MAX_SIZE#>;
       Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)target);
-      @this += <#=MAX_SIZE#>;
-      target += <#=MAX_SIZE#>;
-    } while (count > <#=MAX_SIZE#>);
+      count -= <#=MAX_SIZE / size#>;
+      @this += <#=MAX_SIZE / size#>;
+      target += <#=MAX_SIZE / size#>;
+    } while (count > <#=MAX_SIZE / size#>);
     <#=name#>(@this, target, count);
   }
 
 <#+
 }
 
-void GenerateThreeOperandArbitraryCountOperation(string name) {
+void GenerateThreeOperandArbitraryCountOperation(string name, int size) {
+  var dataType = GetDataTypeForByteCount(size);
 #>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, byte* operand, int count)
+  public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* operand, int count)
     => <#=name#>(@this, operand, @this, count)
     ;
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, byte* operand, byte* target, int count) {
+  public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* operand, <#=dataType#>* target, int count) {
     switch (count) {
       case <= 0: break;
-<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-      case <#=blockSize#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand, (Block<#=blockSize#>*)target); break;
+<#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
+      case <#=blockSize / size#>: Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)operand, (Block<#=blockSize#>*)target); break;
 <#+}#>
       default: _<#=name#>Many(@this, operand, target, count); break;
     }
   }
 
-  private static unsafe void _<#=name#>Many(byte* @this, byte* operand, byte* target, int count) {
+  private static unsafe void _<#=name#>Many(<#=dataType#>* @this, <#=dataType#>* operand, <#=dataType#>* target, int count) {
     do {
-      count -= <#=MAX_SIZE#>;
       Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)operand, (Block<#=MAX_SIZE#>*)target);
-      @this += <#=MAX_SIZE#>;
-      operand += <#=MAX_SIZE#>;
-      target += <#=MAX_SIZE#>;
-    } while (count > <#=MAX_SIZE#>);
+      count -= <#=MAX_SIZE / size#>;
+      @this += <#=MAX_SIZE / size#>;
+      operand += <#=MAX_SIZE / size#>;
+      target += <#=MAX_SIZE / size#>;
+    } while (count > <#=MAX_SIZE / size#>);
     <#=name#>(@this, operand, target, count);
   }
 <#+
