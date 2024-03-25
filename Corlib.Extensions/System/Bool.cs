@@ -20,132 +20,165 @@
 #endregion
 
 // ReSharper disable UnusedMember.Global
+using Guard;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
-namespace System {
-  // ReSharper disable once PartialTypeWithSinglePart
-  // ReSharper disable once UnusedMember.Global
+namespace System;
+// ReSharper disable once PartialTypeWithSinglePart
+// ReSharper disable once UnusedMember.Global
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class BoolExtensions {
+static partial class BoolExtensions {
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string ToOneOrZeroString(this bool @this) => _ConvertToString(@this, "1", "0", false);
+  public static string ToOneOrZeroString(this bool @this) => _ConvertToString(@this, "1", "0", false);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string ToYesOrNoString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "Yes", "No", useLowerCaseOnly);
+  public static string ToYesOrNoString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "Yes", "No", useLowerCaseOnly);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string ToTrueOrFalseString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "True", "False", useLowerCaseOnly);
+  public static string ToTrueOrFalseString(this bool @this, bool useLowerCaseOnly = false) => _ConvertToString(@this, "True", "False", useLowerCaseOnly);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private static string _ConvertToString(bool value, string trueValue, string falseValue, bool useLowerCaseOnly) {
-      var result = value ? trueValue : falseValue;
-      if (useLowerCaseOnly)
-        result = result.ToLower();
+  private static string _ConvertToString(bool value, string trueValue, string falseValue, bool useLowerCaseOnly) {
+    var result = value ? trueValue : falseValue;
+    if (useLowerCaseOnly)
+      result = result.ToLower();
 
-      return result;
-    }
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static void When(this bool @this, Action @true = null, Action @false = null) {
-      if (@this)
-        @true?.Invoke();
-      else
-        @false?.Invoke();
-    }
+    return result;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static void When(this bool @this, Action<bool> @true = null, Action<bool> @false = null) {
-      if (@this)
-        @true?.Invoke(true);
-      else
-        @false?.Invoke(false);
-    }
+  public static void When(this bool @this, Action @true = null, Action @false = null) {
+    Against.True(@true == null && @false == null);
+      
+    var action = @this ? @true : @false;
+    action?.Invoke();
+  }
+    
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void When(this bool @this, Action<bool> @true = null, Action<bool> @false = null) {
+    Against.True(@true == null && @false == null);
+      
+    var action = @this ? @true : @false;
+    action?.Invoke(@this);
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool WhenTrue(this bool @this, Action callback) {
-      if (@this)
-        callback();
-      return @this;
-    }
+  public static bool WhenTrue(this bool @this, Action callback) {
+    Against.ArgumentIsNull(callback);
+      
+    if (@this)
+      callback();
+    return @this;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool WhenTrue(this bool @this, Action<bool> callback) {
-      if (@this)
-        callback(true);
-      return @this;
-    }
+  public static bool WhenTrue(this bool @this, Action<bool> callback) {
+    Against.ArgumentIsNull(callback);
+      
+    if (@this)
+      callback(true);
+    return @this;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool WhenFalse(this bool @this, Action callback) {
-      if (!@this)
-        callback();
-      return @this;
-    }
+  public static bool WhenFalse(this bool @this, Action callback) {
+    Against.ArgumentIsNull(callback);
+      
+    if (!@this)
+      callback();
+    return @this;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool WhenFalse(this bool @this, Action<bool> callback) {
-      if (!@this)
-        callback(false);
-      return @this;
-    }
+  public static bool WhenFalse(this bool @this, Action<bool> callback) {
+    Against.ArgumentIsNull(callback);
+      
+    if (!@this)
+      callback(false);
+    return @this;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult WhenTrue<TResult>(this bool @this, Func<TResult> callback) => @this ? callback() : default(TResult);
+  public static TResult WhenTrue<TResult>(this bool @this, Func<TResult> callback) {
+    Against.ArgumentIsNull(callback);
+      
+    return @this ? callback() : default;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult WhenFalse<TResult>(this bool @this, Func<TResult> callback) => @this ? default(TResult) : callback();
+  public static TResult WhenFalse<TResult>(this bool @this, Func<TResult> callback) {
+    Against.ArgumentIsNull(callback);
+      
+    return @this ? default : callback();
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult When<TResult>(this bool @this, Func<TResult> @true = null, Func<TResult> @false = null) => @this ? @true == null ? default(TResult) : @true() : @false == null ? default(TResult) : @false();
+  public static TResult When<TResult>(this bool @this, Func<TResult> @true = null, Func<TResult> @false = null) {
+    Against.True(@true == null && @false == null);
+      
+    var function = @this ? @true : @false;
+    return function == null ? default : function();
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult WhenTrue<TResult>(this bool @this, Func<bool, TResult> callback) => @this ? callback(true) : default(TResult);
+  public static TResult WhenTrue<TResult>(this bool @this, Func<bool, TResult> callback) {
+    Against.ArgumentIsNull(callback);
+      
+    return @this ? callback(true) : default;
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult WhenFalse<TResult>(this bool @this, Func<bool, TResult> callback) => @this ? default(TResult) : callback(false);
+  public static TResult WhenFalse<TResult>(this bool @this, Func<bool, TResult> callback) {
+    Against.ArgumentIsNull(callback);
+
+    return @this ? default : callback(false);
+  }
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static TResult When<TResult>(this bool @this, Func<bool, TResult> @true = null, Func<bool, TResult> @false = null) => @this ? @true == null ? default(TResult) : @true(true) : @false == null ? default(TResult) : @false(false);
+  public static TResult When<TResult>(this bool @this, Func<bool, TResult> @true = null, Func<bool, TResult> @false = null) {
+    Against.True(@true == null && @false == null);
 
+    var function = @this ? @true : @false;
+    return function == null ? default : function(@this);
   }
 }

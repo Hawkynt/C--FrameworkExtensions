@@ -19,80 +19,76 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Reflection;
+using Guard;
 
-namespace System.Text.RegularExpressions {
+namespace System.Text.RegularExpressions;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class MatchExtensions {
-    /// <summary>
-    /// Gets the linenumber of this match in the original text.
-    /// </summary>
-    /// <param name="This">This Match.</param>
-    /// <returns>The number of \n in the text before this match started.</returns>
-    public static int LineNumber(this Match This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      if (!This.Success)
-        return (-1);
+// ReSharper disable once PartialTypeWithSinglePart
+static partial class MatchExtensions {
+  /// <summary>
+  /// Gets the linenumber of this match in the original text.
+  /// </summary>
+  /// <param name="this">This Match.</param>
+  /// <returns>The number of \n in the text before this match started.</returns>
+  public static int LineNumber(this Match @this) {
+    Against.ThisIsNull(@this);
+    
+    if (!@this.Success)
+      return -1;
 
-      var text = This.GetTextSource();
-      var before = text.Substring(0, This.Index);
-      var result = before.Count(c => c == '\n');
+    var text = @this.GetTextSource();
+    var before = text[..@this.Index];
+    var result = before.Count(c => c == '\n');
 
-      return (result);
+    return result;
+  }
 
+  /// <summary>
+  /// Gets the text source.
+  /// </summary>
+  /// <param name="this">This Match.</param>
+  /// <returns>The text that generated this match.</returns>
+  public static string GetTextSource(this Match @this) => @this._GetPrivateTextFieldValue();
+
+  /// <summary>
+  /// Gets the private field value of a match.
+  /// </summary>
+  /// <param name="match">The match.</param>
+  /// <returns></returns>
+  private static string _GetPrivateTextFieldValue(this Match match) {
+    Against.ThisIsNull(match);
+    
+    const string fieldName = "_text";
+    const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+    
+    var type = typeof(Match);
+    FieldInfo fieldInfo = null;
+
+    while (fieldInfo == null && type != null) {
+      fieldInfo = type.GetField(fieldName, bindingFlags);
+      type = type.BaseType;
     }
 
-    /// <summary>
-    /// Gets the text source.
-    /// </summary>
-    /// <param name="This">This Match.</param>
-    /// <returns>The text that generated this match.</returns>
-    public static string GetTextSource(this Match This) => This._GetPrivateTextFieldValue();
+    if (fieldInfo != null)
+      return (string) fieldInfo.GetValue(match);
 
-    /// <summary>
-    /// Gets the private field value of a match.
-    /// </summary>
-    /// <param name="match">The match.</param>
-    /// <returns></returns>
-    private static string _GetPrivateTextFieldValue(this Match match) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(match != null);
-#endif
-      const string fieldName = "_text";
-      var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-      var type = typeof(Match);
-      FieldInfo fieldInfo = null;
+    const string propName = "Text";
+    type = typeof(Match);
+    PropertyInfo fieldProperty = null;
 
-      while (fieldInfo == null && type != null) {
-        fieldInfo = type.GetField(fieldName, bindingFlags);
-        type = type.BaseType;
-      }
-
-      if (fieldInfo != null)
-        return (string) fieldInfo.GetValue(match);
-
-      const string propName = "Text";
-      type = typeof(Match);
-      PropertyInfo fieldProperty = null;
-
-      while (fieldProperty == null && type != null) {
-        fieldProperty = type.GetProperty(propName, bindingFlags);
-        type = type.BaseType;
-      }
-
-      return (string)fieldProperty?.GetValue(match,null)
-             ?? throw new ArgumentOutOfRangeException("propName", $"Neither field {fieldName} nor property {propName} was found in Type {typeof(Match).FullName}");
+    while (fieldProperty == null && type != null) {
+      fieldProperty = type.GetProperty(propName, bindingFlags);
+      type = type.BaseType;
     }
+
+    return (string)fieldProperty?.GetValue(match,null)
+           ?? throw new ArgumentOutOfRangeException(propName, $"Neither field {fieldName} nor property {propName} was found in Type {typeof(Match).FullName}");
   }
 }

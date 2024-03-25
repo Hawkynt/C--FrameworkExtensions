@@ -20,36 +20,34 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
-namespace System.Text {
+namespace System.Text;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
+  // ReSharper disable once PartialTypeWithSinglePart
   static partial class StringBuilderExtensions {
 
-    /// <summary>
-    /// Appends the lines.
-    /// </summary>
-    /// <param name="This">This StringBuilder.</param>
-    /// <param name="lines">The lines to add.</param>
-    public static void AppendLines(this StringBuilder This, IEnumerable<string> lines) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(lines != null);
-#endif
-      foreach (var line in lines)
-        This.AppendLine(line);
-    }
+  /// <summary>
+  /// Appends a collection of lines to the end of the current <see cref="StringBuilder"/> object.
+  /// Each line is appended as a new line.
+  /// </summary>
+  /// <param name="this">The <see cref="StringBuilder"/> to which the lines should be appended.</param>
+  /// <param name="lines">An <see cref="IEnumerable{T}"/> of lines to append to the <see cref="StringBuilder"/>.</param>
+  public static void AppendLines(this StringBuilder @this, IEnumerable<string> lines) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(lines);
+    
+    foreach (var line in lines)
+      @this.AppendLine(line);
+  }
 
 #if !SUPPORTS_STRING_BUILDER_CLEAR
-    public static void Clear(this StringBuilder @this) => @this.Length = 0;
+  public static void Clear(this StringBuilder @this) => @this.Length = 0;
 #endif
 
-  }
 }

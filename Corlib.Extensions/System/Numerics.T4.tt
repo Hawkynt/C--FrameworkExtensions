@@ -86,7 +86,7 @@ static partial class <#=type#>Extensions {
     if (text == null)
       return null;
 
-    StringBuilder result = new(<#if (CanComputeCapacity(type)) {#>text.Length * @this<#}#>);
+    StringBuilder result = new(<#if (CanComputeCapacity(type)) {#>text.Length * @this<#} else {#>text.Length<#}#>);
     while (@this-- > 0)
       result.Append(text);
 

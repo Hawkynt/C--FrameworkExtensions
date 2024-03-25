@@ -1,5 +1,4 @@
-﻿#if !SUPPORTS_CALLER_MEMBER_NAME
-#region (c)2010-2042 Hawkynt
+﻿#region (c)2010-2042 Hawkynt
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
@@ -20,6 +19,8 @@
 */
 #endregion
 
+#if !SUPPORTS_CALLER_MEMBER_NAME
+
 namespace System.Runtime.CompilerServices;
 
 [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
@@ -27,8 +28,8 @@ namespace System.Runtime.CompilerServices;
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
-  internal
+internal
 #endif
-  sealed class CallerLineNumberAttribute : Attribute { }
+sealed class CallerLineNumberAttribute : Attribute { }
 
 #endif
