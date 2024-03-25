@@ -61,7 +61,7 @@ internal static partial class MemoryManipulation {
     {
       if(blockSize == 1 || blockSize == 2 || blockSize == 4 || blockSize == 8) {
 #>
-      return *(<#=GetTypeForSize(blockSize)#>*)@this == *(<#=GetTypeForSize(blockSize)#>*) other;
+      return *(<#=GetDataTypeForByteCount(blockSize)#>*)@this == *(<#=GetDataTypeForByteCount(blockSize)#>*) other;
 <#
       } else {
       
@@ -95,7 +95,7 @@ internal static partial class MemoryManipulation {
     {
       if(blockSize == 1 || blockSize == 2 || blockSize == 4) {
 #>
-      return *(<#=GetTypeForSize(blockSize)#>*)@this == *(<#=GetTypeForSize(blockSize)#>*) other;
+      return *(<#=GetDataTypeForByteCount(blockSize)#>*)@this == *(<#=GetDataTypeForByteCount(blockSize)#>*) other;
 <#
       } else {
 
@@ -495,12 +495,29 @@ internal static partial class MemoryManipulation {
   GenerateTwoOperandArbitraryCountOperation("Not");
 #>
 
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static unsafe void CopyTo(byte* source, byte* target, int count) =>
+#if PLATFORM_X86
+      _CopyTox86(source, target, count)
+#else
+      _CopyTox64(source, target, count)
+#endif
+      ;
+
+<#
+  GenerateCopyToOperation("x64", MAX_SIZE);
+  GenerateCopyToOperation("x86", MAX_COPY_SIZE_X86);
+#>
+
 #endif
 
 }
 
 <#+
  const int MAX_SIZE = 64;
+ const int MAX_COPY_SIZE_X86 = 16;
 
 int DoFullLoop(string operation, int blockSize, int size, params string[] variableNames) {
   var bytesLeft = blockSize;
@@ -522,13 +539,41 @@ void DoOperationLoop(string operation, ref int bytesLeft, ref int byteOffset, re
     
     var index = byteOffset / size;
     foreach (var variableName in variableNames)
-      args.Add(DoCastedIndexLookup(variableName, index, GetTypeForSize(size)));
+      args.Add(EmitCastedIndexLookup(variableName, index, GetDataTypeForByteCount(size)));
 #>
       <#=string.Format(operation, args.ToArray())#>;
 <#+  
     bytesLeft -= size;
     byteOffset += size;
   }
+}
+
+void GenerateCopyToOperation(string name, int maxBlockSize) {
+#>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  private static unsafe void _CopyTo<#=name#>(byte* source, byte* target, int count) {
+    switch (count) {
+      case <= 0: break;
+<#+for(var blockSize = 1; blockSize <= maxBlockSize; ++blockSize) {#>
+      case <#=blockSize#>: *(Block<#=blockSize#>*)target = *(Block<#=blockSize#>*)source; break;
+<#+}#>
+      default: _CopyToMany<#=name#>(source, target, count); break;
+    }
+  }
+
+  private static unsafe void _CopyToMany<#=name#>(byte* source, byte* target, int count) {
+    do {
+      count -= <#=maxBlockSize#>;
+      *(Block<#=maxBlockSize#>*)target = *(Block<#=maxBlockSize#>*)source;
+      source += <#=maxBlockSize#>;
+      target += <#=maxBlockSize#>;
+    } while (count > <#=maxBlockSize#>);
+    _CopyTo<#=name#>(source, target, count);
+  }
+
+<#+
 }
 
 void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool negate, int blockSize) {
@@ -650,7 +695,7 @@ void GenerateTwoOperandArbitraryCountFill(string name, int size) {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe void <#=name#>(byte* @this, <#=GetTypeForSize(size)#> value, int count) {
+  public static unsafe void <#=name#>(byte* @this, <#=GetDataTypeForByteCount(size)#> value, int count) {
     switch (count) {
       case <= 0: break;
 <#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
@@ -660,7 +705,7 @@ void GenerateTwoOperandArbitraryCountFill(string name, int size) {
     }
   }
 
-  private static unsafe void _<#=name#>(byte* @this, <#=GetTypeForSize(size)#> value, int count) {
+  private static unsafe void _<#=name#>(byte* @this, <#=GetDataTypeForByteCount(size)#> value, int count) {
     do {
       count -= <#=MAX_SIZE / size#>;
       Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, value);
@@ -744,8 +789,8 @@ void GenerateThreeOperandArbitraryCountOperation(string name) {
 <#+
 }
 
-string GetTypeForSize(int size) 
-  => size switch {
+string GetDataTypeForByteCount(int sizeInBytes) 
+  => sizeInBytes switch {
     8 => "ulong",
     4 => "uint",
     2 => "ushort",
@@ -754,7 +799,7 @@ string GetTypeForSize(int size)
   }
   ;
 
-string DoCastedIndexLookup(string variableName, int index, string typeName)
+string EmitCastedIndexLookup(string variableName, int index, string typeName)
   => index == 0 ? $"*({typeName}*){variableName}" : $"(({typeName}*){variableName})[{index}]"
   ;
  
