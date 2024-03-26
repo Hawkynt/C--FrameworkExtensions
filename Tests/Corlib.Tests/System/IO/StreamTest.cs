@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Corlib.Tests.System.IO;
-
-using global::System.Linq;
 
 internal class StreamTest {
 
@@ -18,17 +19,17 @@ internal class StreamTest {
     memoryStream.Write(value);
     var result = memoryStream.ToArray();
     Assert.AreEqual(1, result.Length);
-    if(value)
+    if (value)
       Assert.AreNotEqual(0, result[0]);
     else
       Assert.AreEqual(0, result[0]);
-    
+
     // Test reading
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadBool();
     Assert.AreEqual(value, readBack);
   }
-  
+
   [Test]
   [TestCase(100)]
   [TestCase(byte.MinValue)]
@@ -160,7 +161,7 @@ internal class StreamTest {
     Assert.AreEqual(2, result.Length);
     Assert.AreEqual((byte)(value >> 0), result[0]);
     Assert.AreEqual((byte)(value >> 8), result[1]);
-    
+
     // test reading
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadInt16();
@@ -232,9 +233,9 @@ internal class StreamTest {
   public void WriteInt(int value) {
 
     // test writing
-    using var memoryStream=new MemoryStream();
+    using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
-    var result=memoryStream.ToArray();
+    var result = memoryStream.ToArray();
     Assert.AreEqual(4, result.Length);
     Assert.AreEqual((byte)(value >> 0), result[0]);
     Assert.AreEqual((byte)(value >> 8), result[1]);
@@ -301,7 +302,7 @@ internal class StreamTest {
     memoryStream.Position = 0;
     Assert.AreEqual(value, memoryStream.ReadUInt64(true));
   }
-  
+
   [Test]
   [TestCase(0L)]
   [TestCase(1L)]
@@ -420,7 +421,7 @@ internal class StreamTest {
 
     // Convert float to bytes for comparison
     var valueBytes = BitConverter.GetBytes(value);
-    for(var i=0;i<8;++i)
+    for (var i = 0; i < 8; ++i)
       Assert.AreEqual(valueBytes[i], result[i]);
 
     // Test reading
@@ -493,6 +494,139 @@ internal class StreamTest {
     // test readin big endian
     memoryStream.Position = 0;
     Assert.AreEqual(value, memoryStream.ReadMoney128(true));
+  }
+
+  private static IEnumerable<int> _CountGenerator() {
+    for (var i = 0; i <= 511; ++i)
+      yield return i;
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_CountGenerator))]
+  public void ToArrayOnSeekableStream(int size) {
+    using var memoryStream = new MemoryStream(size + 1);
+    var bytes = new byte[size];
+    if (size < byte.MaxValue)
+      new Random().NextBytes(bytes);
+    else
+      for (var i = 0; i < size; ++i)
+        bytes[i] = (byte)i;
+
+    memoryStream.Write(bytes);
+
+    memoryStream.Position = 0;
+    var result = memoryStream.ToArray();
+    Assert.That(result, Is.EquivalentTo(bytes));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_CountGenerator))]
+  public void ToArrayOnUnseekableStream(int size) {
+    var bytes = new byte[size];
+    if (size < byte.MaxValue)
+      new Random().NextBytes(bytes);
+    else
+      for (var i = 0; i < size; ++i)
+        bytes[i] = (byte)i;
+
+    var aes = Aes.Create();
+    aes.Mode = CipherMode.CBC;
+    aes.Padding = PaddingMode.Zeros;
+    aes.KeySize = 128;
+    aes.BlockSize = 128;
+
+    byte[] cipherText;
+    using (var memoryStream = new MemoryStream(size + 1)) {
+      aes.Key = new byte[16];
+      aes.IV = new byte[16];
+      var cipher = aes.CreateEncryptor();
+      using (var cs = new CryptoStream(memoryStream, cipher, CryptoStreamMode.Write))
+        memoryStream.Write(bytes);
+      cipherText = memoryStream.ToArray();
+    }
+
+    byte[] result;
+    using (var memoryStream = new MemoryStream(cipherText)) {
+      aes.Key = new byte[16];
+      aes.IV = new byte[16];
+      var cipher = aes.CreateDecryptor();
+      using (var cs = new CryptoStream(memoryStream, cipher, CryptoStreamMode.Read))
+        result = memoryStream.ToArray();
+    }
+
+    Assert.That(result, Is.EquivalentTo(bytes));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_CountGenerator))]
+  public void ReadAllBytesOnSeekableStream_Should_Return_Bytes_Left(int size) {
+    using var memoryStream = new MemoryStream(size + 1);
+    var bytes = new byte[size];
+    if (size < byte.MaxValue)
+      new Random().NextBytes(bytes);
+    else
+      for (var i = 0; i < size; ++i)
+        bytes[i] = (byte)i;
+
+    var dummy = new byte[size];
+    for (var i = 0; i < size; ++i)
+      dummy[i] = (byte)(255 - bytes[i]);
+
+    memoryStream.Write(dummy); // we write bytes before so we can discard them later again
+    memoryStream.Write(bytes);
+
+    memoryStream.Position = 0;
+    memoryStream.ReadBytes(dummy.Length); // discard the dummy
+
+    var result = memoryStream.ReadAllBytes();
+    Assert.That(result, Is.EquivalentTo(bytes));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_CountGenerator))]
+  public void ReadAllBytesOnUnseekableStream_Should_Return_Bytes_Left(int size) {
+    var bytes = new byte[size];
+    if (size < byte.MaxValue)
+      new Random().NextBytes(bytes);
+    else
+      for (var i = 0; i < size; ++i)
+        bytes[i] = (byte)i;
+
+    var dummy = new byte[size];
+    for (var i = 0; i < size; ++i)
+      dummy[i] = (byte)(255 - bytes[i]);
+
+    var aes = Aes.Create();
+    aes.Mode = CipherMode.CBC;
+    aes.Padding = PaddingMode.Zeros;
+    aes.KeySize = 128;
+    aes.BlockSize = 128;
+
+    byte[] cipherText;
+    using (var memoryStream = new MemoryStream(size + 1)) {
+      aes.Key = new byte[16];
+      aes.IV = new byte[16];
+      var cipher = aes.CreateEncryptor();
+      using (var cs = new CryptoStream(memoryStream, cipher, CryptoStreamMode.Write)) {
+        memoryStream.Write(dummy);
+        memoryStream.Write(bytes);
+      }
+
+      cipherText = memoryStream.ToArray();
+    }
+
+    byte[] result;
+    using (var memoryStream = new MemoryStream(cipherText)) {
+      aes.Key = new byte[16];
+      aes.IV = new byte[16];
+      var cipher = aes.CreateDecryptor();
+      using (var cs = new CryptoStream(memoryStream, cipher, CryptoStreamMode.Read)) {
+        memoryStream.ReadBytes(dummy.Length);
+        result = memoryStream.ReadAllBytes();
+      }
+    }
+
+    Assert.That(result, Is.EquivalentTo(bytes));
   }
 
 }

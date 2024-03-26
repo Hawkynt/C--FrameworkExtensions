@@ -22,7 +22,6 @@
 #endregion
 
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Net.Sockets;
 using System.Text;
@@ -33,14 +32,13 @@ using System.Threading.Tasks;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
+using Guard;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.IO;
-
-using Guard;
 
 /// <summary>
 ///   Extensions for Streams.
@@ -50,7 +48,9 @@ public
 #else
 internal
 #endif
-static partial class StreamExtensions {
+  static partial class StreamExtensions {
+
+  private const int _BUFFER_SIZE = 4 * 1024 * 16;
 
   #region nested types
 
@@ -69,9 +69,8 @@ static partial class StreamExtensions {
   private static class PrimitiveConversionBufferManager {
     private const int BufferSize = 64; // Fixed buffer size, enough to keep the largest primitive datatype
     private static byte[] _sharedBuffer = new byte[BufferSize];
-        
-    [ThreadStatic]
-    private static byte[] threadLocalBuffer;
+
+    [ThreadStatic] private static byte[] threadLocalBuffer;
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,13 +88,16 @@ static partial class StreamExtensions {
 
 #endif
 
-#endregion
+  #endregion
 
   /// <summary>
   ///   Writes a whole array of bytes to a stream.
   /// </summary>
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="data">The data to write.</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+# endif
   public static void Write(this Stream @this, byte[] data) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(data);
@@ -110,6 +112,9 @@ static partial class StreamExtensions {
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="result">The array where to store the results.</param>
   /// <returns>The number of bytes actually read.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+# endif
   public static int Read(this Stream @this, byte[] result) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(result);
@@ -119,19 +124,126 @@ static partial class StreamExtensions {
   }
 
   /// <summary>
-  ///   Tries to read a given number of bytes from a stream.
+  /// Tries to read a given number of bytes from a stream.
   /// </summary>
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="count">The number of bytes to read.</param>
   /// <returns>The number of bytes actually read.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+# endif
   public static byte[] ReadBytes(this Stream @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(count);
     Against.False(@this.CanRead);
 
-    var result = new byte[count];
-    var bytesGot = @this.Read(result, 0, count);
-    return bytesGot == count ? result : result.Take(bytesGot).ToArray();
+    return _ReadBytes(@this, count);
+  }
+
+  /// <summary>
+  /// Reads all bytes from the current position of the given <see cref="Stream"/> and returns them as a byte array.
+  /// </summary>
+  /// <param name="this">The <see cref="Stream"/> instance on which the extension method is called.</param>
+  /// <returns>A byte array containing the bytes read from the <see cref="Stream"/>.</returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single array in .NET.
+  /// </exception>
+  /// <remarks>
+  /// The method reads bytes into a byte array, which has a maximum indexable length of <see cref="Int32.MaxValue"/> (2,147,483,647) elements,
+  /// roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow of the array index.
+  /// </remarks>
+  /// <example>
+  /// This example shows how to use the <see cref="ReadAllBytes"/> extension method
+  /// to read all bytes from a file stream and store them in a byte array.
+  /// <code>
+  /// using System;
+  /// using System.IO;
+  ///
+  /// class Program
+  /// {
+  ///     static void Main()
+  ///     {
+  ///         using (FileStream fileStream = File.OpenRead("example.txt"))
+  ///         {
+  ///             byte[] fileContents = fileStream.ReadAllBytes();
+  ///             // Use fileContents as needed
+  ///         }
+  ///     }
+  /// }
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static byte[] ReadAllBytes(this Stream @this) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    return @this.CanSeek ? _ReadBytesSeekable(@this, @this.Length - @this.Position) : _ReadAllBytesNonSeekable(@this);
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  private static byte[] _ReadAllBytesNonSeekable(Stream @this) {
+    using MemoryStream data = new(_BUFFER_SIZE);
+    @this.CopyTo(data);
+    return data.ToArray();
+  }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  private static byte[] _ReadBytes(Stream @this, long count)
+    => @this.CanSeek ? _ReadBytesSeekable(@this, count) : _ReadBytesNonSeekable(@this, count)
+    ;
+
+  /// <summary>
+  /// Some non-seekable streams have problems when reading into array buffers, so they need slow byte-by-byte reading
+  /// </summary>
+  /// <param name="this"></param>
+  /// <param name="count"></param>
+  /// <returns></returns>
+  private static byte[] _ReadBytesNonSeekable(Stream @this, long count) {
+    using MemoryStream data = new(_BUFFER_SIZE);
+    while (count-- > 0) {
+      var @byte = @this.ReadByte();
+      if (@byte < 0)
+        break;
+
+      data.WriteByte((byte)@byte);
+    }
+
+    return data.ToArray();
+  }
+
+  private static byte[] _ReadBytesSeekable(Stream @this, long count) {
+    Against.ValuesAbove(count, int.MaxValue);
+
+    var smallCount = (int)count;
+    var result = new byte[smallCount];
+    var offset = _ReadBytesToArraySeekable(@this, result, 0, smallCount);
+
+    if (offset >= smallCount)
+      return result;
+
+    // stream ended too early - shrink block
+    var finalBlock = new byte[offset];
+    result.CopyTo(0, finalBlock, 0, offset);
+    return finalBlock;
+  }
+
+  private static int _ReadBytesToArraySeekable(Stream @this, byte[] target, int offset, int count) {
+    while (count > 0) {
+      var bytesRead = @this.Read(target, offset, count);
+      if (bytesRead == 0)
+        break;
+
+      offset += bytesRead;
+      count -= bytesRead;
+    }
+
+    return offset;
   }
 
   #region Reading/Writing primitives
@@ -142,7 +254,7 @@ static partial class StreamExtensions {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
-    @this.WriteByte(value? (byte)255 : (byte)0);
+    @this.WriteByte(value ? (byte)255 : (byte)0);
   }
 
   public static bool ReadBool(this Stream @this) {
@@ -202,8 +314,8 @@ static partial class StreamExtensions {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       *(ushort*)bytes = value;
-    
-    stream.Write(handle.Buffer,0,sizeof(ushort));
+
+    stream.Write(handle.Buffer, 0, sizeof(ushort));
 #endif
   }
 
@@ -237,7 +349,7 @@ static partial class StreamExtensions {
       return *(ushort*)bytes;
 #endif
   }
-  
+
   private static unsafe ushort _ReadBigEndianU16(Stream stream) {
     ushort result = 0;
     var ptr = (byte*)&result;
@@ -289,7 +401,7 @@ static partial class StreamExtensions {
 
 #endif
 
-    public static void Write(this Stream @this, ushort value) {
+  public static void Write(this Stream @this, ushort value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
@@ -412,7 +524,7 @@ static partial class StreamExtensions {
 
   private static unsafe void _WriteBigEndianU32(Stream stream, uint value) {
     var ptr = (byte*)&value;
-    
+
 #if SUPPORTS_SPAN
     (*ptr, ptr[1], ptr[2], ptr[3]) = (ptr[3], ptr[2], ptr[1], *ptr);
     var bytes = new ReadOnlySpan<byte>(ptr, sizeof(uint));
@@ -496,7 +608,7 @@ static partial class StreamExtensions {
 
 #endif
 
-    public static void Write(this Stream @this, uint value) {
+  public static void Write(this Stream @this, uint value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
@@ -565,7 +677,6 @@ static partial class StreamExtensions {
 
   #endregion
 
-
   #region ulong
 
 
@@ -595,7 +706,7 @@ static partial class StreamExtensions {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     fixed (byte* bytes = handle.Buffer)
       (*bytes, bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (ptr[7], ptr[6], ptr[5], ptr[4], ptr[3], ptr[2], ptr[1], *ptr);
-    
+
     stream.Write(handle.Buffer, 0, sizeof(ulong));
 #endif
   }
@@ -630,7 +741,7 @@ static partial class StreamExtensions {
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], *bytes);
 #endif
-    
+
     return result;
   }
 
@@ -668,7 +779,7 @@ static partial class StreamExtensions {
 
 #endif
 
-    public static void Write(this Stream @this, ulong value) {
+  public static void Write(this Stream @this, ulong value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
 
@@ -743,7 +854,7 @@ static partial class StreamExtensions {
 
   private static unsafe void _WriteLittleEndianF32(Stream stream, float value) => _WriteLittleEndianU32(stream, *(uint*)&value);
   private static unsafe void _WriteBigEndianF32(Stream stream, float value) => _WriteBigEndianU32(stream, *(uint*)&value);
-  
+
   private static unsafe float _ReadLittleEndianF32(Stream stream) {
     var result = _ReadLittleEndianU32(stream);
     return *(float*)&result;
@@ -895,9 +1006,9 @@ static partial class StreamExtensions {
     return bigEndian ? _ReadBigEndianF64(@this) : _ReadLittleEndianF64(@this);
   }
 
-#endregion
+  #endregion
 
-#region decimal
+  #region decimal
 
   private static void _WriteLittleEndianM128(Stream stream, decimal value) {
     var blocks = decimal.GetBits(value);
@@ -958,9 +1069,9 @@ static partial class StreamExtensions {
     return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
   }
 
-#endregion
+  #endregion
 
-#endregion
+  #endregion
 
   /// <summary>
   /// Determines whether the current <see cref="Stream"/> position pointer is at the end of the <see cref="Stream"/>.
@@ -996,16 +1107,50 @@ static partial class StreamExtensions {
   }
 
   /// <summary>
-  ///   Copies the whole stream to an array.
+  /// Reads all bytes from the starting position of the given <see cref="Stream"/> and returns them as a byte array.
   /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <returns>The content of the stream.</returns>
+  /// <param name="this">The <see cref="Stream"/> instance on which the extension method is called.</param>
+  /// <returns>A byte array containing the bytes read from the <see cref="Stream"/>.</returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single array in .NET.
+  /// </exception>
+  /// <remarks>
+  /// If the <see cref="Stream"/> is not seekable, the bytes are read from the current position.
+  /// The method reads bytes into a byte array, which has a maximum indexable length of <see cref="Int32.MaxValue"/> (2,147,483,647) elements,
+  /// roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow of the array index.
+  /// </remarks>
+  /// <example>
+  /// This example shows how to use the <see cref="ToArray"/> extension method
+  /// to read all bytes from a file stream and store them in a byte array.
+  /// <code>
+  /// using System;
+  /// using System.IO;
+  ///
+  /// class Program
+  /// {
+  ///     static void Main()
+  ///     {
+  ///         using (FileStream fileStream = File.OpenRead("example.txt"))
+  ///         {
+  ///             byte[] fileContents = fileStream.ToArray();
+  ///             // Use fileContents as needed
+  ///         }
+  ///     }
+  /// }
+  /// </code>
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static byte[] ToArray(this Stream @this) {
     Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
 
-    using MemoryStream data = new();
-    @this.CopyTo(data);
-    return data.ToArray();
+    if (!@this.CanSeek)
+      return _ReadAllBytesNonSeekable(@this);
+
+    @this.Position = 0;
+    return _ReadBytesSeekable(@this, @this.Length);
   }
 
   /// <summary>
@@ -1014,11 +1159,14 @@ static partial class StreamExtensions {
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="encoding">The encoding.</param>
   /// <returns>The text from the stream.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static string ReadAllText(this Stream @this, Encoding encoding = null) {
     Against.ThisIsNull(@this);
 
     encoding ??= Encoding.Default;
-    return @this.CanRead ? encoding.GetString(@this.ToArray()) : null;
+    return @this.CanRead ? encoding.GetString(@this.ReadAllBytes()) : null;
   }
 
   /// <summary>
@@ -1027,6 +1175,9 @@ static partial class StreamExtensions {
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="data">The data.</param>
   /// <param name="encoding">The encoding.</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void WriteAllText(this Stream @this, string data, Encoding encoding = null) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -1044,7 +1195,7 @@ static partial class StreamExtensions {
   public static TStruct Read<TStruct>(this Stream @this) where TStruct : struct {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
-    
+
     static TStruct BytesToStruct(byte[] buffer) {
       var size = buffer.Length;
       var unmanagedMemory = IntPtr.Zero;
@@ -1057,17 +1208,6 @@ static partial class StreamExtensions {
         if (unmanagedMemory != IntPtr.Zero)
           Marshal.FreeHGlobal(unmanagedMemory);
       }
-    }
-
-    static byte[] ReadEnoughBytes(Stream stream, int size) {
-      var result = new byte[size];
-      var offset = 0;
-      while (size > 0 && !stream.IsAtEndOfStream()) {
-        var read = stream.Read(result, offset, size);
-        size -= read;
-        offset += read;
-      }
-      return result;
     }
 
     if (typeof(TStruct) == typeof(byte))
@@ -1096,8 +1236,8 @@ static partial class StreamExtensions {
       return (TStruct)(object)_ReadLittleEndianF64(@this);
     if (typeof(TStruct) == typeof(decimal))
       return (TStruct)(object)_ReadLittleEndianM128(@this);
-    
-    return BytesToStruct(ReadEnoughBytes(@this, Marshal.SizeOf(typeof(TStruct))));
+
+    return BytesToStruct(_ReadBytes(@this, Marshal.SizeOf(typeof(TStruct))));
   }
 
   /// <summary>
@@ -1124,7 +1264,7 @@ static partial class StreamExtensions {
           Marshal.FreeHGlobal(unmanagedMemory);
       }
     }
-    
+
     if (typeof(TStruct) == typeof(byte))
       @this.WriteByte((byte)(object)value);
     else if (typeof(TStruct) == typeof(bool))
@@ -1163,27 +1303,14 @@ static partial class StreamExtensions {
   /// <param name="buffer">The buffer where the result is written in</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   // Note: not thread safe
-  public static void ReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => _ReadBytes(@this, position, buffer, 0, buffer.Length, seekOrigin);
-
-  /// <summary>
-  ///   Read Bytes from a given position with a given SeekOrigin in the given buffer with an offset
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="offset">The offset in the buffer</param>
-  /// <param name="count">The amount of bytes you want to read</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  private static void _ReadBytes(Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void ReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     Against.False(@this.CanRead);
 
-    _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-    while (count > 0 && !@this.IsAtEndOfStream()) {
-      var read = @this.Read(buffer, offset, count);
-      count -= read;
-      offset += read;
-    }
+    _SeekToPositionAndCheck(@this, position, buffer.Length, seekOrigin);
+    _ReadBytesToArraySeekable(@this, buffer, 0, buffer.Length);
   }
 
 #if SUPPORTS_STREAM_ASYNC
@@ -1196,6 +1323,9 @@ static partial class StreamExtensions {
   /// <param name="buffer">The buffer where the result is written in</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
     => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
 
@@ -1209,6 +1339,9 @@ static partial class StreamExtensions {
   /// <param name="count">The amount of bytes you want to read</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     return await Task.Run(async () => {
       _SeekToPositionAndCheck(@this, position, count, seekOrigin);
@@ -1225,6 +1358,9 @@ static partial class StreamExtensions {
   /// <param name="token">The Cancellation Token</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
     => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
 
@@ -1239,6 +1375,9 @@ static partial class StreamExtensions {
   /// <param name="token">The Cancellation Token</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A awaitable Task representing the operation</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     return await Task.Run(async () => {
       _SeekToPositionAndCheck(@this, position, count, seekOrigin);
@@ -1258,6 +1397,9 @@ static partial class StreamExtensions {
   /// <param name="state">The given State</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns>A IAsyncResult representing the operation</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static IAsyncResult BeginReadBytes(this Stream @this, long position, byte[] buffer, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin)
     => BeginReadBytes(@this, position, buffer, 0, buffer.Length, callback, state, seekOrigin);
 
@@ -1273,6 +1415,9 @@ static partial class StreamExtensions {
   /// <param name="state">The given State</param>
   /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
   /// <returns></returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static IAsyncResult BeginReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -1286,6 +1431,9 @@ static partial class StreamExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="result">The IAsyncResult representing the result of the Begin operation</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void EndReadBytes(this Stream @this, IAsyncResult result)
     => @this.EndRead(result);
 
@@ -1326,7 +1474,7 @@ static partial class StreamExtensions {
     Against.False(@this.CanRead);
     Against.False(target.CanWrite);
 
-    var buffer = new byte[81920];
+    var buffer = new byte[_BUFFER_SIZE];
     int count;
     while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
       target.Write(buffer, 0, count);
@@ -1337,6 +1485,9 @@ static partial class StreamExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Stream"/>.</param>
   /// <param name="_">Dummy, ignored</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Flush(this Stream @this, bool _) => @this.Flush();
 
 #endif
