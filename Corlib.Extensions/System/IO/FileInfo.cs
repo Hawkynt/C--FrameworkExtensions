@@ -1278,8 +1278,13 @@ internal
   /// </example>
   public static IEnumerable<byte> ReadBytes(this FileInfo @this) {
     using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-    while (!stream.IsAtEndOfStream())
-      yield return (byte)stream.ReadByte();
+    for (;;) {
+      var result= stream.ReadByte();
+      if (result < 0)
+        yield break;
+
+      yield return (byte)result;
+    }
   }
 
   /// <summary>
