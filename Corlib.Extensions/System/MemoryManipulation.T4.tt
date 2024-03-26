@@ -520,8 +520,8 @@ GenerationEnvironment = fileManager;
 #if UNSAFE
 
 <#
-  GenerateTwoOperandArbitraryCountEqual("AreEqual");
   foreach(var size in new[]{1, 2, 4, 8}){
+    GenerateTwoOperandArbitraryCountEqual("AreEqual", size);
     GenerateTwoOperandArbitraryCountFill("Fill", size);
     GenerateOneOperandArbitraryCountOperation("Clear", size);
     GenerateThreeOperandArbitraryCountOperation("And", size);
@@ -698,30 +698,31 @@ void GenerateOneOperandArbitraryCountOperation(string name, int size) {
 <#+
 }
 
-void GenerateTwoOperandArbitraryCountEqual(string name) {
+void GenerateTwoOperandArbitraryCountEqual(string name, int size) {
+  var dataType = GetDataTypeForByteCount(size);
 #>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static unsafe bool <#=name#>(byte* @this, byte* other, int count)
+  public static unsafe bool <#=name#>(<#=dataType#>* @this, <#=dataType#>* other, int count)
     => count switch {
       <= 0 => true,
-<#+for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {#>
-      <#=blockSize#> => Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)other),
+<#+for(var blockSize = size; blockSize <= MAX_SIZE; blockSize+=size) {#>
+      <#=blockSize / size#> => Block<#=blockSize#>.<#=name#>((Block<#=blockSize#>*)@this, (Block<#=blockSize#>*)other),
 <#+}#>
       _ => _<#=name#>Many(@this, other, count)
     };
 
-  private static unsafe bool _<#=name#>Many(byte* @this, byte* other, int count) {
+  private static unsafe bool _<#=name#>Many(<#=dataType#>* @this, <#=dataType#>* other, int count) {
     do {
       if (!Block<#=MAX_SIZE#>.<#=name#>((Block<#=MAX_SIZE#>*)@this, (Block<#=MAX_SIZE#>*)other))
         return false;
 
-      count -= <#=MAX_SIZE#>;
-      @this += <#=MAX_SIZE#>;
-      other += <#=MAX_SIZE#>;
-    } while (count > <#=MAX_SIZE#>);
+      count -= <#=MAX_SIZE / size#>;
+      @this += <#=MAX_SIZE / size#>;
+      other += <#=MAX_SIZE / size#>;
+    } while (count > <#=MAX_SIZE / size#>);
     return <#=name#>(@this, other, count);
   }
 
