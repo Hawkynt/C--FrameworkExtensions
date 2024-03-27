@@ -375,6 +375,21 @@ static partial class ListExtensions {
 #endif
 
   /// <summary>
+  /// Removes every occurance of the given item.
+  /// </summary>
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  /// <param name="this">This <see cref="IList{T}"/>.</param>
+  /// <param name="item">The item to remove.</param>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void RemoveEvery<TItem>(this IList<TItem> @this, TItem item) {
+    Against.ThisIsNull(@this);
+
+    while (@this.Remove(item)) { }
+  }
+
+  /// <summary>
   /// Removes the given items from the list.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
@@ -394,7 +409,7 @@ static partial class ListExtensions {
     Against.ThisIsNull(@this);
     
     var result = new T[count];
-    for (var i = count - 1; i >= 0; i--)
+    for (var i = count - 1; i >= 0; --i)
       result[i] = @this[i + start];
 
     return result;
