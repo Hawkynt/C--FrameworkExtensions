@@ -103,20 +103,12 @@ internal static partial class MemoryManipulation {
       
         DoFullLoop("var result{0} = {1}", blockSize, 8, "@this");
         var resultCount = DoFullLoop("result{0} ^= {1}", blockSize, 8, "other");
-
-        var shift = 1;
-        while (shift < resultCount) {
-          for (var index = 0; index < resultCount; index += 2 * shift) {
-            if (index + shift < resultCount) {
 #>
-      result<#=index#> |= result<#=(index + shift)#>;
-<#
-            }
-          }
-          shift *= 2;
-        }
-#>
-      return result0 == 0;
+      return 
+<#      for (var i = 0; i < resultCount; ++i){#>
+        <#if(i > 0) {#>&& <#}#>result<#=i#> == 0
+<#      }#>
+        ;
 <#
       }
     }
@@ -137,20 +129,12 @@ internal static partial class MemoryManipulation {
 
         DoFullLoop("var result{0} = {1}", blockSize, 4, "@this");
         var resultCount = DoFullLoop("result{0} ^= {1}", blockSize, 4, "other");
-
-        var shift = 1;
-        while (shift < resultCount) {
-          for (var index = 0; index < resultCount; index += 2 * shift) {
-            if (index + shift < resultCount) {
 #>
-      result<#=index#> |= result<#=(index + shift)#>;
-<#
-            }
-          }
-          shift *= 2;
-        }
-#>
-      return result0 == 0;
+      return 
+<#      for (var i = 0; i < resultCount; ++i){#>
+        <#if(i > 0) {#>&& <#}#>result<#=i#> == 0
+<#      }#>
+        ;
 <#
       }
     }
