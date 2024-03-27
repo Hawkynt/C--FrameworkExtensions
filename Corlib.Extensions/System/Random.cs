@@ -31,81 +31,216 @@ using qword = System.UInt64;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System {
+namespace System;
+
+using Collections.Generic;
+using Linq;
+using Security.Cryptography;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
   static partial class RandomExtensions {
-    /// <summary>
-    /// Creates a random number between the given limits.
-    /// </summary>
-    /// <param name="This">This Random.</param>
-    /// <param name="minValue">The min value.</param>
-    /// <param name="maxValue">The max value.</param>
-    /// <returns>A value between the given boundaries</returns>
+
+  /// <summary>
+  /// Creates a random number between the given limits.
+  /// </summary>
+  /// <param name="this">This Random.</param>
+  /// <param name="minimumInclusive">The min value.</param>
+  /// <param name="maximumExclusive">The max value.</param>
+  /// <returns>A value between the given boundaries</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static double NextDouble(this Random This, double minValue, double maxValue) => This.NextDouble() * (maxValue - minValue) + minValue;
+  public static double NextDouble(this Random @this, double minimumInclusive, double maximumExclusive) => @this.NextDouble() * (maximumExclusive - minimumInclusive) + minimumInclusive;
+
+  /// <summary>
+  /// Represents settings for generating passwords.
+  /// </summary>
+  public readonly struct PasswordSettings {
 
     /// <summary>
-    /// Generates a random password.
+    /// Initializes a new instance of the <see cref="PasswordSettings"/> struct with default values.
     /// </summary>
-    /// <param name="This">The this.</param>
-    /// <param name="minimumLength">The minimum length.</param>
-    /// <param name="maximumLength">The maximum length.</param>
-    /// <param name="useLetters">if set to <c>true</c> [use letters].</param>
-    /// <param name="allowCaseSensitive">if set to <c>true</c> [allow case sensitive].</param>
-    /// <param name="allowNumbers">if set to <c>true</c> [allow numbers].</param>
-    /// <param name="allowSpecialChars">if set to <c>true</c> [allow special chars].</param>
-    /// <param name="allowedCharset">The allowed charset.</param>
-    /// <returns></returns>
-    public static string GeneratePassword(this Random This, qword minimumLength = 8, qword maximumLength = 14, bool useLetters = true, bool allowCaseSensitive = true, bool allowNumbers = true, bool allowSpecialChars = true, string allowedCharset = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    public PasswordSettings() { }
 
-      // generate a length
-      if (maximumLength < minimumLength)
-        maximumLength = minimumLength;
+    /// <summary>
+    /// Indicates whether lowercase letters are allowed in the password.
+    /// </summary>
+    public bool AllowLowerCaseLetters { get; init; } = true;
 
-      var length =
-        maximumLength == minimumLength
-        ? minimumLength
-        : (qword)This.Next((int)(maximumLength - minimumLength)) + minimumLength
-        ;
+    /// <summary>
+    /// Indicates whether uppercase letters are allowed in the password.
+    /// </summary>
+    public bool AllowUpperCaseLetters { get; init; } = true;
 
-      // find out which chars are allowed
-      var allowedChars = string.Empty;
-      if (string.IsNullOrEmpty(allowedCharset)) {
-        StringBuilder builder = new(256);
+    /// <summary>
+    /// Indicates whether numbers are allowed in the password.
+    /// </summary>
+    public bool AllowNumbers { get; init; } = true;
 
-        if (useLetters)
-          builder.Append(allowCaseSensitive ? "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    /// <summary>
+    /// Indicates whether special characters are allowed in the password.
+    /// </summary>
+    public bool AllowSpecialCharacters { get; init; } = true;
 
-        if (allowNumbers)
-          builder.Append("0123456789");
+    /// <summary>
+    /// Indicates whether duplicate characters are to be avoided in the password.
+    /// </summary>
+    public bool AvoidDuplicates { get; init; } = false;
 
-        if (allowSpecialChars)
-          builder.Append(@"!""$%&/()=?{[]}\#+*~-_.:,;<>@");
+    /// <summary>
+    /// Indicates whether visually similar characters are to be avoided in the password.
+    /// </summary>
+    public bool AvoidVisuallySimilarCharacters { get; init; } = false;
 
-        allowedChars = builder.ToString();
-      } else {
-        allowedChars = allowedCharset;
-      }
+    /// <summary>
+    /// Indicates whether to prefer pronounceable patterns in the password.
+    /// </summary>
+    public bool PreferPronouncable { get; init; } = false;
 
-      // build a password
-      StringBuilder result = new((int)length);
-      var charCount = allowedChars.Length;
-      for (var i = length; i > 0; --i) {
-        var index = This.Next(charCount);
-        result.Append(allowedChars[index]);
-      }
+    /// <summary>
+    /// Specifies the minimum length of the generated password.
+    /// </summary>
+    public byte MinimumLength { get; init; } = 8;
 
-      return (result.ToString());
+    /// <summary>
+    /// Specifies the maximum length of the generated password.
+    /// </summary>
+    public byte MaximumLength { get; init; } = 14;
+
+    /// <summary>
+    /// Specifies a custom set of allowed characters for the password. If null or empty, default character sets are used.
+    /// </summary>
+    /// <remarks>Overrides the other settings regarding used characters</remarks>
+    public string AllowedCharacterSet { get; init; } = null;
+
+    internal const string VOWELS = "aA4eE3iI1!yYoO0uU";
+    internal const string CONSONANTS = "bBcCdDfFgGhHjJkKlL1mMnNpPqQrRsS5$tTvVwWxXyYzZ";
+    internal const string NUMBERS = "0123456789";
+    internal const string LOWER_LETTERS = "abcdefghijklmnopqrstuvwxyz";
+    internal const string UPPER_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    internal const string SPECIAL = "!@#$%^&*()-_=+[]{}|;:'\",.<>?~";
+    internal const string HARD_TO_DISTINGUISH = "il1|!0OQ:;.,";
+  }
+
+  /// <summary>
+  /// Generates a password based on provided settings.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance to use for random number generation.</param>
+  /// <param name="settings">The <see cref="PasswordSettings"/> to use for password generation.</param>
+  /// <param name="useStrongRandomization">Indicates whether to use a strong random number generator (if set to <see langword="true"/> the <paramref name="this"/> is ignored, entirely).</param>
+  /// <returns>A randomly generated password string.</returns>
+  /// <exception cref="InvalidOperationException">Thrown when no characters are available to select for the generated password.</exception>
+  /// <example>
+  /// <code>
+  /// // Example usage with custom settings:
+  /// var random = new Random();
+  /// var settings = new PasswordSettings
+  /// {
+  ///     AllowLowerCaseLetters = true,
+  ///     AllowUpperCaseLetters = true,
+  ///     AllowNumbers = true,
+  ///     AllowSpecialCharacters = true,
+  ///     AvoidDuplicates = true,
+  ///     AvoidVisuallySimilarCharacters = true,
+  ///     PreferPronouncable = true,
+  ///     MinimumLength = 10,
+  ///     MaximumLength = 16
+  /// };
+  /// string customPassword = random.GeneratePassword(settings, true);
+  /// Console.WriteLine(customPassword);
+  ///
+  /// // Example usage without specifying settings (using defaults):
+  /// string defaultPassword = random.GeneratePassword();
+  /// Console.WriteLine(defaultPassword);
+  /// </code>
+  /// </example>
+  public static string GeneratePassword(this Random @this, PasswordSettings? settings = null, bool useStrongRandomization = false) {
+    var localSettings = settings ?? new();
+    
+    List<char> pool = new(128);
+
+    if (localSettings.AllowedCharacterSet.IsNotNullOrEmpty())
+      pool.AddRange(localSettings.AllowedCharacterSet);
+    else {
+      if (localSettings.AllowNumbers)
+        pool.AddRange(PasswordSettings.NUMBERS);
+      if (localSettings.AllowLowerCaseLetters)
+        pool.AddRange(PasswordSettings.LOWER_LETTERS);
+      if (localSettings.AllowUpperCaseLetters)
+        pool.AddRange(PasswordSettings.UPPER_LETTERS);
+      if (localSettings.AllowSpecialCharacters)
+        pool.AddRange(PasswordSettings.SPECIAL);
+      if (localSettings.AvoidVisuallySimilarCharacters)
+        pool.RemoveRange(PasswordSettings.HARD_TO_DISTINGUISH);
+    }
+
+    Func<int, int> getNext = useStrongRandomization ? new RNGCryptoServiceProvider().Next : @this.Next;
+    var length = localSettings.MinimumLength >= localSettings.MaximumLength 
+      ? localSettings.MinimumLength 
+      : localSettings.MinimumLength + getNext(localSettings.MaximumLength - localSettings.MinimumLength + 1)
+      ;
+
+    var result = new char[length];
+
+    if (localSettings.PreferPronouncable) {
+      var vowels = pool.Where(c => PasswordSettings.VOWELS.Contains(c)).ToList();
+      var consonants = pool.Where(c => PasswordSettings.CONSONANTS.Contains(c)).ToList();
+      var special = pool.Except(vowels).Except(consonants).ToList();
+      GeneratePronounceable(localSettings.AvoidDuplicates, getNext, vowels, consonants, special, result);
+    } else
+      GenerateNormal(localSettings.AvoidDuplicates, getNext, pool, result);
+
+    return result.ToStringInstance();
+
+    static void RemoveFromPoolIfNotEmpty(IList<char> pool, char entry) {
+      if (pool.Count > 1)
+        pool.RemoveEvery(entry);
+    }
+
+    static void GeneratePronounceable(bool avoidDuplicates, Func<int, int> next, List<char> vowels, List<char> consonants, List<char> special, char[] result) {
+      Func<IList<char>, char> func = avoidDuplicates switch {
+        true => p => {
+          var c = p[next(p.Count)];
+          RemoveFromPoolIfNotEmpty(vowels, c);
+          RemoveFromPoolIfNotEmpty(consonants, c);
+          RemoveFromPoolIfNotEmpty(special, c);
+          return c;
+        },
+        _ => p => p[next(p.Count)]
+      };
+
+      // Randomly decide if starting with vowel or consonant
+      var isVowel = next(2) < 1;
+      for (var i = 0; i < result.Length; isVowel = !isVowel, ++i )
+        result[i] = func(i switch {
+          _ when i == result.Length - 1 && special.Any() => special,
+          _ when isVowel && vowels.Any() => vowels,
+          _ when !isVowel && consonants.Any() => consonants,
+          _ when vowels.Any() => vowels,
+          _ when consonants.Any() => consonants,
+          _ when special.Any() => special,
+          _ => throw new InvalidOperationException("No characters available to select.")
+        });
+    }
+
+    static void GenerateNormal(bool avoidDuplicates, Func<int, int> next, List<char> pool, char[] result) {
+      Func<char> func = avoidDuplicates switch {
+        true => () => {
+          var c = pool[next(pool.Count)];
+          RemoveFromPoolIfNotEmpty(pool, c);
+          return c;
+        }
+        ,
+        _ => () => pool[next(pool.Count)]
+      };
+
+      for (var i = 0; i < result.Length; ++i)
+        result[i] = func();
     }
   }
+  
 }
