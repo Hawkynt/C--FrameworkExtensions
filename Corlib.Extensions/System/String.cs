@@ -29,7 +29,6 @@ using Buffers;
 #endif
 using Collections;
 using Collections.Generic;
-using Diagnostics;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using Diagnostics.CodeAnalysis;
 #endif
@@ -51,59 +50,11 @@ public
 internal
 #endif
   static partial class StringExtensions {
-  #region consts
-
+  
+#if SUPPORTS_SPAN
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
-
-  /// <summary>
-  /// This is a list of services which are registered to certain ports according to IANA.
-  /// It allows us to use names for these ports if we want to.
-  /// </summary>
-  private static readonly Dictionary<string, ushort> _OFFICIAL_PORT_NAMES = new() {
-    { "tcpmux", 1 },
-    { "echo", 7 },
-    { "discard", 9 },
-    { "daytime", 13 },
-    { "quote", 17 },
-    { "chargen", 19 },
-    { "ftp", 21 },
-    { "ssh", 22 },
-    { "telnet", 23 },
-    { "smtp", 25 },
-    { "time", 37 },
-    { "whois", 43 },
-    { "dns", 53 },
-    { "mtp", 57 },
-    { "tftp", 69 },
-    { "gopher", 70 },
-    { "finger", 79 },
-    { "http", 80 },
-    { "kerberos", 88 },
-    { "pop2", 109 },
-    { "pop3", 110 },
-    { "ident", 113 },
-    { "auth", 113 },
-    { "sftp", 115 },
-    { "sql", 118 },
-    { "nntp", 119 },
-    { "ntp", 123 },
-    { "imap", 143 },
-    { "bftp", 152 },
-    { "sgmp", 153 },
-    { "snmp", 161 },
-    { "snmptrap", 162 },
-    { "irc", 194 },
-    { "ipx", 213 },
-    { "mpp", 218 },
-    { "imap3", 220 },
-    { "https", 443 },
-    { "rip", 520 },
-    { "rpc", 530 },
-    { "nntps", 563 },
-  };
-
-  #endregion
-
+#endif
+  
   #region ExchangeAt
 
   /// <summary>
@@ -443,18 +394,25 @@ internal
   public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
 
   #endregion
-
-  private static HashSet<char> _invalidFileNameChars;
-  private static HashSet<char> _InvalidFileNameChars =>
-    _invalidFileNameChars ??= Path.GetInvalidFileNameChars()
-      .Union("<>|:?*/\\\"")
-      .ToHashSet(c => c)
-    ;
-
+  
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  private static bool _IsInvalidCharacter(char c) => c < 32 || c >= 127 || _InvalidFileNameChars.Contains(c);
+  private static bool _IsInvalidCharacter(char c) => (__isInvalidCharacter ??= new()).Invoke(c);
+  private static __IsInvalidCharacter __isInvalidCharacter;
+  private class __IsInvalidCharacter {
+    private readonly HashSet<char> _invalidFileNameChars = 
+      Path.GetInvalidFileNameChars()
+      .Union("<>|:?*/\\\"")
+      .ToHashSet(c => c)
+      ;
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public bool Invoke(char c) => c < 32 || c >= 127 || this._invalidFileNameChars.Contains(c);
+
+  }
 
   /// <summary>
   /// Sanitizes the text to use as a filename.
@@ -2440,7 +2398,7 @@ internal
 #else
   public static bool IsNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(false)] 
+      [NotNullWhen(false)]
 #endif
     this string @this) {
     if (@this == null)
@@ -2475,7 +2433,7 @@ internal
 #else
   public static bool IsNotNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(true)] 
+      [NotNullWhen(true)]
 #endif
     this string @this) => !IsNullOrWhiteSpace(@this);
 #endif
@@ -3118,7 +3076,7 @@ internal
   }
 
   private static IEnumerable<string> _EnumerateLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
-    for (; ; )
+    for (;;)
       switch (mode) {
         case LineBreakMode.All:
           return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
@@ -3126,6 +3084,7 @@ internal
           mode = DetectLineBreakMode(@this);
           continue;
         case LineBreakMode.None:
+
           static IEnumerable<string> EnumerateOneLine(string line) {
             yield return line;
           }
@@ -3185,35 +3144,39 @@ internal
 
     return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
+  
+  private static string[] _GetLines(string text, bool removeEmpty, int count) => (__getLines ??= new()).Invoke(text, removeEmpty, count);
+  private static __GetLines __getLines;
+  private class __GetLines {
+    private readonly string[] _possibleSplitters = {
+      "\r\n",
+      "\n\r",
+      "\n",
+      "\r",
+      "\x15",
+      "\x0C",
+      "\x85",
+      "\u2028",
+      "\u2029"
+    };
 
-  // TODO: don't use the array call, do something with less memory and better performance
-  private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, int count)
-    => _GetLines(text, removeEmpty, count)
-    ;
-
-  private static readonly string[] _POSSIBLE_SPLITTERS = {
-    "\r\n",
-    "\n\r",
-    "\n",
-    "\r",
-    "\x15",
-    "\x0C",
-    "\x85",
-    "\u2028",
-    "\u2029"
-  };
-
-  private static string[] _GetLines(string text, bool removeEmpty, int count) {
-    return count == 0
-        ? text.Split(_POSSIBLE_SPLITTERS, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-        : text.Split(_POSSIBLE_SPLITTERS, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-      ;
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public string[] Invoke(string text, bool removeEmpty, int count) 
+      => count == 0
+        ? text.Split(this._possibleSplitters, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        : text.Split(this._possibleSplitters, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        ;
   }
 
   // TODO: don't use the array call, do something with less memory and better performance
+  private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, int count)
+    => _GetLines(text, removeEmpty, count);
+
+  // TODO: don't use the array call, do something with less memory and better performance
   private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, char delimiter, int count)
-    => _GetLines(text, removeEmpty, delimiter, count)
-    ;
+    => _GetLines(text, removeEmpty, delimiter, count);
 
   private static string[] _GetLines(string text, bool removeEmpty, char delimiter, int count) {
     return count == 0
@@ -3224,8 +3187,7 @@ internal
 
   // TODO: don't use the array call, do something with less memory and better performance
   private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, string delimiter, int count)
-    => _GetLines(text, removeEmpty, delimiter, count)
-    ;
+    => _GetLines(text, removeEmpty, delimiter, count);
 
   private static string[] _GetLines(string text, bool removeEmpty, string delimiter, int count) {
     return count == 0
@@ -3251,7 +3213,7 @@ internal
   }
 
   private static string[] _GetLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
-    for (; ; )
+    for (;;)
       switch (mode) {
         case LineBreakMode.All:
           return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
@@ -3389,8 +3351,7 @@ internal
       LineJoinMode.CrLf => "\r\n",
       LineJoinMode.LfCr => "\n\r",
       _ => throw new NotImplementedException()
-    }
-  ;
+    };
 
   /// <summary>
   /// Does word-wrapping if needed
@@ -3414,7 +3375,7 @@ internal
     var joinerLength = joiner.Length;
     StringBuilder result = new(length + (length / count + 1) * joinerLength);
 
-    for (var lineStart = 0; ;) {
+    for (var lineStart = 0;;) {
       var nextBreakAt = lineStart + count - joinerLength;
       if (nextBreakAt >= length) {
         result.Append(@this, lineStart, length - lineStart);
@@ -3607,13 +3568,11 @@ internal
 
         currentPart.Clear();
         pos += delimiter.Length - 1;
-      } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'') {
         currentlyInSingleQuote = true;
-      } else if (/*currentPart.Length == 0 &&*/ chr == '"') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '"') {
         currentlyInDoubleQuote = true;
-      } else if (chr == ' ') {
-
-      } else {
+      } else if (chr == ' ') { } else {
         currentPart.Append(chr);
       }
 
@@ -3680,13 +3639,11 @@ internal
           yield return currentPart.ToString();
 
         currentPart.Clear();
-      } else if (/*currentPart.Length == 0 &&*/ chr == '\'') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'') {
         currentlyInSingleQuote = true;
-      } else if (/*currentPart.Length == 0 &&*/ chr == '"') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '"') {
         currentlyInDoubleQuote = true;
-      } else if (chr == ' ') {
-
-      } else {
+      } else if (chr == ' ') { } else {
         currentPart.Append(chr);
       }
 
@@ -3697,6 +3654,7 @@ internal
   }
 
   #region nested HostEndPoint
+
   /// <summary>
   /// A host endpoint with port.
   /// </summary>
@@ -3718,6 +3676,7 @@ internal
 
     public static explicit operator IPEndPoint(HostEndPoint @this) => new(Dns.GetHostEntry(@this.Host).AddressList[0], @this.Port);
   }
+
   #endregion
 
   /// <summary>
@@ -3725,24 +3684,78 @@ internal
   /// </summary>
   /// <param name="this">This String, e.g. 172.17.4.3:http .</param>
   /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
+  public static HostEndPoint ParseHostAndPort(this string @this) => (__parseHostAndPort ??= new()).Invoke(@this);
+  private static __ParseHostAndPort __parseHostAndPort;
+  private class __ParseHostAndPort {
+
+    /// <summary>
+    /// This is a list of services which are registered to certain ports according to IANA.
+    /// It allows us to use names for these ports if we want to.
+    /// </summary>
+    private readonly Dictionary<string, ushort> _officialPortNames = new() {
+      { "tcpmux", 1 },
+      { "echo", 7 },
+      { "discard", 9 },
+      { "daytime", 13 },
+      { "quote", 17 },
+      { "chargen", 19 },
+      { "ftp", 21 },
+      { "ssh", 22 },
+      { "telnet", 23 },
+      { "smtp", 25 },
+      { "time", 37 },
+      { "whois", 43 },
+      { "dns", 53 },
+      { "mtp", 57 },
+      { "tftp", 69 },
+      { "gopher", 70 },
+      { "finger", 79 },
+      { "http", 80 },
+      { "kerberos", 88 },
+      { "pop2", 109 },
+      { "pop3", 110 },
+      { "ident", 113 },
+      { "auth", 113 },
+      { "sftp", 115 },
+      { "sql", 118 },
+      { "nntp", 119 },
+      { "ntp", 123 },
+      { "imap", 143 },
+      { "bftp", 152 },
+      { "sgmp", 153 },
+      { "snmp", 161 },
+      { "snmptrap", 162 },
+      { "irc", 194 },
+      { "ipx", 213 },
+      { "mpp", 218 },
+      { "imap3", 220 },
+      { "https", 443 },
+      { "rip", 520 },
+      { "rpc", 530 },
+      { "nntps", 563 },
+    };
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static HostEndPoint ParseHostAndPort(this string @this) {
-    if (@this.IsNullOrWhiteSpace())
-      return null;
+    public HostEndPoint Invoke(string @this) {
+      if (@this.IsNullOrWhiteSpace())
+        return null;
 
-    var host = @this;
-    ushort port = 0;
-    var index = host.IndexOf(':');
-    if (index < 0)
+      var host = @this;
+      ushort port = 0;
+      var index = host.IndexOf(':');
+      if (index < 0)
+        return new(host, port);
+
+      var portText = host[(index + 1)..];
+      host = host.Left(index);
+      if (!ushort.TryParse(portText, out port) && !this._officialPortNames.TryGetValue(portText.Trim().ToLower(), out port))
+        return null;
+
       return new(host, port);
+    }
 
-    var portText = host.Substring(index + 1);
-    host = host.Left(index);
-    if (!ushort.TryParse(portText, out port) && !_OFFICIAL_PORT_NAMES.TryGetValue(portText.Trim().ToLower(), out port))
-      return null;
-    return new(host, port);
   }
 
   /// <summary>
@@ -3752,9 +3765,6 @@ internal
   /// <param name="chars">The chars to replace.</param>
   /// <param name="replacement">The replacement.</param>
   /// <returns>The new string with replacements done.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
   public static string ReplaceAnyOf(this string @this, string chars, string replacement) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(chars);
@@ -3794,46 +3804,45 @@ internal
 
   #region Similarities
 
-
-  #region needed consts for converting filename patterns into regexes
-
-
   /// <summary>
   /// Converts a given filename pattern into a regular expression.
   /// </summary>
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
-  private static Regex _ConvertFilePatternToRegex(string pattern) {
+  private static Regex _ConvertFilePatternToRegex(string pattern) => (__convertFilePatternToRegex ??= new()).Invoke(pattern);
 
-    const string nonDotCharacters = "[^.]*";
+  private static __ConvertFilePatternToRegex __convertFilePatternToRegex;
 
-    var match = CatchFilenameExtension().Match(pattern);
-    var hasExtension = match.Success;
-    var matchExact = false;
+  private class __ConvertFilePatternToRegex {
+    private readonly Regex _catchFilenameExtension = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-    if (pattern.IndexOf('?') >= 0)
-      matchExact = true;
-    else if (hasExtension)
-      matchExact = match.Groups[1].Length != 3;
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public Regex Invoke(string pattern) {
+      const string nonDotCharacters = "[^.]*";
 
-    var regexString = Regex.Escape(pattern);
-    regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
-    regexString = Regex.Replace(regexString, @"\\\?", ".");
+      var match = this._catchFilenameExtension.Match(pattern);
+      var hasExtension = match.Success;
+      var matchExact = false;
 
-    if (!matchExact && hasExtension)
-      regexString += nonDotCharacters;
+      if (pattern.IndexOf('?') >= 0)
+        matchExact = true;
+      else if (hasExtension)
+        matchExact = match.Groups[1].Length != 3;
 
-    regexString += "$";
-    return new(regexString, RegexOptions.IgnoreCase);
+      var regexString = Regex.Escape(pattern);
+      regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
+      regexString = Regex.Replace(regexString, @"\\\?", ".");
 
-    // TODO: use GeneratedRegex when available (.Net7+)
-    static Regex CatchFilenameExtension() => StaticMethodLocal<Regex>.Get(
-      () => new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled | RegexOptions.ExplicitCapture)
-    );
+      if (!matchExact && hasExtension)
+        regexString += nonDotCharacters;
+
+      regexString += "$";
+      return new(regexString, RegexOptions.IgnoreCase);
+    }
 
   }
-
-  #endregion
 
   /// <summary>
   /// Determines if the given string matches a given file pattern or not.
@@ -3844,23 +3853,26 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool MatchesFilePattern(this string @this, string pattern) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrEmpty(pattern);
+  public static bool MatchesFilePattern(this string @this, string pattern) => (__matchesFilePattern ??= new()).Invoke(@this, pattern);
 
-    if (IllegalFilenameCharacters().IsMatch(pattern))
-      throw new ArgumentException("Patterns contains ilegal characters.");
+  private static __MatchesFilePattern __matchesFilePattern;
 
-    return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
+  private class __MatchesFilePattern {
+    private readonly Regex _illegalFilenameCharacters = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-    // TODO: use GeneratedRegex when available (.Net7+)
-    static Regex IllegalFilenameCharacters() => StaticMethodLocal<Regex>.Get(
-      () => new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture)
-    );
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public bool Invoke(string @this, string pattern, [CallerMemberName] string caller = null) {
+      Against.ThisIsNull(@this, caller);
+      Against.ArgumentIsNullOrEmpty(pattern, caller);
 
+      if (this._illegalFilenameCharacters.IsMatch(pattern))
+        AlwaysThrow.ArgumentException(nameof(pattern), "Patterns contains ilegal characters.", caller);
+
+      return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
+    }
   }
-
-  private static readonly Regex _SQL_LIKE_ESCAPING = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
 
   /// <summary>
   /// Equivalent to SQL LIKE Statement.
@@ -3871,14 +3883,24 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool Like(this string @this, string toFind)
-    => new Regex(@"\A"
-                 + _SQL_LIKE_ESCAPING
-                   .Replace(toFind, ch => @"\" + ch)
-                   .Replace('_', '.')
-                   .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
-      .IsMatch(@this)
-  ;
+  public static bool Like(this string @this, string toFind) => (__like ??= new()).Invoke(@this, toFind);
+
+  private static __Like __like;
+
+  private class __Like {
+    private readonly Regex _sqlLikeEscaping = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+# endif
+    public bool Invoke(string @this, string toFind)
+      => new Regex(@"\A"
+                   + this._sqlLikeEscaping
+                     .Replace(toFind, ch => @"\" + ch)
+                     .Replace('_', '.')
+                     .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
+        .IsMatch(@this);
+  }
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3886,8 +3908,7 @@ internal
   /// <param name="this">This <see cref="String"/></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this)
-    => GetSoundexRepresentation(@this, CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? 5 : 4, CultureInfo.CurrentCulture)
-    ;
+    => GetSoundexRepresentation(@this, CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? 5 : 4, CultureInfo.CurrentCulture);
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3896,8 +3917,7 @@ internal
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, int maxLength)
-    => GetSoundexRepresentation(@this, maxLength, CultureInfo.CurrentCulture)
-    ;
+    => GetSoundexRepresentation(@this, maxLength, CultureInfo.CurrentCulture);
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3905,8 +3925,7 @@ internal
   /// <param name="this">This <see cref="String"/></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this)
-    => GetSoundexRepresentation(@this, 4, CultureInfo.InvariantCulture)
-  ;
+    => GetSoundexRepresentation(@this, 4, CultureInfo.InvariantCulture);
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3915,8 +3934,7 @@ internal
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this, int maxLength)
-    => GetSoundexRepresentation(@this, maxLength, CultureInfo.InvariantCulture)
-  ;
+    => GetSoundexRepresentation(@this, maxLength, CultureInfo.InvariantCulture);
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3925,8 +3943,7 @@ internal
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, CultureInfo culture)
-    => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de" ? 5 : 4, culture)
-    ;
+    => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de" ? 5 : 4, culture);
 
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -3993,80 +4010,38 @@ internal
       return new(result);
     }
 
-    static char GetGermanSoundexCode(char letter, char next) {
-      switch (letter) {
-        case 'C' when next == 'H':
-          return '7';
-        case 'B':
-        case 'P':
-        case 'F':
-        case 'V':
-        case 'W':
-          return '1';
-        case 'C':
-        case 'G':
-        case 'K':
-        case 'Q':
-        case 'X':
-        case 'S':
-        case 'Z':
-        case 'ß':
-          return '2';
-        case 'D':
-        case 'T':
-          return '3';
-        case 'L':
-          return '4';
-        case 'M':
-        case 'N':
-          return '5';
-        case 'R':
-          return '6';
-        default:
-          return '0';
-      }
-    }
-    static char GetGermanReplacer(char letter) => letter switch {
-      '\u00c4' or
-        '\u00e4' => 'A',
-      '\u00d6' or
-        '\u00f6' => 'O',
-      '\u00dc' or
-        '\u00fc' => 'U',
-      '\u00df' => 'S',
-      _ => letter
-    };
+    static char GetGermanSoundexCode(char letter, char next)
+      => letter switch {
+        'C' when next == 'H' => '7',
+        'B' or 'P' or 'F' or 'V' or 'W' => '1',
+        'C' or 'G' or 'K' or 'Q' or 'X' or 'S' or 'Z' or 'ß' => '2',
+        'D' or 'T' => '3',
+        'L' => '4',
+        'M' or 'N' => '5',
+        'R' => '6',
+        _ => '0'
+      };
 
-    static char GetEnglishSoundexCode(char letter, char next) {
-      switch (letter) {
-        case 'B':
-        case 'F':
-        case 'P':
-        case 'V':
-          return '1';
-        case 'C':
-        case 'G':
-        case 'J':
-        case 'K':
-        case 'Q':
-        case 'S':
-        case 'X':
-        case 'Z':
-          return '2';
-        case 'D':
-        case 'T':
-          return '3';
-        case 'L':
-          return '4';
-        case 'M':
-        case 'N':
-          return '5';
-        case 'R':
-          return '6';
-        default:
-          return '0';
-      }
-    }
+    static char GetGermanReplacer(char letter)
+      => letter switch {
+        '\u00c4' or '\u00e4' => 'A',
+        '\u00d6' or '\u00f6' => 'O',
+        '\u00dc' or '\u00fc' => 'U',
+        '\u00df' => 'S',
+        _ => letter
+      };
+
+    static char GetEnglishSoundexCode(char letter, char next)
+      => letter switch {
+        'B' or 'F' or 'P' or 'V' => '1',
+        'C' or 'G' or 'J' or 'K' or 'Q' or 'S' or 'X' or 'Z' => '2',
+        'D' or 'T' => '3',
+        'L' => '4',
+        'M' or 'N' => '5',
+        'R' => '6',
+        _ => '0'
+      };
+
     static char GetEnglishReplacer(char letter) => letter;
 
     var isGermanCulture = culture.TwoLetterISOLanguageName == "de";
@@ -4136,58 +4111,69 @@ internal
     return result.ToString();
   }
 
-  private static readonly byte[] _CHAR_TO_HEX_LOOKUP = {
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xA,  0xB,  0xC,  0xD,  0xE,  0xF,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-  };
-
   /// <summary>
   /// Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version of it.
   /// </summary>
   /// <param name="this">The string to convert</param>
   /// <returns>The non-quoted-printable string</returns>
 
-  public static string FromQuotedPrintable(this string @this) {
-    if (string.IsNullOrEmpty(@this))
-      return @this;
+  public static string FromQuotedPrintable(this string @this) => (__fromQuotedPrintable ??= new()).Invoke(@this);
+
+  private static __FromQuotedPrintable __fromQuotedPrintable;
+
+  private class __FromQuotedPrintable {
+
+    private readonly byte[] _charToHexLookup = {
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+    };
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    int Hex2Short(char highNibble, char lowNibble) {
-      var high = _CHAR_TO_HEX_LOOKUP[highNibble];
-      var low = _CHAR_TO_HEX_LOOKUP[lowNibble];
-      if ((high | low) == 0xff)
-        Throw(highNibble, lowNibble);
+    public string Invoke(string @this) {
+      if (string.IsNullOrEmpty(@this))
+        return @this;
 
-      return high << 4 | low;
+#if SUPPORTS_INLINING
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+      int Hex2Short(char highNibble, char lowNibble) {
+        var high = this._charToHexLookup[highNibble];
+        var low = this._charToHexLookup[lowNibble];
+        if ((high | low) == 0xff)
+          Throw(highNibble, lowNibble);
+
+        return high << 4 | low;
+      }
+
+      [MethodImpl(MethodImplOptions.NoInlining)]
+      void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
+
+      List<byte> bytes = new(@this.Length);
+      for (var index = 0; index < @this.Length; ++index)
+        if (@this[index] == '=')
+          bytes.Add((byte)Hex2Short(@this[++index], @this[++index]));
+        else
+          bytes.Add((byte)@this[index]);
+
+      return Encoding.UTF8.GetString(bytes.ToArray());
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
-
-    List<byte> bytes = new(@this.Length);
-    for (var index = 0; index < @this.Length; ++index)
-      if (@this[index] == '=')
-        bytes.Add((byte)Hex2Short(@this[++index], @this[++index]));
-      else
-        bytes.Add((byte)@this[index]);
-
-    return Encoding.UTF8.GetString(bytes.ToArray());
   }
 
 }
