@@ -35,6 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance (N
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "ExternalAnnotations", "{0A73474B-0AF6-47CF-B596-8E7CDC9AC001}"
 	ProjectSection(SolutionItems) = preProject
+		ExternalAnnotations\Corlib.Extensions (NoUnsafe).xml = ExternalAnnotations\Corlib.Extensions (NoUnsafe).xml
 		ExternalAnnotations\Corlib.Extensions.xml = ExternalAnnotations\Corlib.Extensions.xml
 		ReSharper.DotSettings = ReSharper.DotSettings
 	EndProjectSection

@@ -1,0 +1,12 @@
+﻿<assembly name="Corlib.Extensions (NoUnsafe)">
+  <member name="M:Guard.Against.ThisIsNull``1(``0,System.String,System.String)">
+    <parameter name="value">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNull``1(``0,System.String,System.String)">
+    <parameter name="value">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+</assembly>
