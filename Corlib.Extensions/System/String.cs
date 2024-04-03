@@ -49,12 +49,12 @@ public
 #else
 internal
 #endif
-  static partial class StringExtensions {
-  
+static partial class StringExtensions {
+
 #if SUPPORTS_SPAN
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
 #endif
-  
+
   #region ExchangeAt
 
   /// <summary>
@@ -160,7 +160,7 @@ internal
     Against.IndexBelowZero(index);
     Against.CountBelowOrEqualZero(count);
 
-    return (index, count, length: @this.Length) switch {
+    return (index, count, @this.Length) switch {
       (0, var c, var l) when l <= c => replacement,
       (0, var c, _) => replacement + @this[c..],
       var (i, c, l) when i + c >= l => @this[..i] + replacement,
@@ -185,28 +185,22 @@ internal
     Against.CountBelowOrEqualZero(count);
     Against.ValuesBelowOrEqual(count, 1);
 
-    var length = @this.Length;
-    if (length == 1)
-      return @this[0].Repeat(count);
+    return count switch {
+      0 => string.Empty,
+      _ when @this.Length == 1 => @this[0].Repeat(count),
+      1 => @this,
+      2 => @this + @this,
+      3 => string.Concat(@this, @this, @this),
+      4 => string.Concat(@this, @this, @this, @this),
+      _ => Invoke(@this, count)
+    };
 
-    switch (count) {
-      case 0:
-        return string.Empty;
-      case 1:
-        return @this;
-      case 2:
-        return @this + @this;
-      case 3:
-        return string.Concat(@this, @this, @this);
-      case 4:
-        return string.Concat(@this, @this, @this, @this);
-      default: {
-        StringBuilder result = new(length * count);
-        for (var i = count; i > 0; --i)
-          result.Append(@this);
+    static string Invoke(string t, int c) {
+      StringBuilder result = new(t.Length * c);
+      for (var i = c; i > 0; --i)
+        result.Append(t);
 
-        return result.ToString();
-      }
+      return result.ToString();
     }
   }
 
@@ -340,10 +334,10 @@ internal
   #region First/Last
 
   /// <summary>
-  /// Gets the first <see cref="Char"/> of the <see cref="String"/>.
+  /// Gets the first <see cref="char"/> of the <see cref="string"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <returns>The first <see cref="Char"/></returns>
+  /// <param name="this">This <see cref="string"/></param>
+  /// <returns>The first <see cref="char"/></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -353,11 +347,11 @@ internal
   public static char First(this string @this) => @this[0];
 
   /// <summary>
-  /// Gets the first <see cref="Char"/> of the <see cref="String"/> or a default value.
+  /// Gets the first <see cref="char"/> of the <see cref="string"/> or a default value.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <param name="default">The default <see cref="Char"/> to return</param>
-  /// <returns>The first <see cref="Char"/></returns>
+  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="default">The default <see cref="char"/> to return</param>
+  /// <returns>The first <see cref="char"/></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -367,10 +361,10 @@ internal
   public static char FirstOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[0];
 
   /// <summary>
-  /// Gets the last <see cref="Char"/> of the <see cref="String"/>.
+  /// Gets the last <see cref="char"/> of the <see cref="string"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <returns>The last <see cref="Char"/></returns>
+  /// <param name="this">This <see cref="string"/></param>
+  /// <returns>The last <see cref="char"/></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -380,11 +374,11 @@ internal
   public static char Last(this string @this) => @this[^1];
 
   /// <summary>
-  /// Gets the last <see cref="Char"/> of the <see cref="String"/> or a default value.
+  /// Gets the last <see cref="char"/> of the <see cref="string"/> or a default value.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <param name="default">The default <see cref="Char"/> to return</param>
-  /// <returns>The last <see cref="Char"/></returns>
+  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="default">The default <see cref="char"/> to return</param>
+  /// <returns>The last <see cref="char"/></returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -394,14 +388,16 @@ internal
   public static char LastOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[^1];
 
   #endregion
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   private static bool _IsInvalidCharacter(char c) => (__isInvalidCharacter ??= new()).Invoke(c);
+
   private static __IsInvalidCharacter __isInvalidCharacter;
+
   private class __IsInvalidCharacter {
-    private readonly HashSet<char> _invalidFileNameChars = 
+    private readonly HashSet<char> _invalidFileNameChars =
       Path.GetInvalidFileNameChars()
       .Union("<>|:?*/\\\"")
       .ToHashSet(c => c)
@@ -503,7 +499,7 @@ internal
         if (_IsInvalidCharacter(buffer[i]))
           buffer[i] = sanitation;
 
-      result = new string(buffer, 0, length);
+      result = new(buffer, 0, length);
       ArrayPool<char>.Shared.Return(buffer);
 #else
       var buffer = @this.ToCharArray();
@@ -516,6 +512,7 @@ internal
 #endif
       break;
     }
+
     return result;
   }
 
@@ -1687,35 +1684,35 @@ internal
   #region StartsWithAny/StartsNotWithAny
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// Checks if the <see cref="string"/> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// Checks if the <see cref="string"/> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// Checks if the <see cref="string"/> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1727,12 +1724,12 @@ internal
   public static bool StartsWithAny(this string @this, IEnumerable<string> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// Checks if the <see cref="string"/> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1744,12 +1741,12 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any from the given list.
+  /// Checks if the <see cref="string"/> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1761,35 +1758,35 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// Checks if the <see cref="string"/> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, params char[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// Checks if the <see cref="string"/> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, StringComparison stringComparison, params char[] values) => StartsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// Checks if the <see cref="string"/> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1801,12 +1798,12 @@ internal
   public static bool StartsWithAny(this string @this, IEnumerable<char> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// Checks if the <see cref="string"/> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1818,12 +1815,12 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> starts with any character from the given list.
+  /// Checks if the <see cref="string"/> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1899,35 +1896,35 @@ internal
   #region EndsWithAny/EndsNotWithAny
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// Checks if the <see cref="string"/> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// Checks if the <see cref="string"/> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// Checks if the <see cref="string"/> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1939,12 +1936,12 @@ internal
   public static bool EndsWithAny(this string @this, IEnumerable<string> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// Checks if the <see cref="string"/> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1956,12 +1953,12 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any from the given list.
+  /// Checks if the <see cref="string"/> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="String"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1973,35 +1970,35 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// Checks if the <see cref="string"/> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, params char[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// Checks if the <see cref="string"/> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, StringComparison stringComparison, params char[] values) => EndsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// Checks if the <see cref="string"/> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2013,12 +2010,12 @@ internal
   public static bool EndsWithAny(this string @this, IEnumerable<char> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// Checks if the <see cref="string"/> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2030,12 +2027,12 @@ internal
   }
 
   /// <summary>
-  /// Checks if the <see cref="String"/> ends with any character from the given list.
+  /// Checks if the <see cref="string"/> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="Char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2444,15 +2441,15 @@ internal
 
 #if !SUPPORTS_STRING_CONTAINS_COMPARISON_TYPE
 
-  /// <summary>
-  /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
-  /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <param name="value">The string to seek.</param>
-  /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
-  /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
+    /// <summary>
+    /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
+    /// </summary>
+    /// <param name="this">This <see cref="string"/></param>
+    /// <param name="value">The string to seek.</param>
+    /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
+    /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
 #if SUPPORTS_CONTRACTS
-  [Pure]
+    [Pure]
 #endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2475,7 +2472,7 @@ internal
   /// <summary>
   /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="value">The string to seek.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use.</param>
   /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
@@ -2548,12 +2545,12 @@ internal
   public static bool ContainsAll(this string @this, IEnumerable<string> values) => ContainsAll(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Whether the given <see cref="String"/> contains all the given values or not.
+  /// Whether the given <see cref="string"/> contains all the given values or not.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="values">The values that should be included</param>
   /// <param name="comparison">The type of <see cref="StringComparison"/> to use</param>
-  /// <returns><see langword="true"/> if the given <see cref="String"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  /// <returns><see langword="true"/> if the given <see cref="string"/> contains all the given values; otherwise, <see langword="false"/></returns>
   public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparison comparison) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(values);
@@ -2563,12 +2560,12 @@ internal
   }
 
   /// <summary>
-  /// Whether the given <see cref="String"/> contains all the given values or not.
+  /// Whether the given <see cref="string"/> contains all the given values or not.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="values">The values that should be included</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if the given <see cref="String"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  /// <returns><see langword="true"/> if the given <see cref="string"/> contains all the given values; otherwise, <see langword="false"/></returns>
   public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparer comparer) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(values);
@@ -2598,12 +2595,12 @@ internal
   public static bool ContainsAny(this string @this, IEnumerable<string> other) => ContainsAny(@this, other, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Determines whether a given <see cref="String"/> contains one of others.
+  /// Determines whether a given <see cref="string"/> contains one of others.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="other">The strings to look for.</param>
   /// <param name="comparisonType">Type of the comparison.</param>
-  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="String"/>; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="string"/>; otherwise, <see langword="false"/>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2615,12 +2612,12 @@ internal
   }
 
   /// <summary>
-  /// Determines whether a given <see cref="String"/> contains one of others.
+  /// Determines whether a given <see cref="string"/> contains one of others.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="other">The strings to look for.</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons.</param>
-  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="String"/>; otherwise, <see langword="false"/>. </returns>
+  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="string"/>; otherwise, <see langword="false"/>. </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2669,7 +2666,7 @@ internal
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="needles">String to compare to</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
 #if SUPPORTS_INLINING
@@ -2690,7 +2687,7 @@ internal
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="needles">String to compare to</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
@@ -2723,7 +2720,7 @@ internal
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="needles">String to compare to</param>
   /// <param name="comparison">The comparison mode</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
@@ -2757,7 +2754,7 @@ internal
   /// <summary>
   /// Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="needles">String to compare to</param>
   /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
@@ -2806,11 +2803,11 @@ internal
   #region DefaultIf
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/>.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="defaultValue">The default value</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -2820,11 +2817,11 @@ internal
   public static string DefaultIfNull(this string @this, string defaultValue) => @this ?? defaultValue;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/>.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="factory">The factory to generate the default value</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2835,11 +2832,11 @@ internal
   }
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or empty.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or empty.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -2849,11 +2846,11 @@ internal
   public static string DefaultIfNullOrEmpty(this string @this, string defaultValue = null) => @this.IsNullOrEmpty() ? defaultValue : @this;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or empty.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or empty.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="factory">The factory to generate the default value</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2864,11 +2861,11 @@ internal
   }
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or whitespace.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or whitespace.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_CONTRACTS
   [Pure]
 #endif
@@ -2878,11 +2875,11 @@ internal
   public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="String"/> is <see langword="null"/> or whitespace.
+  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or whitespace.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="factory">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="String"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string"/> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2981,7 +2978,7 @@ internal
   /// <summary>
   /// Tries to detect the used line-break mode.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <returns>The first matching line-break found or <see cref="LineBreakMode.None"/>.</returns>
   public static LineBreakMode DetectLineBreakMode(this string @this) {
     Against.ThisIsNull(@this);
@@ -3144,9 +3141,10 @@ internal
 
     return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, delimiter, count);
   }
-  
+
   private static string[] _GetLines(string text, bool removeEmpty, int count) => (__getLines ??= new()).Invoke(text, removeEmpty, count);
   private static __GetLines __getLines;
+
   private class __GetLines {
     private readonly string[] _possibleSplitters = {
       "\r\n",
@@ -3163,7 +3161,7 @@ internal
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public string[] Invoke(string text, bool removeEmpty, int count) 
+    public string[] Invoke(string text, bool removeEmpty, int count)
       => count == 0
         ? text.Split(this._possibleSplitters, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
         : text.Split(this._possibleSplitters, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
@@ -3278,9 +3276,9 @@ internal
   }
 
   /// <summary>
-  /// Counts the number of lines in the given <see cref="String"/>.
+  /// Counts the number of lines in the given <see cref="string"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
@@ -3295,9 +3293,9 @@ internal
   }
 
   /// <summary>
-  /// Counts the number of lines in the given <see cref="String"/>.
+  /// Counts the number of lines in the given <see cref="string"/>.
   /// </summary>
-  /// <param name="this">This <see cref="String"/>.</param>
+  /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
@@ -3356,7 +3354,7 @@ internal
   /// <summary>
   /// Does word-wrapping if needed
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="count">The maximum number of characters per line</param>
   /// <param name="mode">How to join lines</param>
   /// <returns>The word-wrapped text</returns>
@@ -3439,7 +3437,7 @@ internal
   #region Truncation
 
   /// <summary>
-  /// How to truncate <see cref="String"/>s that are too long
+  /// How to truncate <see cref="string"/>s that are too long
   /// </summary>
   public enum TruncateMode {
     KeepStart = 0,
@@ -3464,10 +3462,10 @@ internal
   public static string Truncate(this string @this, int count, string ellipse) => Truncate(@this, count, TruncateMode.KeepStart, ellipse);
 
   /// <summary>
-  /// Truncates a given <see cref="String"/> if it is too long.
+  /// Truncates a given <see cref="string"/> if it is too long.
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
-  /// <param name="count">The maximum allowed number of <see cref="Char"/>s; must be &gt; 0</param>
+  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="count">The maximum allowed number of <see cref="char"/>s; must be &gt; 0</param>
   /// <param name="mode">How to truncate; optional, defaults to <see cref="TruncateMode.KeepStart"/></param>
   /// <param name="ellipse">What to replace the trimmed parts with; optional, defaults to "..."</param>
   /// <returns>A string that is no longer than the given count</returns>
@@ -3685,7 +3683,9 @@ internal
   /// <param name="this">This String, e.g. 172.17.4.3:http .</param>
   /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
   public static HostEndPoint ParseHostAndPort(this string @this) => (__parseHostAndPort ??= new()).Invoke(@this);
+
   private static __ParseHostAndPort __parseHostAndPort;
+
   private class __ParseHostAndPort {
 
     /// <summary>
@@ -3905,7 +3905,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this)
     => GetSoundexRepresentation(@this, CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? 5 : 4, CultureInfo.CurrentCulture);
@@ -3913,7 +3913,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, int maxLength)
@@ -3922,7 +3922,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this)
     => GetSoundexRepresentation(@this, 4, CultureInfo.InvariantCulture);
@@ -3930,7 +3930,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this, int maxLength)
@@ -3939,7 +3939,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, CultureInfo culture)
@@ -3948,7 +3948,7 @@ internal
   /// <summary>
   /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="String"/></param>
+  /// <param name="this">This <see cref="string"/></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
