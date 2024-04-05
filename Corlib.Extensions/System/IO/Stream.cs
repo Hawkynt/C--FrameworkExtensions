@@ -250,6 +250,9 @@ internal
 
   #region bool
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, bool value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -257,6 +260,9 @@ internal
     @this.WriteByte(value ? (byte)255 : (byte)0);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool ReadBool(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -268,6 +274,9 @@ internal
 
   #region byte
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, byte value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -275,6 +284,9 @@ internal
     @this.WriteByte(value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static byte ReadUInt8(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -286,6 +298,9 @@ internal
 
   #region sbyte
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, sbyte value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -293,6 +308,9 @@ internal
     @this.WriteByte((byte)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static sbyte ReadInt8(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -306,6 +324,9 @@ internal
 
 #if UNSAFE
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteLittleEndianU16(Stream stream, ushort value) {
 #if SUPPORTS_SPAN
     var bytes = new ReadOnlySpan<byte>(&value, sizeof(ushort));
@@ -319,6 +340,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteBigEndianU16(Stream stream, ushort value) {
     var ptr = (byte*)&value;
 
@@ -335,6 +359,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe ushort _ReadLittleEndianU16(Stream stream) {
 #if SUPPORTS_SPAN
     ushort result = 0;
@@ -350,6 +377,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe ushort _ReadBigEndianU16(Stream stream) {
     ushort result = 0;
     var ptr = (byte*)&result;
@@ -371,6 +401,9 @@ internal
 
 #else
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteLittleEndianU16(Stream stream, ushort value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[0] = (byte)value;
@@ -378,6 +411,9 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(ushort));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteBigEndianU16(Stream stream, ushort value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[1] = (byte)value;
@@ -385,6 +421,9 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(ushort));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static ushort _ReadLittleEndianU16(Stream stream) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
@@ -392,6 +431,9 @@ internal
     return (ushort)(handle.Buffer[0] | (handle.Buffer[1] << 8));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static ushort _ReadBigEndianU16(Stream stream) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
@@ -401,6 +443,9 @@ internal
 
 #endif
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, ushort value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -408,6 +453,9 @@ internal
     _WriteLittleEndianU16(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, ushort value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -418,6 +466,9 @@ internal
       _WriteLittleEndianU16(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ushort ReadUInt16(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -425,6 +476,9 @@ internal
     return _ReadLittleEndianU16(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ushort ReadUInt16(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -436,6 +490,9 @@ internal
 
   #region short
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, short value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -443,6 +500,9 @@ internal
     _WriteLittleEndianU16(@this, (ushort)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, short value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -453,6 +513,9 @@ internal
       _WriteLittleEndianU16(@this, (ushort)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static short ReadInt16(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -460,6 +523,9 @@ internal
     return (short)_ReadLittleEndianU16(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static short ReadInt16(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -471,6 +537,9 @@ internal
 
   #region char
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, char value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -478,6 +547,9 @@ internal
     _WriteLittleEndianU16(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, char value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -488,6 +560,9 @@ internal
       _WriteLittleEndianU16(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static char ReadChar(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -495,6 +570,9 @@ internal
     return (char)_ReadLittleEndianU16(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static char ReadChar(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -509,6 +587,9 @@ internal
 
 #if UNSAFE
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteLittleEndianU32(Stream stream, uint value) {
 #if SUPPORTS_SPAN
     var bytes = new ReadOnlySpan<byte>(&value, sizeof(uint));
@@ -522,6 +603,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteBigEndianU32(Stream stream, uint value) {
     var ptr = (byte*)&value;
 
@@ -538,6 +622,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe uint _ReadLittleEndianU32(Stream stream) {
 #if SUPPORTS_SPAN
     var result = 0U;
@@ -553,6 +640,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe uint _ReadBigEndianU32(Stream stream) {
     var result = 0U;
     var ptr = (byte*)&result;
@@ -574,6 +664,9 @@ internal
 
 #else
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteLittleEndianU32(Stream stream, uint value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[0] = (byte)value;
@@ -583,6 +676,9 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(uint));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteBigEndianU32(Stream stream, uint value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[3] = (byte)value;
@@ -592,6 +688,9 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(uint));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static uint _ReadLittleEndianU32(Stream stream) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
@@ -599,6 +698,9 @@ internal
     return (uint)(handle.Buffer[0] | (handle.Buffer[1] << 8) | (handle.Buffer[2] << 16) | (handle.Buffer[3] << 24));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static uint _ReadBigEndianU32(Stream stream) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     // ReSharper disable once MustUseReturnValue
@@ -608,6 +710,9 @@ internal
 
 #endif
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, uint value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -615,6 +720,9 @@ internal
     _WriteLittleEndianU32(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, uint value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -625,6 +733,9 @@ internal
       _WriteLittleEndianU32(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static uint ReadUInt32(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -632,6 +743,9 @@ internal
     return _ReadLittleEndianU32(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static uint ReadUInt32(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -644,6 +758,9 @@ internal
 
   #region int
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, int value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -651,6 +768,9 @@ internal
     _WriteLittleEndianU32(@this, (uint)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, int value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -661,6 +781,9 @@ internal
       _WriteLittleEndianU32(@this, (uint)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static int ReadInt32(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -668,6 +791,9 @@ internal
     return (int)_ReadLittleEndianU32(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static int ReadInt32(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -682,6 +808,9 @@ internal
 
 #if UNSAFE
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteLittleEndianU64(Stream stream, ulong value) {
 #if SUPPORTS_SPAN
     var bytes = new ReadOnlySpan<byte>(&value, sizeof(ulong));
@@ -695,6 +824,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteBigEndianU64(Stream stream, ulong value) {
     var ptr = (byte*)&value;
 
@@ -711,6 +843,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe ulong _ReadLittleEndianU64(Stream stream) {
 #if SUPPORTS_SPAN
     var result = 0UL;
@@ -726,6 +861,9 @@ internal
 #endif
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe ulong _ReadBigEndianU64(Stream stream) {
     var result = 0UL;
     var ptr = (byte*)&result;
@@ -747,6 +885,9 @@ internal
 
 #else
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteLittleEndianU64(Stream stream, ulong value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[0] = (byte)value;
@@ -760,6 +901,9 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(ulong));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteBigEndianU64(Stream stream, ulong value) {
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
     handle.Buffer[7] = (byte)value;
@@ -773,12 +917,21 @@ internal
     stream.Write(handle.Buffer, 0, sizeof(ulong));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static ulong _ReadLittleEndianU64(Stream stream) => _ReadLittleEndianU32(stream) | ((ulong)_ReadLittleEndianU32(stream) << 32);
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static ulong _ReadBigEndianU64(Stream stream) => ((ulong)_ReadBigEndianU32(stream) << 32) | _ReadBigEndianU32(stream);
 
 #endif
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, ulong value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -786,6 +939,9 @@ internal
     _WriteLittleEndianU64(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, ulong value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -796,6 +952,9 @@ internal
       _WriteLittleEndianU64(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ulong ReadUInt64(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -803,6 +962,9 @@ internal
     return _ReadLittleEndianU64(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ulong ReadUInt64(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -815,6 +977,9 @@ internal
 
   #region long
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, long value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -822,6 +987,9 @@ internal
     _WriteLittleEndianU64(@this, (ulong)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, long value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -832,6 +1000,9 @@ internal
       _WriteLittleEndianU64(@this, (ulong)value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long ReadInt64(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -839,6 +1010,9 @@ internal
     return (long)_ReadLittleEndianU64(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long ReadInt64(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -852,14 +1026,27 @@ internal
 
 #if UNSAFE
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteLittleEndianF32(Stream stream, float value) => _WriteLittleEndianU32(stream, *(uint*)&value);
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteBigEndianF32(Stream stream, float value) => _WriteBigEndianU32(stream, *(uint*)&value);
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe float _ReadLittleEndianF32(Stream stream) {
     var result = _ReadLittleEndianU32(stream);
     return *(float*)&result;
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe float _ReadBigEndianF32(Stream stream) {
     var result = _ReadBigEndianU32(stream);
     return *(float*)&result;
@@ -867,17 +1054,26 @@ internal
 
 #else
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteLittleEndianF32(Stream stream, float value) {
     var bytes = BitConverter.GetBytes(value);
     stream.Write(bytes, 0, sizeof(float));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteBigEndianF32(Stream stream, float value) {
     var bytes = BitConverter.GetBytes(value);
     (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
     stream.Write(bytes, 0, sizeof(float));
   }
   
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static float _ReadLittleEndianF32(Stream stream) {
     var bytes = new byte[sizeof(float)];
     // ReSharper disable once MustUseReturnValue
@@ -885,6 +1081,9 @@ internal
     return BitConverter.ToSingle(bytes, 0);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static float _ReadBigEndianF32(Stream stream) {
     var bytes = new byte[sizeof(float)];
     // ReSharper disable once MustUseReturnValue
@@ -895,6 +1094,9 @@ internal
 
 #endif
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, float value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -902,6 +1104,9 @@ internal
     _WriteLittleEndianF32(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, float value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -912,6 +1117,9 @@ internal
       _WriteLittleEndianF32(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static float ReadFloat32(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -919,6 +1127,9 @@ internal
     return _ReadLittleEndianF32(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static float ReadFloat32(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -932,14 +1143,27 @@ internal
 
 #if UNSAFE
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteLittleEndianF64(Stream stream, double value) => _WriteLittleEndianU64(stream, *(ulong*)&value);
+  
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe void _WriteBigEndianF64(Stream stream, double value) => _WriteBigEndianU64(stream, *(ulong*)&value);
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe double _ReadLittleEndianF64(Stream stream) {
     var result = _ReadLittleEndianU64(stream);
     return *(double*)&result;
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static unsafe double _ReadBigEndianF64(Stream stream) {
     var result = _ReadBigEndianU64(stream);
     return *(double*)&result;
@@ -947,17 +1171,26 @@ internal
 
 #else
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteLittleEndianF64(Stream stream, double value) {
     var bytes = BitConverter.GetBytes(value);
     stream.Write(bytes, 0, sizeof(double));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static void _WriteBigEndianF64(Stream stream, double value) {
     var bytes = BitConverter.GetBytes(value);
     (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
     stream.Write(bytes, 0, sizeof(double));
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static double _ReadLittleEndianF64(Stream stream) {
     var bytes = new byte[sizeof(double)];
     // ReSharper disable once MustUseReturnValue
@@ -965,6 +1198,9 @@ internal
     return BitConverter.ToDouble(bytes, 0);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   private static double _ReadBigEndianF64(Stream stream) {
     var bytes = new byte[sizeof(double)];
     // ReSharper disable once MustUseReturnValue
@@ -975,6 +1211,9 @@ internal
 
 #endif
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, double value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -982,6 +1221,9 @@ internal
     _WriteLittleEndianF64(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, double value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -992,6 +1234,9 @@ internal
       _WriteLittleEndianF64(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static double ReadFloat64(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -999,6 +1244,9 @@ internal
     return _ReadLittleEndianF64(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static double ReadFloat64(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -1038,6 +1286,9 @@ internal
     return new(blocks);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, decimal value) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -1045,6 +1296,9 @@ internal
     _WriteLittleEndianM128(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void Write(this Stream @this, decimal value, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
@@ -1055,6 +1309,9 @@ internal
       _WriteLittleEndianM128(@this, value);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static decimal ReadMoney128(this Stream @this) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -1062,6 +1319,9 @@ internal
     return _ReadLittleEndianM128(@this);
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static decimal ReadMoney128(this Stream @this, bool bigEndian) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
@@ -1093,6 +1353,9 @@ internal
   /// For other non-seekable stream types, the caller should ensure an appropriate method to check for the end of the <see cref="Stream"/>, 
   /// as this method will throw an <see cref="InvalidOperationException"/>.
   /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool IsAtEndOfStream(this Stream @this) {
     Against.ThisIsNull(@this);
 
