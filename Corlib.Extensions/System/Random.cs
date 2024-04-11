@@ -334,4 +334,35 @@ internal
 
 #endif
 
+  /// <summary>
+  /// Generates a random string of a specified maximum length.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random string.</param>
+  /// <param name="maxLength">The maximum length of the generated string. The actual length can be less than the maximum specified.</param>
+  /// <returns>A random string of up to <paramref name="maxLength"/> characters with at least one character.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxLength"/> is less than 1.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// string randomString = random.GetRandomString(10);
+  /// Console.WriteLine($"Random string: {randomString}");
+  /// </code>
+  /// This example generates and prints a random string of up to 10 characters in length.
+  /// </example>
+  /// <remarks>
+  /// The method creates a string consisting of purely random characters.
+  /// The exact length of the string is determined randomly and can be up to <paramref name="maxLength"/>.
+  /// Note: The string may contain invalid surrogates, non-printable characters and control sequences.
+  /// </remarks>
+  public static string GetRandomString(this Random @this, int maxLength) {
+    Against.ThisIsNull(@this);
+    Against.NegativeValuesAndZero(maxLength);
+
+    var length = maxLength <= 1 ? 1 : @this.Next(1, maxLength);
+    var bytes = new byte[length * 2];
+    @this.NextBytes(bytes);
+    return Encoding.Unicode.GetString(bytes);
+  }
+
 }
