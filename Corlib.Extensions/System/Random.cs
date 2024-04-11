@@ -291,6 +291,55 @@ internal
     return (byte)(@this.Next(count) + 1);
   }
 
+  /// <summary>
+  /// Generates a random value for the specified type <typeparamref name="T"/>.
+  /// </summary>
+  /// <typeparam name="T">The type for which to generate a random value.</typeparam>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
+  /// <param name="_">Reserved for being used by the compiler</param>
+  /// <returns>A random value of type <typeparamref name="T"/>.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// int randomInt = random.GetRandomValueFor&lt;int&gt;();
+  /// Console.WriteLine($"Random int: {randomInt}");
+  /// 
+  /// double randomDouble = random.GetRandomValueFor&lt;double&gt;();
+  /// Console.WriteLine($"Random double: {randomDouble}");
+  /// 
+  /// // The following line assumes that there's an implementation detail that allows fetching a random boolean.
+  /// bool randomBool = random.GetRandomValueFor&lt;bool&gt;();
+  /// Console.WriteLine($"Random bool: {randomBool}");
+  /// </code>
+  /// This example demonstrates generating random values for int, double, and bool types.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static T GetRandomValueFor<T>(this Random @this, __StructForcingTag<T> _ = null) where T : struct => (T)TypeExtensions.GetRandomValueFor(typeof(T),false, @this);
+
+  /// <summary>
+  /// Generates a random value for the specified type <typeparamref name="T"/>.
+  /// </summary>
+  /// <typeparam name="T">The type for which to generate a random value.</typeparam>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
+  /// <param name="_">Reserved for being used by the compiler</param>
+  /// <returns>A random value of type <typeparamref name="T"/> (this does include <see langword="null"/>).</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// string randomString = random.GetRandomValueFor&lt;string&gt;();
+  /// Console.WriteLine($"Random string: {randomString}");
+  /// </code>
+  /// This example demonstrates generating random values for int, double, and bool types.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static T GetRandomValueFor<T>(this Random @this, __ClassForcingTag<T> _ = null) where T : class => (T)TypeExtensions.GetRandomValueFor(typeof(T), true, @this);
+
 #if !SUPPORTS_RANDOM_NEXTINT64
 
   /// <summary>Returns a non-negative random integer.</summary>

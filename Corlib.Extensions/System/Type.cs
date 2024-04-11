@@ -21,13 +21,19 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+#if NETFRAMEWORK
 using Microsoft.Win32;
+#endif
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Guard;
+using System.Runtime.InteropServices;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -41,7 +47,7 @@ internal
 #endif
 static partial class TypeExtensions {
 
-  #region nested types
+#region nested types
 
   /// <summary>
   /// Holds information about properties which are important for designer components.
@@ -127,7 +133,7 @@ static partial class TypeExtensions {
     public Type PropertyType => this.__propertyType ??= this.Info?.PropertyType ?? TypeObject;
     private Type __propertyType;
 
-    #region value getter
+#region value getter
 
     public readonly object GetValue(object instance) => this.Info.GetValue(instance, null);
     public readonly TValue GetValue<TValue>(object instance) => (TValue)this.GetValue(instance);
@@ -196,9 +202,9 @@ static partial class TypeExtensions {
       }
     }
 
-    #endregion
+#endregion
 
-    #region value setter
+#region value setter
 
     public readonly void SetValue(object value) => this.Info.SetValue(null, value, null);
 
@@ -226,7 +232,7 @@ static partial class TypeExtensions {
       }
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Gets all custom attributes.
@@ -295,9 +301,9 @@ static partial class TypeExtensions {
     public readonly object Value;
   }
 
-  #endregion
+#endregion
 
-  #region specific type
+#region specific type
 
   public static readonly Type TypeVoid = typeof(void);
   public static readonly Type TypeBool = typeof(bool);
@@ -318,9 +324,9 @@ static partial class TypeExtensions {
   public static readonly Type TypeTimeSpan = typeof(TimeSpan);
   public static readonly Type TypeDateTime = typeof(DateTime);
 
-  #endregion
+#endregion
 
-  #region type conversion
+#region type conversion
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
     { TypeDecimal, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar } }, 
@@ -378,9 +384,9 @@ static partial class TypeExtensions {
     return source.IsCastableTo(@this);
   }
 
-  #endregion
+#endregion
 
-  #region messing for designers
+#region messing for designers
 
   /// <summary>
   /// Cache
@@ -419,7 +425,7 @@ static partial class TypeExtensions {
     return result;
   }
 
-  #endregion
+#endregion
 
   /// <summary>
   /// Gets the assembly attribute.
@@ -429,6 +435,9 @@ static partial class TypeExtensions {
   /// <param name="inherit">if set to <c>true</c> inherited attributes would also be returned; otherwise, not.</param>
   /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
   /// <returns>The given attribute instance.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static TAttribute GetAssemblyAttribute<TAttribute>(this Type @this, bool inherit = false, int index = 0) {
     Against.ThisIsNull(@this);
 
@@ -454,18 +463,246 @@ static partial class TypeExtensions {
   }
 
   /// <summary>
+  /// Generates a random value of the specified type. For reference types, an instance can optionally be created.
+  /// </summary>
+  /// <param name="this">The type for which to generate a random value.</param>
+  /// <param name="allowInstanceCreationForReferenceTypes">If set to <see langword="true"/>, allows the creation of a new instance for reference types. Default is false.</param>
+  /// <returns>A random value of the specified type or a new instance of the type if it's a reference type and instance creation is allowed.</returns>
+  /// <exception cref="ArgumentException">Thrown if it's not possible to create a value of the specified type.</exception>
+  /// <example>
+  /// <code>
+  /// Type intType = typeof(int);
+  /// object randomInt = intType.GetRandomValue();
+  /// Console.WriteLine($"Random int: {randomInt}");
+  ///
+  /// Type stringType = typeof(string);
+  /// // Note that without instance creation, the default for reference types like string is null.
+  /// object randomString = stringType.GetRandomValue(true);
+  /// Console.WriteLine($"Random string: {randomString ?? "null"}");
+  /// </code>
+  /// This example shows how to generate a random integer and an instance of a string. For the string, instance creation is allowed.
+  /// </example>
+  /// <remarks>
+  /// This method can handle primitive types, structs, and reference types. For reference types, a new instance is only created if <paramref name="allowInstanceCreationForReferenceTypes"/> is true, otherwise, the default value (null) is returned.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static object GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
+    Against.ThisIsNull(@this);
+
+#if SUPPORTS_RANDOM_SHARED
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Random.Shared);
+#else
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, new Random());
+#endif
+  }
+  
+  internal static object GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
+    Against.ArgumentIsNull(type);
+    Against.ArgumentIsNull(entropySource);
+
+    if (TryCreateForWellKnownValueType(type, entropySource, out var result))
+      return result;
+
+    if (Nullable.GetUnderlyingType(type) is { } ul)
+      return CreateForNullable(ul, allowInstanceCreationForReferenceTypes, entropySource);
+
+    if(type.IsEnum)
+      return CreateForEnum(type, entropySource);
+
+    if (type.IsClass)
+      return CreateForRefType(type, allowInstanceCreationForReferenceTypes, entropySource);
+
+    if (type.IsValueType)
+      return CreateForValueType(type, entropySource);
+
+    throw new NotSupportedException("Unknown type");
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    static object CreateForNullable(Type underlyingType, bool allowInstanceCreationForReferenceTypes, Random entropySource)
+      => entropySource.FlipACoin() ? null : GetRandomValueFor(underlyingType, allowInstanceCreationForReferenceTypes, entropySource)
+    ;
+
+    static object CreateForRefType(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
+      if (entropySource.FlipACoin())
+        return null;
+
+      if (!allowInstanceCreationForReferenceTypes) {
+        Trace.WriteLine($"[Warning]Not allowed to create instance of type {type.FullName} by parameter, always returning <null>");
+        return null;
+      }
+
+      var constructors = type.GetConstructors();
+      if (constructors.Length <= 0) {
+        Trace.WriteLine($"[Warning]No public constructors available for type {type.FullName}");
+        return null;
+      }
+
+      // use any ctor randomly
+      var ctor = constructors[entropySource.Next(constructors.Length)];
+      var parameters = ctor.GetParameters().Select(p => GetRandomValueFor(p.ParameterType, true, entropySource)).ToArray();
+      return Activator.CreateInstance(type, parameters);
+    }
+
+    static object CreateForValueType(Type type, Random entropySource) {
+      var size = Marshal.SizeOf(type);
+      var data = new byte[size];
+      entropySource.NextBytes(data);
+
+      var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+      try {
+        var pointer = handle.AddrOfPinnedObject();
+        return Marshal.PtrToStructure(pointer, type);
+      } finally {
+        handle.Free();
+      }
+    }
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    static bool TryCreateForWellKnownValueType(Type type, Random entropySource, out object result) => (__tryCreateRandomValueForWellKnownType ??= new()).Invoke(type, entropySource, out result);
+
+    static object CreateForEnum(Type type, Random entropySource) {
+
+      // Return any integer value in the range of the underlying enum type
+      if (entropySource.FlipACoin()) {
+
+        var underlyingType = Enum.GetUnderlyingType(type);
+        return
+          underlyingType == TypeInt || underlyingType == TypeDWord || underlyingType == TypeChar ? Enum.ToObject(type, entropySource.Next())
+          : underlyingType == TypeLong || underlyingType == TypeQWord ? Enum.ToObject(type, entropySource.NextInt64())
+          : underlyingType == TypeShort || underlyingType == TypeWord ? Enum.ToObject(type, entropySource.Next(ushort.MaxValue))
+          : underlyingType == TypeByte || underlyingType == TypeSByte ? Enum.ToObject(type, entropySource.Next(byte.MaxValue))
+          : Enum.ToObject(type, 0)
+          ;
+      }
+
+      var isFlagged = type.GetCustomAttributes(typeof(FlagsAttribute), false).Any();
+      var enumValues = Enum.GetValues(type);
+
+      // For a flagged enum, start with no flags and randomly combine them
+      if (isFlagged) {
+
+        var combinedValue = 0UL;
+        // ReSharper disable once LoopCanBeConvertedToQuery
+        foreach (var value in enumValues)
+          if (entropySource.FlipACoin())
+            combinedValue |= Convert.ToUInt64(value);
+
+        return Enum.ToObject(type, combinedValue);
+      }
+
+      // Include the possibility of generating values explicitly defined in the enum
+      var randomIndex = entropySource.Next(enumValues.Length);
+      return enumValues.GetValue(randomIndex);
+    }
+
+  }
+
+  private static __TryCreateRandomValueForWellKnownType __tryCreateRandomValueForWellKnownType;
+
+  private class __TryCreateRandomValueForWellKnownType {
+
+    private readonly Dictionary<Type, Func<Random, object>> _generators = new() {
+      { TypeBool, r => r.FlipACoin() },
+      { TypeChar, r => (char)r.Next(char.MinValue, char.MaxValue + 1) },
+      { TypeByte, r => (byte)r.Next(byte.MaxValue + 1) },
+      { TypeSByte, r => (sbyte)r.Next(sbyte.MinValue, sbyte.MaxValue + 1) },
+      { TypeShort, r => (short)r.Next(short.MinValue, short.MaxValue + 1) },
+      { TypeWord, r => (ushort)r.Next(ushort.MaxValue + 1) },
+      { TypeInt, r => r.Next() },
+      { TypeDWord, r => (uint)r.Next() },
+      { TypeLong, r => r.NextInt64() },
+      { TypeQWord, r => (ulong)r.NextInt64() },
+      { TypeFloat, r => _GetRandomFloat(r) },
+      { TypeDouble, r => _GetRandomDouble(r) },
+      { TypeDecimal, r => _GetRandomDecimal(r) },
+      { TypeString, _GetRandomString },
+      { TypeObject, r => r.FlipACoin() ? null : new object() },
+      { TypeTimeSpan, r => new TimeSpan(r.NextInt64()) },
+      { TypeDateTime, r => new DateTime(r.NextInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks)) },
+    };
+
+    private static string _GetRandomString(Random entropySource) 
+      => entropySource.Next(4) switch {
+        0 => null,
+        1 => string.Empty,
+        _ => entropySource.GetRandomString(65536)
+      }
+    ;
+
+    private static float _GetRandomFloat(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => float.MinValue,
+        1 => float.MaxValue,
+        2 => float.NaN,
+        3 => float.NegativeInfinity,
+        4 => float.PositiveInfinity,
+        _ => (float)(entropySource.NextDouble() * (entropySource.FlipACoin() ? float.MaxValue : -float.MaxValue))
+      }
+    ;
+
+    private static double _GetRandomDouble(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => double.MinValue,
+        1 => double.MaxValue,
+        2 => double.NaN,
+        3 => double.NegativeInfinity,
+        4 => double.PositiveInfinity,
+        _ => entropySource.NextDouble()
+      }
+    ;
+
+    private static decimal _GetRandomDecimal(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => decimal.MinValue,
+        1 => decimal.MaxValue,
+        2 => decimal.Zero,
+        3 => decimal.MinusOne,
+        4 => decimal.One,
+        _ => new(
+          entropySource.Next(),
+          entropySource.Next(),
+          entropySource.Next(),
+          entropySource.FlipACoin(),
+          (byte)entropySource.Next(29))  // Decimal has 28-29 significant digits.
+      }
+    ;
+
+#if SUPPORTS_INLINING
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public bool Invoke(Type type, Random entropySource, out object result) {
+      if (this._generators.TryGetValue(type, out var generator)) {
+        result = generator(entropySource);
+        return true;
+      }
+
+      result = default;
+      return false;
+    }
+  }
+
+  /// <summary>
   /// Determines whether the specified type is an integer type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
   ///   <c>true</c> if the specified type is integer; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsIntegerType(this Type @this) {
-    Against.ThisIsNull(@this);
-
-    return @this == TypeByte || @this == TypeSByte || @this == TypeShort || @this == TypeWord || @this == TypeInt ||
-           @this == TypeDWord || @this == TypeLong || @this == TypeQWord;
-  }
+  public static bool IsIntegerType(this Type @this) =>
+    @this == TypeByte 
+    || @this == TypeSByte 
+    || @this == TypeShort 
+    || @this == TypeWord 
+    || @this == TypeInt 
+    || @this == TypeDWord
+    || @this == TypeLong 
+    || @this == TypeQWord;
 
   /// <summary>
   /// Gets the minimum value of an int type.
