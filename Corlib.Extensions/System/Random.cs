@@ -244,6 +244,52 @@ internal
     }
   }
 
+  /// <summary>
+  /// Simulates flipping a coin using the provided <see cref="Random"/> instance.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the coin flip.</param>
+  /// <returns><see langword="true"/> for heads and <see langword="false"/> for tails.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// bool flipResult = random.FlipACoin();
+  /// Console.WriteLine($"Coin flip result: {(flipResult ? "Heads" : "Tails")}");
+  /// </code>
+  /// This example simulates a coin flip and prints whether the result is heads or tails.
+  /// </example>
+  public static bool FlipACoin(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(2) <= 0;
+  }
+
+  /// <summary>
+  /// Rolls a dice of a specified number of sides using the provided <see cref="Random"/> instance.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the dice roll.</param>
+  /// <param name="count">The number of sides of the dice (default is 6).</param>
+  /// <returns>A <see cref="byte"/> representing the result of the dice roll, ranging from 1 to the number of sides inclusive.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if the number of sides is less than 1.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// byte rollResult = random.RollADice();
+  /// Console.WriteLine($"Result of rolling a 6-sided dice: {rollResult}");
+  /// 
+  /// rollResult = random.RollADice(20);
+  /// Console.WriteLine($"Result of rolling a 20-sided dice: {rollResult}");
+  /// </code>
+  /// This example demonstrates rolling a standard 6-sided dice and a 20-sided dice, printing the results to the console.
+  /// </example>
+  public static byte RollADice(this Random @this, byte count = 6) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+
+    return (byte)(@this.Next(count) + 1);
+  }
+
 #if !SUPPORTS_RANDOM_NEXTINT64
 
   /// <summary>Returns a non-negative random integer.</summary>
