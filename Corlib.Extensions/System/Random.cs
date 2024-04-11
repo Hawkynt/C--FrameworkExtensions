@@ -19,24 +19,19 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 using System.Text;
-using qword = System.UInt64;
+using System.Collections.Generic;
+using Guard;
+using System.Linq;
+using System.Security.Cryptography;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
-
-using Collections.Generic;
-using Guard;
-using Linq;
-using Security.Cryptography;
 
 #if COMPILE_TO_EXTENSION_DLL
 public
@@ -258,6 +253,9 @@ internal
   /// </code>
   /// This example simulates a coin flip and prints whether the result is heads or tails.
   /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static bool FlipACoin(this Random @this) {
     Against.ThisIsNull(@this);
 
@@ -283,6 +281,9 @@ internal
   /// </code>
   /// This example demonstrates rolling a standard 6-sided dice and a 20-sided dice, printing the results to the console.
   /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static byte RollADice(this Random @this, byte count = 6) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
@@ -295,6 +296,10 @@ internal
   /// <summary>Returns a non-negative random integer.</summary>
   /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
   /// <returns>A 64-bit signed integer that is greater than or equal to 0 and less than <see cref="long.MaxValue"/>.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long NextInt64(this Random @this) {
     Against.ThisIsNull(@this);
 
@@ -308,7 +313,11 @@ internal
   /// A 64-bit signed integer that is greater than or equal to 0, and less than <paramref name="maxValue"/>; that is, the range of return values ordinarily
   /// includes 0 but not <paramref name="maxValue"/>. However, if <paramref name="maxValue"/> equals 0, <paramref name="maxValue"/> is returned.
   /// </returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxValue"/> is less than 0.</exception>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long NextInt64(this Random @this, long maxValue) {
     Against.ThisIsNull(@this);
     Against.NegativeValues(maxValue);
@@ -324,7 +333,11 @@ internal
   /// A 64-bit signed integer greater than or equal to <paramref name="minValue"/> and less than <paramref name="maxValue"/>; that is, the range of return values includes <paramref name="minValue"/>
   /// but not <paramref name="maxValue"/>. If minValue equals <paramref name="maxValue"/>, <paramref name="minValue"/> is returned.
   /// </returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="minValue"/> is greater than <paramref name="maxValue"/>.</exception>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static long NextInt64(this Random @this, long minValue, long maxValue) {
     Against.ThisIsNull(@this);
     Against.False(minValue <= maxValue);
