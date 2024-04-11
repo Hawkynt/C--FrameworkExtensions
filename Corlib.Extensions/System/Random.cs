@@ -34,6 +34,7 @@ using qword = System.UInt64;
 namespace System;
 
 using Collections.Generic;
+using Guard;
 using Linq;
 using Security.Cryptography;
 
@@ -242,5 +243,49 @@ internal
         result[i] = func();
     }
   }
-  
+
+#if !SUPPORTS_RANDOM_NEXTINT64
+
+  /// <summary>Returns a non-negative random integer.</summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
+  /// <returns>A 64-bit signed integer that is greater than or equal to 0 and less than <see cref="long.MaxValue"/>.</returns>
+  public static long NextInt64(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return (long)(@this.NextDouble() * ulong.MaxValue);
+  }
+
+  /// <summary>Returns a non-negative random integer that is less than the specified maximum.</summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
+  /// <param name="maxValue">The exclusive upper bound of the random number to be generated. <paramref name="maxValue"/> must be greater than or equal to 0.</param>
+  /// <returns>
+  /// A 64-bit signed integer that is greater than or equal to 0, and less than <paramref name="maxValue"/>; that is, the range of return values ordinarily
+  /// includes 0 but not <paramref name="maxValue"/>. However, if <paramref name="maxValue"/> equals 0, <paramref name="maxValue"/> is returned.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxValue"/> is less than 0.</exception>
+  public static long NextInt64(this Random @this, long maxValue) {
+    Against.ThisIsNull(@this);
+    Against.NegativeValues(maxValue);
+
+    return (long)(@this.NextDouble() * maxValue);
+  }
+
+  /// <summary>Returns a random integer that is within a specified range.</summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random value.</param>
+  /// <param name="minValue">The inclusive lower bound of the random number returned.</param>
+  /// <param name="maxValue">The exclusive upper bound of the random number returned. <paramref name="maxValue"/> must be greater than or equal to <paramref name="minValue"/>.</param>
+  /// <returns>
+  /// A 64-bit signed integer greater than or equal to <paramref name="minValue"/> and less than <paramref name="maxValue"/>; that is, the range of return values includes <paramref name="minValue"/>
+  /// but not <paramref name="maxValue"/>. If minValue equals <paramref name="maxValue"/>, <paramref name="minValue"/> is returned.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="minValue"/> is greater than <paramref name="maxValue"/>.</exception>
+  public static long NextInt64(this Random @this, long minValue, long maxValue) {
+    Against.ThisIsNull(@this);
+    Against.False(minValue <= maxValue);
+
+    return minValue + (long)(@this.NextDouble() * (maxValue - minValue));
+  }
+
+#endif
+
 }
