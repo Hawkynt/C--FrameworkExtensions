@@ -1,8 +1,7 @@
 using System.Linq;
+using NUnit.Framework;
 
 namespace System;
-
-using NUnit.Framework;
 
 [TestFixture]
 public class MathTest {
