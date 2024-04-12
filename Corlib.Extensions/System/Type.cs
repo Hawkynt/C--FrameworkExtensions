@@ -550,7 +550,9 @@ static partial class TypeExtensions {
     static object CreateForValueType(Type type, Random entropySource) {
       var size = Marshal.SizeOf(type);
       var data = new byte[size];
-      entropySource.NextBytes(data);
+
+      if(entropySource.FlipACoin()) 
+        entropySource.NextBytes(data);
 
       var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
       try {
@@ -573,7 +575,7 @@ static partial class TypeExtensions {
 
         var underlyingType = Enum.GetUnderlyingType(type);
         return
-          underlyingType == TypeInt || underlyingType == TypeDWord || underlyingType == TypeChar ? Enum.ToObject(type, entropySource.Next())
+          underlyingType == TypeInt || underlyingType == TypeDWord || underlyingType == TypeChar ? Enum.ToObject(type, entropySource.NextInt64(uint.MaxValue+1L))
           : underlyingType == TypeLong || underlyingType == TypeQWord ? Enum.ToObject(type, entropySource.NextInt64())
           : underlyingType == TypeShort || underlyingType == TypeWord ? Enum.ToObject(type, entropySource.Next(ushort.MaxValue))
           : underlyingType == TypeByte || underlyingType == TypeSByte ? Enum.ToObject(type, entropySource.Next(byte.MaxValue))
@@ -610,14 +612,14 @@ static partial class TypeExtensions {
     private readonly Dictionary<Type, Func<Random, object>> _generators = new() {
       { TypeBool, r => r.FlipACoin() },
       { TypeChar, r => (char)r.Next(char.MinValue, char.MaxValue + 1) },
-      { TypeByte, r => (byte)r.Next(byte.MaxValue + 1) },
       { TypeSByte, r => (sbyte)r.Next(sbyte.MinValue, sbyte.MaxValue + 1) },
+      { TypeByte, r => _GetRandomUInt8(r) },
       { TypeShort, r => (short)r.Next(short.MinValue, short.MaxValue + 1) },
-      { TypeWord, r => (ushort)r.Next(ushort.MaxValue + 1) },
-      { TypeInt, r => r.Next() },
-      { TypeDWord, r => (uint)r.Next() },
-      { TypeLong, r => r.NextInt64() },
-      { TypeQWord, r => (ulong)r.NextInt64() },
+      { TypeWord, r => _GetRandomUInt16(r) },
+      { TypeInt, r =>  _GetRandomInt32(r)  },
+      { TypeDWord, r => _GetRandomUInt32(r) },
+      { TypeLong, r => _GetRandomInt64(r) },
+      { TypeQWord, r => _GetRandomUInt64(r) },
       { TypeFloat, r => _GetRandomFloat(r) },
       { TypeDouble, r => _GetRandomDouble(r) },
       { TypeDecimal, r => _GetRandomDecimal(r) },
@@ -627,8 +629,57 @@ static partial class TypeExtensions {
       { TypeDateTime, r => new DateTime(r.NextInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks)) },
     };
 
+    private static ulong _GetRandomUInt64(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => ulong.MaxValue,
+        _ => (ulong)(entropySource.NextDouble() * ulong.MaxValue)
+      }
+    ;
+
+    private static uint _GetRandomUInt32(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => uint.MaxValue,
+        _ => (uint)entropySource.NextInt64(uint.MaxValue + 1L)
+      }
+    ;
+    
+    private static ushort _GetRandomUInt16(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => ushort.MaxValue,
+        _ => (ushort)entropySource.Next(ushort.MaxValue + 1)
+      }
+    ;
+
+    private static byte _GetRandomUInt8(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => byte.MaxValue,
+        _ => (byte)entropySource.Next(byte.MaxValue + 1)
+      }
+    ;
+
+    private static long _GetRandomInt64(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => long.MaxValue,
+        2 => long.MinValue,
+        _ => (long)(entropySource.NextDouble() * ((double)long.MaxValue - long.MinValue) + long.MinValue)
+      }
+    ;
+
+    private static int _GetRandomInt32(Random entropySource)
+      => entropySource.Next(10) switch {
+        0 => 0,
+        1 => int.MaxValue,
+        2 => int.MinValue,
+        _ => (int)entropySource.NextInt64(int.MinValue, int.MaxValue + 1L)
+      };
+
     private static string _GetRandomString(Random entropySource) 
-      => entropySource.Next(4) switch {
+      => entropySource.Next(10) switch {
         0 => null,
         1 => string.Empty,
         _ => entropySource.GetRandomString(65536)
@@ -637,23 +688,25 @@ static partial class TypeExtensions {
 
     private static float _GetRandomFloat(Random entropySource)
       => entropySource.Next(10) switch {
-        0 => float.MinValue,
-        1 => float.MaxValue,
-        2 => float.NaN,
-        3 => float.NegativeInfinity,
-        4 => float.PositiveInfinity,
+        0 => 0,
+        1 => float.MinValue,
+        2 => float.MaxValue,
+        3 => float.NaN,
+        4 => float.NegativeInfinity,
+        5 => float.PositiveInfinity,
         _ => (float)(entropySource.NextDouble() * (entropySource.FlipACoin() ? float.MaxValue : -float.MaxValue))
       }
     ;
 
     private static double _GetRandomDouble(Random entropySource)
       => entropySource.Next(10) switch {
-        0 => double.MinValue,
-        1 => double.MaxValue,
-        2 => double.NaN,
-        3 => double.NegativeInfinity,
-        4 => double.PositiveInfinity,
-        _ => entropySource.NextDouble()
+        0 => 0,
+        1 => double.MinValue,
+        2 => double.MaxValue,
+        3 => double.NaN,
+        4 => double.NegativeInfinity,
+        5 => double.PositiveInfinity,
+        _ => entropySource.NextDouble() * (entropySource.FlipACoin() ? double.MaxValue : -double.MaxValue)
       }
     ;
 
