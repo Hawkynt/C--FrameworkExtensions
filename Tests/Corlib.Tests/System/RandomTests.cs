@@ -19,7 +19,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<bool>();
+      var value = rnd.GetValueFor<bool>();
       switch (value) {
         case true:
           wasTrue = true;
@@ -50,7 +50,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<bool?>();
+      var value = rnd.GetValueFor<bool?>();
       switch (value) {
         case null:
           wasNull = true;
@@ -85,7 +85,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<T>();
+      var value = rnd.GetValueFor<T>();
       if (value.Equals(zero))
         wasZero = true;
       else if (value.Equals(minValue))
@@ -117,7 +117,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<T>();
+      var value = rnd.GetValueFor<T>();
       if (value.Equals(zero))
         wasZero = true;
       else if (value.Equals(maxValue))
@@ -137,6 +137,53 @@ internal class RandomTests {
   }
 
   [Test]
+  public void GenerateRandomChar() {
+    var wasControl = false;
+    var wasNumber = false;
+    var wasWhiteSpace = false;
+    var wasLetter = false;
+    var wasSurrogate = false;
+    var wasSingleByte = false;
+    var wasMultiByte = false;
+
+    var rnd = new Random();
+
+    var stopwatch = Stopwatch.StartNew();
+    do {
+      var value = rnd.GetValueFor<char>();
+      if (char.IsControl(value))
+        wasControl = true;
+      else if (char.IsDigit(value))
+        wasNumber = true;
+      else if (char.IsWhiteSpace(value))
+        wasWhiteSpace = true;
+      else if (char.IsLetter(value))
+        wasLetter = true;
+      else if (char.IsSurrogate(value))
+        wasSurrogate = true;
+      else if (value < 0x100)
+        wasSingleByte = true;
+      else if (value > 0x100)
+        wasMultiByte = true;
+
+      if (!(wasControl && wasNumber && wasWhiteSpace && wasLetter && wasSurrogate && wasSingleByte && wasMultiByte))
+        continue;
+
+      Assert.Pass($"Successfully generated various types of characters in {stopwatch.ElapsedMilliseconds}ms.");
+      return;
+    } while (stopwatch.Elapsed < _timeout);
+
+    Assert.Fail($"Failed to generate all types of characters within the allotted time. Results: " +
+                $"Control: {wasControl}, " +
+                $"Number: {wasNumber}, " +
+                $"WhiteSpace: {wasWhiteSpace}, " +
+                $"Letter: {wasLetter}, " +
+                $"Surrogate: {wasSurrogate}, " +
+                $"SingleByte: {wasSingleByte}, " +
+                $"MultiByte: {wasMultiByte}.");
+  }
+
+  [Test]
   public void GenerateRandomFloat() {
     var wasPositive = false;
     var wasPositiveMax = false;
@@ -151,7 +198,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<float>();
+      var value = rnd.GetValueFor<float>();
       switch (value) {
         case 0:
           wasZero = true;
@@ -203,7 +250,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<double>();
+      var value = rnd.GetValueFor<double>();
       switch (value) {
         case 0:
           wasZero = true;
@@ -254,7 +301,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<decimal>();
+      var value = rnd.GetValueFor<decimal>();
       switch (value) {
         case 0:
           wasZero = true;
@@ -324,7 +371,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<string>();
+      var value = rnd.GetValueFor<string>();
       switch (value) {
         case null:
           wasNull = true;
@@ -357,7 +404,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<string>();
+      var value = rnd.GetValueFor<string>();
       if (value == null)
         wasNull = true;
       else
@@ -390,7 +437,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<DemoStruct>();
+      var value = rnd.GetValueFor<DemoStruct>();
       if (value is { x: 0, y: 0 })
         wasEmpty = true;
       else
@@ -429,7 +476,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<DemoClass>();
+      var value = rnd.GetValueFor<DemoClass>();
       switch (value) {
         case null:
           wasNull = true;
@@ -473,7 +520,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<DemoEnum>();
+      var value = rnd.GetValueFor<DemoEnum>();
       switch (value) {
         case DemoEnum.Unknown:
           wasZero = true;
@@ -524,7 +571,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<SmallDemoEnum>();
+      var value = rnd.GetValueFor<SmallDemoEnum>();
       switch (value) {
         case SmallDemoEnum.Unknown:
           wasZero = true;
@@ -564,7 +611,7 @@ internal class RandomTests {
 
     var stopwatch = Stopwatch.StartNew();
     do {
-      var value = rnd.GetRandomValueFor<FlagDemoEnum>();
+      var value = rnd.GetValueFor<FlagDemoEnum>();
       if (value == FlagDemoEnum.Apple)
         wasSingle = true;
       else if (value == (FlagDemoEnum.Apple | FlagDemoEnum.Pie))
