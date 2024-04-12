@@ -688,6 +688,67 @@ static partial class TypeExtensions {
   }
 
   /// <summary>
+  /// Retrieves the default value for the specified type.
+  /// </summary>
+  /// <param name="this">The <see cref="Type"/> for which to retrieve the default value.</param>
+  /// <returns>The default value for the type specified. This returns <see langword="null"/> for reference types and zero or equivalent for value types.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Type intType = typeof(int);
+  /// object defaultInt = intType.GetDefaultValue();
+  /// Console.WriteLine($"Default value for int: {defaultInt}"); // Outputs "Default value for int: 0"
+  ///
+  /// Type stringType = typeof(string);
+  /// object defaultString = stringType.GetDefaultValue();
+  /// Console.WriteLine($"Default value for string: {defaultString}"); // Outputs "Default value for string: null"
+  /// </code>
+  /// This example demonstrates retrieving the default values for an integer and a string.
+  /// </example>
+  public static object GetDefaultValue(this Type @this) {
+    Against.ThisIsNull(@this);
+
+    if (@this.IsNullable())
+      return null;
+    if (@this.IsClass)
+      return null;
+    if (@this.IsEnum)
+      return Enum.ToObject(@this, (byte)0);
+    if (@this == TypeBool)
+      return false;
+    if (@this == TypeChar)
+      return '\0';
+    if (@this == TypeSByte)
+      return (sbyte)0;
+    if (@this == TypeByte)
+      return (byte)0;
+    if (@this == TypeShort)
+      return (short)0;
+    if (@this == TypeWord)
+      return (ushort)0;
+    if (@this == TypeInt)
+      return 0;
+    if (@this == TypeDWord)
+      return 0U;
+    if (@this == TypeLong)
+      return 0L;
+    if (@this == TypeQWord)
+      return 0UL;
+    if (@this == TypeFloat)
+      return 0f;
+    if (@this == TypeDouble)
+      return 0d;
+    if (@this == TypeDecimal)
+      return 0m;
+    if (@this.IsValueType)
+      return Activator.CreateInstance(@this);
+    if (@this.IsArray)
+      return null;
+
+    throw new NotSupportedException($"Unknown type {@this}");
+  }
+
+  /// <summary>
   /// Determines whether the specified type is an integer type.
   /// </summary>
   /// <param name="this">This Type.</param>
