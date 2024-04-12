@@ -41,18 +41,6 @@ internal
   static partial class RandomExtensions {
 
   /// <summary>
-  /// Creates a random number between the given limits.
-  /// </summary>
-  /// <param name="this">This Random.</param>
-  /// <param name="minimumInclusive">The min value.</param>
-  /// <param name="maximumExclusive">The max value.</param>
-  /// <returns>A value between the given boundaries</returns>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static double NextDouble(this Random @this, double minimumInclusive, double maximumExclusive) => @this.NextDouble() * (maximumExclusive - minimumInclusive) + minimumInclusive;
-
-  /// <summary>
   /// Represents settings for generating passwords.
   /// </summary>
   public readonly struct PasswordSettings {
@@ -248,7 +236,7 @@ internal
   /// <example>
   /// <code>
   /// Random random = new Random();
-  /// bool flipResult = random.FlipACoin();
+  /// bool flipResult = random.GetBoolean();
   /// Console.WriteLine($"Coin flip result: {(flipResult ? "Heads" : "Tails")}");
   /// </code>
   /// This example simulates a coin flip and prints whether the result is heads or tails.
@@ -256,7 +244,7 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool FlipACoin(this Random @this) {
+  public static bool GetBoolean(this Random @this) {
     Against.ThisIsNull(@this);
 
     return @this.Next(2) <= 0;
@@ -309,7 +297,435 @@ internal
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static T GetRandomValueFor<T>(this Random @this) => (T)TypeExtensions.GetRandomValueFor(typeof(T), true, @this);
+  public static T GetValueFor<T>(this Random @this) => (T)TypeExtensions.GetRandomValueFor(typeof(T), true, @this);
+
+  // When higher -> less likely; must be > 6
+  private const int _SPECIAL_VALUE_LIKELIHOOD = 10;
+
+  /// <summary>
+  /// Generates a random string of a specified maximum length.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random string.</param>
+  /// <param name="maxLength">The maximum length of the generated string. The actual length can be less than the maximum specified.</param>
+  /// <param name="allowNull">Whether the return of <see langword="null"/> is allowed</param>
+  /// <param name="allowEmpty">Whether the return of <see cref="string.Empty"/> is allowed</param>
+  /// <returns>A random string of up to <paramref name="maxLength"/> characters with at least one character.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxLength"/> is less than 1.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// string randomString = random.GetRandomString(10);
+  /// Console.WriteLine($"Random string: {randomString}");
+  /// </code>
+  /// This example generates and prints a random string of up to 10 characters in length.
+  /// </example>
+  /// <remarks>
+  /// The method creates a string consisting of purely random characters.
+  /// The exact length of the string is determined randomly and can be up to <paramref name="maxLength"/>.
+  /// Note: The string may contain invalid surrogates, non-printable characters and control sequences.
+  /// </remarks>
+  public static string GetString(this Random @this, int maxLength, bool allowNull = false, bool allowEmpty = false) {
+    Against.ThisIsNull(@this);
+    Against.NegativeValuesAndZero(maxLength);
+
+    switch (@this.Next(_SPECIAL_VALUE_LIKELIHOOD)){
+      case 0 when allowNull:
+        return null;
+      case 1 when allowEmpty:
+        return string.Empty;
+      default:
+        var length = maxLength <= 1 ? 1 : @this.Next(1, maxLength);
+        var bytes = new byte[length * 2];
+        @this.NextBytes(bytes);
+        return Encoding.Unicode.GetString(bytes);
+    }
+  }
+
+  /// <summary>
+  /// Generates a random unsigned byte (<see cref="System.Byte"/>).
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random byte.</param>
+  /// <returns>A random unsigned byte ranging from 0 to 255.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// byte randomByte = random.GetUInt8();
+  /// Console.WriteLine($"Random byte: {randomByte}");
+  /// </code>
+  /// This example generates a random byte and prints it.
+  /// </example>
+  public static byte GetUInt8(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => byte.MaxValue,
+      _ => (byte)@this.Next(byte.MaxValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random unsigned short (<see cref="System.UInt16"/>).
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random ushort.</param>
+  /// <returns>A random unsigned short ranging from 0 to 65535.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// ushort randomUShort = random.GetUInt16();
+  /// Console.WriteLine($"Random ushort: {randomUShort}");
+  /// </code>
+  /// This example generates a random ushort and prints it.
+  /// </example>
+  public static ushort GetUInt16(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => ushort.MaxValue,
+      _ => (ushort)@this.Next(ushort.MaxValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random unsigned integer (<see cref="System.UInt32"/>).
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random uint.</param>
+  /// <returns>A random unsigned integer ranging from 0 to 4294967295.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// uint randomUInt = random.GetUInt32();
+  /// Console.WriteLine($"Random uint: {randomUInt}");
+  /// </code>
+  /// This example generates a random uint and prints it.
+  /// </example>
+  public static uint GetUInt32(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => uint.MaxValue,
+      _ => (uint)@this.NextInt64(uint.MaxValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random unsigned long (<see cref="System.UInt64"/>).
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random ulong.</param>
+  /// <returns>A random unsigned long ranging from 0 to 18446744073709551615.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// ulong randomULong = random.GetUInt64();
+  /// Console.WriteLine($"Random ulong: {randomULong}");
+  /// </code>
+  /// This example generates a random ulong and prints it.
+  /// </example>
+  public static ulong GetUInt64(this Random @this) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => ulong.MaxValue,
+      _ => (ulong)(@this.NextDouble() * ulong.MaxValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random signed byte (<see cref="System.SByte"/>), with an option to restrict output to only positive values.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random sbyte.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range is from 0 to 127. If <see langword="false"/>, the range is from -128 to 127.</param>
+  /// <returns>A random signed byte, potentially restricted to positive values based on the <paramref name="onlyPositive"/> parameter.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// sbyte randomSByte = random.GetInt8();
+  /// Console.WriteLine($"Random sbyte: {randomSByte}");
+  ///
+  /// sbyte positiveSByte = random.GetInt8(onlyPositive: true);
+  /// Console.WriteLine($"Random positive sbyte: {positiveSByte}");
+  /// </code>
+  /// This example generates a random sbyte and a random positive sbyte, printing both.
+  /// </example>
+  public static sbyte GetInt8(this Random @this, bool onlyPositive = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => sbyte.MaxValue,
+      2 when !onlyPositive=> sbyte.MinValue,
+      _ when onlyPositive => (sbyte)@this.Next(sbyte.MaxValue),
+      _ => (sbyte)@this.Next(byte.MaxValue + 1)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random signed short (<see cref="System.Int16"/>), with an option to restrict output to only positive values.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random short.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range is from 0 to 32767. If <see langword="false"/>, the range is from -32768 to 32767.</param>
+  /// <returns>A random signed short, potentially restricted to positive values based on the <paramref name="onlyPositive"/> parameter.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// short randomShort = random.GetInt16();
+  /// Console.WriteLine($"Random short: {randomShort}");
+  ///
+  /// short positiveShort = random.GetInt16(onlyPositive: true);
+  /// Console.WriteLine($"Random positive short: {positiveShort}");
+  /// </code>
+  /// This example generates a random short and a random positive short, printing both.
+  /// </example>
+  public static short GetInt16(this Random @this, bool onlyPositive = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => short.MaxValue,
+      2 when !onlyPositive => short.MinValue,
+      _ when onlyPositive => (short)@this.Next(short.MaxValue),
+      _ => (short)@this.Next(ushort.MaxValue + 1)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random signed integer (<see cref="System.Int32"/>), with an option to restrict output to only positive values.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random integer.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range is from 0 to 2147483647. If <see langword="false"/>, the range is from -2147483648 to 2147483647.</param>
+  /// <returns>A random signed integer, potentially restricted to positive values based on the <paramref name="onlyPositive"/> parameter.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// int randomInt = random.GetInt32();
+  /// Console.WriteLine($"Random int: {randomInt}");
+  ///
+  /// int positiveInt = random.GetInt32(onlyPositive: true);
+  /// Console.WriteLine($"Random positive int: {positiveInt}");
+  /// </code>
+  /// This example generates a random integer and a random positive integer, printing both.
+  /// </example>
+  public static int GetInt32(this Random @this, bool onlyPositive = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => int.MaxValue,
+      2 when !onlyPositive => int.MinValue,
+      _ when onlyPositive => @this.Next(),
+      _ => (int)@this.NextInt64(uint.MaxValue + 1L)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random signed long (<see cref="System.Int64"/>), with an option to restrict output to only positive values.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random long.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range is from 0 to 9223372036854775807. If <see langword="false"/>, the range is from -9223372036854775808 to 9223372036854775807.</param>
+  /// <returns>A random signed long, potentially restricted to positive values based on the <paramref name="onlyPositive"/> parameter.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// long randomLong = random.GetInt64();
+  /// Console.WriteLine($"Random long: {randomLong}");
+  ///
+  /// long positiveLong = random.GetInt64(onlyPositive: true);
+  /// Console.WriteLine($"Random positive long: {positiveLong}");
+  /// </code>
+  /// This example generates a random long and a random positive long, printing both.
+  /// </example>
+  public static long GetInt64(this Random @this, bool onlyPositive = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => long.MaxValue,
+      2 when !onlyPositive => long.MinValue,
+      _ when onlyPositive => @this.NextInt64(),
+      _ => (long)(@this.NextDouble() * ((double)long.MaxValue - long.MinValue) + long.MinValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random floating-point number (<see cref="System.Single"/>) with options to exclude negative values, NaN (Not a Number), and Infinity.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random float.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range excludes negative numbers.</param>
+  /// <param name="noNaN">Specifies whether to exclude NaN values from the possible outputs.</param>
+  /// <param name="noInfinity">Specifies whether to exclude positive and negative infinity from the possible outputs.</param>
+  /// <returns>A random float potentially restricted based on the parameters provided.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// float randomFloat = random.GetFloat();
+  /// Console.WriteLine($"Random float: {randomFloat}");
+  ///
+  /// float positiveFloat = random.GetFloat(onlyPositive: true);
+  /// Console.WriteLine($"Random positive float: {positiveFloat}");
+  ///
+  /// float normalFloat = random.GetFloat(noNaN: true, noInfinity: true);
+  /// Console.WriteLine($"Random float with no NaN or Infinity: {normalFloat}");
+  /// </code>
+  /// This example generates three different floats:
+  /// - A completely random float.
+  /// - A random positive float.
+  /// - A random float that is neither NaN nor Infinity.
+  /// </example>
+  public static float GetFloat(this Random @this, bool onlyPositive = false, bool noNaN = false, bool noInfinity = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => float.MaxValue,
+      2 when !onlyPositive => float.MinValue,
+      3 when !noNaN && !onlyPositive => float.NaN,
+      4 when !noInfinity && !onlyPositive => float.NegativeInfinity,
+      5 when !noInfinity => float.PositiveInfinity,
+      _ when onlyPositive => (float)(@this.NextDouble() * float.MaxValue),
+      _ => (float)(@this.NextDouble() * (@this.GetBoolean() ? float.MaxValue : -float.MaxValue))
+    };
+  }
+
+  /// <summary>
+  /// Generates a random double-precision floating-point number (<see cref="System.Double"/>), with options to exclude negative values, NaN (Not a Number), and Infinity.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random double.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, negative values are excluded, making the range from 0 to <see cref="Double.MaxValue"/>.</param>
+  /// <param name="noNaN">Specifies whether to prevent the generation of NaN values. This is typically only relevant in certain computational scenarios where operations could yield NaN.</param>
+  /// <param name="noInfinity">Specifies whether to prevent the generation of Infinity values. This is important when operations that could produce infinity (like division by zero) are involved.</param>
+  /// <returns>A random double potentially restricted based on the specified parameters.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// double randomDouble = random.GetDouble();
+  /// Console.WriteLine($"Random double: {randomDouble}");
+  ///
+  /// double positiveDouble = random.GetDouble(onlyPositive: true);
+  /// Console.WriteLine($"Random positive double: {positiveDouble}");
+  ///
+  /// double normalDouble = random.GetDouble(noNaN: true, noInfinity: true);
+  /// Console.WriteLine($"Random double with no NaN or Infinity: {normalDouble}");
+  /// </code>
+  /// This example generates three different doubles:
+  /// - A completely random double.
+  /// - A random positive double.
+  /// - A random double that is neither NaN nor Infinity.
+  /// </example>
+  public static double GetDouble(this Random @this, bool onlyPositive = false, bool noNaN = false, bool noInfinity = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => 0,
+      1 => double.MaxValue,
+      2 when !onlyPositive => double.MinValue,
+      3 when !noNaN && !onlyPositive => double.NaN,
+      4 when !noInfinity && !onlyPositive => double.NegativeInfinity,
+      5 when !noInfinity => double.PositiveInfinity,
+      _ when onlyPositive => @this.NextDouble() * double.MaxValue,
+      _ => @this.NextDouble() * (@this.GetBoolean() ? double.MaxValue : -double.MaxValue)
+    };
+  }
+
+  /// <summary>
+  /// Generates a random decimal value (<see cref="System.Decimal"/>), with an option to exclude negative values.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random decimal.</param>
+  /// <param name="onlyPositive">Specifies whether to generate only positive values. If set to <see langword="true"/>, the range is from 0 to <see cref="Decimal.MaxValue"/>.</param>
+  /// <returns>A random decimal, potentially restricted to positive values based on the <paramref name="onlyPositive"/> parameter.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// decimal randomDecimal = random.GetDecimal();
+  /// Console.WriteLine($"Random decimal: {randomDecimal}");
+  ///
+  /// decimal positiveDecimal = random.GetDecimal(onlyPositive: true);
+  /// Console.WriteLine($"Random positive decimal: {positiveDecimal}");
+  /// </code>
+  /// This example generates a random decimal and a random positive decimal, printing both to demonstrate the output.
+  /// </example>
+  public static decimal GetDecimal(this Random @this, bool onlyPositive = false) {
+    Against.ThisIsNull(@this);
+
+    return @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+      0 => decimal.Zero,
+      1 => decimal.MaxValue,
+      2 when !onlyPositive => decimal.MinValue,
+      3 => decimal.One,
+      4 when !onlyPositive => decimal.MinusOne,
+      _ => new(
+        @this.Next(),
+        @this.Next(),
+        @this.Next(),
+        onlyPositive || @this.GetBoolean(),
+        (byte)@this.Next(29)) // Decimal has 28-29 significant digits.
+    };
+  }
+
+  /// <summary>
+  /// Generates a random character (<see cref="System.Char"/>), with options to restrict the character range based on specific criteria.
+  /// </summary>
+  /// <param name="this">The <see cref="Random"/> instance used to generate the random character.</param>
+  /// <param name="only7BitAscii">Specifies whether to generate only ASCII characters (7-bit), limiting the range to characters from 0 to 127.</param>
+  /// <param name="only8Bit">Specifies whether to generate characters that fit within an 8-bit byte, limiting the range to characters from 0 to 255. This is broader than the 7-bit ASCII range.</param>
+  /// <param name="noSurrogates">Specifies whether to exclude surrogate characters from the Unicode range.</param>
+  /// <param name="noControlCharacters">Specifies whether to exclude control characters from the generated results.</param>
+  /// <param name="noWhiteSpace">Specifies whether to exclude whitespace characters from the generated results.</param>
+  /// <returns>A random character, potentially restricted based on the specified parameters.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Random random = new Random();
+  /// char randomChar = random.GetChar();
+  /// Console.WriteLine($"Random char: {randomChar}");
+  /// 
+  /// char asciiChar = random.GetChar(only7BitAscii: true);
+  /// Console.WriteLine($"Random ASCII char: {asciiChar}");
+  /// 
+  /// char extendedChar = random.GetChar(only8Bit: true);
+  /// Console.WriteLine($"Random Extended ASCII char: {extendedChar}");
+  /// 
+  /// char printableChar = random.GetChar(noControlCharacters: true);
+  /// Console.WriteLine($"Random Printable char: {printableChar}");
+  /// </code>
+  /// This example generates random characters under different constraints: any character, only ASCII characters, only extended ASCII characters, and only printable characters, demonstrating the versatility of the method.
+  /// </example>
+  public static char GetChar(this Random @this, bool only7BitAscii = false, bool only8Bit = false, bool noSurrogates = false, bool noControlCharacters = false, bool noWhiteSpace=false) {
+    Against.ThisIsNull(@this);
+    switch (@this.Next(_SPECIAL_VALUE_LIKELIHOOD)) {
+      case 0:
+        return char.MinValue;
+      case 1:
+        return char.MaxValue;
+      default:
+        var max = only7BitAscii ? 0x80 : only8Bit ? 0x100 : 0x10000;
+        for (;;) {
+          var result = (char)@this.Next(max);
+          if(noControlCharacters && char.IsControl(result))
+            continue;
+          if(noWhiteSpace && char.IsWhiteSpace(result))
+            continue;
+          if(noSurrogates && char.IsSurrogate(result))
+            continue;
+
+          return result;
+        }
+    }
+  }
 
 #if !SUPPORTS_RANDOM_NEXTINT64
 
@@ -368,34 +784,15 @@ internal
 #endif
 
   /// <summary>
-  /// Generates a random string of a specified maximum length.
+  /// Creates a random number between the given limits.
   /// </summary>
-  /// <param name="this">The <see cref="Random"/> instance used to generate the random string.</param>
-  /// <param name="maxLength">The maximum length of the generated string. The actual length can be less than the maximum specified.</param>
-  /// <returns>A random string of up to <paramref name="maxLength"/> characters with at least one character.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxLength"/> is less than 1.</exception>
-  /// <example>
-  /// <code>
-  /// Random random = new Random();
-  /// string randomString = random.GetRandomString(10);
-  /// Console.WriteLine($"Random string: {randomString}");
-  /// </code>
-  /// This example generates and prints a random string of up to 10 characters in length.
-  /// </example>
-  /// <remarks>
-  /// The method creates a string consisting of purely random characters.
-  /// The exact length of the string is determined randomly and can be up to <paramref name="maxLength"/>.
-  /// Note: The string may contain invalid surrogates, non-printable characters and control sequences.
-  /// </remarks>
-  public static string GetRandomString(this Random @this, int maxLength) {
-    Against.ThisIsNull(@this);
-    Against.NegativeValuesAndZero(maxLength);
-
-    var length = maxLength <= 1 ? 1 : @this.Next(1, maxLength);
-    var bytes = new byte[length * 2];
-    @this.NextBytes(bytes);
-    return Encoding.Unicode.GetString(bytes);
-  }
-
+  /// <param name="this">This Random.</param>
+  /// <param name="minimumInclusive">The min value.</param>
+  /// <param name="maximumExclusive">The max value.</param>
+  /// <returns>A value between the given boundaries</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static double NextDouble(this Random @this, double minimumInclusive, double maximumExclusive) => @this.NextDouble() * (maximumExclusive - minimumInclusive) + minimumInclusive;
+  
 }
