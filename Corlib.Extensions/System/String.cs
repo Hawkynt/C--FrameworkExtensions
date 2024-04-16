@@ -2439,36 +2439,6 @@ static partial class StringExtensions {
 
   #region Contains/ContainsNot
 
-#if !SUPPORTS_STRING_CONTAINS_COMPARISON_TYPE
-
-    /// <summary>
-    /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
-    /// </summary>
-    /// <param name="this">This <see cref="string"/></param>
-    /// <param name="value">The string to seek.</param>
-    /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
-    /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_CONTRACTS
-    [Pure]
-#endif
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool Contains(this string @this, string value, StringComparison comparisonType) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(value);
-
-    if (value.Length <= 0)
-      return true;
-
-    if (value.Length > @this.Length)
-      return false;
-
-    return @this.IndexOf(value, comparisonType) >= 0;
-  }
-
-#endif
-
   /// <summary>
   /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
   /// </summary>

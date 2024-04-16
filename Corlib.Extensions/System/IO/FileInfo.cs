@@ -761,35 +761,6 @@ internal
   /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, bool overwrite, TimeSpan timeout) => @this.MoveTo(destFile.FullName, overwrite, timeout);
 
-#if !SUPPORTS_MOVETO_OVERWRITE
-
-  /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location with an option to overwrite an existing file,
-  /// using a default timeout period for retrying the deletion of the source file if it is locked or cannot be deleted immediately.
-  /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
-  /// <param name="destFileName">The path to the destination file. This cannot be a directory.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
-  /// if a file with the same name already exists at the destination.</param>
-  /// <remarks>
-  /// This method delegates to <see cref="MoveTo(FileInfo, string, bool, TimeSpan)"/>, specifying a default timeout of 30 seconds
-  /// for retrying the deletion of the source file.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
-  /// string destinationPath = @"D:\destination\example.txt";
-  /// sourceFile.MoveTo(destinationPath, true);
-  /// Console.WriteLine("File moved successfully.");
-  /// </code>
-  /// This example demonstrates moving a file from one location to another, with the option to overwrite an existing file
-  /// at the destination and a default timeout of 30 seconds for retrying deletion of the source file if necessary.
-  /// </example>
-  public static void MoveTo(this FileInfo @this, string destFileName, bool overwrite) => MoveTo(@this, destFileName, overwrite, TimeSpan.FromSeconds(30));
-
-#endif
-
   /// <summary>
   /// Moves the specified <see cref="FileInfo"/> instance to a new location with an option to overwrite an existing file,
   /// and retries deletion of the source file within a specified timeout period if necessary.

@@ -44,10 +44,10 @@ namespace System.Net.NetworkInformation {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-#if !SUPPORTS_JOIN_ENUMERABLES
-      return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
-#else
+#if SUPPORTS_JOIN_ENUMERABLES
       return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}"));
+#else
+      return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
 #endif
     }
 

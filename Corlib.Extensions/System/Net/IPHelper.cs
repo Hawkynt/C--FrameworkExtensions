@@ -389,12 +389,12 @@ namespace System.Net {
     /// <param name="rowProcessor">The row processor.</param>
     /// <returns>The connections from the table.</returns>
     private static Connection[] _GetTable<TRowtype>(Func<IntPtr, dword, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(call != null);
-      Debug.Assert(rowProcessor != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(call != null);
       Contract.Requires(rowProcessor != null);
+#else
+      Debug.Assert(call != null);
+      Debug.Assert(rowProcessor != null);
 #endif
 
       // get size of table first
@@ -403,7 +403,7 @@ namespace System.Net {
       var status = tuple.Status;
 
       if (status == NativeMethods.Win32ApiError.Success)
-        return (new Connection[0]);
+        return new Connection[0];
 
       while (status == NativeMethods.Win32ApiError.InsufficientBuffer) {
 

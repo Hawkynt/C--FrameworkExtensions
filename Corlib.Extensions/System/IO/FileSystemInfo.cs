@@ -119,10 +119,10 @@ namespace System.IO {
 
       return string.Join(
         Path.DirectorySeparatorChar + string.Empty,
-#if !SUPPORTS_JOIN_ENUMERABLES
-        result.ToArray()
-#else
+#if SUPPORTS_JOIN_ENUMERABLES
         result
+#else
+        result.ToArray()
 #endif
       );
     }
@@ -215,10 +215,10 @@ namespace System.IO {
         return false;
 
       if ((int) fileSystemInfo.Attributes != -1)
-#if !SUPPORTS_HAS_FLAG
-        return (fileSystemInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+#if SUPPORTS_HAS_FLAG
+        return fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);        
 #else
-        return fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);
+        return (fileSystemInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
 #endif
 
       return fileSystemInfo is DirectoryInfo;

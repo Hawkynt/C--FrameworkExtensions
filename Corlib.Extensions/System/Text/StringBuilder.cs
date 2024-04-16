@@ -46,8 +46,4 @@ internal
       @this.AppendLine(line);
   }
 
-#if !SUPPORTS_STRING_BUILDER_CLEAR
-  public static void Clear(this StringBuilder @this) => @this.Length = 0;
-#endif
-
 }

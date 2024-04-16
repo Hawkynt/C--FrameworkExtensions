@@ -1724,36 +1724,5 @@ internal
     stream.Seek(absolutePosition, SeekOrigin.Begin);
   }
 
-#if !SUPPORTS_STREAM_COPY
-
-  /// <summary>
-  /// Copies all contents from this <see cref="Stream"/> to another <see cref="Stream"/>.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="target">Target <see cref="Stream"/>.</param>
-  public static void CopyTo(this Stream @this, Stream target) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(target);
-    Against.False(@this.CanRead);
-    Against.False(target.CanWrite);
-
-    var buffer = new byte[_BUFFER_SIZE];
-    int count;
-    while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
-      target.Write(buffer, 0, count);
-  }
-
-  /// <summary>
-  /// Flushes the <see cref="Stream"/>.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream"/>.</param>
-  /// <param name="_">Dummy, ignored</param>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static void Flush(this Stream @this, bool _) => @this.Flush();
-
-#endif
-
 }
 

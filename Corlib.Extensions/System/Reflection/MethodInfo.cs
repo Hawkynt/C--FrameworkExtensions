@@ -213,9 +213,5 @@ namespace System.Reflection {
       return sb.ToString();
     }
 
-#if !SUPPORTS_METHODINFO_CREATEDELEGATE
-    public static Delegate CreateDelegate(this MethodInfo @this,Type result) => Delegate.CreateDelegate(result,@this);
-#endif
-
   }
 }

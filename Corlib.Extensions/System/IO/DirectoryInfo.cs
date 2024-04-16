@@ -671,35 +671,6 @@ namespace System.IO {
       }
     }
 
-#if !SUPPORTS_ENUMERATING_IO
-    
-    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
-      foreach (var entry in @this.GetFileSystemInfos())
-        yield return entry;
-    }
-
-    public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this) {
-      foreach (var entry in @this.GetFiles())
-        yield return entry;
-    }
-
-    public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this) {
-      foreach (var entry in @this.GetDirectories())
-        yield return entry;
-    }
-
-    public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-      foreach (var entry in @this.GetFiles(searchPattern,searchOption))
-        yield return entry;
-    }
-
-    public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-      foreach (var entry in @this.GetDirectories(searchPattern, searchOption))
-        yield return entry;
-    }
-
-#endif
-
     /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
     /// <param name="this">This <see cref="DirectoryInfo"/></param>
     public static IEnumerable<DirectoryInfo> SafelyEnumerateDirectories(this DirectoryInfo @this) {

@@ -29,7 +29,8 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic;
 
 // ReSharper disable UnusedMember.Global
-public static class EnumerablePolyfills {
+// ReSharper disable once PartialTypeWithSinglePart
+public static partial class EnumerablePolyfills {
 
 #if !SUPPORTS_ENUMERABLE_APPEND
 
