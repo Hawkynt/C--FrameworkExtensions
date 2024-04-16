@@ -32,7 +32,7 @@ internal class RandomTests {
       if (!(wasTrue && wasFalse))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -66,7 +66,7 @@ internal class RandomTests {
       if (!(wasTrue && wasFalse && wasNull))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -100,7 +100,7 @@ internal class RandomTests {
       if (!(wasNegative && wasPositive && wasZero && wasNegativeMax && wasPositiveMax))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -128,7 +128,7 @@ internal class RandomTests {
       if (!(wasPositive && wasZero && wasPositiveMax))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -169,7 +169,7 @@ internal class RandomTests {
       if (!(wasControl && wasNumber && wasWhiteSpace && wasLetter && wasSurrogate && wasSingleByte && wasMultiByte))
         continue;
 
-      Assert.Pass($"Successfully generated various types of characters in {stopwatch.ElapsedMilliseconds}ms.");
+      Assert.Pass();
       return;
     } while (stopwatch.Elapsed < _timeout);
 
@@ -227,7 +227,7 @@ internal class RandomTests {
       if (!(wasPositive && wasZero && wasPositiveMax && wasNegative && wasNegativeMax && wasNaN && wasNegInf && wasPosInf))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -279,7 +279,7 @@ internal class RandomTests {
       if (!(wasPositive && wasZero && wasPositiveMax && wasNegative && wasNegativeMax && wasNaN && wasNegInf && wasPosInf))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -329,7 +329,7 @@ internal class RandomTests {
       if (!(wasPositive && wasZero && wasPositiveMax && wasNegative && wasNegativeMax && wasMinusOne && wasOne))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -387,7 +387,7 @@ internal class RandomTests {
       if (!(wasNull && wasEmpty && wasSomeLength))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -413,7 +413,7 @@ internal class RandomTests {
       if (!(wasNull && wasSomething))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -446,7 +446,7 @@ internal class RandomTests {
       if (!(wasEmpty && wasNotDefault))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -494,7 +494,7 @@ internal class RandomTests {
       if (!(wasNull && wasDefaultCtor && was2ndCtor))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -548,7 +548,7 @@ internal class RandomTests {
       if (!(wasNegative && wasPositive && wasZero && wasNegativeMax && wasPositiveMax))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -587,7 +587,7 @@ internal class RandomTests {
       if (!(wasPositive && wasZero && wasPositiveMax))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);
@@ -622,7 +622,7 @@ internal class RandomTests {
       if (!(wasPositive && wasSingle && wasCombined))
         continue;
 
-      Assert.Pass($"Encountered all interesing values after {stopwatch.ElapsedMilliseconds}ms");
+      Assert.Pass();
       return;
 
     } while (stopwatch.Elapsed < _timeout);

@@ -390,7 +390,7 @@ static partial class ArrayExtensions {
     }
 
 #if !SUPPORTS_POINTER_ARITHMETIC
-    private static void _Add(ref IntPtr src, int count) => src=new IntPtr(src.ToInt64() + count);
+    private static void _Add(ref IntPtr src, int count) => src = new IntPtr(src.ToInt64() + count);
 #endif
 
     private static void _FillWithQWords(IntPtr source, ref int offset, int count, ulong value) {
