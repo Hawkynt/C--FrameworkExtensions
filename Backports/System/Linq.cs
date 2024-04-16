@@ -21,19 +21,28 @@
 
 #endregion
 
+using System.Collections;
 using System.Collections.Generic;
 
 #if !SUPPORTS_LINQ
 
 namespace System.Linq;
 
+using Diagnostics.CodeAnalysis;
+
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
 internal
 #endif
-static partial class EnumerableExtensions {
+static partial class EnumerablePolyfills {
+
   public static TResult[] ToArray<TResult>(this IEnumerable<TResult> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
     switch (@this) {
       case ICollection<TResult> collection: {
         var result = new TResult[collection.Count];
@@ -54,7 +63,10 @@ static partial class EnumerableExtensions {
           result[length++] = item;
         }
 
-        if (length != result.Length) {
+        if (length == result.Length)
+          return result;
+
+        {
           var next = new TResult[length];
           Array.Copy(result, 0, next, 0, length);
           result = next;
@@ -64,6 +76,215 @@ static partial class EnumerableExtensions {
       }
     }
   }
+
+  public static IEnumerable<TResult> Cast<TResult>(this IEnumerable @this) {
+    foreach (var item in @this)
+      yield return (TResult)item;
+  }
+
+  public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
+
+    foreach (var item in @this)
+      if (predicate(item))
+        yield return item;
+  }
+
+  public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (selector == null)
+      throw new ArgumentNullException(nameof(selector));
+
+    foreach (var item in @this)
+      yield return selector(item);
+  }
+
+  public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (selector == null)
+      throw new ArgumentNullException(nameof(selector));
+
+    var index = 0;
+    foreach (var item in @this)
+      yield return selector(item, index++);
+  }
+
+  public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) {
+    var comparer = Comparer<TKey>.Default;
+
+    var sortedList = new List<(int, TKey, TSource)>(@this.Select((v, i) => (i, keySelector(v), v)));
+    sortedList.Sort(Compare);
+    return sortedList.Select(i => i.Item3);
+
+    int Compare((int, TKey, TSource) x, (int, TKey, TSource) y) {
+      var result = comparer.Compare(x.Item2, y.Item2);
+      return result != 0 ? result : x.Item1.CompareTo(y.Item1);
+    }
+  }
+
+
+  public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) {
+    // Assuming source is already sorted by a previous OrderBy or ThenBy
+    return @this.OrderBy(keySelector);
+  }
+
+  public static TSource First<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    foreach (var item in @this)
+      return item;
+
+    _ThrowNoElements();
+    return default;
+  }
+
+  public static TSource Single<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = default(TSource);
+    var found = false;
+    foreach (var item in @this) {
+      if (found)
+        throw new InvalidOperationException("Sequence contains more than one element");
+      result = item;
+      found = true;
+    }
+
+    if (!found)
+      _ThrowNoElements();
+
+    return result;
+  }
+
+  public static TSource Last<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = default(TSource);
+    var found = false;
+    foreach (var item in @this) {
+      result = item;
+      found = true;
+    }
+
+    if (!found)
+      _ThrowNoElements();
+
+    return result;
+  }
+
+  public static TSource Min<TSource>(this IEnumerable<TSource> source) {
+    if (source == null)
+      throw new ArgumentNullException(nameof(source));
+
+    var comparer = Comparer<TSource>.Default;
+    using var enumerator = source.GetEnumerator();
+    if (!enumerator.MoveNext()) {
+      _ThrowNoElements();
+      return default;
+    }
+
+    var min = enumerator.Current;
+    while (enumerator.MoveNext()) {
+      var current = enumerator.Current;
+      if (comparer.Compare(current, min) < 0)
+        min = current;
+    }
+
+    return min;
+  }
+
+  public static TSource Max<TSource>(this IEnumerable<TSource> source) {
+    if (source == null)
+      throw new ArgumentNullException(nameof(source));
+
+    var comparer = Comparer<TSource>.Default;
+
+    using var enumerator = source.GetEnumerator();
+    if (!enumerator.MoveNext()) {
+      _ThrowNoElements();
+      return default;
+    }
+
+    var max = enumerator.Current;
+    while (enumerator.MoveNext()) {
+      var current = enumerator.Current;
+      if (comparer.Compare(current, max) > 0)
+        max = current;
+    }
+
+    return max;
+  }
+
+  private readonly struct Wrapper<T> {
+    private readonly T value;
+    private readonly IEqualityComparer<T> _comparer;
+
+    public Wrapper(T value, IEqualityComparer<T> comparer) {
+      this.value = value;
+      this._comparer = comparer;
+    }
+
+    public override int GetHashCode() => this.value == null ? 0 : this._comparer.GetHashCode(this.value);
+
+    #region Overrides of ValueType
+
+    public override bool Equals(object obj) => obj is Wrapper<T> w && this._comparer.Equals(this.value, w.value);
+
+    #endregion
+  }
+
+  private sealed class Grouping<TKey, TSource> : IGrouping<TKey, TSource> {
+    private readonly List<TSource> _items = new();
+    public Grouping(TKey key) => this.Key = key;
+
+    public TKey Key { get; }
+
+    internal void Add(TSource item) => this._items.Add(item);
+
+    #region Implementation of IEnumerable
+
+    public IEnumerator<TSource> GetEnumerator() => this._items.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+    #endregion
+  }
+
+  public static IEnumerable<IGrouping<TKey, TSource>> GroupBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
+    if (source == null)
+      throw new ArgumentNullException(nameof(source));
+    if (keySelector == null)
+      throw new ArgumentNullException(nameof(keySelector));
+
+    var comparer = EqualityComparer<TKey>.Default;
+    var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>();
+    foreach (var element in source) {
+      var key = keySelector(element);
+      var wrapper = new Wrapper<TKey>(key, comparer);
+      if (!groups.ContainsKey(wrapper)) {
+        groups[wrapper] = new(key);
+      }
+      groups[wrapper].Add(element);
+    }
+
+    return groups.Values.Cast<IGrouping<TKey, TSource>>();
+  }
+
+  [DoesNotReturn]
+  private static void _ThrowNoElements() => throw new InvalidOperationException("Sequence contains no elements");
+
+}
+
+public interface IGrouping<out TKey, TElement> : IEnumerable<TElement> {
+  TKey Key { get; }
 }
 
 #endif
