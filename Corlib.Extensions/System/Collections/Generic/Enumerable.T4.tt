@@ -55,10 +55,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static TimeSpan Sum(this IEnumerable<TimeSpan> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       return TimeSpan.FromMilliseconds(This.Select(i => i.TotalMilliseconds).Sum());
     }
@@ -71,12 +71,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static TimeSpan Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, TimeSpan> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return This.Select(selector).Sum();
     }
@@ -89,10 +89,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The sum of all given elements.</returns>
     public static <#=i#> Sum(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
+#if SUPPORTS_CONTRACTS
+      Contract.Requires(This != null);      
 #else
-      Contract.Requires(This != null);
+      Debug.Assert(This != null);      
 #endif
       // ReSharper disable once RedundantCast
       return (This.Aggregate((<#=i#>)0, (current, i) => (<#=i#>)(current + i)));
@@ -106,12 +106,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The sum of all given elements.</returns>
     public static <#=i#> Sum<TIn>(this IEnumerable<TIn> This, Func<TIn, <#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return (This.Select(selector).Sum());
     }
@@ -124,10 +124,10 @@ namespace System.Collections.Generic {
 <#foreach(var i in new[]{"sbyte","byte","short","word","dword","qword"}){#>
     #region <#=i#>
     public static <#=i#> <#=j#>(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       <#=i#> result;
       using(var enumerator=This.GetEnumerator()) {
@@ -144,12 +144,12 @@ namespace System.Collections.Generic {
     }
 
     public static <#=i#> <#=j#><TItem>(this IEnumerable<TItem> This, Func<TItem, <#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return (This.Select(selector).<#=j#>());
     }
@@ -160,32 +160,32 @@ namespace System.Collections.Generic {
 <#foreach(var i in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
     #region <#=i#>
     public static <#=i#> <#=j#>OrDefault(this IEnumerable<<#=i#>> This, <#=i#> defaultValue = default(<#=i#>)) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       var items = This as ICollection<<#=i#>> ?? This.ToList();
       return (items.Count == 0 ? defaultValue : items.<#=j#>());
     }
 
     public static <#=i#> <#=j#>OrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem, <#=i#>> selector, <#=i#> defaultValue = default(<#=i#>)) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return (This.Select(selector).<#=j#>OrDefault());
     }
     #endregion
     #region <#=i#>?
     public static <#=i#>? <#=j#>OrDefault(this IEnumerable<<#=i#>?> This, <#=i#>? defaultValue = default(<#=i#>?)) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       var items = This.Where(x=>x.HasValue).ToList();
       // ReSharper disable once PossibleInvalidOperationException
@@ -213,10 +213,10 @@ namespace System.Collections.Generic {
     }
 
     public static <#=i#> AverageOrDefault<TItem>(this IEnumerable<TItem> This, Func<TItem,<#=i#>> selector, <#=i#> defaultValue = default(<#=i#>)) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).AverageOrDefault(defaultValue));
     }
@@ -244,10 +244,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This enumeration.</param>
     /// <returns>The average of all given elements.</returns>
     public static TimeSpan Average(this IEnumerable<TimeSpan> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       return new((long)This.Average(i => i.Ticks));
     }
@@ -260,12 +260,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns>The average of all given elements.</returns>
     public static TimeSpan Average<TIn>(this IEnumerable<TIn> This, Func<TIn, TimeSpan> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return new((long)This.Average(i => selector(i).Ticks));
     }
@@ -280,10 +280,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Variance(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       var collection=This as ICollection<<#=i#>> ?? This.ToList();
       var count = collection.Count;
@@ -300,12 +300,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> Variance<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).Variance());
     }
@@ -317,10 +317,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Variance(this IEnumerable<<#=i#>?> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       // ReSharper disable once PossibleInvalidOperationException
       return(This.Where(x=>x.HasValue).Variance(x=>x.Value));
@@ -349,12 +349,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> StdDev<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).StdDev());
     }
@@ -381,10 +381,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Center(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       var sortedList = This.OrderBy(v => v).ToList();
       var index = sortedList.Count >> 1;
@@ -398,12 +398,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> Center<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).Center());
     }
@@ -415,10 +415,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Center(this IEnumerable<<#=i#>?> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       // ReSharper disable once PossibleInvalidOperationException
       return (This.Where(x=>x.HasValue).Center(x=>x.Value));
@@ -435,10 +435,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Median(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       return(This.Min()+This.Range()/2);
     }
@@ -450,12 +450,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> Median<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).Median());
     }
@@ -467,10 +467,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Median(this IEnumerable<<#=i#>?> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       // ReSharper disable once PossibleInvalidOperationException
       return (This.Where(x=>x.HasValue).Median(x=>x.Value));
@@ -486,10 +486,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static T Mode<T>(this IEnumerable<T> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       return (
         from v in This
@@ -510,10 +510,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Range(this IEnumerable<<#=i#>> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       <#=i#> min;
       <#=i#> max;
@@ -545,12 +545,12 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> Range<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).Range());
     }
@@ -562,10 +562,10 @@ namespace System.Collections.Generic {
     /// <param name="This">This Enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Range(this IEnumerable<<#=i#>?> This) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
+#else
+      Debug.Assert(This != null);
 #endif
       // ReSharper disable once PossibleInvalidOperationException
       return(This.Where(x=>x.HasValue).Range(x=>x.Value));
@@ -583,12 +583,12 @@ namespace System.Collections.Generic {
     /// <param name="other">The other enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Covariance(this IEnumerable<<#=i#>> This, IEnumerable<<#=i#>> other) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(other != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
 #endif
       var a = This as IList<<#=i#>> ?? This.ToList();
       var b = other as IList<<#=i#>> ?? other.ToList();
@@ -610,14 +610,14 @@ namespace System.Collections.Generic {
     /// <param name="selector">The selector.</param>
     /// <returns></returns>
     public static <#=i#> Covariance<TItem>(this IEnumerable<TItem> This, IEnumerable<TItem> other,Func<TItem,<#=i#>> selector) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-      Debug.Assert(selector != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(other != null);
       Contract.Requires(selector != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+      Debug.Assert(selector != null);
 #endif
       return(This.Select(selector).Covariance(other.Select(selector)));
     }
@@ -631,16 +631,16 @@ namespace System.Collections.Generic {
     /// <param name="selector2">The selector for the other enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Covariance<TItem>(this IEnumerable<TItem> This,Func<TItem,<#=i#>> selector1, IEnumerable<TItem> other,Func<TItem,<#=i#>> selector2) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-      Debug.Assert(selector1 != null);
-      Debug.Assert(selector2 != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(other != null);
       Contract.Requires(selector1 != null);
       Contract.Requires(selector2 != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
+      Debug.Assert(selector1 != null);
+      Debug.Assert(selector2 != null);
 #endif
       return(This.Select(selector1).Covariance(other.Select(selector2)));
     }
@@ -653,12 +653,12 @@ namespace System.Collections.Generic {
     /// <param name="other">The other enumeration.</param>
     /// <returns></returns>
     public static <#=i#> Covariance(this IEnumerable<<#=i#>?> This, IEnumerable<<#=i#>?> other) {
-#if !SUPPORTS_CONTRACTS
-      Debug.Assert(This != null);
-      Debug.Assert(other != null);
-#else
+#if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(other != null);
+#else
+      Debug.Assert(This != null);
+      Debug.Assert(other != null);
 #endif
       // ReSharper disable PossibleInvalidOperationException
       return(This.Where(x=>x.HasValue).Covariance(x=>x.Value,other.Where(x=>x.HasValue),x=>x.Value));
