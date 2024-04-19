@@ -268,7 +268,7 @@ namespace System.IO {
       }
 
       static IEnumerable<FileSystemInfo> InvokeShortestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-        Queue<DirectoryInfo> results = new();
+        LinkedList<DirectoryInfo> results = new();
         results.Enqueue(@this);
         while (results.Any()) {
           var result = results.Dequeue();
@@ -284,7 +284,7 @@ namespace System.IO {
       }
 
       static IEnumerable<FileSystemInfo> InvokeDeepestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-        Stack<DirectoryInfo> results = new();
+        LinkedList<DirectoryInfo> results = new();
         results.Push(@this);
         while (results.Any()) {
           var result = results.Pop();
