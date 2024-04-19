@@ -78,8 +78,15 @@ static partial class EnumerablePolyfills {
   }
 
   public static IEnumerable<TResult> Cast<TResult>(this IEnumerable @this) {
-    foreach (var item in @this)
-      yield return (TResult)item;
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    return Invoke(@this);
+    
+    static IEnumerable<TResult> Invoke(IEnumerable @this) {
+      foreach (var item in @this)
+        yield return (TResult)item;
+    }
   }
 
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
@@ -88,9 +95,13 @@ static partial class EnumerablePolyfills {
     if (predicate == null)
       throw new ArgumentNullException(nameof(predicate));
 
-    foreach (var item in @this)
-      if (predicate(item))
-        yield return item;
+    return Invoke(@this, predicate);
+    
+    static IEnumerable<TSource> Invoke(IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
+      foreach (var item in @this)
+        if (predicate(item))
+          yield return item;
+    }
   }
 
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
@@ -99,8 +110,12 @@ static partial class EnumerablePolyfills {
     if (selector == null)
       throw new ArgumentNullException(nameof(selector));
 
-    foreach (var item in @this)
-      yield return selector(item);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
+      foreach (var item in @this)
+        yield return selector(item);
+    }
   }
 
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
@@ -109,29 +124,40 @@ static partial class EnumerablePolyfills {
     if (selector == null)
       throw new ArgumentNullException(nameof(selector));
 
-    var index = 0;
-    foreach (var item in @this)
-      yield return selector(item, index++);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
+      var index = 0;
+      foreach (var item in @this)
+        yield return selector(item, index++);
+    }
   }
 
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (keySelector == null)
+      throw new ArgumentNullException(nameof(keySelector));
+    
     var comparer = Comparer<TKey>.Default;
-
-    var sortedList = new List<(int, TKey, TSource)>(@this.Select((v, i) => (i, keySelector(v), v)));
-    sortedList.Sort(Compare);
-    return sortedList.Select(i => i.Item3);
+    return Invoke(@this, keySelector, Compare);
 
     int Compare((int, TKey, TSource) x, (int, TKey, TSource) y) {
       var result = comparer.Compare(x.Item2, y.Item2);
       return result != 0 ? result : x.Item1.CompareTo(y.Item1);
     }
+
+    static IEnumerable<TSource> Invoke(IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, Comparison<(int, TKey, TSource)> compare) {
+      var sortedList = new List<(int, TKey, TSource)>(@this.Select((v, i) => (i, keySelector(v), v)));
+      sortedList.Sort(compare);
+      return sortedList.Select(i => i.Item3);
+    }
   }
-
-
-  public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) {
+  
+  public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
-    return @this.OrderBy(keySelector);
-  }
+    => @this.OrderBy(keySelector)
+    ;
 
   public static TSource First<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
@@ -265,17 +291,21 @@ static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(keySelector));
 
     var comparer = EqualityComparer<TKey>.Default;
-    var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>();
-    foreach (var element in source) {
-      var key = keySelector(element);
-      var wrapper = new Wrapper<TKey>(key, comparer);
-      if (!groups.ContainsKey(wrapper)) {
-        groups[wrapper] = new(key);
-      }
-      groups[wrapper].Add(element);
-    }
+    return Invoke(source, keySelector, comparer);
 
-    return groups.Values.Cast<IGrouping<TKey, TSource>>();
+    static IEnumerable<IGrouping<TKey, TSource>> Invoke(IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, EqualityComparer<TKey> comparer) {
+      var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>();
+      foreach (var element in @this) {
+        var key = keySelector(element);
+        var wrapper = new Wrapper<TKey>(key, comparer);
+        if (!groups.ContainsKey(wrapper)) {
+          groups[wrapper] = new(key);
+        }
+        groups[wrapper].Add(element);
+      }
+
+      return groups.Values.Cast<IGrouping<TKey, TSource>>();
+    }
   }
 
   [DoesNotReturn]

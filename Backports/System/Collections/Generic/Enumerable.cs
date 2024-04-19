@@ -45,11 +45,15 @@ public static partial class EnumerablePolyfills {
   public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
-    
-    yield return item;
 
-    foreach (var i in @this)
-      yield return i;
+    return Invoke(@this, item);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem item) {
+      yield return item;
+
+      foreach (var i in @this)
+        yield return i;
+    }
   }
 
   /// <summary>
@@ -63,11 +67,15 @@ public static partial class EnumerablePolyfills {
   public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
-    
-    foreach (var i in @this)
-      yield return i;
 
-    yield return item;
+    return Invoke(@this, item);
+
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem item) {
+      foreach (var i in @this)
+        yield return i;
+
+      yield return item;
+    }
   }
 
 #endif
