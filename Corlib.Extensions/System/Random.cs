@@ -162,7 +162,15 @@ internal
         pool.RemoveRange(PasswordSettings.HARD_TO_DISTINGUISH);
     }
 
-    Func<int, int> getNext = useStrongRandomization ? new RNGCryptoServiceProvider().Next : @this.Next;
+    Func<int, int> getNext = useStrongRandomization
+#if DEPRECATED_RNG_CRYPTO_SERVICE_PROVIDER
+      ? RandomNumberGenerator.GetInt32
+#else
+      ? new RNGCryptoServiceProvider().Next 
+#endif
+      : @this.Next
+      ;
+    
     var length = localSettings.MinimumLength >= localSettings.MaximumLength 
       ? localSettings.MinimumLength 
       : localSettings.MinimumLength + getNext(localSettings.MaximumLength - localSettings.MinimumLength + 1)
@@ -306,16 +314,16 @@ internal
   /// Generates a random string of a specified maximum length.
   /// </summary>
   /// <param name="this">The <see cref="Random"/> instance used to generate the random string.</param>
-  /// <param name="maxLength">The maximum length of the generated string. The actual length can be less than the maximum specified.</param>
+  /// <param name="minLength">The minimum length of the generated string. The actual length can be more than or equal to the minimum specified.</param>
+  /// <param name="maxLength">The maximum length of the generated string. The actual length can be less than or equal to the maximum specified.</param>
   /// <param name="allowNull">Whether the return of <see langword="null"/> is allowed</param>
-  /// <param name="allowEmpty">Whether the return of <see cref="string.Empty"/> is allowed</param>
   /// <returns>A random string of up to <paramref name="maxLength"/> characters with at least one character.</returns>
   /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
   /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="maxLength"/> is less than 1.</exception>
   /// <example>
   /// <code>
   /// Random random = new Random();
-  /// string randomString = random.GetRandomString(10);
+  /// string randomString = random.GetRandomString(0, 10);
   /// Console.WriteLine($"Random string: {randomString}");
   /// </code>
   /// This example generates and prints a random string of up to 10 characters in length.
@@ -325,17 +333,18 @@ internal
   /// The exact length of the string is determined randomly and can be up to <paramref name="maxLength"/>.
   /// Note: The string may contain invalid surrogates, non-printable characters and control sequences.
   /// </remarks>
-  public static string GetString(this Random @this, int maxLength, bool allowNull = false, bool allowEmpty = false) {
+  public static string GetString(this Random @this, int minLength, int maxLength, bool allowNull = false) {
     Against.ThisIsNull(@this);
-    Against.NegativeValuesAndZero(maxLength);
-
+    Against.NegativeValues(minLength);
+    Against.ValuesBelow(maxLength, minLength);
+    
     switch (@this.Next(_SPECIAL_VALUE_LIKELIHOOD)){
       case 0 when allowNull:
         return null;
-      case 1 when allowEmpty:
+      case 1 when minLength < 1:
         return string.Empty;
       default:
-        var length = maxLength <= 1 ? 1 : @this.Next(1, maxLength);
+        var length = @this.Next(minLength, maxLength + 1);
         var bytes = new byte[length * 2];
         @this.NextBytes(bytes);
         return Encoding.Unicode.GetString(bytes);

@@ -623,7 +623,7 @@ static partial class TypeExtensions {
       { TypeFloat, r => r.GetFloat() },
       { TypeDouble, r => r.GetDouble() },
       { TypeDecimal, r => r.GetDecimal() },
-      { TypeString, r => r.GetString(65536, true, true) },
+      { TypeString, r => r.GetString(0, 65536, true) },
       { TypeObject, r => r.GetBoolean() ? null : new object() },
       { TypeTimeSpan, r => new TimeSpan(r.NextInt64()) },
       { TypeDateTime, r => new DateTime(r.NextInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks)) },
