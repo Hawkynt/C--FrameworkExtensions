@@ -181,7 +181,7 @@ static partial class DictionaryExtensions {
   public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
     Guard.Against.ThisIsNull(@this);
 
-    return @this.TryGetValue(key, out var result) ? result : default(TValue);
+    return @this.TryGetValue(key, out var result) ? result : default;
   }
 
 #if SUPPORTS_READ_ONLY_COLLECTIONS
@@ -199,7 +199,7 @@ static partial class DictionaryExtensions {
   public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key) {
     Guard.Against.ThisIsNull(@this);
 
-    return @this.TryGetValue(key, out var result) ? result : default(TValue);
+    return @this.TryGetValue(key, out var result) ? result : default;
   }
 
   /// <summary>
@@ -215,7 +215,7 @@ static partial class DictionaryExtensions {
   public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key) {
     Guard.Against.ThisIsNull(@this);
 
-    return @this.TryGetValue(key, out var result) ? result : default(TValue);
+    return @this.TryGetValue(key, out var result) ? result : default;
   }
 
 #endif
@@ -770,26 +770,28 @@ static partial class DictionaryExtensions {
     Guard.Against.ThisIsNull(@this);
     Guard.Against.ArgumentIsNull(other);
 
-    valueComparer ??= EqualityComparer<TValue>.Default;
+    return Invoke(@this, other, valueComparer ?? EqualityComparer<TValue>.Default, keyComparer);
 
-    var keys = @this.Keys.Concat(other.Keys).Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
-    foreach (var key in keys) {
-      if (!other.TryGetValue(key, out var otherValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Added, key, @this[key], default(TValue));
-        continue;
+    static IEnumerable<IChangeSet<TKey, TValue>> Invoke(IDictionary<TKey, TValue> @this, IDictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer, IEqualityComparer<TKey> keyComparer) {
+      var keys = @this.Keys.Concat(other.Keys).Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
+      foreach (var key in keys) {
+        if (!other.TryGetValue(key, out var otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Added, key, @this[key], default);
+          continue;
+        }
+
+        if (!@this.TryGetValue(key, out var thisValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Removed, key, default, other[key]);
+          continue;
+        }
+
+        if (ReferenceEquals(thisValue, otherValue) || valueComparer.Equals(thisValue, otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Equal, key, thisValue, otherValue);
+          continue;
+        }
+
+        yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
       }
-
-      if (!@this.TryGetValue(key, out var thisValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Removed, key, default(TValue), other[key]);
-        continue;
-      }
-
-      if (ReferenceEquals(thisValue, otherValue) || valueComparer.Equals(thisValue, otherValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Equal, key, thisValue, otherValue);
-        continue;
-      }
-
-      yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
     }
   }
 
@@ -812,27 +814,30 @@ static partial class DictionaryExtensions {
   public static IEnumerable<IChangeSet<TKey, TValue>> CompareTo<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, IReadOnlyDictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer = null, IEqualityComparer<TKey> keyComparer = null) {
     Guard.Against.ThisIsNull(@this);
     Guard.Against.ArgumentIsNull(other);
+    
+    return Invoke(@this, other, valueComparer ?? EqualityComparer<TValue>.Default, keyComparer);
 
-    valueComparer ??= EqualityComparer<TValue>.Default;
+    static IEnumerable<IChangeSet<TKey, TValue>> Invoke(IReadOnlyDictionary<TKey, TValue> @this, IReadOnlyDictionary<TKey, TValue> other, IEqualityComparer<TValue> valueComparer, IEqualityComparer<TKey> keyComparer) {
+      var keys = @this.Keys.Concat(other.Keys)
+        .Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
+      foreach (var key in keys) {
+        if (!other.TryGetValue(key, out var otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Added, key, @this[key], default);
+          continue;
+        }
 
-    var keys = @this.Keys.Concat(other.Keys).Distinct(keyComparer ?? (@this as Dictionary<TKey, TValue>)?.Comparer ?? EqualityComparer<TKey>.Default);
-    foreach (var key in keys) {
-      if (!other.TryGetValue(key, out var otherValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Added, key, @this[key], default(TValue));
-        continue;
+        if (!@this.TryGetValue(key, out var thisValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Removed, key, default, other[key]);
+          continue;
+        }
+
+        if (ReferenceEquals(thisValue, otherValue) || valueComparer.Equals(thisValue, otherValue)) {
+          yield return new ChangeSet<TKey, TValue>(ChangeType.Equal, key, thisValue, otherValue);
+          continue;
+        }
+
+        yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
       }
-
-      if (!@this.TryGetValue(key, out var thisValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Removed, key, default(TValue), other[key]);
-        continue;
-      }
-
-      if (ReferenceEquals(thisValue, otherValue) || valueComparer.Equals(thisValue, otherValue)) {
-        yield return new ChangeSet<TKey, TValue>(ChangeType.Equal, key, thisValue, otherValue);
-        continue;
-      }
-
-      yield return new ChangeSet<TKey, TValue>(ChangeType.Changed, key, thisValue, otherValue);
     }
   }
 #endif

@@ -114,12 +114,16 @@ static partial class EnumerableExtensions {
   public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, params TItem[] items) {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(items);
-    
-    foreach (var i in items)
-      yield return i;
 
-    foreach (var i in @this)
-      yield return i;
+    return Invoke(@this, items);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem[] items) {
+      foreach (var i in items)
+        yield return i;
+
+      foreach (var i in @this)
+        yield return i;
+    }
   }
 
   /// <summary>
@@ -134,11 +138,15 @@ static partial class EnumerableExtensions {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(items);
 
-    foreach (var i in @this)
-      yield return i;
+    return Invoke(@this, items);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem[] items) {
+      foreach (var i in @this)
+        yield return i;
 
-    foreach (var i in items)
-      yield return i;
+      foreach (var i in items)
+        yield return i;
+    }
   }
 
   /// <summary>
@@ -153,11 +161,15 @@ static partial class EnumerableExtensions {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(items);
 
-    foreach (var i in items)
-      yield return i;
+    return Invoke(@this, items);
     
-    foreach (var i in @this)
-      yield return i;
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, IEnumerable<TItem> items) {
+      foreach (var i in items)
+        yield return i;
+
+      foreach (var i in @this)
+        yield return i;
+    }
   }
 
   /// <summary>
@@ -172,11 +184,15 @@ static partial class EnumerableExtensions {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(items);
 
-    foreach (var i in @this)
-      yield return i;
+    return Invoke(@this, items);
 
-    foreach (var i in items)
-      yield return i;
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, IEnumerable<TItem> items) {
+      foreach (var i in @this)
+        yield return i;
+
+      foreach (var i in items)
+        yield return i;
+    }
   }
 
   /// <summary>
@@ -219,58 +235,65 @@ static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(other);
 
-    comparer ??= EqualityComparer<TItem>.Default;
+    return Invoke(@this, other, comparer ?? EqualityComparer<TItem>.Default);
 
-    var target = other.ToArray();
-    var targetIndex = 0;
-    var currentSourceBuffer = new Queue<Tuple<int, TItem>>();
+    static IEnumerable<IChangeSet<TItem>> Invoke(IEnumerable<TItem> @this, IEnumerable<TItem> other, IEqualityComparer<TItem> comparer) {
 
-    var i = -1;
-    foreach (var item in @this) {
-      ++i;
-      var foundAt = _IndexOf(target, item, targetIndex, comparer);
-      if (foundAt < 0) {
-        // does not exist in target
-        currentSourceBuffer.Enqueue(Tuple.Create(i, item));
-        continue;
-      }
+      var target = other.ToArray();
+      var targetIndex = 0;
+      var currentSourceBuffer = new Queue<Tuple<int, TItem>>();
 
-      // found
-      while (targetIndex <= foundAt) {
-        if (targetIndex == foundAt) {
-          // last iteration
-          while (currentSourceBuffer.Count > 0) {
-            var index = currentSourceBuffer.Dequeue();
-            yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
+      var i = -1;
+      foreach (var item in @this) {
+        ++i;
+        var foundAt = _IndexOf(target, item, targetIndex, comparer);
+        if (foundAt < 0) {
+          // does not exist in target
+          currentSourceBuffer.Enqueue(Tuple.Create(i, item));
+          continue;
+        }
+
+        // found
+        while (targetIndex <= foundAt) {
+          if (targetIndex == foundAt) {
+            // last iteration
+            while (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
+            }
+
+            yield return new ChangeSet<TItem>(ChangeType.Equal, i, item, targetIndex, target[targetIndex]);
+          } else {
+            if (currentSourceBuffer.Count > 0) {
+              var index = currentSourceBuffer.Dequeue();
+              yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex,
+                target[targetIndex]);
+            } else
+              yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex,
+                target[targetIndex]);
           }
 
-          yield return new ChangeSet<TItem>(ChangeType.Equal, i, item, targetIndex, target[targetIndex]);
-        } else {
-          if (currentSourceBuffer.Count > 0) {
-            var index = currentSourceBuffer.Dequeue();
-            yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex, target[targetIndex]);
-          } else
-            yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, target[targetIndex]);
+          ++targetIndex;
         }
+      }
+
+      var targetLen = target.Length;
+      while (currentSourceBuffer.Count > 0) {
+        if (targetIndex < targetLen) {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex,
+            target[targetIndex]);
+          ++targetIndex;
+        } else {
+          var index = currentSourceBuffer.Dequeue();
+          yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
+        }
+      }
+
+      while (targetIndex < targetLen) {
+        yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, target[targetIndex]);
         ++targetIndex;
       }
-    }
-
-    var targetLen = target.Length;
-    while (currentSourceBuffer.Count > 0) {
-      if (targetIndex < targetLen) {
-        var index = currentSourceBuffer.Dequeue();
-        yield return new ChangeSet<TItem>(ChangeType.Changed, index.Item1, index.Item2, targetIndex, target[targetIndex]);
-        ++targetIndex;
-      } else {
-        var index = currentSourceBuffer.Dequeue();
-        yield return new ChangeSet<TItem>(ChangeType.Added, index.Item1, index.Item2, -1, default(TItem));
-      }
-    }
-
-    while (targetIndex < targetLen) {
-      yield return new ChangeSet<TItem>(ChangeType.Removed, -1, default(TItem), targetIndex, target[targetIndex]);
-      ++targetIndex;
     }
   }
 
@@ -400,7 +423,7 @@ static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
 
 #if SUPPORTS_RANDOM_SHARED
-      random ??= Random.Shared;
+    random ??= Random.Shared;
 #else
     random ??= new();
 #endif
@@ -680,7 +703,6 @@ static partial class EnumerableExtensions {
 
     foreach (var item in @this)
       action(item);
-
   }
 
   /// <summary>
@@ -837,26 +859,30 @@ static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(progressCallback);
 
-    if (length == 0)
-      progressCallback(0, 0);
-    else {
-      progressCallback(0, length);
+    return Invoke(@this, length, progressCallback, delayed);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, int length, Action<long, long> progressCallback, bool delayed) {
+      if (length == 0)
+        progressCallback(0, 0);
+      else {
+        progressCallback(0, length);
 
-      void ProgressAction(int i) => progressCallback(i, length);
-      void NullAction(int _) { }
+        void ProgressAction(int i) => progressCallback(i, length);
+        void NullAction(int _) { }
 
-      var preAction = delayed ? (Action<int>)ProgressAction : NullAction;
-      var postAction = delayed ? NullAction : (Action<int>)ProgressAction;
+        var preAction = delayed ? (Action<int>)ProgressAction : NullAction;
+        var postAction = delayed ? NullAction : (Action<int>)ProgressAction;
 
-      var currentIndex = 0;
-      foreach (var item in @this) {
-        preAction(currentIndex);
-        yield return item;
-        postAction(currentIndex);
-        ++currentIndex;
+        var currentIndex = 0;
+        foreach (var item in @this) {
+          preAction(currentIndex);
+          yield return item;
+          postAction(currentIndex);
+          ++currentIndex;
+        }
+
+        progressCallback(length, length);
       }
-
-      progressCallback(length, length);
     }
   }
 
@@ -896,17 +922,11 @@ static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
-    var list = (
-      from i in @this
-      select new {
-        comparer = selector(i),
-        data = i
-      }
-    ).ToList();
-
-    var groups = list.GroupBy(i => i.comparer);
-    var firstOfGroup = groups.Select(g => g.First().data);
-    return firstOfGroup;
+    return @this
+      .Select(i => new { comparer = selector(i), data = i })
+      .GroupBy(i => i.comparer)
+      .Select(g => g.First().data)
+      ;
   }
 
   /// <summary>
@@ -950,10 +970,14 @@ static partial class EnumerableExtensions {
   [DebuggerStepThrough]
   public static IEnumerable<TItem> SelectMany<TItem>(this IEnumerable<IEnumerable<TItem>> @this) {
     Against.ThisIsNull(@this);
-      
-    foreach(var enumeration in @this)
-    foreach (var item in enumeration)
-      yield return item;
+
+    return Invoke(@this);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<IEnumerable<TItem>> @this) {
+      foreach (var enumeration in @this)
+      foreach (var item in enumeration)
+        yield return item;
+    }
   }
 
   /// <summary>
@@ -1158,16 +1182,16 @@ static partial class EnumerableExtensions {
       return false;
     }
 
-    IEnumerable<TItem> Enumerate() {
+    result = selector(Enumerate(enumerator));
+    return true;
+
+    static IEnumerable<TItem> Enumerate(IEnumerator<TItem> enumerator) {
       yield return enumerator.Current;
       while(enumerator.MoveNext())
         yield return enumerator.Current;
 
       enumerator.Dispose();
     }
-
-    result = selector(Enumerate());
-    return true;
   }
 
   /// <summary>
@@ -1367,27 +1391,6 @@ static partial class EnumerableExtensions {
     return defaultValueFactory(@this);
   }
 
-#if !NETSTANDARD && !NETCOREAPP && !NET35_OR_GREATER
-    /// <summary>
-    /// Gets the first item matching the condition or the given default value.
-    /// </summary>
-    /// <typeparam name="TIn">The type of the items.</typeparam>
-    /// <param name="this">This enumeration.</param>
-    /// <param name="selector">The selector.</param>
-    /// <returns>The matched item or the given default value.</returns>
-    [DebuggerStepThrough]
-    public static TIn FirstOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector) {
-      Guard.Against.ThisIsNull(@this);
-      Guard.Against.ArgumentIsNull(selector);
-
-      foreach (var item in @this)
-        if (selector(item))
-          return item;
-
-      return default(TIn);
-    }
-#endif
-
   /// <summary>
   /// Gets the first item matching the condition or the given default value.
   /// </summary>
@@ -1452,23 +1455,6 @@ static partial class EnumerableExtensions {
     return defaultValueFactory(@this);
   }
 
-#if !NETSTANDARD && !NETCOREAPP && !NET35_OR_GREATER
-    /// <summary>
-    /// Gets the last item matching the condition or the given default value.
-    /// </summary>
-    /// <typeparam name="TIn">The type of the items.</typeparam>
-    /// <param name="this">This enumeration.</param>
-    /// <param name="selector">The selector.</param>
-    /// <returns>The matched item or the given default value.</returns>
-    [DebuggerStepThrough]
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static TIn LastOrDefault<TIn>(this IEnumerable<TIn> @this, Func<TIn, bool> selector)
-      => FirstOrDefault(@this.Reverse(), selector)
-    ;
-#endif
-
   /// <summary>
   /// Gets the last item matching the condition or the given default value.
   /// </summary>
@@ -1516,8 +1502,7 @@ static partial class EnumerableExtensions {
   public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory)
   ;
-
-
+  
   /// <summary>
   /// Retrieves the last element from the specified <see cref="IEnumerable{TItem}"/> collection of reference types, or returns <see langword="null"/> if the collection is empty.
   /// </summary>
@@ -1687,12 +1672,16 @@ static partial class EnumerableExtensions {
     random ??= new();
 #endif
 
-    var list = @this.Select(o => o).ToList();
-    int count;
-    while ((count = list.Count) > 0) {
-      var index = count == 1 ? 0 : random.Next(0, count);
-      yield return list[index];
-      list.RemoveAt(index);
+    return Invoke(@this, random);
+    
+    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, Random random) {
+      var list = @this.Select(o => o).ToList();
+      int count;
+      while ((count = list.Count) > 0) {
+        var index = count == 1 ? 0 : random.Next(0, count);
+        yield return list[index];
+        list.RemoveAt(index);
+      }
     }
   }
 

@@ -667,9 +667,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.NegativeValuesAndZero(size);
 
-    var length = @this.Length;
-    for (var index = 0; index < length; index += size)
-      yield return new(@this, index, Math.Min(length - index, size));
+    return Invoke(@this, size);
+    
+    static IEnumerable<ReadOnlyArraySlice<TItem>> Invoke(TItem[] @this, int size) {
+      var length = @this.Length;
+      for (var index = 0; index < length; index += size)
+        yield return new(@this, index, Math.Min(length - index, size));
+    }
   }
 
   /// <summary>
@@ -702,9 +706,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.NegativeValuesAndZero(size);
 
-    var length = @this.Length;
-    for (var index = 0; index < length; index += size)
-      yield return new(@this, index, Math.Min(length - index, size));
+    return Invoke(@this, size);
+    
+    static IEnumerable<ArraySlice<TItem>> Invoke(TItem[] @this, int size) {
+      var length = @this.Length;
+      for (var index = 0; index < length; index += size)
+        yield return new(@this, index, Math.Min(length - index, size));
+    }
   }
 
   /// <summary>
@@ -1799,10 +1807,14 @@ static partial class ArrayExtensions {
   public static IEnumerable<TResult> OfType<TResult>(this Array @this) {
     Against.ThisIsNull(@this);
 
-    for (var i = 0; i < @this.LongLength; ++i) {
-      var item = @this.GetValue(i);
-      if (item is TResult result)
-        yield return result;
+    return Invoke(@this);
+    
+    static IEnumerable<TResult> Invoke(Array @this) {
+      for (var i = 0; i < @this.LongLength; ++i) {
+        var item = @this.GetValue(i);
+        if (item is TResult result)
+          yield return result;
+      }
     }
   }
 
@@ -1822,8 +1834,12 @@ static partial class ArrayExtensions {
   public static IEnumerable<object> Reverse(this Array @this) {
     Against.ThisIsNull(@this);
 
-    for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
-      yield return @this.GetValue(i);
+    return Invoke(@this);
+    
+    static IEnumerable<object> Invoke(Array @this) {
+      for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
+        yield return @this.GetValue(i);
+    }
   }
 
   [DebuggerStepThrough]
@@ -1842,8 +1858,12 @@ static partial class ArrayExtensions {
   public static IEnumerable<TResult> Cast<TResult>(this Array @this) {
     Against.ThisIsNull(@this);
 
-    for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
-      yield return (TResult)@this.GetValue(i);
+    return Invoke(@this);
+    
+    static IEnumerable<TResult> Invoke(Array @this) {
+      for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
+        yield return (TResult)@this.GetValue(i);
+    }
   }
 
   #endregion
@@ -1853,9 +1873,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
-    var length = @this.Length;
-    for (var i = 0; i < length; ++i)
-      yield return selector(@this[i]);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, TResult> selector) {
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i]);
+    }
   }
 
   [DebuggerStepThrough]
@@ -1863,9 +1887,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
-    var length = @this.LongLength;
-    for (var i = 0; i < length; ++i)
-      yield return selector(@this[i]);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, TResult> selector) {
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i]);
+    }
   }
 
   [DebuggerStepThrough]
@@ -1873,9 +1901,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
-    var length = @this.Length;
-    for (var i = 0; i < length; ++i)
-      yield return selector(@this[i], i);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, int, TResult> selector) {
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i], i);
+    }
   }
 
   [DebuggerStepThrough]
@@ -1883,9 +1915,13 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
-    var length = @this.LongLength;
-    for (var i = 0; i < length; ++i)
-      yield return selector(@this[i], i);
+    return Invoke(@this, selector);
+    
+    static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, long, TResult> selector) {
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i)
+        yield return selector(@this[i], i);
+    }
   }
 
   [DebuggerStepThrough]
@@ -1893,11 +1929,15 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
 
-    var length = @this.LongLength;
-    for (var i = 0; i < length; ++i) {
-      var current = @this[i];
-      if (predicate(current))
-        yield return current;
+    return Invoke(@this, predicate);
+    
+    static IEnumerable<TItem> Invoke(TItem[] @this, Predicate<TItem> predicate) {
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
+        if (predicate(current))
+          yield return current;
+      }
     }
   }
 
@@ -1906,11 +1946,15 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
 
-    var length = @this.Length;
-    for (var i = 0; i < length; ++i) {
-      var current = @this[i];
-      if (predicate(current, i))
-        yield return current;
+    return Invoke(@this, predicate);
+    
+    static IEnumerable<TItem> Invoke(TItem[] @this, Func<TItem, int, bool> predicate) {
+      var length = @this.Length;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
+        if (predicate(current, i))
+          yield return current;
+      }
     }
   }
 
@@ -1919,11 +1963,15 @@ static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
 
-    var length = @this.LongLength;
-    for (var i = 0; i < length; ++i) {
-      var current = @this[i];
-      if (predicate(current, i))
-        yield return current;
+    return Invoke(@this, predicate);
+
+    static IEnumerable<TItem> Invoke(TItem[] @this, Func<TItem, long, bool> predicate) {
+      var length = @this.LongLength;
+      for (var i = 0; i < length; ++i) {
+        var current = @this[i];
+        if (predicate(current, i))
+          yield return current;
+      }
     }
   }
 
