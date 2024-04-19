@@ -93,11 +93,25 @@ namespace System.IO {
     #endregion
 
     /// <summary>
-    /// Renames this directory.
+    /// Renames the directory represented by this <see cref="DirectoryInfo"/> instance to a new name in the same parent directory.
     /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <param name="newName">The new name.</param>
+    /// <param name="this">The <see cref="DirectoryInfo"/> instance to rename.</param>
+    /// <param name="newName">The new name for the directory. This should not include the path, only the new directory name.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="newName"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="newName"/> is empty or contains invalid characters.</exception>
+    /// <exception cref="IOException">Thrown if a directory with the new name already exists, or if any other I/O error occurs during the renaming.</exception>
+    /// <example>
+    /// <code>
+    /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\Example");
+    /// directoryInfo.RenameTo("NewExample");
+    /// Console.WriteLine("Directory renamed to: " + directoryInfo.FullName);
+    /// </code>
+    /// This example renames the directory 'Example' to 'NewExample'.
+    /// </example>
     public static void RenameTo(this DirectoryInfo @this, string newName) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNullOrEmpty(newName);
+      
       if (newName.Contains(Path.DirectorySeparatorChar) || newName.Contains(Path.AltDirectorySeparatorChar) || newName.Contains(Path.VolumeSeparatorChar))
         throw new ArgumentException("No support for new directory structures", nameof(newName));
 
@@ -105,33 +119,42 @@ namespace System.IO {
       if (@this.Name == newName)
         return;
 
-      // more than just casing
-      if (!string.Equals(@this.Name, newName, StringComparison.OrdinalIgnoreCase)) {
-        @this.MoveTo(Path.Combine(@this.Parent.FullName, newName));
-        return;
-      }
+      var parent = @this.Parent;
+      var fullTargetName = parent == null ? newName : Path.Combine(parent.FullName, newName);
 
       // only case has changed, so rename using a temporary intermediate
-      var temporaryName = @this.FullName + "$";
-      while (IO.Directory.Exists(temporaryName) || IO.File.Exists(temporaryName))
-        temporaryName += "$";
+      if (string.Equals(@this.Name, newName, StringComparison.OrdinalIgnoreCase)) {
+        var temporaryName = @this.FullName + "$";
+        while (IO.Directory.Exists(temporaryName) || IO.File.Exists(temporaryName))
+          temporaryName += "$";
 
-      @this.MoveTo(temporaryName);
-      @this.MoveTo(Path.Combine(@this.Parent.FullName, newName));
+        @this.MoveTo(temporaryName);
+      }
+
+      @this.MoveTo(fullTargetName);
     }
 
     /// <summary>
-    /// Deletes all files and directories in this DirectoryInfo.
+    /// Deletes all files and subdirectories within the directory represented by this <see cref="DirectoryInfo"/> instance.
     /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <exception cref="System.NotSupportedException">Unknown FileSystem item</exception>
+    /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the directory to clear.</param>
+    /// <exception cref="System.IO.IOException">Thrown if the directory does not exist or an error occurs when trying to delete the files or subdirectories.</exception>
+    /// <exception cref="System.Security.SecurityException">Thrown if the caller does not have the required permission to delete files or directories.</exception>
+    /// <exception cref="System.NotSupportedException">Thrown if the operation is attempted on a directory with a read-only file system.</exception>
+    /// <example>
+    /// <code>
+    /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\MyDirectory");
+    /// directoryInfo.Clear();
+    /// Console.WriteLine("All files and subdirectories have been deleted.");
+    /// </code>
+    /// This example demonstrates how to delete all files and subdirectories within 'MyDirectory'.
+    /// </example>
+    /// <remarks>
+    /// This method is destructive and irreversible. It will delete all contents within the directory but not the directory itself.
+    /// Ensure that you have appropriate backups or safeguards before using this method to prevent data loss.
+    /// </remarks>
     public static void Clear(this DirectoryInfo @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      foreach (var item in @this.EnumerateFileSystemInfos()) {
-#else
-      foreach (var item in @this.GetFileSystemInfos()) {
-#endif
+      foreach (var item in @this.EnumerateFileSystemInfos())
         switch (item) {
           case FileInfo file:
             file.Delete();
@@ -142,7 +165,6 @@ namespace System.IO {
           default:
             throw new NotSupportedException("Unknown FileSystem item");
         }
-      }
     }
 
     /// <summary>
@@ -221,13 +243,13 @@ namespace System.IO {
       if (c is (< 'a' or > 'z') and (< 'A' or > 'Z'))
         return @this;
 
-      StringBuilder sb = new(512);
+      StringBuilder sb = new(32768);
       var size = sb.Capacity;
-      var error = NativeMethods.WNetGetConnection(originalPath.Substring(0, 2), sb, ref size);
+      var error = NativeMethods.WNetGetConnection(originalPath[..2], sb, ref size);
       if (error != 0)
         return @this;
 
-      var path = originalPath.Substring(@this.Root.FullName.Length);
+      var path = originalPath[@this.Root.FullName.Length..];
       return new(Path.Combine(sb.ToString().TrimEnd(), path));
     }
 
