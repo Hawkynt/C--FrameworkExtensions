@@ -1979,8 +1979,8 @@ static partial class ArrayExtensions {
 
   #region byte-array specials
 
-  private static readonly string _HEX_BYTES_UPPER_CASE = "0123456789ABCDEF";
-  private static readonly string _HEX_BYTES_LOWER_CASE = "0123456789abcdef";
+  private const string _HEX_BYTES_UPPER_CASE = "0123456789ABCDEF";
+  private const string _HEX_BYTES_LOWER_CASE = "0123456789abcdef";
 
   /// <summary>
   /// Converts the bytes to a hex representation.
