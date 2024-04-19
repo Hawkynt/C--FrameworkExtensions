@@ -245,56 +245,58 @@ namespace System.IO {
     /// <summary>
     /// Enumerates the file system infos.
     /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
+    /// <param name="this">This DirectoryInfo.</param>
     /// <param name="mode">The recursion mode.</param>
     /// <param name="recursionFilter">The filter to use for recursing into sub-directories (Walks on <c>true</c>; otherwise, skips recursion).</param>
     /// <returns>
     /// The FileSystemInfos
     /// </returns>
     /// <exception cref="System.NotSupportedException">RecursionMode</exception>
-    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo This, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
-      switch (mode) {
-        case RecursionMode.ToplevelOnly: {
-          foreach (var result in This.EnumerateFileSystemInfos())
-              yield return result;
+    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
+      Against.ThisIsNull(@this);
 
-          break;
+      return mode switch {
+        RecursionMode.ToplevelOnly => InvokeTopLevelOnly(@this),
+        RecursionMode.ShortestPathFirst => InvokeShortestPathFirst(@this, recursionFilter),
+        RecursionMode.DeepestPathFirst => InvokeDeepestPathFirst(@this, recursionFilter),
+        _ => throw new NotSupportedException(nameof(RecursionMode))
+      };
+
+      static IEnumerable<FileSystemInfo> InvokeTopLevelOnly(DirectoryInfo @this) {
+        foreach (var result in @this.EnumerateFileSystemInfos())
+          yield return result;
+      }
+
+      static IEnumerable<FileSystemInfo> InvokeShortestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
+        Queue<DirectoryInfo> results = new();
+        results.Enqueue(@this);
+        while (results.Any()) {
+          var result = results.Dequeue();
+          foreach (var fsi in result.EnumerateFileSystemInfos()) {
+            yield return fsi;
+            if (fsi is not DirectoryInfo di)
+              continue;
+
+            if (recursionFilter == null || recursionFilter(di))
+              results.Enqueue(di);
+          }
         }
-        case RecursionMode.ShortestPathFirst: {
-          Queue<DirectoryInfo> results = new();
-            results.Enqueue(This);
-            while (results.Any()) {
-              var result = results.Dequeue();
-              foreach (var fsi in result.EnumerateFileSystemInfos()) {
-                yield return fsi;
-                if (fsi is not DirectoryInfo di)
-                  continue;
+      }
 
-                if (recursionFilter == null || recursionFilter(di))
-                  results.Enqueue(di);
-              }
-            }
-            break;
-          }
-        case RecursionMode.DeepestPathFirst: {
-          Stack<DirectoryInfo> results = new();
-            results.Push(This);
-            while (results.Any()) {
-              var result = results.Pop();
-              foreach (var fsi in result.EnumerateFileSystemInfos()) {
-                yield return fsi;
-                if (fsi is not DirectoryInfo di)
-                  continue;
+      static IEnumerable<FileSystemInfo> InvokeDeepestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
+        Stack<DirectoryInfo> results = new();
+        results.Push(@this);
+        while (results.Any()) {
+          var result = results.Pop();
+          foreach (var fsi in result.EnumerateFileSystemInfos()) {
+            yield return fsi;
+            if (fsi is not DirectoryInfo di)
+              continue;
 
-                if (recursionFilter == null || recursionFilter(di))
-                  results.Push(di);
-              }
-            }
-            break;
+            if (recursionFilter == null || recursionFilter(di))
+              results.Push(di);
           }
-        default: {
-            throw new NotSupportedException(nameof(RecursionMode));
-          }
+        }
       }
     }
 
@@ -674,69 +676,83 @@ namespace System.IO {
     /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
     /// <param name="this">This <see cref="DirectoryInfo"/></param>
     public static IEnumerable<DirectoryInfo> SafelyEnumerateDirectories(this DirectoryInfo @this) {
-      IEnumerator<DirectoryInfo> enumerator = null;
-      try {
-        enumerator = @this.EnumerateDirectories().GetEnumerator();
-      } catch {
-        ;
-      }
-      if (enumerator == null)
-        yield break;
+      Against.ThisIsNull(@this);
+
+      return Invoke(@this);
       
-      for (;;) {
+      static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this) {
+        IEnumerator<DirectoryInfo> enumerator = null;
         try {
-          if (!enumerator.MoveNext())
-            break;
-        } catch {
-          continue;
-        }
-        
-        DirectoryInfo result = null;
-        try {
-          result = enumerator.Current;
+          enumerator = @this.EnumerateDirectories().GetEnumerator();
         } catch {
           ;
         }
-        
-        if(result != null)
-          yield return result;
+
+        if (enumerator == null)
+          yield break;
+
+        for (;;) {
+          try {
+            if (!enumerator.MoveNext())
+              break;
+          } catch {
+            continue;
+          }
+
+          DirectoryInfo result = null;
+          try {
+            result = enumerator.Current;
+          } catch {
+            ;
+          }
+
+          if (result != null)
+            yield return result;
+        }
+
+        enumerator.Dispose();
       }
-      
-      enumerator.Dispose();
     }
 
     /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
     /// <param name="this">This <see cref="DirectoryInfo"/></param>
     public static IEnumerable<FileInfo> SafelyEnumerateFiles(this DirectoryInfo @this) {
-      IEnumerator<FileInfo> enumerator = null;
-      try {
-        enumerator = @this.EnumerateFiles().GetEnumerator();
-      } catch {
-        ;
-      }
-      if (enumerator == null)
-        yield break;
+      Against.ThisIsNull(@this);
+
+      return Invoke(@this);
       
-      for (;;) {
+      static IEnumerable<FileInfo> Invoke(DirectoryInfo @this) {
+        IEnumerator<FileInfo> enumerator = null;
         try {
-          if (!enumerator.MoveNext())
-            break;
-        } catch {
-          continue;
-        }
-        
-        FileInfo result = null;
-        try {
-          result = enumerator.Current;
+          enumerator = @this.EnumerateFiles().GetEnumerator();
         } catch {
           ;
         }
-        
-        if(result != null)
-          yield return result;
+
+        if (enumerator == null)
+          yield break;
+
+        for (;;) {
+          try {
+            if (!enumerator.MoveNext())
+              break;
+          } catch {
+            continue;
+          }
+
+          FileInfo result = null;
+          try {
+            result = enumerator.Current;
+          } catch {
+            ;
+          }
+
+          if (result != null)
+            yield return result;
+        }
+
+        enumerator.Dispose();
       }
-      
-      enumerator.Dispose();
     }
 
   }

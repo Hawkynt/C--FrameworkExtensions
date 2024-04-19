@@ -20,32 +20,40 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics;
-namespace System.IO {
-  /// <summary>
-  /// Extensions for Streams.
-  /// </summary>
+using Guard;
+
+// ReSharper disable PartialTypeWithSinglePart
+
+namespace System.IO;
+
+/// <summary>
+/// Extensions for Streams.
+/// </summary>
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static partial class TextReaderExtensions {
+static partial class TextReaderExtensions {
 
-    /// <summary>
-    /// Reads the lines of a text reader.
-    /// </summary>
-    /// <param name="This">This TextReader.</param>
-    /// <returns>One line after the other until end of stream is reached.</returns>
-    public static IEnumerable<string> ReadLines(this TextReader This) {
-      Debug.Assert(This != null);
-      while (true) {
-        var line = This.ReadLine();
+  /// <summary>
+  /// Reads the lines of a text reader.
+  /// </summary>
+  /// <param name="this">This TextReader.</param>
+  /// <returns>One line after the other until end of stream is reached.</returns>
+  public static IEnumerable<string> ReadLines(this TextReader @this) {
+    Against.ThisIsNull(@this);
+
+    return Invoke(@this);
+
+    static IEnumerable<string> Invoke(TextReader @this) {
+      for (;;) {
+        var line = @this.ReadLine();
         if (line == null)
           yield break;
 
-        yield return (line);
+        yield return line;
       }
     }
   }

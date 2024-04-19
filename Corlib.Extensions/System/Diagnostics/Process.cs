@@ -96,13 +96,17 @@ static partial class ProcessExtensions {
   public static IEnumerable<Process> Parents(this Process @this) {
     Against.ThisIsNull(@this);
 
-    var currentChild = @this;
-    for (;;) {
-      currentChild = GetParentProcessOrNull(currentChild);
-      if (currentChild == null)
-        yield break;
+    return Invoke(@this);
 
-      yield return currentChild;
+    static IEnumerable<Process> Invoke(Process @this) {
+      var currentChild = @this;
+      for (;;) {
+        currentChild = GetParentProcessOrNull(currentChild);
+        if (currentChild == null)
+          yield break;
+
+        yield return currentChild;
+      }
     }
   }
 
@@ -130,6 +134,33 @@ static partial class ProcessExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IEnumerable<Process> AllChildren(this Process @this) {
+    Against.ThisIsNull(@this);
+    
+    return Invoke(@this);
+    
+    static IEnumerable<Process> Invoke(Process @this) {
+      var allProcessIdsWithChildren = Process
+          .GetProcesses()
+          .Select(p => new { Process = p, Parent = GetParentProcessOrNull(p) })
+          .Where(p => p.Parent.IsNotNull())
+          .GroupBy(p => p.Parent.Id)
+          .ToDictionary(g => g.Key, g => g.Select(p => p.Process).ToArray())
+        ;
+
+      Stack<Process> stack = new();
+      List<Process> tempList = new();
+      var result = @this;
+      for (;;) {
+        FillList(result, tempList, allProcessIdsWithChildren);
+        PushReverse(tempList, stack);
+
+        if (!stack.Any())
+          break;
+
+        result = stack.Pop();
+        yield return result;
+      }
+    }
 
     static void FillList(Process process, List<Process> list, IDictionary<int, Process[]> allProcessIdsWithChildren) {
       list.Clear();
@@ -140,28 +171,6 @@ static partial class ProcessExtensions {
     static void PushReverse(IList<Process> list, Stack<Process> stack) {
       for (var i = list.Count - 1; i >= 0; --i)
         stack.Push(list[i]);
-    }
-
-    var allProcessIdsWithChildren = Process
-        .GetProcesses()
-        .Select(p => new { Process = p, Parent = GetParentProcessOrNull(p) })
-        .Where(p => p.Parent.IsNotNull())
-        .GroupBy(p=>p.Parent.Id)
-        .ToDictionary(g => g.Key, g => g.Select(p=>p.Process).ToArray())
-      ;
-
-    Stack<Process> stack = new();
-    List<Process> tempList = new();
-    var result = @this;
-    for (;;) {
-      FillList(result, tempList, allProcessIdsWithChildren);
-      PushReverse(tempList, stack);
-
-      if (!stack.Any())
-        break;
-
-      result = stack.Pop();
-      yield return result;
     }
   }
 

@@ -26,6 +26,7 @@ using System.Diagnostics.Contracts;
 #endif
 using System.Linq;
 using System.Runtime.InteropServices;
+using Guard;
 
 namespace System.Net.NetworkInformation {
 
@@ -54,19 +55,18 @@ namespace System.Net.NetworkInformation {
     /// <summary>
     /// Gets the ip adresses for a MAC.
     /// </summary>
-    /// <param name="This">This PhysicalAddress.</param>
+    /// <param name="this">This PhysicalAddress.</param>
     /// <returns>A number of IPAdress instances</returns>
-    public static IEnumerable<IPAddress> GetIpAdresses(this PhysicalAddress This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      var arpTable = _GetArpCache();
-      var result =
-        from ip in arpTable
-        where ip.Item1.Equals(This)
-        select ip.Item2
-        ;
-      return result;
+    public static IEnumerable<IPAddress> GetIpAdresses(this PhysicalAddress @this) {
+      Against.ThisIsNull(@this);
+
+      return Invoke(@this);
+
+      static IEnumerable<IPAddress> Invoke(PhysicalAddress @this)
+        => from ip in _GetArpCache()
+           where ip.Item1.Equals(@this)
+           select ip.Item2
+      ;
     }
 
     private static class NativeMethods {

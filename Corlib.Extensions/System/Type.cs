@@ -1135,35 +1135,38 @@ static partial class TypeExtensions {
       ;
   }
 
-  public static IEnumerable<TAttribute> GetAttributes<TAttribute>(this Type @this, bool inherit = false) where TAttribute : Attribute {
-    if (!inherit)
-      foreach (var result in @this.GetCustomAttributes(typeof(TAttribute), false))
-        yield return (TAttribute)result;
+  public static IEnumerable<TAttribute> GetAttributes<TAttribute>(this Type @this, bool inherit = false)
+    where TAttribute : Attribute {
+    Against.ThisIsNull(@this);
 
-    HashSet<TAttribute> alreadyReturned = new();
-    var baseType = @this;
-    do {
-      foreach (var result in baseType.GetCustomAttributes(true)) {
-        if (result is not TAttribute castedAttribute || alreadyReturned.Contains(castedAttribute))
+    return Invoke(@this, inherit);
+
+    static IEnumerable<TAttribute> Invoke(Type @this, bool inherit) {
+      if (!inherit)
+        foreach (var result in @this.GetCustomAttributes(typeof(TAttribute), false))
+          yield return (TAttribute)result;
+
+      HashSet<TAttribute> alreadyReturned = new();
+      var baseType = @this;
+      do {
+        foreach (var result in baseType.GetCustomAttributes(true)) {
+          if (result is not TAttribute castedAttribute || !alreadyReturned.Add(castedAttribute))
+            continue;
+
+          yield return castedAttribute;
+        }
+
+        baseType = baseType.BaseType;
+      } while (baseType != null);
+
+      foreach (var @interface in @this.GetInterfaces())
+      foreach (var result in GetAttributes<TAttribute>(@interface, true)) {
+        if (!alreadyReturned.Add(result))
           continue;
 
-        alreadyReturned.Add(castedAttribute);
-        yield return castedAttribute;
+        yield return result;
       }
-
-      baseType = baseType.BaseType;
-    } while (baseType != null);
-
-    foreach (var @interface in @this.GetInterfaces())
-    foreach (var result in GetAttributes<TAttribute>(@interface, true)) {
-      if (alreadyReturned.Contains(result))
-        continue;
-
-      alreadyReturned.Add(result);
-
-      yield return result;
     }
-
   }
 
 }

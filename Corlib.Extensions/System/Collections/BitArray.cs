@@ -20,6 +20,8 @@
 #endregion
 
 using System.Collections.Generic;
+using Guard;
+// ReSharper disable PartialTypeWithSinglePart
 
 namespace System.Collections; 
 
@@ -36,11 +38,15 @@ static partial class BitArrayExtensions {
   /// <param name="this">This <see cref="BitArray"/></param>
   /// <returns>An enumeration of indexes.</returns>
   public static IEnumerable<int> GetSetBits(this BitArray @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
-    for (var i = 0; i < @this.Length; ++i) {
-      if (@this[i])
-        yield return i;
+    return Invoke(@this);
+    
+    static IEnumerable<int> Invoke(BitArray @this) {
+      for (var i = 0; i < @this.Length; ++i) {
+        if (@this[i])
+          yield return i;
+      }
     }
   }
 
@@ -50,11 +56,15 @@ static partial class BitArrayExtensions {
   /// <param name="this">This <see cref="BitArray"/></param>
   /// <returns>An enumeration of indexes.</returns>
   public static IEnumerable<int> GetUnsetBits(this BitArray @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
-    for (var i = 0; i < @this.Length; ++i) {
-      if (!@this[i])
-        yield return i;
+    return Invoke(@this);
+    
+    static IEnumerable<int> Invoke(BitArray @this) {
+      for (var i = 0; i < @this.Length; ++i) {
+        if (!@this[i])
+          yield return i;
+      }
     }
   }
 

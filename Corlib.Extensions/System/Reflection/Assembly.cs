@@ -28,123 +28,114 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Guard;
 
-namespace System.Reflection {
+// ReSharper disable UnusedMember.Global
+
+namespace System.Reflection;
 
 #if COMPILE_TO_EXTENSION_DLL
-  public
+public
 #else
-  internal
+internal
 #endif
-  static class AssemblyExtensions {
-    /// <summary>
-    /// Gets the embedded resource file.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>The resource stream.</returns>
-    public static Stream GetResourceFileStream(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(fileName != null);
-#endif
-      var resourceName = string.Format(
-        "{0}.{1}",
-        This
-          .EntryPoint
-          .DeclaringType
-          .Namespace,
-        fileName
-          .Replace(Path.DirectorySeparatorChar, '.')
-          .Replace(Path.AltDirectorySeparatorChar, '.')
-      );
+static class AssemblyExtensions {
+  
+  /// <summary>
+  /// Gets the embedded resource file.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>The resource stream.</returns>
+  public static Stream GetResourceFileStream(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(fileName);
 
-      return (This.GetManifestResourceStream(resourceName));
-    }
+    var resourceName = $"{@this
+      .EntryPoint
+      .DeclaringType
+      .Namespace}.{fileName
+      .Replace(Path.DirectorySeparatorChar, '.')
+      .Replace(Path.AltDirectorySeparatorChar, '.')}";
 
-    /// <summary>
-    /// Gets the embedded resource stream reader.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>A usable stream reader.</returns>
-    public static StreamReader GetResourceStreamReader(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      return (new(This.GetResourceFileStream(fileName)));
-    }
+    return @this.GetManifestResourceStream(resourceName);
+  }
 
-    /// <summary>
-    /// Gets the embedded resource binary reader.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>A usable binary reader.</returns>
-    public static BinaryReader GetResourceBinaryReader(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      return (new(This.GetResourceFileStream(fileName)));
-    }
+  /// <summary>
+  /// Gets the embedded resource stream reader.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>A usable stream reader.</returns>
+  public static StreamReader GetResourceStreamReader(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+    
+    return new(@this.GetResourceFileStream(fileName));
+  }
 
-    /// <summary>
-    /// Gets the text of an embedded resource.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>All text from the resource.</returns>
-    public static string ReadResourceAllText(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      using (var reader = This.GetResourceStreamReader(fileName))
-        return (reader.ReadToEnd());
-    }
+  /// <summary>
+  /// Gets the embedded resource binary reader.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>A usable binary reader.</returns>
+  public static BinaryReader GetResourceBinaryReader(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+    
+    return new(@this.GetResourceFileStream(fileName));
+  }
 
-    /// <summary>
-    /// Gets the lines of an embedded resource.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>All lines from the resource.</returns>
-    public static IEnumerable<string> ReadResourceAllLines(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      return (
-        This
-        .ReadResourceAllText(fileName)
-        .Split(new[] { "\r\n" }, StringSplitOptions.None)
-        .SelectMany(l => l.Split(new[] { "\n\r" }, StringSplitOptions.None))
-        .SelectMany(l => l.Split(new[] { "\r" }, StringSplitOptions.None))
-        .SelectMany(l => l.Split(new[] { "\n" }, StringSplitOptions.None))
-      );
-    }
+  /// <summary>
+  /// Gets the text of an embedded resource.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>All text from the resource.</returns>
+  public static string ReadResourceAllText(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+    
+    using var reader = @this.GetResourceStreamReader(fileName);
+    return reader.ReadToEnd();
+  }
 
-    /// <summary>
-    /// Gets the bytes of an embedded resource.
-    /// </summary>
-    /// <param name="This">This Assembly.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <returns>All bytes from the resource.</returns>
-    public static byte[] ReadResourceAllBytes(this Assembly This, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      using (var reader = This.GetResourceBinaryReader(fileName))
-        return (reader.ReadAllBytes());
-    }
+  /// <summary>
+  /// Gets the lines of an embedded resource.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>All lines from the resource.</returns>
+  public static IEnumerable<string> ReadResourceAllLines(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+    
+    return @this
+      .ReadResourceAllText(fileName)
+      .Lines()
+      ;
+  }
 
-    /// <summary>
-    /// Get the guid from, the assembly attributes or returns the fallabck
-    /// </summary>
-    /// <param name="this">Assembly to use</param>
-    /// <param name="fallbackGuid">Fallback to return if needed</param>
-    /// <returns>a valid Guid</returns>
-    public static string GetGuidOrFallback(this Assembly @this, string fallbackGuid = null) {
-      var attributes = @this.GetCustomAttributes(typeof(GuidAttribute), true);
-      return attributes.Length > 0 ? ((GuidAttribute)attributes[0]).Value : fallbackGuid;
-    }
+  /// <summary>
+  /// Gets the bytes of an embedded resource.
+  /// </summary>
+  /// <param name="this">This Assembly.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <returns>All bytes from the resource.</returns>
+  public static byte[] ReadResourceAllBytes(this Assembly @this, string fileName) {
+    Against.ThisIsNull(@this);
+
+    using var reader = @this.GetResourceBinaryReader(fileName);
+    return reader.ReadAllBytes();
+  }
+
+  /// <summary>
+  /// Get the guid from, the assembly attributes or returns the fallabck
+  /// </summary>
+  /// <param name="this">Assembly to use</param>
+  /// <param name="fallbackGuid">Fallback to return if needed</param>
+  /// <returns>a valid Guid</returns>
+  public static string GetGuidOrFallback(this Assembly @this, string fallbackGuid = null) {
+    Against.ThisIsNull(@this);
+    
+    var attributes = @this.GetCustomAttributes(typeof(GuidAttribute), true);
+    return attributes.Length > 0 ? ((GuidAttribute)attributes[0]).Value : fallbackGuid;
   }
 }

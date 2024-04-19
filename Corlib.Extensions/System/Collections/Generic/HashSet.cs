@@ -21,6 +21,7 @@
 
 using System.Diagnostics;
 using System.Linq;
+using Guard;
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
@@ -81,24 +82,27 @@ static partial class HashSetExtensions {
   /// <exception cref="ArgumentNullException"></exception>
   [DebuggerStepThrough]
   public static IEnumerable<IChangeSet<TItem>> CompareTo<TItem>(this HashSet<TItem> @this, HashSet<TItem> other) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(other);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+
+    return Invoke(@this, other);
     
-    var keys = @this.Concat(other).Distinct(@this.Comparer);
-    foreach (var key in keys) {
-      if (!other.Contains(key)) {
-        yield return new ChangeSet<TItem>(ChangeType.Added, key);
-        continue;
-      }
+    static IEnumerable<IChangeSet<TItem>> Invoke(HashSet<TItem> @this, HashSet<TItem> other) {
+      var keys = @this.Concat(other).Distinct(@this.Comparer);
+      foreach (var key in keys) {
+        if (!other.Contains(key)) {
+          yield return new ChangeSet<TItem>(ChangeType.Added, key);
+          continue;
+        }
 
-      if (!@this.Contains(key)) {
-        yield return new ChangeSet<TItem>(ChangeType.Removed, key);
-        continue;
-      }
+        if (!@this.Contains(key)) {
+          yield return new ChangeSet<TItem>(ChangeType.Removed, key);
+          continue;
+        }
 
-      yield return new ChangeSet<TItem>(ChangeType.Equal, key);
+        yield return new ChangeSet<TItem>(ChangeType.Equal, key);
+      }
     }
-
   }
 
   /// <summary>
@@ -116,7 +120,7 @@ static partial class HashSetExtensions {
 #endif
   [DebuggerStepThrough]
   public static bool ContainsNot<TItem>(this HashSet<TItem> @this, TItem item) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     
     return !@this.Contains(item);
   }
@@ -131,7 +135,7 @@ static partial class HashSetExtensions {
   /// <remarks></remarks>
   [DebuggerStepThrough]
   public static bool TryAdd<TItem>(this HashSet<TItem> @this, TItem value) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     if (@this.Contains(value))
       return false;
@@ -152,7 +156,7 @@ static partial class HashSetExtensions {
 #endif
   [DebuggerStepThrough]
   public static bool TryRemove<TItem>(this HashSet<TItem> @this, TItem item) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
     
     return @this.Remove(item);
   }

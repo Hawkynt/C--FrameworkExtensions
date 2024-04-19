@@ -28,6 +28,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 #endif
 
 namespace System.Collections.Generic; 
@@ -673,64 +674,68 @@ static partial class ListExtensions {
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
     Against.ThisIsNull(@this);
 
-    var length = @this.Count;
-    if (length < 1)
-      yield break;
+    return Invoke(@this, separateArrays);
+    
+    static IEnumerable<T[]> Invoke(IList<T> @this, bool separateArrays) {
 
-    var current = new T[length];
-    var state = new int[length];
-    for (var i = 0; i < length; ++i)
-      current[i] = @this[state[i] = i];
+      var length = @this.Count;
+      if (length < 1)
+        yield break;
 
-    var lastIndex = length - 1;
-    while (true) {
+      var current = new T[length];
+      var state = new int[length];
+      for (var i = 0; i < length; ++i)
+        current[i] = @this[state[i] = i];
 
-      // return copy or working array
-      if (separateArrays) {
-        var result = new T[length];
-        current.CopyTo(result, 0);
-        yield return result;
-      } else
-        yield return current;
-
-      // increment the 2nd last digit
-      var index = lastIndex - 1;
+      var lastIndex = length - 1;
       while (true) {
 
-        // increment as long as there are matching slots
-        HashSet<int> slotsBefore = new(state.Take(index));
-        do {
-          ++state[index];
-        } while (slotsBefore.Contains(state[index]));
+        // return copy or working array
+        if (separateArrays) {
+          var result = new T[length];
+          current.CopyTo(result, 0);
+          yield return result;
+        } else
+          yield return current;
 
-        // if we did not ran out of digits
-        if (state[index] <= lastIndex)
-          break;
+        // increment the 2nd last digit
+        var index = lastIndex - 1;
+        while (true) {
 
-        // otherwise, try incrementing the left next slot
-        --index;
+          // increment as long as there are matching slots
+          HashSet<int> slotsBefore = new(state.Take(index));
+          do {
+            ++state[index];
+          } while (slotsBefore.Contains(state[index]));
 
-        // no more slots, all permutations done
-        if (index < 0)
-          yield break;
+          // if we did not ran out of digits
+          if (state[index] <= lastIndex)
+            break;
+
+          // otherwise, try incrementing the left next slot
+          --index;
+
+          // no more slots, all permutations done
+          if (index < 0)
+            yield break;
+        }
+
+        // fill content by digit
+        current[index] = @this[state[index]];
+
+        // fill all slots after the incremented one
+        for (var i = index + 1; i < length; ++i) {
+          state[i] = 0;
+
+          HashSet<int> slotsBefore = new(state.Take(i));
+          while (slotsBefore.Contains(state[i]))
+            ++state[i];
+
+          current[i] = @this[state[i]];
+        }
+
       }
-
-      // fill content by digit
-      current[index] = @this[state[index]];
-
-      // fill all slots after the incremented one
-      for (var i = index + 1; i < length; ++i) {
-        state[i] = 0;
-
-        HashSet<int> slotsBefore = new(state.Take(i));
-        while (slotsBefore.Contains(state[i]))
-          ++state[i];
-
-        current[i] = @this[state[i]];
-      }
-
     }
-
   }
 
   /// <summary>
@@ -744,39 +749,43 @@ static partial class ListExtensions {
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
     Against.ThisIsNull(@this);
 
-    if (length < 1)
-      yield break;
+    return Invoke(@this, length, separateArrays);
+    
+    static IEnumerable<T[]> Invoke(IList<T> @this, int length, bool separateArrays) {
 
-    var itemLastIndex = @this.Count - 1;
-    if (itemLastIndex < 0)
-      yield break;
+      if (length < 1)
+        yield break;
 
-    var current = new T[length];
-    for (var i = 0; i < length; ++i)
-      current[i] = @this[0];
+      var itemLastIndex = @this.Count - 1;
+      if (itemLastIndex < 0)
+        yield break;
 
-    var states = new int[length];
-    --length;
+      var current = new T[length];
+      for (var i = 0; i < length; ++i)
+        current[i] = @this[0];
 
-    // this version creates a new array for each permutations and returns it
-    if (separateArrays) {
+      var states = new int[length];
+      --length;
+
+      // this version creates a new array for each permutations and returns it
+      if (separateArrays) {
+        while (true) {
+          var result = new T[length + 1];
+          current.CopyTo(result, 0);
+          yield return result;
+
+          if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
+            yield break;
+        }
+      }
+
       while (true) {
-        var result = new T[length + 1];
-        current.CopyTo(result, 0);
-        yield return result;
+        yield return current;
 
         if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
           yield break;
       }
     }
-
-    while (true) {
-      yield return current;
-
-      if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
-        yield break;
-    }
-
   }
 
   /// <summary>
