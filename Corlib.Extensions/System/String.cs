@@ -3769,10 +3769,138 @@ static partial class StringExtensions {
       return null;
 
     var index = @this.IndexOf(pattern, comparison);
-    return index < 0 ? @this : @this.Substring(0, index);
+    return index < 0 ? @this : @this[..index];
   }
 
   #region Similarities
+
+  /// <summary>
+  /// Defines the types of case comparison strategies for string operations, providing options suitable for different cultural and technical contexts.
+  /// </summary>
+  public enum CaseComparison {
+    /// <summary>
+    /// Specifies that string comparisons should use ordinal (binary) sort rules.
+    /// </summary>
+    /// <remarks>
+    /// Ordinal comparison is based on the binary values of the characters and does not take linguistic patterns into account.
+    /// It is the fastest type of comparison and is culture-insensitive, making it suitable for scenarios where performance is critical and
+    /// the text being compared is not culturally sensitive.
+    /// </remarks>
+    Ordinal,
+
+    /// <summary>
+    /// Specifies that string comparisons should be based on culture-specific rules.
+    /// </summary>
+    /// <remarks>
+    /// Culture-specific comparisons take into account the cultural context of the data, such as linguistic and alphabetic rules specific to the user's culture.
+    /// This type of comparison is essential for applications that are sensitive to local language settings, as it respects locale-specific rules for comparing strings.
+    /// </remarks>
+    CultureSpecific,
+
+    /// <summary>
+    /// Specifies that string comparisons should use rules that are consistent across cultures.
+    /// </summary>
+    /// <remarks>
+    /// Invariant culture comparison is designed to offer consistency for operations that require culturally neutral results, such as formatting and sorting data in a way that does not change with the user's locale.
+    /// This comparison type is suitable for scenarios where data needs to be presented or processed in a uniform manner regardless of the local culture settings.
+    /// </remarks>
+    InvariantCulture
+  }
+
+  /// <summary>
+  /// Determines whether the current string and another specified string differ only by case, and are not exactly the same.
+  /// </summary>
+  /// <param name="this">The current string instance.</param>
+  /// <param name="other">The string to compare with the current string.</param>
+  /// <returns><see langword="true"/> if the two strings are equivalent when case is ignored and they are not identical in case; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string str1 = "hello";
+  /// string str2 = "HELLO";
+  /// bool result = str1.OnlyCaseDiffersFrom(str2);
+  /// Console.WriteLine(result); // Outputs: True
+  ///
+  /// string str3 = "hello";
+  /// string str4 = "hello";
+  /// result = str3.OnlyCaseDiffersFrom(str4);
+  /// Console.WriteLine(result); // Outputs: False
+  ///
+  /// string str5 = "hello";
+  /// string str6 = "world";
+  /// result = str5.OnlyCaseDiffersFrom(str6);
+  /// Console.WriteLine(result); // Outputs: False
+  /// </code>
+  /// This example demonstrates how to check if two strings differ only by case, but are not the same string when considering case.
+  /// </example>
+  /// <remarks>
+  /// This method checks if two strings are the same ignoring case differences but are not the same when considering case.
+  /// This can be particularly useful for situations where you want to validate that inputs are not simply cased versions of the same value.
+  /// </remarks>
+  public static bool OnlyCaseDiffersFrom(this string @this, string other) => OnlyCaseDiffersFrom(@this, other, CaseComparison.Ordinal);
+
+  /// <summary>
+  /// Determines whether the current string and another specified string differ only by case, considering a specified case comparison strategy.
+  /// </summary>
+  /// <param name="this">The current string instance.</param>
+  /// <param name="other">The string to compare with the current string.</param>
+  /// <param name="comparison">The case comparison strategy to use when comparing the strings.</param>
+  /// <returns><see langword="true"/> if the two strings are equivalent when case is ignored according to the specified comparison strategy, and they are not identical considering case; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string str1 = "hello";
+  /// string str2 = "HELLO";
+  /// bool result = str1.OnlyCaseDiffersFrom(str2, CaseComparison.Ordinal);
+  /// Console.WriteLine(result); // Outputs: True
+  ///
+  /// string str3 = "hello";
+  /// string str4 = "hello";
+  /// result = str3.OnlyCaseDiffersFrom(str4, CaseComparison.Ordinal);
+  /// Console.WriteLine(result); // Outputs: False
+  ///
+  /// string str5 = "hello";
+  /// string str6 = "world";
+  /// result = str5.OnlyCaseDiffersFrom(str6, CaseComparison.Ordinal);
+  /// Console.WriteLine(result); // Outputs: False
+  ///
+  /// string str7 = "straﬂe";
+  /// string str8 = "STRASSE";
+  /// result = str7.OnlyCaseDiffersFrom(str8, CaseComparison.CultureSpecific);
+  /// Console.WriteLine(result); // Outputs: True, in a culture where 'ﬂ' is equivalent to 'SS'
+  /// </code>
+  /// This example demonstrates how to check if two strings differ only by case, with different case comparison strategies affecting the result.
+  /// </example>
+  /// <remarks>
+  /// This method is useful in contexts where the sensitivity to case and cultural differences needs to be considered, such as user inputs where the intent is identical despite differences in casing and locale-specific forms.
+  /// </remarks>
+  public static bool OnlyCaseDiffersFrom(this string @this, string other, CaseComparison comparison) {
+    Against.UnknownEnumValues(comparison);
+
+    if (ReferenceEquals(@this, other))
+      return false;
+
+    if (@this == null || other == null || @this.Length != other.Length)
+      return false;
+
+    Func<char, char> comparer = comparison switch {
+      CaseComparison.Ordinal => char.ToUpperInvariant,
+      CaseComparison.CultureSpecific => char.ToUpper,
+      CaseComparison.InvariantCulture => c => char.ToUpper(c, CultureInfo.InvariantCulture),
+      _ => throw new ArgumentException($"Unknown enum value: {comparison}", nameof(comparison))
+    };
+
+    var foundCaseDifference = false;
+    for (var i = 0; i < @this.Length; ++i) {
+      if (@this[i] == other[i])
+        continue;
+
+      if (comparer(@this[i]) != comparer(other[i]))
+        return false;
+
+      foundCaseDifference = true;
+    }
+
+    return foundCaseDifference;
+  }
 
   /// <summary>
   /// Converts a given filename pattern into a regular expression.
