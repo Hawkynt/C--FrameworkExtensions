@@ -19,14 +19,15 @@
 */
 #endregion
 
+// ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
 public
 #else
-  internal
+internal
 #endif
-  static partial class QueueExtensions {
+static partial class QueueExtensions {
 
   /// <summary>
   /// Adds all given items to the queue.

@@ -19,6 +19,7 @@
 */
 #endregion
 
+// ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
 #if COMPILE_TO_EXTENSION_DLL
