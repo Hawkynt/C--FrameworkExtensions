@@ -1978,10 +1978,7 @@ static partial class ArrayExtensions {
   #endregion
 
   #region byte-array specials
-
-  private const string _HEX_BYTES_UPPER_CASE = "0123456789ABCDEF";
-  private const string _HEX_BYTES_LOWER_CASE = "0123456789abcdef";
-
+  
   /// <summary>
   /// Converts the bytes to a hex representation.
   /// </summary>
@@ -1995,12 +1992,33 @@ static partial class ArrayExtensions {
     if (@this == null)
       return null;
 
-    var format = allUpperCase ? _HEX_BYTES_UPPER_CASE : _HEX_BYTES_LOWER_CASE;
+    const byte ZERO = (byte)'0';
+    const byte LOWA = (byte)'a' - 10;
+    const byte HIGHA = (byte)'A' - 10;
+
+    const int ZEROZERO = ZERO | (ZERO << 8);
+    const int ZERO_TO_LOWA_DELTA = LOWA - ZERO;
+    const int ZERO_TO_HIGHA_DELTA = HIGHA - ZERO;
+
+    var letterDelta = allUpperCase ? ZERO_TO_HIGHA_DELTA : ZERO_TO_LOWA_DELTA;
     var result = new char[@this.Length << 1];
-    for (int i = 0, j = 0; i < @this.Length; ++i, j += 2) {
+    for (int i = 0, j = 0; i < @this.Length && j < result.Length - 1; ++i, j += 2) {
       var value = @this[i];
-      result[j] = format[value >> 4];
-      result[j + 1] = format[value & 0b1111];
+
+      var hi = (value & 0xf0) << 4;
+      var lo = value & 0x0f;
+      var both = hi + lo + ZEROZERO; // bring into number range
+      var mask = both - ZEROZERO + 0x0606; // let value above or equal 10 overflow into the next digit
+      mask &= 0x1010; // get a mask containing what overflowed
+      mask >>>= 4; // push down one nibble
+      mask *= letterDelta; // multiply with difference to numbers
+      both += mask; // add delta to letters
+
+      hi = both >> 8;
+      lo = both & 0xff;
+
+      result[j] = (char)hi;
+      result[j + 1] = (char)lo;
     }
 
     return new(result);

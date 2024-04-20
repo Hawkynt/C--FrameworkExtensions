@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
@@ -294,5 +295,22 @@ public class ArrayTests {
   public void SafelyClone(string? input, string? output) {
     ExecuteTest(()=>ConvertFromStringToTestArray(input)?.ToArray().SafelyClone(),ConvertFromStringToTestArray(output)?.ToArray(),null);
   }
+  
+  private static IEnumerable<TestCaseData> _ToHexGenerator() {
+    foreach (var i in new byte[]{0x00,0x01,0x20,0xa0,0x0b,0xcd,0xff}) {
+      yield return new(new[] { i }, true, i.ToString("X2"));
+      yield return new(new[] { i }, false, i.ToString("x2"));
+    }
 
+    yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff }, false, "000120a00bcdff");
+    yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff }, true, "000120A00BCDFF");
+  }
+  
+  [Test]
+  [TestCaseSource(nameof(_ToHexGenerator))]
+  public void ToHex(byte[] input,bool allUpperCase,string expected) {
+    var got = input.ToHex(allUpperCase);
+    Assert.AreEqual(got,expected);
+  }
+  
 }
