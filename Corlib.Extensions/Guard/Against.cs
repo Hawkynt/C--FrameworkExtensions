@@ -319,7 +319,27 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void CountBelowOrEqualZero(long value, [CallerMemberName] string caller = null,
+    [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value <= 0)
+      AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void CountBelowZero(int value, [CallerMemberName] string caller = null,
+    [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value < 0)
+      AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);
+  }
+  
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void CountBelowZero(long value, [CallerMemberName] string caller = null,
     [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value < 0)
       AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);
@@ -336,12 +356,36 @@ internal static partial class Against {
     if (value > maxValue)
       AlwaysThrow.CountTooHighException(expression ?? nameof(value), value, maxValue, caller);
   }
+  
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void CountOutOfRange(long value, long maxValue, [CallerMemberName] string caller = null,
+    [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value <= 0)
+      AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);
+    if (value > maxValue)
+      AlwaysThrow.CountTooHighException(expression ?? nameof(value), value, maxValue, caller);
+  }
 
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static void CountOutOfRange(int value, int checkValue, int maxValue, [CallerMemberName] string caller = null,
+    [CallerArgumentExpression(nameof(value))] string expression = null) {
+    if (value <= 0)
+      AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);
+    if (checkValue > maxValue)
+      AlwaysThrow.CountTooHighException(expression ?? nameof(value), value, checkValue, maxValue, caller);
+  }
+  
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void CountOutOfRange(long value, long checkValue, long maxValue, [CallerMemberName] string caller = null,
     [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value <= 0)
       AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);

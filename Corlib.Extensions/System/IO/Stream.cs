@@ -1225,20 +1225,6 @@ internal
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
-    static TStruct BytesToStruct(byte[] buffer) {
-      var size = buffer.Length;
-      var unmanagedMemory = IntPtr.Zero;
-      try {
-        unmanagedMemory = Marshal.AllocHGlobal(size);
-        Marshal.Copy(buffer, 0, unmanagedMemory, size);
-        var result = (TStruct)Marshal.PtrToStructure(unmanagedMemory, typeof(TStruct));
-        return result;
-      } finally {
-        if (unmanagedMemory != IntPtr.Zero)
-          Marshal.FreeHGlobal(unmanagedMemory);
-      }
-    }
-
     if (typeof(TStruct) == typeof(byte))
       return (TStruct)(object)(byte)@this.ReadByte();
     if (typeof(TStruct) == typeof(bool))
@@ -1267,6 +1253,20 @@ internal
       return (TStruct)(object)_ReadLittleEndianM128(@this);
 
     return BytesToStruct(_ReadBytes(@this, Marshal.SizeOf(typeof(TStruct))));
+
+    static TStruct BytesToStruct(byte[] buffer) {
+      var size = buffer.Length;
+      var unmanagedMemory = IntPtr.Zero;
+      try {
+        unmanagedMemory = Marshal.AllocHGlobal(size);
+        Marshal.Copy(buffer, 0, unmanagedMemory, size);
+        var result = (TStruct)Marshal.PtrToStructure(unmanagedMemory, typeof(TStruct));
+        return result;
+      } finally {
+        if (unmanagedMemory != IntPtr.Zero)
+          Marshal.FreeHGlobal(unmanagedMemory);
+      }
+    }
   }
 
   /// <summary>
@@ -1278,21 +1278,6 @@ internal
   public static void Write<TStruct>(this Stream @this, TStruct value) where TStruct : struct {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
-
-    static byte[] StructToBytes(TStruct value) {
-      var size = Marshal.SizeOf(typeof(TStruct));
-      var unmanagedMemory = IntPtr.Zero;
-      try {
-        unmanagedMemory = Marshal.AllocHGlobal(size);
-        Marshal.StructureToPtr(value, unmanagedMemory, false);
-        var result = new byte[size];
-        Marshal.Copy(unmanagedMemory, result, 0, size);
-        return result;
-      } finally {
-        if (unmanagedMemory != IntPtr.Zero)
-          Marshal.FreeHGlobal(unmanagedMemory);
-      }
-    }
 
     if (typeof(TStruct) == typeof(byte))
       @this.WriteByte((byte)(object)value);
@@ -1322,6 +1307,22 @@ internal
       _WriteLittleEndianM128(@this, (decimal)(object)value);
     else
       @this.Write(StructToBytes(value));
+    return;
+
+    static byte[] StructToBytes(TStruct value) {
+      var size = Marshal.SizeOf(typeof(TStruct));
+      var unmanagedMemory = IntPtr.Zero;
+      try {
+        unmanagedMemory = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(value, unmanagedMemory, false);
+        var result = new byte[size];
+        Marshal.Copy(unmanagedMemory, result, 0, size);
+        return result;
+      } finally {
+        if (unmanagedMemory != IntPtr.Zero)
+          Marshal.FreeHGlobal(unmanagedMemory);
+      }
+    }
   }
 
   /// <summary>
@@ -1356,7 +1357,8 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
+    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin)
+    ;
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -1391,7 +1393,8 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
+    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin)
+    ;
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -1430,7 +1433,8 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static IAsyncResult BeginReadBytes(this Stream @this, long position, byte[] buffer, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => BeginReadBytes(@this, position, buffer, 0, buffer.Length, callback, state, seekOrigin);
+    => BeginReadBytes(@this, position, buffer, 0, buffer.Length, callback, state, seekOrigin)
+    ;
 
   /// <summary>
   ///   Begins reading Bytes from a given position with a given SeekOrigin in the given buffer with an offset
@@ -1464,7 +1468,8 @@ internal
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static void EndReadBytes(this Stream @this, IAsyncResult result)
-    => @this.EndRead(result);
+    => @this.EndRead(result)
+    ;
 
   /// <summary>
   /// Seeks to the gives position and checks if the position is valid
@@ -1476,7 +1481,7 @@ internal
   [DebuggerHidden]
   private static void _SeekToPositionAndCheck(Stream stream, long position, int wantedBytes, SeekOrigin origin) {
     Against.False(stream.CanSeek);
-
+    
     var absolutePosition = origin switch {
       SeekOrigin.Begin => position,
       SeekOrigin.Current => stream.Position + position,
@@ -1484,9 +1489,7 @@ internal
       _ => throw new NotSupportedException()
     };
 
-    if (absolutePosition + wantedBytes > stream.Length)
-      throw new ArgumentOutOfRangeException($"offset({absolutePosition}) + count({wantedBytes}) > Stream.Length({stream.Length})");
-
+    Against.CountOutOfRange(absolutePosition + wantedBytes, stream.Length);
     stream.Seek(absolutePosition, SeekOrigin.Begin);
   }
 
