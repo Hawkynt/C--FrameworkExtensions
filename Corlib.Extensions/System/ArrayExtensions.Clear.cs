@@ -19,134 +19,72 @@
 */
 #endregion
 
+using Guard;
+
 namespace System;
 
 static partial class ArrayExtensions {
   
   public static void Clear(this byte[] @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     _FillWithBytes(@this, 0, @this.Length, 0);
   }
 
-  public static void Clear(this ushort[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this ushort[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (ushort* pointer = &@this[0])
-        _FillWords(pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (ushort* pointer = &@this[0])
+      _FillWords(pointer, @this.Length, 0);
   }
 
-  public static void Clear(this short[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this short[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (short* pointer = &@this[0])
-        _FillWords((ushort*)pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (short* pointer = &@this[0])
+      _FillWords((ushort*)pointer, @this.Length, 0);
   }
 
-  public static void Clear(this uint[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this uint[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (uint* pointer = &@this[0])
-        _FillDWords(pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillDWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (uint* pointer = &@this[0])
+      _FillDWords(pointer, @this.Length, 0);
   }
 
-  public static void Clear(this int[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this int[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (int* pointer = &@this[0])
-        _FillDWords((uint*)pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillDWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (int* pointer = &@this[0])
+      _FillDWords((uint*)pointer, @this.Length, 0);
   }
 
-  public static void Clear(this float[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this float[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (float* pointer = &@this[0])
-        _FillDWords((uint*)pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillDWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (float* pointer = &@this[0])
+      _FillDWords((uint*)pointer, @this.Length, 0);
   }
 
-  public static void Clear(this ulong[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this ulong[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (ulong* pointer = &@this[0])
-        _FillQWords(pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillQWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (ulong* pointer = &@this[0])
+      _FillQWords(pointer, @this.Length, 0);
   }
 
-  public static void Clear(this long[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this long[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (long* pointer = &@this[0])
-        _FillQWords((ulong*)pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillQWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (long* pointer = &@this[0])
+      _FillQWords((ulong*)pointer, @this.Length, 0);
   }
 
-  public static void Clear(this double[] @this) {
-    Guard.Against.ThisIsNull(@this);
+  public static unsafe void Clear(this double[] @this) {
+    Against.ThisIsNull(@this);
 
-#if UNSAFE
-    unsafe {
-      fixed (double* pointer = &@this[0])
-        _FillQWords((ulong*)pointer, @this.Length, 0);
-    }
-#else
-    using var sourceFixedPointer = DisposableGCHandle.Pin(@this);
-    var pointer = sourceFixedPointer.AddrOfPinnedObject();
-    _FillQWordPointer(pointer, 0, @this.Length, 0);
-#endif
+    fixed (double* pointer = &@this[0])
+      _FillQWords((ulong*)pointer, @this.Length, 0);
   }
 
 }

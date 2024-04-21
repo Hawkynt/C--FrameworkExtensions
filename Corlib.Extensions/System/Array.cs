@@ -2185,7 +2185,6 @@ static partial class ArrayExtensions {
 
     // ReSharper disable once JoinDeclarationAndInitializer
     int index;
-#if UNSAFE
 #if PLATFORM_X86
     // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
     if (searchStringLength <= 32)
@@ -2196,10 +2195,9 @@ static partial class ArrayExtensions {
       index = _ContainsBNDM(@this, searchString, offset);
 #endif
     else
-#endif
       index = _ContainsBoyerMoore(@this, searchString, offset);
 
-    return (index < 0 && defaultValueFunc != null) ? defaultValueFunc(@this, searchString) : index;
+    return index < 0 && defaultValueFunc != null ? defaultValueFunc(@this, searchString) : index;
   }
 
   private static int _ContainsNaïve(byte[] haystack, byte[] needle, int offset) {
@@ -2223,7 +2221,6 @@ static partial class ArrayExtensions {
     return _INDEX_WHEN_NOT_FOUND;
   }
 
-#if UNSAFE
   // maximum Length allowed for @this and searchByteArray = 32/64
   // ReSharper disable once SuggestBaseTypeForParameter
   private static unsafe int _ContainsBNDM(byte[] haystack, byte[] needle, int offset) {
@@ -2276,7 +2273,6 @@ static partial class ArrayExtensions {
 
     return _INDEX_WHEN_NOT_FOUND;
   }
-#endif
 
   private static int _ContainsBoyerMoore(byte[] haystack, byte[] needle, int offset) {
     var searchStringLength = needle.Length;

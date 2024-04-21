@@ -29,8 +29,6 @@
 <#
   const int LINEAR_BLOCK_COUNTX86   = 16;              // x86 can only copy 16-byte blocks without emitting loop constructs (rep movsb)
   const int LINEAR_BLOCK_COUNTX64   = 64;              // x64 uses vmovdqu for blocks up to 64-bytes
-  const int MARSHALL_SWITCH_COUNT   = 8;               // how many bytes we'll quickly process using a switch statement (must >= 7)
-  const int MARSHALL_LOOP_UNROLL    = 0;               // doesn't give speedup when using Marshal.* because the calls are damn slow anyway
   const int UNSAFE_SWITCH_COUNT     = 8;               // what number of bytes to unroll unsafe
   const int INDEX_LOOP_UNROLL       = 8;               // ldc.i4 8 is the highest opcode available for index operations
   const int BYTE_COUNT_POINTER      = 1 * 1024 * 1024; // we'll use pointer pinning and block-copies when this many bytes need to be copied
@@ -108,9 +106,6 @@ static partial class ArrayExtensions {
 <#  foreach(var typeData in typeDatas) {#>
 <#    var typeName = typeData.name;#>
   #region Type: <#=typeName#>
-<#    if(typeData.isUnsafeOnly) {#>
-#if UNSAFE
-<#    }#>
 <#    if(!typeData.noArraySupport) {#>
 
   <#=string.Join("\n  ", EmitMethodHeader2("Copy", typeData))#>) {
@@ -253,10 +248,6 @@ static partial class ArrayExtensions {
   }
 <#      }#>
 <#    }#>
-<#    if(typeData.isUnsafeOnly) {#>
-
-#endif
-<#    }#>
   #endregion
 <#  }#>
 <#  foreach(var typeData in typeDatas.Where(i=>!i.hasHandcraftedCopyToMethod)) {#>
@@ -279,17 +270,11 @@ static partial class ArrayExtensions {
 
 <#      if(BYTE_COUNT_POINTER > 0 && typeData.size > 0 && typeData.useBlockCopyInsteadOfArrayCopy) {#>
       if( count > <#=(BYTE_COUNT_POINTER / typeData.size)#>) {
-#if UNSAFE
         unsafe {
           fixed(<#=typeData.name#>* sourceFixedPointer = &source[srcIndex])
           fixed(<#=typeData.name#>* targetFixedPointer = &target[tgtIndex])
             _CopyTo(<#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>sourceFixedPointer, <#=(typeData.name == "byte" ? string.Empty : "(byte*)")#>targetFixedPointer, count<#=EmitFastIntegerMultiply(typeData.size)#>);
         }
-#else
-        using var sourceFixedPointer = DisposableGCHandle.Pin(source);
-        using var targetFixedPointer = DisposableGCHandle.Pin(target);
-        _CopyTo(sourceFixedPointer.AddrOfPinnedObject(), srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, targetFixedPointer.AddrOfPinnedObject(), tgtIndex<#=EmitFastIntegerMultiply(typeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>);
-#endif
 
         return;
       }
@@ -329,74 +314,13 @@ static partial class ArrayExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  private static void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count) {
-#if UNSAFE
-    unsafe { _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count); }
-#else
-    for (;;) {
-      switch(count) {
-        case 0: return;
-<#        for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-        case <#=i#>:
-          <#=string.Join("\n          ",EmitMarshalCopyBytes(i))#>
-          return;
-<#        }#>
-      }
-
-<#  if(MARSHALL_LOOP_UNROLL>1){#>
-
-      <#=string.Join("\n      ",EmitMarshalCopyBytes(MARSHALL_SWITCH_COUNT))#>
-      count -= <#=MARSHALL_SWITCH_COUNT#>;
-      srcIndex += <#=MARSHALL_SWITCH_COUNT#>;
-      tgtIndex += <#=MARSHALL_SWITCH_COUNT#>;
-    
-      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-      count = count<#=EmitFastIntegerModulo(8)#>;
-
-      while (qwordCount > 0) {
-        switch (qwordCount) {
-<#          for(var i = 1; i <= MARSHALL_LOOP_UNROLL; ++i) {#>
-          case <#=i#>: goto qwordDuff<#=(MARSHALL_LOOP_UNROLL - i)#>;<#}#>
-          default: goto qwordDuffOut;
-        }
-
-<#      for(var i = 0; i < MARSHALL_LOOP_UNROLL; ++i) {#>
-qwordDuff<#=i#>: <#=EmitMarshalCopyQWord((MARSHALL_LOOP_UNROLL - i - 1) * 8)#><#}#>
-
-        var processed = qwordCount<#=EmitFastIntegerMultiply(8)#>;
-        srcIndex += processed;
-        tgtIndex += processed;
-        break;
-
-qwordDuffOut:
-
-        do {
-          <#=string.Join("\n          ",EmitMarshalCopyBytes(MARSHALL_LOOP_UNROLL * 8))#>
-          srcIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-          tgtIndex += <#=(MARSHALL_LOOP_UNROLL * 8)#>;
-          qwordCount -= <#=MARSHALL_LOOP_UNROLL#>;
-        } while (qwordCount >= <#=MARSHALL_LOOP_UNROLL#>);
-
-      }
-<#  } else {#>
-      var qwordCount = count<#=EmitFastIntegerDivide(8)#>;
-      count = count<#=EmitFastIntegerModulo(8)#>;
-      do {
-        <#=string.Join("\n        ",EmitMarshalCopyBytes(8))#>
-        srcIndex += 8;
-        tgtIndex += 8;
-        --qwordCount;
-      } while (qwordCount > 0);
-<#  }#>
-    }
-#endif
-  }
+  private static unsafe void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count)
+    => _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count)
+    ;
 
   #endregion
 
   #region Fill
-
-#if UNSAFE
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -514,68 +438,9 @@ qwordDuffOut:
       } // single-byte switch
   }
 
-#else
-
-  public static void Fill(this IntPtr @this, int count, byte value) {
-    <#=EmitCountTooSmallCheck()#>
-      
-    for (;;)
-      switch (count) {
-        case 0: return;
-<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-        case <#=i#>: 
-          <#=string.Join("\n          ", EmitMarshalSetBytes(i, "value"))#>
-          return;
-<#    }#>
-        default: {
-          var block8 = (long) (0x0101010101010101UL * value);
-          var blocks = count >> 3;
-            
-          count &= 0b111;
-          for (;;)
-            switch (blocks) {
-<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-              case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-              default: {
-                var block64=(object)new Block64((ulong)block8);
-
-                do {
-                  Marshal.StructureToPtr(block64, @this, false);
-#if SUPPORTS_POINTER_ARITHMETIC
-                  @this += 64;
-#else
-                  _Add(ref @this, 64);
-#endif
-                  blocks -= 8;
-                } while (blocks >= 8);
-
-                continue; // next blocks
-              }
-            }
-              
-<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-          blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, block8);
-<#    }#>
-          blockCount1: Marshal.WriteInt64(@this, block8);
-#if SUPPORTS_POINTER_ARITHMETIC
-          @this += blocks << 3;
-#else
-          _Add(ref @this, blocks << 3);
-#endif
-          blockCount0: continue; // copy single bytes left
-
-        } // single-byte default
-      } // single-byte switch
-  }
-
-#endif
-
   #endregion
 
   #region Clear
-
-#if UNSAFE
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -693,67 +558,9 @@ qwordDuffOut:
       } // single-byte switch
   }
 
-#else
-
-  public static void Clear(this IntPtr @this, int count) {
-    <#=EmitCountTooSmallCheck()#>
-      
-    for (;;)
-      switch (count) {
-        case 0: return;
-<#    for(var i = 1; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-        case <#=i#>: 
-          <#=string.Join("\n          ", EmitMarshalSetBytes(i))#>
-          return;
-<#    }#>
-        default: {
-          var blocks = count >> 3;
-            
-          count &= 0b111;
-          for (;;)
-            switch (blocks) {
-<#    for(var i = 0; i <= MARSHALL_SWITCH_COUNT; ++i) {#>
-              case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-              default: {
-                var block64=(object)new Block64();
-
-                do {
-                  Marshal.StructureToPtr(block64, @this, false);
-#if SUPPORTS_POINTER_ARITHMETIC
-                  @this += 64;
-#else
-                  _Add(ref @this, 64);
-#endif
-                  blocks -= 8;
-                } while (blocks >= 8);
-
-                continue; // next blocks
-              }
-            }
-              
-<#    for(var i = MARSHALL_SWITCH_COUNT; i > 1; --i) {#>
-          blockCount<#=i#>: Marshal.WriteInt64(@this, <#=((i - 1) * 8)#>, 0);
-<#    }#>
-          blockCount1: Marshal.WriteInt64(@this, 0);
-#if SUPPORTS_POINTER_ARITHMETIC
-          @this += blocks << 3;
-#else
-          _Add(ref @this, blocks << 3);
-#endif
-          blockCount0: continue; // copy single bytes left
-
-        } // single-byte default
-      } // single-byte switch
-  }
-
-#endif
-
   #endregion
 
   #region Copy-blocks
-
-  #if UNSAFE
 
   #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -772,8 +579,6 @@ qwordDuffOut:
     
   #endif
         
-  #endif
-
   #endregion
 
   <#=string.Join("\n  ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
@@ -1074,17 +879,10 @@ IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount,
     yield return "  " + EmitCountTooLargeCheck(( i ==0 ? "@this" : operands[i] ) + ".Length - " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset");
 
   var paramList = string.Join(", ", operands.Select((n, i) => ( i ==0 ? "@this" : operands[i] ) + ", " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"));
-  yield return "  #if UNSAFE";
   yield return "  _" + name + "Unmanaged(" + paramList + ", count);";
-  yield return "  #else";
-  yield return "  _" + name + "Managed(" + paramList + ", count);";
-  yield return "  #endif";
   yield return "}";
   yield return string.Empty;
-  
-  yield return "#if UNSAFE";
-  yield return string.Empty;
-  
+    
   yield return "#if SUPPORTS_INLINING";
   yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
   yield return "#endif";
@@ -1104,10 +902,6 @@ IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount,
     yield return line;
 
   yield return string.Empty;
-  
-  yield return "#endif";
-  yield return string.Empty;
-  
   yield return "#endregion";
 }
 
