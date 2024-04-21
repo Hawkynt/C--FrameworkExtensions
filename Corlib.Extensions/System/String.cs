@@ -24,9 +24,6 @@
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if SUPPORTS_ARRAYPOOL && !UNSAFE
-using Buffers;
-#endif
 using Collections;
 using Collections.Generic;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
@@ -416,8 +413,6 @@ static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="sanitation">The character to use for sanitation; defaults to underscore (_)</param>
   /// <returns>The sanitized string.</returns>
-#if UNSAFE
-
   public static unsafe string SanitizeForFileName(this string @this, char sanitation = '_') {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(@this);
@@ -460,63 +455,6 @@ static partial class StringExtensions {
 
     return result;
   }
-
-#else
-
-  public static string SanitizeForFileName(this string @this, char sanitation = '_') {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrEmpty(@this);
-
-    var result = @this;
-
-    for (var i = 0; i < @this.Length; ++i) {
-      if (!_IsInvalidCharacter(@this[i]))
-        continue;
-
-      // ReSharper disable once UnusedVariable
-      var length = @this.Length;
-
-      // create copy and work on that
-#if SUPPORTS_SPAN
-      if (length <= _MAX_STACKALLOC_STRING_LENGTH) {
-        Span<char> results = stackalloc char[length];
-        @this.CopyTo(results);
-        results[i] = sanitation;
-        for (++i; i < results.Length; ++i)
-          if (_IsInvalidCharacter(results[i]))
-            results[i] = sanitation;
-
-        result = new(results);
-        break;
-      }
-#endif
-
-#if SUPPORTS_ARRAYPOOL
-      var buffer = ArrayPool<char>.Shared.Rent(length);
-      @this.CopyTo(buffer);
-      buffer[i] = sanitation;
-      for (++i; i < length; ++i)
-        if (_IsInvalidCharacter(buffer[i]))
-          buffer[i] = sanitation;
-
-      result = new(buffer, 0, length);
-      ArrayPool<char>.Shared.Return(buffer);
-#else
-      var buffer = @this.ToCharArray();
-      buffer[i] = sanitation;
-      for (++i; i < buffer.Length; ++i)
-        if (_IsInvalidCharacter(buffer[i]))
-          buffer[i] = sanitation;
-
-      result = new(buffer);
-#endif
-      break;
-    }
-
-    return result;
-  }
-
-#endif
 
   #region Matching Regexes
 
@@ -1106,7 +1044,6 @@ static partial class StringExtensions {
       var firstChar = @this[0];
       var firstCharUpper = culture == null ? char.ToUpper(firstChar) : char.ToUpper(firstChar, culture);
       if (firstCharUpper != firstChar) {
-#if UNSAFE
 #if SUPPORTS_SPAN
         result = new(@this);
 #else
@@ -1116,9 +1053,6 @@ static partial class StringExtensions {
           fixed (char* ptrResult = result)
             *ptrResult = firstCharUpper;
         }
-#else
-        result = length == 1 ? firstCharUpper.ToString() : firstCharUpper + @this[1..];
-#endif
       } else
         result = @this;
     } else
@@ -1149,7 +1083,6 @@ static partial class StringExtensions {
       var firstChar = @this[0];
       var firstCharUpper = char.ToUpperInvariant(firstChar);
       if (firstCharUpper != firstChar) {
-#if UNSAFE
 #if SUPPORTS_SPAN
         result = new(@this);
 #else
@@ -1159,9 +1092,6 @@ static partial class StringExtensions {
           fixed (char* ptrResult = result)
             *ptrResult = firstCharUpper;
         }
-#else
-        result = length == 1 ? firstCharUpper.ToString() : firstCharUpper + @this[1..];
-#endif
       } else
         result = @this;
     } else
@@ -1193,7 +1123,6 @@ static partial class StringExtensions {
       var firstChar = @this[0];
       var firstCharLower = culture == null ? char.ToLower(firstChar) : char.ToLower(firstChar, culture);
       if (firstCharLower != firstChar) {
-#if UNSAFE
 #if SUPPORTS_SPAN
         result = new(@this);
 #else
@@ -1203,9 +1132,6 @@ static partial class StringExtensions {
           fixed (char* ptrResult = result)
             *ptrResult = firstCharLower;
         }
-#else
-        result = length == 1 ? firstCharLower.ToString() : firstCharLower + @this[1..];
-#endif
       } else
         result = @this;
     } else
@@ -1236,7 +1162,6 @@ static partial class StringExtensions {
       var firstChar = @this[0];
       var firstCharLower = char.ToLowerInvariant(firstChar);
       if (firstCharLower != firstChar) {
-#if UNSAFE
 #if SUPPORTS_SPAN
         result = new(@this);
 #else
@@ -1246,9 +1171,6 @@ static partial class StringExtensions {
           fixed (char* ptrResult = result)
             *ptrResult = firstCharLower;
         }
-#else
-        result = length == 1 ? firstCharLower.ToString() : firstCharLower + @this[1..];
-#endif
       } else
         result = @this;
     } else
@@ -2200,11 +2122,25 @@ static partial class StringExtensions {
     return @this.EndsWith(what, stringComparison) ? @this[..^what.Length] + replacement : @this;
   }
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
-#if UNSAFE
-
+  /// <summary>
+  /// Trims the specified string from the end of the current string.
+  /// </summary>
+  /// <param name="this">The current string instance.</param>
+  /// <param name="what">The string to remove from the end of the current string.</param>
+  /// <returns>The string after removing the specified string from the end.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="what"/> is null.</exception>
+  /// <example>
+  /// <code>
+  /// string example = "Hello World!!!";
+  /// string trimmed = example.TrimEnd("!!!");
+  /// Console.WriteLine(trimmed); // Outputs: "Hello World"
+  /// </code>
+  /// This example demonstrates how to remove a specific substring ("!!!") from the end of a string.
+  /// </example>
+  /// <remarks>
+  /// If the string in <paramref name="what"/> does not appear at the end of the current string, or if it is an empty string,
+  /// the original string is returned unchanged. This method is case-sensitive.
+  /// </remarks>
   public static unsafe string TrimEnd(this string @this, string what) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
@@ -2223,7 +2159,7 @@ static partial class StringExtensions {
       while (true) {
         switch (count) {
           case 0:
-            return @this.Substring(0, index);
+            return @this[..index];
           case 1:
             if (*srcPtr != *cmpPtr)
               return @this;
@@ -2248,20 +2184,20 @@ static partial class StringExtensions {
             goto case 0;
 
 #if PLATFORM_X86
-            default:
-              const int stepSize = 4;
-              var cntSteps = count >> 2;
-              count &= 3;
-              do {
-                if (*(int*)srcPtr != *(int*)cmpPtr)
-                  return @this;
-                if (((int*)srcPtr)[1] != ((int*)cmpPtr)[1])
-                  return @this;
+          default:
+            const int stepSize = 4;
+            var cntSteps = count >> 2;
+            count &= 3;
+            do {
+              if (*(int*)srcPtr != *(int*)cmpPtr)
+                return @this;
+              if (((int*)srcPtr)[1] != ((int*)cmpPtr)[1])
+                return @this;
 
-                srcPtr += stepSize;
-                cmpPtr += stepSize;
-              } while (--cntSteps > 0);
-              break;
+              srcPtr += stepSize;
+              cmpPtr += stepSize;
+            } while (--cntSteps > 0);
+            break;
 #else
           case 5:
             if (*(long*)srcPtr != *(long*)cmpPtr)
@@ -2314,27 +2250,6 @@ static partial class StringExtensions {
 
     }
   }
-
-#else
-
-  public static string TrimEnd(this string @this, string what) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(what);
-
-    var index = @this.Length - what.Length;
-
-    // source shorter than search string, exit  
-    if (index < 0)
-      return @this;
-
-    for (int j = index, i = 0; i < what.Length; ++j, ++i)
-      if (@this[j] != what[i])
-        return @this;
-
-    return @this.Substring(0, index);
-  }
-
-#endif
 
   #region Null and WhiteSpace checks
 

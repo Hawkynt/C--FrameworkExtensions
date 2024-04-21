@@ -30,9 +30,6 @@ using System.Runtime.CompilerServices;
 namespace System;
 static partial class ArrayExtensions {
 
-
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -398,71 +395,9 @@ static partial class ArrayExtensions {
 
 #endif
 
-#else
-
-#if DEBUG && !PLATFORM_X86
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static bool _SequenceEqualManagedPointers(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      using (var sourceFixedPointer = DisposableGCHandle.Pin(source))
-      using (var targetFixedPointer = DisposableGCHandle.Pin(target)) {
-        var sourcePointer = sourceFixedPointer.AddrOfPinnedObject();
-        var targetPointer = targetFixedPointer.AddrOfPinnedObject();
-        while (count >= 8) {
-          if (Marshal.ReadInt64(sourcePointer, sourceOffset) != Marshal.ReadInt64(targetPointer, targetOffset))
-            return false;
-
-          sourceOffset += 8;
-          targetOffset += 8;
-          count -= 8;
-        }
-
-        while (count > 0) {
-          if (Marshal.ReadByte(sourcePointer, sourceOffset) != Marshal.ReadByte(targetPointer, targetOffset))
-            return false;
-
-          ++sourceOffset;
-          ++targetOffset;
-          --count;
-        }
-      }
-
-      return true;
-    }
-
-#endif
-
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private static bool _SequenceEqualNaive(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-      while (count > 0) {
-        if (source[sourceOffset] != target[targetOffset])
-          return false;
-
-        ++sourceOffset;
-        ++targetOffset;
-        --count;
-      }
-
-      return true;
-    }
-
-#endif
-
-  private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
-#if UNSAFE
-    return _SequenceUnsafe(source, sourceOffset, target, targetOffset, count);
-#else
-#if DEBUG && !PLATFORM_X86
-      return _SequenceEqualManagedPointers(source, sourceOffset, target, targetOffset, count);
-#else
-      return _SequenceEqualNaive(source, sourceOffset, target, targetOffset, count);
-#endif
-#endif
-  }
+  private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) 
+    => _SequenceUnsafe(source, sourceOffset, target, targetOffset, count)
+    ;
 
   public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
     if (ReferenceEquals(source, target) && sourceOffset == targetOffset)

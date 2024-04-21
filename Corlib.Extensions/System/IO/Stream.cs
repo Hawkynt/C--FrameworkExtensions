@@ -54,7 +54,7 @@ internal
 
   #region nested types
 
-#if !SUPPORTS_SPAN || !UNSAFE
+#if !SUPPORTS_SPAN
 
   private readonly struct BufferHandle : IDisposable {
     public readonly byte[] Buffer;
@@ -322,8 +322,6 @@ internal
 
   #region ushort
 
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -398,50 +396,6 @@ internal
 
     return result;
   }
-
-#else
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteLittleEndianU16(Stream stream, ushort value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[0] = (byte)value;
-    handle.Buffer[1] = (byte)(value >> 8);
-    stream.Write(handle.Buffer, 0, sizeof(ushort));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteBigEndianU16(Stream stream, ushort value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[1] = (byte)value;
-    handle.Buffer[0] = (byte)(value >> 8);
-    stream.Write(handle.Buffer, 0, sizeof(ushort));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static ushort _ReadLittleEndianU16(Stream stream) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ushort));
-    return (ushort)(handle.Buffer[0] | (handle.Buffer[1] << 8));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static ushort _ReadBigEndianU16(Stream stream) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ushort));
-    return (ushort)(handle.Buffer[1] | (handle.Buffer[0] << 8));
-  }
-
-#endif
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -584,9 +538,6 @@ internal
 
   #region uint
 
-
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -661,55 +612,7 @@ internal
 
     return result;
   }
-
-#else
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteLittleEndianU32(Stream stream, uint value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[0] = (byte)value;
-    handle.Buffer[1] = (byte)(value >> 8);
-    handle.Buffer[2] = (byte)(value >> 16);
-    handle.Buffer[3] = (byte)(value >> 24);
-    stream.Write(handle.Buffer, 0, sizeof(uint));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteBigEndianU32(Stream stream, uint value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[3] = (byte)value;
-    handle.Buffer[2] = (byte)(value >> 8);
-    handle.Buffer[1] = (byte)(value >> 16);
-    handle.Buffer[0] = (byte)(value >> 24);
-    stream.Write(handle.Buffer, 0, sizeof(uint));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static uint _ReadLittleEndianU32(Stream stream) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(uint));
-    return (uint)(handle.Buffer[0] | (handle.Buffer[1] << 8) | (handle.Buffer[2] << 16) | (handle.Buffer[3] << 24));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static uint _ReadBigEndianU32(Stream stream) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(uint));
-    return (uint)(handle.Buffer[3] | (handle.Buffer[2] << 8) | (handle.Buffer[1] << 16) | (handle.Buffer[0] << 24));
-  }
-
-#endif
-
+  
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -805,9 +708,6 @@ internal
 
   #region ulong
 
-
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -882,52 +782,6 @@ internal
 
     return result;
   }
-
-#else
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteLittleEndianU64(Stream stream, ulong value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[0] = (byte)value;
-    handle.Buffer[1] = (byte)(value >> 8);
-    handle.Buffer[2] = (byte)(value >> 16);
-    handle.Buffer[3] = (byte)(value >> 24);
-    handle.Buffer[4] = (byte)(value >> 32);
-    handle.Buffer[5] = (byte)(value >> 40);
-    handle.Buffer[6] = (byte)(value >> 48);
-    handle.Buffer[7] = (byte)(value >> 56);
-    stream.Write(handle.Buffer, 0, sizeof(ulong));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteBigEndianU64(Stream stream, ulong value) {
-    using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    handle.Buffer[7] = (byte)value;
-    handle.Buffer[6] = (byte)(value >> 8);
-    handle.Buffer[5] = (byte)(value >> 16);
-    handle.Buffer[4] = (byte)(value >> 24);
-    handle.Buffer[3] = (byte)(value >> 32);
-    handle.Buffer[2] = (byte)(value >> 40);
-    handle.Buffer[1] = (byte)(value >> 48);
-    handle.Buffer[0] = (byte)(value >> 56);
-    stream.Write(handle.Buffer, 0, sizeof(ulong));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static ulong _ReadLittleEndianU64(Stream stream) => _ReadLittleEndianU32(stream) | ((ulong)_ReadLittleEndianU32(stream) << 32);
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static ulong _ReadBigEndianU64(Stream stream) => ((ulong)_ReadBigEndianU32(stream) << 32) | _ReadBigEndianU32(stream);
-
-#endif
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1024,8 +878,6 @@ internal
 
   #region single
 
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1051,48 +903,6 @@ internal
     var result = _ReadBigEndianU32(stream);
     return *(float*)&result;
   }
-
-#else
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteLittleEndianF32(Stream stream, float value) {
-    var bytes = BitConverter.GetBytes(value);
-    stream.Write(bytes, 0, sizeof(float));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteBigEndianF32(Stream stream, float value) {
-    var bytes = BitConverter.GetBytes(value);
-    (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
-    stream.Write(bytes, 0, sizeof(float));
-  }
-  
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static float _ReadLittleEndianF32(Stream stream) {
-    var bytes = new byte[sizeof(float)];
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(bytes, 0, sizeof(float));
-    return BitConverter.ToSingle(bytes, 0);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static float _ReadBigEndianF32(Stream stream) {
-    var bytes = new byte[sizeof(float)];
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(bytes, 0, sizeof(float));
-    (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
-    return BitConverter.ToSingle(bytes, 0);
-  }
-
-#endif
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1141,8 +951,6 @@ internal
 
   #region double
 
-#if UNSAFE
-
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1168,48 +976,6 @@ internal
     var result = _ReadBigEndianU64(stream);
     return *(double*)&result;
   }
-
-#else
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteLittleEndianF64(Stream stream, double value) {
-    var bytes = BitConverter.GetBytes(value);
-    stream.Write(bytes, 0, sizeof(double));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _WriteBigEndianF64(Stream stream, double value) {
-    var bytes = BitConverter.GetBytes(value);
-    (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
-    stream.Write(bytes, 0, sizeof(double));
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static double _ReadLittleEndianF64(Stream stream) {
-    var bytes = new byte[sizeof(double)];
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(bytes, 0, sizeof(double));
-    return BitConverter.ToDouble(bytes, 0);
-  }
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static double _ReadBigEndianF64(Stream stream) {
-    var bytes = new byte[sizeof(double)];
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(bytes, 0, sizeof(double));
-    (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
-    return BitConverter.ToDouble(bytes, 0);
-  }
-
-#endif
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

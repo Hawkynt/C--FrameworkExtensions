@@ -15,7 +15,6 @@ jobs:
         os: [windows-latest]
         csproj-file: 
           - 'Tests/Corlib.Tests/Corlib.Tests.csproj'
-          - 'Tests/Corlib.Tests/Corlib.Tests (NoUnsafe).csproj'
         configuration: ['Debug','Release']
         architecture: ['AnyCPU','x86','x64']
 

@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if SUPPORTS_INLINING && !UNSAFE
-using System.Runtime.CompilerServices;
-#endif
-
 #if SUPPORTS_ASYNC
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,15 +27,6 @@ using System.Threading.Tasks;
 namespace System;
 
 static partial class ArrayExtensions {
-
-#if !UNSAFE
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _OrManaged(byte[] data, int offset, byte[] operand, int operandOffset, int count) => FastOr.ProcessInChunks(data, offset, operand, operandOffset, count);
-
-#endif
 
   private static class FastOr {
     private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {

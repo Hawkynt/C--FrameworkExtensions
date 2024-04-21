@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if SUPPORTS_INLINING && !UNSAFE
-using System.Runtime.CompilerServices;
-#endif
-
 #if SUPPORTS_ASYNC
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,16 +27,6 @@ using System.Threading.Tasks;
 namespace System; 
 
 static partial class ArrayExtensions {
-
-
-#if !UNSAFE
-
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  private static void _NotManaged(byte[] data, int offset, int count) => FastNot.ProcessInChunks(data, offset, count);
-  
-#endif
 
   private static class FastNot {
       

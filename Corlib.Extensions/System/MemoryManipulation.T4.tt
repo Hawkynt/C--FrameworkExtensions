@@ -51,8 +51,6 @@ internal static partial class MemoryManipulation {
   [StructLayout(LayoutKind.Sequential, Size = <#=blockSize#>)] 
   public struct Block<#=blockSize#> {
 
-#if UNSAFE
-
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -444,8 +442,6 @@ internal static partial class MemoryManipulation {
     }
 #>
     }
-    
-#endif
 
   }
 }
@@ -509,8 +505,6 @@ internal static partial class MemoryManipulation {
 #endif
   private static byte _Not(byte operand) => (byte)~operand;
 
-#if UNSAFE
-
 <#
   foreach(var size in new[]{1, 2, 4, 8}){
     GenerateTwoOperandArbitraryCountEqual("AreEqual", size);
@@ -541,8 +535,6 @@ internal static partial class MemoryManipulation {
   GenerateCopyToOperation("x64", MAX_SIZE);
   GenerateCopyToOperation("x86", MAX_COPY_SIZE_X86);
 #>
-
-#endif
 
 }
 }

@@ -19,10 +19,6 @@
 */
 #endregion
 
-#if !UNSAFE
-using System.Runtime.InteropServices;
-#endif
-
 namespace System;
 
 static partial class ArrayExtensions {
@@ -148,8 +144,6 @@ static partial class ArrayExtensions {
 
     _FillQWordPointer(@this, offset, count, value);
   }
-
-#if UNSAFE
 
   private static unsafe void _FillWithBytes(byte[] source, int offset, int count, byte value) {
     fixed (byte* pointer = &source[offset])
@@ -319,151 +313,5 @@ static partial class ArrayExtensions {
     while (--count >= 0)
       *source++ = value;
   }
-
-#else // Managed stuff
-
-    private static void _FillWithBytes(byte[] source, int offset, int count, byte value) {
-      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
-      _FillBytePointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithWords(byte[] source, int offset, int count, ushort value) {
-      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
-      _FillWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithDWords(byte[] source, int offset, int count, uint value) {
-      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
-      _FillDWordPointer(sourceFixedPointer.AddrOfPinnedObject(), offset, count, value);
-    }
-
-    private static void _FillWithQWords(byte[] source, int offset, int count, ulong value) {
-      offset <<= 3;
-      using var sourceFixedPointer = DisposableGCHandle.Pin(source);
-      _FillWithQWords(sourceFixedPointer.AddrOfPinnedObject(), ref offset, count, value);
-    }
-
-    private static void _FillBytePointer(IntPtr source, int offset, int count, byte value) {
-      if (count >= 8) {
-        var localCount = count >> 3;
-        _FillWithQWords(source, ref offset, localCount, (ulong)value << 56 | (ulong)value << 48 | (ulong)value << 40 | (ulong)value << 32 | (ulong)value << 24 | (ulong)value << 16 | (ulong)value << 8 | value);
-        count &= 0b111;
-      }
-
-      while (--count >= 0)
-        Marshal.WriteByte(source, offset++, value);
-    }
-
-    private static void _FillWordPointer(IntPtr source, int offset, int count, ushort value) {
-      offset = offset << 1;
-
-      if (count >= 4) {
-        var localCount = count >> 2;
-        _FillWithQWords(source, ref offset, localCount, (ulong)value << 32 | (ulong)value << 24 | (ulong)value << 16 | value);
-        count &= 0b11;
-      }
-
-      while (--count >= 0) {
-        Marshal.WriteInt16(source, offset, (short)value);
-        offset += 2;
-      }
-    }
-
-    private static void _FillDWordPointer(IntPtr source, int offset, int count, uint value) {
-      offset = offset << 2;
-
-      if (count >= 2) {
-        var localCount = count >> 1;
-        _FillWithQWords(source, ref offset, localCount, (ulong)value << 32 | value);
-        count &= 0b1;
-      }
-
-      while (--count >= 0) {
-        Marshal.WriteInt32(source, offset, (int)value);
-        offset += 4;
-      }
-    }
-
-    private static void _FillQWordPointer(IntPtr source, int offset, int count, ulong value) {
-      offset <<= 3;
-      _FillWithQWords(source, ref offset, count, value);
-    }
-
-#if !SUPPORTS_POINTER_ARITHMETIC
-    private static void _Add(ref IntPtr src, int count) => src = new IntPtr(src.ToInt64() + count);
-#endif
-
-    private static void _FillWithQWords(IntPtr source, ref int offset, int count, ulong value) {
-      var v = (long)value;
-#if SUPPORTS_POINTER_ARITHMETIC
-      source += offset;
-#else
-      _Add(ref source,offset);
-#endif
-      offset += count << 3;
-
-      if (count >= 64) {
-        Marshal.WriteInt64(source, 0, v);
-        Marshal.WriteInt64(source, 8, v);
-        Marshal.WriteInt64(source, 16, v);
-        Marshal.WriteInt64(source, 24, v);
-        Marshal.WriteInt64(source, 32, v);
-        Marshal.WriteInt64(source, 40, v);
-        Marshal.WriteInt64(source, 48, v);
-        Marshal.WriteInt64(source, 56, v);
-
-        var sizeInBytes = 64;
-        var start = source;
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += sizeInBytes;
-#else
-        _Add(ref source, sizeInBytes);
-#endif
-        count -= 8;
-
-        var countInBytes = count << 3;
-        while (countInBytes > sizeInBytes) {
-          _CopyTo(start, 0, source, 0, sizeInBytes);
-#if SUPPORTS_POINTER_ARITHMETIC
-          source += sizeInBytes;
-#else
-          _Add(ref source, sizeInBytes);
-#endif
-          countInBytes -= sizeInBytes;
-          sizeInBytes <<= 1;
-        }
-        _CopyTo(start, 0, source, 0, countInBytes);
-        return;
-      }
-
-      while (count >= 8) {
-        Marshal.WriteInt64(source, 0, v);
-        Marshal.WriteInt64(source, 8, v);
-        Marshal.WriteInt64(source, 16, v);
-        Marshal.WriteInt64(source, 24, v);
-        Marshal.WriteInt64(source, 32, v);
-        Marshal.WriteInt64(source, 40, v);
-        Marshal.WriteInt64(source, 48, v);
-        Marshal.WriteInt64(source, 56, v);
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += 64;
-#else
-        _Add(ref source, 64);
-#endif
-        count -= 8;
-      }
-
-      while (count > 0) {
-        Marshal.WriteInt64(source, 0, v);
-#if SUPPORTS_POINTER_ARITHMETIC
-        source += 8;
-#else
-        _Add(ref source, 8);
-#endif
-        --count;
-      }
-    }
-
-#endif
 
 }
