@@ -44,7 +44,7 @@ public static partial class StringPolyfills {
 #endif
   public static bool Contains(this string @this, string value, StringComparison comparisonType) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      throw new NullReferenceException(nameof(@this));
     if (value == null)
       throw new ArgumentNullException(nameof(value));
     
