@@ -27,12 +27,7 @@ using System.Collections.Generic;
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  class ConcurrentQueue<T> {
+public class ConcurrentQueue<T> {
   private readonly Queue<T> _queue = new();
 
   public bool IsEmpty => !this.Any();

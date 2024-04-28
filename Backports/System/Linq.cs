@@ -32,12 +32,7 @@ using Diagnostics.CodeAnalysis;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class EnumerablePolyfills {
+public static partial class EnumerablePolyfills {
 
   public static TResult[] ToArray<TResult>(this IEnumerable<TResult> @this) {
     if (@this == null)

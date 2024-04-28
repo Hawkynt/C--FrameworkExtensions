@@ -20,9 +20,4 @@
 #endregion
 
 namespace System.Runtime.CompilerServices;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static class IsExternalInit { }
+public static class IsExternalInit { }

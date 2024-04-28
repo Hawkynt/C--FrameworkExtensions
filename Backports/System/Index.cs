@@ -23,12 +23,7 @@
 namespace System;
 using Runtime.CompilerServices;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-readonly struct Index:IEquatable<Index> {
+public readonly struct Index:IEquatable<Index> {
   private readonly int _index;
 
   public static Index Start => new(0);

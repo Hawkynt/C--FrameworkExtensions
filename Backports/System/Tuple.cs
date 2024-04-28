@@ -22,33 +22,18 @@ using System.Globalization;
 
 namespace System {
   namespace Collections {
-#if COMPILE_TO_EXTENSION_DLL
-    public
-#else
-  internal
-#endif
-      interface IStructuralComparable {
+    public interface IStructuralComparable {
       int CompareTo(object other, IComparer comparer);
     }
 
-#if COMPILE_TO_EXTENSION_DLL
-    public
-#else
-  internal
-#endif
-      interface IStructuralEquatable {
+    public interface IStructuralEquatable {
       bool Equals(object other, IEqualityComparer comparer);
 
       int GetHashCode(IEqualityComparer comparer);
     }
   }
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    static class Tuple {
+  public static class Tuple {
     public static Tuple<T1> Create<T1>(T1 item1) => new(item1);
 
     public static Tuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2) => new(item1, item2);
@@ -77,12 +62,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1) => this.Item1 = item1;
 
     public T1 Item1 { get; }
@@ -114,12 +94,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -170,12 +145,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -234,12 +204,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3, T4 item4) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -308,12 +273,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -390,12 +350,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -480,12 +435,7 @@ namespace System {
 
   [Serializable]
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) {
       this.Item1 = item1;
       this.Item2 = item2;
@@ -577,13 +527,7 @@ namespace System {
   }
 
   [Serializable]
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IStructuralComparable, IComparable {
+  public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IStructuralComparable, IComparable {
     public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, TRest rest) {
       CheckType(rest);
       this.Item1 = item1;

@@ -27,12 +27,7 @@ using System.Collections.Generic;
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class ConcurrentBag<T> {
+public class ConcurrentBag<T> {
   private readonly List<T> _items = new();
 
   public bool Any() {

@@ -24,12 +24,7 @@
 #endregion
 
 namespace System.Threading;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class ManualResetEventSlim : IDisposable {
+public class ManualResetEventSlim : IDisposable {
   private readonly ManualResetEvent _manualResetEvent;
 
   public ManualResetEventSlim() : this(false) { }

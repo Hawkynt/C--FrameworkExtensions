@@ -23,12 +23,7 @@ namespace System.Threading;
 
 using Reflection;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class WaitHandleExtensions {
+public static partial class WaitHandleExtensions {
 
 #if !SUPPORTS_WAITHANDLE_DISPOSE
   public static void Dispose(this WaitHandle @this) {

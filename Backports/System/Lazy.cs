@@ -25,116 +25,105 @@ using System.Threading;
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System {
-  /// <summary>
-  /// Creates a value that is only calculated on first access and then cached.
-  /// </summary>
-  /// <typeparam name="TValue">The type of the result.</typeparam>
+namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class Lazy<TValue> {
-    private readonly ManualResetEventSlim _valueIsReady = new(false);
-    private readonly object _lock = new();
-    private TValue _value;
-    private readonly Func<TValue> _function;
+/// <summary>
+/// Creates a value that is only calculated on first access and then cached.
+/// </summary>
+/// <typeparam name="TValue">The type of the result.</typeparam>
+
+public class Lazy<TValue> {
+  private readonly ManualResetEventSlim _valueIsReady = new(false);
+  private readonly object _lock = new();
+  private TValue _value;
+  private readonly Func<TValue> _function;
 
 #region ctor
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;"/> class.
-    /// </summary>
-    /// <param name="function">The function that should create the value.</param>
-    public Lazy(Func<TValue> function) => this._function = function;
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;"/> class.
+  /// </summary>
+  /// <param name="function">The function that should create the value.</param>
+  public Lazy(Func<TValue> function) => this._function = function;
 
 #endregion
-    /// <summary>
-    /// Gets a value indicating whether this instance has a value already calculated.
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
-    /// </value>
-    public bool HasValue => this._valueIsReady.IsSet;
-
-    /// <summary>
-    /// Gets a value indicating whether this instance completed calculation.
-    /// </summary>
-    /// <value>
-    /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
-    /// </value>
-    public bool IsCompleted => this.HasValue;
-
-    /// <summary>
-    /// Gets the value.
-    /// </summary>
-    public TValue Value {
-      get {
-        if (this.HasValue)
-          return this._value;
-
-        lock (this._lock)
-          if (!this.HasValue) {
-            this._value = this._function();
-            this._valueIsReady.Set();
-          }
-
-        return this._value;
-      }
-    }
-    /// <summary>
-    /// Performs an implicit conversion from <see cref="Lazy"/> to <see cref="TValue"/>.
-    /// </summary>
-    /// <param name="lazy">The obj lazy.</param>
-    /// <returns>
-    /// The result of the conversion.
-    /// </returns>
-    public static implicit operator TValue(Lazy<TValue> lazy) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(lazy != null);
-#endif
-      return lazy.Value;
-    }
-    /// <summary>
-    /// Returns a <see cref="System.String"/> that represents this instance.
-    /// </summary>
-    /// <returns>
-    /// A <see cref="System.String"/> that represents this instance.
-    /// </returns>
-    public override string ToString() => this.HasValue ? this.Value.ToString() : "Lazy of type:" + typeof(TValue).Name;
-  }
+  /// <summary>
+  /// Gets a value indicating whether this instance has a value already calculated.
+  /// </summary>
+  /// <value>
+  ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
+  /// </value>
+  public bool HasValue => this._valueIsReady.IsSet;
 
   /// <summary>
-  /// A class that only calls it's action on access.
+  /// Gets a value indicating whether this instance completed calculation.
   /// </summary>
+  /// <value>
+  /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
+  /// </value>
+  public bool IsCompleted => this.HasValue;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class Lazy {
-    private readonly Lazy<byte> _lazy;
-    public Lazy(Action action) {
-      this._lazy = new(() => {
-        action();
-        return byte.MaxValue;
-      });
+  /// <summary>
+  /// Gets the value.
+  /// </summary>
+  public TValue Value {
+    get {
+      if (this.HasValue)
+        return this._value;
+
+      lock (this._lock)
+        if (!this.HasValue) {
+          this._value = this._function();
+          this._valueIsReady.Set();
+        }
+
+      return this._value;
     }
-    /// <summary>
-    /// Gets a value indicating whether this instance is completed.
-    /// </summary>
-    /// <value>
-    /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
-    /// </value>
-    public bool IsCompleted => this._lazy.HasValue;
-
-    /// <summary>
-    /// Triggers the action.
-    /// </summary>
-    public byte Value => this._lazy.Value;
   }
+  /// <summary>
+  /// Performs an implicit conversion from <see cref="Lazy"/> to <see cref="TValue"/>.
+  /// </summary>
+  /// <param name="lazy">The obj lazy.</param>
+  /// <returns>
+  /// The result of the conversion.
+  /// </returns>
+  public static implicit operator TValue(Lazy<TValue> lazy) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(lazy != null);
+#endif
+    return lazy.Value;
+  }
+  /// <summary>
+  /// Returns a <see cref="System.String"/> that represents this instance.
+  /// </summary>
+  /// <returns>
+  /// A <see cref="System.String"/> that represents this instance.
+  /// </returns>
+  public override string ToString() => this.HasValue ? this.Value.ToString() : "Lazy of type:" + typeof(TValue).Name;
+}
+
+/// <summary>
+/// A class that only calls it's action on access.
+/// </summary>
+public class Lazy {
+  private readonly Lazy<byte> _lazy;
+  public Lazy(Action action) {
+    this._lazy = new(() => {
+      action();
+      return byte.MaxValue;
+    });
+  }
+  /// <summary>
+  /// Gets a value indicating whether this instance is completed.
+  /// </summary>
+  /// <value>
+  /// 	<c>true</c> if this instance is completed; otherwise, <c>false</c>.
+  /// </value>
+  public bool IsCompleted => this._lazy.HasValue;
+
+  /// <summary>
+  /// Triggers the action.
+  /// </summary>
+  public byte Value => this._lazy.Value;
 }
 
 #endif

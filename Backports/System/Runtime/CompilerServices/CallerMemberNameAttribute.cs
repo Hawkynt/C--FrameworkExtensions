@@ -25,11 +25,6 @@ namespace System.Runtime.CompilerServices;
 
 [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-sealed class CallerMemberNameAttribute : Attribute { }
+public sealed class CallerMemberNameAttribute : Attribute { }
 
 #endif

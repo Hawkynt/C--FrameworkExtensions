@@ -28,12 +28,7 @@ using System.Linq;
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
+public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
   private readonly Dictionary<TKey, TValue> _items;
 
   public ConcurrentDictionary() => this._items = new();

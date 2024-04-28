@@ -24,12 +24,7 @@ using System.Runtime.CompilerServices;
 
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-readonly struct Range : IEquatable<Range> {
+public readonly struct Range : IEquatable<Range> {
   public Index Start { get; }
   public Index End { get; }
 

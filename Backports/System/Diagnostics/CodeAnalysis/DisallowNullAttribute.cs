@@ -23,11 +23,6 @@
 namespace System.Diagnostics.CodeAnalysis;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, Inherited = false)]
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  sealed class DisallowNullAttribute : Attribute { }
+public sealed class DisallowNullAttribute : Attribute { }
 
 #endif

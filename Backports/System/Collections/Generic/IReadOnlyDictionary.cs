@@ -28,20 +28,9 @@ using System.Collections.Generic;
 namespace System.Collections.ObjectModel;
 
 // ReSharper disable UnusedMember.Global
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-interface IReadOnlyDictionary<K, V> : IDictionary<K, V> { }
+public interface IReadOnlyDictionary<K, V> : IDictionary<K, V> { }
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class ReadOnlyDictionary<K, V> : Dictionary<K, V>, IReadOnlyDictionary<K, V> {
-
+public class ReadOnlyDictionary<K, V> : Dictionary<K, V>, IReadOnlyDictionary<K, V> {
   public ReadOnlyDictionary(IDictionary<K,V> dictionary) : base(dictionary) {}
 }
 #endif

@@ -41,13 +41,7 @@ using Runtime.InteropServices;
 ///   - they are mutable rather than readonly, and
 ///   - their members (such as Item1, Item2, etc) are fields rather than properties.
 /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple>, ITupleInternal {
+public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple>, ITupleInternal {
   int ITupleInternal.Size => 0;
 
   /// <summary>Creates a new struct 0-tuple.</summary>
@@ -226,13 +220,7 @@ struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStructuralCom
 
 /// <summary>Represents a 1-tuple, or singleton, as a value type.</summary>
 /// <typeparam name="T1">The type of the tuple's only component.</typeparam>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1>>, ITupleInternal {
+public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1}" /> instance's first component.
   /// </summary>
@@ -364,13 +352,7 @@ struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable, IStruc
 /// <typeparam name="T1">The type of the tuple's first component.</typeparam>
 /// <typeparam name="T2">The type of the tuple's second component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2>>, ITupleInternal {
+public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2}" /> instance's first component.
   /// </summary>
@@ -558,13 +540,7 @@ struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable
 /// <typeparam name="T2">The type of the tuple's second component.</typeparam>
 /// <typeparam name="T3">The type of the tuple's third component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3>
+public struct ValueTuple<T1, T2, T3>
   : IEquatable<ValueTuple<T1, T2, T3>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3}" /> instance's first component.
@@ -656,8 +632,7 @@ struct ValueTuple<T1, T2, T3>
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its fields
   ///   are equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
-  public bool Equals(ValueTuple<T1, T2, T3> other) =>
-    EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
+  public bool Equals(ValueTuple<T1, T2, T3> other) =>    EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
     && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2)
     && EqualityComparer<T3>.Default.Equals(this.Item3, other.Item3);
 
@@ -744,13 +719,7 @@ struct ValueTuple<T1, T2, T3>
 /// <typeparam name="T3">The type of the tuple's third component.</typeparam>
 /// <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3, T4> : IEquatable<ValueTuple<T1, T2, T3, T4>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4>>, ITupleInternal {
+public struct ValueTuple<T1, T2, T3, T4> : IEquatable<ValueTuple<T1, T2, T3, T4>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4}" /> instance's first component.
   /// </summary>
@@ -949,13 +918,7 @@ struct ValueTuple<T1, T2, T3, T4> : IEquatable<ValueTuple<T1, T2, T3, T4>>, IStr
 /// <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
 /// <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3, T4, T5> : IEquatable<ValueTuple<T1, T2, T3, T4, T5>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5>>, ITupleInternal {
+public struct ValueTuple<T1, T2, T3, T4, T5> : IEquatable<ValueTuple<T1, T2, T3, T4, T5>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4, T5}" /> instance's first component.
   /// </summary>
@@ -1174,13 +1137,7 @@ struct ValueTuple<T1, T2, T3, T4, T5> : IEquatable<ValueTuple<T1, T2, T3, T4, T5
 /// <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
 /// <typeparam name="T6">The type of the tuple's sixth component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3, T4, T5, T6> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6>>, ITupleInternal {
+public struct ValueTuple<T1, T2, T3, T4, T5, T6> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4, T5, T6}" /> instance's first component.
   /// </summary>
@@ -1419,13 +1376,7 @@ struct ValueTuple<T1, T2, T3, T4, T5, T6> : IEquatable<ValueTuple<T1, T2, T3, T4
 /// <typeparam name="T6">The type of the tuple's sixth component.</typeparam>
 /// <typeparam name="T7">The type of the tuple's seventh component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3, T4, T5, T6, T7> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>, ITupleInternal {
+public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4, T5, T6, T7}" /> instance's first component.
   /// </summary>
@@ -1684,13 +1635,7 @@ struct ValueTuple<T1, T2, T3, T4, T5, T6, T7> : IEquatable<ValueTuple<T1, T2, T3
 /// <typeparam name="T7">The type of the tuple's seventh component.</typeparam>
 /// <typeparam name="TRest">The type of the tuple's eighth component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, ITupleInternal
+public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, ITupleInternal
   where TRest : struct {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}" /> instance's first component.
@@ -2102,13 +2047,7 @@ struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTuple<T1,
 ///   Provides extension methods for <see cref="Tuple" /> instances to interop with C# tuples features (deconstruction
 ///   syntax, converting from and to <see cref="ValueTuple" />).
 /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static class TupleExtensions {
+public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1>(this Tuple<T1> value, out T1 item1) {
     if (value == null)

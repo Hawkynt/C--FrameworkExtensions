@@ -24,11 +24,6 @@
 namespace System.Runtime.CompilerServices;
 
 [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)]
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-sealed class ExtensionAttribute : Attribute { }
+public sealed class ExtensionAttribute : Attribute { }
 
 #endif
