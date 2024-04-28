@@ -18,29 +18,28 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if NET20_OR_GREATER
+
+#if NETFRAMEWORK
+
 using System.Data;
-namespace System.Web.UI.WebControls {
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class GridViewRowExtensions {
-    /// <summary>
-    /// Gets the data from a column.
-    /// </summary>
-    /// <param name="This">The this.</param>
-    /// <param name="columnName">Name of the column.</param>
-    /// <returns></returns>
-    public static object GetDataFromColumn(this GridViewRow This, string columnName) {
-      if (This.RowType != DataControlRowType.DataRow)
-        throw new ArgumentException("The GridViewRow must be a DataRow.");
+namespace System.Web.UI.WebControls;
 
-      var row = ((DataRowView)This.DataItem).Row;
-      return (row[columnName]);
-    }
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable UnusedMember.Global
+public static partial class GridViewRowExtensions {
+  /// <summary>
+  /// Gets the data from a column.
+  /// </summary>
+  /// <param name="This">The this.</param>
+  /// <param name="columnName">Name of the column.</param>
+  /// <returns></returns>
+  public static object GetDataFromColumn(this GridViewRow This, string columnName) {
+    if (This.RowType != DataControlRowType.DataRow)
+      throw new ArgumentException("The GridViewRow must be a DataRow.");
+
+    var row = ((DataRowView)This.DataItem).Row;
+    return row[columnName];
   }
 }
 
