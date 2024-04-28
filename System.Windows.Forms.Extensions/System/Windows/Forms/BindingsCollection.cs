@@ -29,12 +29,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class BindingsCollectionExtensions {
+public static partial class BindingsCollectionExtensions {
   /// <summary>
   ///   Gets a binding by its bound property.
   /// </summary>

@@ -28,13 +28,7 @@ namespace System.Windows.Forms;
 /// <summary>
 ///   Extension class for <see cref="ToolStripComboBox" /> objects.
 /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class ToolStripItemExtensions {
+public static partial class ToolStripItemExtensions {
   /// <summary>
   ///   Sets the <see cref="ToolStripItem.Text" /> property to the specified text and makes the <see cref="ToolStripItem" />
   ///   visible if the text is not <see langword="null" /> or contains only whitespace-characters.

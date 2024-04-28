@@ -23,16 +23,12 @@
 
 using System.ComponentModel;
 using System.Threading;
+
 // ReSharper disable UnusedMember.Global
 
 namespace System.Windows.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class EventExtensions {
+public static partial class EventExtensions {
   /// <summary>
   ///   Invokes an event safely from no matter what thread and makes sure that the subscribers who needs it, get the event
   ///   invocation in their own threads.
@@ -46,7 +42,7 @@ public
       // no subscribers
       return;
     var copy = @this;
-    foreach (var @delegate in copy.GetInvocationList()) {
+    foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is ISynchronizeInvoke dispatcherObject) {
         if (!dispatcherObject.InvokeRequired)
           @delegate.DynamicInvoke(sender, eventArgs);
@@ -56,7 +52,6 @@ public
         }
       } else
         @delegate.DynamicInvoke(sender, eventArgs);
-    }
   }
 
   /// <summary>
@@ -70,7 +65,7 @@ public
       // no subscribers
       return;
     var copy = @this;
-    foreach (var @delegate in copy.GetInvocationList()) {
+    foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is ISynchronizeInvoke dispatcherObject) {
         if (!dispatcherObject.InvokeRequired)
           @delegate.DynamicInvoke(arguments);
@@ -80,7 +75,6 @@ public
         }
       } else
         @delegate.DynamicInvoke(arguments);
-    }
   }
 
   /// <summary>

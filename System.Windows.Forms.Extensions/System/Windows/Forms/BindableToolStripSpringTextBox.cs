@@ -2,12 +2,7 @@
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  class BindableToolStripSpringTextBox : ToolStripSpringTextBox, IBindableComponent {
+public class BindableToolStripSpringTextBox : ToolStripSpringTextBox, IBindableComponent {
   #region IBindableComponent Members
 
   private BindingContext _bindingContext;

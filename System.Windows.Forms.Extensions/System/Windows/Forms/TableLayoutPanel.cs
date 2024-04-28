@@ -29,12 +29,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TableLayoutPanelExtensions {
+public static partial class TableLayoutPanelExtensions {
   /// <summary>
   ///   Removes the given row from a TableLayoutPanel.
   /// </summary>
@@ -259,8 +254,8 @@ public
   }
 
   /// <summary>
-  /// <br>A simple way to use the <see cref="TableLayoutPanel"/> as a table and fill it up with controls.</br>
-  /// <br>Info: The columns and their widths need to be already set, the rows will all be auto-sized.</br>
+  ///   <br>A simple way to use the <see cref="TableLayoutPanel" /> as a table and fill it up with controls.</br>
+  ///   <br>Info: The columns and their widths need to be already set, the rows will all be auto-sized.</br>
   /// </summary>
   /// <param name="this">This.</param>
   /// <param name="cellControls">The controls to fill up with, first dimension is the rows, 2nd the columns.</param>
@@ -284,5 +279,4 @@ public
     @this.Controls.Add(new Label { Width = 0, Height = 0 }, 0, cellControls.Length); //hack for correct display
     @this.ResumeLayout();
   }
-
 }

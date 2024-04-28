@@ -30,12 +30,7 @@ using word = System.UInt32;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TextBoxExtensions {
+public static partial class TextBoxExtensions {
   /// <summary>
   ///   Appends the text and scrolls.
   /// </summary>

@@ -28,12 +28,7 @@ namespace Microsoft.Office.Interop.Excel {
   /// <summary>
   ///   This class contains all constants, that are needed to access Excel Files.
   /// </summary>
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    static partial class ApplicationExtensions {
+  public static partial class ApplicationExtensions {
 
     /// <summary>
     ///   True to open the workbook in read-only mode.

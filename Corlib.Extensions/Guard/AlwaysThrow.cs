@@ -140,58 +140,72 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooLowException(string parameterName, int value, [CallerMemberName] string caller = null) 
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0") { Data = { { parameterName, value } } }
-  ;
+  public static void CountTooLowException(string parameterName, int value, [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0")
+      { Data = { { parameterName, value } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void CountTooLowException(string parameterName, long value, [CallerMemberName] string caller = null)
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0") { Data = { { parameterName, value } } }
-  ;
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0")
+      { Data = { { parameterName, value } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooHighException(string parameterName, int value, int maxValue, [CallerMemberName] string caller = null)
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too high {value} >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue } } }
-  ;
-  
-  [DebuggerHidden]
-  [MethodImpl(MethodImplOptions.NoInlining)]
-  [DoesNotReturn]
-  public static void CountTooHighException(string parameterName, long value, long maxValue, [CallerMemberName] string caller = null) 
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too high {value} >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue } } }
-  ;
+  public static void CountTooHighException(string parameterName, int value, int maxValue,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too high {value} >= {maxValue}")
+      { Data = { { parameterName, value }, { "Maximum", maxValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooHighException(string parameterName, int value, int checkValue, int maxValue, [CallerMemberName] string caller = null) 
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too high {checkValue}({value}) >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue }, { "Index", checkValue } } }
-  ;
+  public static void CountTooHighException(string parameterName, long value, long maxValue,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too high {value} >= {maxValue}")
+      { Data = { { parameterName, value }, { "Maximum", maxValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooHighException(string parameterName, long value, long checkValue, long maxValue, [CallerMemberName] string caller = null)
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Count too high {checkValue}({value}) >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue }, { "Index", checkValue } } }
-  ;
+  public static void CountTooHighException(string parameterName, int value, int checkValue, int maxValue,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too high {checkValue}({value}) >= {maxValue}")
+      { Data = { { parameterName, value }, { "Maximum", maxValue }, { "Index", checkValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountNotMultipleOfException(string parameterName, int needed, int value, [CallerMemberName] string caller = null)
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Missing {needed - value} more items to fully cover target items") { Data = { { parameterName, value }, { "Needed", needed }, { "Having", value } } }
-  ;
+  public static void CountTooHighException(string parameterName, long value, long checkValue, long maxValue,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Count too high {checkValue}({value}) >= {maxValue}")
+      { Data = { { parameterName, value }, { "Maximum", maxValue }, { "Index", checkValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountNotMultipleOfException(string parameterName, long needed, long value, [CallerMemberName] string caller = null)
-    => throw new ArgumentOutOfRangeException(parameterName, $"{(caller == null ? string.Empty : caller + ":")}Missing {needed - value} more items to fully cover target items") { Data = { { parameterName, value }, { "Needed", needed }, { "Having", value } } }
-  ;
+  public static void CountNotMultipleOfException(string parameterName, int needed, int value,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Missing {needed - value} more items to fully cover target items")
+      { Data = { { parameterName, value }, { "Needed", needed }, { "Having", value } } };
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void CountNotMultipleOfException(string parameterName, long needed, long value,
+    [CallerMemberName] string caller = null)
+    => throw new ArgumentOutOfRangeException(parameterName,
+        $"{(caller == null ? string.Empty : caller + ":")}Missing {needed - value} more items to fully cover target items")
+      { Data = { { parameterName, value }, { "Needed", needed }, { "Having", value } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]

@@ -33,12 +33,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ImageListExtensions {
+public static partial class ImageListExtensions {
   public static void SaveToDirectory(this ImageList @this, string directoryName) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(@this != null);

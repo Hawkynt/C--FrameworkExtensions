@@ -31,12 +31,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TreeViewExtensions {
+public static partial class TreeViewExtensions {
   /// <summary>
   ///   Used to store subscriptions to the treeviews.
   /// </summary>
@@ -268,7 +263,8 @@ public
 
       var nodeImage = treeNode.GetImage();
 
-      imageList.ImageSize = new(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)), Math.Min(256, treeNode.Bounds.Height));
+      imageList.ImageSize = new(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)),
+        Math.Min(256, treeNode.Bounds.Height));
 
       // Create new bitmap
       // This bitmap will contain the tree node image to be dragged

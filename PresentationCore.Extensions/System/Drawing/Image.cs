@@ -33,12 +33,7 @@ using System.Windows.Media.Imaging;
 // ReSharper disable PartialTypeWithSinglePart
 
 namespace System.Drawing;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ImageExtensions {
+public static partial class ImageExtensions {
   
 #if !NETCOREAPP && !NET5_0_OR_GREATER
   /// <summary>

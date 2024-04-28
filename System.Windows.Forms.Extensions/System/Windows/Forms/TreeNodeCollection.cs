@@ -25,13 +25,7 @@ using System.Collections.Generic;
 
 namespace System.Windows.Forms;
 // ReSharper disable once PartialTypeWithSinglePart
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TreeNodeCollectionExtensions {
+public static partial class TreeNodeCollectionExtensions {
   /// <summary>
   ///   Flatteneds the hierarchy.
   /// </summary>

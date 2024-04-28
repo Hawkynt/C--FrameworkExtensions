@@ -15,8 +15,6 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <UseWpf>True</UseWpf>
     <DebugType>embedded</DebugType>
-    <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
-    <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
     <CheckEolTargetFramework>False</CheckEolTargetFramework>
     <TargetFrameworks>net40;net45;net48;netcoreapp3.1;net6.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>

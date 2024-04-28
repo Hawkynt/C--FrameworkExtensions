@@ -26,12 +26,7 @@
 using System;
 
 namespace Microsoft.Office.Interop.Word {
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif 
-    class PrintToken : IDisposable {
+  public class PrintToken : IDisposable {
 
     private readonly string _currentPrinter;
     private readonly _Application _app;
@@ -44,12 +39,7 @@ namespace Microsoft.Office.Interop.Word {
     public void Dispose() => this._app.ActivePrinter = this._currentPrinter;
   }
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    static partial class ApplicationExtensions {
+  public static partial class ApplicationExtensions {
     public static PrintToken CreatePrintToken(this Application @this, string printer) => new PrintToken(@this, printer);
   }
 }

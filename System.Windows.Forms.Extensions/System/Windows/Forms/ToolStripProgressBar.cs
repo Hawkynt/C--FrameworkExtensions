@@ -31,12 +31,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ToolStripProgressBarExtensions {
+public static partial class ToolStripProgressBarExtensions {
   /// <summary>
   ///   Sets the progress bar percentage.
   /// </summary>

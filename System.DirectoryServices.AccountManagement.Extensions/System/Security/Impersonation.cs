@@ -35,12 +35,7 @@ namespace System.Security;
 
 [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class Impersonation : IDisposable {
+public class Impersonation : IDisposable {
   #region nested types
 
   public enum LogonType {

@@ -35,12 +35,7 @@ using System.Linq;
 
 namespace System.Drawing;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ImageExtensions {
+public static partial class ImageExtensions {
   /// <summary>
   ///   Gets a single page of a multipage image.
   /// </summary>

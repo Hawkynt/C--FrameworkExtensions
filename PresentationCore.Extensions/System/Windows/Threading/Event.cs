@@ -24,12 +24,7 @@
 using System.Threading;
 
 namespace System.Windows.Threading;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class EventExtensions {
+public static partial class EventExtensions {
   /// <summary>
   ///   Invokes an event safely from no matter what thread and makes sure that the subscribers who needs it, get the event
   ///   invocation in their own threads.

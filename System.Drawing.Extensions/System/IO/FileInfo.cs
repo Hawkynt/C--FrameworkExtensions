@@ -35,12 +35,7 @@ using System.Runtime.InteropServices;
 
 namespace System.IO;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class FileInfoExtensions {
+public static partial class FileInfoExtensions {
   /// <summary>
   ///   The native methods.
   /// </summary>

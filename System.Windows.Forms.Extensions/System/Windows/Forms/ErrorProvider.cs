@@ -27,11 +27,6 @@
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ErrorProviderExtensions {
+public static partial class ErrorProviderExtensions {
   public static void Clear(this ErrorProvider @this, Control control) => @this.SetError(control, null);
 }

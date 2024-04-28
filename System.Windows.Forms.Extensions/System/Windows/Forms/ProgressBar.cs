@@ -27,12 +27,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ProgressBarExtensions {
+public static partial class ProgressBarExtensions {
   /// <summary>
   ///   Sets the progress bar percentage.
   /// </summary>

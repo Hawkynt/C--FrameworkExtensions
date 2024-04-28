@@ -28,12 +28,7 @@ using System.Drawing;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TreeNodeExtensions {
+public static partial class TreeNodeExtensions {
   /// <summary>
   ///   Find out if a given node is a child of another one.
   /// </summary>

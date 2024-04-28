@@ -27,12 +27,7 @@ using System.ComponentModel;
 using System.Windows.Threading;
 
 namespace System.Collections.Specialized;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  class ObservableList<T> : IList<T>, IList, INotifyCollectionChanged where T : INotifyPropertyChanged {
+public class ObservableList<T> : IList<T>, IList, INotifyCollectionChanged where T : INotifyPropertyChanged {
   public Dispatcher Dispatcher { get; }
 
   private readonly List<T> _arrList = new();

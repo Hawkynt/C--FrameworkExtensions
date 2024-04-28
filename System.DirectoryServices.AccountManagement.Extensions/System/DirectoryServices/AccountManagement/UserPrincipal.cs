@@ -38,12 +38,7 @@ namespace System.DirectoryServices.AccountManagement;
 #if NET5_0_OR_GREATER
 [SupportedOSPlatform("windows")]
 #endif
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class UserPrincipalExtensions {
+public static partial class UserPrincipalExtensions {
 
   private static bool _FOS_IsNotNullOrWhiteSpace(this string text)
 #if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE

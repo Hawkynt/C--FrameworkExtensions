@@ -24,12 +24,7 @@
 // ReSharper disable UnusedMember.Global
 namespace System.Drawing;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class RectangleExtensions {
+public static partial class RectangleExtensions {
   /// <summary>
   ///   Scales the given rectangle by a given factor.
   /// </summary>

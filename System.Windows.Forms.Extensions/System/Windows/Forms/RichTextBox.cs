@@ -41,13 +41,7 @@ using DrawingSize = System.Drawing.Size;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class RichTextBoxExtensions {
-  
+public static partial class RichTextBoxExtensions {
   #region Native Methods
 
   private static partial class NativeMethods {
@@ -319,7 +313,8 @@ static partial class RichTextBoxExtensions {
 #if !SUPPORTS_CONDITIONAL_WEAK_TABLE
   private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new();
 #else
-  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new ConditionalWeakTable<RichTextBox, SyntaxHighlighter>();
+  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache =
+ new ConditionalWeakTable<RichTextBox, SyntaxHighlighter>();
 #endif
 
   public static void ApplySyntaxHighlighting(this RichTextBox @this, SyntaxHighlightingConfiguration configuration,
@@ -478,7 +473,8 @@ static partial class RichTextBoxExtensions {
       new ReadOnlyDictionary<string, ISyntaxStyle>(styles));
 
     private struct Pattern : ISyntaxHighlightPattern {
-      public Pattern(Regex regularExpression, ISyntaxStyle style, IReadOnlyDictionary<string, ISyntaxStyle> groupStyles = null) {
+      public Pattern(Regex regularExpression, ISyntaxStyle style,
+        IReadOnlyDictionary<string, ISyntaxStyle> groupStyles = null) {
         this.RegularExpression = regularExpression;
         this.Style = style;
         this.GroupStyles = groupStyles;

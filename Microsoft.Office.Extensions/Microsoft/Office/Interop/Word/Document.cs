@@ -25,12 +25,7 @@ using System.IO;
 
 namespace Microsoft.Office.Interop.Word {
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static class DocumentExtensions {
+  public static class DocumentExtensions {
 
     /// <summary>
     /// Returns the file that belong to this <see cref="Document"/>.

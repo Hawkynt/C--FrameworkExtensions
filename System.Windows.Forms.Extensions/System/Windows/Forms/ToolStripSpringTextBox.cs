@@ -3,12 +3,7 @@
 namespace System.Windows.Forms;
 
 // see https://docs.microsoft.com/en-us/dotnet/desktop/winforms/controls/stretch-a-toolstriptextbox-to-fill-the-remaining-width-of-a-toolstrip-wf?view=netframeworkdesktop-4.8
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  class ToolStripSpringTextBox : ToolStripTextBox {
+public class ToolStripSpringTextBox : ToolStripTextBox {
   public override Size GetPreferredSize(Size constrainingSize) {
     // Use the default size if the text box is on the overflow menu
     // or is on a vertical ToolStrip.

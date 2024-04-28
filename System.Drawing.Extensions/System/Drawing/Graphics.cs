@@ -27,12 +27,7 @@
 
 namespace System.Drawing;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class GraphicsExtensions {
+public static partial class GraphicsExtensions {
   public static void DrawString(this Graphics @this, float x, float y, string text, Font font, Brush brush, ContentAlignment anchor) {
     var size = @this.MeasureString(text, font);
 

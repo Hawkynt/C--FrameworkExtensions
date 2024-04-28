@@ -16,7 +16,6 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
-    <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
     <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>

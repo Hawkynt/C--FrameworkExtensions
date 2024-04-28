@@ -28,12 +28,7 @@ using System.Linq;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ToolTipExtensions {
+public static partial class ToolTipExtensions {
   /// <summary>
   ///   Sets the tooltips on each child control of the base control.
   /// </summary>

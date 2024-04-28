@@ -28,12 +28,7 @@
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class ControlCollectionExtensions {
+public static partial class ControlCollectionExtensions {
   public static Control[] ToArray(this Control.ControlCollection @this) {
     var result = new Control[@this.Count];
     for (var i = 0; i < result.Length; ++i)

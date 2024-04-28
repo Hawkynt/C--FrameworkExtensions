@@ -8,12 +8,7 @@ using System.IO;
 using System.Linq;
 
 namespace Microsoft.Office.Interop.Outlook {
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif 
-    static partial class MailItemExtensions {
+  public static partial class MailItemExtensions {
 
     public static void AddMailToRecipients(this MailItem @this, string[] mailTo) {
       if (mailTo == null || mailTo.Length == 0)

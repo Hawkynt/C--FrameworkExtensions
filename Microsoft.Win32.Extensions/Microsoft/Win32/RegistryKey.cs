@@ -30,12 +30,7 @@ namespace Microsoft.Win32 {
 #if NET5_0_OR_GREATER
   [SupportedOSPlatform("windows")]
 #endif
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    static partial class RegistryKeyExtensions {
+  public static partial class RegistryKeyExtensions {
     /// <summary>
     /// </summary>
     /// <param name="this"></param>

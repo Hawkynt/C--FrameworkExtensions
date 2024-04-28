@@ -39,12 +39,7 @@ using System.Runtime.InteropServices;
 namespace System.Drawing;
 // ReSharper disable once PartialTypeWithSinglePart
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class BitmapExtensions {
+public static partial class BitmapExtensions {
   #region nested types
 
   // ReSharper disable once PartialTypeWithSinglePart
@@ -60,7 +55,6 @@ static partial class BitmapExtensions {
     public static void MemorySet(IntPtr source, byte value, int count) => _MemorySet(source, value, count);
   }
 
-  [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public interface IBitmapLocker : IDisposable {
     BitmapData BitmapData { get; }
     Color this[int x, int y] { get; set; }

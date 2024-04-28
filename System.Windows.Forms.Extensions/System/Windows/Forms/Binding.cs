@@ -27,12 +27,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class BindingExtensions {
+public static partial class BindingExtensions {
   /// <summary>
   ///   Adds a value converter for a certain type of values.
   /// </summary>

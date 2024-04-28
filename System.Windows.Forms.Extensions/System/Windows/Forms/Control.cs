@@ -40,12 +40,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Forms;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ControlExtensions {
+public static partial class ControlExtensions {
   #region nested types
 
   [CompilerGenerated]
@@ -915,11 +910,15 @@ public
         case MemberExpression member: // controlProperty = bs.PropertyName
           return _GetPropertyName(member);
 
-        case UnaryExpression { NodeType: ExpressionType.Convert, Operand: MemberExpression member } // controlProperty = (cast)bs.PropertyName
+        case UnaryExpression {
+            NodeType: ExpressionType.Convert, Operand: MemberExpression member
+          } // controlProperty = (cast)bs.PropertyName
           :
           return _GetPropertyName(member);
 
-        case MethodCallExpression { Method.Name: nameof(ToString), Arguments.Count: 0, Object: MemberExpression member } // controlProperty = bs.PropertyName.ToString()
+        case MethodCallExpression {
+            Method.Name: nameof(ToString), Arguments.Count: 0, Object: MemberExpression member
+          } // controlProperty = bs.PropertyName.ToString()
           :
           return _GetPropertyName(member);
       }
@@ -934,7 +933,10 @@ public
           :
           return member.Member.Name;
 
-        case UnaryExpression { NodeType: ExpressionType.Convert, Operand: MemberExpression { Expression: ParameterExpression parameter } member } when parameter.Type == controlType
+        case UnaryExpression {
+            NodeType: ExpressionType.Convert,
+            Operand: MemberExpression { Expression: ParameterExpression parameter } member
+          } when parameter.Type == controlType
           :
           return member.Member.Name;
 

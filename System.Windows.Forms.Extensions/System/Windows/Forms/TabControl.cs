@@ -35,13 +35,7 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Forms;
 // ReSharper disable once PartialTypeWithSinglePart
 // ReSharper disable once UnusedMember.Global
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class TabControlExtensions {
+public static partial class TabControlExtensions {
   public static void AddImageToImageList(this TabControl @this, Image image, string key) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(image != null);

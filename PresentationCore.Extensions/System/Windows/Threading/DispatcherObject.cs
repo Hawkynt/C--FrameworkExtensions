@@ -27,12 +27,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Windows.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class DispatcherObjectExtensions {
+public static partial class DispatcherObjectExtensions {
   /// <summary>
   ///   Safely invokes an action on a dispatcher object.
   /// </summary>

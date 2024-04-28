@@ -26,13 +26,7 @@ namespace System.Windows.Forms;
 /// <summary>
 ///   Extension class for <see cref="ToolStripComboBox" /> objects.
 /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class ToolStripComboBoxExtensions {
+public static partial class ToolStripComboBoxExtensions {
   /// <summary>
   ///   Sets the selected item and suppress given event.
   /// </summary>

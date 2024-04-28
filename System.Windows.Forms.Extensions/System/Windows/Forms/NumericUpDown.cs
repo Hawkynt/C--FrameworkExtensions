@@ -28,13 +28,7 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Forms;
 // ReSharper disable once PartialTypeWithSinglePart
 // ReSharper disable once UnusedMember.Global
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class NumericUpDownExtensions {
+public static partial class NumericUpDownExtensions {
   /// <summary>
   ///   Sets the min,max & step values.
   /// </summary>

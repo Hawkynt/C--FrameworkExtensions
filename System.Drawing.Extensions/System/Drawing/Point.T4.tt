@@ -42,12 +42,7 @@ for(var k=0;k<d.Length;++k){
   var j=d[(k+1)%d.Length];
 #>
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class <#=i.Item1#>Extensions {
+  public static partial class <#=i.Item1#>Extensions {
     public static <#=i.Item1#> SetX(this <#=i.Item1#> @this, <#=i.Item2#> value) => new <#=i.Item1#>(value, @this.Y);
     public static <#=i.Item1#> SetY(this <#=i.Item1#> @this, <#=i.Item2#> value) => new <#=i.Item1#>(@this.X, value);
 
@@ -113,12 +108,7 @@ for(var k=0;k<d.Length;++k){
   }
 <# } #>
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class PointExtensions {
+  public static partial class PointExtensions {
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,12 +117,7 @@ for(var k=0;k<d.Length;++k){
 
   }
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class PointFExtensions {
+  public static partial class PointFExtensions {
   
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

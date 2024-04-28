@@ -6,12 +6,7 @@ namespace System.Windows.Forms;
 // see https://stackoverflow.com/questions/2002170/c-sharp-how-to-implement-databinding-without-control
 [ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.ToolStrip |
                                    ToolStripItemDesignerAvailability.StatusStrip)]
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  class BindableToolStripButton : ToolStripButton, IBindableComponent {
+public class BindableToolStripButton : ToolStripButton, IBindableComponent {
   #region IBindableComponent Members
 
   private BindingContext _bindingContext;

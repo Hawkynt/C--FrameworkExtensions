@@ -16,8 +16,6 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
-    <DefineConstants Condition="'$(AllowUnsafeBlocks)' == 'true'">$(DefineConstants);UNSAFE</DefineConstants>
-    <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
