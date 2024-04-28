@@ -1,6 +1,6 @@
 # Extensions to WindowsForms
 
-[![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Build.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Build.yml)
+[![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml)
 [![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
 
 [![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/master/System.Windows.Forms.Extensions)
