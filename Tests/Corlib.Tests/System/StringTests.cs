@@ -467,32 +467,32 @@ public class StringTests {
   [TestCaseSource(nameof(_TestMatchesTestData))]
 
   public void Matches(MatchesTestData data) {
-    var resultProvider = () => data.Input.Matches(data.Regex, data.RegexOptions);
-
     if (data.Exception == null) {
-      var resultMatchCollection = resultProvider.Invoke();
+      var resultMatchCollection = ResultProvider();
       for (var i = 0; i < resultMatchCollection.Count; ++i) {
         Assert.True(resultMatchCollection[i].ToString().Equals(data.Expected![i]));
       }
     } else {
-      Assert.That(resultProvider, Throws.TypeOf(data.Exception));
+      Assert.That(ResultProvider, Throws.TypeOf(data.Exception));
     }
+    
+    MatchCollection ResultProvider() => data.Input.Matches(data.Regex, data.RegexOptions);
   }
 
   [Test]
   [TestCaseSource(nameof(_TestMatchGroupsTestData))]
 
   public void MatchGroups(MatchGroupsTestData data) {
-    var resultProvider = () => data.Input.MatchGroups(data.Regex, data.RegexOptions);
-
     if (data.Exception == null) {
-      var resultGroupCollection = resultProvider.Invoke();
+      var resultGroupCollection = ResultProvider();
       for (var i = 0; i < resultGroupCollection.Count; ++i) {
         Assert.True(resultGroupCollection[i].ToString().Equals(data.Expected![i]));
       }
     } else {
-      Assert.That(resultProvider, Throws.TypeOf(data.Exception));
+      Assert.That(ResultProvider, Throws.TypeOf(data.Exception));
     }
+
+    GroupCollection ResultProvider() => data.Input.MatchGroups(data.Regex, data.RegexOptions);
   }
 
   [Test]
