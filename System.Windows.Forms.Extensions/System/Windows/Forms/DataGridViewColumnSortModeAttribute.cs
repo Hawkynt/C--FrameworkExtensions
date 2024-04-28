@@ -32,7 +32,6 @@ public sealed class DataGridViewColumnSortModeAttribute : Attribute {
 
   public DataGridViewColumnSortModeAttribute(DataGridViewColumnSortMode sortMode) => this.SortMode = sortMode;
 
-  public void ApplyTo(DataGridViewColumn column) {
-    column.SortMode = this.SortMode;
-  }
+  public void ApplyTo(DataGridViewColumn column) => column.SortMode = this.SortMode;
+  
 }

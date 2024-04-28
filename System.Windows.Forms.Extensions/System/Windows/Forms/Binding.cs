@@ -21,9 +21,7 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -32,17 +30,18 @@ public static partial class BindingExtensions {
   ///   Adds a value converter for a certain type of values.
   /// </summary>
   /// <typeparam name="TType">The type of the value to convert.</typeparam>
-  /// <param name="This">This Binding.</param>
+  /// <param name="this">This Binding.</param>
   /// <param name="converter">The converter.</param>
-  public static void AddTypeConverter<TType>(this Binding This, Func<object, TType> converter) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(converter != null);
-#endif
-    This.Format += (s, e) => {
+  public static void AddTypeConverter<TType>(this Binding @this, Func<object, TType> converter) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(converter);
+
+    @this.Format += (_, e) => {
       if (e.DesiredType != typeof(TType))
         return;
+      
       e.Value = converter(e.Value);
     };
+    
   }
 }

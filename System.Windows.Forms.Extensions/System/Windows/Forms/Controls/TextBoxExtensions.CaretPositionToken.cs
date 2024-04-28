@@ -21,23 +21,23 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
 
-namespace System.Windows.Forms;
+namespace System.Windows.Controls;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class TextBoxExtensions {
+  private class CaretPositionToken : ICaretPositionToken {
+    private readonly Point _point;
 
-  public string ConditionPropertyName { get; }
+    public CaretPositionToken() => NativeMethods._GetCaretPos(out this._point);
 
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
+    public void Dispose() {
+      NativeMethods._SetCaretPos(this._point.X, this._point.Y);
+      GC.SuppressFinalize(this);
+    }
 
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+    ~CaretPositionToken() => this.Dispose();
+
+    public Point Position => this._point;
   }
 }

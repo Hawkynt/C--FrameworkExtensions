@@ -33,8 +33,7 @@ public sealed class DataGridViewComboboxColumnAttribute : Attribute {
   public string DisplayMember { get; }
   public string DataSourcePropertyName { get; }
 
-  public DataGridViewComboboxColumnAttribute(string dataSourcePropertyName, string enabledWhenPropertyName = null,
-    string valueMember = null, string displayMember = null) {
+  public DataGridViewComboboxColumnAttribute(string dataSourcePropertyName, string enabledWhenPropertyName = null, string valueMember = null, string displayMember = null) {
     this.EnabledWhenPropertyName = enabledWhenPropertyName;
     this.ValueMember = valueMember;
     this.DisplayMember = displayMember;

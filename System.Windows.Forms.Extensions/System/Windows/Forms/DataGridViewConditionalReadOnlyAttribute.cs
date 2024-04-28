@@ -32,6 +32,8 @@ public sealed class DataGridViewConditionalReadOnlyAttribute : Attribute {
 
   public string IsReadOnlyWhen { get; }
 
-  public bool IsReadOnly(object row) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsReadOnlyWhen, false, false, false, false);
+  public bool IsReadOnly(object row)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsReadOnlyWhen, false, false, false, false)
+    ;
+  
 }

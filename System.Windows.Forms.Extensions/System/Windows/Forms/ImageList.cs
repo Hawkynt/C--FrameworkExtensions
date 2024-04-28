@@ -23,9 +23,7 @@
 
 using System.IO;
 using System.Linq;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -35,14 +33,13 @@ namespace System.Windows.Forms;
 
 public static partial class ImageListExtensions {
   public static void SaveToDirectory(this ImageList @this, string directoryName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     var images = @this.Images;
     foreach (var image in from i in Enumerable.Range(0, images.Count) select Tuple.Create(i, images[i], images.Keys[i]))
-      image.Item2.Save(image.Item3 + ".png");
+      image.Item2.Save(Path.Combine(directoryName, image.Item3 + ".png"));
   }
 
-  public static void SaveToDirectory(this ImageList @this, DirectoryInfo directory) =>
-    SaveToDirectory(@this, directory.FullName);
+  public static void SaveToDirectory(this ImageList @this, DirectoryInfo directory) => SaveToDirectory(@this, directory.FullName);
+  
 }

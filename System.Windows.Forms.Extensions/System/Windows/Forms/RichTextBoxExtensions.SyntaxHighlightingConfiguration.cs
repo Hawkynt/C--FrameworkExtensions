@@ -26,18 +26,17 @@ using System.Linq;
 
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class RichTextBoxExtensions {
+  public struct SyntaxHighlightingConfiguration {
+    public ISyntaxHighlightPattern[] Patterns { get; }
 
-  public string ConditionPropertyName { get; }
+    public SyntaxHighlightingConfiguration(IEnumerable<ISyntaxHighlightPattern> patterns) {
+      if (patterns == null)
+        throw new ArgumentNullException(nameof(patterns));
 
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
+      this.Patterns = patterns.ToArray();
+    }
 
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+    public SyntaxHighlightingConfiguration(params ISyntaxHighlightPattern[] patterns) => this.Patterns = patterns;
   }
 }

@@ -21,23 +21,32 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class ControlExtensions {
+  private class SuspendedRedrawToken : ISuspendedRedrawToken {
+    private readonly IntPtr _targetControl;
 
-  public string ConditionPropertyName { get; }
+    [DllImport("user32.dll")]
+    private static extern int SendMessage(IntPtr hWnd, int wMsg, bool wParam, int lParam);
 
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
+    private const int WM_SETREDRAW = 11;
 
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+    public SuspendedRedrawToken(Control targetControl) 
+      => SendMessage(this._targetControl = targetControl.Handle, WM_SETREDRAW, false, 0)
+      ;
+
+    ~SuspendedRedrawToken() => this._Dispose(false);
+
+    private void _Dispose(bool isManagedDisposal) {
+      SendMessage(this._targetControl, WM_SETREDRAW, true, 0);
+      if (isManagedDisposal)
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose() => this._Dispose(true);
+    
   }
 }

@@ -33,8 +33,7 @@ public sealed class DataGridViewNumericUpDownColumnAttribute : Attribute {
   public int DecimalPlaces { get; }
   public decimal Increment { get; }
 
-  public DataGridViewNumericUpDownColumnAttribute(double minimum, double maximum, double increment = 1,
-    int decimalPlaces = 2) {
+  public DataGridViewNumericUpDownColumnAttribute(double minimum, double maximum, double increment = 1, int decimalPlaces = 2) {
     this.Minimum = (decimal)minimum;
     this.Maximum = (decimal)maximum;
     this.Increment = (decimal)increment;

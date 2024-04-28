@@ -21,9 +21,7 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Windows.Forms;
 // ReSharper disable once PartialTypeWithSinglePart
@@ -37,9 +35,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="max">The max.</param>
   /// <param name="step">The step.</param>
   public static void SetMinMaxStep(this NumericUpDown This, decimal min, decimal max, decimal step) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+    
     This.Minimum = min;
     This.Maximum = max;
     This.Increment = step;
@@ -53,9 +50,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="max">The max.</param>
   /// <param name="step">The step.</param>
   public static void SetMinMaxStep(this NumericUpDown This, double min, double max, double step) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetMinMaxStep((decimal)min, (decimal)max, (decimal)step);
   }
 
@@ -67,9 +63,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="max">The max.</param>
   /// <param name="step">The step.</param>
   public static void SetMinMaxStep(this NumericUpDown This, int min, int max, int step) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetMinMaxStep((decimal)min, max, step);
   }
 
@@ -79,9 +74,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, decimal value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.Value = Math.Min(Math.Max(This.Minimum, value), This.Maximum);
   }
 
@@ -91,9 +85,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, double value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetSaveValue((decimal)value);
   }
 
@@ -103,9 +96,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, int value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetSaveValue((decimal)value);
   }
 
@@ -115,9 +107,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, uint value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetSaveValue((decimal)value);
   }
 
@@ -127,9 +118,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, long value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetSaveValue((decimal)value);
   }
 
@@ -139,9 +129,8 @@ public static partial class NumericUpDownExtensions {
   /// <param name="This">This NumericUpDown.</param>
   /// <param name="value">The value to set.</param>
   public static void SetSaveValue(this NumericUpDown This, ulong value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Against.ThisIsNull(This);
+
     This.SetSaveValue((decimal)value);
   }
 }

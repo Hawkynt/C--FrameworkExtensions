@@ -21,23 +21,20 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class ControlExtensions {
+  [CompilerGenerated]
+  // ReSharper disable once InconsistentNaming
+  private sealed class __FunctionWithDummyParameterWrapper<TResult> {
+#pragma warning disable CC0074 // Make field readonly
+    public Func<TResult> function;
+#pragma warning restore CC0074 // Make field readonly
 
-  public string ConditionPropertyName { get; }
-
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
-
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+#pragma warning disable CC0057 // Unused parameters
+    public TResult Invoke(object _) => this.function();
+#pragma warning restore CC0057 // Unused parameters
   }
 }

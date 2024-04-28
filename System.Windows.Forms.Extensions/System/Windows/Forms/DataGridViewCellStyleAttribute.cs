@@ -109,11 +109,11 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
     style.Alignment = this.Alignment;
   }
 
-  private bool _IsEnabled(object data) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false);
+  private bool _IsEnabled(object data) 
+    => DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false)
+    ;
 
-  public static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row,
-    DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  public static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     foreach (var attribute in @this)
       if (attribute._IsEnabled(data))
         attribute._ApplyTo(e.CellStyle, data);

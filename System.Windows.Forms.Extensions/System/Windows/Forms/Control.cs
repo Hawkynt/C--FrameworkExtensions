@@ -27,12 +27,8 @@ using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -41,154 +37,19 @@ using System.Diagnostics.Contracts;
 namespace System.Windows.Forms;
 
 public static partial class ControlExtensions {
-  #region nested types
-
-  [CompilerGenerated]
-  // ReSharper disable once InconsistentNaming
-  private sealed class __ActionWithDummyParameterWrapper {
-#pragma warning disable CC0074 // Make field readonly
-    public Action method;
-#pragma warning restore CC0074 // Make field readonly
-
-#pragma warning disable CC0057 // Unused parameters
-    public void Invoke(object _) => this.method();
-#pragma warning restore CC0057 // Unused parameters
-  }
-
-  [CompilerGenerated]
-  // ReSharper disable once InconsistentNaming
-  private sealed class __ControlActionWithDummyParameterWrapper<TControl> where TControl : Control {
-#pragma warning disable CC0074 // Make field readonly
-    public Action<TControl> method;
-    public TControl control;
-#pragma warning restore CC0074 // Make field readonly
-
-#pragma warning disable CC0057 // Unused parameters
-    public void Invoke(object _) => this.method(this.control);
-#pragma warning restore CC0057 // Unused parameters
-  }
-
-  [CompilerGenerated]
-  // ReSharper disable once InconsistentNaming
-  private sealed class __FunctionWithDummyParameterWrapper<TResult> {
-#pragma warning disable CC0074 // Make field readonly
-    public Func<TResult> function;
-#pragma warning restore CC0074 // Make field readonly
-
-#pragma warning disable CC0057 // Unused parameters
-    public TResult Invoke(object _) => this.function();
-#pragma warning restore CC0057 // Unused parameters
-  }
-
-  [CompilerGenerated]
-  // ReSharper disable once InconsistentNaming
-  private sealed class __ReturnValueWithDummyParameterWrapper<TControl, TResult> where TControl : Control {
-#pragma warning disable CC0074 // Make field readonly
-    public TControl control;
-    public Func<TControl, TResult> function;
-    public TResult result;
-#pragma warning restore CC0074 // Make field readonly
-
-#pragma warning disable CC0057 // Unused parameters
-    public void Invoke(object _) => this.result = this.function(this.control);
-#pragma warning restore CC0057 // Unused parameters
-  }
-
-  [CompilerGenerated]
-  // ReSharper disable once InconsistentNaming
-  private sealed class __HandleCallback<TControl> where TControl : Control {
-#pragma warning disable CC0074 // Make field readonly
-    public Action<TControl> method;
-    public ManualResetEventSlim resetEvent;
-#pragma warning restore CC0074 // Make field readonly
-
-    public void Invoke(object sender, EventArgs _) {
-      var control = (TControl)sender;
-      control.HandleCreated -= this.Invoke;
-      try {
-        this.method(control);
-      } finally {
-        this.resetEvent?.Set();
-      }
-    }
-  }
-
-  /// <summary>
-  ///   The token that resumes layout on disposal.
-  /// </summary>
-  public interface ISuspendedLayoutToken : IDisposable { }
-
-  private class SuspendedLayoutToken : ISuspendedLayoutToken {
-    private readonly Control _targetControl;
-
-    public SuspendedLayoutToken(Control targetControl) {
-      targetControl.SuspendLayout();
-      this._targetControl = targetControl;
-    }
-
-    ~SuspendedLayoutToken() {
-      this._Dispose(false);
-    }
-
-    private void _Dispose(bool isManagedDisposal) {
-      this._targetControl.ResumeLayout(true);
-      if (isManagedDisposal)
-        GC.SuppressFinalize(this);
-    }
-
-    public void Dispose() => this._Dispose(true);
-  }
-
-  public interface ISuspendedRedrawToken : IDisposable { }
-
-  private class SuspendedRedrawToken : ISuspendedRedrawToken {
-    private readonly IntPtr _targetControl;
-
-    [DllImport("user32.dll")]
-    private static extern int SendMessage(IntPtr hWnd, int wMsg, bool wParam, int lParam);
-
-    private const int WM_SETREDRAW = 11;
-
-    public SuspendedRedrawToken(Control targetControl) {
-      SendMessage(this._targetControl = targetControl.Handle, WM_SETREDRAW, false, 0);
-    }
-
-    ~SuspendedRedrawToken() {
-      this._Dispose(false);
-    }
-
-    private void _Dispose(bool isManagedDisposal) {
-      SendMessage(this._targetControl, WM_SETREDRAW, true, 0);
-      if (isManagedDisposal)
-        GC.SuppressFinalize(this);
-    }
-
-    public void Dispose() => this._Dispose(true);
-  }
-
-  #endregion
-
   /// <summary>
   ///   Stops the layout and returns a token which will continue layoutint on disposal.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <returns></returns>
   public static ISuspendedLayoutToken PauseLayout(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
     return new SuspendedLayoutToken(@this);
   }
 
   public static ISuspendedRedrawToken PauseRedraw(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
     return new SuspendedRedrawToken(@this);
   }
@@ -199,15 +60,9 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <param name="dueTime">The time to wait until execution.</param>
   /// <param name="action">The action.</param>
-  public static void SetTimeout<TControl>(this TControl @this, TimeSpan dueTime, Action<TControl> action)
-    where TControl : Control {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (action == null)
-      throw new ArgumentNullException(nameof(action));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+  public static void SetTimeout<TControl>(this TControl @this, TimeSpan dueTime, Action<TControl> action) where TControl : Control {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
 
     Async(@this, t => {
       Thread.Sleep(dueTime);
@@ -221,16 +76,13 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <returns>The position of it relative to it's form.</returns>
   public static Point GetLocationOnForm(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+    Against.ThisIsNull(@this);
+    
     var result = @this.Location;
     var c = @this;
-    for (; !(c is Form); c = c.Parent)
+    for (; c is not Form; c = c.Parent)
       result.Offset(c.Location);
+    
     return result;
   }
 
@@ -240,22 +92,14 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <returns>The position of it relative to it's screen.</returns>
   public static Point GetLocationOnScreen(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+    Against.ThisIsNull(@this);
+    
     return @this.PointToScreen(Point.Empty);
   }
 
   public static Point GetLocationOnClient(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+    Against.ThisIsNull(@this);
+    
     var result = Point.Empty;
     var c = @this;
     for (; c.Parent != null; c = c.Parent)
@@ -275,14 +119,9 @@ public static partial class ControlExtensions {
   /// </returns>
   /// <exception cref="System.ObjectDisposedException">Control already disposed.</exception>
   public static bool SafelyInvoke(this Control @this, Action task, bool async = true) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (task == null)
-      throw new ArgumentNullException(nameof(task));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(task);
+    
     return SafelyInvoke(@this, new __ActionWithDummyParameterWrapper { method = task }.Invoke, async);
   }
 
@@ -295,13 +134,8 @@ public static partial class ControlExtensions {
   /// <param name="function">The function.</param>
   /// <returns>Whatever the method returned.</returns>
   public static TResult SafelyInvoke<TResult>(this Control @this, Func<TResult> function) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (function == null)
-      throw new ArgumentNullException(nameof(function));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(function);
 
     return SafelyInvoke(@this, new __FunctionWithDummyParameterWrapper<TResult> { function = function }.Invoke);
   }
@@ -316,15 +150,9 @@ public static partial class ControlExtensions {
   /// <returns>
   ///   Whatever the method returned.
   /// </returns>
-  public static TResult SafelyInvoke<TControl, TResult>(this TControl @this, Func<TControl, TResult> function)
-    where TControl : Control {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (function == null)
-      throw new ArgumentNullException(nameof(function));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+  public static TResult SafelyInvoke<TControl, TResult>(this TControl @this, Func<TControl, TResult> function) where TControl : Control {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(function);
 
     if (@this.IsDisposed)
       throw new ObjectDisposedException(nameof(@this));
@@ -358,15 +186,9 @@ public static partial class ControlExtensions {
   /// <returns>
   ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
   /// </returns>
-  public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool async = true)
-    where TControl : Control {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (task == null)
-      throw new ArgumentNullException(nameof(task));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+  public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool async = true) where TControl : Control {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(task);
 
     if (@this.IsDisposed)
       throw new ObjectDisposedException(nameof(@this));
@@ -402,11 +224,11 @@ public static partial class ControlExtensions {
 
     if (async)
       @this.HandleCreated += new __HandleCallback<TControl> { method = task }.Invoke;
-    else
-      using (var eventWaiter = new ManualResetEventSlim(false)) {
-        @this.HandleCreated += new __HandleCallback<TControl> { method = task, resetEvent = eventWaiter }.Invoke;
-        eventWaiter.Wait();
-      }
+    else {
+      using var eventWaiter = new ManualResetEventSlim(false);
+      @this.HandleCreated += new __HandleCallback<TControl> { method = task, resetEvent = eventWaiter }.Invoke;
+      eventWaiter.Wait();
+    }
 
     return false;
   }
@@ -420,13 +242,8 @@ public static partial class ControlExtensions {
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
   public static bool Async(this Control @this, Action task) {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-    if (@this == null)
-      throw new NullReferenceException();
-    if (task == null)
-      throw new ArgumentNullException(nameof(task));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(task);
 
     if (@this.InvokeRequired) {
       task();
@@ -446,13 +263,8 @@ public static partial class ControlExtensions {
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
   public static bool Async<TControl>(this TControl @this, Action<TControl> task) where TControl : Control {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-    if (@this == null)
-      throw new NullReferenceException();
-    if (task == null)
-      throw new ArgumentNullException(nameof(task));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(task);
 
     if (@this.InvokeRequired) {
       task(@this);
@@ -472,18 +284,11 @@ public static partial class ControlExtensions {
   /// <param name="task">The task.</param>
   /// <param name="syncPostAction">The sync post action.</param>
 #pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
-  public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task,
-    Action<TControl> syncPostAction = null) where TControl : Control {
+  public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task, Action<TControl> syncPostAction = null) where TControl : Control {
 #pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
-    if (@this == null)
-      throw new NullReferenceException();
-    if (syncPreAction == null)
-      throw new ArgumentNullException(nameof(syncPreAction));
-    if (task == null)
-      throw new ArgumentNullException(nameof(task));
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(syncPreAction);
+    Against.ArgumentIsNull(task);
 
     SafelyInvoke(@this, syncPreAction, false);
     Async(@this, () => {
@@ -502,11 +307,7 @@ public static partial class ControlExtensions {
   /// <param name="this">This control.</param>
   /// <returns>A string with text or <c>null</c>.</returns>
   public static string GetTextProperty(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
     var text = @this.Text;
     if (text == null)
@@ -522,11 +323,7 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <param name="predicate">The predicate, default to <c>null</c>.</param>
   public static void ClearChildren(this Control @this, Predicate<Control> predicate = null) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
     var children = @this.Controls;
     if (predicate == null)
@@ -555,11 +352,7 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <returns>An enumeration of child controls.</returns>
   public static IEnumerable<Control> AllControls(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
     foreach (Control child in @this.Controls) {
       yield return child;
@@ -580,8 +373,7 @@ public static partial class ControlExtensions {
   /// </summary>
   /// <param name="this">The control</param>
   public static void EnableDoubleBuffering(this Control @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     if (SystemInformation.TerminalServerSession)
       return;
@@ -601,292 +393,332 @@ public static partial class ControlExtensions {
   /// <param name="newName">The name for the new control; defaults to auto-name.</param>
   /// <returns>A new control with the same properties as the given one.</returns>
   public static Control Duplicate(this Control @this, string newName = null) {
-    if (@this == null)
-      throw new NullReferenceException();
-#if SUPPORTS_CONTRACTS
-      Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
 
-    if (newName == null)
-      newName = new Guid().ToString();
+    newName ??= new Guid().ToString();
 
-    if (@this is Label) {
-      var label = new Label {
-        AllowDrop = @this.AllowDrop,
-        Anchor = @this.Anchor,
-        AutoEllipsis = ((Label)@this).AutoEllipsis,
-        AutoSize = @this.AutoSize,
-        BackColor = @this.BackColor,
-        BackgroundImage = @this.BackgroundImage,
-        AutoScrollOffset = @this.AutoScrollOffset,
-        BackgroundImageLayout = @this.BackgroundImageLayout,
-        Bounds = @this.Bounds,
-        Capture = @this.Capture,
-        Text = @this.Text,
-        Tag = @this.Tag,
-        BorderStyle = ((Label)@this).BorderStyle,
-        CausesValidation = @this.CausesValidation,
-        ClientSize = @this.ClientSize,
+    switch (@this) {
+      case Label label: {
+        return new Label {
+          AllowDrop = label.AllowDrop,
+          Anchor = label.Anchor,
+          AutoEllipsis = label.AutoEllipsis,
+          AutoSize = label.AutoSize,
+          BackColor = label.BackColor,
+          BackgroundImage = label.BackgroundImage,
+          AutoScrollOffset = label.AutoScrollOffset,
+          BackgroundImageLayout = label.BackgroundImageLayout,
+          Bounds = label.Bounds,
+          Capture = label.Capture,
+          Text = label.Text,
+          Tag = label.Tag,
+          BorderStyle = label.BorderStyle,
+          CausesValidation = label.CausesValidation,
+          ClientSize = label.ClientSize,
 #if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-        ContextMenu = @this.ContextMenu,
+          ContextMenu = label.ContextMenu,
 #endif
-        Cursor = @this.Cursor,
-        Enabled = @this.Enabled,
-        Visible = @this.Visible,
-        Dock = @this.Dock,
-        FlatStyle = ((Label)@this).FlatStyle,
-        Font = @this.Font,
-        ForeColor = @this.ForeColor,
-        ContextMenuStrip = @this.ContextMenuStrip,
-        Location = @this.Location,
-        Size = @this.Size,
-        Image = ((Label)@this).Image,
-        ImageAlign = ((Label)@this).ImageAlign,
-        ImageKey = ((Label)@this).ImageKey,
-        ImageIndex = ((Label)@this).ImageIndex,
-        ImageList = ((Label)@this).ImageList,
-        TextAlign = ((Label)@this).TextAlign,
-        Padding = @this.Padding,
-        Margin = @this.Margin,
-        UseWaitCursor = @this.UseWaitCursor,
-        UseMnemonic = ((Label)@this).UseMnemonic,
-        Name = newName,
-        RightToLeft = @this.RightToLeft,
-        MinimumSize = @this.MinimumSize,
-        MaximumSize = @this.MaximumSize,
-      };
-      return label;
-    }
-
-    newName = new Guid().ToString();
-    if (@this is Button)
-      return new Button {
-        AllowDrop = @this.AllowDrop,
-        Anchor = @this.Anchor,
-        AutoEllipsis = ((Button)@this).AutoEllipsis,
-        AutoSize = @this.AutoSize,
-        BackColor = @this.BackColor,
-        BackgroundImage = @this.BackgroundImage,
-        AutoScrollOffset = @this.AutoScrollOffset,
-        BackgroundImageLayout = @this.BackgroundImageLayout,
-        Bounds = @this.Bounds,
-        Capture = @this.Capture,
-        Text = @this.Text,
-        Tag = @this.Tag,
-        CausesValidation = @this.CausesValidation,
-        ClientSize = @this.ClientSize,
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-        ContextMenu = @this.ContextMenu,
-#endif
-        Cursor = @this.Cursor,
-        Enabled = @this.Enabled,
-        Visible = @this.Visible,
-        Dock = @this.Dock,
-        FlatStyle = ((Button)@this).FlatStyle,
-        Font = @this.Font,
-        ForeColor = @this.ForeColor,
-        ContextMenuStrip = @this.ContextMenuStrip,
-        Location = @this.Location,
-        Size = @this.Size,
-        Image = ((Button)@this).Image,
-        ImageAlign = ((Button)@this).ImageAlign,
-        ImageKey = ((Button)@this).ImageKey,
-        ImageIndex = ((Button)@this).ImageIndex,
-        ImageList = ((Button)@this).ImageList,
-        TextAlign = ((Button)@this).TextAlign,
-        Padding = @this.Padding,
-        Margin = @this.Margin,
-        UseWaitCursor = @this.UseWaitCursor,
-        UseMnemonic = ((Button)@this).UseMnemonic,
-        Name = newName,
-        RightToLeft = @this.RightToLeft,
-        MinimumSize = @this.MinimumSize,
-        MaximumSize = @this.MaximumSize,
-        TextImageRelation = ((Button)@this).TextImageRelation,
-        UseVisualStyleBackColor = ((Button)@this).UseVisualStyleBackColor,
-        UseCompatibleTextRendering = ((Button)@this).UseCompatibleTextRendering,
-        AutoSizeMode = ((Button)@this).AutoSizeMode,
-        DialogResult = ((Button)@this).DialogResult,
-      };
-    if (@this is CheckBox)
-      return new CheckBox {
-        AllowDrop = @this.AllowDrop,
-        Anchor = @this.Anchor,
-        AutoEllipsis = ((CheckBox)@this).AutoEllipsis,
-        AutoSize = @this.AutoSize,
-        BackColor = @this.BackColor,
-        BackgroundImage = @this.BackgroundImage,
-        AutoScrollOffset = @this.AutoScrollOffset,
-        BackgroundImageLayout = @this.BackgroundImageLayout,
-        Bounds = @this.Bounds,
-        Capture = @this.Capture,
-        Text = @this.Text,
-        Tag = @this.Tag,
-        CausesValidation = @this.CausesValidation,
-        ClientSize = @this.ClientSize,
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-        ContextMenu = @this.ContextMenu,
-#endif
-        Cursor = @this.Cursor,
-        Enabled = @this.Enabled,
-        Visible = @this.Visible,
-        Dock = @this.Dock,
-        FlatStyle = ((CheckBox)@this).FlatStyle,
-        Font = @this.Font,
-        ForeColor = @this.ForeColor,
-        ContextMenuStrip = @this.ContextMenuStrip,
-        Location = @this.Location,
-        Size = @this.Size,
-        Image = ((CheckBox)@this).Image,
-        ImageAlign = ((CheckBox)@this).ImageAlign,
-        ImageKey = ((CheckBox)@this).ImageKey,
-        ImageIndex = ((CheckBox)@this).ImageIndex,
-        ImageList = ((CheckBox)@this).ImageList,
-        TextAlign = ((CheckBox)@this).TextAlign,
-        Padding = @this.Padding,
-        Margin = @this.Margin,
-        UseWaitCursor = @this.UseWaitCursor,
-        UseMnemonic = ((CheckBox)@this).UseMnemonic,
-        Name = newName,
-        RightToLeft = @this.RightToLeft,
-        MinimumSize = @this.MinimumSize,
-        MaximumSize = @this.MaximumSize,
-        CheckAlign = ((CheckBox)@this).CheckAlign,
-        CheckState = ((CheckBox)@this).CheckState,
-        Checked = ((CheckBox)@this).Checked,
-        AutoCheck = ((CheckBox)@this).AutoCheck,
-        ThreeState = ((CheckBox)@this).ThreeState,
-        TextImageRelation = ((CheckBox)@this).TextImageRelation,
-        Appearance = ((CheckBox)@this).Appearance,
-      };
-    if (@this is NumericUpDown)
-      return new NumericUpDown {
-        AllowDrop = @this.AllowDrop,
-        Anchor = @this.Anchor,
-        AutoSize = @this.AutoSize,
-        BackColor = @this.BackColor,
-        BackgroundImage = @this.BackgroundImage,
-        AutoScrollOffset = @this.AutoScrollOffset,
-        BackgroundImageLayout = @this.BackgroundImageLayout,
-        Bounds = @this.Bounds,
-        Capture = @this.Capture,
-        Text = @this.Text,
-        Tag = @this.Tag,
-        CausesValidation = @this.CausesValidation,
-        ClientSize = @this.ClientSize,
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-        ContextMenu = @this.ContextMenu,
-#endif
-        Cursor = @this.Cursor,
-        Enabled = @this.Enabled,
-        Visible = @this.Visible,
-        Dock = @this.Dock,
-        Font = @this.Font,
-        ForeColor = @this.ForeColor,
-        ContextMenuStrip = @this.ContextMenuStrip,
-        Location = @this.Location,
-        Size = @this.Size,
-        TextAlign = ((NumericUpDown)@this).TextAlign,
-        Padding = @this.Padding,
-        Margin = @this.Margin,
-        UseWaitCursor = @this.UseWaitCursor,
-        Name = newName,
-        RightToLeft = @this.RightToLeft,
-        MinimumSize = @this.MinimumSize,
-        MaximumSize = @this.MaximumSize,
-        Minimum = ((NumericUpDown)@this).Minimum,
-        Maximum = ((NumericUpDown)@this).Maximum,
-        Value = ((NumericUpDown)@this).Value,
-        UpDownAlign = ((NumericUpDown)@this).UpDownAlign,
-        ThousandsSeparator = ((NumericUpDown)@this).ThousandsSeparator,
-        ReadOnly = ((NumericUpDown)@this).ReadOnly,
-        InterceptArrowKeys = ((NumericUpDown)@this).InterceptArrowKeys,
-        Increment = ((NumericUpDown)@this).Increment,
-        Hexadecimal = ((NumericUpDown)@this).Hexadecimal,
-        DecimalPlaces = ((NumericUpDown)@this).DecimalPlaces,
-        BorderStyle = ((NumericUpDown)@this).BorderStyle,
-        AutoValidate = ((NumericUpDown)@this).AutoValidate,
-        AutoScroll = ((NumericUpDown)@this).AutoScroll,
-        AutoScrollMargin = ((NumericUpDown)@this).AutoScrollMargin,
-        AutoScrollMinSize = ((NumericUpDown)@this).AutoScrollMinSize,
-        AutoScrollPosition = ((NumericUpDown)@this).AutoScrollPosition
-      };
-
-    if (@this is ComboBox) {
-      var comboBox = new ComboBox {
-        AllowDrop = @this.AllowDrop,
-        Anchor = @this.Anchor,
-        AutoSize = @this.AutoSize,
-        BackColor = @this.BackColor,
-        BackgroundImage = @this.BackgroundImage,
-        AutoScrollOffset = @this.AutoScrollOffset,
-        BackgroundImageLayout = @this.BackgroundImageLayout,
-        Bounds = @this.Bounds,
-        Capture = @this.Capture,
-        Text = @this.Text,
-        Tag = @this.Tag,
-        CausesValidation = @this.CausesValidation,
-        ClientSize = @this.ClientSize,
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
-        ContextMenu = @this.ContextMenu,
-#endif
-        Cursor = @this.Cursor,
-        Enabled = @this.Enabled,
-        Visible = @this.Visible,
-        Dock = @this.Dock,
-        FlatStyle = ((ComboBox)@this).FlatStyle,
-        Font = @this.Font,
-        ForeColor = @this.ForeColor,
-        ContextMenuStrip = @this.ContextMenuStrip,
-        Location = @this.Location,
-        Size = @this.Size,
-        Padding = @this.Padding,
-        Margin = @this.Margin,
-        UseWaitCursor = @this.UseWaitCursor,
-        Name = newName,
-        RightToLeft = @this.RightToLeft,
-        MinimumSize = @this.MinimumSize,
-        MaximumSize = @this.MaximumSize,
-        DisplayMember = ((ComboBox)@this).DisplayMember,
-        ValueMember = ((ComboBox)@this).ValueMember,
-        SelectedText = ((ComboBox)@this).SelectedText,
-        MaxLength = ((ComboBox)@this).MaxLength,
-        MaxDropDownItems = ((ComboBox)@this).MaxDropDownItems,
-        DropDownHeight = ((ComboBox)@this).DropDownHeight,
-        DropDownStyle = ((ComboBox)@this).DropDownStyle,
-        DropDownWidth = ((ComboBox)@this).DropDownWidth,
-        DroppedDown = ((ComboBox)@this).DroppedDown,
-      };
-      if (((ComboBox)@this).DataSource == null) {
-        var items = ((ComboBox)@this).Items;
-        if (items.Count > 0) {
-          comboBox.Items.AddRange(items.Cast<object>().ToArray());
-          comboBox.SelectedItem = ((ComboBox)@this).SelectedItem;
-          comboBox.SelectedIndex = ((ComboBox)@this).SelectedIndex;
-        }
-      } else {
-        comboBox.DataSource = ((ComboBox)@this).DataSource;
-        comboBox.SelectedValue = ((ComboBox)@this).SelectedValue;
+          Cursor = label.Cursor,
+          Enabled = label.Enabled,
+          Visible = label.Visible,
+          Dock = label.Dock,
+          FlatStyle = label.FlatStyle,
+          Font = label.Font,
+          ForeColor = label.ForeColor,
+          ContextMenuStrip = label.ContextMenuStrip,
+          Location = label.Location,
+          Size = label.Size,
+          Image = label.Image,
+          ImageAlign = label.ImageAlign,
+          ImageKey = label.ImageKey,
+          ImageIndex = label.ImageIndex,
+          ImageList = label.ImageList,
+          TextAlign = label.TextAlign,
+          Padding = label.Padding,
+          Margin = label.Margin,
+          UseWaitCursor = label.UseWaitCursor,
+          UseMnemonic = label.UseMnemonic,
+          Name = newName,
+          RightToLeft = label.RightToLeft,
+          MinimumSize = label.MinimumSize,
+          MaximumSize = label.MaximumSize,
+        };
       }
+      case Button button:
+        return new Button {
+          AllowDrop = button.AllowDrop,
+          Anchor = button.Anchor,
+          AutoEllipsis = button.AutoEllipsis,
+          AutoSize = button.AutoSize,
+          BackColor = button.BackColor,
+          BackgroundImage = button.BackgroundImage,
+          AutoScrollOffset = button.AutoScrollOffset,
+          BackgroundImageLayout = button.BackgroundImageLayout,
+          Bounds = button.Bounds,
+          Capture = button.Capture,
+          Text = button.Text,
+          Tag = button.Tag,
+          CausesValidation = button.CausesValidation,
+          ClientSize = button.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+          ContextMenu = button.ContextMenu,
+#endif
+          Cursor = button.Cursor,
+          Enabled = button.Enabled,
+          Visible = button.Visible,
+          Dock = button.Dock,
+          FlatStyle = button.FlatStyle,
+          Font = button.Font,
+          ForeColor = button.ForeColor,
+          ContextMenuStrip = button.ContextMenuStrip,
+          Location = button.Location,
+          Size = button.Size,
+          Image = button.Image,
+          ImageAlign = button.ImageAlign,
+          ImageKey = button.ImageKey,
+          ImageIndex = button.ImageIndex,
+          ImageList = button.ImageList,
+          TextAlign = button.TextAlign,
+          Padding = button.Padding,
+          Margin = button.Margin,
+          UseWaitCursor = button.UseWaitCursor,
+          UseMnemonic = button.UseMnemonic,
+          Name = newName,
+          RightToLeft = button.RightToLeft,
+          MinimumSize = button.MinimumSize,
+          MaximumSize = button.MaximumSize,
+          TextImageRelation = button.TextImageRelation,
+          UseVisualStyleBackColor = button.UseVisualStyleBackColor,
+          UseCompatibleTextRendering = button.UseCompatibleTextRendering,
+          AutoSizeMode = button.AutoSizeMode,
+          DialogResult = button.DialogResult,
+        };
+      case CheckBox box:
+        return new CheckBox {
+          AllowDrop = box.AllowDrop,
+          Anchor = box.Anchor,
+          AutoEllipsis = box.AutoEllipsis,
+          AutoSize = box.AutoSize,
+          BackColor = box.BackColor,
+          BackgroundImage = box.BackgroundImage,
+          AutoScrollOffset = box.AutoScrollOffset,
+          BackgroundImageLayout = box.BackgroundImageLayout,
+          Bounds = box.Bounds,
+          Capture = box.Capture,
+          Text = box.Text,
+          Tag = box.Tag,
+          CausesValidation = box.CausesValidation,
+          ClientSize = box.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+          ContextMenu = box.ContextMenu,
+#endif
+          Cursor = box.Cursor,
+          Enabled = box.Enabled,
+          Visible = box.Visible,
+          Dock = box.Dock,
+          FlatStyle = box.FlatStyle,
+          Font = box.Font,
+          ForeColor = box.ForeColor,
+          ContextMenuStrip = box.ContextMenuStrip,
+          Location = box.Location,
+          Size = box.Size,
+          Image = box.Image,
+          ImageAlign = box.ImageAlign,
+          ImageKey = box.ImageKey,
+          ImageIndex = box.ImageIndex,
+          ImageList = box.ImageList,
+          TextAlign = box.TextAlign,
+          Padding = box.Padding,
+          Margin = box.Margin,
+          UseWaitCursor = box.UseWaitCursor,
+          UseMnemonic = box.UseMnemonic,
+          Name = newName,
+          RightToLeft = box.RightToLeft,
+          MinimumSize = box.MinimumSize,
+          MaximumSize = box.MaximumSize,
+          CheckAlign = box.CheckAlign,
+          CheckState = box.CheckState,
+          Checked = box.Checked,
+          AutoCheck = box.AutoCheck,
+          ThreeState = box.ThreeState,
+          TextImageRelation = box.TextImageRelation,
+          Appearance = box.Appearance,
+        };
+      case NumericUpDown down:
+        return new NumericUpDown {
+          AllowDrop = down.AllowDrop,
+          Anchor = down.Anchor,
+          AutoSize = down.AutoSize,
+          BackColor = down.BackColor,
+          BackgroundImage = down.BackgroundImage,
+          AutoScrollOffset = down.AutoScrollOffset,
+          BackgroundImageLayout = down.BackgroundImageLayout,
+          Bounds = down.Bounds,
+          Capture = down.Capture,
+          Text = down.Text,
+          Tag = down.Tag,
+          CausesValidation = down.CausesValidation,
+          ClientSize = down.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+          ContextMenu = down.ContextMenu,
+#endif
+          Cursor = down.Cursor,
+          Enabled = down.Enabled,
+          Visible = down.Visible,
+          Dock = down.Dock,
+          Font = down.Font,
+          ForeColor = down.ForeColor,
+          ContextMenuStrip = down.ContextMenuStrip,
+          Location = down.Location,
+          Size = down.Size,
+          TextAlign = down.TextAlign,
+          Padding = @this.Padding,
+          Margin = down.Margin,
+          UseWaitCursor = down.UseWaitCursor,
+          Name = newName,
+          RightToLeft = down.RightToLeft,
+          MinimumSize = down.MinimumSize,
+          MaximumSize = down.MaximumSize,
+          Minimum = down.Minimum,
+          Maximum = down.Maximum,
+          Value = down.Value,
+          UpDownAlign = down.UpDownAlign,
+          ThousandsSeparator = down.ThousandsSeparator,
+          ReadOnly = down.ReadOnly,
+          InterceptArrowKeys = down.InterceptArrowKeys,
+          Increment = down.Increment,
+          Hexadecimal = down.Hexadecimal,
+          DecimalPlaces = down.DecimalPlaces,
+          BorderStyle = down.BorderStyle,
+          AutoValidate = down.AutoValidate,
+          AutoScroll = down.AutoScroll,
+          AutoScrollMargin = down.AutoScrollMargin,
+          AutoScrollMinSize = down.AutoScrollMinSize,
+          AutoScrollPosition = down.AutoScrollPosition
+        };
+      case ComboBox box: {
+        var comboBox = new ComboBox {
+          AllowDrop = box.AllowDrop,
+          Anchor = box.Anchor,
+          AutoSize = box.AutoSize,
+          BackColor = box.BackColor,
+          BackgroundImage = box.BackgroundImage,
+          AutoScrollOffset = box.AutoScrollOffset,
+          BackgroundImageLayout = box.BackgroundImageLayout,
+          Bounds = box.Bounds,
+          Capture = box.Capture,
+          Text = box.Text,
+          Tag = box.Tag,
+          CausesValidation = box.CausesValidation,
+          ClientSize = box.ClientSize,
+#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+          ContextMenu = box.ContextMenu,
+#endif
+          Cursor = box.Cursor,
+          Enabled = box.Enabled,
+          Visible = box.Visible,
+          Dock = box.Dock,
+          FlatStyle = box.FlatStyle,
+          Font = box.Font,
+          ForeColor = box.ForeColor,
+          ContextMenuStrip = box.ContextMenuStrip,
+          Location = box.Location,
+          Size = box.Size,
+          Padding = @this.Padding,
+          Margin = box.Margin,
+          UseWaitCursor = box.UseWaitCursor,
+          Name = newName,
+          RightToLeft = box.RightToLeft,
+          MinimumSize = box.MinimumSize,
+          MaximumSize = box.MaximumSize,
+          DisplayMember = box.DisplayMember,
+          ValueMember = box.ValueMember,
+          SelectedText = box.SelectedText,
+          MaxLength = box.MaxLength,
+          MaxDropDownItems = box.MaxDropDownItems,
+          DropDownHeight = box.DropDownHeight,
+          DropDownStyle = box.DropDownStyle,
+          DropDownWidth = box.DropDownWidth,
+          DroppedDown = box.DroppedDown,
+        };
+        if (box.DataSource == null) {
+          var items = box.Items;
+          if (items.Count <= 0)
+            return comboBox;
+          
+          comboBox.Items.AddRange(items.Cast<object>().ToArray());
+          comboBox.SelectedItem = box.SelectedItem;
+          comboBox.SelectedIndex = box.SelectedIndex;
+        } else {
+          comboBox.DataSource = box.DataSource;
+          comboBox.SelectedValue = box.SelectedValue;
+        }
 
-      return comboBox;
+        return comboBox;
+      }
+      default:
+        throw new NotSupportedException();
     }
-
-    throw new NotSupportedException();
   }
 
-  private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource,
-    Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null)
-    where TControl : Control {
-    string _GetPropertyName(MemberExpression member) {
+  private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control {
+    const string excMessage = @"Must be an expression like :
+(control, source) => control.propertyName == source.dataMember
+(control, source) => control.propertyName == (type)source.dataMember
+(control, source) => control.propertyName == source.dataMember.ToString()
+(control, source) => control.propertyName == source.subMember.dataMember
+(control, source) => control.propertyName == (type)source.subMember.dataMember
+(control, source) => control.propertyName == source.subMember.dataMember.ToString()
+(control, source) => control.propertyName == source.....dataMember
+(control, source) => control.propertyName == (type)source.....dataMember
+(control, source) => control.propertyName == source.....dataMember.ToString()
+";
+
+    if (expression.Body is not BinaryExpression { NodeType: ExpressionType.Equal } body)
+      throw new ArgumentException(excMessage);
+
+    var propertyName = GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
+    var dataMember = GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
+
+    var binding = new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode };
+    if (customConversionHandler != null)
+      binding.Format += customConversionHandler;
+
+    if (bindingCompleteCallback != null)
+      binding.BindingComplete += bindingCompleteCallback;
+
+    @this.DataBindings.Add(binding);
+    return;
+
+    string GetBindingSourcePropertyName(Expression e) 
+      => e switch {
+        MemberExpression member => // controlProperty = bs.PropertyName
+          GetPropertyName(member),
+        UnaryExpression { NodeType: ExpressionType.Convert, Operand: MemberExpression member } => GetPropertyName(member),
+        MethodCallExpression { Method.Name: nameof(ToString), Arguments.Count: 0, Object: MemberExpression member } => GetPropertyName(member),
+        _ => null
+      }
+    ;
+
+    string GetControlPropertyName(Expression e) {
+      return e switch {
+        MemberExpression { Expression: ParameterExpression parameter } member when parameter.Type == controlType => member.Member.Name,
+        UnaryExpression {
+          NodeType: ExpressionType.Convert,
+          Operand: MemberExpression { Expression: ParameterExpression parameter } member
+        } when parameter.Type == controlType => member.Member.Name,
+        _ => null
+      };
+    }
+
+    string GetPropertyName(MemberExpression member) {
       if (
         member.Expression is ParameterExpression parameter
         && parameter.Type == sourceType
       )
         return member.Member.Name;
 
-      if (!(member.Expression is MemberExpression parent))
+      if (member.Expression is not MemberExpression parent)
         return null;
 
       // walk the expression
@@ -904,90 +736,15 @@ public static partial class ControlExtensions {
 
       return member.Member.Name;
     }
-
-    string _GetBindingSourcePropertyName(Expression e) {
-      switch (e) {
-        case MemberExpression member: // controlProperty = bs.PropertyName
-          return _GetPropertyName(member);
-
-        case UnaryExpression {
-            NodeType: ExpressionType.Convert, Operand: MemberExpression member
-          } // controlProperty = (cast)bs.PropertyName
-          :
-          return _GetPropertyName(member);
-
-        case MethodCallExpression {
-            Method.Name: nameof(ToString), Arguments.Count: 0, Object: MemberExpression member
-          } // controlProperty = bs.PropertyName.ToString()
-          :
-          return _GetPropertyName(member);
-      }
-
-      return null;
-    }
-
-    string _GetControlPropertyName(Expression e) {
-      switch (e) {
-        case MemberExpression { Expression: ParameterExpression parameter } member
-          when parameter.Type == controlType
-          :
-          return member.Member.Name;
-
-        case UnaryExpression {
-            NodeType: ExpressionType.Convert,
-            Operand: MemberExpression { Expression: ParameterExpression parameter } member
-          } when parameter.Type == controlType
-          :
-          return member.Member.Name;
-
-        default:
-          return null;
-      }
-    }
-
-    const string excMessage = @"Must be an expression like :
-(control, source) => control.propertyName == source.dataMember
-(control, source) => control.propertyName == (type)source.dataMember
-(control, source) => control.propertyName == source.dataMember.ToString()
-(control, source) => control.propertyName == source.subMember.dataMember
-(control, source) => control.propertyName == (type)source.subMember.dataMember
-(control, source) => control.propertyName == source.subMember.dataMember.ToString()
-(control, source) => control.propertyName == source.....dataMember
-(control, source) => control.propertyName == (type)source.....dataMember
-(control, source) => control.propertyName == source.....dataMember.ToString()
-";
-
-    if (!(expression.Body is BinaryExpression body) || body.NodeType != ExpressionType.Equal)
-      throw new ArgumentException(excMessage);
-
-    var propertyName = _GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
-    var dataMember = _GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
-
-    var binding = new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode };
-    if (customConversionHandler != null)
-      binding.Format += customConversionHandler;
-
-    if (bindingCompleteCallback != null)
-      binding.BindingComplete += bindingCompleteCallback;
-
-    @this.DataBindings.Add(binding);
   }
 
-  public static void AddBinding<TControl, TSource>(this TControl @this, TSource source,
-    Expression<Func<TControl, TSource, bool>> expression,
-    DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null)
-    where TControl : Control
-    => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler,
-      bindingCompleteCallback);
+  public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
+    => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler, bindingCompleteCallback)
+    ;
 
-  public static void AddBinding<TControl, TSource>(this TControl @this, object source,
-    Expression<Func<TControl, TSource, bool>> expression,
-    DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null)
-    where TControl : Control
-    => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler,
-      bindingCompleteCallback);
+  public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
+    => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler, bindingCompleteCallback)
+    ;
 
   #region to make life easier
 
@@ -1049,35 +806,6 @@ public static partial class ControlExtensions {
 
   #endregion
 
-  private class IsDesignModeDetector {
-    public static IsDesignModeDetector Instance { get; } = new();
-
-    private readonly Dictionary<Type, Func<Control, bool>> _methodCache = new();
-
-    private IsDesignModeDetector() { }
-
-    public bool GetDesignModePropertyValue(Control c) {
-      Func<Control, bool> getter;
-      var controlType = c.GetType();
-      lock (this._methodCache)
-        if (!this._methodCache.TryGetValue(controlType, out getter))
-          this._methodCache.Add(controlType, getter = CreateGetDesignModePropertyGetter(controlType));
-
-      return getter(c);
-    }
-
-    private static Func<Control, bool> CreateGetDesignModePropertyGetter(Type controlType) {
-      var propertyInfo = controlType.GetProperty("DesignMode", BindingFlags.Instance | BindingFlags.NonPublic);
-
-      var getMethod = propertyInfo?.GetGetMethod(true);
-      if (getMethod == null)
-        return _ => false;
-
-      var call = (Func<Control, bool>)Delegate.CreateDelegate(typeof(Func<Control, bool>), getMethod);
-      return call;
-    }
-  }
-
   /// <summary>
   ///   Checks if this or parents are in DesignMode.
   ///   Use this instead because <see cref="System.ComponentModel.Component.DesignMode">Component.DesignMode</see> is only
@@ -1086,7 +814,9 @@ public static partial class ControlExtensions {
   /// </summary>
   /// <param name="this">The control on which to check if it's in DesignMode.</param>
   /// <returns>True if DesignMode.</returns>
-  public static bool IsDesignMode(this Control @this) => LicenseManager.UsageMode == LicenseUsageMode.Designtime ||
-                                                         IsDesignModeDetector.Instance
-                                                           .GetDesignModePropertyValue(@this);
+  public static bool IsDesignMode(this Control @this) 
+    => LicenseManager.UsageMode == LicenseUsageMode.Designtime 
+       || IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this)
+       ;
+  
 }

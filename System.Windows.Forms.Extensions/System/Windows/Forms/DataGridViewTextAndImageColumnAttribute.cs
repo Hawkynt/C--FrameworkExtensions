@@ -86,8 +86,7 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
     return image;
   }
 
-  public static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row,
-    DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  public static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     if (row.Cells[e.ColumnIndex] is not DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell textAndImageCell)
       return;
 

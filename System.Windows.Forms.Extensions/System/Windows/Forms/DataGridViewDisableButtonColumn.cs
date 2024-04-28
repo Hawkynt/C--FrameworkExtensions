@@ -37,7 +37,7 @@ public class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
     /// <value>
     ///   <c>true</c> if enabled; otherwise, <c>false</c>.
     /// </value>
-    public bool Enabled { get; set; }
+    public bool Enabled { get; set; } = true; // By default, enable the button cell.
 
     // Override the Clone method so that the Enabled property is copied.
     public override object Clone() {
@@ -46,9 +46,7 @@ public class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
       return cell;
     }
 
-    // By default, enable the button cell.
-    public DataGridViewDisableButtonCell() => this.Enabled = true;
-
+    
     protected override void Paint(
       Graphics graphics,
       Rectangle clipBounds,
@@ -90,13 +88,11 @@ public class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
 
       // Draw the button
       if (isEnabled) {
-        int _Clamp(int a) => a < byte.MinValue ? byte.MinValue : a > byte.MaxValue ? byte.MaxValue : a;
+        static int Clamp(int a) => a < byte.MinValue ? byte.MinValue : a > byte.MaxValue ? byte.MaxValue : a;
         const int shadingAmount = 64;
 
-        var lighterColor = Color.FromArgb(backColor.A, _Clamp(backColor.R + shadingAmount),
-          _Clamp(backColor.G + shadingAmount), _Clamp(backColor.B + shadingAmount));
-        var darkerColor = Color.FromArgb(backColor.A, _Clamp(backColor.R - shadingAmount),
-          _Clamp(backColor.G - shadingAmount), _Clamp(backColor.B - shadingAmount));
+        var lighterColor = Color.FromArgb(backColor.A, Clamp(backColor.R + shadingAmount), Clamp(backColor.G + shadingAmount), Clamp(backColor.B + shadingAmount));
+        var darkerColor = Color.FromArgb(backColor.A, Clamp(backColor.R - shadingAmount), Clamp(backColor.G - shadingAmount), Clamp(backColor.B - shadingAmount));
 
         var borderWidth = 3;
         buttonArea.Inflate(-borderWidth / 2, -borderWidth / 2);

@@ -29,9 +29,9 @@ public sealed class DataGridViewCellDisplayTextAttribute : Attribute {
 
   public DataGridViewCellDisplayTextAttribute(string propertyName) => this.PropertyName = propertyName;
 
-  private string _GetDisplayText(object row) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty,
-      string.Empty);
+  private string _GetDisplayText(object row) 
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
+    ;
 
   public static void OnCellFormatting(DataGridViewCellDisplayTextAttribute @this, DataGridViewRow row,
     DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {

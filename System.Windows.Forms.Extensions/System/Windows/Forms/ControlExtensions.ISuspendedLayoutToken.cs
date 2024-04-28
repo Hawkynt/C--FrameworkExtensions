@@ -21,23 +21,11 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
-
-  public string ConditionPropertyName { get; }
-
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
-
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
-  }
+public static partial class ControlExtensions {
+  /// <summary>
+  ///   The token that resumes layout on disposal.
+  /// </summary>
+  public interface ISuspendedLayoutToken : IDisposable { }
 }

@@ -21,23 +21,26 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class ControlExtensions {
+  private class SuspendedLayoutToken : ISuspendedLayoutToken {
+    private readonly Control _targetControl;
 
-  public string ConditionPropertyName { get; }
+    public SuspendedLayoutToken(Control targetControl) {
+      targetControl.SuspendLayout();
+      this._targetControl = targetControl;
+    }
 
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
+    ~SuspendedLayoutToken() => this._Dispose(false);
 
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+    private void _Dispose(bool isManagedDisposal) {
+      this._targetControl.ResumeLayout(true);
+      if (isManagedDisposal)
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose() => this._Dispose(true);
+    
   }
 }

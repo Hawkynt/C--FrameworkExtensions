@@ -21,13 +21,11 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.Windows.Forms;
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -36,6 +34,7 @@ using System.Windows.Forms;
 namespace System.Drawing;
 
 public static partial class ImageExtensions {
+  
   /// <summary>
   ///   Gets a single page of a multipage image.
   /// </summary>
@@ -80,11 +79,9 @@ public static partial class ImageExtensions {
   /// <param name="documentName">Name of the document.</param>
   /// <param name="dialog">The dialog to use; creates its own when none is given.</param>
   /// <returns>The used printersettings</returns>
-  public static PrinterSettings PrintImageWithDialog(this Image @this, string documentName = null,
-    PrintDialog dialog = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static PrinterSettings PrintImageWithDialog(this Image @this, string documentName = null, PrintDialog dialog = null) {
+    Against.ThisIsNull(@this);
+    
     using var document = new PrintDocument();
     var pageCount = _GetPageCount(@this);
 
@@ -145,9 +142,8 @@ public static partial class ImageExtensions {
   /// <param name="documentName">Name of the document.</param>
   /// <param name="settings">The settings.</param>
   public static void PrintImage(this Image @this, string documentName = null, PrinterSettings settings = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     using var document = new PrintDocument();
     var pageCount = _GetPageCount(@this);
 

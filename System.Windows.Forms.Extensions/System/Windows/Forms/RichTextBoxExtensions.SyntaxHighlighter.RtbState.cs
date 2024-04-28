@@ -21,23 +21,28 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace System.Windows.Forms;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class RichTextBoxExtensions {
+  private partial class SyntaxHighlighter {
+    private readonly struct RtbState {
+      private readonly RichTextBox _owner;
+      private readonly int _selectionStart;
+      private readonly int _selectionLength;
 
-  public string ConditionPropertyName { get; }
+      private RtbState(RichTextBox owner) {
+        this._owner = owner;
+        this._selectionStart = owner.SelectionStart;
+        this._selectionLength = owner.SelectionLength;
+      }
 
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
+      public static RtbState Save(RichTextBox owner) => new(owner);
 
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+      public void Load() {
+        var rtb = this._owner;
+        rtb.SelectionStart = this._selectionStart;
+        rtb.SelectionLength = this._selectionLength;
+      }
+    }
   }
 }

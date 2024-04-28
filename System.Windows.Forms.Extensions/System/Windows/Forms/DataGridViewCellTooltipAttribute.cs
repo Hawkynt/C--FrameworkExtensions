@@ -49,15 +49,13 @@ public sealed class DataGridViewCellTooltipAttribute : Attribute {
       return;
     }
 
-    var text = DataGridViewExtensions.GetPropertyValueOrDefault<object>(data, this.TooltipTextPropertyName, null, null,
-      null, null) ?? this.ToolTipText;
-    cell.ToolTipText =
-      (this.Format != null && text is IFormattable f ? f.ToString(this.Format, null) : text?.ToString()) ??
-      string.Empty;
+    var text = DataGridViewExtensions.GetPropertyValueOrDefault<object>(data, this.TooltipTextPropertyName, null, null, null, null) ?? this.ToolTipText;
+    cell.ToolTipText = (this.Format != null && text is IFormattable f ? f.ToString(this.Format, null) : text?.ToString()) 
+                       ?? string.Empty
+                       ;
   }
 
-  public static void OnCellFormatting(DataGridViewCellTooltipAttribute @this, DataGridViewRow row,
-    DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  public static void OnCellFormatting(DataGridViewCellTooltipAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     if (row.Cells[e.ColumnIndex] is { } dgvCell)
       @this._ApplyTo(dgvCell, data);
   }

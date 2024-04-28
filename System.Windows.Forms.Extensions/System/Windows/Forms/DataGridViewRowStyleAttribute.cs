@@ -80,11 +80,11 @@ public sealed class DataGridViewRowStyleAttribute : Attribute {
       style.Font = new(style.Font ?? row.InheritedStyle.Font, this.FontStyle);
   }
 
-  private bool _IsEnabled(object value) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
-
-  public static void OnRowPrepaint(IEnumerable<DataGridViewRowStyleAttribute> @this, DataGridViewRow row, object data,
-    DataGridViewRowPrePaintEventArgs e) {
+  private bool _IsEnabled(object value) 
+    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false)
+    ;
+  
+  public static void OnRowPrepaint(IEnumerable<DataGridViewRowStyleAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
     foreach (var attribute in @this)
       if (attribute._IsEnabled(data))
         attribute._ApplyTo(row, data);

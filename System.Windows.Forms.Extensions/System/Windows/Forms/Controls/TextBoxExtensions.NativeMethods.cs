@@ -21,23 +21,17 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
-namespace System.Windows.Forms;
+namespace System.Windows.Controls;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class DataGridViewRowSelectableAttribute : Attribute {
-  public DataGridViewRowSelectableAttribute(string conditionProperty = null) => this.ConditionPropertyName = conditionProperty;
+public static partial class TextBoxExtensions {
+  private static partial class NativeMethods {
+    [DllImport("user32", EntryPoint = "GetCaretPos", SetLastError = true)]
+    public static extern int _GetCaretPos(out Point p);
 
-  public string ConditionPropertyName { get; }
-
-  public bool IsSelectable(object value) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionPropertyName, true, true, false, false)
-    ;
-
-  public static void OnSelectionChanged(IEnumerable<DataGridViewRowSelectableAttribute> @this, DataGridViewRow row, object data, EventArgs e) {
-    if (@this.Any(attribute => !attribute.IsSelectable(data)))
-      row.Selected = false;
+    [DllImport("user32", EntryPoint = "SetCaretPos", SetLastError = true)]
+    public static extern int _SetCaretPos(int x, int y);
   }
 }

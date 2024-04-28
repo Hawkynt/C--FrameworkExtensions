@@ -34,11 +34,13 @@ public sealed class DataGridViewConditionalRowHiddenAttribute : Attribute {
 
   public string IsHiddenWhen { get; }
 
-  public bool IsHidden(object row) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsHiddenWhen, false, false, false, false);
+  public bool IsHidden(object row) 
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsHiddenWhen, false, false, false, false)
+    ;
 
-  public static void OnRowPrepaint(IEnumerable<DataGridViewConditionalRowHiddenAttribute> @this, DataGridViewRow row,
-    object data, DataGridViewRowPrePaintEventArgs e) {
+  public static void OnRowPrepaint(IEnumerable<DataGridViewConditionalRowHiddenAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
+    
+    // ReSharper disable once LoopCanBeConvertedToQuery
     foreach (var attribute in @this)
       if (attribute.IsHidden(data)) {
         row.Visible = false;

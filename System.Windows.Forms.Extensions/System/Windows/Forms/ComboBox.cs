@@ -24,9 +24,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -59,11 +57,9 @@ public static partial class ComboBoxExtensions {
   /// <param name="source">The source.</param>
   /// <param name="displayMember">The display member, if any.</param>
   /// <param name="valueMember">The value member, if any.</param>
-  public static void DataSource(this ComboBox @this, object source, string displayMember = null,
-    string valueMember = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static void DataSource(this ComboBox @this, object source, string displayMember = null, string valueMember = null) {
+    Against.ThisIsNull(@this);
+    
     var oldDis = @this.DisplayMember;
     var oldVal = @this.ValueMember;
     @this.DataSource = null;
@@ -82,11 +78,7 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">This ComboBox.</param>
   /// <param name="insertNull">Insert null-object (use as non-selected).</param>
   /// <param name="ignoreValues">Values not to be used.</param>
-  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null)
-    where TEnum : struct {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(typeof(TEnum).IsEnum);
-#endif
+  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct {
 
     @this.DataSource(
       (insertNull ? new[] { new Tuple<object, string>(null, null) } : new Tuple<object, string>[0])
@@ -95,9 +87,6 @@ public static partial class ComboBoxExtensions {
         .Select(
           i => {
             var fieldInfo = typeof(TEnum).GetField(i.ToString());
-#if SUPPORTS_CONTRACTS
-            Contract.Assert(fieldInfo != null, "Can not find field");
-#endif
             var attribute =
               (DisplayNameAttribute)fieldInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false).FirstOrDefault();
             return Tuple.Create(i, attribute?.DisplayName ?? i.ToString());
@@ -111,21 +100,18 @@ public static partial class ComboBoxExtensions {
   /// <typeparam name="TEnum">The type of the enum.</typeparam>
   /// <param name="this">This ComboBox.</param>
   /// <param name="value">The value.</param>
-  public static void SetSelectedEnumItem<TEnum>(this ComboBox @this, TEnum value) where TEnum : struct {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(typeof(TEnum).IsEnum);
-#endif
-    SetSelectedItem<Tuple<object, string>>(@this, i => Equals((TEnum)i.Item1, value));
-  }
+  public static void SetSelectedEnumItem<TEnum>(this ComboBox @this, TEnum value) where TEnum : struct 
+    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals((TEnum)i.Item1, value))
+    ;
 
   /// <summary>
   ///   Sets the selected item.
   /// </summary>
   /// <param name="this">This ComboBox.</param>
   /// <param name="value">The value.</param>
-  public static void SetSelectedItem(this ComboBox @this, object value) {
-    SetSelectedItem<Tuple<object, string>>(@this, i => Equals(i.Item1, value));
-  }
+  public static void SetSelectedItem(this ComboBox @this, object value) 
+    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals(i.Item1, value))
+    ;
 
   /// <summary>
   ///   Sets the selected item based on a predicate.
@@ -145,8 +131,8 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">The tool strip ComboBox.</param>
   /// <param name="selectedItem">The selected item.</param>
   /// <param name="handler">The handler.</param>
-  public static void SetSelectedItemAndSuppressIndexChangedEvent(this ComboBox @this, object selectedItem,
-    EventHandler handler) {
+  public static void SetSelectedItemAndSuppressIndexChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
+
     // no handler given? just set the given item as selected
     if (handler == null) {
       @this.SelectedItem = selectedItem;
@@ -172,8 +158,8 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">The tool strip ComboBox.</param>
   /// <param name="selectedValue">The selected value.</param>
   /// <param name="handler">The handler.</param>
-  public static void SetSelectedValueAndSuppressIndexChangedEvent(this ComboBox @this, object selectedValue,
-    EventHandler handler) {
+  public static void SetSelectedValueAndSuppressIndexChangedEvent(this ComboBox @this, object selectedValue, EventHandler handler) {
+
     // no handler given? just set the given value as selected
     if (handler == null) {
       @this.SelectedValue = selectedValue;
@@ -199,8 +185,8 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">The ComboBox.</param>
   /// <param name="selectedItem">The selected item.</param>
   /// <param name="handler">The handler.</param>
-  public static void SetSelectedItemAndSuppressValueChangedEvent(this ComboBox @this, object selectedItem,
-    EventHandler handler) {
+  public static void SetSelectedItemAndSuppressValueChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
+
     // no handler given? just set the given value as selected
     if (handler == null) {
       @this.SelectedItem = selectedItem;
@@ -225,18 +211,18 @@ public static partial class ComboBoxExtensions {
   /// </summary>
   /// <typeparam name="TItem">The Type of the items of the combobox</typeparam>
   /// <param name="this">The combobox</param>
-  /// <param name="item">ot parameter for the selected item</param>
+  /// <param name="result">ot parameter for the selected item</param>
   /// <returns>true if there was a selection, false otherwise</returns>
-  public static bool TryGetSelectedItem<TItem>(this ComboBox @this, out TItem item) {
+  public static bool TryGetSelectedItem<TItem>(this ComboBox @this, out TItem result) {
     var selected = @this.SelectedItem;
 
-    if (!(selected is TItem)) {
-      item = default;
-      return false;
+    if (selected is TItem item) {
+      result = item;
+      return true;
     }
 
-    item = (TItem)selected;
-    return true;
+    result = default;
+    return false;
   }
 
   /// <summary>
@@ -246,8 +232,7 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">The combobox</param>
   /// <param name="item">ot parameter for the selected item</param>
   /// <returns>true if there was a selection, false otherwise</returns>
-  public static bool TryGetSelectedEnumItem<TEnum>(this ComboBox @this, out TEnum item)
-    where TEnum : struct, IConvertible {
+  public static bool TryGetSelectedEnumItem<TEnum>(this ComboBox @this, out TEnum item) where TEnum : struct, IConvertible {
     var success = @this.TryGetSelectedItem(out Tuple<object, string> enumValue);
 
     item = success ? (TEnum)enumValue.Item1 : default;
@@ -260,6 +245,8 @@ public static partial class ComboBoxExtensions {
   /// <typeparam name="TItem">The Type of the items of the combobox</typeparam>
   /// <param name="this">The combobox</param>
   /// <returns>The selected item in the combobox if there is a selection, and default(TItem) otherwise</returns>
-  public static TItem GetSelectedItem<TItem>(this ComboBox @this) =>
-    !TryGetSelectedItem(@this, out TItem item) ? default : item;
+  public static TItem GetSelectedItem<TItem>(this ComboBox @this) 
+    => !TryGetSelectedItem(@this, out TItem item) ? default : item
+    ;
+  
 }

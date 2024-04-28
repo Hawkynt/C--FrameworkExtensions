@@ -28,12 +28,7 @@ namespace System.Windows.Forms;
 
 public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
   public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
-    public DataGridViewProgressBarCell() {
-      this.Maximum = 100;
-      this.Minimum = 0;
-    }
-
-    public double Maximum { get; set; }
+    public double Maximum { get; set; } = 100;
     public double Minimum { get; set; }
     public override object DefaultNewRowValue => 0;
 
@@ -57,15 +52,14 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
       DataGridViewAdvancedBorderStyle advancedBorderStyle,
       DataGridViewPaintParts paintParts
     ) {
-      var intValue = 0d;
-      if (value is int i)
-        intValue = i;
-      if (value is float f)
-        intValue = f;
-      if (value is double d)
-        intValue = d;
-      if (value is decimal dec)
-        intValue = (double)dec;
+      
+      var intValue = value switch {
+        int i => i,
+        float f => f,
+        double d => d,
+        decimal dec => (double)dec,
+        _ => 0d
+      };
 
       if (intValue < this.Minimum)
         intValue = this.Minimum;
@@ -183,7 +177,7 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
         return;
 
       var rowCount = this.DataGridView.RowCount;
-      for (var i = 0; i <= rowCount - 1; i++) {
+      for (var i = 0; i <= rowCount - 1; ++i) {
         var r = this.DataGridView.Rows.SharedRow(i);
         ((DataGridViewProgressBarCell)r.Cells[this.Index]).Minimum = value;
       }

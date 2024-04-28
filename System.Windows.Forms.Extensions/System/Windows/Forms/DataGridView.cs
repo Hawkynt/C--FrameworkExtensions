@@ -21,9 +21,6 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
 using System.Runtime.CompilerServices;
 #endif

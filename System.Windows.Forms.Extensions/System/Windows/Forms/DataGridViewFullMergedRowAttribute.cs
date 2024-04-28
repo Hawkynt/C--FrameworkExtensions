@@ -41,6 +41,8 @@ public sealed class DataGridViewFullMergedRowAttribute : Attribute {
   public float? TextSize { get; }
   public string HeadingTextPropertyName { get; }
 
-  public string GetHeadingText(object rowData) => DataGridViewExtensions.GetPropertyValueOrDefault(rowData,
-    this.HeadingTextPropertyName, string.Empty, string.Empty, string.Empty, string.Empty);
+  public string GetHeadingText(object rowData) 
+    => DataGridViewExtensions.GetPropertyValueOrDefault(rowData, this.HeadingTextPropertyName, string.Empty, string.Empty, string.Empty, string.Empty)
+    ;
+  
 }

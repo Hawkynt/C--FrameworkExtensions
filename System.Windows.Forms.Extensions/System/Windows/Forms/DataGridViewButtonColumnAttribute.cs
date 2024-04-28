@@ -51,6 +51,8 @@ public sealed class DataGridViewButtonColumnAttribute : Attribute {
       DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
   }
 
-  public bool IsEnabled(object row) =>
-    DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsEnabledWhen, false, true, false, false);
+  public bool IsEnabled(object row)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsEnabledWhen, false, true, false, false)
+    ;
+  
 }

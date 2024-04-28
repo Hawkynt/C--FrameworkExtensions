@@ -21,40 +21,25 @@
 
 #endregion
 
-using System.Drawing;
-
 namespace System.Windows.Forms;
 
-public partial class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
-  private Image imageValue;
+public partial class DataGridViewDateTimePickerColumn {
+  public class DataGridViewDateTimePickerCell : DataGridViewTextBoxCell {
+    public DataGridViewDateTimePickerCell() => this.Style.Format = "d";
 
-  public DataGridViewImageAndTextColumn() => this.CellTemplate = new DataGridViewTextAndImageCell();
+    public override void InitializeEditingControl(int rowIndex, object initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle) {
+      base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
 
-  public override object Clone() {
-    var c = base.Clone() as DataGridViewImageAndTextColumn;
-    c.imageValue = this.imageValue;
-    c.ImageSize = this.ImageSize;
-    return c;
-  }
-
-  public Image Image {
-    get => this.imageValue;
-    set {
-      if (this.Image == value)
+      if (this.DataGridView.EditingControl is not DateTimePickerEditingControl ctl)
         return;
 
-      this.imageValue = value;
-      this.ImageSize = value.Size;
-
-      if (this.InheritedStyle == null)
-        return;
-
-      var inheritedPadding = this.InheritedStyle.Padding;
-      this.DefaultCellStyle.Padding = new(this.ImageSize.Width,
-        inheritedPadding.Top, inheritedPadding.Right,
-        inheritedPadding.Bottom);
+      ctl.Value = (DateTime?)this.Value ?? ((DateTime?)this.DefaultNewRowValue ?? DateTime.Now);
     }
-  }
 
-  internal Size ImageSize { get; private set; }
+    public override Type EditType => typeof(DateTimePickerEditingControl);
+
+    public override Type ValueType => typeof(DateTime);
+
+    public override object DefaultNewRowValue => DateTime.Now;
+  }
 }
