@@ -19,51 +19,45 @@
 */
 #endregion
 
-namespace System.Collections.Generic {
-  /// <summary>
-  /// Interface for Queues
-  /// </summary>
-  /// <typeparam name="T">the type of items in the queue</typeparam>
+namespace System.Collections.Generic;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  interface IQueue<T> {
-    /// <summary>
-    /// Dequeues an item or blocks until there is one.
-    /// </summary>
-    /// <returns>the item</returns>
-    T Dequeue();
-    /// <summary>
-    /// Enqueues an item.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    void Enqueue(T item);
-    /// <summary>
-    /// Tries to dequeue an item.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    bool TryDequeue(out T item);
-    /// <summary>
-    /// Gets the number of items contained.
-    /// </summary>
-    /// <value>The number of items</value>
-    int Count {
-      get;
-    }
-    /// <summary>
-    /// Gets a value indicating whether this queue is empty.
-    /// </summary>
-    /// <value><c>true</c> if this instance is empty; otherwise, <c>false</c>.</value>
-    bool IsEmpty {
-      get;
-    }
-    /// <summary>
-    /// Clears this instance.
-    /// </summary>
-    void Clear();
+/// <summary>
+/// Interface for Queues
+/// </summary>
+/// <typeparam name="T">the type of items in the queue</typeparam>
+public interface IQueue<T> {
+  /// <summary>
+  /// Dequeues an item or blocks until there is one.
+  /// </summary>
+  /// <returns>the item</returns>
+  T Dequeue();
+  /// <summary>
+  /// Enqueues an item.
+  /// </summary>
+  /// <param name="item">The item.</param>
+  void Enqueue(T item);
+  /// <summary>
+  /// Tries to dequeue an item.
+  /// </summary>
+  /// <param name="item">The item.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  bool TryDequeue(out T item);
+  /// <summary>
+  /// Gets the number of items contained.
+  /// </summary>
+  /// <value>The number of items</value>
+  int Count {
+    get;
   }
+  /// <summary>
+  /// Gets a value indicating whether this queue is empty.
+  /// </summary>
+  /// <value><c>true</c> if this instance is empty; otherwise, <c>false</c>.</value>
+  bool IsEmpty {
+    get;
+  }
+  /// <summary>
+  /// Clears this instance.
+  /// </summary>
+  void Clear();
 }

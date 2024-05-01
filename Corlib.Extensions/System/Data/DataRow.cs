@@ -21,24 +21,19 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace System.Data {
+namespace System.Data;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class DataRowExtensions {
-    /// <summary>
-    /// Converrs the datarow to a dictionary.
-    /// </summary>
-    /// <param name="This">This DataRow.</param>
-    /// <returns></returns>
-    public static Dictionary<string, object> ToDictionary(this DataRow This) {
-      var table = This.Table;
-      var i = 0;
-      var result = table.Columns.Cast<DataColumn>().ToDictionary(column => column.ColumnName, column => This.ItemArray[i++]);
-      return (result);
-    }
+public static partial class DataRowExtensions {
+  /// <summary>
+  /// Converrs the datarow to a dictionary.
+  /// </summary>
+  /// <param name="this">This DataRow.</param>
+  /// <returns></returns>
+  public static Dictionary<string, object> ToDictionary(this DataRow @this) {
+    var table = @this.Table;
+    var i = 0;
+    var result = table.Columns.Cast<DataColumn>().ToDictionary(column => column.ColumnName, column => @this.ItemArray[i++]);
+    return result;
   }
+  
 }

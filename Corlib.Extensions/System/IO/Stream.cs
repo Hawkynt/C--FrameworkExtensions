@@ -43,12 +43,7 @@ namespace System.IO;
 /// <summary>
 ///   Extensions for Streams.
 /// </summary>
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class StreamExtensions {
+public static partial class StreamExtensions {
 
   private const int _BUFFER_SIZE = 4 * 1024 * 16;
 

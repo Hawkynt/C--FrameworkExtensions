@@ -36,12 +36,7 @@ namespace System;
 /// If a source file implements several classes with the same method name, values are shared across classes.
 /// </remarks>
 /// <typeparam name="TValue">The type of value to keep</typeparam>
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static class StaticMethodLocal<TValue> {
+public static class StaticMethodLocal<TValue> {
 
   /// <summary>
   /// The internal key to distinguish values.

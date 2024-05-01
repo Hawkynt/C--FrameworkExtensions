@@ -32,13 +32,7 @@ namespace System.Collections.Generic;
 /// Items will be pulled out of the enumeration as late as possible, at least on first access, but never more than once, because they'll get cached.
 /// </summary>
 /// <typeparam name="TItem">The type of the underlying enumerations' items.</typeparam>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
+public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
   private IEnumerator<TItem> _enumerator;
   private bool _enumerationEnded;
@@ -247,12 +241,7 @@ public
 /// <summary>
 /// Extensions for the generic enumerables.
 /// </summary>
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class EnumerableExtensions {
+public static partial class EnumerableExtensions {
   /// <summary>
   /// Creates a cached version of the given enumeration.
   /// </summary>

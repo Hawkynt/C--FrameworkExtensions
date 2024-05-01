@@ -35,12 +35,7 @@ namespace System;
 
 using Collections.Generic;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class CharExtensions {
+public static partial class CharExtensions {
 
   /// <summary>
   /// Determines whether the given <see cref="Char"/> is a whitespace.
@@ -66,7 +61,7 @@ static partial class CharExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNullWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
+  public static bool IsNullOrWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
 
   /// <summary>
   /// Determines whether the given <see cref="Char"/> is not the null character or a whitespace.
@@ -79,7 +74,7 @@ static partial class CharExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNotNullWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
+  public static bool IsNotNullOrWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
 
   /// <summary>
   /// Determines whether the specified <see cref="Char"/> is a digit.

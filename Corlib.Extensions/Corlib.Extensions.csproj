@@ -26,10 +26,6 @@
   </PropertyGroup>
   
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
-  
-  <PropertyGroup><!-- allow exporting all extensions to other loaded assemblies -->
-    <DefineConstants>$(DefineConstants);COMPILE_TO_EXTENSION_DLL</DefineConstants>
-  </PropertyGroup>
 
   <ItemGroup Condition="$(IsNetFramework)">
     <Reference Include="System.Data" />

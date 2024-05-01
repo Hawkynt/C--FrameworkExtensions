@@ -30,12 +30,7 @@ namespace System.IO;
 /// Extensions for Streams.
 /// </summary>
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class TextReaderExtensions {
+public static partial class TextReaderExtensions {
 
   /// <summary>
   /// Reads the lines of a text reader.

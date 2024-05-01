@@ -27,25 +27,20 @@
 using System.Runtime.CompilerServices;
 #endif
 
-namespace System.Xml {
+namespace System.Xml;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class XmlAttributeCollectionExtensions {
-    /// <summary>
-    /// Gets the value or a default.
-    /// </summary>
-    /// <param name="This">The attribute collection.</param>
-    /// <param name="key">The attribute name.</param>
-    /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
-    /// <returns>The value of that attribute or the given default value.</returns>
-    /// <remarks></remarks>
+public static partial class XmlAttributeCollectionExtensions {
+  /// <summary>
+  /// Gets the value or a default.
+  /// </summary>
+  /// <param name="this">The attribute collection.</param>
+  /// <param name="key">The attribute name.</param>
+  /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
+  /// <returns>The value of that attribute or the given default value.</returns>
+  /// <remarks></remarks>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static string GetValueOrDefault(this XmlAttributeCollection This, string key, string defaultValue = null) => This[key] == null ? defaultValue : This[key].Value;
-  }
+  public static string GetValueOrDefault(this XmlAttributeCollection @this, string key, string defaultValue = null) => @this[key] == null ? defaultValue : @this[key].Value;
+  
 }

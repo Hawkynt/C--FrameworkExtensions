@@ -23,12 +23,7 @@ using System.Collections.Generic;
 
 namespace System.Collections.ObjectModel; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class CollectionExtensions {
+public static partial class CollectionExtensions {
   /// <summary>
   /// Adds items to a collection.
   /// </summary>

@@ -41,12 +41,7 @@ namespace System.Collections.Generic;
 
 using Guard;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class EnumerableExtensions {
+public static partial class EnumerableExtensions {
 
   #region nested types
 

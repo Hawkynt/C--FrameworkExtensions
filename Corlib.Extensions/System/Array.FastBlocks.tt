@@ -74,12 +74,7 @@ using SBlock8 = System.Int64;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ArrayExtensions {
+public static partial class ArrayExtensions {
     
   #region nested types
 

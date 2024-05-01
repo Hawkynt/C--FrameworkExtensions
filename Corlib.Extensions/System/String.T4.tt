@@ -49,12 +49,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable ExpressionIsAlwaysNull
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class StringExtensions {
+public static partial class StringExtensions {
     
   #region Consts
   private const NumberStyles _STYLE_FLOAT = NumberStyles.Float | NumberStyles.AllowThousands;

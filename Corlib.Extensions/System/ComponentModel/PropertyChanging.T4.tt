@@ -35,12 +35,7 @@ using Guard;
 
 namespace System.ComponentModel;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class PropertyChangingExtensions {
+public static partial class PropertyChangingExtensions {
 
 <#foreach(var type in new[]{"bool","byte","sbyte","char","short","ushort","int","uint","long","ulong","float","double","decimal","string"}){#>
 

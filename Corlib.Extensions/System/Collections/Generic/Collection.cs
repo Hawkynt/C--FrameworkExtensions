@@ -29,12 +29,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class CollectionExtensions {
+public static partial class CollectionExtensions {
 
   /// <summary>
   /// Implements a faster shortcut for LINQ's .Any()

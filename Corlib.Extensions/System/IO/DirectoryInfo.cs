@@ -31,752 +31,745 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
+using Guard;
+
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System.IO {
-  using Guard;
+namespace System.IO;
+
+/// <summary>
+/// Extensions for the DirectoryInfo type.
+/// </summary>
+public static partial class DirectoryInfoExtensions {
+
+  #region nested types
+
+  private readonly struct SubdirectoryInfo {
+    public SubdirectoryInfo(DirectoryInfo directory, string pathRelativeToRoot) {
+      this._directory = directory;
+      this._pathRelativeToRoot = pathRelativeToRoot;
+    }
+
+    private readonly DirectoryInfo _directory;
+    private readonly string _pathRelativeToRoot;
+
+    public void Deconstruct(out DirectoryInfo directory, out string pathRelativeToRoot) {
+      directory = this._directory;
+      pathRelativeToRoot = this._pathRelativeToRoot;
+    }
+  }
+
+  private static class NativeMethods {
+    [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern int WNetGetConnection(
+      [MarshalAs(UnmanagedType.LPTStr)] string localName,
+      [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
+      ref int length);
+  }
 
   /// <summary>
-  /// Extensions for the DirectoryInfo type.
+  /// Determines the order in which sub-items will be returned.
   /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class DirectoryInfoExtensions {
-
-    #region nested types
-
-    private readonly struct SubdirectoryInfo {
-      public SubdirectoryInfo(DirectoryInfo directory, string pathRelativeToRoot) {
-        this._directory = directory;
-        this._pathRelativeToRoot = pathRelativeToRoot;
-      }
-
-      private readonly DirectoryInfo _directory;
-      private readonly string _pathRelativeToRoot;
-
-      public void Deconstruct(out DirectoryInfo directory, out string pathRelativeToRoot) {
-        directory = this._directory;
-        pathRelativeToRoot = this._pathRelativeToRoot;
-      }
-    }
-
-    private static class NativeMethods {
-      [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-      public static extern int WNetGetConnection(
-          [MarshalAs(UnmanagedType.LPTStr)] string localName,
-          [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
-          ref int length);
-    }
-
+  public enum RecursionMode {
     /// <summary>
-    /// Determines the order in which sub-items will be returned.
+    /// The toplevel items only (eg. /a, /b)
     /// </summary>
-    public enum RecursionMode {
-      /// <summary>
-      /// The toplevel items only (eg. /a, /b)
-      /// </summary>
-      ToplevelOnly,
-      /// <summary>
-      /// The shortest path first (eg. /a, /b, /a/c, /b/d)
-      /// </summary>
-      ShortestPathFirst,
-      /// <summary>
-      /// The deepest path first (eg. /a , /a/c, /b, /b/d)
-      /// </summary>
-      DeepestPathFirst,
-    }
-    #endregion
-
+    ToplevelOnly,
     /// <summary>
-    /// Renames the directory represented by this <see cref="DirectoryInfo"/> instance to a new name in the same parent directory.
+    /// The shortest path first (eg. /a, /b, /a/c, /b/d)
     /// </summary>
-    /// <param name="this">The <see cref="DirectoryInfo"/> instance to rename.</param>
-    /// <param name="newName">The new name for the directory. This should not include the path, only the new directory name.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="newName"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="newName"/> is empty or contains invalid characters.</exception>
-    /// <exception cref="IOException">Thrown if a directory with the new name already exists, or if any other I/O error occurs during the renaming.</exception>
-    /// <example>
-    /// <code>
-    /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\Example");
-    /// directoryInfo.RenameTo("NewExample");
-    /// Console.WriteLine("Directory renamed to: " + directoryInfo.FullName);
-    /// </code>
-    /// This example renames the directory 'Example' to 'NewExample'.
-    /// </example>
-    public static void RenameTo(this DirectoryInfo @this, string newName) {
-      Against.ThisIsNull(@this);
-      Against.ArgumentIsNullOrEmpty(newName);
+    ShortestPathFirst,
+    /// <summary>
+    /// The deepest path first (eg. /a , /a/c, /b, /b/d)
+    /// </summary>
+    DeepestPathFirst,
+  }
+  #endregion
+
+  /// <summary>
+  /// Renames the directory represented by this <see cref="DirectoryInfo"/> instance to a new name in the same parent directory.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance to rename.</param>
+  /// <param name="newName">The new name for the directory. This should not include the path, only the new directory name.</param>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="newName"/> is null.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="newName"/> is empty or contains invalid characters.</exception>
+  /// <exception cref="IOException">Thrown if a directory with the new name already exists, or if any other I/O error occurs during the renaming.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\Example");
+  /// directoryInfo.RenameTo("NewExample");
+  /// Console.WriteLine("Directory renamed to: " + directoryInfo.FullName);
+  /// </code>
+  /// This example renames the directory 'Example' to 'NewExample'.
+  /// </example>
+  public static void RenameTo(this DirectoryInfo @this, string newName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(newName);
       
-      if (newName.Contains(Path.DirectorySeparatorChar) || newName.Contains(Path.AltDirectorySeparatorChar) || newName.Contains(Path.VolumeSeparatorChar))
-        throw new ArgumentException("No support for new directory structures", nameof(newName));
+    if (newName.Contains(Path.DirectorySeparatorChar) || newName.Contains(Path.AltDirectorySeparatorChar) || newName.Contains(Path.VolumeSeparatorChar))
+      throw new ArgumentException("No support for new directory structures", nameof(newName));
 
-      // nothing to do on same name
-      if (@this.Name == newName)
+    // nothing to do on same name
+    if (@this.Name == newName)
+      return;
+
+    var parent = @this.Parent;
+    var fullTargetName = parent == null ? newName : Path.Combine(parent.FullName, newName);
+
+    // only case has changed, so rename using a temporary intermediate
+    if (string.Equals(@this.Name, newName, StringComparison.OrdinalIgnoreCase)) {
+      var temporaryName = @this.FullName + "$";
+      while (IO.Directory.Exists(temporaryName) || IO.File.Exists(temporaryName))
+        temporaryName += "$";
+
+      @this.MoveTo(temporaryName);
+    }
+
+    @this.MoveTo(fullTargetName);
+  }
+
+  /// <summary>
+  /// Deletes all files and subdirectories within the directory represented by this <see cref="DirectoryInfo"/> instance.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the directory to clear.</param>
+  /// <exception cref="System.IO.IOException">Thrown if the directory does not exist or an error occurs when trying to delete the files or subdirectories.</exception>
+  /// <exception cref="System.Security.SecurityException">Thrown if the caller does not have the required permission to delete files or directories.</exception>
+  /// <exception cref="System.NotSupportedException">Thrown if the operation is attempted on a directory with a read-only file system.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\MyDirectory");
+  /// directoryInfo.Clear();
+  /// Console.WriteLine("All files and subdirectories have been deleted.");
+  /// </code>
+  /// This example demonstrates how to delete all files and subdirectories within 'MyDirectory'.
+  /// </example>
+  /// <remarks>
+  /// This method is destructive and irreversible. It will delete all contents within the directory but not the directory itself.
+  /// Ensure that you have appropriate backups or safeguards before using this method to prevent data loss.
+  /// </remarks>
+  public static void Clear(this DirectoryInfo @this) {
+    foreach (var item in @this.EnumerateFileSystemInfos())
+      switch (item) {
+        case FileInfo file:
+          file.Delete();
+          continue;
+        case DirectoryInfo directory:
+          directory.Delete(true);
+          continue;
+        default:
+          throw new NotSupportedException("Unknown FileSystem item");
+      }
+  }
+
+  /// <summary>
+  /// Gets the size.
+  /// </summary>
+  /// <param name="this">This DirectoryInfo.</param>
+  /// <returns>The number of bytes in this directory</returns>
+  public static long GetSize(this DirectoryInfo @this) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(@this != null);
+#endif
+    // if less than 4 cores, use sequential approach
+    if (Environment.ProcessorCount < 4)
+      return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
+
+    // otherwise, use MT approach
+    long[] itemsLeftAndResult = { 1L, 0L };
+    using AutoResetEvent pushNotification = new(false);
+
+    void ExecuteAsync(DirectoryInfo directory) {
+      if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
         return;
 
-      var parent = @this.Parent;
-      var fullTargetName = parent == null ? newName : Path.Combine(parent.FullName, newName);
-
-      // only case has changed, so rename using a temporary intermediate
-      if (string.Equals(@this.Name, newName, StringComparison.OrdinalIgnoreCase)) {
-        var temporaryName = @this.FullName + "$";
-        while (IO.Directory.Exists(temporaryName) || IO.File.Exists(temporaryName))
-          temporaryName += "$";
-
-        @this.MoveTo(temporaryName);
-      }
-
-      @this.MoveTo(fullTargetName);
+      var call = WorkOnDirectory;
+      call.BeginInvoke(directory, call.EndInvoke, null);
     }
 
-    /// <summary>
-    /// Deletes all files and subdirectories within the directory represented by this <see cref="DirectoryInfo"/> instance.
-    /// </summary>
-    /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the directory to clear.</param>
-    /// <exception cref="System.IO.IOException">Thrown if the directory does not exist or an error occurs when trying to delete the files or subdirectories.</exception>
-    /// <exception cref="System.Security.SecurityException">Thrown if the caller does not have the required permission to delete files or directories.</exception>
-    /// <exception cref="System.NotSupportedException">Thrown if the operation is attempted on a directory with a read-only file system.</exception>
-    /// <example>
-    /// <code>
-    /// DirectoryInfo directoryInfo = new DirectoryInfo("C:\\MyDirectory");
-    /// directoryInfo.Clear();
-    /// Console.WriteLine("All files and subdirectories have been deleted.");
-    /// </code>
-    /// This example demonstrates how to delete all files and subdirectories within 'MyDirectory'.
-    /// </example>
-    /// <remarks>
-    /// This method is destructive and irreversible. It will delete all contents within the directory but not the directory itself.
-    /// Ensure that you have appropriate backups or safeguards before using this method to prevent data loss.
-    /// </remarks>
-    public static void Clear(this DirectoryInfo @this) {
-      foreach (var item in @this.EnumerateFileSystemInfos())
-        switch (item) {
-          case FileInfo file:
-            file.Delete();
-            continue;
-          case DirectoryInfo directory:
-            directory.Delete(true);
-            continue;
-          default:
-            throw new NotSupportedException("Unknown FileSystem item");
-        }
-    }
-
-    /// <summary>
-    /// Gets the size.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <returns>The number of bytes in this directory</returns>
-    public static long GetSize(this DirectoryInfo @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-      // if less than 4 cores, use sequential approach
-      if (Environment.ProcessorCount < 4)
-        return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
-
-      // otherwise, use MT approach
-      long[] itemsLeftAndResult = { 1L, 0L };
-      using AutoResetEvent pushNotification = new(false);
-
-      void ExecuteAsync(DirectoryInfo directory) {
-        if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
-          return;
-
-        var call = WorkOnDirectory;
-        call.BeginInvoke(directory, call.EndInvoke, null);
-      }
-
-      void WorkOnDirectory(DirectoryInfo directory) {
-        try {
-          foreach (var item in directory.EnumerateFileSystemInfos()) {
-            switch (item) {
-              case FileInfo file:
-                Interlocked.Add(ref itemsLeftAndResult[1], file.Length);
-                continue;
-              case DirectoryInfo folder: {
-                Interlocked.Increment(ref itemsLeftAndResult[0]);
-                ExecuteAsync(folder);
-                continue;
-              }
-              default:
-                throw new NotSupportedException("Unknown FileSystemInfo item");
+    void WorkOnDirectory(DirectoryInfo directory) {
+      try {
+        foreach (var item in directory.EnumerateFileSystemInfos()) {
+          switch (item) {
+            case FileInfo file:
+              Interlocked.Add(ref itemsLeftAndResult[1], file.Length);
+              continue;
+            case DirectoryInfo folder: {
+              Interlocked.Increment(ref itemsLeftAndResult[0]);
+              ExecuteAsync(folder);
+              continue;
             }
+            default:
+              throw new NotSupportedException("Unknown FileSystemInfo item");
           }
-        } finally {
-          if(Interlocked.Decrement(ref itemsLeftAndResult[0])<=0)
-            // ReSharper disable once AccessToDisposedClosure
-            pushNotification.Set();
         }
+      } finally {
+        if(Interlocked.Decrement(ref itemsLeftAndResult[0])<=0)
+          // ReSharper disable once AccessToDisposedClosure
+          pushNotification.Set();
       }
-
-      ExecuteAsync(@this);
-      pushNotification.WaitOne();
-
-      return itemsLeftAndResult[1];
     }
 
-    /// <summary>
-    /// Given a path, returns the UNC path or the original. (No exceptions
-    /// are raised by this function directly). For example, "P:\2008-02-29"
-    /// might return: "\\networkserver\Shares\Photos\2008-02-09"
-    /// </summary>
-    /// <param name="this">The path to convert to a UNC Path</param>
-    /// <returns>A UNC path. If a network drive letter is specified, the
-    /// drive letter is converted to a UNC or network path. If the
-    /// originalPath cannot be converted, it is returned unchanged.</returns>
-    public static DirectoryInfo GetRealPath(this DirectoryInfo @this) {
-      var originalPath = @this.FullName;
+    ExecuteAsync(@this);
+    pushNotification.WaitOne();
 
-      // look for the {LETTER}: combination ...
-      if (originalPath.Length < 2 || originalPath[1] != ':')
-        return @this;
+    return itemsLeftAndResult[1];
+  }
 
-      // don't use char.IsLetter here - as that can be misleading
-      // the only valid drive letters are a-z && A-Z.
-      var c = originalPath[0];
-      if (c is (< 'a' or > 'z') and (< 'A' or > 'Z'))
-        return @this;
+  /// <summary>
+  /// Given a path, returns the UNC path or the original. (No exceptions
+  /// are raised by this function directly). For example, "P:\2008-02-29"
+  /// might return: "\\networkserver\Shares\Photos\2008-02-09"
+  /// </summary>
+  /// <param name="this">The path to convert to a UNC Path</param>
+  /// <returns>A UNC path. If a network drive letter is specified, the
+  /// drive letter is converted to a UNC or network path. If the
+  /// originalPath cannot be converted, it is returned unchanged.</returns>
+  public static DirectoryInfo GetRealPath(this DirectoryInfo @this) {
+    var originalPath = @this.FullName;
 
-      StringBuilder sb = new(32768);
-      var size = sb.Capacity;
-      var error = NativeMethods.WNetGetConnection(originalPath[..2], sb, ref size);
-      if (error != 0)
-        return @this;
+    // look for the {LETTER}: combination ...
+    if (originalPath.Length < 2 || originalPath[1] != ':')
+      return @this;
 
-      var path = originalPath[@this.Root.FullName.Length..];
-      return new(Path.Combine(sb.ToString().TrimEnd(), path));
-    }
+    // don't use char.IsLetter here - as that can be misleading
+    // the only valid drive letters are a-z && A-Z.
+    var c = originalPath[0];
+    if (c is (< 'a' or > 'z') and (< 'A' or > 'Z'))
+      return @this;
 
-    /// <summary>
-    /// Gets all sub-directories.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo</param>
-    /// <param name="searchOption">Whether to get all directories recursively or not.</param>
-    /// <returns>An enumeration of DirectoryInfos</returns>
+    StringBuilder sb = new(32768);
+    var size = sb.Capacity;
+    var error = NativeMethods.WNetGetConnection(originalPath[..2], sb, ref size);
+    if (error != 0)
+      return @this;
+
+    var path = originalPath[@this.Root.FullName.Length..];
+    return new(Path.Combine(sb.ToString().TrimEnd(), path));
+  }
+
+  /// <summary>
+  /// Gets all sub-directories.
+  /// </summary>
+  /// <param name="this">This DirectoryInfo</param>
+  /// <param name="searchOption">Whether to get all directories recursively or not.</param>
+  /// <returns>An enumeration of DirectoryInfos</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) => @this.GetDirectories("*.*", searchOption);
+  public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) => @this.GetDirectories("*.*", searchOption);
 
-    /// <summary>
-    /// Enumerates the file system infos.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <param name="mode">The recursion mode.</param>
-    /// <param name="recursionFilter">The filter to use for recursing into sub-directories (Walks on <c>true</c>; otherwise, skips recursion).</param>
-    /// <returns>
-    /// The FileSystemInfos
-    /// </returns>
-    /// <exception cref="System.NotSupportedException">RecursionMode</exception>
-    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
-      Against.ThisIsNull(@this);
+  /// <summary>
+  /// Enumerates the file system infos.
+  /// </summary>
+  /// <param name="this">This DirectoryInfo.</param>
+  /// <param name="mode">The recursion mode.</param>
+  /// <param name="recursionFilter">The filter to use for recursing into sub-directories (Walks on <c>true</c>; otherwise, skips recursion).</param>
+  /// <returns>
+  /// The FileSystemInfos
+  /// </returns>
+  /// <exception cref="System.NotSupportedException">RecursionMode</exception>
+  public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this, RecursionMode mode, Func<DirectoryInfo, bool> recursionFilter = null) {
+    Against.ThisIsNull(@this);
 
-      return mode switch {
-        RecursionMode.ToplevelOnly => InvokeTopLevelOnly(@this),
-        RecursionMode.ShortestPathFirst => InvokeShortestPathFirst(@this, recursionFilter),
-        RecursionMode.DeepestPathFirst => InvokeDeepestPathFirst(@this, recursionFilter),
-        _ => throw new NotSupportedException(nameof(RecursionMode))
-      };
+    return mode switch {
+      RecursionMode.ToplevelOnly => InvokeTopLevelOnly(@this),
+      RecursionMode.ShortestPathFirst => InvokeShortestPathFirst(@this, recursionFilter),
+      RecursionMode.DeepestPathFirst => InvokeDeepestPathFirst(@this, recursionFilter),
+      _ => throw new NotSupportedException(nameof(RecursionMode))
+    };
 
-      static IEnumerable<FileSystemInfo> InvokeTopLevelOnly(DirectoryInfo @this) {
-        foreach (var result in @this.EnumerateFileSystemInfos())
-          yield return result;
-      }
+    static IEnumerable<FileSystemInfo> InvokeTopLevelOnly(DirectoryInfo @this) {
+      foreach (var result in @this.EnumerateFileSystemInfos())
+        yield return result;
+    }
 
-      static IEnumerable<FileSystemInfo> InvokeShortestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-        LinkedList<DirectoryInfo> results = new();
-        results.Enqueue(@this);
-        while (results.Any()) {
-          var result = results.Dequeue();
-          foreach (var fsi in result.EnumerateFileSystemInfos()) {
-            yield return fsi;
-            if (fsi is not DirectoryInfo di)
-              continue;
+    static IEnumerable<FileSystemInfo> InvokeShortestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
+      LinkedList<DirectoryInfo> results = new();
+      results.Enqueue(@this);
+      while (results.Any()) {
+        var result = results.Dequeue();
+        foreach (var fsi in result.EnumerateFileSystemInfos()) {
+          yield return fsi;
+          if (fsi is not DirectoryInfo di)
+            continue;
 
-            if (recursionFilter == null || recursionFilter(di))
-              results.Enqueue(di);
-          }
-        }
-      }
-
-      static IEnumerable<FileSystemInfo> InvokeDeepestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-        LinkedList<DirectoryInfo> results = new();
-        results.Push(@this);
-        while (results.Any()) {
-          var result = results.Pop();
-          foreach (var fsi in result.EnumerateFileSystemInfos()) {
-            yield return fsi;
-            if (fsi is not DirectoryInfo di)
-              continue;
-
-            if (recursionFilter == null || recursionFilter(di))
-              results.Push(di);
-          }
+          if (recursionFilter == null || recursionFilter(di))
+            results.Enqueue(di);
         }
       }
     }
 
-    /// <summary>
-    /// Tries to set the last write time.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      This.Refresh();
+    static IEnumerable<FileSystemInfo> InvokeDeepestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
+      LinkedList<DirectoryInfo> results = new();
+      results.Push(@this);
+      while (results.Any()) {
+        var result = results.Pop();
+        foreach (var fsi in result.EnumerateFileSystemInfos()) {
+          yield return fsi;
+          if (fsi is not DirectoryInfo di)
+            continue;
 
-      if (!This.Exists)
-        return false;
-
-      if (This.LastWriteTimeUtc == lastWriteTimeUtc)
-        return true;
-
-      try {
-        This.LastWriteTimeUtc = lastWriteTimeUtc;
-        return true;
-      } catch (Exception) {
-        return This.LastWriteTimeUtc == lastWriteTimeUtc;
+          if (recursionFilter == null || recursionFilter(di))
+            results.Push(di);
+        }
       }
     }
+  }
 
-    /// <summary>
-    /// Tries to set the creation time.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="creationTimeUtc">The date&amp;time.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
+  /// <summary>
+  /// Tries to set the last write time.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+    Contract.Requires(This != null);
 #endif
-      This.Refresh();
+    This.Refresh();
 
-      if (!This.Exists)
-        return false;
+    if (!This.Exists)
+      return false;
 
-      if (This.CreationTimeUtc == creationTimeUtc)
-        return true;
+    if (This.LastWriteTimeUtc == lastWriteTimeUtc)
+      return true;
 
-      try {
-        This.CreationTimeUtc = creationTimeUtc;
-        return true;
-      } catch (Exception) {
-        return This.CreationTimeUtc == creationTimeUtc;
-      }
+    try {
+      This.LastWriteTimeUtc = lastWriteTimeUtc;
+      return true;
+    } catch (Exception) {
+      return This.LastWriteTimeUtc == lastWriteTimeUtc;
     }
+  }
 
-    /// <summary>
-    /// Tries to set the attributes.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="attributes">The attributes.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
+  /// <summary>
+  /// Tries to set the creation time.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="creationTimeUtc">The date&amp;time.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+    Contract.Requires(This != null);
 #endif
-      This.Refresh();
+    This.Refresh();
 
-      if (!This.Exists)
-        return false;
+    if (!This.Exists)
+      return false;
 
-      if (This.Attributes == attributes)
-        return true;
+    if (This.CreationTimeUtc == creationTimeUtc)
+      return true;
 
-      try {
-        This.Attributes = attributes;
-        return true;
-      } catch (Exception) {
-        return This.Attributes == attributes;
-      }
+    try {
+      This.CreationTimeUtc = creationTimeUtc;
+      return true;
+    } catch (Exception) {
+      return This.CreationTimeUtc == creationTimeUtc;
     }
+  }
 
-    public static bool TryCreate(this DirectoryInfo @this) => TryCreate(@this, false);
-
-    /// <summary>
-    /// Tries to create the given directory.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <param name="recursive">if set to <c>true</c> recursively tries to create all subdirectories.</param>
-    /// <returns>
-    ///   <c>true</c> on success; otherwise, <c>false</c>.
-    /// </returns>
-    public static bool TryCreate(this DirectoryInfo @this, bool recursive) {
+  /// <summary>
+  /// Tries to set the attributes.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="attributes">The attributes.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(This != null);
 #endif
-      if (@this.Exists)
-        return true;
+    This.Refresh();
 
-      try {
-        if (recursive) {
-          IO.Directory.CreateDirectory(@this.FullName);
-          @this.Refresh();
-        } else
-          @this.Create();
-        return true;
-      } catch (Exception) {
+    if (!This.Exists)
+      return false;
+
+    if (This.Attributes == attributes)
+      return true;
+
+    try {
+      This.Attributes = attributes;
+      return true;
+    } catch (Exception) {
+      return This.Attributes == attributes;
+    }
+  }
+
+  public static bool TryCreate(this DirectoryInfo @this) => TryCreate(@this, false);
+
+  /// <summary>
+  /// Tries to create the given directory.
+  /// </summary>
+  /// <param name="this">This DirectoryInfo.</param>
+  /// <param name="recursive">if set to <c>true</c> recursively tries to create all subdirectories.</param>
+  /// <returns>
+  ///   <c>true</c> on success; otherwise, <c>false</c>.
+  /// </returns>
+  public static bool TryCreate(this DirectoryInfo @this, bool recursive) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(@this != null);
+#endif
+    if (@this.Exists)
+      return true;
+
+    try {
+      if (recursive) {
+        IO.Directory.CreateDirectory(@this.FullName);
         @this.Refresh();
-        return @this.Exists;
-      }
+      } else
+        @this.Create();
+      return true;
+    } catch (Exception) {
+      @this.Refresh();
+      return @this.Exists;
     }
+  }
 
-    /// <summary>
-    /// Tries to delete the given directory.
-    /// </summary>
-    /// <param name="this">This DirectoyInfo.</param>
-    /// <param name="recursive">if set to <c>true</c> deletes recursive.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryDelete(this DirectoryInfo @this, bool recursive = false) {
+  /// <summary>
+  /// Tries to delete the given directory.
+  /// </summary>
+  /// <param name="this">This DirectoyInfo.</param>
+  /// <param name="recursive">if set to <c>true</c> deletes recursive.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TryDelete(this DirectoryInfo @this, bool recursive = false) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(@this != null);
 #endif
-      if (!@this.Exists)
-        return true;
+    if (!@this.Exists)
+      return true;
 
-      try {
-        @this.Delete(recursive);
-        @this.Refresh();
-        return true;
-      } catch (Exception) {
-        @this.Refresh();
-        return !@this.Exists;
-      }
+    try {
+      @this.Delete(recursive);
+      @this.Refresh();
+      return true;
+    } catch (Exception) {
+      @this.Refresh();
+      return !@this.Exists;
     }
+  }
 
-    /// <summary>
-    /// Checks whether the given directory does not exist.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
+  /// <summary>
+  /// Checks whether the given directory does not exist.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool NotExists(this DirectoryInfo This) => !This.Exists;
+  public static bool NotExists(this DirectoryInfo This) => !This.Exists;
 
-    /// <summary>
-    /// Gets a directory under the current directory.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="subdirectories">The relative path to the sub-directory.</param>
-    /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
+  /// <summary>
+  /// Gets a directory under the current directory.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="subdirectories">The relative path to the sub-directory.</param>
+  /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_PATH_COMBINE_ARRAYS
-    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
+  public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #else
     public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #endif
 
-    /// <summary>
-    /// Gets a file under the current directory.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="filePath">The relative path to the file.</param>
-    /// <returns>A FileInfo instance pointing to the given path.</returns>
+  /// <summary>
+  /// Gets a file under the current directory.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="filePath">The relative path to the file.</param>
+  /// <returns>A FileInfo instance pointing to the given path.</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 #if SUPPORTS_PATH_COMBINE_ARRAYS
-    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
+  public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
 #else
     public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
 #endif
 
-    /// <summary>
-    /// Determines whether the specified subdirectory exists.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="searchPattern">The search pattern.</param>
-    /// <param name="searchOption">The search option.</param>
-    /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
+  /// <summary>
+  /// Determines whether the specified subdirectory exists.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="searchPattern">The search pattern.</param>
+  /// <param name="searchOption">The search option.</param>
+  /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
+  public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
 
-    /// <summary>
-    /// Determines whether the specified file exists.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="searchPattern">The search pattern.</param>
-    /// <param name="searchOption">The search option.</param>
-    /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
+  /// <summary>
+  /// Determines whether the specified file exists.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="searchPattern">The search pattern.</param>
+  /// <param name="searchOption">The search option.</param>
+  /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
+  public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
 
-    /// <summary>
-    /// Creates the directory recursively.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    public static void CreateDirectory(this DirectoryInfo This) {
+  /// <summary>
+  /// Creates the directory recursively.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  public static void CreateDirectory(this DirectoryInfo This) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+    Contract.Requires(This != null);
 #endif
-      if (This.Parent != null && !This.Exists)
-        CreateDirectory(This.Parent);
+    if (This.Parent != null && !This.Exists)
+      CreateDirectory(This.Parent);
 
-      if (This.Exists)
-        return;
+    if (This.Exists)
+      return;
 
-      This.Create();
-      This.Refresh();
-    }
+    This.Create();
+    This.Refresh();
+  }
 
-    /// <summary>
-    /// Copies the specified directorys' contents to the target directory.
-    /// </summary>
-    /// <param name="this">This DirectoryInfo.</param>
-    /// <param name="target">The target directory to place files.</param>
-    public static void CopyTo(this DirectoryInfo @this, DirectoryInfo target) {
-      Against.ThisIsNull(@this);
-      Against.ArgumentIsNull(target);
+  /// <summary>
+  /// Copies the specified directorys' contents to the target directory.
+  /// </summary>
+  /// <param name="this">This DirectoryInfo.</param>
+  /// <param name="target">The target directory to place files.</param>
+  public static void CopyTo(this DirectoryInfo @this, DirectoryInfo target) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(target);
 
-      Stack<SubdirectoryInfo> stack = new();
-      stack.Push(new(@this, "."));
-      while (stack.Count > 0) {
-        var (directory, relativePath) = stack.Pop();
-        var targetPath = Path.Combine(target.FullName, relativePath);
+    Stack<SubdirectoryInfo> stack = new();
+    stack.Push(new(@this, "."));
+    while (stack.Count > 0) {
+      var (directory, relativePath) = stack.Pop();
+      var targetPath = Path.Combine(target.FullName, relativePath);
 
-        // create directory if it does not exist
-        if (!IO.Directory.Exists(targetPath))
-          IO.Directory.CreateDirectory(targetPath);
+      // create directory if it does not exist
+      if (!IO.Directory.Exists(targetPath))
+        IO.Directory.CreateDirectory(targetPath);
 
-        foreach (var fileSystemInfo in directory.GetFileSystemInfos()) {
-          if (fileSystemInfo is FileInfo fileInfo) {
-            fileInfo.CopyTo(Path.Combine(targetPath, fileInfo.Name));
-            continue;
-          }
-
-          var directoryInfo = fileSystemInfo as DirectoryInfo;
-#if SUPPORTS_CONTRACTS
-          Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
-#endif
-          stack.Push(new(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
+      foreach (var fileSystemInfo in directory.GetFileSystemInfos()) {
+        if (fileSystemInfo is FileInfo fileInfo) {
+          fileInfo.CopyTo(Path.Combine(targetPath, fileInfo.Name));
+          continue;
         }
-      }
-    }
 
-    /// <summary>
-    /// Gets the or adds a subdirectory.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="name">The name.</param>
-    /// <returns></returns>
-    public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo This, string name) {
+        var directoryInfo = fileSystemInfo as DirectoryInfo;
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+        Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
 #endif
-      var fullPath = Path.Combine(This.FullName, name);
-      return IO.Directory.Exists(fullPath) ? new(fullPath) : This.CreateSubdirectory(name);
-    }
-
-    /// <summary>
-    /// Determines whether the specified directory contains file.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <param name="option">The option.</param>
-    /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
-
-    /// <summary>
-    /// Determines whether the specified directory contains directory.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="directoryName">Name of the directory.</param>
-    /// <param name="option">The option.</param>
-    /// <returns>
-    ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
-    /// </returns>
-#if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
-
-    /// <summary>
-    /// Checks whether the given directory exists and contains at least one file.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="fileMask">The file mask; defaults to '*.*'.</param>
-    /// <returns><c>true</c> if it exists and has matching files; otherwise, <c>false</c>.</returns>
-    public static bool ExistsAndHasFiles(this DirectoryInfo This, string fileMask = "*.*") {
-      if (!This.Exists)
-        return false;
-
-      try {
-        if (This.HasFile(fileMask, SearchOption.AllDirectories))
-          return true;
-
-      } catch (IOException) {
-        return false;
+        stack.Push(new(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
       }
+    }
+  }
+
+  /// <summary>
+  /// Gets the or adds a subdirectory.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="name">The name.</param>
+  /// <returns></returns>
+  public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo This, string name) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(This != null);
+#endif
+    var fullPath = Path.Combine(This.FullName, name);
+    return IO.Directory.Exists(fullPath) ? new(fullPath) : This.CreateSubdirectory(name);
+  }
+
+  /// <summary>
+  /// Determines whether the specified directory contains file.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <param name="option">The option.</param>
+  /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
+
+  /// <summary>
+  /// Determines whether the specified directory contains directory.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="directoryName">Name of the directory.</param>
+  /// <param name="option">The option.</param>
+  /// <returns>
+  ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
+  /// </returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
+
+  /// <summary>
+  /// Checks whether the given directory exists and contains at least one file.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="fileMask">The file mask; defaults to '*.*'.</param>
+  /// <returns><c>true</c> if it exists and has matching files; otherwise, <c>false</c>.</returns>
+  public static bool ExistsAndHasFiles(this DirectoryInfo This, string fileMask = "*.*") {
+    if (!This.Exists)
+      return false;
+
+    try {
+      if (This.HasFile(fileMask, SearchOption.AllDirectories))
+        return true;
+
+    } catch (IOException) {
       return false;
     }
+    return false;
+  }
 
-    /// <summary>
-    /// Tries to create a temporary file.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="extension">The extension; defaults to '.tmp'.</param>
-    /// <returns>A temporary file</returns>
-    public static FileInfo GetTempFile(this DirectoryInfo This, string extension = null) {
+  /// <summary>
+  /// Tries to create a temporary file.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="extension">The extension; defaults to '.tmp'.</param>
+  /// <returns>A temporary file</returns>
+  public static FileInfo GetTempFile(this DirectoryInfo This, string extension = null) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+    Contract.Requires(This != null);
 #endif
-      extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
+    extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
 
-      static string Generator(Random random,string ext) {
-        const int LENGTH = 4;
-        const string PREFIX = "tmp";
-        StringBuilder result = new(16);
-        result.Append(PREFIX);
-        for (var i = 0; i < LENGTH; ++i)
-          result.Append(random.Next(0, 16).ToString("X"));
+    static string Generator(Random random,string ext) {
+      const int LENGTH = 4;
+      const string PREFIX = "tmp";
+      StringBuilder result = new(16);
+      result.Append(PREFIX);
+      for (var i = 0; i < LENGTH; ++i)
+        result.Append(random.Next(0, 16).ToString("X"));
 
-        result.Append(ext);
-        return result.ToString();
-      }
-
-      Random random = new();
-
-      while (true) {
-        var result = This.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
-        if (result != null)
-          return result;
-      }
-
+      result.Append(ext);
+      return result.ToString();
     }
 
-    /// <summary>
-    /// Tries to create file.
-    /// </summary>
-    /// <param name="This">This DirectoryInfo.</param>
-    /// <param name="fileName">Name of the file.</param>
-    /// <param name="attributes">The attributes; defaults to FileAttributes.Normal.</param>
-    /// <returns>A FileInfo instance or <c>null</c> on error.</returns>
-    public static FileInfo TryCreateFile(this DirectoryInfo This, string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+    Random random = new();
 
-      var fullFileName = Path.Combine(This.FullName, fileName);
-      if (IO.File.Exists(fullFileName))
-        return null;
-
-      try {
-        var fileHandle = IO.File.Open(fullFileName, FileMode.CreateNew, FileAccess.Write);
-        fileHandle.Close();
-        IO.File.SetAttributes(fullFileName, attributes);
-        return new(fullFileName);
-      } catch (UnauthorizedAccessException) {
-
-        // in case multiple threads try to create the same file, this gets fired
-        return null;
-      } catch (IOException) {
-
-        // file already exists
-        return null;
-      }
-    }
-
-    /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
-    /// <param name="this">This <see cref="DirectoryInfo"/></param>
-    public static IEnumerable<DirectoryInfo> SafelyEnumerateDirectories(this DirectoryInfo @this) {
-      Against.ThisIsNull(@this);
-
-      return Invoke(@this);
-      
-      static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this) {
-        IEnumerator<DirectoryInfo> enumerator = null;
-        try {
-          enumerator = @this.EnumerateDirectories().GetEnumerator();
-        } catch {
-          ;
-        }
-
-        if (enumerator == null)
-          yield break;
-
-        for (;;) {
-          try {
-            if (!enumerator.MoveNext())
-              break;
-          } catch {
-            continue;
-          }
-
-          DirectoryInfo result = null;
-          try {
-            result = enumerator.Current;
-          } catch {
-            ;
-          }
-
-          if (result != null)
-            yield return result;
-        }
-
-        enumerator.Dispose();
-      }
-    }
-
-    /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
-    /// <param name="this">This <see cref="DirectoryInfo"/></param>
-    public static IEnumerable<FileInfo> SafelyEnumerateFiles(this DirectoryInfo @this) {
-      Against.ThisIsNull(@this);
-
-      return Invoke(@this);
-      
-      static IEnumerable<FileInfo> Invoke(DirectoryInfo @this) {
-        IEnumerator<FileInfo> enumerator = null;
-        try {
-          enumerator = @this.EnumerateFiles().GetEnumerator();
-        } catch {
-          ;
-        }
-
-        if (enumerator == null)
-          yield break;
-
-        for (;;) {
-          try {
-            if (!enumerator.MoveNext())
-              break;
-          } catch {
-            continue;
-          }
-
-          FileInfo result = null;
-          try {
-            result = enumerator.Current;
-          } catch {
-            ;
-          }
-
-          if (result != null)
-            yield return result;
-        }
-
-        enumerator.Dispose();
-      }
+    while (true) {
+      var result = This.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
+      if (result != null)
+        return result;
     }
 
   }
-}
 
+  /// <summary>
+  /// Tries to create file.
+  /// </summary>
+  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="fileName">Name of the file.</param>
+  /// <param name="attributes">The attributes; defaults to FileAttributes.Normal.</param>
+  /// <returns>A FileInfo instance or <c>null</c> on error.</returns>
+  public static FileInfo TryCreateFile(this DirectoryInfo This, string fileName, FileAttributes attributes = FileAttributes.Normal) {
+#if SUPPORTS_CONTRACTS
+    Contract.Requires(This != null);
+#endif
+
+    var fullFileName = Path.Combine(This.FullName, fileName);
+    if (IO.File.Exists(fullFileName))
+      return null;
+
+    try {
+      var fileHandle = IO.File.Open(fullFileName, FileMode.CreateNew, FileAccess.Write);
+      fileHandle.Close();
+      IO.File.SetAttributes(fullFileName, attributes);
+      return new(fullFileName);
+    } catch (UnauthorizedAccessException) {
+
+      // in case multiple threads try to create the same file, this gets fired
+      return null;
+    } catch (IOException) {
+
+      // file already exists
+      return null;
+    }
+  }
+
+  /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
+  /// <param name="this">This <see cref="DirectoryInfo"/></param>
+  public static IEnumerable<DirectoryInfo> SafelyEnumerateDirectories(this DirectoryInfo @this) {
+    Against.ThisIsNull(@this);
+
+    return Invoke(@this);
+      
+    static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this) {
+      IEnumerator<DirectoryInfo> enumerator = null;
+      try {
+        enumerator = @this.EnumerateDirectories().GetEnumerator();
+      } catch {
+        ;
+      }
+
+      if (enumerator == null)
+        yield break;
+
+      for (;;) {
+        try {
+          if (!enumerator.MoveNext())
+            break;
+        } catch {
+          continue;
+        }
+
+        DirectoryInfo result = null;
+        try {
+          result = enumerator.Current;
+        } catch {
+          ;
+        }
+
+        if (result != null)
+          yield return result;
+      }
+
+      enumerator.Dispose();
+    }
+  }
+
+  /// <summary>Safely enumerates through a directory even if some entries throw exceptions</summary>
+  /// <param name="this">This <see cref="DirectoryInfo"/></param>
+  public static IEnumerable<FileInfo> SafelyEnumerateFiles(this DirectoryInfo @this) {
+    Against.ThisIsNull(@this);
+
+    return Invoke(@this);
+      
+    static IEnumerable<FileInfo> Invoke(DirectoryInfo @this) {
+      IEnumerator<FileInfo> enumerator = null;
+      try {
+        enumerator = @this.EnumerateFiles().GetEnumerator();
+      } catch {
+        ;
+      }
+
+      if (enumerator == null)
+        yield break;
+
+      for (;;) {
+        try {
+          if (!enumerator.MoveNext())
+            break;
+        } catch {
+          continue;
+        }
+
+        FileInfo result = null;
+        try {
+          result = enumerator.Current;
+        } catch {
+          ;
+        }
+
+        if (result != null)
+          yield return result;
+      }
+
+      enumerator.Dispose();
+    }
+  }
+
+}

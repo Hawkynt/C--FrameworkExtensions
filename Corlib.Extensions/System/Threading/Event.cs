@@ -21,14 +21,9 @@
 
 namespace System.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
 // ReSharper disable UnusedMember.Global
 // ReSharper disable once PartialTypeWithSinglePart
-static partial class EventExtensions {
+public static partial class EventExtensions {
   /// <summary>
   /// Invoke all handlers in parallel.
   /// </summary>

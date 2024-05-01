@@ -19,32 +19,20 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+namespace System.Security.Cryptography;
 
-namespace System.Security.Cryptography {
+public static partial class RandomNumberGeneratorExtenions {
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class RandomNumberGeneratorExtenions {
-    /// <summary>
-    /// Gets a new random number.
-    /// </summary>
-    /// <param name="This">This RandomNumberGenerator.</param>
-    /// <param name="maxValue">The maximum exclusive value.</param>
-    /// <returns></returns>
-    public static int Next(this RandomNumberGenerator This, int maxValue) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      var data = new byte[4];
-      This.GetBytes(data);
-      var result = BitConverter.ToInt32(data, 0);
-      return (Math.Abs(result) % maxValue);
-    }
+  /// <summary>
+  /// Gets a new random number.
+  /// </summary>
+  /// <param name="this">This RandomNumberGenerator.</param>
+  /// <param name="maxValue">The maximum exclusive value.</param>
+  /// <returns></returns>
+  public static int Next(this RandomNumberGenerator @this, int maxValue) {
+    var data = new byte[4];
+    @this.GetBytes(data);
+    var result = BitConverter.ToInt32(data, 0);
+    return Math.Abs(result) % maxValue;
   }
 }

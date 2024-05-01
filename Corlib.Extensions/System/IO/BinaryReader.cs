@@ -23,34 +23,28 @@
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.IO {
+namespace System.IO;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class BinaryReaderExtensions {
+public static partial class BinaryReaderExtensions {
 
-    /// <summary>
-    /// Reads all bytes from a binarystream's current position.
-    /// </summary>
-    /// <param name="this">The reader.</param>
-    /// <param name="bufferSize">Size of the buffer.</param>
-    /// <returns>All read bytes.</returns>
-    public static byte[] ReadAllBytes(this BinaryReader @this, uint bufferSize = 65536) {
+  /// <summary>
+  /// Reads all bytes from a binarystream's current position.
+  /// </summary>
+  /// <param name="this">The reader.</param>
+  /// <param name="bufferSize">Size of the buffer.</param>
+  /// <returns>All read bytes.</returns>
+  public static byte[] ReadAllBytes(this BinaryReader @this, uint bufferSize = 65536) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(bufferSize > 0);
+    Contract.Requires(@this != null);
+    Contract.Requires(bufferSize > 0);
 #endif
-      using MemoryStream result = new();
-      var buffer = new byte[bufferSize];
+    using MemoryStream result = new();
+    var buffer = new byte[bufferSize];
 
-      int count;
-      while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
-        result.Write(buffer, 0, count);
+    int count;
+    while ((count = @this.Read(buffer, 0, buffer.Length)) != 0)
+      result.Write(buffer, 0, count);
 
-      return (result.ToArray());
-    }
+    return result.ToArray();
   }
 }

@@ -28,13 +28,7 @@ namespace System.Collections.Concurrent;
 /// A thread-safe queue which executes a certain callback whenever an element is added
 /// </summary>
 /// <typeparam name="TItem">The type of items contained in this queue.</typeparam>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  class ExecutiveQueue<TItem>{
+public class ExecutiveQueue<TItem>{
 
   #region consts
   private const int _IDLE = 0;
@@ -123,7 +117,7 @@ public
 
     //overflow protection
     while (queue.Count >= this._maxItems)
-      Thread.Sleep(_overflowThrottle);
+      Thread.Sleep(this._overflowThrottle);
 
     queue.Enqueue(item);
 
@@ -132,68 +126,52 @@ public
       return;
 
     try {
-      Action call = () => _Worker(queue, callback, this._executionDelay, this._exceptionCallback, ref this._processing);
+      var call = () => _Worker(queue, callback, this._executionDelay, this._exceptionCallback, ref this._processing);
       call.BeginInvoke(call.EndInvoke, null);
     } catch {
       // in case we're crashing
       Interlocked.CompareExchange(ref this._processing, _IDLE, _PROCESSING);
       throw;
     }
-  }
 
+    return;
+    
+    static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
+      while (queue.Count > 0) { // just be save in case of races
 
-  /// <summary>
-  /// The worker thread.
-  /// </summary>
-  /// <param name="queue">The queue.</param>
-  /// <param name="callback">The callback.</param>
-  /// <param name="executionDelay">The execution delay.</param>
-  /// <param name="exceptionCallback">The exception callback, if any.</param>
-  /// <param name="isRunning">The reference to the isRunning flag.</param>
-  private static void _Worker(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback, ref int isRunning) {
-    Debug.Assert(queue != null);
-    Debug.Assert(callback != null);
+        // in case the value has alread changed
+        if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
+          return;
 
-    while(queue.Count>0){ // just be save in case of races
-        
-      // in case the value has alread changed
-      if (Interlocked.CompareExchange(ref isRunning, _PROCESSING, _IDLE) != _IDLE)
-        return;
+        try {
+          _DeqeueAndExecute(queue, callback, executionDelay, exceptionCallback);
+        } finally {
 
-      try {
-        _DeqeueAndExecute(queue, callback, executionDelay, exceptionCallback);
-      } finally {
-
-        // reset flag when done
-        Interlocked.CompareExchange(ref isRunning, _IDLE, _PROCESSING);
+          // reset flag when done
+          Interlocked.CompareExchange(ref isRunning, _IDLE, _PROCESSING);
+        }
       }
     }
-  }
 
-  /// <summary>
-  /// Dequeues and executes items
-  /// </summary>
-  /// <param name="queue">Our queue</param>
-  /// <param name="callback">The item executor</param>
-  /// <param name="executionDelay">The delay to use when executing items</param>
-  /// <param name="exceptionCallback">Called on exceptions</param>
-  private static void _DeqeueAndExecute(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback) {
-    var useDelay = executionDelay != null;
-      
-    while (queue.TryDequeue(out var current)) {
-      if (useDelay)
-        Thread.Sleep(executionDelay.Value);
+    static void _DeqeueAndExecute(ConcurrentQueue<TItem> queue, Action<TItem> callback, TimeSpan? executionDelay, Action<TItem, Exception> exceptionCallback) {
+      var useDelay = executionDelay != null;
 
-      try {
-        callback(current);
-      } catch (Exception e) {
-        if (exceptionCallback == null)
-          throw;
-        exceptionCallback(current, e);
+      while (queue.TryDequeue(out var current)) {
+        if (useDelay)
+          Thread.Sleep(executionDelay.Value);
+
+        try {
+          callback(current);
+        } catch (Exception e) {
+          if (exceptionCallback == null)
+            throw;
+          exceptionCallback(current, e);
+        }
       }
     }
-  }
 
+  }
+  
   /// <summary>
   /// Tries to dequeue.
   /// </summary>

@@ -29,12 +29,7 @@ namespace System;
 // ReSharper disable once PartialTypeWithSinglePart
 // ReSharper disable once UnusedMember.Global
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class BoolExtensions {
+public static partial class BoolExtensions {
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -22,12 +22,7 @@
 // ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class StackExtensions {
+public static partial class StackExtensions {
   /// <summary>
   /// Inverts the specified stack.
   /// </summary>

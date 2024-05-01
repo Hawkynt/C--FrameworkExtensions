@@ -22,32 +22,26 @@
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System.Threading {
+namespace System.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class TimerExtensions {
-    /// <summary>
-    /// Stops the specified <see cref="Timer">Timer</see>.
-    /// </summary>
-    /// <param name="this">This <see cref="Timer">Timer</see>.</param>
-    public static void Stop(this Timer @this) => @this.Change(Timeout.Infinite, Timeout.Infinite);
+public static partial class TimerExtensions {
+  /// <summary>
+  /// Stops the specified <see cref="Timer">Timer</see>.
+  /// </summary>
+  /// <param name="this">This <see cref="Timer">Timer</see>.</param>
+  public static void Stop(this Timer @this) => @this.Change(Timeout.Infinite, Timeout.Infinite);
 
-    /// <summary>
-    /// Starts the specified <see cref="Timer">Timer</see>.
-    /// </summary>
-    /// <param name="this">This <see cref="Timer">Timer</see>.</param>
-    /// <param name="timeout">The timeout before the first run occurs.</param>
-    public static void Start(this Timer @this, TimeSpan timeout) => @this.Change((long)timeout.TotalMilliseconds, Timeout.Infinite);
+  /// <summary>
+  /// Starts the specified <see cref="Timer">Timer</see>.
+  /// </summary>
+  /// <param name="this">This <see cref="Timer">Timer</see>.</param>
+  /// <param name="timeout">The timeout before the first run occurs.</param>
+  public static void Start(this Timer @this, TimeSpan timeout) => @this.Change((long)timeout.TotalMilliseconds, Timeout.Infinite);
 
-    /// <summary>
-    /// Starts the specified <see cref="Timer">Timer</see>.
-    /// </summary>
-    /// <param name="this">This <see cref="Timer">Timer</see>.</param>
-    /// <param name="timeoutInMilliseconds">The timeoutInMilliseconds before the first run occurs.</param>
-    public static void Start(this Timer @this, int timeoutInMilliseconds) => @this.Change(timeoutInMilliseconds, Timeout.Infinite);
-  }
+  /// <summary>
+  /// Starts the specified <see cref="Timer">Timer</see>.
+  /// </summary>
+  /// <param name="this">This <see cref="Timer">Timer</see>.</param>
+  /// <param name="timeoutInMilliseconds">The timeoutInMilliseconds before the first run occurs.</param>
+  public static void Start(this Timer @this, int timeoutInMilliseconds) => @this.Change(timeoutInMilliseconds, Timeout.Infinite);
 }

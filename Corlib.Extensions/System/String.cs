@@ -41,12 +41,7 @@ using Text;
 using Text.RegularExpressions;
 using Guard;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class StringExtensions {
+public static partial class StringExtensions {
 
 #if SUPPORTS_SPAN
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;

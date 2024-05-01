@@ -50,12 +50,7 @@ using System.Xml.Serialization;
 
 namespace System; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ObjectExtensions {
+public static partial class ObjectExtensions {
 
 #if !DEPRECATED_BINARY_FORMATTER
   private static readonly Lazy<BinaryFormatter> _formatter = new(() => new());

@@ -28,12 +28,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class CollectionExtensions {
+public static partial class CollectionExtensions {
 
   /// <summary>
   /// Implements a faster shortcut for LINQ's .Any()

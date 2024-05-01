@@ -39,12 +39,7 @@ namespace System;
 <# foreach (var type in new[] { "Byte", "SByte", "UInt16", "Int16", "UInt32", "Int32", "UInt64", "Int64" }) {#>
 
 // ReSharper disable once PartialTypeWithSinglePart
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class <#=type#>Extensions {
+public static partial class <#=type#>Extensions {
 
   /// <summary>
   /// Repeats an <see cref="Action"/> a given number of times.

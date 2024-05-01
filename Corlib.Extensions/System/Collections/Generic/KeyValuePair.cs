@@ -21,12 +21,7 @@
 
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class KeyValuePairExtensions {
+public static partial class KeyValuePairExtensions {
   /// <summary>
   /// Creates a dictionary from the given key/value pairs.
   /// Note: if more than one key/value pair exists with the same key name, only the last value gets stored in the dictionary.

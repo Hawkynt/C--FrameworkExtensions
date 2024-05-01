@@ -22,12 +22,7 @@
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ConcurrentBagExtensions {
+public static partial class ConcurrentBagExtensions {
   /// <summary>
   /// Clears the specified Bag.
   /// </summary>

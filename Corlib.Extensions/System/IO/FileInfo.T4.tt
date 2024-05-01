@@ -28,32 +28,26 @@ using System.Text;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedParameter.Global
 
-namespace System.IO {
+namespace System.IO;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class FileInfoExtensions {
+public static partial class FileInfoExtensions {
 
 <#=GenerateDefaultValueStubs("string[]",@"
-    public static string[] ReadAllLinesOrDefault(this FileInfo @this{0} {1}) 
-      => TryReadAllLines(@this, out var result) ? result : {2}
-    ;
+  public static string[] ReadAllLinesOrDefault(this FileInfo @this{0} {1}) 
+    => TryReadAllLines(@this, out var result) ? result : {2}
+  ;
 ")#>
 <#=GenerateDefaultValueStubs("string[]",@"
-    public static string[] ReadAllLinesOrDefault(this FileInfo @this, Encoding encoding{0} {1}) 
-      => TryReadAllLines(@this, encoding, out var result) ? result : {2}
-    ;
+  public static string[] ReadAllLinesOrDefault(this FileInfo @this, Encoding encoding{0} {1}) 
+    => TryReadAllLines(@this, encoding, out var result) ? result : {2}
+  ;
 ")#>
 <#=GenerateDefaultValueStubs("byte[]",@"
-    public static byte[] ReadAllBytesOrDefault(this FileInfo @this{0} {1})
-      => TryReadAllBytes(@this, out var result) ? result : {2}
-    ;
+  public static byte[] ReadAllBytesOrDefault(this FileInfo @this{0} {1})
+    => TryReadAllBytes(@this, out var result) ? result : {2}
+  ;
 ")#>
 
-  }
 }
 <#+
 string GenerateDefaultValueStubs(string typeName,string code) {

@@ -28,12 +28,7 @@ using System.Linq;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Text.RegularExpressions;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class RegexExtensions {
+public static partial class RegexExtensions {
   
   /// <summary>
   /// Replaces groups with replacements.
@@ -45,7 +40,7 @@ static partial class RegexExtensions {
   /// <param name="groupId">The group id, defaults to <c>null</c>.</param>
   /// <param name="matchCount">The max replaces, default to <c>null</c>.</param>
   /// <returns></returns>
-  private static string _ReplaceGroup(this Regex regex, string source, string replacement, string groupName, int? groupId, int? matchCount) {
+  private static string _ReplaceGroup(Regex regex, string source, string replacement, string groupName, int? groupId, int? matchCount) {
     Against.ThisIsNull(regex);
     
     if (source == null)
@@ -74,7 +69,7 @@ static partial class RegexExtensions {
   public static string ReplaceGroup(this Regex @this, string source, string replacement) {
     Against.ThisIsNull(@this);
     
-    return @this._ReplaceGroup(source, replacement, null, null, null);
+    return _ReplaceGroup(@this, source, replacement, null, null, null);
   }
 
   /// <summary>
@@ -89,7 +84,7 @@ static partial class RegexExtensions {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(matchCount);
 
-    return @this._ReplaceGroup(source, replacement, null, null, matchCount);
+    return _ReplaceGroup(@this, source, replacement, null, null, matchCount);
   }
 
   /// <summary>
@@ -104,7 +99,7 @@ static partial class RegexExtensions {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(groupId);
 
-    return @this._ReplaceGroup(source, replacement, null, groupId, null);
+    return _ReplaceGroup(@this, source, replacement, null, groupId, null);
   }
 
   /// <summary>
@@ -121,7 +116,7 @@ static partial class RegexExtensions {
     Against.IndexBelowZero(groupId);
     Against.CountBelowZero(matchCount);
 
-    return @this._ReplaceGroup(source, replacement, null, groupId, matchCount);
+    return _ReplaceGroup(@this, source, replacement, null, groupId, matchCount);
   }
 
   /// <summary>
@@ -136,7 +131,7 @@ static partial class RegexExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(groupName);
 
-    return @this._ReplaceGroup(source, replacement, groupName, null, null);
+    return _ReplaceGroup(@this, source, replacement, groupName, null, null);
   }
 
   /// <summary>
@@ -153,7 +148,7 @@ static partial class RegexExtensions {
     Against.ArgumentIsNull(groupName);
     Against.CountBelowZero(matchCount);
     
-    return @this._ReplaceGroup(source, replacement, groupName, null, matchCount);
+    return _ReplaceGroup(@this, source, replacement, groupName, null, matchCount);
   }
 
   /// <summary>

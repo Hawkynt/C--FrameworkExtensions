@@ -21,7 +21,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
@@ -34,14 +33,7 @@ namespace System.Diagnostics;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ProcessExtensions {
+public static partial class ProcessExtensions {
 
   private static class NativeMethods {
 
@@ -49,8 +41,6 @@ static partial class ProcessExtensions {
     /// A utility class to determine a this parent.     
     /// </summary>     
     [StructLayout(LayoutKind.Sequential)]
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-    [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
     public struct ProcessBasicInformation {
       // These members must match PROCESS_BASIC_INFORMATION         
       public IntPtr Reserved1;

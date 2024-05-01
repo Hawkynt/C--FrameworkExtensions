@@ -37,12 +37,7 @@ using Guard;
 using Runtime.CompilerServices;
 #endif
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class BindingListExtensions {
+public static partial class BindingListExtensions {
 
   /// <summary>
   /// Implements a faster shortcut for LINQ's .Any()

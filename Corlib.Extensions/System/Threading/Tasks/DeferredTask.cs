@@ -25,161 +25,155 @@
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.Threading.Tasks {
+namespace System.Threading.Tasks;
+
+/// <summary>
+/// This class allows us to defer actions by a certain time and possibly overwrite the passed values within that timespan.
+/// </summary>
+/// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
+public class DeferredTask<TValue> {
+
   /// <summary>
-  /// This class allows us to defer actions by a certain time and possibly overwrite the passed values within that timespan.
+  /// Stores the scheduled values, alongside their storage date.
   /// </summary>
-  /// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
-
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class DeferredTask<TValue> {
-
-    /// <summary>
-    /// Stores the scheduled values, alongside their storage date.
-    /// </summary>
-    private class Item {
-      public readonly TValue value;
-      public readonly DateTime createDate;
-      private Item(TValue value, DateTime createDate) {
-        this.value = value;
-        this.createDate = createDate;
-      }
-
-      public static Item Now(TValue value) => new(value, DateTime.MinValue);
-      public static Item Schedule(TValue value) => new(value, DateTime.UtcNow);
-
+  private class Item {
+    public readonly TValue value;
+    public readonly DateTime createDate;
+    private Item(TValue value, DateTime createDate) {
+      this.value = value;
+      this.createDate = createDate;
     }
 
-    private const int _DEFAULT_WAIT_TIME_IN_MSECS = 500;
+    public static Item Now(TValue value) => new(value, DateTime.MinValue);
+    public static Item Schedule(TValue value) => new(value, DateTime.UtcNow);
 
-    private readonly Action<TValue> _action;
-    private readonly TimeSpan _waitTime;
-    private readonly bool _allowTaskOverlapping;
-    private readonly bool _autoAbortOnSchedule;
+  }
 
-    private Item _currentValue;
-    private Thread _currentThread;
-    private int _threadCount;
+  private const int _DEFAULT_WAIT_TIME_IN_MSECS = 500;
 
-    public ManualResetEventSlim WaitHandle { get; } = new(true);
+  private readonly Action<TValue> _action;
+  private readonly TimeSpan _waitTime;
+  private readonly bool _allowTaskOverlapping;
+  private readonly bool _autoAbortOnSchedule;
 
-    public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
+  private Item _currentValue;
+  private Thread _currentThread;
+  private int _threadCount;
+
+  public ManualResetEventSlim WaitHandle { get; } = new(true);
+
+  public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(action != null);
+    Contract.Requires(action != null);
 #endif
-      this._action = action;
-      this._waitTime = waitTime ?? TimeSpan.FromMilliseconds(_DEFAULT_WAIT_TIME_IN_MSECS);
-      this._allowTaskOverlapping = allowTaskOverlapping;
-      this._autoAbortOnSchedule = autoAbortOnSchedule;
-    }
+    this._action = action;
+    this._waitTime = waitTime ?? TimeSpan.FromMilliseconds(_DEFAULT_WAIT_TIME_IN_MSECS);
+    this._allowTaskOverlapping = allowTaskOverlapping;
+    this._autoAbortOnSchedule = autoAbortOnSchedule;
+  }
 
-    /// <summary>
-    /// Schedules the specified value for later execution.
-    /// </summary>
-    /// <param name="value">The value.</param>
-    public void Schedule(TValue value) {
-      if (this._autoAbortOnSchedule)
-        this.Abort();
+  /// <summary>
+  /// Schedules the specified value for later execution.
+  /// </summary>
+  /// <param name="value">The value.</param>
+  public void Schedule(TValue value) {
+    if (this._autoAbortOnSchedule)
+      this.Abort();
 
-      Interlocked.Exchange(ref this._currentValue, Item.Schedule(value));
+    Interlocked.Exchange(ref this._currentValue, Item.Schedule(value));
 
-      this._RunThreadIfNeeded();
-    }
+    this._RunThreadIfNeeded();
+  }
 
-    /// <summary>
-    /// Executes immediately with the given value.
-    /// </summary>
-    /// <param name="value">The value.</param>
-    public void Now(TValue value) {
-      Interlocked.Exchange(ref this._currentValue, Item.Now(value));
-      if (this._autoAbortOnSchedule)
-        this.Abort();
+  /// <summary>
+  /// Executes immediately with the given value.
+  /// </summary>
+  /// <param name="value">The value.</param>
+  public void Now(TValue value) {
+    Interlocked.Exchange(ref this._currentValue, Item.Now(value));
+    if (this._autoAbortOnSchedule)
+      this.Abort();
 
-      this._RunThreadIfNeeded();
-    }
+    this._RunThreadIfNeeded();
+  }
 
-    /// <summary>
-    /// Aborts a currently running waiting or worker thread.
-    /// </summary>
-    public void Abort() {
-      var thread = this._currentThread;
-      if (thread == null || Interlocked.CompareExchange(ref this._currentThread, null, thread) != thread)
-        return;
+  /// <summary>
+  /// Aborts a currently running waiting or worker thread.
+  /// </summary>
+  public void Abort() {
+    var thread = this._currentThread;
+    if (thread == null || Interlocked.CompareExchange(ref this._currentThread, null, thread) != thread)
+      return;
 
 #if !NETCOREAPP && !NETSTANDARD && !NET5_0_OR_GREATER
-      thread.Abort();
+    thread.Abort();
 #else
       // TODO: signal the running thread to abort somehow ... maybe a reset event, maybe a weak-dictionary IDK
 #endif
 
-    }
+  }
 
-    /// <summary>
-    /// Starts a new worker thread if values are available.
-    /// </summary>
-    private void _RunThreadIfNeeded() {
-      if (this._currentValue == null)
-        return;
+  /// <summary>
+  /// Starts a new worker thread if values are available.
+  /// </summary>
+  private void _RunThreadIfNeeded() {
+    if (this._currentValue == null)
+      return;
 
-      Thread thread = new(this._thread) {
-        IsBackground = true,
-        Name = "Deferred Task #" + this.GetHashCode()
-      };
+    Thread thread = new(this._thread) {
+      IsBackground = true,
+      Name = "Deferred Task #" + this.GetHashCode()
+    };
 
-      // if not somebody else started a thread already
-      if (Interlocked.CompareExchange(ref this._currentThread, thread, null) == null)
-        thread.Start(thread);
-    }
+    // if not somebody else started a thread already
+    if (Interlocked.CompareExchange(ref this._currentThread, thread, null) == null)
+      thread.Start(thread);
+  }
 
-    private void _thread(object state) {
-      var thread = (Thread)state;
-      try {
-        //if this is the first thread reset the WaitHandle
-        if(Interlocked.Increment(ref this._threadCount) == 1)
-          this.WaitHandle.Reset();
+  private void _thread(object state) {
+    var thread = (Thread)state;
+    try {
+      //if this is the first thread reset the WaitHandle
+      if(Interlocked.Increment(ref this._threadCount) == 1)
+        this.WaitHandle.Reset();
 
-        while (true) {
-          Item item;
+      while (true) {
+        Item item;
 
-          // wait as long as items are inserted
-          var sleepTime = TimeSpan.Zero;
-          do {
-            Thread.Sleep(sleepTime);
-            item = this._currentValue;
+        // wait as long as items are inserted
+        var sleepTime = TimeSpan.Zero;
+        do {
+          Thread.Sleep(sleepTime);
+          item = this._currentValue;
 
-            // no more items scheduled, exit thread
-            if (item == null)
-              return;
+          // no more items scheduled, exit thread
+          if (item == null)
+            return;
 
-            // time to wait before executing action/re-checking
-            sleepTime = this._waitTime - (DateTime.UtcNow - item.createDate);
-          } while (sleepTime > TimeSpan.Zero);
+          // time to wait before executing action/re-checking
+          sleepTime = this._waitTime - (DateTime.UtcNow - item.createDate);
+        } while (sleepTime > TimeSpan.Zero);
 
-          // remove item if it did not change, if it did - process in next round
-          Interlocked.CompareExchange(ref this._currentValue, null, item);
+        // remove item if it did not change, if it did - process in next round
+        Interlocked.CompareExchange(ref this._currentValue, null, item);
 
-          if (this._allowTaskOverlapping) {
+        if (this._allowTaskOverlapping) {
 
-            // immediately release thread, new thread will start with null value if needed
-            Interlocked.CompareExchange(ref this._currentThread, null, thread);
-          }
-
-          // execute action
-          this._action(item.value);
+          // immediately release thread, new thread will start with null value if needed
+          Interlocked.CompareExchange(ref this._currentThread, null, thread);
         }
-      } finally {
 
-        // release this thread
-        Interlocked.CompareExchange(ref this._currentThread, null, thread);
-
-        //only set the WaitHandle if no other threads are active
-        if (Interlocked.Decrement(ref this._threadCount) == 0)
-          this.WaitHandle.Set();
+        // execute action
+        this._action(item.value);
       }
+    } finally {
+
+      // release this thread
+      Interlocked.CompareExchange(ref this._currentThread, null, thread);
+
+      //only set the WaitHandle if no other threads are active
+      if (Interlocked.Decrement(ref this._threadCount) == 0)
+        this.WaitHandle.Set();
     }
   }
 }

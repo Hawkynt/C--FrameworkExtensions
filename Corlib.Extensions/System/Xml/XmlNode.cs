@@ -21,25 +21,19 @@
 
 #endregion
 
-namespace System.Xml {
+namespace System.Xml;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-    static partial class XmlNodeExtensions {
+public static partial class XmlNodeExtensions {
 
-    /// <summary>
-    /// Appends this node to a new parent.
-    /// </summary>
-    /// <param name="this">The node getting the new parent.</param>
-    /// <param name="newParent">The new parent for this node.</param>
-    public static void ChangeParent(this XmlNode @this, XmlNode newParent) {
-      var oldParent = @this.ParentNode;
-      oldParent?.RemoveChild(@this);
-      newParent.AppendChild(@this);
-    }
-
+  /// <summary>
+  /// Appends this node to a new parent.
+  /// </summary>
+  /// <param name="this">The node getting the new parent.</param>
+  /// <param name="newParent">The new parent for this node.</param>
+  public static void ChangeParent(this XmlNode @this, XmlNode newParent) {
+    var oldParent = @this.ParentNode;
+    oldParent?.RemoveChild(@this);
+    newParent.AppendChild(@this);
   }
+
 }

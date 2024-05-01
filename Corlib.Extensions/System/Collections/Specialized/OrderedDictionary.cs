@@ -27,20 +27,7 @@ using System.Linq;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Specialized; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class OrderedDictionaryExtensions {
-}
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {
+public class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {
   private readonly List<TKey> _keys = new();
 
   public OrderedDictionary() {

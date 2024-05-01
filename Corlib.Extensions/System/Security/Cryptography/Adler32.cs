@@ -20,42 +20,32 @@
 #endregion
 
 
-namespace System.Security.Cryptography {
-  /// <summary>
-  /// </summary>
+namespace System.Security.Cryptography;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class Adler32 : HashAlgorithm {
+public class Adler32 : HashAlgorithm {
 
-    private const ushort _DIVISOR = 65521;
+  private const ushort _DIVISOR = 65521;
 
-    public Adler32() {
-      this.Initialize();
-    }
-
-    private ushort _state;
-    private ushort _sum;
-
-    #region Overrides of HashAlgorithm
-
-    public override sealed void Initialize() {
-      this._state = 1;
-      this._sum = 0;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-      for (var i = ibStart; i < ibStart + cbSize; ++i)
-        _sum = (ushort)((_sum + (_state = (ushort)((_state + array[i]) % _DIVISOR))) % _DIVISOR);
-    }
-
-    protected override byte[] HashFinal() {
-      return (BitConverter.GetBytes(_sum << 16 | _state));
-    }
-
-    #endregion
+  public Adler32() {
+    this.Initialize();
   }
+
+  private ushort _state;
+  private ushort _sum;
+
+  #region Overrides of HashAlgorithm
+
+  public sealed override void Initialize() {
+    this._state = 1;
+    this._sum = 0;
+  }
+
+  protected override void HashCore(byte[] array, int ibStart, int cbSize) {
+    for (var i = ibStart; i < ibStart + cbSize; ++i)
+      this._sum = (ushort)((this._sum + (this._state = (ushort)((this._state + array[i]) % _DIVISOR))) % _DIVISOR);
+  }
+
+  protected override byte[] HashFinal() => BitConverter.GetBytes(this._sum << 16 | this._state);
+
+  #endregion
 }

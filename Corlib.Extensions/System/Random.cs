@@ -33,12 +33,7 @@ using System.Security.Cryptography;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class RandomExtensions {
+public static partial class RandomExtensions {
 
   /// <summary>
   /// Represents settings for generating passwords.

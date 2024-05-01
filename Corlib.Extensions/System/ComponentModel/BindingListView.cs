@@ -26,103 +26,98 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace System.ComponentModel {
+namespace System.ComponentModel;
+
+/// <summary>
+///   A list view for applying filtering and stuff.
+/// </summary>
+/// <typeparam name="TItem">The type of the item.</typeparam>
+
+public class BindingListView<TItem> : SortableBindingList<TItem> {
+  private bool _isFiltering;
+  private Predicate<TItem> _filterPredicate;
+  private bool _ignoreDataSourceEvents;
+
+  public BindingListView(BindingList<TItem> baseList) {
+    this.DataSource = baseList ?? throw new ArgumentNullException(nameof(baseList));
+    this._Hook(baseList);
+  }
+
+  private void _Hook(IBindingList baseList) {
+    baseList.ListChanged += (s, e) => {
+      if (this._ignoreDataSourceEvents)
+        return;
+
+      this._ApplyFiltering();
+    };
+  }
+
+  public new void Add(TItem item) => this.DataSource.Add(item);
+
   /// <summary>
-  ///   A list view for applying filtering and stuff.
+  /// Adds the range.
   /// </summary>
-  /// <typeparam name="TItem">The type of the item.</typeparam>
+  /// <param name="items">The items.</param>
+  public new void AddRange(IEnumerable<TItem> items) {
+    this._ignoreDataSourceEvents = true;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class BindingListView<TItem> : SortableBindingList<TItem> {
-    private bool _isFiltering;
-    private Predicate<TItem> _filterPredicate;
-    private bool _ignoreDataSourceEvents;
+    foreach (var item in items)
+      this.DataSource.Add(item);
 
-    public BindingListView(BindingList<TItem> baseList) {
-      this.DataSource = baseList ?? throw new ArgumentNullException(nameof(baseList));
-      this._Hook(baseList);
-    }
+    this._ignoreDataSourceEvents = false;
+    this._ApplyFiltering();
+  }
 
-    private void _Hook(IBindingList baseList) {
-      baseList.ListChanged += (s, e) => {
-        if (this._ignoreDataSourceEvents)
-          return;
+  /// <summary>
+  ///   Gets the data source.
+  /// </summary>
+  public BindingList<TItem> DataSource { get; }
 
-        this._ApplyFiltering();
-      };
-    }
-
-    public new void Add(TItem item) => this.DataSource.Add(item);
-
-    /// <summary>
-    /// Adds the range.
-    /// </summary>
-    /// <param name="items">The items.</param>
-    public new void AddRange(IEnumerable<TItem> items) {
-      this._ignoreDataSourceEvents = true;
-
-      foreach (var item in items)
-        this.DataSource.Add(item);
-
-      this._ignoreDataSourceEvents = false;
+  /// <summary>
+  ///   Gets or sets a value indicating whether this instance is filtering.
+  /// </summary>
+  /// <value>
+  ///   <c>true</c> if this instance is filtering; otherwise, <c>false</c>.
+  /// </value>
+  public bool IsFiltering {
+    get => this._isFiltering;
+    set {
+      this._isFiltering = value;
       this._ApplyFiltering();
     }
+  }
 
-    /// <summary>
-    ///   Gets the data source.
-    /// </summary>
-    public BindingList<TItem> DataSource { get; }
-
-    /// <summary>
-    ///   Gets or sets a value indicating whether this instance is filtering.
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if this instance is filtering; otherwise, <c>false</c>.
-    /// </value>
-    public bool IsFiltering {
-      get => this._isFiltering;
-      set {
-        this._isFiltering = value;
-        this._ApplyFiltering();
-      }
+  /// <summary>
+  ///   Gets or sets the filter predicate.
+  /// </summary>
+  /// <value>
+  ///   The filter predicate.
+  /// </value>
+  public Predicate<TItem> FilterPredicate {
+    get => this._filterPredicate;
+    set {
+      this._filterPredicate = value;
+      this._ApplyFiltering();
     }
+  }
 
-    /// <summary>
-    ///   Gets or sets the filter predicate.
-    /// </summary>
-    /// <value>
-    ///   The filter predicate.
-    /// </value>
-    public Predicate<TItem> FilterPredicate {
-      get => this._filterPredicate;
-      set {
-        this._filterPredicate = value;
-        this._ApplyFiltering();
-      }
-    }
+  /// <summary>
+  ///   Re-applies filtering to all elements.
+  /// </summary>
+  private void _ApplyFiltering() {
+    var ignoreEvents = this.RaiseListChangedEvents;
+    this.RaiseListChangedEvents = false;
 
-    /// <summary>
-    ///   Re-applies filtering to all elements.
-    /// </summary>
-    private void _ApplyFiltering() {
-      var ignoreEvents = this.RaiseListChangedEvents;
-      this.RaiseListChangedEvents = false;
+    this.Clear();
+    var isFiltering = this.IsFiltering;
+    var filter = this.FilterPredicate;
+    var results = !isFiltering || filter == null ? this.DataSource : this.DataSource.Where(item => filter(item));
 
-      this.Clear();
-      var isFiltering = this.IsFiltering;
-      var filter = this.FilterPredicate;
-      var results = !isFiltering || filter == null ? this.DataSource : this.DataSource.Where(item => filter(item));
+    // FIXME: calls this in a GUI thread
+    base.AddRange(results);
 
-      // FIXME: calls this in a GUI thread
-      base.AddRange(results);
-
-      this.RaiseListChangedEvents = ignoreEvents;
-      this.OnListChanged(new(ListChangedType.Reset, 0));
-    }
+    this.RaiseListChangedEvents = ignoreEvents;
+    this.OnListChanged(new(ListChangedType.Reset, 0));
   }
 }
 

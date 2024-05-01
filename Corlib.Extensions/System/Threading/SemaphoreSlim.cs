@@ -25,68 +25,62 @@
 using System.Diagnostics;
 #endif
 
-namespace System.Threading {
+namespace System.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class SemaphoreSlimExtensions {
+public static partial class SemaphoreSlimExtensions {
 
 #region nested types
 
-    private class SemaphoreAcquired : IDisposable {
-      private readonly SemaphoreSlim _semaphore;
-      private readonly bool _entered;
-      private int _isDisposed;
+  private class SemaphoreAcquired : IDisposable {
+    private readonly SemaphoreSlim _semaphore;
+    private readonly bool _entered;
+    private int _isDisposed;
 
-      public SemaphoreAcquired(SemaphoreSlim semaphore) {
-        this._semaphore = semaphore;
-        this._entered = this._semaphore.Wait(-1, new());
+    public SemaphoreAcquired(SemaphoreSlim semaphore) {
+      this._semaphore = semaphore;
+      this._entered = this._semaphore.Wait(-1, new());
 #if DEBUG
-        Trace.WriteLine($"SemaphoreSlim({this._semaphore.GetHashCode():X8}): {this._semaphore.CurrentCount} free");
+      Trace.WriteLine($"SemaphoreSlim({this._semaphore.GetHashCode():X8}): {this._semaphore.CurrentCount} free");
 #endif
-      }
+    }
 
-      ~SemaphoreAcquired() {
-        this.Dispose();
-      }
+    ~SemaphoreAcquired() {
+      this.Dispose();
+    }
 
 #region IDisposable
 
-      public void Dispose() {
-        if (Interlocked.CompareExchange(ref this._isDisposed, 1, 0) != 0)
-          return;
+    public void Dispose() {
+      if (Interlocked.CompareExchange(ref this._isDisposed, 1, 0) != 0)
+        return;
 
-        if (this._entered)
-          this._semaphore.Release();
+      if (this._entered)
+        this._semaphore.Release();
 
 #if DEBUG
-        Trace.WriteLine($"SemaphoreSlim({this._semaphore.GetHashCode():X8}): {this._semaphore.CurrentCount} free");
+      Trace.WriteLine($"SemaphoreSlim({this._semaphore.GetHashCode():X8}): {this._semaphore.CurrentCount} free");
 #endif
-      }
-
-#endregion
     }
 
 #endregion
-
-    /// <summary>
-    /// Tries to wait for the semaphore to enter.
-    /// </summary>
-    /// <param name="this">This <see cref="SemaphoreSlim">SemaphoreSlim</see></param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TryWait(this SemaphoreSlim @this) => @this.Wait(-1, new());
-
-    /// <summary>
-    /// Wait to enter the semaphore.
-    /// </summary>
-    /// <param name="this">This <see cref="SemaphoreSlim">SemaphoreSlim</see></param>
-    /// <returns>An <see cref="IDisposable">IDisposable</see> to be used in using-blocks</returns>
-    public static IDisposable Enter(this SemaphoreSlim @this) => new SemaphoreAcquired(@this);
-
   }
+
+#endregion
+
+  /// <summary>
+  /// Tries to wait for the semaphore to enter.
+  /// </summary>
+  /// <param name="this">This <see cref="SemaphoreSlim">SemaphoreSlim</see></param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TryWait(this SemaphoreSlim @this) => @this.Wait(-1, new());
+
+  /// <summary>
+  /// Wait to enter the semaphore.
+  /// </summary>
+  /// <param name="this">This <see cref="SemaphoreSlim">SemaphoreSlim</see></param>
+  /// <returns>An <see cref="IDisposable">IDisposable</see> to be used in using-blocks</returns>
+  public static IDisposable Enter(this SemaphoreSlim @this) => new SemaphoreAcquired(@this);
+
 }
 
 #endif

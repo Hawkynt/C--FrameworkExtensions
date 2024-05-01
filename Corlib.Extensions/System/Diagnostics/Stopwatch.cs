@@ -22,25 +22,20 @@
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System.Diagnostics {
+namespace System.Diagnostics;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class StopwatchExtensions {
+public static partial class StopwatchExtensions {
 
-    private const long TicksPerMillisecond = 10000L;
-    private const long TicksPerSecond = 1000 * TicksPerMillisecond;
+  private const long TicksPerMillisecond = 10000L;
+  private const long TicksPerSecond = 1000 * TicksPerMillisecond;
 
-    private static double tickFrequency => Stopwatch.IsHighResolution ? TicksPerSecond / (double)Stopwatch.Frequency : 1;
+  private static double _tickFrequency => Stopwatch.IsHighResolution ? TicksPerSecond / (double)Stopwatch.Frequency : 1;
 
-    /// <summary>
-    /// Gets the elapsed fractional milliseconds.
-    /// </summary>
-    /// <param name="This">This TimeSpan.</param>
-    /// <returns></returns>
-    public static double GetElapsedMilliseconds(this Stopwatch This) => This.ElapsedTicks * tickFrequency / TicksPerMillisecond;
-  }
+  /// <summary>
+  /// Gets the elapsed fractional milliseconds.
+  /// </summary>
+  /// <param name="This">This TimeSpan.</param>
+  /// <returns></returns>
+  public static double GetElapsedMilliseconds(this Stopwatch This) => This.ElapsedTicks * _tickFrequency / TicksPerMillisecond;
+  
 }

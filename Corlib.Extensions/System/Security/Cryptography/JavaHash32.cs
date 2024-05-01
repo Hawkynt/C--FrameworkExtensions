@@ -20,38 +20,30 @@
 #endregion
 
 
-namespace System.Security.Cryptography {
-  /// <summary>
-  /// </summary>
+namespace System.Security.Cryptography;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  class JavaHash32 : HashAlgorithm {
+public class JavaHash32 : HashAlgorithm {
 
-    public JavaHash32() {
-      this.Initialize();
-    }
-
-    private uint _state;
-
-    #region Overrides of HashAlgorithm
-
-    public override sealed void Initialize() {
-      this._state = 0;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-      for (var i = ibStart; i < ibStart + cbSize; ++i)
-        this._state = this._state * 0x1f + array[i];
-    }
-
-    protected override byte[] HashFinal() {
-      return BitConverter.GetBytes(this._state);
-    }
-
-    #endregion
+  public JavaHash32() {
+    this.Initialize();
   }
+
+  private uint _state;
+
+  #region Overrides of HashAlgorithm
+
+  public override sealed void Initialize() {
+    this._state = 0;
+  }
+
+  protected override void HashCore(byte[] array, int ibStart, int cbSize) {
+    for (var i = ibStart; i < ibStart + cbSize; ++i)
+      this._state = this._state * 0x1f + array[i];
+  }
+
+  protected override byte[] HashFinal() {
+    return BitConverter.GetBytes(this._state);
+  }
+
+  #endregion
 }

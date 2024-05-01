@@ -21,71 +21,64 @@
 
 using System.Reflection.Emit;
 using System.Collections.Concurrent;
-namespace System.Runtime {
+namespace System.Runtime;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static class DynamicObjectFactory {
-    /// <summary>
-    /// Creates an instance of a class decided at runtime
-    /// </summary>
-    /// <typeparam name="TClass">The type of the class.</typeparam>
-    /// <param name="arrParams">The parameters for the constructor.</param>
-    /// <returns>An new instance of the class</returns>
-    public static TClass CreateInstance<TClass>(params object[] arrParams) where TClass : class {
+public static class DynamicObjectFactory {
+  /// <summary>
+  /// Creates an instance of a class decided at runtime
+  /// </summary>
+  /// <typeparam name="TClass">The type of the class.</typeparam>
+  /// <param name="arrParams">The parameters for the constructor.</param>
+  /// <returns>An new instance of the class</returns>
+  public static TClass CreateInstance<TClass>(params object[] arrParams) where TClass : class {
 #if !DEBUG
-      try {
+    try {
 #endif
-      return (TClass)((arrParams == null || arrParams.Length == 0)
-                ? _varCreateInstanceRaw<TClass>()
-                : (Activator.CreateInstance(typeof(TClass), arrParams)));
+      return (TClass)(arrParams == null || arrParams.Length == 0
+        ? _varCreateInstanceRaw<TClass>()
+        : Activator.CreateInstance(typeof(TClass), arrParams));
 #if !DEBUG
-      } catch {
-        return (null);
-      }
-#endif
+    } catch {
+      return null;
     }
+#endif
+  }
 
-    private delegate object delCreateObject();
-    private static readonly Type tpDelegate=typeof(delCreateObject);
-    private static readonly ConcurrentDictionary<Type, delCreateObject> _hashILCache = new();
-    // create a class by calling an empty constructur
-    private static TClass _varCreateInstanceRaw<TClass>() {
-      // this is fast for up to 6 different classes
-      //return (Activator.CreateInstance<TClass>());
-      // after that this is faster because it caches
-      // first call is 5 times slower than the above 
-      // but every call after that is 3 times faster
-      Type tpClass = typeof(TClass);
-      string strCacheName = "varObjFactory$$_" + tpClass.FullName;
-      delCreateObject ptrCall;
-      if (!_hashILCache.TryGetValue(tpClass, out ptrCall)) {
-        DynamicMethod objDynamicMethod = new DynamicMethod(strCacheName, typeof(object), null, tpClass);
-        ILGenerator objILGenerator = objDynamicMethod.GetILGenerator();
-        objILGenerator.Emit(OpCodes.Newobj, tpClass.GetConstructor(Type.EmptyTypes));
-        objILGenerator.Emit(OpCodes.Ret);
-        ptrCall=(delCreateObject)objDynamicMethod.CreateDelegate(tpDelegate);
-        _hashILCache.TryAdd(tpClass, ptrCall);
-      } else {
-        // successfully read cache entry
-      }
-      return ((TClass)ptrCall());
+  private delegate object delCreateObject();
+  private static readonly Type tpDelegate=typeof(delCreateObject);
+  private static readonly ConcurrentDictionary<Type, delCreateObject> _hashILCache = new();
+  // create a class by calling an empty constructur
+  private static TClass _varCreateInstanceRaw<TClass>() {
+    // this is fast for up to 6 different classes
+    //return (Activator.CreateInstance<TClass>());
+    // after that this is faster because it caches
+    // first call is 5 times slower than the above 
+    // but every call after that is 3 times faster
+    var tpClass = typeof(TClass);
+    var strCacheName = "varObjFactory$$_" + tpClass.FullName;
+    if (!_hashILCache.TryGetValue(tpClass, out var ptrCall)) {
+      var objDynamicMethod = new DynamicMethod(strCacheName, typeof(object), null, tpClass);
+      var objILGenerator = objDynamicMethod.GetILGenerator();
+      objILGenerator.Emit(OpCodes.Newobj, tpClass.GetConstructor(Type.EmptyTypes));
+      objILGenerator.Emit(OpCodes.Ret);
+      ptrCall=(delCreateObject)objDynamicMethod.CreateDelegate(tpDelegate);
+      _hashILCache.TryAdd(tpClass, ptrCall);
+    } else {
+      // successfully read cache entry
     }
-    /// <summary>
-    /// Creates an instance of a class decided at runtime
-    /// </summary>
-    /// <param name="strType">Type of the class.</param>
-    /// <param name="arrParams">The parameters for the constructor.</param>
-    /// <returns>A new instance of the class</returns>
-    public static object CreateInstance(string strType, params object[] arrParams) {
-      try {
-        return (Activator.CreateInstance(Type.GetType(strType), arrParams));
-      } catch {
-        return (null);
-      }
+    return (TClass)ptrCall();
+  }
+  /// <summary>
+  /// Creates an instance of a class decided at runtime
+  /// </summary>
+  /// <param name="strType">Type of the class.</param>
+  /// <param name="arrParams">The parameters for the constructor.</param>
+  /// <returns>A new instance of the class</returns>
+  public static object CreateInstance(string strType, params object[] arrParams) {
+    try {
+      return Activator.CreateInstance(Type.GetType(strType), arrParams);
+    } catch {
+      return null;
     }
   }
 }

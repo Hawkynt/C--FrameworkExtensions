@@ -23,63 +23,57 @@
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.Reflection {
+namespace System.Reflection;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class PropertyInfoExtensions {
-    /// <summary>
-    /// Tries the set value.
-    /// </summary>
-    /// <param name="This">This PropertyInfo.</param>
-    /// <param name="instance">The instance.</param>
-    /// <param name="value">The value.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TrySetValue(this PropertyInfo This, object instance, object value) {
+public static partial class PropertyInfoExtensions {
+  /// <summary>
+  /// Tries the set value.
+  /// </summary>
+  /// <param name="This">This PropertyInfo.</param>
+  /// <param name="instance">The instance.</param>
+  /// <param name="value">The value.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TrySetValue(this PropertyInfo This, object instance, object value) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      try {
-        This.SetValue(instance, value, null);
-        return true;
-      } catch {
-        return false;
-      }
+    try {
+      This.SetValue(instance, value, null);
+      return true;
+    } catch {
+      return false;
     }
-    /// <summary>
-    /// Tries the set value.
-    /// </summary>
-    /// <param name="This">This PropertyInfo.</param>
-    /// <param name="value">The value.</param>
-    /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-    public static bool TrySetValue(this PropertyInfo This, object value) {
+  }
+  /// <summary>
+  /// Tries the set value.
+  /// </summary>
+  /// <param name="This">This PropertyInfo.</param>
+  /// <param name="value">The value.</param>
+  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  public static bool TrySetValue(this PropertyInfo This, object value) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
 #endif
-      return This.TrySetValue(null, value);
-    }
+    return This.TrySetValue(null, value);
+  }
 
-    /// <summary>
-    /// Gets the value or a default.
-    /// </summary>
-    /// <param name="This">This PropertyInfo.</param>
-    /// <param name="value">The value.</param>
-    /// <param name="index">The index.</param>
-    /// <param name="defaultValue">The default value.</param>
-    /// <returns>The value of the property from the given object or the default value.</returns>
-    public static object GetValueOrDefault(this PropertyInfo This, object value, object[] index = null, object defaultValue = null) {
+  /// <summary>
+  /// Gets the value or a default.
+  /// </summary>
+  /// <param name="This">This PropertyInfo.</param>
+  /// <param name="value">The value.</param>
+  /// <param name="index">The index.</param>
+  /// <param name="defaultValue">The default value.</param>
+  /// <returns>The value of the property from the given object or the default value.</returns>
+  public static object GetValueOrDefault(this PropertyInfo This, object value, object[] index = null, object defaultValue = null) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(value != null);
 #endif
-      try {
-        return This.GetValue(value, index);
-      } catch {
-        return defaultValue;
-      }
+    try {
+      return This.GetValue(value, index);
+    } catch {
+      return defaultValue;
     }
   }
 }

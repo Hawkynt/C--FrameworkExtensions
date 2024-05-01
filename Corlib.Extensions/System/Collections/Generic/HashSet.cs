@@ -36,12 +36,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class HashSetExtensions {
+public static partial class HashSetExtensions {
 
   #region nested types
 

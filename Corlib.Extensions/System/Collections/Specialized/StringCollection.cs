@@ -21,12 +21,7 @@
 
 namespace System.Collections.Specialized; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class StringCollectionExtensions {
+public static partial class StringCollectionExtensions {
 
   /// <summary>
   /// Copies the content of this collection to an array.

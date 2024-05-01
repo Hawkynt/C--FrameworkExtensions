@@ -29,12 +29,7 @@ using System.Diagnostics.Contracts;
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ConcurrentDictionaryExtensions {
+public static partial class ConcurrentDictionaryExtensions {
   /// <summary>
   /// Adds the key to the dictionary or updates its value.
   /// </summary>
@@ -47,7 +42,7 @@ static partial class ConcurrentDictionaryExtensions {
     Guard.Against.ThisIsNull(@this);
 
 #if SUPPORTS_CONTRACTS
-    Contract.Requires(!ReferenceEquals(key, null));
+    Contract.Requires(key is not null);
 #endif
     @this.AddOrUpdate(key, value, (_, __) => value);
   }

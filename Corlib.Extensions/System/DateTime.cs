@@ -26,12 +26,7 @@ using System.Collections.Generic;
 
 namespace System; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class DateTimeExtensions {
+public static partial class DateTimeExtensions {
 
   /// <summary>
   /// Returns the end of the day of the given date.

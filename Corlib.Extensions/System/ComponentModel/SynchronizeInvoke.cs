@@ -20,26 +20,22 @@
 #endregion
 using System.Diagnostics;
 
-namespace System.ComponentModel {
+namespace System.ComponentModel;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class SynchronizeInvokeExtensions {
-    public static bool SafeInvoke<T>(this T This, Action<T> call, bool @async = false) where T : class, ISynchronizeInvoke {
-      Debug.Assert(This != null);
-      Debug.Assert(call != null);
-      if (This.InvokeRequired) {
-        if (@async)
-          This.BeginInvoke(new Action<T>(call), new object[] { This });
-        else
-          This.Invoke(new Action<T>(call), new object[] { This });
-        return (false);
-      }
-      call(This);
-      return (true);
+public static partial class SynchronizeInvokeExtensions {
+  public static bool SafeInvoke<T>(this T @this, Action<T> call, bool async = false) where T : class, ISynchronizeInvoke {
+    Debug.Assert(@this != null);
+    Debug.Assert(call != null);
+    
+    if (@this.InvokeRequired) {
+      if (async)
+        @this.BeginInvoke(new Action<T>(call), new object[] { @this });
+      else
+        @this.Invoke(new Action<T>(call), new object[] { @this });
+      return false;
     }
+    
+    call(@this);
+    return true;
   }
 }

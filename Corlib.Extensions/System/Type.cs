@@ -40,12 +40,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class TypeExtensions {
+public static partial class TypeExtensions {
 
 #region nested types
 

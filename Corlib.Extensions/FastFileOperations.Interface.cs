@@ -21,92 +21,86 @@
 
 using System.Collections.Generic;
 
-namespace System.IO {
+namespace System.IO;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class FastFileOperations {
-    /// <summary>
-    /// The type of reason a report is done.
-    /// </summary>
-    public enum ReportType {
-      StartOperation,
-      FinishedOperation,
-      AbortedOperation,
-      CreatedLink,
-      StartRead,
-      StartWrite,
-      FinishedRead,
-      FinishedWrite,
-    }
-
-    /// <summary>
-    /// The type of continuation used.
-    /// </summary>
-    public enum ContinuationType {
-      /// <summary>
-      /// Proceed normally with the current operation.
-      /// </summary>
-      Proceed,
-      /// <summary>
-      /// Retries the current chunk.
-      /// </summary>
-      RetryChunk,
-      /// <summary>
-      /// Retries the whole stream.
-      /// </summary>
-      RetryStream,
-      /// <summary>
-      /// Queues the whole stream for later retry.
-      /// </summary>
-      QueueStream,
-      /// <summary>
-      /// Aborts the currently running operation.
-      /// </summary>
-      AbortOperation,
-    }
-
-    public partial interface IFileSystemReport {
-      ReportType ReportType { get; }
-      IFileSystemOperation Operation { get; }
-      int StreamIndex { get; }
-      long StreamOffset { get; }
-      long ChunkOffset { get; }
-      long ChunkSize { get; }
-      long StreamSize { get; }
-      FileSystemInfo Source { get; }
-      FileSystemInfo Target { get; }
-      ContinuationType ContinuationType { get; set; }
-    }
-
-    public partial interface IFileReport : IFileSystemReport { }
-    public partial interface IDirectoryReport : IFileSystemReport { }
-
-    public partial interface IFileSystemOperation {
-      FileSystemInfo Source { get; }
-      FileSystemInfo Target { get; }
-      long TotalSize { get; }
-      long BytesToTransfer { get; }
-      long BytesRead { get; }
-      long BytesTransferred { get; }
-      int StreamCount { get; set; }
-      Exception Exception { get; }
-      bool IsDone { get; }
-      bool ThrewException { get; }
-      void Abort();
-      void WaitTillDone();
-      bool WaitTillDone(TimeSpan timeout);
-    }
-
-    public partial interface IFileOperation : IFileSystemOperation { }
-
-    public partial interface IDirectoryOperation : IFileSystemOperation {
-      int CrawlerCount { get; set; }
-    }
-
-    public partial interface IFileComparer : IEqualityComparer<FileInfo> { }
+public static partial class FastFileOperations {
+  /// <summary>
+  /// The type of reason a report is done.
+  /// </summary>
+  public enum ReportType {
+    StartOperation,
+    FinishedOperation,
+    AbortedOperation,
+    CreatedLink,
+    StartRead,
+    StartWrite,
+    FinishedRead,
+    FinishedWrite,
   }
+
+  /// <summary>
+  /// The type of continuation used.
+  /// </summary>
+  public enum ContinuationType {
+    /// <summary>
+    /// Proceed normally with the current operation.
+    /// </summary>
+    Proceed,
+    /// <summary>
+    /// Retries the current chunk.
+    /// </summary>
+    RetryChunk,
+    /// <summary>
+    /// Retries the whole stream.
+    /// </summary>
+    RetryStream,
+    /// <summary>
+    /// Queues the whole stream for later retry.
+    /// </summary>
+    QueueStream,
+    /// <summary>
+    /// Aborts the currently running operation.
+    /// </summary>
+    AbortOperation,
+  }
+
+  public partial interface IFileSystemReport {
+    ReportType ReportType { get; }
+    IFileSystemOperation Operation { get; }
+    int StreamIndex { get; }
+    long StreamOffset { get; }
+    long ChunkOffset { get; }
+    long ChunkSize { get; }
+    long StreamSize { get; }
+    FileSystemInfo Source { get; }
+    FileSystemInfo Target { get; }
+    ContinuationType ContinuationType { get; set; }
+  }
+
+  public partial interface IFileReport : IFileSystemReport { }
+  public partial interface IDirectoryReport : IFileSystemReport { }
+
+  public partial interface IFileSystemOperation {
+    FileSystemInfo Source { get; }
+    FileSystemInfo Target { get; }
+    long TotalSize { get; }
+    long BytesToTransfer { get; }
+    long BytesRead { get; }
+    long BytesTransferred { get; }
+    int StreamCount { get; set; }
+    Exception Exception { get; }
+    bool IsDone { get; }
+    bool ThrewException { get; }
+    void Abort();
+    void WaitTillDone();
+    bool WaitTillDone(TimeSpan timeout);
+  }
+
+  public partial interface IFileOperation : IFileSystemOperation { }
+
+  public partial interface IDirectoryOperation : IFileSystemOperation {
+    int CrawlerCount { get; set; }
+  }
+
+  public partial interface IFileComparer : IEqualityComparer<FileInfo> { }
 }

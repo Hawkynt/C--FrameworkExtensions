@@ -49,12 +49,7 @@ namespace System.IO;
 using LineJoinMode = StringExtensions.LineJoinMode;
 using LineBreakMode = StringExtensions.LineBreakMode;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class FileInfoExtensions {
+public static partial class FileInfoExtensions {
 
   /// <summary>
   /// Provides access to native Windows API functions and constants, facilitating operations such as file system control and shell file information retrieval.

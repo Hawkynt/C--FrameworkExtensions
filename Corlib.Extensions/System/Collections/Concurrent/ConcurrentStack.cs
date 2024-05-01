@@ -25,12 +25,8 @@ using System.Collections.Generic;
 using System.Threading;
 
 namespace System.Collections.Concurrent;
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ConcurrentStackExtensions {
+
+public static partial class ConcurrentStackExtensions {
   /// <summary>
   /// Pops an item from the stack.
   /// </summary>

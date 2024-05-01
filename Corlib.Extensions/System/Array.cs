@@ -42,6 +42,7 @@ using System.Runtime.InteropServices;
 #if !UNSAFE
 using System.Security.Permissions;
 #endif
+using Guard;
 
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -50,14 +51,7 @@ using System.Security.Permissions;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-using Guard;
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ArrayExtensions {
+public static partial class ArrayExtensions {
 
   #region nested types
 

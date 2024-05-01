@@ -25,33 +25,27 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
 
-namespace System.Threading.Tasks {
+namespace System.Threading.Tasks;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class TaskExtensions {
-    /// <summary>
-    /// Gets the result or a default value.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result.</typeparam>
-    /// <param name="this">This Task.</param>
-    /// <param name="defaultValue">The default value.</param>
-    /// <returns></returns>
-    public static TResult GetResultOrDefault<TResult>(this Task<TResult> @this, TResult defaultValue = default(TResult)) {
-      if (@this.IsFaulted)
-        return (defaultValue);
+public static partial class TaskExtensions {
+  /// <summary>
+  /// Gets the result or a default value.
+  /// </summary>
+  /// <typeparam name="TResult">The type of the result.</typeparam>
+  /// <param name="this">This Task.</param>
+  /// <param name="defaultValue">The default value.</param>
+  /// <returns></returns>
+  public static TResult GetResultOrDefault<TResult>(this Task<TResult> @this, TResult defaultValue = default) {
+    if (@this.IsFaulted)
+      return defaultValue;
 
-      if (@this.IsCanceled)
-        return (defaultValue);
+    if (@this.IsCanceled)
+      return defaultValue;
 
-      try {
-        return (@this.Result);
-      } catch {
-        return (defaultValue);
-      }
+    try {
+      return @this.Result;
+    } catch {
+      return defaultValue;
     }
   }
 }

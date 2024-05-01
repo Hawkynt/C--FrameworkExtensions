@@ -32,159 +32,152 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace System.Data.Linq {
+namespace System.Data.Linq;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class DataContextExtensions {
-
-
-    /// <summary>
-    /// Gets the SQL statements for committing the current changeset.
-    /// </summary>
-    /// <param name="this">This DataContext.</param>
-    /// <returns>String containing the sql statements.</returns>
-    public static string GetChangeSqlStatement(this DataContext @this) {
+public static partial class DataContextExtensions {
+  
+  /// <summary>
+  /// Gets the SQL statements for committing the current changeset.
+  /// </summary>
+  /// <param name="this">This DataContext.</param>
+  /// <returns>String containing the sql statements.</returns>
+  public static string GetChangeSqlStatement(this DataContext @this) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(@this != null);
 #endif
-      using MemoryStream memStream = new();
-      using StreamWriter textWriter = new(memStream) { AutoFlush = true };
-      using (new TransactionScope()) {
-        @this.Log = textWriter;
-        try {
-          @this.SubmitChanges();
-        } catch {
-          return null;
-        }
-        Transaction.Current.Rollback();
-      }
-      return Encoding.UTF8.GetString(memStream.ToArray());
-    }
-
-    private static readonly ConcurrentDictionary<Type, MethodInfo> _initializeMethods = new();
-
-    /// <summary>
-    /// Detaches an entity from its existing connection.
-    /// </summary>
-    /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    /// <param name="this">Can be ANY connection.</param>
-    /// <param name="entity">The entity to detach from its connection.</param>
-    public static void Detach<TEntity>(this DataContext @this, TEntity entity) where TEntity : INotifyPropertyChanged, INotifyPropertyChanging
-          => _initializeMethods.GetOrAdd(typeof(TEntity), t => t.GetMethod("Initialize", BindingFlags.Instance | BindingFlags.NonPublic)).Invoke(entity, null)
-          ;
-
-    /// <summary>
-    /// Runs specific update actions in a database transaction
-    /// </summary>
-    /// <typeparam name="TContext">The type of this DataContext</typeparam>
-    /// <param name="this">The DataContext where the statements should be executed</param>
-    /// <param name="updateAction">update actions which should be executed on this DataContext</param>
-    /// <param name="exception">out parameter for any occurred exception within the transaction</param>
-    /// <returns>True if the transaction was committed successfully, false otherwise</returns>
-    public static bool RunInTransaction<TContext>(this TContext @this, Func<TContext, bool> updateAction, out Exception exception) where TContext : DataContext {
+    using MemoryStream memStream = new();
+    using StreamWriter textWriter = new(memStream) { AutoFlush = true };
+    using (new TransactionScope()) {
+      @this.Log = textWriter;
       try {
-        @this.Connection.Open();
-        @this.Transaction = @this.Connection.BeginTransaction();
+        @this.SubmitChanges();
+      } catch {
+        return null;
+      }
+      Transaction.Current.Rollback();
+    }
+    return Encoding.UTF8.GetString(memStream.ToArray());
+  }
 
-        exception = null;
+  private static readonly ConcurrentDictionary<Type, MethodInfo> _initializeMethods = new();
 
-        var success = updateAction.Invoke(@this);
+  /// <summary>
+  /// Detaches an entity from its existing connection.
+  /// </summary>
+  /// <typeparam name="TEntity">The type of the entity.</typeparam>
+  /// <param name="this">Can be ANY connection.</param>
+  /// <param name="entity">The entity to detach from its connection.</param>
+  public static void Detach<TEntity>(this DataContext @this, TEntity entity) where TEntity : INotifyPropertyChanged, INotifyPropertyChanging
+    => _initializeMethods.GetOrAdd(typeof(TEntity), t => t.GetMethod("Initialize", BindingFlags.Instance | BindingFlags.NonPublic)).Invoke(entity, null)
+    ;
 
-        if (!success) {
-          @this.Transaction.Rollback();
-          return false;
-        }
+  /// <summary>
+  /// Runs specific update actions in a database transaction
+  /// </summary>
+  /// <typeparam name="TContext">The type of this DataContext</typeparam>
+  /// <param name="this">The DataContext where the statements should be executed</param>
+  /// <param name="updateAction">update actions which should be executed on this DataContext</param>
+  /// <param name="exception">out parameter for any occurred exception within the transaction</param>
+  /// <returns>True if the transaction was committed successfully, false otherwise</returns>
+  public static bool RunInTransaction<TContext>(this TContext @this, Func<TContext, bool> updateAction, out Exception exception) where TContext : DataContext {
+    try {
+      @this.Connection.Open();
+      @this.Transaction = @this.Connection.BeginTransaction();
 
-        @this.Transaction.Commit();
-        return true;
+      exception = null;
 
-      } catch (Exception e) {
-        Trace.WriteLine(e);
+      var success = updateAction.Invoke(@this);
 
-        exception = e;
+      if (!success) {
         @this.Transaction.Rollback();
-
         return false;
       }
+
+      @this.Transaction.Commit();
+      return true;
+
+    } catch (Exception e) {
+      Trace.WriteLine(e);
+
+      exception = e;
+      @this.Transaction.Rollback();
+
+      return false;
     }
+  }
 
-    /// <summary>
-    /// Try to load data from the specified database
-    /// </summary>
-    /// <typeparam name="TContext">The type of this DataContext</typeparam>
-    /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
-    /// <param name="this">The DataContext where to run the loading-statement</param>
-    /// <param name="loadRequest">A function which returns the requested data from the database</param>
-    /// <param name="results">out parameter for the results returned by the loadRequest</param>
-    /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
-    /// <returns>True if the data could be loaded successfully, false otherwise</returns>
-    public static bool TryGetResults<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest, out TResult[] results, out Exception exception) where TContext : DataContext {
-      try {
-        results = loadRequest.Invoke(@this);
-        exception = null;
+  /// <summary>
+  /// Try to load data from the specified database
+  /// </summary>
+  /// <typeparam name="TContext">The type of this DataContext</typeparam>
+  /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
+  /// <param name="this">The DataContext where to run the loading-statement</param>
+  /// <param name="loadRequest">A function which returns the requested data from the database</param>
+  /// <param name="results">out parameter for the results returned by the loadRequest</param>
+  /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
+  /// <returns>True if the data could be loaded successfully, false otherwise</returns>
+  public static bool TryGetResults<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest, out TResult[] results, out Exception exception) where TContext : DataContext {
+    try {
+      results = loadRequest.Invoke(@this);
+      exception = null;
 
-        return true;
-      } catch (Exception e) {
-        Trace.WriteLine(e);
+      return true;
+    } catch (Exception e) {
+      Trace.WriteLine(e);
 
-        exception = e;
-        results = new TResult[] { };
-        return false;
-      }
+      exception = e;
+      results = new TResult[] { };
+      return false;
     }
+  }
 
 #if SUPPORTS_TASK_RUN
-    /// <summary>
-    /// Try to load asynchronously data from the specified database
-    /// </summary>
-    /// <typeparam name="TContext">The type of this DataContext</typeparam>
-    /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
-    /// <param name="this">The DataContext where to run the loading-statement</param>
-    /// <param name="loadRequest">A function which returns the requested data from the database</param>
-    /// <returns>An awaitable Task which returns a Tuple which holds the success of the loadRequest,
-    /// a reference to a possibly occurred exception and the resulting data</returns>
-    public static async Task<Tuple<bool, Exception, TResult[]>> TryGetResultsAsync<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest) where TContext : DataContext {
-      return await Task.Run(() => {
-        try {
-          var results = loadRequest.Invoke(@this);
-
-          return Tuple.Create(true, (Exception)null, results);
-        } catch (Exception e) {
-          Trace.WriteLine(e);
-
-          return Tuple.Create(false, e, new TResult[] { });
-        }
-      });
-    }
-#endif
-
-    /// <summary>
-    /// Try to load a single row from the specified database
-    /// </summary>
-    /// <typeparam name="TContext">The type of this DataContext</typeparam>
-    /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
-    /// <param name="this">The DataContext where to run the loading-statement</param>
-    /// <param name="loadRequest">A function which returns the requested data from the database</param>
-    /// <param name="result">out parameter for the result returned by the loadRequest</param>
-    /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
-    /// <returns>True if the data could be loaded successfully, false otherwise</returns>
-    public static bool TryGetSingleResult<TContext, TResult>(this TContext @this, out TResult result, Func<TContext, TResult> loadRequest, out Exception exception) where TContext : DataContext  {
+  /// <summary>
+  /// Try to load asynchronously data from the specified database
+  /// </summary>
+  /// <typeparam name="TContext">The type of this DataContext</typeparam>
+  /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
+  /// <param name="this">The DataContext where to run the loading-statement</param>
+  /// <param name="loadRequest">A function which returns the requested data from the database</param>
+  /// <returns>An awaitable Task which returns a Tuple which holds the success of the loadRequest,
+  /// a reference to a possibly occurred exception and the resulting data</returns>
+  public static async Task<Tuple<bool, Exception, TResult[]>> TryGetResultsAsync<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest) where TContext : DataContext {
+    return await Task.Run(() => {
       try {
-        result = loadRequest.Invoke(@this);
-        exception = null;
+        var results = loadRequest.Invoke(@this);
 
-        return true;
+        return Tuple.Create(true, (Exception)null, results);
       } catch (Exception e) {
         Trace.WriteLine(e);
 
-        exception = e;
-        result = default(TResult);
-        return false;
+        return Tuple.Create(false, e, new TResult[] { });
       }
+    });
+  }
+#endif
+
+  /// <summary>
+  /// Try to load a single row from the specified database
+  /// </summary>
+  /// <typeparam name="TContext">The type of this DataContext</typeparam>
+  /// <typeparam name="TResult">The type of the data which should be returned</typeparam>
+  /// <param name="this">The DataContext where to run the loading-statement</param>
+  /// <param name="loadRequest">A function which returns the requested data from the database</param>
+  /// <param name="result">out parameter for the result returned by the loadRequest</param>
+  /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
+  /// <returns>True if the data could be loaded successfully, false otherwise</returns>
+  public static bool TryGetSingleResult<TContext, TResult>(this TContext @this, out TResult result, Func<TContext, TResult> loadRequest, out Exception exception) where TContext : DataContext  {
+    try {
+      result = loadRequest.Invoke(@this);
+      exception = null;
+
+      return true;
+    } catch (Exception e) {
+      Trace.WriteLine(e);
+
+      exception = e;
+      result = default;
+      return false;
     }
   }
 }

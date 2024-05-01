@@ -35,12 +35,7 @@ using System.Threading.Tasks;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class MathEx {
+public static partial class MathEx {
 
 #if SUPPORTS_CONTRACTS
   [Pure]

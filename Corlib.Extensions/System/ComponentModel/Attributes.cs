@@ -26,12 +26,7 @@ namespace System.ComponentModel;
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class MinValueAttribute : Attribute {
+public class MinValueAttribute : Attribute {
   public decimal Value { get; }
   public MinValueAttribute(decimal value) => this.Value = value;
   public MinValueAttribute(int value) : this((decimal)value) { }
@@ -42,12 +37,7 @@ class MinValueAttribute : Attribute {
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class MaxValueAttribute : Attribute {
+public class MaxValueAttribute : Attribute {
   public decimal Value { get; }
   public MaxValueAttribute(decimal value) => this.Value = value;
   public MaxValueAttribute(int value) : this((decimal)value) { }
@@ -58,12 +48,7 @@ class MaxValueAttribute : Attribute {
 /// </summary>
 [AttributeUsage(AttributeTargets.Field)]
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class EnumDisplayNameAttribute : DisplayNameAttribute {
+public class EnumDisplayNameAttribute : DisplayNameAttribute {
   public override string DisplayName { get; }
   public EnumDisplayNameAttribute(string displayName) => this.DisplayName = displayName;
   public static string GetDisplayName<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(typeof(TEnum), value);

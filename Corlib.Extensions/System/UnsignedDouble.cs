@@ -18,151 +18,98 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-namespace System {
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  struct UnsignedDouble {
-    private const string _errExceptionText = @"Value needs to be positive";
-    private readonly double _value;
+namespace System;
 
-    public UnsignedDouble(double value) {
-      if (value < 0)
-        throw new ArgumentException(_errExceptionText);
-      _value = value;
-    }
+public struct UnsignedDouble {
+  private const string _errExceptionText = @"Value needs to be positive";
+  private readonly double _value;
 
-    #region casts
-    public static implicit operator double(UnsignedDouble value) {
-      return (value._value);
-    }
-
-    // This conversion is not always safe, so we make it explicit
-    public static explicit operator UnsignedDouble(double value) {
-      if (value < 0)
-        throw new ArgumentOutOfRangeException(_errExceptionText);
-      return (new(value));
-    }
-    #endregion
-
-    #region arithmetic
-    #region byte
-    public static implicit operator UnsignedDouble(byte value) {
-      return (new(value));
-    }
-
-    public static UnsignedDouble operator +(UnsignedDouble a, byte b) {
-      return (new(a._value + b));
-    }
-
-    public static UnsignedDouble operator +(byte a, UnsignedDouble b) {
-      return (new(a + b._value));
-    }
-
-    public static UnsignedDouble operator *(UnsignedDouble a, byte b) {
-      return (new(a._value * b));
-    }
-
-    public static UnsignedDouble operator *(byte a, UnsignedDouble b) {
-      return (new(a * b._value));
-    }
-    #endregion
-    #region char
-    public static implicit operator UnsignedDouble(char value) {
-      return (new(value));
-    }
-
-    public static UnsignedDouble operator +(UnsignedDouble a, char b) {
-      return (new(a._value + b));
-    }
-
-    public static UnsignedDouble operator +(char a, UnsignedDouble b) {
-      return (new(a + b._value));
-    }
-
-    public static UnsignedDouble operator *(UnsignedDouble a, char b) {
-      return (new(a._value * b));
-    }
-
-    public static UnsignedDouble operator *(char a, UnsignedDouble b) {
-      return (new(a * b._value));
-    }
-    #endregion
-    #region ushort
-    public static implicit operator UnsignedDouble(ushort value) {
-      return (new(value));
-    }
-
-    public static UnsignedDouble operator +(UnsignedDouble a, ushort b) {
-      return (new(a._value + b));
-    }
-
-    public static UnsignedDouble operator +(ushort a, UnsignedDouble b) {
-      return (new(a + b._value));
-    }
-
-    public static UnsignedDouble operator *(UnsignedDouble a, ushort b) {
-      return (new(a._value * b));
-    }
-
-    public static UnsignedDouble operator *(ushort a, UnsignedDouble b) {
-      return (new(a * b._value));
-    }
-    #endregion
-    #region uint
-    public static implicit operator UnsignedDouble(uint value) {
-      return (new(value));
-    }
-
-    public static UnsignedDouble operator +(UnsignedDouble a, uint b) {
-      return (new(a._value + b));
-    }
-
-    public static UnsignedDouble operator +(uint a, UnsignedDouble b) {
-      return (new(a + b._value));
-    }
-
-    public static UnsignedDouble operator *(UnsignedDouble a, uint b) {
-      return (new(a._value * b));
-    }
-
-    public static UnsignedDouble operator *(uint a, UnsignedDouble b) {
-      return (new(a * b._value));
-    }
-    #endregion
-    #region ulong
-    public static implicit operator UnsignedDouble(ulong value) {
-      return (new(value));
-    }
-
-    public static UnsignedDouble operator +(UnsignedDouble a, ulong b) {
-      return (new(a._value + b));
-    }
-
-    public static UnsignedDouble operator +(ulong a, UnsignedDouble b) {
-      return (new(a + b._value));
-    }
-
-    public static UnsignedDouble operator *(UnsignedDouble a, ulong b) {
-      return (new(a._value * b));
-    }
-
-    public static UnsignedDouble operator *(ulong a, UnsignedDouble b) {
-      return (new(a * b._value));
-    }
-    #endregion
-    #region UnsignedDouble
-    public static UnsignedDouble operator +(UnsignedDouble a, UnsignedDouble b) {
-      return (new(a._value + b._value));
-    }
-    public static UnsignedDouble operator *(UnsignedDouble a, UnsignedDouble b) {
-      return (new(a._value * b._value));
-    }
-    #endregion
-    #endregion
-
+  public UnsignedDouble(double value) {
+    if (value < 0)
+      throw new ArgumentException(_errExceptionText);
+    
+    this._value = value;
   }
+
+  #region casts
+  public static implicit operator double(UnsignedDouble value) => value._value;
+
+  // This conversion is not always safe, so we make it explicit
+  public static explicit operator UnsignedDouble(double value) {
+    if (value < 0)
+      throw new ArgumentOutOfRangeException(_errExceptionText);
+    return new(value);
+  }
+  #endregion
+
+  #region arithmetic
+  #region byte
+  public static implicit operator UnsignedDouble(byte value) => new(value);
+
+  public static UnsignedDouble operator +(UnsignedDouble a, byte b) => new(a._value + b);
+
+  public static UnsignedDouble operator +(byte a, UnsignedDouble b) => new(a + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, byte b) => new(a._value * b);
+
+  public static UnsignedDouble operator *(byte a, UnsignedDouble b) => new(a * b._value);
+
+  #endregion
+  #region char
+  public static implicit operator UnsignedDouble(char value) => new(value);
+
+  public static UnsignedDouble operator +(UnsignedDouble a, char b) => new(a._value + b);
+
+  public static UnsignedDouble operator +(char a, UnsignedDouble b) => new(a + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, char b) => new(a._value * b);
+
+  public static UnsignedDouble operator *(char a, UnsignedDouble b) => new(a * b._value);
+
+  #endregion
+  #region ushort
+  public static implicit operator UnsignedDouble(ushort value) => new(value);
+
+  public static UnsignedDouble operator +(UnsignedDouble a, ushort b) => new(a._value + b);
+
+  public static UnsignedDouble operator +(ushort a, UnsignedDouble b) => new(a + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, ushort b) => new(a._value * b);
+
+  public static UnsignedDouble operator *(ushort a, UnsignedDouble b) => new(a * b._value);
+
+  #endregion
+  #region uint
+  public static implicit operator UnsignedDouble(uint value) => new(value);
+
+  public static UnsignedDouble operator +(UnsignedDouble a, uint b) => new(a._value + b);
+
+  public static UnsignedDouble operator +(uint a, UnsignedDouble b) => new(a + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, uint b) => new(a._value * b);
+
+  public static UnsignedDouble operator *(uint a, UnsignedDouble b) => new(a * b._value);
+
+  #endregion
+  #region ulong
+  public static implicit operator UnsignedDouble(ulong value) => new(value);
+
+  public static UnsignedDouble operator +(UnsignedDouble a, ulong b) => new(a._value + b);
+
+  public static UnsignedDouble operator +(ulong a, UnsignedDouble b) => new(a + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, ulong b) => new(a._value * b);
+
+  public static UnsignedDouble operator *(ulong a, UnsignedDouble b) => new(a * b._value);
+
+  #endregion
+  #region UnsignedDouble
+  public static UnsignedDouble operator +(UnsignedDouble a, UnsignedDouble b) => new(a._value + b._value);
+
+  public static UnsignedDouble operator *(UnsignedDouble a, UnsignedDouble b) => new(a._value * b._value);
+
+  #endregion
+  #endregion
+
 }

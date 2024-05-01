@@ -33,12 +33,7 @@ using System.Text.RegularExpressions;
 
 namespace System.IO;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class VolumeExtensions {
+public static partial class VolumeExtensions {
 
   #region nested types
   /// <summary>

@@ -25,12 +25,7 @@ using Guard;
 
 namespace System.Collections; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class BitArrayExtensions {
+public static partial class BitArrayExtensions {
 
   /// <summary>
   /// Get the set bit positions.

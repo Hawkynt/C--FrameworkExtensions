@@ -23,12 +23,7 @@ using System.Linq;
 
 namespace System.Collections; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class EnumerableExtensions {
+public static partial class EnumerableExtensions {
 
   /// <summary>
   /// Counts the elements.

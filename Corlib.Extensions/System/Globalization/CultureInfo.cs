@@ -21,32 +21,26 @@
 
 using System.Diagnostics;
 
-namespace System.Globalization {
+namespace System.Globalization;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class CultureInfoExtensions {
-    /// <summary>
-    /// Gets the region info.
-    /// </summary>
-    /// <param name="This">This CultureInfo.</param>
-    /// <returns>The RegionInfo for the given culture.</returns>
-    public static RegionInfo GetRegionInfo(this CultureInfo This) {
-      Debug.Assert(This != null);
-      return (new(This.LCID));
-    }
+public static partial class CultureInfoExtensions {
+  /// <summary>
+  /// Gets the region info.
+  /// </summary>
+  /// <param name="this">This CultureInfo.</param>
+  /// <returns>The RegionInfo for the given culture.</returns>
+  public static RegionInfo GetRegionInfo(this CultureInfo @this) {
+    Debug.Assert(@this != null);
+    return new(@this.LCID);
+  }
 
-    /// <summary>
-    /// Gets the ISO currency symbol.
-    /// </summary>
-    /// <param name="This">This CultureInfo.</param>
-    /// <returns>The symbol name for the currency of the given culture, eg. EUR, GBP, USD.</returns>
-    public static string GetISOCurrencySymbol(this CultureInfo This) {
-      Debug.Assert(This != null);
-      return (This.GetRegionInfo().ISOCurrencySymbol);
-    }
+  /// <summary>
+  /// Gets the ISO currency symbol.
+  /// </summary>
+  /// <param name="this">This CultureInfo.</param>
+  /// <returns>The symbol name for the currency of the given culture, eg. EUR, GBP, USD.</returns>
+  public static string GetISOCurrencySymbol(this CultureInfo @this) {
+    Debug.Assert(@this != null);
+    return @this.GetRegionInfo().ISOCurrencySymbol;
   }
 }

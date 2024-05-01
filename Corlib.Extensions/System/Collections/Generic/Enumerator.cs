@@ -27,12 +27,7 @@ using Guard;
 
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  static partial class EnumeratorExtensions {
+public static partial class EnumeratorExtensions {
 
   /// <summary>
   /// Takes the specified amount of elements.

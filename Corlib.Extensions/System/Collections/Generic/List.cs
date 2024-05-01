@@ -33,12 +33,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ListExtensions {
+public static partial class ListExtensions {
 
   /// <summary>
   /// Implements a faster shortcut for LINQ's .Any()

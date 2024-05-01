@@ -24,32 +24,26 @@ using System.Net.NetworkInformation;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 
-namespace System.Net.Sockets {
+namespace System.Net.Sockets;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class TcpClientExtensions {
+public static partial class TcpClientExtensions {
 
-    /// <summary>
-    /// Gets the state of the tcp client connection
-    /// </summary>
-    /// <param name="this">This <see href="TcpClient">TcpClient</see></param>
-    /// <returns></returns>
-    public static TcpState GetState(this TcpClient @this) =>
-      IPGlobalProperties.GetIPGlobalProperties()
-        .GetActiveTcpConnections()
-        .FirstOrDefault(ci => ci.LocalEndPoint.Equals(@this.Client.LocalEndPoint))?.State ?? TcpState.Unknown
-    ;
+  /// <summary>
+  /// Gets the state of the tcp client connection
+  /// </summary>
+  /// <param name="this">This <see href="TcpClient">TcpClient</see></param>
+  /// <returns></returns>
+  public static TcpState GetState(this TcpClient @this) =>
+    IPGlobalProperties.GetIPGlobalProperties()
+      .GetActiveTcpConnections()
+      .FirstOrDefault(ci => ci.LocalEndPoint.Equals(@this.Client.LocalEndPoint))?.State ?? TcpState.Unknown
+  ;
 
-    /// <summary>
-    /// Checks if the tcp client is still connected
-    /// </summary>
-    /// <param name="this">This <see href="TcpClient">TcpClient</see></param>
-    /// <returns><c>true</c> if client is still connected; otherwise <c>false</c></returns>
-    public static bool IsStillConnected(this TcpClient @this) => GetState(@this) == TcpState.Established;
+  /// <summary>
+  /// Checks if the tcp client is still connected
+  /// </summary>
+  /// <param name="this">This <see href="TcpClient">TcpClient</see></param>
+  /// <returns><c>true</c> if client is still connected; otherwise <c>false</c></returns>
+  public static bool IsStillConnected(this TcpClient @this) => GetState(@this) == TcpState.Established;
 
-  }
 }

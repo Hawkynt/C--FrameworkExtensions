@@ -31,13 +31,7 @@ namespace System.IO;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Local
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class DriveTypeExtensions {
+public static partial class DriveTypeExtensions {
 
   /// <summary>
   /// Tests whether the specified drive is removable.

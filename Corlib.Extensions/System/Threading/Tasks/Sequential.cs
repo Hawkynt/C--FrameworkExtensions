@@ -19,22 +19,17 @@
 */
 #endregion
 
-namespace System.Threading.Tasks {
+namespace System.Threading.Tasks;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static class Sequential {
-    /// <summary>
-    /// Invokes the specified actions one-after-another.
-    /// </summary>
-    /// <param name="actions">The actions.</param>
-    public static void Invoke(params Action[] actions) {
-      foreach (var action in actions) {
-        action();
-      }
+public static class Sequential {
+  /// <summary>
+  /// Invokes the specified actions one-after-another.
+  /// </summary>
+  /// <param name="actions">The actions.</param>
+  public static void Invoke(params Action[] actions) {
+    foreach (var action in actions) {
+      action();
     }
   }
+  
 }

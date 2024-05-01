@@ -23,26 +23,21 @@
 using System.ComponentModel;
 using System.Data.Common;
 
-namespace System.Data {
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class DataTableExtensions {
-    /// <summary>
-    /// Fills a datatable from a dataadapter.
-    /// </summary>
-    /// <typeparam name="ATableAdapter">The type of the table adapter.</typeparam>
-    /// <param name="this">This DataTable.</param>
-    /// <param name="connection">Optional: A different connection string.</param>
-    public static void FillWith<ATableAdapter>(this DataTable @this, string connection = null) where ATableAdapter : Component, new() {
-      dynamic adapter = new ATableAdapter();
-      if (connection != null)
-        ((DbConnection)adapter.Connection).ConnectionString = connection;
+namespace System.Data;
+public static partial class DataTableExtensions {
+  
+  /// <summary>
+  /// Fills a datatable from a dataadapter.
+  /// </summary>
+  /// <typeparam name="ATableAdapter">The type of the table adapter.</typeparam>
+  /// <param name="this">This DataTable.</param>
+  /// <param name="connection">Optional: A different connection string.</param>
+  public static void FillWith<ATableAdapter>(this DataTable @this, string connection = null) where ATableAdapter : Component, new() {
+    dynamic adapter = new ATableAdapter();
+    if (connection != null)
+      ((DbConnection)adapter.Connection).ConnectionString = connection;
 
-      adapter.Fill((dynamic)@this);
-    }
+    adapter.Fill((dynamic)@this);
   }
 }
 

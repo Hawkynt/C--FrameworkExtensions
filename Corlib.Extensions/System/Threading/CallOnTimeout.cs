@@ -27,13 +27,7 @@ namespace System.Threading;
 /// Allows a block of code to be flagged with a timeout callback.
 /// Note: The executed code will not be aborted, only the timeout gets called.
 /// </summary>
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-class CallOnTimeout : IDisposable {
+public class CallOnTimeout : IDisposable {
 
   private static readonly TimeSpan _TIME_BEFORE_CHECKS = TimeSpan.FromMilliseconds(100);
   private readonly DateTime _creationTime = DateTime.UtcNow;

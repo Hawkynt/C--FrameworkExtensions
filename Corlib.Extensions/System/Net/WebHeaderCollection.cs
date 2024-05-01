@@ -24,54 +24,48 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 #endif
 
-namespace System.Net {
+namespace System.Net;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class WebHeaderCollectionExntenions {
-    /// <summary>
-    /// Adds a bunch of headers.
-    /// </summary>
-    /// <param name="This">This WebHeaderCollection.</param>
-    /// <param name="headers">The headers.</param>
-    public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<string, string>> headers) {
+public static partial class WebHeaderCollectionExntenions {
+  /// <summary>
+  /// Adds a bunch of headers.
+  /// </summary>
+  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="headers">The headers.</param>
+  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<string, string>> headers) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
 #endif
-      foreach (var kvp in headers)
-        This.Add(kvp.Key, kvp.Value);
-    }
+    foreach (var kvp in headers)
+      This.Add(kvp.Key, kvp.Value);
+  }
 
-    /// <summary>
-    /// Adds a bunch of headers.
-    /// </summary>
-    /// <param name="This">This WebHeaderCollection.</param>
-    /// <param name="headers">The headers.</param>
-    public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
+  /// <summary>
+  /// Adds a bunch of headers.
+  /// </summary>
+  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="headers">The headers.</param>
+  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
 #endif
-      foreach (var kvp in headers)
-        This.Add(kvp.Key, kvp.Value);
-    }
+    foreach (var kvp in headers)
+      This.Add(kvp.Key, kvp.Value);
+  }
 
-    /// <summary>
-    /// Adds a bunch of headers.
-    /// </summary>
-    /// <param name="This">This WebHeaderCollection.</param>
-    /// <param name="headers">The headers.</param>
-    public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpResponseHeader, string>> headers) {
+  /// <summary>
+  /// Adds a bunch of headers.
+  /// </summary>
+  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="headers">The headers.</param>
+  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpResponseHeader, string>> headers) {
 #if SUPPORTS_CONTRACTS
       Contract.Requires(This != null);
       Contract.Requires(headers != null);
 #endif
-      foreach (var kvp in headers)
-        This.Add(kvp.Key, kvp.Value);
-    }
+    foreach (var kvp in headers)
+      This.Add(kvp.Key, kvp.Value);
   }
 }

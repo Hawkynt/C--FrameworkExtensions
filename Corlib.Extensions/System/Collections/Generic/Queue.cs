@@ -22,12 +22,7 @@
 // ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class QueueExtensions {
+public static partial class QueueExtensions {
 
   /// <summary>
   /// Adds all given items to the queue.

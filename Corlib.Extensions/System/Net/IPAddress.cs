@@ -29,127 +29,122 @@ using System.Diagnostics.Contracts;
 #else
 using System.Diagnostics;
 #endif
+
 // ReSharper disable UnusedMember.Global
+// ReSharper disable once PartialTypeWithSinglePart
 
-namespace System.Net {
-  // ReSharper disable once PartialTypeWithSinglePart
+namespace System.Net;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class IPAddressExtensions {
-    /// <summary>
-    /// Determines whether the specified IPAddress is loopback.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified IPAddress is loopback; otherwise, <c>false</c>.
-    /// </returns>
-    public static bool IsLoopback(this IPAddress @this)
-      => IPAddress.IsLoopback(@this) || new[] { IPAddress.Any, IPAddress.IPv6Any, IPAddress.Loopback, IPAddress.IPv6Loopback }.Contains(@this)
-      ;
+public static partial class IPAddressExtensions {
+  /// <summary>
+  /// Determines whether the specified IPAddress is loopback.
+  /// </summary>
+  /// <param name="this">The this.</param>
+  /// <returns>
+  ///   <c>true</c> if the specified IPAddress is loopback; otherwise, <c>false</c>.
+  /// </returns>
+  public static bool IsLoopback(this IPAddress @this)
+    => IPAddress.IsLoopback(@this) || new[] { IPAddress.Any, IPAddress.IPv6Any, IPAddress.Loopback, IPAddress.IPv6Loopback }.Contains(@this)
+  ;
 
-    /// <summary>
-    /// Gets the host name for the given ip-Address.
-    /// </summary>
-    /// <param name="this">This IPAddress.</param>
-    /// <returns>The host name or <c>null</c>.</returns>
-    public static string GetHostName(this IPAddress @this) {
+  /// <summary>
+  /// Gets the host name for the given ip-Address.
+  /// </summary>
+  /// <param name="this">This IPAddress.</param>
+  /// <returns>The host name or <c>null</c>.</returns>
+  public static string GetHostName(this IPAddress @this) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(@this != null);
 #else
       Debug.Assert(@this != null);
 #endif
-      try {
-        var hostEntry = Dns.GetHostEntry(@this);
-        return hostEntry.HostName;
-      } catch (Exception) {
-        return null;
-      }
+    try {
+      var hostEntry = Dns.GetHostEntry(@this);
+      return hostEntry.HostName;
+    } catch (Exception) {
+      return null;
     }
+  }
 
 #if SUPPORTS_ASYNC && NET45_OR_GREATER // this doesnt work on 4.0 but above
-    /// <summary>
-    /// Gets the host name for the given ip-Address.
-    /// </summary>
-    /// <param name="This">This IPAddress.</param>
-    /// <returns>The host name or <c>null</c>.</returns>
-    public static async Task<string> GetHostNameAsync(this IPAddress This) {
+  /// <summary>
+  /// Gets the host name for the given ip-Address.
+  /// </summary>
+  /// <param name="This">This IPAddress.</param>
+  /// <returns>The host name or <c>null</c>.</returns>
+  public static async Task<string> GetHostNameAsync(this IPAddress This) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
+    Contract.Requires(This != null);
 #endif
-      try {
-        var hostEntry = await Dns.GetHostEntryAsync(This);
-        return hostEntry.HostName;
-      } catch (Exception) {
-        return null;
-      }
+    try {
+      var hostEntry = await Dns.GetHostEntryAsync(This);
+      return hostEntry.HostName;
+    } catch (Exception) {
+      return null;
     }
-#endif
-
-    public static Tuple<bool, string, PingReply, Exception> Ping(this IPAddress @this, uint retryCount = 0, TimeSpan? timeout = null, PingOptions options = null) {
-      const int ttl = 128;
-      const bool dontFragment = true;
-
-      options ??= new(ttl, dontFragment);
-      timeout ??= TimeSpan.FromSeconds(5);
-
-      var receiveBuffer = new byte[32];
-
-      Tuple<bool, string, PingReply, Exception> result;
-      using Ping ping = new();
-      do {
-        try {
-          var pingReply = ping.Send(@this, (int)timeout.Value.TotalMilliseconds, receiveBuffer, options);
-          //make sure we dont have a null reply
-          if (pingReply == null) {
-            result = Tuple.Create(false, "Got empty packet.", (PingReply)null, (Exception)null);
-            continue;
-          }
-
-          switch (pingReply.Status) {
-            case IPStatus.Success:
-              return Tuple.Create(true, (string)null, pingReply, (Exception)null);
-            case IPStatus.TimedOut: {
-              result = Tuple.Create(false, "Remote connection timed out.", pingReply, (Exception)null);
-              break;
-            }
-            case IPStatus.DestinationHostUnreachable: {
-              result = Tuple.Create(false, "Destination host unreachable.", pingReply, (Exception)null);
-              break;
-            }
-            case IPStatus.DestinationNetworkUnreachable: {
-              result = Tuple.Create(false, "Destination network unreachable.", pingReply, (Exception)null);
-              break;
-            }
-            case IPStatus.DestinationPortUnreachable: {
-              result = Tuple.Create(false, "Destination port unreachable.", pingReply, (Exception)null);
-              break;
-            }
-            case IPStatus.DestinationUnreachable: {
-              result = Tuple.Create(false, "Destination unreachable.", pingReply, (Exception)null);
-              break;
-            }
-            case IPStatus.TtlExpired: {
-              result = Tuple.Create(false, "Too many hops.", pingReply, (Exception)null);
-              break;
-            }
-            default: {
-              result = Tuple.Create(false, pingReply.Status.ToString(), pingReply, (Exception)null);
-              break;
-            }
-          }
-        } catch (PingException e) {
-          result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
-        } catch (SocketException e) {
-          result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
-        }
-      } while (retryCount-- > 0);
-
-      return result;
-    }
-
   }
+#endif
+
+  public static Tuple<bool, string, PingReply, Exception> Ping(this IPAddress @this, uint retryCount = 0, TimeSpan? timeout = null, PingOptions options = null) {
+    const int ttl = 128;
+    const bool dontFragment = true;
+
+    options ??= new(ttl, dontFragment);
+    timeout ??= TimeSpan.FromSeconds(5);
+
+    var receiveBuffer = new byte[32];
+
+    Tuple<bool, string, PingReply, Exception> result;
+    using Ping ping = new();
+    do {
+      try {
+        var pingReply = ping.Send(@this, (int)timeout.Value.TotalMilliseconds, receiveBuffer, options);
+        //make sure we dont have a null reply
+        if (pingReply == null) {
+          result = Tuple.Create(false, "Got empty packet.", (PingReply)null, (Exception)null);
+          continue;
+        }
+
+        switch (pingReply.Status) {
+          case IPStatus.Success:
+            return Tuple.Create(true, (string)null, pingReply, (Exception)null);
+          case IPStatus.TimedOut: {
+            result = Tuple.Create(false, "Remote connection timed out.", pingReply, (Exception)null);
+            break;
+          }
+          case IPStatus.DestinationHostUnreachable: {
+            result = Tuple.Create(false, "Destination host unreachable.", pingReply, (Exception)null);
+            break;
+          }
+          case IPStatus.DestinationNetworkUnreachable: {
+            result = Tuple.Create(false, "Destination network unreachable.", pingReply, (Exception)null);
+            break;
+          }
+          case IPStatus.DestinationPortUnreachable: {
+            result = Tuple.Create(false, "Destination port unreachable.", pingReply, (Exception)null);
+            break;
+          }
+          case IPStatus.DestinationUnreachable: {
+            result = Tuple.Create(false, "Destination unreachable.", pingReply, (Exception)null);
+            break;
+          }
+          case IPStatus.TtlExpired: {
+            result = Tuple.Create(false, "Too many hops.", pingReply, (Exception)null);
+            break;
+          }
+          default: {
+            result = Tuple.Create(false, pingReply.Status.ToString(), pingReply, (Exception)null);
+            break;
+          }
+        }
+      } catch (PingException e) {
+        result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
+      } catch (SocketException e) {
+        result = Tuple.Create(false, e.Message, (PingReply)null, (Exception)e);
+      }
+    } while (retryCount-- > 0);
+
+    return result;
+  }
+
 }

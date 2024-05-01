@@ -27,80 +27,74 @@ using System.Runtime.InteropServices;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-namespace System.Threading {
+namespace System.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class ThreadExtensions {
-    /// <summary>
-    /// Allows pushing the current thread into the low-IO mode introduced with Windows Vista.
-    /// </summary>
-    private class IoBackgroundModeToken : IDisposable {
+public static partial class ThreadExtensions {
+  /// <summary>
+  /// Allows pushing the current thread into the low-IO mode introduced with Windows Vista.
+  /// </summary>
+  private class IoBackgroundModeToken : IDisposable {
 
-      private static class NativeMethods {
-        private enum ThreadBackgroundMode {
-          Begin = 0x00010000,
-          End = 0x00020000,
-        }
-
-        [DllImport("Kernel32.dll", EntryPoint = "GetCurrentThread")]
-        private static extern IntPtr GetCurrentThread();
-
-        [DllImport("Kernel32.dll", EntryPoint = "SetThreadPriority")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
-
-        public static void EnterBackgroundMode() {
-          SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.Begin);
-        }
-
-        public static void LeaveBackgroundMode() {
-          SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.End);
-        }
+    private static class NativeMethods {
+      private enum ThreadBackgroundMode {
+        Begin = 0x00010000,
+        End = 0x00020000,
       }
 
-      private bool _isDisposed;
+      [DllImport("Kernel32.dll", EntryPoint = "GetCurrentThread")]
+      private static extern IntPtr GetCurrentThread();
 
-      public IoBackgroundModeToken() {
-        Thread.BeginThreadAffinity();
-        NativeMethods.EnterBackgroundMode();
+      [DllImport("Kernel32.dll", EntryPoint = "SetThreadPriority")]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      private static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
+
+      public static void EnterBackgroundMode() {
+        SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.Begin);
       }
 
-      #region Implementation of IDisposable
-
-      ~IoBackgroundModeToken() {
-        this.Dispose();
+      public static void LeaveBackgroundMode() {
+        SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.End);
       }
-
-      public void Dispose() {
-
-        if (this._isDisposed)
-          return;
-
-        this._isDisposed = true;
-        GC.SuppressFinalize(this);
-        NativeMethods.LeaveBackgroundMode();
-        Thread.EndThreadAffinity();
-      }
-
-      #endregion
-
-
     }
 
-    /// <summary>
-    /// Pushes the CURRENT thread into the low-IO mode introduced with Windows Vista.
-    /// </summary>
-    /// <param name="This">This Thread.</param>
-    /// <returns>A disposable object that automatically releases from the low-io mode upon destruction.</returns>
-    public static IDisposable IoBackgroundMode(this Thread This) {
+    private bool _isDisposed;
+
+    public IoBackgroundModeToken() {
+      Thread.BeginThreadAffinity();
+      NativeMethods.EnterBackgroundMode();
+    }
+
+    #region Implementation of IDisposable
+
+    ~IoBackgroundModeToken() {
+      this.Dispose();
+    }
+
+    public void Dispose() {
+
+      if (this._isDisposed)
+        return;
+
+      this._isDisposed = true;
+      GC.SuppressFinalize(this);
+      NativeMethods.LeaveBackgroundMode();
+      Thread.EndThreadAffinity();
+    }
+
+    #endregion
+
+
+  }
+
+  /// <summary>
+  /// Pushes the CURRENT thread into the low-IO mode introduced with Windows Vista.
+  /// </summary>
+  /// <param name="This">This Thread.</param>
+  /// <returns>A disposable object that automatically releases from the low-io mode upon destruction.</returns>
+  public static IDisposable IoBackgroundMode(this Thread This) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(Thread.CurrentThread == This);
+    Contract.Requires(Thread.CurrentThread == This);
 #endif
-      return (new IoBackgroundModeToken());
-    }
+    return (new IoBackgroundModeToken());
   }
 }

@@ -19,18 +19,10 @@
 */
 #endregion
 
-namespace System.Security.Cryptography {
-  /// <summary>
-  /// </summary>
+namespace System.Security.Cryptography;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  interface IAdvancedHashAlgorithm {
-    string Name { get; }
-    int OutputBits { get; set; }
-    byte[] IV { get; set; }
-  }
+public interface IAdvancedHashAlgorithm {
+  string Name { get; }
+  int OutputBits { get; set; }
+  byte[] IV { get; set; }
 }

@@ -47,12 +47,7 @@ namespace System;
 using Runtime.CompilerServices;
 #endif
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class AppDomainExtensions {
+public static partial class AppDomainExtensions {
 
   private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
 
@@ -204,17 +199,17 @@ static partial class AppDomainExtensions {
     if (result.Exists)
       return null;
 
-    File.WriteAllText(result.FullName, $@"
+    File.WriteAllText(result.FullName, $"""
 @echo off
 :repeat
 echo Trying to delete...
-rd /q /s ""{directoryToDelete.FullName}""
-if exist ""{directoryToDelete.FullName}"" (
-ping 127.0.0.1 -n 3 >NUL
-goto repeat
+rd /q /s "{directoryToDelete.FullName}"
+if exist "{directoryToDelete.FullName}" (
+  ping 127.0.0.1 -n 3 >NUL
+  goto repeat
 )
-del ""%~0""
-");
+del "%~0"
+""");
     return result;
   }
 

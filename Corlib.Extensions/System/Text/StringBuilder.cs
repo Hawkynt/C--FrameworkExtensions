@@ -24,13 +24,8 @@ using Guard;
 
 namespace System.Text;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  // ReSharper disable once PartialTypeWithSinglePart
-  static partial class StringBuilderExtensions {
+// ReSharper disable once PartialTypeWithSinglePart
+public static partial class StringBuilderExtensions {
 
   /// <summary>
   /// Appends a collection of lines to the end of the current <see cref="StringBuilder"/> object.
@@ -41,7 +36,7 @@ internal
   public static void AppendLines(this StringBuilder @this, IEnumerable<string> lines) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(lines);
-    
+
     foreach (var line in lines)
       @this.AppendLine(line);
   }

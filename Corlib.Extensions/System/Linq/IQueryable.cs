@@ -26,12 +26,7 @@ using Guard;
 namespace System.Linq; 
 // ReSharper disable once PartialTypeWithSinglePart
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class IQueryableExtensions {
+public static partial class IQueryableExtensions {
 
   /// <summary>
   /// Finds the first Element whose trimmed value determined via <paramref name="selector" /> matches the search term. 

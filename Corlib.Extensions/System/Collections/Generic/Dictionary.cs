@@ -32,12 +32,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class DictionaryExtensions {
+public static partial class DictionaryExtensions {
 
   #region nested types
 
@@ -93,7 +88,7 @@ static partial class DictionaryExtensions {
 
     var length = keyValuePairs.LongLength;
     if ((length & 1) == 1)
-      length--;
+      --length;
 
     for (var i = 0; i < length; i += 2) {
       var key = keyValuePairs[i];

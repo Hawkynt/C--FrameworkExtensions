@@ -21,12 +21,7 @@
 
 namespace System.Collections.Specialized; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class StringDictionaryExtensions {
+public static partial class StringDictionaryExtensions {
   /// <summary>
   /// Adds or updates the specified key.
   /// </summary>

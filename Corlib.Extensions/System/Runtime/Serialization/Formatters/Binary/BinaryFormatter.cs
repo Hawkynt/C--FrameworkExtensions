@@ -24,80 +24,73 @@
 #if SUPPORTS_CONTRACTS
 using System.Diagnostics.Contracts;
 #endif
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-namespace System.Runtime.Serialization.Formatters.Binary {
+
+namespace System.Runtime.Serialization.Formatters.Binary;
+/// <summary>
+/// Extensions for the BinaryFormatter.
+/// </summary>
+
+// ReSharper disable once UnusedMember.Global
+// ReSharper disable once PartialTypeWithSinglePart
+
+public static partial class BinaryFormatterExtensions {
   /// <summary>
-  /// Extensions for the BinaryFormatter.
+  /// Serializes the given object.
   /// </summary>
-
-  
-#if COMPILE_TO_EXTENSION_DLL
-  [SuppressMessage("ReSharper", "UnusedMember.Global")]
-  public
-#else
-  internal
-#endif
-    // ReSharper disable once UnusedMember.Global
-    // ReSharper disable once PartialTypeWithSinglePart
-    static partial class BinaryFormatterExtensions {
-    /// <summary>
-    /// Serializes the given object.
-    /// </summary>
-    /// <param name="this">This BinaryFormatter.</param>
-    /// <param name="value">The value to serialize.</param>
-    /// <returns>The bytes needed for deserializing the value.</returns>
-    public static byte[] Serialize(this BinaryFormatter @this, object value) {
+  /// <param name="this">This BinaryFormatter.</param>
+  /// <param name="value">The value to serialize.</param>
+  /// <returns>The bytes needed for deserializing the value.</returns>
+  public static byte[] Serialize(this BinaryFormatter @this, object value) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(@this != null);
 #endif
-      using MemoryStream memStream = new();
-      @this.Serialize(memStream, value);
-      return memStream.ToArray();
-    }
+    using MemoryStream memStream = new();
+    @this.Serialize(memStream, value);
+    return memStream.ToArray();
+  }
 
-    /// <summary>
-    /// Serializes the given object and gzips the resulting bytes.
-    /// </summary>
-    /// <param name="this">This BinaryFormatter.</param>
-    /// <param name="value">The value to serialize.</param>
-    /// <returns>The bytes needed for deserializing the value.</returns>
-    public static byte[] SerializeWithGZip(this BinaryFormatter @this, object value) {
+  /// <summary>
+  /// Serializes the given object and gzips the resulting bytes.
+  /// </summary>
+  /// <param name="this">This BinaryFormatter.</param>
+  /// <param name="value">The value to serialize.</param>
+  /// <returns>The bytes needed for deserializing the value.</returns>
+  public static byte[] SerializeWithGZip(this BinaryFormatter @this, object value) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
+    Contract.Requires(@this != null);
 #endif
-      var data = @this.Serialize(value);
-      return data.GZip();
-    }
+    var data = @this.Serialize(value);
+    return data.GZip();
+  }
 
-    /// <summary>
-    /// Deserializes the a given byte block.
-    /// </summary>
-    /// <param name="this">This BinaryFormatter.</param>
-    /// <param name="data">The data to deserialize.</param>
-    /// <returns>The deserialized value from the byte block.</returns>
-    public static object Deserialize(this BinaryFormatter @this, byte[] data) {
+  /// <summary>
+  /// Deserializes the a given byte block.
+  /// </summary>
+  /// <param name="this">This BinaryFormatter.</param>
+  /// <param name="data">The data to deserialize.</param>
+  /// <returns>The deserialized value from the byte block.</returns>
+  public static object Deserialize(this BinaryFormatter @this, byte[] data) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(data != null);
+    Contract.Requires(@this != null);
+    Contract.Requires(data != null);
 #endif
-      using MemoryStream memStream = new(data);
-      return @this.Deserialize(memStream);
-    }
+    using MemoryStream memStream = new(data);
+    return @this.Deserialize(memStream);
+  }
 
-    /// <summary>
-    /// Deserializes the a given gzipped-byte block.
-    /// </summary>
-    /// <param name="this">This BinaryFormatter.</param>
-    /// <param name="data">The data to deserialize.</param>
-    /// <returns>The deserialized value from the byte block.</returns>
-    public static object DeserializeWithGZip(this BinaryFormatter @this, byte[] data) {
+  /// <summary>
+  /// Deserializes the a given gzipped-byte block.
+  /// </summary>
+  /// <param name="this">This BinaryFormatter.</param>
+  /// <param name="data">The data to deserialize.</param>
+  /// <returns>The deserialized value from the byte block.</returns>
+  public static object DeserializeWithGZip(this BinaryFormatter @this, byte[] data) {
 #if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(data != null);
+    Contract.Requires(@this != null);
+    Contract.Requires(data != null);
 #endif
-      return @this.Deserialize(data.UnGZip());
-    }
+    return @this.Deserialize(data.UnGZip());
   }
 }
 

@@ -30,27 +30,13 @@ namespace System.Collections.Concurrent;
 /// </summary>
 /// <typeparam name="T">Type of items contained</typeparam>
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  class ConcurrentWorkingBag<T> : IEnumerable<T> {
+public class ConcurrentWorkingBag<T> : IEnumerable<T> {
   private readonly List<T> _items = new();
   private readonly ReaderWriterLockSlim _readerWriterLockSlim = new();
 
   private void _ProcessAll(Action<int> callback) {
     ManualResetEventSlim processedAll = new(false);
     var count = this._items.Count;
-
-    void CallBack(object index) {
-      try {
-        callback((int)index);
-      } finally {
-        if (Interlocked.Decrement(ref count) < 1)
-          processedAll.Set();
-      }
-    }
 
     for (var index = 0; index < count; ++index) {
       for (; ; ) {
@@ -63,6 +49,16 @@ public
     }
 
     processedAll.Wait();
+    return;
+
+    void CallBack(object index) {
+      try {
+        callback((int)index);
+      } finally {
+        if (Interlocked.Decrement(ref count) < 1)
+          processedAll.Set();
+      }
+    }
   }
 
   /// <summary>
@@ -204,5 +200,5 @@ public
   IEnumerator IEnumerable.GetEnumerator() => this.ToArray().GetEnumerator();
 
   #endregion
-} // end class
-// end namespace
+  
+}

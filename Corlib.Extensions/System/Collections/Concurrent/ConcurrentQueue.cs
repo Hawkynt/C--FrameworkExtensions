@@ -23,12 +23,7 @@
 
 namespace System.Collections.Concurrent;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class ConcurrentQueueExtensions {
+public static partial class ConcurrentQueueExtensions {
   /// <summary>
   /// Clears the specified Queue.
   /// </summary>
@@ -37,8 +32,7 @@ static partial class ConcurrentQueueExtensions {
   public static void Clear<TValue>(this ConcurrentQueue<TValue> @this) {
     Guard.Against.ThisIsNull(@this);
 
-    TValue dummy;
-    while (@this.TryDequeue(out dummy)) { }
+    while (@this.TryDequeue(out _)) { }
   }
 }
 

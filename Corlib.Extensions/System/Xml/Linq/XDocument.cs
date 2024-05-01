@@ -27,23 +27,17 @@
 
 using System.Linq;
 
-namespace System.Xml.Linq {
+namespace System.Xml.Linq;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class XDocumentExtensions {
+public static partial class XDocumentExtensions {
 
-    /// <summary>
-    /// Gets the given attribute's value or a default value.
-    /// </summary>
-    /// <param name="this">This <see cref="XElement">XElement</see></param>
-    /// <param name="attributeName">The local name of the attribute to get</param>
-    /// <param name="comparison">The type of comparison, defaults to OrdinalIgnoreCase.</param>
-    /// <returns>The attribute's value or <c>null</c></returns>
-    public static string GetAttributeOrDefault(this XElement @this, string attributeName, StringComparison comparison = StringComparison.OrdinalIgnoreCase) => @this.Attributes().Where(a => string.Equals(a.Name.LocalName, attributeName, comparison)).Select(a => a.Value).FirstOrDefault();
+  /// <summary>
+  /// Gets the given attribute's value or a default value.
+  /// </summary>
+  /// <param name="this">This <see cref="XElement">XElement</see></param>
+  /// <param name="attributeName">The local name of the attribute to get</param>
+  /// <param name="comparison">The type of comparison, defaults to OrdinalIgnoreCase.</param>
+  /// <returns>The attribute's value or <c>null</c></returns>
+  public static string GetAttributeOrDefault(this XElement @this, string attributeName, StringComparison comparison = StringComparison.OrdinalIgnoreCase) => @this.Attributes().Where(a => string.Equals(a.Name.LocalName, attributeName, comparison)).Select(a => a.Value).FirstOrDefault();
 
-  }
 }

@@ -23,12 +23,8 @@ using System.Linq;
 
 namespace System.Collections.Generic; 
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-  internal
-#endif
-  class DoubleDictionary<TOuter, TInner, TValue> : Dictionary<TOuter, Dictionary<TInner, TValue>> {
+public class DoubleDictionary<TOuter, TInner, TValue> : Dictionary<TOuter, Dictionary<TInner, TValue>> {
+  
   #region exceptions
   /// <summary>
   /// Throws the key not found exception.
@@ -36,9 +32,7 @@ public
   /// <param name="outerKey">The outer key.</param>
   /// <param name="innerKey">The inner key.</param>
   /// <param name="argumentName">Name of the argument.</param>
-  private void _ThrowKeyNotFoundException(TOuter outerKey, TInner innerKey, string argumentName) {
-    throw new KeyNotFoundException(string.Format("key {0} not found, argument: {1}", Tuple.Create(outerKey, innerKey).ToString(), argumentName));
-  }
+  private static void _ThrowKeyNotFoundException(TOuter outerKey, TInner innerKey, string argumentName) => throw new KeyNotFoundException($"key {Tuple.Create(outerKey, innerKey)} not found, argument: {argumentName}");
 
   /// <summary>
   /// Throws the duplicate key exception.
@@ -46,9 +40,8 @@ public
   /// <param name="outerKey">The outer key.</param>
   /// <param name="innerKey">The inner key.</param>
   /// <param name="argumentName">Name of the argument.</param>
-  private void _ThrowDuplicateKeyException(TOuter outerKey, TInner innerKey, string argumentName) {
-    throw new ArgumentException(string.Format("key {0} already exists, argument: {1}", Tuple.Create(outerKey, innerKey).ToString(), argumentName));
-  }
+  private static void _ThrowDuplicateKeyException(TOuter outerKey, TInner innerKey, string argumentName) => throw new ArgumentException($"key {Tuple.Create(outerKey, innerKey)} already exists, argument: {argumentName}");
+
   #endregion
 
   /// <summary>
@@ -115,7 +108,7 @@ public
   /// <param name="value">The value.</param>
   public void Add(TOuter outer, TInner inner, TValue value) {
     if (!this.TryAdd(outer, inner, value))
-      this._ThrowDuplicateKeyException(outer, inner, null);
+      _ThrowDuplicateKeyException(outer, inner, null);
   }
 
   /// <summary>
@@ -145,9 +138,8 @@ public
   /// <param name="outerKey">The outer key.</param>
   /// <param name="innerKey">The inner key.</param>
   public void Remove(TOuter outerKey, TInner innerKey) {
-    TValue dummy;
-    if (!this.TryRemove(outerKey, innerKey, out dummy))
-      this._ThrowKeyNotFoundException(outerKey, innerKey, this.ContainsKey(outerKey) ? "innerKey" : "outerKey");
+    if (!this.TryRemove(outerKey, innerKey, out _))
+      _ThrowKeyNotFoundException(outerKey, innerKey, this.ContainsKey(outerKey) ? "innerKey" : "outerKey");
   }
 
   /// <summary>
@@ -161,26 +153,26 @@ public
   public TValue this[TOuter outerKey, TInner innerKey] {
     get {
       if (!this.TryGetValue(outerKey, out var inner))
-        this._ThrowKeyNotFoundException(outerKey, innerKey, "outerKey");
+        _ThrowKeyNotFoundException(outerKey, innerKey, "outerKey");
 
       if (inner != null && inner.TryGetValue(innerKey, out var result))
         return result;
 
-      this._ThrowKeyNotFoundException(outerKey, innerKey, "innerKey");
+      _ThrowKeyNotFoundException(outerKey, innerKey, "innerKey");
       result = default;
 
       return result;
     }
     set {
       if (!this.TryGetValue(outerKey, out var inner) || inner == null) {
-        this._ThrowKeyNotFoundException(outerKey, innerKey, "outerKey");
+        _ThrowKeyNotFoundException(outerKey, innerKey, "outerKey");
         return;
       }
 
       try {
         inner[innerKey] = value;
       } catch (KeyNotFoundException) {
-        this._ThrowKeyNotFoundException(outerKey, innerKey, "innerKey");
+        _ThrowKeyNotFoundException(outerKey, innerKey, "innerKey");
       }
     }
   }

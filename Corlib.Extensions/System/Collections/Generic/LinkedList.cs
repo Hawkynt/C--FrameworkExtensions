@@ -28,12 +28,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class LinkedListExtensions {
+public static partial class LinkedListExtensions {
 
   /// <summary>
   /// Determines whether the <see cref="LinkedList{T}"/> contains any elements.

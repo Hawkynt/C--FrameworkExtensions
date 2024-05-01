@@ -31,12 +31,7 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-static partial class NullableExtensions {
+public static partial class NullableExtensions {
 
   /// <summary>
   /// Detects whether the given <see cref="Nullable{T}"/> is <see langword="null"/>.
@@ -75,12 +70,7 @@ static partial class NullableExtensions {
 /// </summary>
 /// <typeparam name="TType">The type of the type.</typeparam>
 
-#if COMPILE_TO_EXTENSION_DLL
-public 
-#else
-internal
-#endif
-readonly struct NullableEx<TType> {
+public readonly struct NullableEx<TType> {
   private readonly TType _value;
   private readonly bool _hasValue;
 
@@ -90,7 +80,7 @@ readonly struct NullableEx<TType> {
     get {
       if (!this._hasValue)
         throw new InvalidOperationException("No Value");
-      return (this._value);
+      return this._value;
     }
   }
 
@@ -100,21 +90,13 @@ readonly struct NullableEx<TType> {
     this._hasValue = true;
   }
 
-  public static implicit operator NullableEx<TType>(TType value) {
-    return (new(value));
-  }
+  public static implicit operator NullableEx<TType>(TType value) => new(value);
 
-  public static explicit operator TType(NullableEx<TType> This) {
-    return (This.Value);
-  }
+  public static explicit operator TType(NullableEx<TType> This) => This.Value;
 
-  public TType GetValueOrDefault() {
-    return (this._value);
-  }
+  public TType GetValueOrDefault() => this._value;
 
-  public TType GetValueOrDefault(TType defaultValue) {
-    return (this._hasValue ? this._value : defaultValue);
-  }
+  public TType GetValueOrDefault(TType defaultValue) => this._hasValue ? this._value : defaultValue;
 
   /// <summary>
   /// Indicates whether the current <see cref="T:System.Nullable`1"/> object is equal to a specified object.

@@ -25,13 +25,8 @@ using Guard;
 
 namespace System.Text.RegularExpressions;
 
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
 // ReSharper disable once PartialTypeWithSinglePart
-static partial class MatchExtensions {
+public static partial class MatchExtensions {
   /// <summary>
   /// Gets the linenumber of this match in the original text.
   /// </summary>

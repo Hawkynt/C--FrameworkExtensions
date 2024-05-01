@@ -19,30 +19,20 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
-namespace System.Threading {
+namespace System.Threading;
 
-#if COMPILE_TO_EXTENSION_DLL
-  public
-#else
-  internal
-#endif
-  static partial class ManualResetEventExtensions {
-    /// <summary>
-    /// Determines whether the specified ManualResetEvent is set or not.
-    /// </summary>
-    /// <param name="This">This ManualResetEvent.</param>
-    /// <returns>
-    ///   <c>true</c> if the specified ManualResetEvent is set; otherwise, <c>false</c>.
-    /// </returns>
-    public static bool IsSet(this ManualResetEvent This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-      return (This.WaitOne(0));
-    }
+public static partial class ManualResetEventExtensions {
+  /// <summary>
+  /// Determines whether the specified ManualResetEvent is set or not.
+  /// </summary>
+  /// <param name="this">This ManualResetEvent.</param>
+  /// <returns>
+  ///   <c>true</c> if the specified ManualResetEvent is set; otherwise, <c>false</c>.
+  /// </returns>
+  public static bool IsSet(this ManualResetEvent @this) {
+    Against.ThisIsNull(@this);
+    return @this.WaitOne(0);
   }
 }

@@ -34,13 +34,7 @@ namespace System.IO;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Local
-
-#if COMPILE_TO_EXTENSION_DLL
-public
-#else
-internal
-#endif
-  static partial class DriveInfoExtensions {
+public static partial class DriveInfoExtensions {
 
   private static class NativeMethods {
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto, EntryPoint = "GetDiskFreeSpace")]
