@@ -43,7 +43,7 @@ using qword = System.UInt64;
 namespace System;
 
 public static partial class MathEx {
-<# foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
+<#foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
 
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -86,7 +86,7 @@ public static partial class MathEx {
 
 <#}#>
   
-<# foreach (var type in new[]{"float","double","decimal"}){#>
+<#foreach (var type in new[]{"float","double","decimal"}){#>
     
   /// <summary>
   /// Calculates 1/x.
@@ -130,7 +130,7 @@ public static partial class MathEx {
   public static bool IsEven(this <#=type#> @this) => @this % 2 == 0;
 <#}#>
   
-<# foreach (var type in new[]{"double","decimal"}){#>
+<#foreach (var type in new[]{"double","decimal"}){#>
     
   /// <summary>Returns the largest integral value less than or equal to the specified decimal number.</summary>
   /// <param name="this">A number.</param>
@@ -166,7 +166,7 @@ public static partial class MathEx {
   public static <#=type#> Truncate(this <#=type#> @this) => <#=(type=="float"?"("+type+")":"")#>Math.Truncate(@this);
 <#}#>
       
-<# foreach (var item in new[]{T("double",15),T("decimal",28)}){#>
+<#foreach (var item in new[]{T("double",15),T("decimal",28)}){#>
 
   /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
   /// <param name="this">A number to be rounded.</param>
@@ -228,7 +228,7 @@ public static partial class MathEx {
 
 <#}#>
 
-<# foreach (var type in new[]{"sbyte","short","int","long","float","double","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","short","int","long","float","double","decimal"}){#>
     
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -280,7 +280,7 @@ public static partial class MathEx {
 
 <#}#>
   
-<# foreach (var type in new[]{"float","double"}){#>
+<#foreach (var type in new[]{"float","double"}){#>
 
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -332,7 +332,7 @@ public static partial class MathEx {
     
 <#}#>
   
-<# foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
     
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -450,7 +450,8 @@ public static partial class MathEx {
 
 <#}#>
 
-<# foreach (var method in new[]{"Sqrt","Log10","Log","Sin","Cos","Tan","Sinh","Cosh","Tanh"}){#>
+<#foreach (var type in new[]{"float","double"}){#>
+<#  foreach (var method in new[]{"Sqrt","Log10","Log","Sin","Cos","Tan","Sinh","Cosh","Tanh"}){#>
 
 #if SUPPORTS_CONTRACTS
   [Pure]
@@ -458,10 +459,19 @@ public static partial class MathEx {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static double <#=method#>(this double @this) => Math.<#=method#>(@this);
+<#    if(type == "float") {#>
+#if SUPPORTS_MATHF
+  public static <#=type#> <#=method#>(this <#=type#> @this) => MathF.<#=method#>(@this);
+#else
+  public static <#=type#> <#=method#>(this <#=type#> @this) => (<#=type#>)Math.<#=method#>(@this);
+#endif
+<#    } else {#>
+  public static <#=type#> <#=method#>(this <#=type#> @this) => Math.<#=method#>(@this);
+<#    }#>
+<#  }#>
 <#}#>
  
-<# foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","decimal"}){#>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -471,7 +481,7 @@ public static partial class MathEx {
 <#}#>
     
 #if SUPPORTS_FMADD
-<# foreach (var type in new[]{"float","double"}){#>
+<#foreach (var type in new[]{"float","double"}){#>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -480,7 +490,7 @@ public static partial class MathEx {
 <#}#>
 
 #else
-<# foreach (var type in new[]{"float","double"}){#>
+<#foreach (var type in new[]{"float","double"}){#>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -492,7 +502,7 @@ public static partial class MathEx {
 
   #region fast min/max/avg
 
-<# foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
 
   #region <#=type#>
   /// <summary>
