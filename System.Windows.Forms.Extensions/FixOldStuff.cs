@@ -55,14 +55,4 @@ internal static class FixOldStuff {
 #endif
   ;
 
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool _FOS_HasFlag<TEnum>(this TEnum @this, TEnum flag) where TEnum : Enum =>
-#if SUPPORTS_HAS_FLAG
-    @this.HasFlag(flag)
-#else
-    ((ulong)(object)@this & (ulong)(object)flag) == (ulong)(object)flag
-#endif
-  ;
 }

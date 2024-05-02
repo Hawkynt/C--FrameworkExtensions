@@ -199,11 +199,7 @@ public static partial class FileSystemInfoExtensions {
       return false;
 
     if ((int) @this.Attributes != -1)
-#if SUPPORTS_HAS_FLAG
       return @this.Attributes.HasFlag(FileAttributes.Directory);        
-#else
-      return (@this.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-#endif
 
     return @this is DirectoryInfo;
   }

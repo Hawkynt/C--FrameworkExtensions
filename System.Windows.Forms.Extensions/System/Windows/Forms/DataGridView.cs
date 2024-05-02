@@ -760,7 +760,7 @@ public static partial class DataGridViewExtensions {
 
     using var brush = rowHeaderAttribute.ForeColor != null
       ? new(rowHeaderAttribute.ForeColor.Value)
-      : e.State._FOS_HasFlag(DataGridViewElementStates.Selected)
+      : e.State.HasFlag(DataGridViewElementStates.Selected)
         ? new(e.InheritedRowStyle.SelectionForeColor)
         : new SolidBrush(e.InheritedRowStyle.ForeColor);
 
@@ -791,7 +791,7 @@ public static partial class DataGridViewExtensions {
       e.RowBounds.Width - borderWidthLeft - borderWidthRight,
       e.RowBounds.Height - borderWidthBottom);
 
-    using (var backBrush = new SolidBrush(e.State._FOS_HasFlag(DataGridViewElementStates.Selected)
+    using (var backBrush = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
              ? e.InheritedRowStyle.SelectionBackColor
              : e.InheritedRowStyle.BackColor))
       e.Graphics.FillRectangle(backBrush, rowBoundsWithoutBorder);

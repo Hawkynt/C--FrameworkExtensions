@@ -76,14 +76,14 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
       var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top,
         cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
 
-      var isSelected = cellState._FOS_HasFlag(DataGridViewElementStates.Selected);
+      var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
       var bkColor =
-          isSelected && paintParts._FOS_HasFlag(DataGridViewPaintParts.SelectionBackground)
+          isSelected && paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground)
             ? cellStyle.SelectionBackColor
             : cellStyle.BackColor
         ;
 
-      if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Background))
+      if (paintParts.HasFlag(DataGridViewPaintParts.Background))
         using (var backBrush = new SolidBrush(bkColor))
           graphics.FillRectangle(backBrush, paintRect);
 
@@ -91,7 +91,7 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
       paintRect.Width -= cellStyle.Padding.Horizontal;
       paintRect.Height -= cellStyle.Padding.Vertical;
 
-      if (paintParts._FOS_HasFlag(DataGridViewPaintParts.ContentForeground)) {
+      if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
         if (ProgressBarRenderer.IsSupported) {
           ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
           var barBounds = new Rectangle(paintRect.Left + 3, paintRect.Top + 3, paintRect.Width - 4,
@@ -110,13 +110,13 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
 
       if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex &&
           this.DataGridView.CurrentCellAddress.Y == this.RowIndex &&
-          paintParts._FOS_HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
+          paintParts.HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
         var focusRect = paintRect;
         focusRect.Inflate(-3, -3);
         ControlPaint.DrawFocusRectangle(graphics, focusRect);
       }
 
-      if (paintParts._FOS_HasFlag(DataGridViewPaintParts.ContentForeground)) {
+      if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
         var txt = $"{Math.Round(rate * 100)}%";
         const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
         var fColor = cellStyle.ForeColor;
@@ -124,7 +124,7 @@ public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
         TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
       }
 
-      if (!paintParts._FOS_HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors ||
+      if (!paintParts.HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors ||
           string.IsNullOrEmpty(errorText))
         return;
 

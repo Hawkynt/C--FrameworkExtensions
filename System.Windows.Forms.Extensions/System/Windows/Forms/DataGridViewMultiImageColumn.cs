@@ -228,20 +228,20 @@ public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
       DataGridViewElementStates cellState, object value, object formattedValue, string errorText,
       DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle,
       DataGridViewPaintParts paintParts) {
-      if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Border))
+      if (paintParts.HasFlag(DataGridViewPaintParts.Border))
         this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
 
       var borderRect = this.BorderWidths(advancedBorderStyle);
       var paintRect = new Rectangle(cellBounds.Left + borderRect.Left, cellBounds.Top + borderRect.Top,
         cellBounds.Width - borderRect.Right, cellBounds.Height - borderRect.Bottom);
 
-      var isSelected = cellState._FOS_HasFlag(DataGridViewElementStates.Selected);
-      var bkColor = isSelected && paintParts._FOS_HasFlag(DataGridViewPaintParts.SelectionBackground)
+      var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
+      var bkColor = isSelected && paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground)
           ? cellStyle.SelectionBackColor
           : cellStyle.BackColor
         ;
 
-      if (paintParts._FOS_HasFlag(DataGridViewPaintParts.Background))
+      if (paintParts.HasFlag(DataGridViewPaintParts.Background))
         using (var backBrush = new SolidBrush(bkColor))
           graphics.FillRectangle(backBrush, paintRect);
 
