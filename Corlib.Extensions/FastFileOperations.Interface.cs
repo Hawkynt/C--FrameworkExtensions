@@ -64,7 +64,7 @@ public static partial class FastFileOperations {
     AbortOperation,
   }
 
-  public partial interface IFileSystemReport {
+  public interface IFileSystemReport {
     ReportType ReportType { get; }
     IFileSystemOperation Operation { get; }
     int StreamIndex { get; }
@@ -77,10 +77,10 @@ public static partial class FastFileOperations {
     ContinuationType ContinuationType { get; set; }
   }
 
-  public partial interface IFileReport : IFileSystemReport { }
-  public partial interface IDirectoryReport : IFileSystemReport { }
+  public interface IFileReport : IFileSystemReport { }
+  public interface IDirectoryReport : IFileSystemReport { }
 
-  public partial interface IFileSystemOperation {
+  public interface IFileSystemOperation {
     FileSystemInfo Source { get; }
     FileSystemInfo Target { get; }
     long TotalSize { get; }
@@ -96,11 +96,11 @@ public static partial class FastFileOperations {
     bool WaitTillDone(TimeSpan timeout);
   }
 
-  public partial interface IFileOperation : IFileSystemOperation { }
+  public interface IFileOperation : IFileSystemOperation { }
 
-  public partial interface IDirectoryOperation : IFileSystemOperation {
+  public interface IDirectoryOperation : IFileSystemOperation {
     int CrawlerCount { get; set; }
   }
 
-  public partial interface IFileComparer : IEqualityComparer<FileInfo> { }
+  public interface IFileComparer : IEqualityComparer<FileInfo> { }
 }

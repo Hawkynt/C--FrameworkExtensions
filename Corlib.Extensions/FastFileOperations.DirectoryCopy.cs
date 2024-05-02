@@ -27,9 +27,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Threading;
 
@@ -40,16 +37,7 @@ namespace System.IO;
 /// </summary>
 
 public static partial class FastFileOperations {
-  partial interface IFileSystemOperation { }
-  partial interface IDirectoryOperation { }
-  partial interface IDirectoryReport { }
-  partial interface IFileSystemReport { }
-  partial interface IFileComparer { }
-  partial class FileLengthComparer : IFileComparer { }
-  partial class FileLastWriteTimeComparer : IFileComparer { }
-  partial class FileSimpleAttributesComparer : IFileComparer { }
-  partial class FileCreationTimeComparer : IFileComparer { }
-
+  
   private class DirectoryCopyOperation : IDirectoryOperation {
     #region nested types
 
@@ -183,9 +171,7 @@ public static partial class FastFileOperations {
 
     public bool ThrewException => this.Exception != null;
 
-    public void Abort() {
-      this.AbortOperation(new OperationCanceledException(_EX_USER_ABORT));
-    }
+    public void Abort() => this.AbortOperation(new OperationCanceledException(_EX_USER_ABORT));
 
     public bool IsDone => this._finishEvent.IsSet;
     public void WaitTillDone() => this._finishEvent.Wait();
@@ -196,25 +182,16 @@ public static partial class FastFileOperations {
     #region methods
 
     #region statistics
-    private void _AddTotalBytes(long count) {
-      Interlocked.Add(ref this._totalSize, count);
-    }
+    private void _AddTotalBytes(long count) => Interlocked.Add(ref this._totalSize, count);
 
-    private void _AddBytesToTransfer(long count) {
-      Interlocked.Add(ref this._bytesToTransfer, count);
-    }
+    private void _AddBytesToTransfer(long count) => Interlocked.Add(ref this._bytesToTransfer, count);
 
-    private void _AddBytesRead(long count) {
-      Interlocked.Add(ref this._bytesRead, count);
-    }
+    private void _AddBytesRead(long count) => Interlocked.Add(ref this._bytesRead, count);
 
-    private void _AddBytesTransferred(long count) {
-      Interlocked.Add(ref this._bytesTransferred, count);
-    }
+    private void _AddBytesTransferred(long count) => Interlocked.Add(ref this._bytesTransferred, count);
 
-    private long _AddBytesProcessing(long count) {
-      return Interlocked.Add(ref this._bytesProcessing, count) - count;
-    }
+    private long _AddBytesProcessing(long count) => Interlocked.Add(ref this._bytesProcessing, count) - count;
+
     #endregion
 
     /// <summary>
@@ -222,13 +199,7 @@ public static partial class FastFileOperations {
     /// </summary>
     /// <param name="info">The file/folder information.</param>
     /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
-    private bool _MatchesFilter(FileSystemInfo info) {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(info != null);
-#endif
-
-      return this._filter(info);
-    }
+    private bool _MatchesFilter(FileSystemInfo info) => this._filter(info);
 
     /// <summary>
     /// Determines whether the given file needs to be copied to the target.
@@ -237,10 +208,6 @@ public static partial class FastFileOperations {
     /// <param name="targetFile">The expected target file.</param>
     /// <returns><c>true</c> if the file needs to be copied; otherwise, <c>false</c>.</returns>
     private bool _FileNeedsSync(FileInfo sourceFile, FileInfo targetFile) {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(sourceFile != null);
-        Contract.Requires(targetFile != null);
-#endif
       if (!sourceFile.Exists)
         return false;
 
@@ -270,12 +237,11 @@ public static partial class FastFileOperations {
     /// <returns>The new index or -1, if no more free crawlers available.</returns>
     private int _CreateCrawlerIndex() {
       var result = Interlocked.Increment(ref this._lastCrawlerIndex) - 1;
-      if (result >= this._crawlerCount) {
-        Interlocked.Decrement(ref this._lastCrawlerIndex);
-        return -1;
-      }
-
-      return result;
+      if (result < this._crawlerCount)
+        return result;
+      
+      Interlocked.Decrement(ref this._lastCrawlerIndex);
+      return -1;
     }
 
     /// <summary>
@@ -298,12 +264,11 @@ public static partial class FastFileOperations {
     /// <returns>The new index or -1, if no more free streams available.</returns>
     private int _CreateStreamIndex() {
       var result = Interlocked.Increment(ref this._lastStreamIndex) - 1;
-      if (result >= this._streamCount) {
-        Interlocked.Decrement(ref this._lastStreamIndex);
-        return -1;
-      }
-
-      return result;
+      if (result < this._streamCount)
+        return result;
+      
+      Interlocked.Decrement(ref this._lastStreamIndex);
+      return -1;
     }
 
     /// <summary>
@@ -331,7 +296,7 @@ public static partial class FastFileOperations {
 
       Thread result = new(this._CrawlerThread) {
         IsBackground = true,
-        Name = "Crawler #" + index
+        Name = $"Crawler #{index}"
       };
       result.Start(index);
       return result;
@@ -348,7 +313,7 @@ public static partial class FastFileOperations {
 
       Thread result = new(this._StreamThread) {
         IsBackground = true,
-        Name = "Stream #" + index
+        Name = $"Stream #{index}"
       };
       result.Start(index);
       return result;

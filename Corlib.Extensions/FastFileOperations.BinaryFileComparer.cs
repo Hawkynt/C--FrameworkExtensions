@@ -31,9 +31,6 @@ namespace System.IO;
 public partial class FastFileOperations {
 
   // ReSharper disable once PartialTypeWithSinglePart
-  partial interface IFileComparer { }
-
-  // ReSharper disable once PartialTypeWithSinglePart
   private static partial class NativeMethods {
     [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern int memcmp(byte[] b1, byte[] b2, long count);
@@ -115,7 +112,7 @@ public partial class FastFileOperations {
   /// <summary>
   /// Compares two files by their length.
   /// </summary>
-  public partial class FileLengthComparer : IFileComparer {
+  public class FileLengthComparer : IFileComparer {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
@@ -133,7 +130,7 @@ public partial class FastFileOperations {
   /// <summary>
   /// Compares two files by their basic attributes (HARS)
   /// </summary>
-  public partial class FileSimpleAttributesComparer : IFileComparer {
+  public class FileSimpleAttributesComparer : IFileComparer {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
@@ -152,7 +149,7 @@ public partial class FastFileOperations {
   /// <summary>
   /// Compares two files by their creation time.
   /// </summary>
-  public partial class FileCreationTimeComparer : IFileComparer {
+  public class FileCreationTimeComparer : IFileComparer {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
@@ -170,7 +167,7 @@ public partial class FastFileOperations {
   /// <summary>
   /// Comapres two files by their last write time.
   /// </summary>
-  public partial class FileLastWriteTimeComparer : IFileComparer {
+  public class FileLastWriteTimeComparer : IFileComparer {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
