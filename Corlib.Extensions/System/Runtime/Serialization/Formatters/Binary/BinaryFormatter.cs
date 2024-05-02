@@ -19,12 +19,10 @@
 */
 #endregion
 
-#if !NET5_0_OR_GREATER
+#if !DEPRECATED_BINARY_FORMATTER
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.IO;
+using Guard;
 
 namespace System.Runtime.Serialization.Formatters.Binary;
 /// <summary>
@@ -42,9 +40,8 @@ public static partial class BinaryFormatterExtensions {
   /// <param name="value">The value to serialize.</param>
   /// <returns>The bytes needed for deserializing the value.</returns>
   public static byte[] Serialize(this BinaryFormatter @this, object value) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     using MemoryStream memStream = new();
     @this.Serialize(memStream, value);
     return memStream.ToArray();
@@ -57,9 +54,8 @@ public static partial class BinaryFormatterExtensions {
   /// <param name="value">The value to serialize.</param>
   /// <returns>The bytes needed for deserializing the value.</returns>
   public static byte[] SerializeWithGZip(this BinaryFormatter @this, object value) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var data = @this.Serialize(value);
     return data.GZip();
   }
@@ -71,10 +67,9 @@ public static partial class BinaryFormatterExtensions {
   /// <param name="data">The data to deserialize.</param>
   /// <returns>The deserialized value from the byte block.</returns>
   public static object Deserialize(this BinaryFormatter @this, byte[] data) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(data != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(data);
+    
     using MemoryStream memStream = new(data);
     return @this.Deserialize(memStream);
   }
@@ -86,10 +81,9 @@ public static partial class BinaryFormatterExtensions {
   /// <param name="data">The data to deserialize.</param>
   /// <returns>The deserialized value from the byte block.</returns>
   public static object DeserializeWithGZip(this BinaryFormatter @this, byte[] data) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(data != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(data);
+
     return @this.Deserialize(data.UnGZip());
   }
 }

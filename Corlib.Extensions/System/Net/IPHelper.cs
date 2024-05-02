@@ -21,11 +21,10 @@
 
 using System.ComponentModel;
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
+
+using Guard;
 
 using word = System.UInt16;
 using dword = System.UInt32;
@@ -242,26 +241,18 @@ public static class IPHelper {
       this.Local = local;
     }
 
-    public override string ToString() {
-      return string.Format("{0}({1}): {2} -> {3} ({4}[{5}])", this.Protocol, this.State, this.Local, this.Remote, this.SourceProcess == null ? null : this.SourceProcess.ProcessName, this.SourceProcess == null ? 0 : this.SourceProcess.Id);
-    }
+    public override string ToString() => $"{this.Protocol}({this.State}): {this.Local} -> {this.Remote} ({this.SourceProcess?.ProcessName}[{this.SourceProcess?.Id ?? 0}])";
   }
 
   private class BufferSizeAndWin32Status {
-    private readonly dword _size;
-    private readonly NativeMethods.Win32ApiError _status;
     public BufferSizeAndWin32Status(NativeMethods.Win32ApiError status, uint size) {
-      this._status = status;
-      this._size = size;
+      this.Status = status;
+      this.Size = size;
     }
 
-    public uint Size {
-      get { return this._size; }
-    }
+    public uint Size { get; }
 
-    public NativeMethods.Win32ApiError Status {
-      get { return this._status; }
-    }
+    public NativeMethods.Win32ApiError Status { get; }
   }
 
   #endregion
@@ -270,9 +261,7 @@ public static class IPHelper {
   /// Gets the active connections.
   /// </summary>
   /// <returns>An array of all active connections.</returns>
-  public static Connection[] GetActiveConnections() {
-    return (GetTcpTable().Concat(GetUdpTable()).ToArray());
-  }
+  public static Connection[] GetActiveConnections() => GetTcpTable().Concat(GetUdpTable()).ToArray();
 
   /// <summary>
   /// Gets the TCP table.
@@ -281,10 +270,10 @@ public static class IPHelper {
   /// <returns>An array with all active TCP connections.</returns>
   public static Connection[] GetTcpTable() {
     try {
-      return (_GetTcpTableNew());
+      return _GetTcpTableNew();
     } catch (Win32Exception e) {
       if (e.NativeErrorCode == (int)NativeMethods.Win32ApiError.NotSupported)
-        return (_GetTcpTableOld());
+        return _GetTcpTableOld();
       throw;
     }
   }
@@ -296,10 +285,10 @@ public static class IPHelper {
   /// <returns>An array with all active UDP connections.</returns>
   public static Connection[] GetUdpTable() {
     try {
-      return (_GetUdpTableNew());
+      return _GetUdpTableNew();
     } catch (Win32Exception e) {
       if (e.NativeErrorCode == (int)NativeMethods.Win32ApiError.NotSupported)
-        return (_GetUdpTableOld());
+        return _GetUdpTableOld();
       throw;
     }
   }
@@ -308,39 +297,37 @@ public static class IPHelper {
   /// Gets the TCP table using the pre-Vista method and without process id's.
   /// </summary>
   /// <returns>An array with all active TCP connections.</returns>
-  private static Connection[] _GetTcpTableOld() {
-    return (_GetTable<NativeMethods.MIB_TCPROW>(
+  private static Connection[] _GetTcpTableOld() 
+    => _GetTable<NativeMethods.MIB_TCPROW>(
       (pointer, size) => {
         var status = NativeMethods.GetTcpTable(pointer, ref size, false);
-        return (new(status, size));
+        return new(status, size);
       },
       row => new(ConnectionProtocol.Tcp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, null)
-    ));
-  }
+    );
 
   /// <summary>
   /// Gets the UDP table using the pre-Vista method and without process id's.
   /// </summary>
   /// <returns>An array with all active UDP connections.</returns>
-  private static Connection[] _GetUdpTableOld() {
-    return (_GetTable<NativeMethods.MIB_UDPROW>(
+  private static Connection[] _GetUdpTableOld() 
+    => _GetTable<NativeMethods.MIB_UDPROW>(
       (pointer, size) => {
         var status = NativeMethods.GetUdpTable(pointer, ref size, false);
-        return (new(status, size));
+        return new(status, size);
       },
       row => new(ConnectionProtocol.Udp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, null)
-    ));
-  }
+    );
 
   /// <summary>
   /// Gets the TCP table using the Vista+ method and with process id's.
   /// </summary>
   /// <returns>An array with all active TCP connections.</returns>
-  private static Connection[] _GetTcpTableNew() {
-    return (_GetTable<NativeMethods.MIB_TCPROW_OWNER_PID>(
+  private static Connection[] _GetTcpTableNew() 
+    => _GetTable<NativeMethods.MIB_TCPROW_OWNER_PID>(
       (pointer, size) => {
         var status = NativeMethods.GetExtendedTcpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.TcpTableClass.OwnerPidAll);
-        return (new(status, size));
+        return new(status, size);
       },
       row => {
         Process process;
@@ -350,18 +337,17 @@ public static class IPHelper {
           process = null;
         }
         return new(ConnectionProtocol.Tcp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, process);
-      }));
-  }
+      });
 
   /// <summary>
   /// Gets the UDP table using the Vista+ method and with process id's.
   /// </summary>
   /// <returns>An array with all active UDP connections.</returns>
-  private static Connection[] _GetUdpTableNew() {
-    return (_GetTable<NativeMethods.MIB_UDPROW_OWNER_PID>(
+  private static Connection[] _GetUdpTableNew() 
+    => _GetTable<NativeMethods.MIB_UDPROW_OWNER_PID>(
       (pointer, size) => {
         var status = NativeMethods.GetExtendedUdpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.UdpTableClass.OwnerPid);
-        return (new(status, size));
+        return new(status, size);
       },
       row => {
         Process process;
@@ -371,8 +357,7 @@ public static class IPHelper {
           process = null;
         }
         return new(ConnectionProtocol.Udp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, process);
-      }));
-  }
+      });
 
   /// <summary>
   /// Gets a connection table.
@@ -383,13 +368,8 @@ public static class IPHelper {
   /// <param name="rowProcessor">The row processor.</param>
   /// <returns>The connections from the table.</returns>
   private static Connection[] _GetTable<TRowtype>(Func<IntPtr, dword, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(call != null);
-    Contract.Requires(rowProcessor != null);
-#else
-      Debug.Assert(call != null);
-      Debug.Assert(rowProcessor != null);
-#endif
+    Against.ArgumentIsNull(call);
+    Against.ArgumentIsNull(rowProcessor);
 
     // get size of table first
     var tuple = call(IntPtr.Zero, 0);
@@ -428,7 +408,7 @@ public static class IPHelper {
           rowPointer = rowPointer + rowSizeInBytes;
         }
 
-        return (result);
+        return result;
       } finally {
 
         // free buffer if allocated

@@ -19,10 +19,8 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Threading;
+using Guard;
 
 namespace System;
 
@@ -41,9 +39,8 @@ public class RealtimeProperty<TType> {
   private bool _gotValueAtLeastOnce;
 
   public RealtimeProperty(Func<TType> getter, Action<TType> setter = null, TimeSpan? timeout = null, bool isAsyncSetter = false) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(getter != null);
-#endif
+    Against.ArgumentIsNull(getter);
+    
     this._getter = getter;
     this._setter = setter;
     this._isAsyncSetter = isAsyncSetter;
@@ -86,7 +83,13 @@ public class RealtimeProperty<TType> {
 
     // reset value flag
     manualResetEventSlim.Reset();
-    Action call = () => {
+
+    var call = Invoke;
+    call.BeginInvoke(call.EndInvoke, null);
+
+    return manualResetEventSlim.Wait(timeout ?? this.Timeout);
+
+    void Invoke() {
       try {
         this._lastKnownValue = getter();
         manualResetEventSlim.Set();
@@ -94,12 +97,7 @@ public class RealtimeProperty<TType> {
       } finally {
         Interlocked.CompareExchange(ref this._isGettingValue, _IS_IDLE, _IS_BUSY);
       }
-    };
-
-    // get in background
-    call.BeginInvoke(call.EndInvoke, null);
-
-    return manualResetEventSlim.Wait(timeout ?? this.Timeout);
+    }
   }
 
 }

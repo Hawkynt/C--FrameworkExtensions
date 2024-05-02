@@ -20,9 +20,6 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 
 namespace System.Security.Cryptography;
@@ -623,9 +620,6 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   }
 
   private void _Compress(byte[] buf, int offset = 0) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(buf != null && buf.Length - offset >= 64);
-#endif
     var x = new ulong[8];
 
     /* load words */

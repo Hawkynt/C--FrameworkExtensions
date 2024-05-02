@@ -19,10 +19,8 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Runtime.InteropServices;
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -30,6 +28,7 @@ using System.Runtime.InteropServices;
 namespace System.Threading;
 
 public static partial class ThreadExtensions {
+  
   /// <summary>
   /// Allows pushing the current thread into the low-IO mode introduced with Windows Vista.
   /// </summary>
@@ -48,13 +47,9 @@ public static partial class ThreadExtensions {
       [return: MarshalAs(UnmanagedType.Bool)]
       private static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
 
-      public static void EnterBackgroundMode() {
-        SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.Begin);
-      }
-
-      public static void LeaveBackgroundMode() {
-        SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.End);
-      }
+      public static void EnterBackgroundMode() => SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.Begin);
+      public static void LeaveBackgroundMode() => SetThreadPriority(GetCurrentThread(), (int)ThreadBackgroundMode.End);
+      
     }
 
     private bool _isDisposed;
@@ -66,12 +61,9 @@ public static partial class ThreadExtensions {
 
     #region Implementation of IDisposable
 
-    ~IoBackgroundModeToken() {
-      this.Dispose();
-    }
+    ~IoBackgroundModeToken() => this.Dispose();
 
     public void Dispose() {
-
       if (this._isDisposed)
         return;
 
@@ -89,12 +81,11 @@ public static partial class ThreadExtensions {
   /// <summary>
   /// Pushes the CURRENT thread into the low-IO mode introduced with Windows Vista.
   /// </summary>
-  /// <param name="This">This Thread.</param>
+  /// <param name="this">This Thread.</param>
   /// <returns>A disposable object that automatically releases from the low-io mode upon destruction.</returns>
-  public static IDisposable IoBackgroundMode(this Thread This) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(Thread.CurrentThread == This);
-#endif
-    return (new IoBackgroundModeToken());
+  public static IDisposable IoBackgroundMode(this Thread @this) {
+    Against.DifferentInstances(@this, Thread.CurrentThread);
+
+    return new IoBackgroundModeToken();
   }
 }

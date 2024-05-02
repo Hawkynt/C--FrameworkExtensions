@@ -21,9 +21,7 @@
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Threading.Tasks;
 
@@ -37,8 +35,10 @@ public class DeferredTask<TValue> {
   /// Stores the scheduled values, alongside their storage date.
   /// </summary>
   private class Item {
-    public readonly TValue value;
+    
     public readonly DateTime createDate;
+    public readonly TValue value;
+    
     private Item(TValue value, DateTime createDate) {
       this.value = value;
       this.createDate = createDate;
@@ -63,9 +63,8 @@ public class DeferredTask<TValue> {
   public ManualResetEventSlim WaitHandle { get; } = new(true);
 
   public DeferredTask(Action<TValue> action, TimeSpan? waitTime = null, bool allowTaskOverlapping = true, bool autoAbortOnSchedule = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(action != null);
-#endif
+    Against.ArgumentIsNull(action);
+    
     this._action = action;
     this._waitTime = waitTime ?? TimeSpan.FromMilliseconds(_DEFAULT_WAIT_TIME_IN_MSECS);
     this._allowTaskOverlapping = allowTaskOverlapping;
@@ -120,60 +119,63 @@ public class DeferredTask<TValue> {
     if (this._currentValue == null)
       return;
 
-    Thread thread = new(this._thread) {
+    Thread thread = new(Invoke) {
       IsBackground = true,
-      Name = "Deferred Task #" + this.GetHashCode()
+      Name = $"Deferred Task #{this.GetHashCode()}"
     };
 
     // if not somebody else started a thread already
     if (Interlocked.CompareExchange(ref this._currentThread, thread, null) == null)
       thread.Start(thread);
-  }
 
-  private void _thread(object state) {
-    var thread = (Thread)state;
-    try {
-      //if this is the first thread reset the WaitHandle
-      if(Interlocked.Increment(ref this._threadCount) == 1)
-        this.WaitHandle.Reset();
+    return;
 
-      while (true) {
-        Item item;
+    void Invoke(object state) {
+      var localThread = (Thread)state;
+      try {
+        //if this is the first thread reset the WaitHandle
+        if (Interlocked.Increment(ref this._threadCount) == 1)
+          this.WaitHandle.Reset();
 
-        // wait as long as items are inserted
-        var sleepTime = TimeSpan.Zero;
-        do {
-          Thread.Sleep(sleepTime);
-          item = this._currentValue;
+        for (;;) {
+          Item item;
 
-          // no more items scheduled, exit thread
-          if (item == null)
-            return;
+          // wait as long as items are inserted
+          var sleepTime = TimeSpan.Zero;
+          do {
+            Thread.Sleep(sleepTime);
+            item = this._currentValue;
 
-          // time to wait before executing action/re-checking
-          sleepTime = this._waitTime - (DateTime.UtcNow - item.createDate);
-        } while (sleepTime > TimeSpan.Zero);
+            // no more items scheduled, exit thread
+            if (item == null)
+              return;
 
-        // remove item if it did not change, if it did - process in next round
-        Interlocked.CompareExchange(ref this._currentValue, null, item);
+            // time to wait before executing action/re-checking
+            sleepTime = this._waitTime - (DateTime.UtcNow - item.createDate);
+          } while (sleepTime > TimeSpan.Zero);
 
-        if (this._allowTaskOverlapping) {
+          // remove item if it did not change, if it did - process in next round
+          Interlocked.CompareExchange(ref this._currentValue, null, item);
 
-          // immediately release thread, new thread will start with null value if needed
-          Interlocked.CompareExchange(ref this._currentThread, null, thread);
+          if (this._allowTaskOverlapping) {
+
+            // immediately release thread, new thread will start with null value if needed
+            Interlocked.CompareExchange(ref this._currentThread, null, localThread);
+          }
+
+          // execute action
+          this._action(item.value);
         }
+      } finally {
 
-        // execute action
-        this._action(item.value);
+        // release this thread
+        Interlocked.CompareExchange(ref this._currentThread, null, localThread);
+
+        //only set the WaitHandle if no other threads are active
+        if (Interlocked.Decrement(ref this._threadCount) == 0)
+          this.WaitHandle.Set();
       }
-    } finally {
-
-      // release this thread
-      Interlocked.CompareExchange(ref this._currentThread, null, thread);
-
-      //only set the WaitHandle if no other threads are active
-      if (Interlocked.Decrement(ref this._threadCount) == 0)
-        this.WaitHandle.Set();
     }
   }
+  
 }

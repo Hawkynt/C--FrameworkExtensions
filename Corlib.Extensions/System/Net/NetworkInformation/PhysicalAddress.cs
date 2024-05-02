@@ -21,9 +21,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 using Guard;
@@ -35,16 +32,15 @@ public static partial class PhysicalAddressExtensions {
   /// <summary>
   /// Gets the MacAdress.
   /// </summary>
-  /// <param name="This">This PhysicalAddress.</param>
+  /// <param name="this">This PhysicalAddress.</param>
   /// <returns>The mac adress string, delimited with ":"</returns>
-  public static string MacAdress(this PhysicalAddress This) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
+  public static string MacAdress(this PhysicalAddress @this) {
+    Against.ThisIsNull(@this);
+
 #if SUPPORTS_JOIN_ENUMERABLES
-    return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}"));
+    return string.Join(":", @this.GetAddressBytes().Select(b => $"{b:X2}"));
 #else
-    return string.Join(":", This.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
+    return string.Join(":", @this.GetAddressBytes().Select(b => $"{b:X2}").ToArray());
 #endif
   }
 

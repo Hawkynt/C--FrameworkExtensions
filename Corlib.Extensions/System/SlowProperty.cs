@@ -19,10 +19,8 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Threading;
+using Guard;
 
 namespace System;
 
@@ -57,10 +55,9 @@ public class SlowProperty<TValue, TIntermediateValue> {
     this(captureSynchronizationContext ? SynchronizationContext.Current : null, valueGetter, intermediateValue, valueGeneratedCallback) { }
 
   public SlowProperty(SynchronizationContext context, Func<SlowProperty<TValue, TIntermediateValue>, TValue> valueGetter, TIntermediateValue intermediateValue = default, Action<SlowProperty<TValue, TIntermediateValue>> valueGeneratedCallback = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(valueGetter != null);
-      Contract.Requires(typeof(TIntermediateValue).IsAssignableFrom(typeof(TValue)));
-#endif
+    Against.ArgumentIsNull(valueGetter);
+    Against.False(typeof(TIntermediateValue).IsAssignableFrom(typeof(TValue)));
+
     this._valueGetter = valueGetter;
     this._intermediateValue = intermediateValue;
     this._valueGeneratedCallback = valueGeneratedCallback;
@@ -69,7 +66,7 @@ public class SlowProperty<TValue, TIntermediateValue> {
     var vtype = typeof(TValue);
     this._valueConverter =
       itype.IsGenericType && itype.GetGenericTypeDefinition() == typeof(Nullable<>) && itype.GetGenericArguments()[0] == vtype
-        ? new(v => (TIntermediateValue)(object)v)
+        ? v => (TIntermediateValue)(object)v
         : new Func<TValue, TIntermediateValue>(v => (TIntermediateValue)Convert.ChangeType(v, itype))
       ;
 

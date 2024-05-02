@@ -21,10 +21,7 @@
 #define SUPPORTTHREADTIMERS
 
 using System.Collections.Concurrent;
-
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Threading.Tasks;
 
@@ -69,9 +66,8 @@ public class ScheduledTask<TValue> {
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledTask(Action<TValue> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(action != null);
-#endif
+    Against.ArgumentIsNull(action);
+    
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -84,6 +80,7 @@ public class ScheduledTask<TValue> {
     }
 #endif
   }
+  
   /// <summary>
   /// Schedule an execution with the specified value.
   /// </summary>
@@ -127,9 +124,6 @@ public class ScheduledTask<TValue> {
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(this._action != null);
-#endif
 
     // as long as there is fresh data available, re-use the thread
     while (this._dataAvailable != 0) {
@@ -235,9 +229,8 @@ public class ScheduledTask {
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledTask(Action action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(action != null);
-#endif
+    Against.ArgumentIsNull(action);
+    
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -287,9 +280,7 @@ public class ScheduledTask {
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(this._action != null);
-#endif
+
     // sleep if needed
     if (sleepTime != null)
       Thread.Sleep((int)sleepTime);
@@ -376,9 +367,8 @@ public class ScheduledCombinedTask<TValue> {
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledCombinedTask(Action<TValue[]> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(action != null);
-#endif
+    Against.ArgumentIsNull(action);
+    
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
@@ -433,10 +423,7 @@ public class ScheduledCombinedTask<TValue> {
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(this._action != null);
-    Contract.Assume(this._scheduledValues != null);
-#endif
+
     // sleep if needed););
     if (sleepTime != null)
       Thread.Sleep((int)sleepTime);
@@ -471,9 +458,6 @@ public class ScheduledCombinedTask<TValue> {
   /// <param name="value">The value.</param>
   /// <param name="sleepTime">The sleep time.</param>
   private void _Schedule(TValue value, int sleepTime) {
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(this._scheduledValues != null);
-#endif
     Interlocked.CompareExchange(ref this._taskIsAborted, 0, 1);
 
     lock (this._lock)
