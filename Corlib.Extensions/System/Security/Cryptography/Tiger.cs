@@ -680,7 +680,7 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   protected override byte[] HashFinal() {
     while (!this._isFinished) {
-      List<byte> buffer = new(this.intermediateBuffer ?? new byte[0]);
+      List<byte> buffer = this.intermediateBuffer == null ? new() : new(this.intermediateBuffer);
 
       /* convert length of the message to bits */
       var len = this.length << 3;

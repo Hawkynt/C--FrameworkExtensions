@@ -172,7 +172,7 @@ public static partial class VolumeExtensions {
   public static IEnumerable<string> GetVolumePathNames(string volumeName) {
     uint bufferSize = 0;
     if (NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, new char[0], 0, ref bufferSize))
-      return new string[0];
+      return Utilities.Array.Empty<string>();
 
     var result = new char[bufferSize];
     if (!NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, result, bufferSize, ref bufferSize))

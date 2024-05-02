@@ -239,7 +239,7 @@ public static partial class TypeExtensions {
 
         var info = this.Info;
         if (info == null)
-          return this.__customAttributes = new object[0];
+          return this.__customAttributes = Utilities.Array.Empty<object>();
 
         var name = info.Name;
         List<object> results = new();
