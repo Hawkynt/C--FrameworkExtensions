@@ -22,14 +22,12 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentDictionaryExtensions {
+
   /// <summary>
   /// Adds the key to the dictionary or updates its value.
   /// </summary>
@@ -39,11 +37,8 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="key">The key.</param>
   /// <param name="value">The value.</param>
   public static void AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this,[DisallowNull] TKey key, TValue value) {
-    Guard.Against.ThisIsNull(@this);
-
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(key is not null);
-#endif
+    Against.ThisIsNull(@this);
+    
     @this.AddOrUpdate(key, value, (_, __) => value);
   }
   /// <summary>
@@ -56,8 +51,8 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="keyFunction">The key generator.</param>
   /// <returns>The added key.</returns>
   public static Tkey Add<Tkey, TValue>(this ConcurrentDictionary<Tkey, TValue> @this, TValue value, Func<Tkey> keyFunction) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(keyFunction);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keyFunction);
 
     Tkey result;
     do {
@@ -76,8 +71,8 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="keyEnumerator">The enum containing possible keys.</param>
   /// <returns>The added key.</returns>
   public static TKey Add<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, IEnumerator<TKey> keyEnumerator) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(keyEnumerator);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keyEnumerator);
 
     TKey result;
     do {
@@ -96,7 +91,7 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="keys">The keys.</param>
   /// <returns>The added key.</returns>
   public static TKey Add<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, IEnumerable<TKey> keys) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.Add(value, keys.GetEnumerator());
   }
@@ -111,12 +106,12 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="key">A key that has that value.</param>
   /// <returns><c>true</c> when the value was found; otherwise, <c>false</c>.</returns>
   public static bool TryGetKey<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TValue value, out TKey key) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var result = false;
     key = default;
     var keyValuePairs = @this.ToArray();
-    for (var index = keyValuePairs.Length - 1; index >= 0 && !result; index--)
+    for (var index = keyValuePairs.Length - 1; index >= 0 && !result; --index)
       if (value.Equals(keyValuePairs[index].Value)) {
         result = true;
         key = keyValuePairs[index].Key;
@@ -133,7 +128,7 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="key">The key to remove.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> @this, TKey key) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.TryRemove(key, out _);
   }
@@ -145,7 +140,7 @@ public static partial class ConcurrentDictionaryExtensions {
   /// <param name="this">This ConcurrentDictionary.</param>
   /// <param name="key">The key/value.</param>
   public static TKey GetOrAdd<TKey>(this ConcurrentDictionary<TKey, TKey> @this, TKey key) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.GetOrAdd(key, key);
   }

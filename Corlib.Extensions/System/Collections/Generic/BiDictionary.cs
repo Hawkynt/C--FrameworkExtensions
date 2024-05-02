@@ -20,10 +20,9 @@
 #endregion
 
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Runtime.Serialization;
+using Guard;
+
 // ReSharper disable UnusedMember.Global
 
 namespace System.Collections.Generic;
@@ -261,17 +260,19 @@ internal class DictionaryDebugView<TKey, TValue> {
 // ReSharper disable once PartialTypeWithSinglePart
 public static partial class KeyValuePairExtensions {
   
-  public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) => new(@this.Value, @this.Key);
-  
+  public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) {
+    Against.ThisIsNull(@this);
+
+    return new(@this.Value, @this.Key);
+  }
 }
 
 public static partial class EnumerableExtensions {
   public static BiDictionary<TKey, TValue> ToBiDictionary<TItem, TKey, TValue>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, Func<TItem, TValue> valueSelector) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(keySelector != null);
-    Contract.Requires(valueSelector != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keySelector);
+    Against.ArgumentIsNull(valueSelector);
+
     var result = new BiDictionary<TKey, TValue>();
     foreach (var item in @this)
       result.Add(keySelector(item), valueSelector(item));

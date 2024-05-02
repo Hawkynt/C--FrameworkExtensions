@@ -19,9 +19,7 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.IO;
 
@@ -34,10 +32,9 @@ public static partial class BinaryReaderExtensions {
   /// <param name="bufferSize">Size of the buffer.</param>
   /// <returns>All read bytes.</returns>
   public static byte[] ReadAllBytes(this BinaryReader @this, uint bufferSize = 65536) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(bufferSize > 0);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ValueIsZero(bufferSize);
+    
     using MemoryStream result = new();
     var buffer = new byte[bufferSize];
 

@@ -21,10 +21,7 @@
 
 using System.Diagnostics;
 using System.Threading;
-
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -42,11 +39,9 @@ public static partial class FunctionExtensions {
   /// <param name="dueTime">The time to wait between executions; if any.</param>
   [DebuggerStepThrough]
   public static TResult RetryOnException<TResult>(this Func<TResult> @this, int repeatCount, TimeSpan? dueTime = null) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (repeatCount <= 0)
-      throw new ArgumentException("Must be > 0", nameof(repeatCount));
-
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(repeatCount);
+    
     while (--repeatCount >= 0) {
       try {
         return @this();
@@ -60,7 +55,7 @@ public static partial class FunctionExtensions {
     }
 
     // INFO: heuristically unreachable
-    return default(TResult);
+    return default;
   }
 
   /// <summary>
@@ -74,10 +69,8 @@ public static partial class FunctionExtensions {
   ///   <c>true</c> on success; otherwise, <c>false</c>.
   /// </returns>
   public static bool TryInvoke<TResult>(this Func<TResult> @this, out TResult result, int repeatCount = 1) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(repeatCount > 0);
-#endif
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(repeatCount);
 
     while (repeatCount-- > 0) {
       try {
@@ -87,7 +80,8 @@ public static partial class FunctionExtensions {
         ;
       }
     }
-    result = default(TResult);
+    
+    result = default;
     return false;
   }
 
@@ -103,31 +97,29 @@ public static partial class FunctionExtensions {
     var lastResult = default(TResult);
     var resultValidUntil = 0L;
 
-    Func<TResult> wrapper;
-    if (prolongOnAccess) {
-      wrapper = () => {
-        var now = Stopwatch.GetTimestamp();
+    return prolongOnAccess ? ProlongingAccessor : NormalAccessor;
 
-        // result no longer valid, generate a new one
-        if (now > resultValidUntil)
-          lastResult = @this();
-
-        resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
+    TResult NormalAccessor() {
+      var now = Stopwatch.GetTimestamp();
+      if (now <= resultValidUntil)
         return lastResult;
-      };
-    } else {
-      wrapper = () => {
-        var now = Stopwatch.GetTimestamp();
-        if (now <= resultValidUntil)
-          return lastResult;
 
-        // result no longer valid, generate a new one
-        lastResult = @this();
-        resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
-        return lastResult;
-      };
+      // result no longer valid, generate a new one
+      lastResult = @this();
+      resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
+      return lastResult;
     }
-    return wrapper;
+
+    TResult ProlongingAccessor() {
+      var now = Stopwatch.GetTimestamp();
+
+      // result no longer valid, generate a new one
+      if (now > resultValidUntil)
+        lastResult = @this();
+
+      resultValidUntil = (long)(now + span.TotalSeconds * Stopwatch.Frequency);
+      return lastResult;
+    }
   }
 
 }

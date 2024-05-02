@@ -22,9 +22,6 @@
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
@@ -107,9 +104,6 @@ public static partial class HashSetExtensions {
   /// <param name="this">This HashSet.</param>
   /// <param name="item">The item.</param>
   /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -132,11 +126,7 @@ public static partial class HashSetExtensions {
   public static bool TryAdd<TItem>(this HashSet<TItem> @this, TItem value) {
     Against.ThisIsNull(@this);
 
-    if (@this.Contains(value))
-      return false;
-
-    @this.Add(value);
-    return true;
+    return @this.Add(value);
   }
 
   /// <summary>

@@ -20,9 +20,6 @@
 #endregion
 
 using System.ComponentModel;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 
 namespace System;
 
@@ -34,7 +31,7 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The type of the enum.</typeparam>
   /// <param name="field">The field.</param>
   /// <returns>The content of the description attribute or <c>null</c>.</returns>
-  public static string GetFieldDescription<TEnum>(this TEnum field) where TEnum : struct
+  public static string GetFieldDescription<TEnum>(this TEnum field) where TEnum : Enum
     => GetFieldAttribute<TEnum, DescriptionAttribute>(field)?.Description
   ;
 
@@ -44,7 +41,7 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The type of the enum.</typeparam>
   /// <param name="field">The field.</param>
   /// <returns>The content of the description attribute or <c>null</c>.</returns>
-  public static string GetFieldDisplayName<TEnum>(this TEnum field) where TEnum : struct
+  public static string GetFieldDisplayName<TEnum>(this TEnum field) where TEnum : Enum
     => GetFieldAttribute<TEnum, DisplayNameAttribute>(field)?.DisplayName
   ;
 
@@ -54,7 +51,7 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The type of the enum.</typeparam>
   /// <param name="field">The field.</param>
   /// <returns>The content of the description attribute or <c>null</c>.</returns>
-  public static string GetFieldDisplayNameOrDefault<TEnum>(this TEnum field) where TEnum : struct
+  public static string GetFieldDisplayNameOrDefault<TEnum>(this TEnum field) where TEnum : Enum
     => GetFieldAttribute<TEnum, DisplayNameAttribute>(field)?.DisplayName ?? field.ToString()
   ;
       
@@ -66,19 +63,12 @@ public static partial class EnumExtensions {
   /// <param name="field">The field.</param>
   /// <returns>The attribute or <c>null</c>.</returns>
   public static TAttribute GetFieldAttribute<TEnum, TAttribute>(this TEnum field)
-    where TEnum : struct
-    where TAttribute : Attribute {
-
-    var type = field.GetType();
-#if SUPPORTS_CONTRACTS
-    Contract.Assert(type.IsEnum, "Only supported on enumerations");
-#endif
-
-    return
-      (TAttribute)type
-        .GetField(field.ToString())?
-        .GetCustomAttributes(typeof(TAttribute), false)
-        .FirstOrDefault()
-      ;
-  }
+    where TEnum : Enum
+    where TAttribute : Attribute 
+    => (TAttribute)field.GetType()
+      .GetField(field.ToString())?
+      .GetCustomAttributes(typeof(TAttribute), false)
+      .FirstOrDefault()
+    ;
+  
 }

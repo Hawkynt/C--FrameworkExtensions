@@ -23,6 +23,7 @@ using System.Collections.Generic;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
+using Guard;
 
 namespace System.IO;
 
@@ -48,12 +49,12 @@ public static partial class FileSystemInfoExtensions {
   /// <summary>
   /// Checks whether the given FileSystemInfo does not exist.
   /// </summary>
-  /// <param name="This">This FileSystemInfo.</param>
+  /// <param name="this">This FileSystemInfo.</param>
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool NotExists(this FileSystemInfo This) => !This.Exists;
+  public static bool NotExists(this FileSystemInfo @this) => !@this.Exists;
 
   /// <summary>
   /// Checks whether the given FileSystemInfo is <c>null</c> or if it does not exists.
@@ -63,7 +64,7 @@ public static partial class FileSystemInfoExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNullOrDoesNotExist(this FileSystemInfo @this) => @this == null || !@this.Exists;
+  public static bool IsNullOrDoesNotExist(this FileSystemInfo @this) => @this is not { Exists: true };
 
   /// <summary>
   /// Checks whether the given FileSystemInfo is not <c>null</c> and if it exists.
@@ -73,7 +74,7 @@ public static partial class FileSystemInfoExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static bool IsNotNullAndExists(this FileSystemInfo @this) => @this != null && @this.Exists;
+  public static bool IsNotNullAndExists(this FileSystemInfo @this) => @this is { Exists: true };
 
   /// <summary>
   /// Returns a given path relative to another.
@@ -82,11 +83,8 @@ public static partial class FileSystemInfoExtensions {
   /// <param name="srcPath">The base path.</param>
   /// <returns>A relative path, if possible; otherwise, the absolute target path is returned.</returns>
   public static string RelativeTo(string tgtPath, string srcPath) {
-    if (tgtPath == null) throw new ArgumentNullException(nameof(tgtPath));
-    if (srcPath == null) throw new ArgumentNullException(nameof(srcPath));
-#if SUPPORTS_CONTRACTS
-    System.Diagnostics.Contracts.Contract.EndContractBlock();
-#endif
+    Against.ArgumentIsNull(tgtPath);
+    Against.ArgumentIsNull(srcPath);
 
     // convert backslashes and slashes to whatever the os prefers and split into parts
     var tgtArray = tgtPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar).Split(Path.DirectorySeparatorChar);
@@ -98,18 +96,18 @@ public static partial class FileSystemInfoExtensions {
 
     // find out how many parts match
     while (i < srcArray.Length && i < tgtArray.Length && string.Equals(srcArray[i], tgtArray[i], caseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase))
-      i++;
+      ++i;
 
     // if no match was found at all, both paths do not have the same base so we return the target path
     if (i == 0)
       return tgtPath;
 
     // walk up till we are at the match
-    for (var j = 0; j < srcArray.Length - i; j++)
+    for (var j = 0; j < srcArray.Length - i; ++j)
       result.Add("..");
 
     // walk down to the target
-    for (var j = 0; j < tgtArray.Length - i; j++)
+    for (var j = 0; j < tgtArray.Length - i; ++j)
       result.Add(tgtArray[j + i]);
 
     return string.Join(
@@ -117,7 +115,7 @@ public static partial class FileSystemInfoExtensions {
 #if SUPPORTS_JOIN_ENUMERABLES
       result
 #else
-        result.ToArray()
+      result.ToArray()
 #endif
     );
   }
@@ -129,12 +127,9 @@ public static partial class FileSystemInfoExtensions {
   /// <param name="source">The base path.</param>
   /// <returns>A relative path, if possible; otherwise, the absolute target path is returned.</returns>
   public static string RelativeTo(this FileSystemInfo @this, FileSystemInfo source) {
-    if (@this == null) throw new NullReferenceException();
-    if (source == null) throw new ArgumentNullException(nameof(source));
-#if SUPPORTS_CONTRACTS
-    System.Diagnostics.Contracts.Contract.EndContractBlock();
-#endif
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(source);
+    
     return RelativeTo(@this.FullName, source.FullName);
   }
 
@@ -147,11 +142,8 @@ public static partial class FileSystemInfoExtensions {
   ///   <c>true</c> if both are on the same physical drive; otherwise, <c>false</c>.
   /// </returns>
   public static bool IsOnSamePhysicalDrive(this FileSystemInfo @this, FileSystemInfo other) {
-    if (@this == null) throw new NullReferenceException();
-    if (other == null) throw new ArgumentNullException(nameof(other));
-#if SUPPORTS_CONTRACTS
-    System.Diagnostics.Contracts.Contract.EndContractBlock();
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
 
     return IsOnSamePhysicalDrive(@this.FullName, other.FullName);
   }
@@ -166,11 +158,8 @@ public static partial class FileSystemInfoExtensions {
   ///   <c>true</c> if both are on the same physical drive; otherwise, <c>false</c>.
   /// </returns>
   public static bool IsOnSamePhysicalDrive(string path, string other) {
-    if (path == null) throw new ArgumentNullException(nameof(path));
-    if (other == null) throw new ArgumentNullException(nameof(other));
-#if SUPPORTS_CONTRACTS
-    System.Diagnostics.Contracts.Contract.EndContractBlock();
-#endif
+    Against.ArgumentIsNull(path);
+    Against.ArgumentIsNull(other);
 
     path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
     other = other.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
@@ -183,7 +172,7 @@ public static partial class FileSystemInfoExtensions {
       drive = Path.GetPathRoot(path);
     else
       drive = path.StartsWith(prefix)
-          ? path.Substring(0, path.IndexOf(Path.DirectorySeparatorChar, prefix.Length + 1))
+          ? path[..path.IndexOf(Path.DirectorySeparatorChar, prefix.Length + 1)]
           : path
         ;
 
@@ -191,7 +180,7 @@ public static partial class FileSystemInfoExtensions {
       otherdrive = Path.GetPathRoot(other);
     else
       otherdrive = other.StartsWith(prefix)
-          ? other.Substring(0, other.IndexOf(Path.DirectorySeparatorChar, prefix.Length + 1))
+          ? other[..other.IndexOf(Path.DirectorySeparatorChar, prefix.Length + 1)]
           : other
         ;
 
@@ -203,20 +192,20 @@ public static partial class FileSystemInfoExtensions {
   /// <summary>
   /// Checks whether a FileInfo or DirectoryInfo object is a directory, or intended to be a directory.
   /// </summary>
-  /// <param name="fileSystemInfo">This object</param>
+  /// <param name="this">This object</param>
   /// <returns>A bool indicating wether the given FileSystemInfo is a directory or not</returns>
-  public static bool IsDirectory(this FileSystemInfo fileSystemInfo) {
-    if (fileSystemInfo == null)
+  public static bool IsDirectory(this FileSystemInfo @this) {
+    if (@this == null)
       return false;
 
-    if ((int) fileSystemInfo.Attributes != -1)
+    if ((int) @this.Attributes != -1)
 #if SUPPORTS_HAS_FLAG
-      return fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory);        
+      return @this.Attributes.HasFlag(FileAttributes.Directory);        
 #else
-        return (fileSystemInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+      return (@this.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
 #endif
 
-    return fileSystemInfo is DirectoryInfo;
+    return @this is DirectoryInfo;
   }
 
 }

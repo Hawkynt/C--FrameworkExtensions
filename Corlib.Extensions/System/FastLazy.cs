@@ -19,9 +19,7 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -43,9 +41,7 @@ public class FastLazy<TValue> {
   /// </summary>
   /// <param name="factory">The factory.</param>
   public FastLazy(Func<TValue> factory) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(factory != null);
-#endif
+    Against.ArgumentIsNull(factory);
 
     this._factory = factory;
     this.Reset();

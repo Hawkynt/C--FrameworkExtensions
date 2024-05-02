@@ -23,14 +23,12 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using Guard;
 
 namespace System.Data.Linq;
 
@@ -42,9 +40,8 @@ public static partial class DataContextExtensions {
   /// <param name="this">This DataContext.</param>
   /// <returns>String containing the sql statements.</returns>
   public static string GetChangeSqlStatement(this DataContext @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     using MemoryStream memStream = new();
     using StreamWriter textWriter = new(memStream) { AutoFlush = true };
     using (new TransactionScope()) {
@@ -67,9 +64,14 @@ public static partial class DataContextExtensions {
   /// <typeparam name="TEntity">The type of the entity.</typeparam>
   /// <param name="this">Can be ANY connection.</param>
   /// <param name="entity">The entity to detach from its connection.</param>
-  public static void Detach<TEntity>(this DataContext @this, TEntity entity) where TEntity : INotifyPropertyChanged, INotifyPropertyChanging
-    => _initializeMethods.GetOrAdd(typeof(TEntity), t => t.GetMethod("Initialize", BindingFlags.Instance | BindingFlags.NonPublic)).Invoke(entity, null)
-    ;
+  public static void Detach<TEntity>(this DataContext @this, TEntity entity) where TEntity : INotifyPropertyChanged, INotifyPropertyChanging {
+    Against.ThisIsNull(@this);
+
+    _initializeMethods
+      .GetOrAdd(typeof(TEntity), t => t.GetMethod("Initialize", BindingFlags.Instance | BindingFlags.NonPublic))
+      .Invoke(entity, null)
+      ;
+  }
 
   /// <summary>
   /// Runs specific update actions in a database transaction
@@ -80,6 +82,9 @@ public static partial class DataContextExtensions {
   /// <param name="exception">out parameter for any occurred exception within the transaction</param>
   /// <returns>True if the transaction was committed successfully, false otherwise</returns>
   public static bool RunInTransaction<TContext>(this TContext @this, Func<TContext, bool> updateAction, out Exception exception) where TContext : DataContext {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(updateAction);
+
     try {
       @this.Connection.Open();
       @this.Transaction = @this.Connection.BeginTransaction();
@@ -117,6 +122,9 @@ public static partial class DataContextExtensions {
   /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
   /// <returns>True if the data could be loaded successfully, false otherwise</returns>
   public static bool TryGetResults<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest, out TResult[] results, out Exception exception) where TContext : DataContext {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(loadRequest);
+
     try {
       results = loadRequest.Invoke(@this);
       exception = null;
@@ -142,6 +150,9 @@ public static partial class DataContextExtensions {
   /// <returns>An awaitable Task which returns a Tuple which holds the success of the loadRequest,
   /// a reference to a possibly occurred exception and the resulting data</returns>
   public static async Task<Tuple<bool, Exception, TResult[]>> TryGetResultsAsync<TContext, TResult>(this TContext @this, Func<TContext, TResult[]> loadRequest) where TContext : DataContext {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(loadRequest);
+
     return await Task.Run(() => {
       try {
         var results = loadRequest.Invoke(@this);
@@ -167,6 +178,9 @@ public static partial class DataContextExtensions {
   /// <param name="exception">out parameter for any occurred exception within the loadRequest</param>
   /// <returns>True if the data could be loaded successfully, false otherwise</returns>
   public static bool TryGetSingleResult<TContext, TResult>(this TContext @this, out TResult result, Func<TContext, TResult> loadRequest, out Exception exception) where TContext : DataContext  {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(loadRequest);
+
     try {
       result = loadRequest.Invoke(@this);
       exception = null;
