@@ -21,9 +21,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -111,9 +108,6 @@ public static partial class VolumeExtensions {
   /// <param name="mask">The mask.</param>
   /// <returns>The compiled regex.</returns>
   private static Regex _ConvertMaskToRegex(string mask) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(mask != null);
-#endif
     mask = mask.Replace("\\", "\\\\");
     mask = mask.Replace("[", "\\[");
     mask = mask.Replace("]", "\\]");

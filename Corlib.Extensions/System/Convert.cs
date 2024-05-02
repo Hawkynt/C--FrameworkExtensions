@@ -20,10 +20,8 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Text;
+using Guard;
 // TODO: qp is also in string extensions
 
 namespace System;
@@ -62,11 +60,8 @@ public static partial class ConvertExtensions {
 
   #region Quoted Printable
   public static string ToQuotedPrintableString(byte[] data) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(data != null);
-#else
-      Diagnostics.Debug.Assert(data!=null);
-#endif
+    Against.ArgumentIsNull(data);
+    
     StringBuilder result = new();
     foreach (var b in data) {
       var c = _QP_ENCODING_TABLE[b];
@@ -79,19 +74,15 @@ public static partial class ConvertExtensions {
   }
 
   public static byte[] FromQuotedPrintableString(string data) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(data != null);
-#else
-      Diagnostics.Debug.Assert(data!=null);
-#endif
+    Against.ArgumentIsNull(data);
+
     List<byte> result = new();
-    for (var i = 0; i < data.Length; i++) {
+    for (var i = 0; i < data.Length; ++i) {
       var c = data[i];
-      if (c == '=') {
+      if (c == '=')
         result.Add((byte)(_QP_DECODING_TABLE[data[++i]] * 16 + _QP_DECODING_TABLE[data[++i]]));
-      } else {
+      else
         result.Add((byte)c);
-      }
     }
     return (result.ToArray());
   }
@@ -104,11 +95,8 @@ public static partial class ConvertExtensions {
   /// <param name="data">The data.</param>
   /// <returns>The encoded string.</returns>
   public static string ToBase91String(byte[] data) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(data != null);
-#else
-      Diagnostics.Debug.Assert(data!=null);
-#endif
+    Against.ArgumentIsNull(data);
+
     StringBuilder result = new();
     int b;
     var n = b = 0;
@@ -129,12 +117,14 @@ public static partial class ConvertExtensions {
       result.Append(_BASE91_ENCODING_TABLE[v / 91]);
     }
     // are there still bits left ?
-    if (n > 0) {
-      result.Append(_BASE91_ENCODING_TABLE[b % 91]);
-      if (n > 7 || b > 90)
-        result.Append(_BASE91_ENCODING_TABLE[b / 91]);
-    }
-    return (result.ToString());
+    if (n <= 0)
+      return result.ToString();
+    
+    result.Append(_BASE91_ENCODING_TABLE[b % 91]);
+    if (n > 7 || b > 90)
+      result.Append(_BASE91_ENCODING_TABLE[b / 91]);
+    
+    return result.ToString();
   }
 
   /// <summary>
@@ -143,17 +133,13 @@ public static partial class ConvertExtensions {
   /// <param name="encoded">The encoded string.</param>
   /// <returns>The data.</returns>
   public static byte[] FromBase91String(string encoded) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(encoded != null);
-#else
-      Diagnostics.Debug.Assert(encoded!=null);
-#endif
+    Against.ArgumentIsNull(encoded);
+
     List<byte> result = new();
     int b, n;
     var v = (b = n = 0) - 1;
     foreach (var i in encoded) {
-      byte c;
-      if (!_BASE91_DECODING_TABLE.TryGetValue(i, out c))
+      if (!_BASE91_DECODING_TABLE.TryGetValue(i, out var c))
         continue;
       if (v < 0) {
         v = c;
@@ -169,9 +155,11 @@ public static partial class ConvertExtensions {
       } while (n > 7);
       v = -1;
     }
+    
     if (v + 1 > 0)
       result.Add((byte)(b | v << n));
-    return (result.ToArray());
+    
+    return result.ToArray();
   }
   #endregion
 

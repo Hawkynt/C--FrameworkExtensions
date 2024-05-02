@@ -18,11 +18,9 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
-#if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
+#if NETFRAMEWORK
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Data.Linq {
   internal static partial class TableExtensions {
@@ -34,19 +32,17 @@ namespace System.Data.Linq {
     /// <param name="this">This Table.</param>
     /// <param name="entity">The entity.</param>
     public static void UpdateEntity<TEntity>(this Table<TEntity> @this, TEntity entity) where TEntity : class {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(entity != null);
-#endif
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(entity);
+
       @this.Attach(entity);
       @this.Context.Refresh(RefreshMode.KeepCurrentValues, entity);
     }
 
     public static void Reattach<TEntity>(this Table<TEntity> @this, TEntity entity) where TEntity : class {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(entity != null);
-#endif
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(entity);
+
       foreach (var pi in typeof(TEntity).GetProperties()) {
         if (pi.GetCustomAttributes(typeof(Mapping.AssociationAttribute), false).Length <= 0)
           continue;
@@ -54,7 +50,7 @@ namespace System.Data.Linq {
         // Property is associated to another entity
         var propType = pi.PropertyType;
         // Invoke Empty contructor (set to default value)
-        var ci = propType.GetConstructor(new Type[0]);
+        var ci = propType.GetConstructor(Utilities.Array.Empty<Type>());
         if (ci != null)
           pi.SetValue(entity, ci.Invoke(null), null);
       }

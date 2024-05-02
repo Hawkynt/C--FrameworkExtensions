@@ -26,9 +26,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -39,10 +36,10 @@ using System.Runtime.CompilerServices;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using System.Diagnostics.CodeAnalysis;
 #endif
-
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
+using Guard;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
@@ -98,9 +95,8 @@ public static partial class ObjectExtensions {
   /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
   /// <returns>A collection of KeyValuePairs.</returns>
   public static Dictionary<string, object> GetProperties(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     var result = new Dictionary<string, object>();
     var type = @this.GetType();
     var flags =
@@ -122,10 +118,7 @@ public static partial class ObjectExtensions {
         value = exceptionHandler?.Invoke(e);
       }
 
-      if (result.ContainsKey(prop.Name))
-        result[prop.Name] = value;
-      else
-        result.Add(prop.Name, value);
+      result[prop.Name] = value;
     }
 
     return result;
@@ -141,9 +134,8 @@ public static partial class ObjectExtensions {
   /// <param name="exceptionHandler">The exception handler that returns a value on exceptions, if needed.</param>
   /// <returns>A collection of KeyValuePairs.</returns>
   public static Dictionary<string, object> GetFields(this object @this, bool flattenHierarchy = true, bool allowNonPublic = true, bool specialNames = true, Func<Exception, object> exceptionHandler = null) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
 
     var result = new Dictionary<string, object>();
     var type = @this.GetType();
@@ -163,10 +155,7 @@ public static partial class ObjectExtensions {
         value = exceptionHandler?.Invoke(e);
       }
 
-      if (result.ContainsKey(field.Name))
-        result[field.Name] = value;
-      else
-        result.Add(field.Name, value);
+      result[field.Name] = value;
     }
 
     return result;
@@ -178,10 +167,8 @@ public static partial class ObjectExtensions {
   /// <param name="this">This Object.</param>
   /// <param name="flattenHierarchy">if set to <c>true</c> flattens the hierarchy.</param>
   public static void ResetDefaultValues(this object @this, bool flattenHierarchy = true) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
-
+    Against.ThisIsNull(@this);
+    
     var type = @this.GetType();
     var flags =
       (flattenHierarchy ? BindingFlags.FlattenHierarchy : 0) |
@@ -192,6 +179,7 @@ public static partial class ObjectExtensions {
       var defaultValueAttribute = prop.GetCustomAttributes(typeof(DefaultValueAttribute), flattenHierarchy).Cast<DefaultValueAttribute>().FirstOrDefault();
       if (defaultValueAttribute == null)
         continue;
+      
       prop.SetValue(@this, defaultValueAttribute.Value, null);
     }
   }
@@ -218,9 +206,6 @@ public static partial class ObjectExtensions {
   ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
   /// </returns>
   public static bool TypeIsAnyOf(this object @this, params Type[] types) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(types != null);
-#endif
     if (@this == null)
       return types.Any(t => t == null || !t.IsValueType);
 

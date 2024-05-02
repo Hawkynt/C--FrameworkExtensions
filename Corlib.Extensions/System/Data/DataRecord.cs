@@ -19,13 +19,12 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Data;
 
 public static partial class DataRecordExtensions {
+  
   /// <summary>
   /// Gets the value or default.
   /// </summary>
@@ -34,10 +33,9 @@ public static partial class DataRecordExtensions {
   /// <param name="fieldName">Name of the field.</param>
   /// <returns>The value from the database or the default value.</returns>
   public static TType GetValueOrDefault<TType>(this IDataRecord @this, string fieldName) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fieldName != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(fieldName);
+
     var value = @this[fieldName];
     return value is DBNull or null ? default : (TType)value;
   }
@@ -52,10 +50,9 @@ public static partial class DataRecordExtensions {
   /// The value from the database or the default value.
   /// </returns>
   public static TType GetValueOrDefault<TType>(this IDataRecord @this, string fieldName, TType defaultValue) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(fieldName != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(fieldName);
+
     var value = @this[fieldName];
     return value is DBNull or null ? defaultValue : (TType)value;
   }

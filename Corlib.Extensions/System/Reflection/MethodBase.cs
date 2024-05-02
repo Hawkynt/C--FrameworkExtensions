@@ -22,11 +22,10 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Guard;
 
 namespace System.Reflection;
 
@@ -64,69 +63,70 @@ public static class MethodBaseExtensions {
     /// <returns></returns>
     public string GetCode() {
       var result = "";
-      result += this.GetExpandedOffset(this.offset) + " : " + this.code;
-      if (this.operand != null) {
-        result += " ";
-        switch (this.code.OperandType) {
-          case OperandType.InlineField: {
-            var fOperand = (FieldInfo)this.operand;
-            result += fOperand.FieldType + " " + fOperand.ReflectedType + "::" + fOperand.Name + "";
-            break;
-          }
-          case OperandType.InlineMethod: {
-            if (this.operand is MethodInfo mOperand) {
-              if (!mOperand.IsStatic)
-                result += "instance ";
+      result += $"{this.GetExpandedOffset(this.offset)} : {this.code}";
+      if (this.operand == null)
+        return result;
+      
+      result += " ";
+      switch (this.code.OperandType) {
+        case OperandType.InlineField: {
+          var fOperand = (FieldInfo)this.operand;
+          result += $"{fOperand.FieldType} {fOperand.ReflectedType}::{fOperand.Name}";
+          break;
+        }
+        case OperandType.InlineMethod: {
+          if (this.operand is MethodInfo mOperand) {
+            if (!mOperand.IsStatic)
+              result += "instance ";
 
-              result += mOperand.ReturnType + " " + mOperand.ReflectedType + "::" + mOperand.Name + "()";
-            } else {
-              var cOperand = (ConstructorInfo)this.operand;
-              result += " ";
-              if (!cOperand.IsStatic)
-                result += "instance ";
-              result += "void " + cOperand.ReflectedType + "::" + cOperand.Name + "()";
-            }
-            break;
+            result += $"{mOperand.ReturnType} {mOperand.ReflectedType}::{mOperand.Name}()";
+          } else {
+            var cOperand = (ConstructorInfo)this.operand;
+            result += " ";
+            if (!cOperand.IsStatic)
+              result += "instance ";
+            result += $"void {cOperand.ReflectedType}::{cOperand.Name}()";
           }
-          case OperandType.ShortInlineBrTarget:
-          case OperandType.InlineBrTarget: {
-            result += this.GetExpandedOffset((int)this.operand);
-            break;
-          }
-          case OperandType.InlineType: {
-            result += this.operand;
-            break;
-          }
-          case OperandType.InlineString: {
-            if (this.operand.ToString() == "\r\n")
-              result += "\"\\r\\n\"";
-            else
-              result += "\"" + this.operand + "\"";
-            break;
-          }
-          case OperandType.ShortInlineVar: {
-            result += this.operand.ToString();
-            break;
-          }
-          case OperandType.InlineI:
-          case OperandType.InlineI8:
-          case OperandType.InlineR:
-          case OperandType.ShortInlineI:
-          case OperandType.ShortInlineR: {
-            result += this.operand.ToString();
-            break;
-          }
-          case OperandType.InlineTok: {
-            if (this.operand is Type type)
-              result += type.FullName;
-            else
-              result += "not supported";
-            break;
-          }
-          default: {
+          break;
+        }
+        case OperandType.ShortInlineBrTarget:
+        case OperandType.InlineBrTarget: {
+          result += this.GetExpandedOffset((int)this.operand);
+          break;
+        }
+        case OperandType.InlineType: {
+          result += this.operand;
+          break;
+        }
+        case OperandType.InlineString: {
+          if (this.operand.ToString() == "\r\n")
+            result += "\"\\r\\n\"";
+          else
+            result += "\"" + this.operand + "\"";
+          break;
+        }
+        case OperandType.ShortInlineVar: {
+          result += this.operand.ToString();
+          break;
+        }
+        case OperandType.InlineI:
+        case OperandType.InlineI8:
+        case OperandType.InlineR:
+        case OperandType.ShortInlineI:
+        case OperandType.ShortInlineR: {
+          result += this.operand.ToString();
+          break;
+        }
+        case OperandType.InlineTok: {
+          if (this.operand is Type type)
+            result += type.FullName;
+          else
             result += "not supported";
-            break;
-          }
+          break;
+        }
+        default: {
+          result += "not supported";
+          break;
         }
       }
       return result;
@@ -153,91 +153,77 @@ public static class MethodBaseExtensions {
 
   #endregion
 
-  #region opcode init
+  private static __GetInstructions _getInstructions;
+  private class __GetInstructions {
+    
+    private static OpCode[] _MULTI_BYTE_OP_CODES;
+    private static OpCode[] _SINGLE_BYTE_OP_CODES;
+    
+    /// <summary>
+    /// Loads the opcode list on demand.
+    /// </summary>
+    public __GetInstructions() {
+      _SINGLE_BYTE_OP_CODES = new OpCode[0x100];
+      _MULTI_BYTE_OP_CODES = new OpCode[0x100];
+      var fields = typeof(OpCodes).GetFields();
+      foreach (var info1 in fields) {
+        if (info1.FieldType != typeof(OpCode))
+          continue;
 
-  private static OpCode[] _MULTI_BYTE_OP_CODES;
-  private static OpCode[] _SINGLE_BYTE_OP_CODES;
-  private static bool _isOpcodeListInited;
+        var code1 = (OpCode)info1.GetValue(null);
+        var num2 = (ushort)code1.Value;
+        if (num2 < 0x100)
+          _SINGLE_BYTE_OP_CODES[num2] = code1;
+        else {
+          if ((num2 & 0xff00) != 0xfe00)
+            throw new("Invalid OpCode.");
 
-  /// <summary>
-  /// Checks whether opcodes are loaded and loads them if needed.
-  /// </summary>
-  private static void _CheckOpcodeInit() {
-    if (_isOpcodeListInited)
-      return;
-
-    _InitOpcodeList();
-    _isOpcodeListInited = true;
-  }
-
-  /// <summary>
-  /// Loads the opcode list on demand.
-  /// </summary>
-  private static void _InitOpcodeList() {
-    _SINGLE_BYTE_OP_CODES = new OpCode[0x100];
-    _MULTI_BYTE_OP_CODES = new OpCode[0x100];
-    var fields = typeof(OpCodes).GetFields();
-    foreach (var info1 in fields) {
-      if (info1.FieldType != typeof(OpCode))
-        continue;
-
-      var code1 = (OpCode)info1.GetValue(null);
-      var num2 = (ushort)code1.Value;
-      if (num2 < 0x100)
-        _SINGLE_BYTE_OP_CODES[num2] = code1;
-      else {
-        if ((num2 & 0xff00) != 0xfe00)
-          throw new("Invalid OpCode.");
-
-        _MULTI_BYTE_OP_CODES[num2 & 0xff] = code1;
+          _MULTI_BYTE_OP_CODES[num2 & 0xff] = code1;
+        }
       }
     }
-  }
 
-  #endregion
+    public ILInstruction[] Invoke(MethodBase @this) {
+      Against.ThisIsNull(@this);
+
+      var body = @this.GetMethodBody();
+      if (body == null)
+        return null;
+      
+      var module = @this.Module;
+      var il = body.GetILAsByteArray();
+      var position = 0;
+      List<ILInstruction> result = new();
+      while (position < il.Length) {
+        ILInstruction instruction = new();
+
+        // get the operation code of the current instruction
+        OpCode code;
+        ushort value = il[position++];
+        if (value != 0xfe)
+          code = _SINGLE_BYTE_OP_CODES[value];
+        else {
+          value = il[position++];
+          code = _MULTI_BYTE_OP_CODES[value];
+          value = (ushort)(value | 0xfe00);
+        }
+        instruction.Code = code;
+        instruction.Offset = position - 1;
+
+        // get the operand of the current operation
+        position = _ReadOperand(@this, code, position, il, module, instruction);
+        result.Add(instruction);
+      }
+      return result.ToArray();
+    }
+  }
 
   /// <summary>
   /// Gets the il instructions.
   /// </summary>
-  /// <param name="This">This MethodBase.</param>
+  /// <param name="this">This MethodBase.</param>
   /// <returns>A list of instructions.</returns>
-  public static ILInstruction[] GetInstructions(this MethodBase This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var body = This.GetMethodBody();
-    if (body == null)
-      return null;
-
-    // make sure opcodes are loaded
-    _CheckOpcodeInit();
-
-    var module = This.Module;
-    var il = body.GetILAsByteArray();
-    var position = 0;
-    List<ILInstruction> result = new();
-    while (position < il.Length) {
-      ILInstruction instruction = new();
-
-      // get the operation code of the current instruction
-      OpCode code;
-      ushort value = il[position++];
-      if (value != 0xfe)
-        code = _SINGLE_BYTE_OP_CODES[value];
-      else {
-        value = il[position++];
-        code = _MULTI_BYTE_OP_CODES[value];
-        value = (ushort)(value | 0xfe00);
-      }
-      instruction.Code = code;
-      instruction.Offset = position - 1;
-
-      // get the operand of the current operation
-      position = _ReadOperand(This, code, position, il, module, instruction);
-      result.Add(instruction);
-    }
-    return result.ToArray();
-  }
+  public static ILInstruction[] GetInstructions(this MethodBase @this) => (_getInstructions ??= new()).Invoke(@this);
 
   private static int _ReadOperand(MethodBase This, OpCode code, int position, byte[] il, Module module, ILInstruction instruction) {
     int metadataToken;
@@ -378,7 +364,7 @@ public static class MethodBaseExtensions {
 
   private static byte ReadByte(byte[] il, ref int position) => il[position++];
 
-  private static Single ReadSingle(byte[] il, ref int position) {
+  private static float ReadSingle(byte[] il, ref int position) {
     var result = BitConverter.ToSingle(il, position);
     position += 4;
     return result;
@@ -389,30 +375,28 @@ public static class MethodBaseExtensions {
   /// <summary>
   /// Determines whether this method is compiler generated or not.
   /// </summary>
-  /// <param name="This">This MethodBase.</param>
+  /// <param name="this">This MethodBase.</param>
   /// <returns>
   ///   <c>true</c> if the given method was compiler generated; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsCompilerGenerated(this MethodBase This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var customAttributes = This.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
+  public static bool IsCompilerGenerated(this MethodBase @this) {
+    Against.ThisIsNull(@this);
+
+    var customAttributes = @this.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false);
     return customAttributes.Length > 0;
   }
 
   /// <summary>
   /// Determines whether this method is a getter or setter.
   /// </summary>
-  /// <param name="This">This MethodBase.</param>
+  /// <param name="this">This MethodBase.</param>
   /// <returns>
   ///   <c>true</c> if this is a getter or setter; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsGetterOrSetter(this MethodBase This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var name = This.Name;
-    return (name.StartsWith("get_") || name.StartsWith("set_")) && (This.IsCompilerGenerated() || This.IsSpecialName);
+  public static bool IsGetterOrSetter(this MethodBase @this) {
+    Against.ThisIsNull(@this);
+
+    var name = @this.Name;
+    return (@this.IsSpecialName || @this.IsCompilerGenerated()) && (name.StartsWith("get_") || name.StartsWith("set_"));
   }
 }

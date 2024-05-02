@@ -24,11 +24,7 @@ using System.Net.Sockets;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#else
-using System.Diagnostics;
-#endif
+using Guard;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable once PartialTypeWithSinglePart
@@ -43,9 +39,13 @@ public static partial class IPAddressExtensions {
   /// <returns>
   ///   <c>true</c> if the specified IPAddress is loopback; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsLoopback(this IPAddress @this)
-    => IPAddress.IsLoopback(@this) || new[] { IPAddress.Any, IPAddress.IPv6Any, IPAddress.Loopback, IPAddress.IPv6Loopback }.Contains(@this)
-  ;
+  public static bool IsLoopback(this IPAddress @this) {
+    Against.ThisIsNull(@this);
+    
+    return IPAddress.IsLoopback(@this) 
+           || new[] { IPAddress.Any, IPAddress.IPv6Any, IPAddress.Loopback, IPAddress.IPv6Loopback }.Contains(@this)
+           ;
+  }
 
   /// <summary>
   /// Gets the host name for the given ip-Address.
@@ -53,11 +53,8 @@ public static partial class IPAddressExtensions {
   /// <param name="this">This IPAddress.</param>
   /// <returns>The host name or <c>null</c>.</returns>
   public static string GetHostName(this IPAddress @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#else
-      Debug.Assert(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     try {
       var hostEntry = Dns.GetHostEntry(@this);
       return hostEntry.HostName;
@@ -70,14 +67,13 @@ public static partial class IPAddressExtensions {
   /// <summary>
   /// Gets the host name for the given ip-Address.
   /// </summary>
-  /// <param name="This">This IPAddress.</param>
+  /// <param name="this">This IPAddress.</param>
   /// <returns>The host name or <c>null</c>.</returns>
-  public static async Task<string> GetHostNameAsync(this IPAddress This) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
+  public static async Task<string> GetHostNameAsync(this IPAddress @this) {
+    Against.ThisIsNull(@this);
+
     try {
-      var hostEntry = await Dns.GetHostEntryAsync(This);
+      var hostEntry = await Dns.GetHostEntryAsync(@this);
       return hostEntry.HostName;
     } catch (Exception) {
       return null;
@@ -86,6 +82,8 @@ public static partial class IPAddressExtensions {
 #endif
 
   public static Tuple<bool, string, PingReply, Exception> Ping(this IPAddress @this, uint retryCount = 0, TimeSpan? timeout = null, PingOptions options = null) {
+    Against.ThisIsNull(@this);
+    
     const int ttl = 128;
     const bool dontFragment = true;
 

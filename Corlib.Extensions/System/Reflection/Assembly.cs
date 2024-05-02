@@ -22,11 +22,7 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Guard;
 

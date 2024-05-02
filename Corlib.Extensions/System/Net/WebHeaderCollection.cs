@@ -20,52 +20,49 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Net;
 
 public static partial class WebHeaderCollectionExntenions {
+  
   /// <summary>
   /// Adds a bunch of headers.
   /// </summary>
-  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="this">This WebHeaderCollection.</param>
   /// <param name="headers">The headers.</param>
-  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<string, string>> headers) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(headers != null);
-#endif
+  public static void AddRange(this WebHeaderCollection @this, IEnumerable<KeyValuePair<string, string>> headers) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(headers);
+
     foreach (var kvp in headers)
-      This.Add(kvp.Key, kvp.Value);
+      @this.Add(kvp.Key, kvp.Value);
   }
 
   /// <summary>
   /// Adds a bunch of headers.
   /// </summary>
-  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="this">This WebHeaderCollection.</param>
   /// <param name="headers">The headers.</param>
-  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(headers != null);
-#endif
+  public static void AddRange(this WebHeaderCollection @this, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(headers);
+
     foreach (var kvp in headers)
-      This.Add(kvp.Key, kvp.Value);
+      @this.Add(kvp.Key, kvp.Value);
   }
 
   /// <summary>
   /// Adds a bunch of headers.
   /// </summary>
-  /// <param name="This">This WebHeaderCollection.</param>
+  /// <param name="this">This WebHeaderCollection.</param>
   /// <param name="headers">The headers.</param>
-  public static void AddRange(this WebHeaderCollection This, IEnumerable<KeyValuePair<HttpResponseHeader, string>> headers) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(headers != null);
-#endif
+  public static void AddRange(this WebHeaderCollection @this, IEnumerable<KeyValuePair<HttpResponseHeader, string>> headers) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(headers);
+
     foreach (var kvp in headers)
-      This.Add(kvp.Key, kvp.Value);
+      @this.Add(kvp.Key, kvp.Value);
   }
+  
 }
