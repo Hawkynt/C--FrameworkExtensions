@@ -35,6 +35,13 @@ partial class Against {
 
 <#foreach (var type in new[]{"sbyte", "byte", "short", "ushort", "int", "uint", "long", "ulong", "float", "double", "decimal"}) {#>
 
+  /// <summary>
+  /// Checks the given parameter for 0 and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> = 0.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,6 +51,15 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be zero.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is outside of a given range and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="minimum">The minimum valid value.</param>
+  /// <param name="maximum">The maximum valid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &lt; <paramref name="minimum"/> or <paramref name="value"/> &gt; <paramref name="maximum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,6 +71,15 @@ partial class Against {
       AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, maximum, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is inside of a given range and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="minimum">The minimum invalid value.</param>
+  /// <param name="maximum">The maximum invalid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="minimum"/> &lt;= <paramref name="value"/> &gt;= <paramref name="maximum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,6 +89,14 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be {value} < {minimum} or {value} > {maximum}.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is below a given value and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="minimum">The minimum valid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &lt; <paramref name="minimum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,6 +106,14 @@ partial class Against {
       AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is below or equal a given value and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="minimum">The maximum invalid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &lt;= <paramref name="minimum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,6 +123,14 @@ partial class Against {
       AlwaysThrow.ArgumentBelowOrEqualRangeException(expression ?? nameof(value), value, minimum, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is above a given value and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="maximum">The maximum valid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &gt; <paramref name="maximum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,6 +140,14 @@ partial class Against {
       AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, maximum, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter whether it is above or equal a given value and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="maximum">The minimum invalid value.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &gt;= <paramref name="maximum"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,6 +161,13 @@ partial class Against {
 
 <#foreach (var type in new[]{"sbyte", "short", "int", "long", "float", "double", "decimal"}) {#>
 
+  /// <summary>
+  /// Checks the given parameter for negative values and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &lt; 0.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -113,6 +177,13 @@ partial class Against {
       AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, 0, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for negative values and 0 and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &lt;= 0.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -122,6 +193,13 @@ partial class Against {
       AlwaysThrow.ArgumentBelowOrEqualRangeException(expression ?? nameof(value), value, 0, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for positive values and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &gt; 0.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -131,6 +209,13 @@ partial class Against {
       AlwaysThrow.ArgumentAboveRangeException(expression ?? nameof(value), value, 0, caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for positive values and 0 and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> &gt;= 0.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,6 +229,13 @@ partial class Against {
 
 <#foreach (var type in new[]{"float", "double"}) {#>
   
+  /// <summary>
+  /// Checks the given parameter for infinity and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is either positive or negative infinity.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -153,6 +245,13 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be infinity.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for positive infinity and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is positive infinity.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -162,6 +261,13 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be +infinity.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for negative infinity and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is negative infinity.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,6 +277,13 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be -infinity.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for 'not a number' and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is NaN.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,6 +293,13 @@ partial class Against {
       AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be NaN.", caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for any non-numeric value and throws an <see cref="System.ArgumentOutOfRangeException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is any infinity or NaN.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

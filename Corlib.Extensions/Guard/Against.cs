@@ -34,6 +34,15 @@ using System.Runtime.CompilerServices;
 namespace Guard;
 
 internal static partial class Against {
+
+  /// <summary>
+  /// Checks the given parameter for <see langword="null"/> and throws a <see cref="NullReferenceException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
+  /// <remarks>Call this method only for the parameter attributed with the <see langword="this"/>-keyword.</remarks>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,6 +52,13 @@ internal static partial class Against {
       AlwaysThrow.NullReferenceException(expression ?? nameof(value), caller);
   }
 
+  /// <summary>
+  /// Checks the given parameter for <see langword="null"/> and throws an <see cref="ArgumentNullException"/>.
+  /// </summary>
+  /// <param name="value">The value to check.</param>
+  /// <param name="caller">The calling method.</param>
+  /// <param name="expression">The name or epxression of the value</param>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
   [DebuggerHidden]
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
