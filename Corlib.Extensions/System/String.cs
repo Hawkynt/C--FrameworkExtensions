@@ -22,15 +22,13 @@
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+
 namespace System;
 
 using Collections;
 using Collections.Generic;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using Diagnostics.CodeAnalysis;
-#endif
-#if SUPPORTS_CONTRACTS
-using Diagnostics.Contracts;
 #endif
 using Globalization;
 using IO;
@@ -40,6 +38,7 @@ using Runtime.CompilerServices;
 using Text;
 using Text.RegularExpressions;
 using Guard;
+using static System.Net.Mime.MediaTypeNames;
 
 public static partial class StringExtensions {
 
@@ -202,9 +201,6 @@ public static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="count">The number of characters to remove.</param>
   /// <returns>The new string</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -220,9 +216,6 @@ public static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="count">The number of characters to remove.</param>
   /// <returns>The new string</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -285,9 +278,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="count">The number of chars to get.</param>
   /// <returns>A string with the first n chars.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -307,9 +297,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="count">The number of chars to get.</param>
   /// <returns>A string with the last n chars.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -330,9 +317,6 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This <see cref="string"/></param>
   /// <returns>The first <see cref="char"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -344,9 +328,6 @@ public static partial class StringExtensions {
   /// <param name="this">This <see cref="string"/></param>
   /// <param name="default">The default <see cref="char"/> to return</param>
   /// <returns>The first <see cref="char"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -357,9 +338,6 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This <see cref="string"/></param>
   /// <returns>The last <see cref="char"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -371,9 +349,6 @@ public static partial class StringExtensions {
   /// <param name="this">This <see cref="string"/></param>
   /// <param name="default">The default <see cref="char"/> to return</param>
   /// <returns>The last <see cref="char"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -391,7 +366,9 @@ public static partial class StringExtensions {
   private class __IsInvalidCharacter {
     private readonly HashSet<char> _invalidFileNameChars =
       Path.GetInvalidFileNameChars()
-      .Union("<>|:?*/\\\"")
+      .Union("""
+             <>|:?*/\"
+             """)
       .ToHashSet(c => c)
       ;
 
@@ -461,9 +438,6 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if it matches; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -477,9 +451,6 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>false</c> if it matches; otherwise, <c>true</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -584,9 +555,6 @@ public static partial class StringExtensions {
   /// <param name="comparer">The comparer.</param>
   /// <param name="fields">The fields.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -603,9 +571,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -622,9 +587,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -641,9 +603,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -748,10 +707,6 @@ public static partial class StringExtensions {
       var next = i < length ? @this[i].ToString() : null;
 
       var fieldContentLength = i - lastStartPos - 1;
-#if SUPPORTS_CONTRACTS
-      Contract.Assume(fieldContentLength >= 0 && fieldContentLength < @this.Length);
-#endif
-
       if (isInField) {
 
         // we're currently reading a field
@@ -832,9 +787,6 @@ public static partial class StringExtensions {
   /// <returns>
   /// An new instance of RegularExpression.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -846,18 +798,11 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string MultipleReplace(this string @this, params KeyValuePair<string, object>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, object>>)replacements);
 
-
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -869,9 +814,6 @@ public static partial class StringExtensions {
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
   /// <returns>A new string containing all parts replaced.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -939,7 +881,8 @@ public static partial class StringExtensions {
   public static string ReplaceRegex(this string @this, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(regex);
-    return @this == null ? null : new Regex(regex, regexOptions).Replace(@this, newValue ?? string.Empty);
+    
+    return new Regex(regex, regexOptions).Replace(@this, newValue ?? string.Empty);
   }
 
   /// <summary>
@@ -957,7 +900,8 @@ public static partial class StringExtensions {
   public static string Replace(this string @this, Regex regex, string newValue) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(regex);
-    return @this == null ? null : regex.Replace(@this, newValue);
+    
+    return regex.Replace(@this, newValue);
   }
 
   /// <summary>
@@ -969,13 +913,9 @@ public static partial class StringExtensions {
   /// <param name="count">The number of times this gets replaced.</param>
   /// <param name="comparison">The comparison mode; defaults to CurrentCulture.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
   public static string Replace(this string @this, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(Enum.IsDefined(typeof(StringComparison), comparison));
-#endif
+    Against.UnknownEnumValues(comparison);
+
     if (@this == null || oldValue == null || count < 1)
       return @this;
 
@@ -989,22 +929,13 @@ public static partial class StringExtensions {
     for (var i = count; i > 0;) {
       --i;
 
-#if SUPPORTS_CONTRACTS
-      Contract.Assume(pos < result.Length);
-#endif
       var n = result.IndexOf(oldValue, pos, comparison);
       if (n < 0)
         break;
 
       if (n == 0) {
-#if SUPPORTS_CONTRACTS
-        Contract.Assume(removedLength <= result.Length);
-#endif
-        result = newValue + result.Substring(removedLength);
+        result = newValue + result[removedLength..];
       } else {
-#if SUPPORTS_CONTRACTS
-        Contract.Assume(n + removedLength <= result.Length);
-#endif
         result = result[..n] + newValue + result[(n + removedLength)..];
       }
 
@@ -1024,9 +955,6 @@ public static partial class StringExtensions {
   /// <returns>
   /// A string where the first char was capitalized.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1063,9 +991,6 @@ public static partial class StringExtensions {
   /// <returns>
   /// A string where the first char was capitalized.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1103,9 +1028,6 @@ public static partial class StringExtensions {
   /// <returns>
   /// A string where the first char was capitalized.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1142,9 +1064,6 @@ public static partial class StringExtensions {
   /// <returns>
   /// A string where the first char was capitalized.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1199,9 +1118,6 @@ public static partial class StringExtensions {
   /// <param name="splitter">The splitter.</param>
   /// <param name="count">The maximum count of returned parts, 0 means unlimited.</param>
   /// <returns>The parts.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1295,9 +1211,6 @@ public static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex to use.</param>
   /// <returns>The parts.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1315,9 +1228,6 @@ public static partial class StringExtensions {
   /// <param name="splitter">The splitter.</param>
   /// <param name="options">The options.</param>
   /// <returns>The parts</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1335,9 +1245,6 @@ public static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="culture">The culture to use; defaults to current culture.</param>
   /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1353,9 +1260,6 @@ public static partial class StringExtensions {
   /// <param name="this">This String.</param>
   /// <param name="culture">The culture to use; defaults to current culture.</param>
   /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1404,16 +1308,12 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This ConnectionString.</param>
   /// <returns>The transformed result.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string ToLinq2SqlConnectionString(this string @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     Regex regex = new(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
     return regex.Replace(@this, string.Empty);
   }
@@ -1423,9 +1323,6 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1436,16 +1333,13 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string MsSqlIdentifierEscape(this string @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(!@this.IsNullOrWhiteSpace());
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrWhiteSpace(@this);
+
     return "[" + @this.Replace("]", "]]") + "]";
   }
 
@@ -1456,6 +1350,7 @@ public static partial class StringExtensions {
 #endif
   public static bool StartsWith(this string @this, char what, StringComparer comparer) {
     Against.ThisIsNull(@this);
+    
     return comparer?.Equals(@this.Length > 0 ? @this[0] + string.Empty : string.Empty, what + string.Empty) ?? @this.StartsWith(what);
   }
 
@@ -1468,14 +1363,12 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the string starts with the given character; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
+    
     return @this.Length > 0 && string.Equals(@this[0].ToString(), value.ToString(), stringComparison);
   }
 
@@ -1512,9 +1405,6 @@ public static partial class StringExtensions {
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1552,16 +1442,12 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the string ends with the given character; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     return @this.Length > 0 && string.Equals(@this[^1] + string.Empty, value + string.Empty, stringComparison);
   }
 
@@ -1588,9 +1474,6 @@ public static partial class StringExtensions {
   /// <param name="value">The value.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2032,17 +1915,13 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsSurroundedWith(this string @this, string text, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(text != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(text);
+
     return @this.IsSurroundedWith(text, text, stringComparison);
   }
 
@@ -2056,18 +1935,14 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the given string is surrounded by the given text; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsSurroundedWith(this string @this, string prefix, string postfix, StringComparison stringComparison = StringComparison.CurrentCulture) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-    Contract.Requires(prefix != null);
-    Contract.Requires(postfix != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(prefix);
+    Against.ArgumentIsNull(postfix);
+
     return @this.StartsWith(prefix, stringComparison) && @this.EndsWith(postfix, stringComparison);
   }
 
@@ -2079,9 +1954,6 @@ public static partial class StringExtensions {
   /// <param name="replacement">The replacement.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2089,8 +1961,9 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    if (@this == null || @this.Length < what.Length)
+    if (@this.Length < what.Length)
       return @this;
+    
     return @this.StartsWith(what, stringComparison) ? replacement + @this[what.Length..] : @this;
   }
 
@@ -2102,9 +1975,6 @@ public static partial class StringExtensions {
   /// <param name="replacement">The replacement.</param>
   /// <param name="stringComparison">The string comparison.</param>
   /// <returns></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2112,8 +1982,9 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    if (@this == null || @this.Length < what.Length)
+    if (@this.Length < what.Length)
       return @this;
+    
     return @this.EndsWith(what, stringComparison) ? @this[..^what.Length] + replacement : @this;
   }
 
@@ -2255,9 +2126,6 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the string is <c>null</c> or empty; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2274,9 +2142,6 @@ public static partial class StringExtensions {
   /// <returns>
   ///   <c>true</c> if the string is not <c>null</c> or empty; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2330,20 +2195,11 @@ public static partial class StringExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if SUPPORTS_CONTRACTS
-  [Pure]
-  public static bool IsNotNullOrWhiteSpace(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(true)]
-#endif
-    this string @this) => !string.IsNullOrWhiteSpace(@this);
-#else
   public static bool IsNotNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
       [NotNullWhen(true)]
 #endif
     this string @this) => !IsNullOrWhiteSpace(@this);
-#endif
 
   #endregion
 
@@ -2688,9 +2544,6 @@ public static partial class StringExtensions {
   /// <param name="this">This <see cref="string"/></param>
   /// <param name="defaultValue">The default value</param>
   /// <returns>The given <see cref="string"/> or the given default value.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2717,9 +2570,6 @@ public static partial class StringExtensions {
   /// <param name="this">This <see cref="string"/></param>
   /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
   /// <returns>The given <see cref="string"/> or the given default value.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2746,9 +2596,6 @@ public static partial class StringExtensions {
   /// <param name="this">This <see cref="string"/>.</param>
   /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
   /// <returns>The given <see cref="string"/> or the given default value.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

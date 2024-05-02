@@ -19,11 +19,9 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Text;
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -57,19 +55,15 @@ public static partial class MethodInfoExtensions {
   /// </summary>
   /// <param name="type">The type.</param>
   /// <returns>A tidied version of the type name.</returns>
-  private static string _tidyTypeName(Type type) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(type != null);
-#endif
+  private static string _TidyTypeName(Type type) {
+    Against.ArgumentIsNull(type);
 
     Type elementType;
-    if (type.IsByRef && (elementType = type.GetElementType()) != null) {
-      return _tidyTypeName(elementType);
-    }
+    if (type.IsByRef && (elementType = type.GetElementType()) != null)
+      return _TidyTypeName(elementType);
 
-    if (type.IsArray && (elementType = type.GetElementType()) != null) {
-      return _tidyTypeName(elementType) + "[]";
-    }
+    if (type.IsArray && (elementType = type.GetElementType()) != null)
+      return _TidyTypeName(elementType) + "[]";
 
     if (type == _tpVoid)
       return "void";
@@ -106,7 +100,7 @@ public static partial class MethodInfoExtensions {
 
     var ntype = Nullable.GetUnderlyingType(type);
     if (ntype != null)
-      return _tidyTypeName(ntype) + "?";
+      return _TidyTypeName(ntype) + "?";
 
     var fullName = type.IsGenericType || type.IsGenericParameter ? type.Name : type.FullName;
 
@@ -115,15 +109,15 @@ public static partial class MethodInfoExtensions {
       if (type.IsGenericType) {
         var i = fullName.IndexOf('`');
         if (i > 0)
-          fullName = fullName.Substring(0, i);
+          fullName = fullName[..i];
       }
 
       if (fullName.StartsWith("System."))
-        fullName = fullName.Substring(7);
+        fullName = fullName[7..];
     }
 
     if (type.IsGenericType)
-      return fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_tidyTypeName).ToArray()) + ">";
+      return fullName + "<" + string.Join(", ", type.GetGenericArguments().Select(_TidyTypeName).ToArray()) + ">";
 
     return fullName;
   }
@@ -131,53 +125,53 @@ public static partial class MethodInfoExtensions {
   /// <summary>
   /// Gets the full signature.
   /// </summary>
-  /// <param name="This">This MethodInfo.</param>
+  /// <param name="this">This MethodInfo.</param>
   /// <returns>The full signature of the method.</returns>
-  public static string GetFullSignature(this MethodInfo This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+  public static string GetFullSignature(this MethodInfo @this) {
+    Against.ThisIsNull(@this);
+    
     StringBuilder sb = new();
 
-    if (This.IsPublic)
+    if (@this.IsPublic)
       sb.Append("public ");
-    else if (This.IsPrivate)
+    else if (@this.IsPrivate)
       sb.Append("private ");
-    else if (This.IsAssembly)
+    else if (@this.IsAssembly)
       sb.Append("internal ");
-    else if (This.IsFamily)
+    else if (@this.IsFamily)
       sb.Append("protected ");
 
-    if (This.IsStatic)
+    if (@this.IsStatic)
       sb.Append("static ");
-    if (This.IsFinal)
+    if (@this.IsFinal)
       sb.Append("final ");
-    if (This.IsVirtual)
+    if (@this.IsVirtual)
       sb.Append("virtual ");
-    if (This.IsAbstract)
+    if (@this.IsAbstract)
       sb.Append("abstract ");
 
-    sb.Append(_tidyTypeName(This.ReturnType));
+    sb.Append(_TidyTypeName(@this.ReturnType));
     sb.Append(' ');
-    sb.Append(This.DeclaringType.ToString());
+    sb.Append(@this.DeclaringType);
     sb.Append('.');
-    sb.Append(This.Name);
-    var types = This.IsGenericMethod ? This.GetGenericArguments() : null;
+    sb.Append(@this.Name);
+    var types = @this.IsGenericMethod ? @this.GetGenericArguments() : null;
     if (types != null) {
       sb.Append('<');
-      for (var j = 0; j < types.Length; j++) {
+      for (var j = 0; j < types.Length; ++j) {
         if (j > 0)
           sb.Append(", ");
-        sb.Append(_tidyTypeName(types[j]));
+        
+        sb.Append(_TidyTypeName(types[j]));
       }
       sb.Append('>');
     }
 
     sb.Append('(');
 
-    var pars = This.GetParameters();
+    var pars = @this.GetParameters();
     var lastI = pars.Length - 1;
-    for (var i = 0; i < pars.Length; i++) {
+    for (var i = 0; i < pars.Length; ++i) {
       if (i > 0)
         sb.Append(", ");
 
@@ -196,7 +190,7 @@ public static partial class MethodInfoExtensions {
       if (i == lastI && paramType.IsArray)
         sb.Append("params ");
 
-      sb.Append(_tidyTypeName(paramType) + ' ');
+      sb.Append(_TidyTypeName(paramType) + ' ');
 
       sb.Append(p.Name);
       if (p.IsOptional) {

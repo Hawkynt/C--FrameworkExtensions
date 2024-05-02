@@ -22,10 +22,9 @@
 #endregion
 
 using System.ComponentModel;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
+using Guard;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -42,14 +41,12 @@ public static class MemberInfoExtensions {
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>The attribute if present; otherwise, throws exception.</returns>
   public static TAttribute GetCustomAttribute<TAttribute>(this MemberInfo @this, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-    TAttribute result;
-    if (!TryGetCustomAttribute(@this, out result, inherit, inheritInterfaces))
+    Against.ThisIsNull(@this);
+
+    if (!TryGetCustomAttribute(@this, out TAttribute result, inherit, inheritInterfaces))
       throw new NullReferenceException();
 
-    return (result);
+    return result;
   }
 
   /// <summary>
@@ -65,11 +62,10 @@ public static class MemberInfoExtensions {
   /// The attribute's value if present; otherwise, throws exception.
   /// </returns>
   public static TValue GetCustomAttributeValue<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(valueGetter != null);
-#endif
-    return (valueGetter(GetCustomAttribute<TAttribute>(@this, inherit, inheritInterfaces)));
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(valueGetter);
+
+    return valueGetter(GetCustomAttribute<TAttribute>(@this, inherit, inheritInterfaces));
   }
 
   /// <summary>
@@ -77,15 +73,14 @@ public static class MemberInfoExtensions {
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
+  /// <param name="defaultValue">The used default value</param>
   /// <param name="inherit">if set to <c>true</c> inherits attributes.</param>
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>The attribute if present; otherwise, the default value.</returns>
-  public static TAttribute GetCustomAttributeOrDefault<TAttribute>(this MemberInfo @this, TAttribute defaultValue = default(TAttribute), bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-    TAttribute result;
-    return TryGetCustomAttribute(@this, out result, inherit, inheritInterfaces) ? result : defaultValue;
+  public static TAttribute GetCustomAttributeOrDefault<TAttribute>(this MemberInfo @this, TAttribute defaultValue = default, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
+    Against.ThisIsNull(@this);
+
+    return TryGetCustomAttribute(@this, out TAttribute result, inherit, inheritInterfaces) ? result : defaultValue;
   }
 
   /// <summary>
@@ -100,13 +95,11 @@ public static class MemberInfoExtensions {
   /// <returns>
   /// The attribute's value if present; otherwise, the default value.
   /// </returns>
-  public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, TValue defaultValue = default(TValue), bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(valueGetter != null);
-#endif
-    TAttribute result;
-    return TryGetCustomAttribute(@this, out result, inherit, inheritInterfaces) ? valueGetter(result) : defaultValue;
+  public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, TValue defaultValue = default, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(valueGetter);
+
+    return TryGetCustomAttribute(@this, out TAttribute result, inherit, inheritInterfaces) ? valueGetter(result) : defaultValue;
   }
 
   /// <summary>
@@ -118,12 +111,10 @@ public static class MemberInfoExtensions {
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>The attribute if present; otherwise, the generated default value.</returns>
   public static TAttribute GetCustomAttributeOrDefault<TAttribute>(this MemberInfo @this, Func<TAttribute> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(defaultValueFactory != null);
-#endif
-    TAttribute result;
-    return TryGetCustomAttribute(@this, out result, inherit, inheritInterfaces) ? result : defaultValueFactory();
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(defaultValueFactory);
+
+    return TryGetCustomAttribute(@this, out TAttribute result, inherit, inheritInterfaces) ? result : defaultValueFactory();
   }
 
   /// <summary>
@@ -140,13 +131,11 @@ public static class MemberInfoExtensions {
   /// The attribute's value if present; otherwise, the default value.
   /// </returns>
   public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, Func<TValue> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(valueGetter != null);
-      Contract.Requires(defaultValueFactory != null);
-#endif
-    TAttribute result;
-    return TryGetCustomAttribute(@this, out result, inherit, inheritInterfaces) ? valueGetter(result) : defaultValueFactory();
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(valueGetter);
+    Against.ArgumentIsNull(defaultValueFactory);
+
+    return TryGetCustomAttribute(@this, out TAttribute result, inherit, inheritInterfaces) ? valueGetter(result) : defaultValueFactory();
   }
 
   /// <summary>
@@ -159,17 +148,16 @@ public static class MemberInfoExtensions {
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns><c>true</c> if the given attribute was present; otherwise, <c>false</c>.</returns>
   public static bool TryGetCustomAttribute<TAttribute>(this MemberInfo @this, out TAttribute result, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var results = GetCustomAttributes<TAttribute>(@this, inherit, inheritInterfaces);
     if (results.Length > 0) {
       result = results[0];
-      return (true);
+      return true;
     }
 
-    result = default(TAttribute);
-    return (false);
+    result = default;
+    return false;
   }
 
   /// <summary>
@@ -183,10 +171,9 @@ public static class MemberInfoExtensions {
   /// The custom attributes of the given type.
   /// </returns>
   public static TAttribute[] GetCustomAttributes<TAttribute>(this MemberInfo @this, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-    return (@this.GetCustomAttributes(typeof(TAttribute), inherit).Union(inheritInterfaces ? @this.DeclaringType.GetInterfaces().Select(i => i.GetMember(@this.Name).FirstOrDefault()).Where(i => i != null).SelectMany(m => m.GetCustomAttributes(typeof(TAttribute), inherit)) : new object[0]).Cast<TAttribute>().ToArray());
+    Against.ThisIsNull(@this);
+
+    return @this.GetCustomAttributes(typeof(TAttribute), inherit).Union(inheritInterfaces ? @this.DeclaringType.GetInterfaces().Select(i => i.GetMember(@this.Name).FirstOrDefault()).Where(i => i != null).SelectMany(m => m.GetCustomAttributes(typeof(TAttribute), inherit)) : new object[0]).Cast<TAttribute>().ToArray();
   }
 
   #region designer-relevant attributes

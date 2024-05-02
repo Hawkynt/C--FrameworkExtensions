@@ -19,9 +19,6 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS 
-using System.Diagnostics.Contracts;
-#endif
 using System.Globalization;
 using System.Linq;
 #if SUPPORTS_INLINING
@@ -42,9 +39,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -55,9 +49,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -68,9 +59,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if it is; otherwise, <see langword="false"/></returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -81,9 +69,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a digit; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -94,9 +79,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not a digit; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -107,9 +89,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is upper-case; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -120,9 +99,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not upper-case; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -133,9 +109,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is lower-case; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -146,9 +119,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not lower-case; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -159,9 +129,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a letter; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -172,9 +139,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not a letter; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -185,9 +149,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns>The upper-case <see cref="Char"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -199,9 +160,6 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <param name="culture">The <see cref="CultureInfo"/> to use.</param>
   /// <returns>The upper-case <see cref="Char"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -212,9 +170,6 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <returns>The lower-case <see cref="Char"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -226,9 +181,6 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <param name="culture">The <see cref="CultureInfo"/> to use.</param>
   /// <returns>The lower-case <see cref="Char"/>.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -241,9 +193,6 @@ public static partial class CharExtensions {
   /// <param name="list">The list.</param>
   /// <returns><see langword="true"/> if the given <see cref="Char"/> is in the list; otherwise, <see langword="false"/>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -256,9 +205,6 @@ public static partial class CharExtensions {
   /// <param name="list">The list.</param>
   /// <returns><see langword="true"/> if the given <see cref="Char"/> is in the list; otherwise, <see langword="false"/>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -270,9 +216,6 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char"/>.</param>
   /// <param name="count">The count.</param>
   /// <returns>A new string containing the given <see cref="Char"/> the specified times.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

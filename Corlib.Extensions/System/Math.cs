@@ -19,9 +19,6 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
@@ -62,9 +59,6 @@ public static partial class MathEx {
     return current;
   }
  
-#if SUPPORTS_CONTRACTS
-[Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -74,9 +68,6 @@ public static partial class MathEx {
   public static float Floor(this float @this) => (float)Math.Floor(@this);
 #endif
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -86,9 +77,6 @@ public static partial class MathEx {
   public static float Ceiling(this float @this) => (float)Math.Ceiling(@this);
 #endif
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -98,9 +86,9 @@ public static partial class MathEx {
   public static float Truncate(this float @this) => (float)Math.Truncate(@this);
 #endif
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+  /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+  /// <param name="this">A number to be rounded.</param>
+  /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -110,16 +98,16 @@ public static partial class MathEx {
   public static float Round(this float @this) => (float)Math.Round(@this);
 #endif
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+  /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+  /// <param name="this">A number to be rounded.</param>
+  /// <param name="digits">The number of decimal places in the return value.</param>
+  /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static float Round(this float @this, int digits) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(digits >= 0 && digits <= 15);
-#endif
+    Against.ValuesOutOfRange(@this, 0, 15);
+
 #if SUPPORTS_MATHF
     return MathF.Round(@this, digits);
 #else
@@ -127,9 +115,10 @@ public static partial class MathEx {
 #endif
   }
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+  /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+  /// <param name="this">A number to be rounded.</param>
+  /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+  /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -139,16 +128,17 @@ public static partial class MathEx {
   public static float Round(this float @this, MidpointRounding method) => (float)Math.Round(@this, method);
 #endif
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
+  /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+  /// <param name="this">A number to be rounded.</param>
+  /// <param name="digits">The number of decimal places in the return value.</param>
+  /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+  /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static float Round(this float @this, int digits, MidpointRounding method) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(digits >= 0 && digits <= 15);
-#endif
+    Against.ValuesOutOfRange(@this, 0, 15);
+
 #if SUPPORTS_MATHF
     return MathF.Round(@this, digits, method);
 #else
@@ -156,25 +146,43 @@ public static partial class MathEx {
 #endif
   }
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+#if SUPPORTS_MATHF
+  public static float Log(this float @this, float @base) => MathF.Log(@this, @base);
+#else
+  public static float Log(this float @this, float @base) => (float)Math.Log(@this, @base);
+#endif
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static double Log(this double @this, double @base) => Math.Log(@this, @base);
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+#if SUPPORTS_MATHF
+  public static float Log2(this float @this) => MathF.Log(@this, 2);
+#else
+  public static float Log2(this float @this) => (float)Math.Log(@this, 2);
+#endif
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static double Log2(this double @this) => Math.Log(@this, 2);
 
-#if SUPPORTS_CONTRACTS
-  [Pure]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+#if SUPPORTS_MATHF
+  public static float Exp(this float @this) => MathF.Exp(@this);
+#else
+  public static float Exp(this float @this) => (float)Math.Exp(@this);
+#endif
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -185,9 +193,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -198,9 +203,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -211,9 +213,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -228,9 +227,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -241,9 +237,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -257,9 +250,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -270,9 +260,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -286,9 +273,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -299,9 +283,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -312,9 +293,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -325,9 +303,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -338,9 +313,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -351,9 +323,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -364,9 +333,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -377,9 +343,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -390,9 +353,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -403,9 +363,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -416,9 +373,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -429,9 +383,6 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

@@ -19,9 +19,6 @@
 */
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -273,9 +270,7 @@ public static partial class PathExtensions {
 
     var path = baseDirectory ?? Path.GetTempPath();
     name = Path.GetFileName(name);
-#if SUPPORTS_CONTRACTS
-    Contract.Assert(name != null, "Filename went <null>");
-#endif
+
     var fullName = Path.Combine(path, name);
 
     // if we could use the given name
@@ -360,9 +355,6 @@ public static partial class PathExtensions {
 
         tempName.Append(SUFFIX);
         result = Path.Combine(path, tempName.ToString());
-#if SUPPORTS_CONTRACTS
-        Contract.Assume(!string.IsNullOrEmpty(result));
-#endif
       } while (!TryCreateDirectory(result));
 
       return result;
@@ -370,15 +362,9 @@ public static partial class PathExtensions {
 
     // a name is given, so try to accommodate this
     name = Path.GetFileName(name);
-#if SUPPORTS_CONTRACTS
-    Contract.Assert(name != null, "DirectoryName went <null>");
-#endif
     var fullName = Path.Combine(path, name);
 
     // if we could use the given name, return it
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(!string.IsNullOrEmpty(fullName));
-#endif
     if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
       return fullName;
 
@@ -397,9 +383,8 @@ public static partial class PathExtensions {
   ///   <c>true</c> when the folder didn't exist and was successfully created; otherwise, <c>false</c>.
   /// </returns>
   public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(!string.IsNullOrEmpty(pathName));
-#endif
+    Against.ArgumentIsNullOrEmpty(pathName);
+    
     if (Directory.Exists(pathName))
       return false;
 
@@ -477,16 +462,13 @@ public static partial class PathExtensions {
       var value = this._fullPath;
       // extract server
       if (value != null && value.StartsWith(_pathSeparator + string.Empty + _pathSeparator)) {
-#if SUPPORTS_CONTRACTS
-        Contract.Assume(value.Length > 2);
-#endif
         var idx = value.IndexOf(_pathSeparator, 2);
         if (idx < 0) {
-          this._server = value.Substring(2);
+          this._server = value[2..];
           value = null;
         } else {
           this._server = value.Substring(2, idx - 2);
-          value = value.Substring(idx);
+          value = value[idx..];
         }
       } else {
         this._server = null;
@@ -494,16 +476,13 @@ public static partial class PathExtensions {
 
       // extract share
       if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
-#if SUPPORTS_CONTRACTS
-        Contract.Assume(value.Length > 1);
-#endif
         var idx = value.IndexOf(_pathSeparator, 1);
         if (idx < 0) {
-          this._share = value.Substring(1);
+          this._share = value[1..];
           value = null;
         } else {
           this._share = value.Substring(1, idx - 1);
-          value = value.Substring(idx + 1);
+          value = value[(idx + 1)..];
         }
       } else {
         this._share = null;
@@ -519,12 +498,12 @@ public static partial class PathExtensions {
 
       var idx = value.IndexOf(_userSeparator);
       if (idx >= 0) {
-        var userAndOrPassword = value.Substring(0, idx);
-        value = value.Substring(idx + 1);
+        var userAndOrPassword = value[..idx];
+        value = value[(idx + 1)..];
         idx = userAndOrPassword.IndexOf(_passSeparator);
         if (idx >= 0) {
-          user = userAndOrPassword.Substring(0, idx);
-          password = userAndOrPassword.Substring(idx + 1);
+          user = userAndOrPassword[..idx];
+          password = userAndOrPassword[(idx + 1)..];
         } else {
           user = userAndOrPassword;
         }
