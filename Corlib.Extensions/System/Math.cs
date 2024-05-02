@@ -29,6 +29,7 @@ using System.Collections.Generic;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
+using Guard;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast
@@ -37,8 +38,32 @@ namespace System;
 
 public static partial class MathEx {
 
+  /// <summary>
+  /// Calculate a more accurate square root, see http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
+  /// </summary>
+  /// <param name="this">The x.</param>
+  /// <param name="epsilon">The epsilon.</param>
+  /// <returns>The square root of x</returns>
+  public static decimal Sqrt(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValues(@this);
+    
+    decimal current = (decimal)Math.Sqrt((double)@this), previous;
+    const decimal factor = 2m;
+    const decimal zero = decimal.Zero;
+
+    do {
+      previous = current;
+      if (previous == zero)
+        return zero;
+      current = (previous + @this / previous) / factor;
+    }
+    while (Math.Abs(previous - current) > epsilon);
+    
+    return current;
+  }
+ 
 #if SUPPORTS_CONTRACTS
-  [Pure]
+[Pure]
 #endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
