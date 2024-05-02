@@ -20,10 +20,13 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
+using System.Diagnostics;
+#if SUPPORTS_INLINING
+using System.Runtime.CompilerServices;
+#endif
+
+using Guard;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -31,11 +34,6 @@ using System.Linq;
 
 namespace System.ComponentModel;
 
-using Diagnostics;
-using Guard;
-#if SUPPORTS_INLINING
-using Runtime.CompilerServices;
-#endif
 
 public static partial class BindingListExtensions {
 
@@ -62,9 +60,8 @@ public static partial class BindingListExtensions {
   /// <param name="this">This BindingList.</param>
   /// <returns>A copy of the list.</returns>
   public static TItem[] ToArray<TItem>(this BindingList<TItem> @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     var result = new TItem[@this.Count];
     @this.CopyTo(result, 0);
     return result;
@@ -77,10 +74,9 @@ public static partial class BindingListExtensions {
   /// <param name="this">This BindingList.</param>
   /// <param name="items">The items.</param>
   public static void AddRange<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+    
     Overhaul(@this, list => {
       foreach (var item in items)
         list.Add(item);
@@ -94,10 +90,9 @@ public static partial class BindingListExtensions {
   /// <param name="this">This BindingList.</param>
   /// <param name="items">The items.</param>
   public static void MoveToFront<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
     Overhaul(@this, list => {
       foreach (var item in items.Reverse()) {
         list.Remove(item);
@@ -113,10 +108,9 @@ public static partial class BindingListExtensions {
   /// <param name="this">This BindingList.</param>
   /// <param name="items">The items.</param>
   public static void MoveToBack<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
     Overhaul(@this, list => {
       foreach (var item in items) {
         list.Remove(item);
@@ -133,10 +127,9 @@ public static partial class BindingListExtensions {
   /// <param name="items">The items.</param>
   /// <param name="delta">The delta.</param>
   public static void MoveRelative<TItem>(this BindingList<TItem> @this, IEnumerable<TItem> items, int delta) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
     if (delta == 0)
       return;
 
@@ -163,13 +156,7 @@ public static partial class BindingListExtensions {
 
           list.RemoveAt(index);
           var newIndex = index + delta;
-          if (newIndex > end) {
-#if SUPPORTS_CONTRACTS
-              Contract.Assume(end >= 0);
-#endif
-            list.Insert(end--, item);
-          } else
-            list.Insert(newIndex, item);
+          list.Insert(newIndex > end ? end-- : newIndex, item);
         }
       }
     });
@@ -182,10 +169,9 @@ public static partial class BindingListExtensions {
   /// <param name="this">This BindingList.</param>
   /// <param name="items">The items.</param>
   public static void ReplaceAll<T>(this BindingList<T> @this, IEnumerable<T> items) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(items != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
     Overhaul(@this, list => {
       list.Clear();
       foreach (var item in items)
@@ -202,6 +188,11 @@ public static partial class BindingListExtensions {
   /// <param name="keyGetter">The key getter to compare what items are added/removed/updated.</param>
   /// <param name="itemUpdateMethod">The item update method; takes the old and new item reference and returns the updated item.</param>
   public static void RefreshAll<T>(this BindingList<T> @this, IEnumerable<T> items, Func<T, string> keyGetter, Func<T, T, T> itemUpdateMethod) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+    Against.ArgumentIsNull(keyGetter);
+    Against.ArgumentIsNull(itemUpdateMethod);
+    
     Overhaul(@this, list => {
       var oldKeys = list.ToDictionary(keyGetter);
       var newKeys = items.ToDictionary(keyGetter);
@@ -229,10 +220,9 @@ public static partial class BindingListExtensions {
   }
 
   public static int RemoveWhere<TItem>(this BindingList<TItem> @this, Predicate<TItem> selector) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(selector != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(selector);
+
     var result = 0;
     var items = @this.Where(i => selector(i)).ToArray();
     foreach (var item in items) {
@@ -244,10 +234,9 @@ public static partial class BindingListExtensions {
   }
 
   public static void Overhaul<TItem>(this BindingList<TItem> @this, Action<BindingList<TItem>> action) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(action != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
+
     var raisesEvents = @this.RaiseListChangedEvents;
     try {
       @this.RaiseListChangedEvents = false;

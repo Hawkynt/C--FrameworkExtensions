@@ -25,9 +25,6 @@ using System.Diagnostics;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using System.Diagnostics.CodeAnalysis;
 #endif
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.IO;
 using System.IO.Compression;
 #if SUPPORTS_INLINING
@@ -125,9 +122,8 @@ public static partial class ArrayExtensions {
     /// <returns>The item at the given index.</returns>
     public TItem this[int index] {
       get {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(index < this.Length);
-#endif
+        Against.IndexOutOfRange(index, this.Length);
+        
         return this._source[index + this._start];
       }
     }
@@ -207,15 +203,13 @@ public static partial class ArrayExtensions {
     /// <returns>The item at the given index</returns>
     public new TItem this[int index] {
       get {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(index < this.Length);
-#endif
+        Against.IndexOutOfRange(index, this.Length);
+
         return this._source[index + this._start];
       }
       set {
-#if SUPPORTS_CONTRACTS
-        Contract.Requires(index < this.Length);
-#endif
+        Against.IndexOutOfRange(index, this.Length);
+
         this._source[index + this._start] = value;
       }
     }
@@ -862,11 +856,9 @@ public static partial class ArrayExtensions {
   /// <returns></returns>
   public static TItem[] Range<TItem>(this TItem[] @this, int startIndex, int count) {
     Against.ThisIsNull(@this);
-
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(startIndex + count <= @this.Length);
-    Contract.Requires(startIndex >= 0);
-#endif
+    Against.IndexBelowZero(startIndex);
+    Against.CountOutOfRange(count, @this.Length - startIndex);
+    
     var result = new TItem[count];
     Array.Copy(@this, startIndex, result, 0, count);
     return result;
@@ -1131,9 +1123,6 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
   /// <returns>An array where all values are inverted.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
   public static TItem[] Reverse<TItem>(this TItem[] @this) {
     Against.ThisIsNull(@this);
 
@@ -1154,9 +1143,6 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1174,9 +1160,6 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if the array contains that value; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
   public static bool Contains(this Array @this, object value) {
     Against.ThisIsNull(@this);
 
@@ -1193,9 +1176,6 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Array.</param>
   /// <returns>An array of objects holding the contents.</returns>
-#if SUPPORTS_CONTRACTS
-  [Pure]
-#endif
   public static object[] ToArray(this Array @this) {
     Against.ThisIsNull(@this);
 
@@ -2141,10 +2121,10 @@ public static partial class ArrayExtensions {
     => IndexOfOrDefault(@this, searchString, offset, _GetInvalidIndex);
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int defaultValue)
-    => IndexOfOrDefault(@this, searchString, 0, (_, __) => defaultValue);
+    => IndexOfOrDefault(@this, searchString, 0, (_, _) => defaultValue);
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, Func<int> defaultValueFunc)
-    => IndexOfOrDefault(@this, searchString, 0, (_, __) => defaultValueFunc());
+    => IndexOfOrDefault(@this, searchString, 0, (_, _) => defaultValueFunc());
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, Func<byte[], int> defaultValueFunc)
     => IndexOfOrDefault(@this, searchString, 0, (t, _) => defaultValueFunc(t));
@@ -2153,10 +2133,10 @@ public static partial class ArrayExtensions {
     => IndexOfOrDefault(@this, searchString, 0, defaultValueFunc);
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, int defaultValue)
-    => IndexOfOrDefault(@this, searchString, offset, (_, __) => defaultValue);
+    => IndexOfOrDefault(@this, searchString, offset, (_, _) => defaultValue);
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<int> defaultValueFunc)
-    => IndexOfOrDefault(@this, searchString, offset, (_, __) => defaultValueFunc());
+    => IndexOfOrDefault(@this, searchString, offset, (_, _) => defaultValueFunc());
 
   public static int IndexOfOrDefault(this byte[] @this, byte[] searchString, int offset, Func<byte[], int> defaultValueFunc)
     => IndexOfOrDefault(@this, searchString, offset, (t, _) => defaultValueFunc(t));
@@ -2174,7 +2154,7 @@ public static partial class ArrayExtensions {
     if (searchStringLength < 1)
       return 0;
 
-    if ((dataStringLength + offset) < searchStringLength)
+    if (dataStringLength + offset < searchStringLength)
       return _INDEX_WHEN_NOT_FOUND;
 
     // ReSharper disable once JoinDeclarationAndInitializer

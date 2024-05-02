@@ -20,9 +20,6 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
@@ -149,6 +146,8 @@ public static partial class DirectoryInfoExtensions {
   /// Ensure that you have appropriate backups or safeguards before using this method to prevent data loss.
   /// </remarks>
   public static void Clear(this DirectoryInfo @this) {
+    Against.ThisIsNull(@this);
+    
     foreach (var item in @this.EnumerateFileSystemInfos())
       switch (item) {
         case FileInfo file:
@@ -168,9 +167,8 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="this">This DirectoryInfo.</param>
   /// <returns>The number of bytes in this directory</returns>
   public static long GetSize(this DirectoryInfo @this) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+    
     // if less than 4 cores, use sequential approach
     if (Environment.ProcessorCount < 4)
       return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
@@ -179,13 +177,10 @@ public static partial class DirectoryInfoExtensions {
     long[] itemsLeftAndResult = { 1L, 0L };
     using AutoResetEvent pushNotification = new(false);
 
-    void ExecuteAsync(DirectoryInfo directory) {
-      if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
-        return;
+    ExecuteAsync(@this);
+    pushNotification.WaitOne();
 
-      var call = WorkOnDirectory;
-      call.BeginInvoke(directory, call.EndInvoke, null);
-    }
+    return itemsLeftAndResult[1];
 
     void WorkOnDirectory(DirectoryInfo directory) {
       try {
@@ -210,10 +205,13 @@ public static partial class DirectoryInfoExtensions {
       }
     }
 
-    ExecuteAsync(@this);
-    pushNotification.WaitOne();
+    void ExecuteAsync(DirectoryInfo directory) {
+      if (ThreadPool.QueueUserWorkItem(_ => WorkOnDirectory(directory)))
+        return;
 
-    return itemsLeftAndResult[1];
+      var call = WorkOnDirectory;
+      call.BeginInvoke(directory, call.EndInvoke, null);
+    }
   }
 
   /// <summary>
@@ -226,6 +224,8 @@ public static partial class DirectoryInfoExtensions {
   /// drive letter is converted to a UNC or network path. If the
   /// originalPath cannot be converted, it is returned unchanged.</returns>
   public static DirectoryInfo GetRealPath(this DirectoryInfo @this) {
+    Against.ThisIsNull(@this);
+    
     var originalPath = @this.FullName;
 
     // look for the {LETTER}: combination ...
@@ -257,7 +257,11 @@ public static partial class DirectoryInfoExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) => @this.GetDirectories("*.*", searchOption);
+  public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) {
+    Against.ThisIsNull(@this);
+    
+    return @this.GetDirectories("*.*", searchOption);
+  }
 
   /// <summary>
   /// Enumerates the file system infos.
@@ -320,78 +324,75 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Tries to set the last write time.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="lastWriteTimeUtc">The date&amp;time.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-  public static bool TrySetLastWriteTimeUtc(this DirectoryInfo This, DateTime lastWriteTimeUtc) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    This.Refresh();
+  public static bool TrySetLastWriteTimeUtc(this DirectoryInfo @this, DateTime lastWriteTimeUtc) {
+    Against.ThisIsNull(@this);
 
-    if (!This.Exists)
+    @this.Refresh();
+
+    if (!@this.Exists)
       return false;
 
-    if (This.LastWriteTimeUtc == lastWriteTimeUtc)
+    if (@this.LastWriteTimeUtc == lastWriteTimeUtc)
       return true;
 
     try {
-      This.LastWriteTimeUtc = lastWriteTimeUtc;
+      @this.LastWriteTimeUtc = lastWriteTimeUtc;
       return true;
     } catch (Exception) {
-      return This.LastWriteTimeUtc == lastWriteTimeUtc;
+      return @this.LastWriteTimeUtc == lastWriteTimeUtc;
     }
   }
 
   /// <summary>
   /// Tries to set the creation time.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="creationTimeUtc">The date&amp;time.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-  public static bool TrySetCreationTimeUtc(this DirectoryInfo This, DateTime creationTimeUtc) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    This.Refresh();
+  public static bool TrySetCreationTimeUtc(this DirectoryInfo @this, DateTime creationTimeUtc) {
+    Against.ThisIsNull(@this);
 
-    if (!This.Exists)
+    @this.Refresh();
+
+    if (!@this.Exists)
       return false;
 
-    if (This.CreationTimeUtc == creationTimeUtc)
+    if (@this.CreationTimeUtc == creationTimeUtc)
       return true;
 
     try {
-      This.CreationTimeUtc = creationTimeUtc;
+      @this.CreationTimeUtc = creationTimeUtc;
       return true;
     } catch (Exception) {
-      return This.CreationTimeUtc == creationTimeUtc;
+      return @this.CreationTimeUtc == creationTimeUtc;
     }
   }
 
   /// <summary>
   /// Tries to set the attributes.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="attributes">The attributes.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
-  public static bool TrySetAttributes(this DirectoryInfo This, FileAttributes attributes) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    This.Refresh();
+  public static bool TrySetAttributes(this DirectoryInfo @this, FileAttributes attributes) {
+    Against.ThisIsNull(@this);
 
-    if (!This.Exists)
+    @this.Refresh();
+
+    if (!@this.Exists)
       return false;
 
-    if (This.Attributes == attributes)
+    if (@this.Attributes == attributes)
       return true;
 
     try {
-      This.Attributes = attributes;
+      @this.Attributes = attributes;
       return true;
     } catch (Exception) {
-      return This.Attributes == attributes;
+      return @this.Attributes == attributes;
     }
   }
 
@@ -406,9 +407,8 @@ public static partial class DirectoryInfoExtensions {
   ///   <c>true</c> on success; otherwise, <c>false</c>.
   /// </returns>
   public static bool TryCreate(this DirectoryInfo @this, bool recursive) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     if (@this.Exists)
       return true;
 
@@ -432,9 +432,8 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="recursive">if set to <c>true</c> deletes recursive.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool TryDelete(this DirectoryInfo @this, bool recursive = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     if (!@this.Exists)
       return true;
 
@@ -470,7 +469,7 @@ public static partial class DirectoryInfoExtensions {
 #if SUPPORTS_PATH_COMBINE_ARRAYS
   public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #else
-    public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
+  public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
 #endif
 
   /// <summary>
@@ -485,7 +484,7 @@ public static partial class DirectoryInfoExtensions {
 #if SUPPORTS_PATH_COMBINE_ARRAYS
   public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
 #else
-    public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
+  public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
 #endif
 
   /// <summary>
@@ -515,19 +514,18 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Creates the directory recursively.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
-  public static void CreateDirectory(this DirectoryInfo This) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    if (This.Parent != null && !This.Exists)
-      CreateDirectory(This.Parent);
+  /// <param name="this">This DirectoryInfo.</param>
+  public static void CreateDirectory(this DirectoryInfo @this) {
+    Against.ThisIsNull(@this);
 
-    if (This.Exists)
+    if (@this.Parent != null && !@this.Exists)
+      CreateDirectory(@this.Parent);
+
+    if (@this.Exists)
       return;
 
-    This.Create();
-    This.Refresh();
+    @this.Create();
+    @this.Refresh();
   }
 
   /// <summary>
@@ -556,9 +554,6 @@ public static partial class DirectoryInfoExtensions {
         }
 
         var directoryInfo = fileSystemInfo as DirectoryInfo;
-#if SUPPORTS_CONTRACTS
-        Contract.Assert(directoryInfo != null, "Not a file or directory info, what is it ?");
-#endif
         stack.Push(new(directoryInfo, Path.Combine(relativePath, directoryInfo.Name)));
       }
     }
@@ -567,15 +562,14 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Gets the or adds a subdirectory.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="name">The name.</param>
   /// <returns></returns>
-  public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo This, string name) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    var fullPath = Path.Combine(This.FullName, name);
-    return IO.Directory.Exists(fullPath) ? new(fullPath) : This.CreateSubdirectory(name);
+  public static DirectoryInfo GetOrAddDirectory(this DirectoryInfo @this, string name) {
+    Against.ThisIsNull(@this);
+
+    var fullPath = Path.Combine(@this.FullName, name);
+    return IO.Directory.Exists(fullPath) ? new(fullPath) : @this.CreateSubdirectory(name);
   }
 
   /// <summary>
@@ -607,15 +601,17 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Checks whether the given directory exists and contains at least one file.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="fileMask">The file mask; defaults to '*.*'.</param>
   /// <returns><c>true</c> if it exists and has matching files; otherwise, <c>false</c>.</returns>
-  public static bool ExistsAndHasFiles(this DirectoryInfo This, string fileMask = "*.*") {
-    if (!This.Exists)
+  public static bool ExistsAndHasFiles(this DirectoryInfo @this, string fileMask = "*.*") {
+    Against.ThisIsNull(@this);
+    
+    if (!@this.Exists)
       return false;
 
     try {
-      if (This.HasFile(fileMask, SearchOption.AllDirectories))
+      if (@this.HasFile(fileMask, SearchOption.AllDirectories))
         return true;
 
     } catch (IOException) {
@@ -627,13 +623,12 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Tries to create a temporary file.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="extension">The extension; defaults to '.tmp'.</param>
   /// <returns>A temporary file</returns>
-  public static FileInfo GetTempFile(this DirectoryInfo This, string extension = null) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
+  public static FileInfo GetTempFile(this DirectoryInfo @this, string extension = null) {
+    Against.ThisIsNull(@this);
+
     extension = extension == null ? ".tmp" : '.' + extension.TrimStart('.');
 
     static string Generator(Random random,string ext) {
@@ -651,7 +646,7 @@ public static partial class DirectoryInfoExtensions {
     Random random = new();
 
     while (true) {
-      var result = This.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
+      var result = @this.TryCreateFile(Generator(random, extension), FileAttributes.NotContentIndexed | FileAttributes.Temporary);
       if (result != null)
         return result;
     }
@@ -661,16 +656,14 @@ public static partial class DirectoryInfoExtensions {
   /// <summary>
   /// Tries to create file.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">This DirectoryInfo.</param>
   /// <param name="fileName">Name of the file.</param>
   /// <param name="attributes">The attributes; defaults to FileAttributes.Normal.</param>
   /// <returns>A FileInfo instance or <c>null</c> on error.</returns>
-  public static FileInfo TryCreateFile(this DirectoryInfo This, string fileName, FileAttributes attributes = FileAttributes.Normal) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
+  public static FileInfo TryCreateFile(this DirectoryInfo @this, string fileName, FileAttributes attributes = FileAttributes.Normal) {
+    Against.ThisIsNull(@this);
 
-    var fullFileName = Path.Combine(This.FullName, fileName);
+    var fullFileName = Path.Combine(@this.FullName, fileName);
     if (IO.File.Exists(fullFileName))
       return null;
 
