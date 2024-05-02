@@ -21,9 +21,6 @@
 #endregion
 
 using System.Threading;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 
 namespace System;
 
@@ -39,13 +36,15 @@ public class Lazy<TValue> {
   private readonly Func<TValue> _function;
 
 #region ctor
+
   /// <summary>
   /// Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;"/> class.
   /// </summary>
   /// <param name="function">The function that should create the value.</param>
-  public Lazy(Func<TValue> function) => this._function = function;
+  public Lazy(Func<TValue> function) => this._function = function ?? throw new ArgumentNullException(nameof(function));
 
 #endregion
+
   /// <summary>
   /// Gets a value indicating whether this instance has a value already calculated.
   /// </summary>
@@ -87,9 +86,9 @@ public class Lazy<TValue> {
   /// The result of the conversion.
   /// </returns>
   public static implicit operator TValue(Lazy<TValue> lazy) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(lazy != null);
-#endif
+    if (lazy == null)
+      throw new ArgumentNullException(nameof(lazy));
+    
     return lazy.Value;
   }
   /// <summary>
@@ -107,6 +106,9 @@ public class Lazy<TValue> {
 public class Lazy {
   private readonly Lazy<byte> _lazy;
   public Lazy(Action action) {
+    if (action == null)
+      throw new ArgumentNullException(nameof(action));
+    
     this._lazy = new(() => {
       action();
       return byte.MaxValue;
