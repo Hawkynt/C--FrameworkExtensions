@@ -127,7 +127,7 @@ public static partial class EnumerableExtensions {
   #region <#=j#>OrDefault
 <#foreach(var i in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
   #region <#=i#>
-  public static <#=i#> <#=j#>OrDefault(this IEnumerable<<#=i#>> @this, <#=i#> defaultValue = default(<#=i#>)) {
+  public static <#=i#> <#=j#>OrDefault(this IEnumerable<<#=i#>> @this, <#=i#> defaultValue = default) {
     Against.ThisIsNull(@this);
 
     var items = @this as ICollection<<#=i#>> ?? @this.ToList();
@@ -274,11 +274,7 @@ public static partial class EnumerableExtensions {
   /// </summary>
   /// <param name="this">This Enumeration.</param>
   /// <returns></returns>
-  public static <#=i#> StdDev(this IEnumerable<<#=i#>> @this) {
-    var result = @this.Variance();
-    result = _Sqrt(result);
-    return result;
-  }
+  public static <#=i#> StdDev(this IEnumerable<<#=i#>> @this) => @this.Variance().Sqrt();
     
   /// <summary>
   /// The Standard Deviation of a statistical population, a data set, or a probability distribution is the square root of its variance.
@@ -548,44 +544,5 @@ public static partial class EnumerableExtensions {
   }
   #endregion
 <#}#>
-  #endregion
-  #region Math Utils
-  /// <summary>
-  /// Calculate a less accurate square root.
-  /// </summary>
-  /// <param name="x">The x.</param>
-  /// <returns>
-  /// The square root of x
-  /// </returns>
-  private static float _Sqrt(float x) => (float)Math.Sqrt(x);
-    
-  /// <summary>
-  /// Just a wrapper for math.sqrt,
-  /// </summary>
-  /// <param name="x">The x.</param>
-  /// <returns>The square root of x</returns>
-  private static double _Sqrt(double x) => Math.Sqrt(x);
-    
-  /// <summary>
-  /// Calculate a more accurate square root, see http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
-  /// </summary>
-  /// <param name="x">The x.</param>
-  /// <param name="epsilon">The epsilon.</param>
-  /// <returns>The square root of x</returns>
-  private static decimal _Sqrt(decimal x, decimal epsilon = 0) {
-    if (x < 0) throw new OverflowException("Cannot calculate square root from a negative number");
-
-    decimal current = (decimal)Math.Sqrt((double)x), previous;
-    const decimal factor = 2m;
-    const decimal zero = decimal.Zero;
-
-    do {
-      previous = current;
-      if (previous == zero) return zero;
-      current = (previous + x / previous) / factor;
-    }
-    while (Math.Abs(previous - current) > epsilon);
-    return(current);
-  }
   #endregion
 }
