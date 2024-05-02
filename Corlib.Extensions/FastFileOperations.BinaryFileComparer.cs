@@ -20,11 +20,9 @@
 #endregion
 
 using System.Collections.Generic;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
+using Guard;
 
 namespace System.IO;
 // ReSharper disable once PartialTypeWithSinglePart
@@ -49,10 +47,9 @@ public partial class FastFileOperations {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(x != null && y != null);
-#endif
-
+      Against.ArgumentIsNull(x);
+      Against.ArgumentIsNull(y);
+      
       // same file
       if (x.FullName == y.FullName)
         return true;
@@ -122,9 +119,9 @@ public partial class FastFileOperations {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(x != null && y != null);
-#endif
+      Against.ArgumentIsNull(x);
+      Against.ArgumentIsNull(y);
+
       return x.Length == y.Length;
     }
 
@@ -140,9 +137,9 @@ public partial class FastFileOperations {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(x != null && y != null);
-#endif
+      Against.ArgumentIsNull(x);
+      Against.ArgumentIsNull(y);
+
       const FileAttributes MASK = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.ReadOnly | FileAttributes.System;
       return (x.Attributes & MASK) == (y.Attributes & MASK);
     }
@@ -159,9 +156,9 @@ public partial class FastFileOperations {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(x != null && y != null);
-#endif
+      Against.ArgumentIsNull(x);
+      Against.ArgumentIsNull(y);
+
       return x.CreationTimeUtc == y.CreationTimeUtc;
     }
 
@@ -177,9 +174,9 @@ public partial class FastFileOperations {
     #region Implementation of IEqualityComparer<in FileInfo>
 
     public bool Equals(FileInfo x, FileInfo y) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(x != null && y != null);
-#endif
+      Against.ArgumentIsNull(x);
+      Against.ArgumentIsNull(y);
+
       return x.LastWriteTimeUtc == y.LastWriteTimeUtc;
     }
 
