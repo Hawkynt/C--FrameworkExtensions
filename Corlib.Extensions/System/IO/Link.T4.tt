@@ -29,14 +29,12 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using dword = System.UInt32;
+using Guard;
 
 namespace System.IO;
 
@@ -224,48 +222,24 @@ public static partial class LinkExtensions {
   #endregion
 
   #region Internal target getters
-  private static int _InternalGetSymbolicLinkTargetCount(FileSystemInfo This){
-    return(_InternalGetSymbolicLinkTarget(This)==null?0:1);
+  
+  private static int _InternalGetSymbolicLinkTargetCount(FileSystemInfo @this) => _InternalGetSymbolicLinkTarget(@this) == null ? 0 : 1;
+  private static string _InternalGetSymbolicLinkTarget(FileSystemInfo @this)=> _GetTargetS(@this.FullName);
+  private static int _InternalGetJunctionTargetCount(DirectoryInfo @this)=> _InternalGetJunctionTarget(@this) == null ? 0 : 1;
+  private static string _InternalGetJunctionTarget(DirectoryInfo @this) => _GetTargetJ(@this.FullName);
+  
+  private static int _InternalGetHardLinkTargetCount(FileInfo @this) {
+    if (@this.IsSymbolicLink())
+      return 0;
+
+    using var handle = @this.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+    if (!NativeMethods.GetFileInformationByHandle(handle.SafeFileHandle, out var lpFileInformation))
+      throw new Win32Exception();
+
+    return (int)lpFileInformation.NumberOfLinks - 1;
   }
 
-  private static string _InternalGetSymbolicLinkTarget(FileSystemInfo This){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-#endif
-    return(_GetTargetS(This.FullName));
-  }
-
-  private static int _InternalGetJunctionTargetCount(DirectoryInfo This){
-    return(_InternalGetJunctionTarget(This)==null?0:1);
-  }
-
-  private static string _InternalGetJunctionTarget(DirectoryInfo This){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-#endif
-    return(_GetTargetJ(This.FullName));
-  }
-
-  private static int _InternalGetHardLinkTargetCount(FileInfo This){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-#endif
-    if (This.IsSymbolicLink())
-      return (0);
-
-    using (var handle = This.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-      NativeMethods.BY_HANDLE_FILE_INFORMATION lpFileInformation;
-      if (!NativeMethods.GetFileInformationByHandle(handle.SafeFileHandle, out lpFileInformation))
-        throw new Win32Exception();
-
-      return ((int)lpFileInformation.NumberOfLinks-1);
-    }
-  }
-
-  private static IEnumerable<string> _InternalGetHardLinkTargets(FileInfo This){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-#endif
+  private static IEnumerable<string> _InternalGetHardLinkTargets(FileInfo This) {
     var handle = NativeMethods.InvalidHandle;
     try {
       StringBuilder buffer;
@@ -290,82 +264,62 @@ public static partial class LinkExtensions {
   #endregion
 
   #region Internal creators
-  private static Exception _InternalCreateSymbolicLinkFrom(FileSystemInfo This,string source){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-    Contract.Requires(source!=null);
-#endif
-    return(NativeMethods.CreateSymbolicLink(This.FullName, source, NativeMethods.SymbolLinkFlag.TargetIsFile)?null:new Win32Exception());
-  }
+  private static Exception _InternalCreateSymbolicLinkFrom(FileSystemInfo This,string source) => NativeMethods.CreateSymbolicLink(This.FullName, source, NativeMethods.SymbolLinkFlag.TargetIsFile) ? null : new Win32Exception();
 
-  private static Exception _InternalCreateHardLinkFrom(FileInfo This,string source){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-    Contract.Requires(source!=null);
-#endif
+  private static Exception _InternalCreateHardLinkFrom(FileInfo This, string source) {
     if(!File.Exists(source))
       throw new FileNotFoundException("HardLink source missing");
 
-    return(NativeMethods.CreateHardLink(This.FullName, source, IntPtr.Zero)?null:new Win32Exception());
+    return NativeMethods.CreateHardLink(This.FullName, source, IntPtr.Zero)?null:new Win32Exception();
   }
     
-  private static Exception _InternalCreateJunctionFrom(DirectoryInfo This,string source){
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This!=null);
-    Contract.Requires(source!=null);
-#endif
+  private static Exception _InternalCreateJunctionFrom(DirectoryInfo This, string source) {
     This.Refresh();
     if(!This.Exists)
       This.Create();
 
-    using (var fileHandle = NativeMethods.CreateFile(This.FullName, NativeMethods.GenericAccessRights.Write, NativeMethods.ShareMode.All, IntPtr.Zero, NativeMethods.CreationDisposition.OpenExisting, NativeMethods._FileAttributes.BackupSemantics | NativeMethods._FileAttributes.OpenReparsePoint, IntPtr.Zero)) {
-      if (fileHandle.IsInvalid)
-        throw new Win32Exception();
+    var fileHandle = NativeMethods.CreateFile(This.FullName, NativeMethods.GenericAccessRights.Write, NativeMethods.ShareMode.All, IntPtr.Zero, NativeMethods.CreationDisposition.OpenExisting, NativeMethods._FileAttributes.BackupSemantics | NativeMethods._FileAttributes.OpenReparsePoint, IntPtr.Zero);
+    if (fileHandle.IsInvalid)
+      throw new Win32Exception();
 
-      var printName = Encoding.Unicode.GetBytes(source);
-      var substTarget = NativeMethods.UnparsedPrefix + (new DirectoryInfo(source).FullName) + Path.DirectorySeparatorChar;
-      var substName = Encoding.Unicode.GetBytes(substTarget);
+    var printName = Encoding.Unicode.GetBytes(source);
+    var substTarget = NativeMethods.UnparsedPrefix + (new DirectoryInfo(source).FullName) + Path.DirectorySeparatorChar;
+    var substName = Encoding.Unicode.GetBytes(substTarget);
 
-      var buffer = new NativeMethods.MountPointReparseBuffer {
-        ReparseTag = NativeMethods.junctionTag,
-        ReparseDataLength = (ushort)(substName.Length + printName.Length + 12),
-        SubstituteNameOffset = 0,
-        SubstituteNameLength = (ushort)(substName.Length),
-        PrintNameOffset = (ushort)(substName.Length + 2),
-        PrintNameLength = (ushort)(printName.Length),
-        PathBuffer = new byte[NativeMethods.maxUnicodePathLength],
-      };
-      Buffer.BlockCopy(substName, 0, buffer.PathBuffer, buffer.SubstituteNameOffset, substName.Length);
-      Buffer.BlockCopy(printName, 0, buffer.PathBuffer, buffer.PrintNameOffset, printName.Length);
+    var buffer = new NativeMethods.MountPointReparseBuffer {
+      ReparseTag = NativeMethods.junctionTag,
+      ReparseDataLength = (ushort)(substName.Length + printName.Length + 12),
+      SubstituteNameOffset = 0,
+      SubstituteNameLength = (ushort)(substName.Length),
+      PrintNameOffset = (ushort)(substName.Length + 2),
+      PrintNameLength = (ushort)(printName.Length),
+      PathBuffer = new byte[NativeMethods.maxUnicodePathLength],
+    };
+    Buffer.BlockCopy(substName, 0, buffer.PathBuffer, buffer.SubstituteNameOffset, substName.Length);
+    Buffer.BlockCopy(printName, 0, buffer.PathBuffer, buffer.PrintNameOffset, printName.Length);
 
-      var blockSize = Marshal.SizeOf(buffer);
-      var unmanagedBlock = IntPtr.Zero;
-      try {
-        unmanagedBlock = Marshal.AllocHGlobal(blockSize);
-        Marshal.StructureToPtr(buffer, unmanagedBlock, false);
-        int bytesReturned;
-        var result = NativeMethods.DeviceIoControl(fileHandle.DangerousGetHandle(), NativeMethods.IoControl.SetReparsePoint, unmanagedBlock, buffer.ReparseDataLength + 8, IntPtr.Zero, 0, out bytesReturned, IntPtr.Zero);
-        if (!result)
-          return (new Win32Exception());
+    var blockSize = Marshal.SizeOf(buffer);
+    var unmanagedBlock = IntPtr.Zero;
+    try {
+      unmanagedBlock = Marshal.AllocHGlobal(blockSize);
+      Marshal.StructureToPtr(buffer, unmanagedBlock, false);
+      int bytesReturned;
+      var result = NativeMethods.DeviceIoControl(fileHandle.DangerousGetHandle(), NativeMethods.IoControl.SetReparsePoint, unmanagedBlock, buffer.ReparseDataLength + 8, IntPtr.Zero, 0, out bytesReturned, IntPtr.Zero);
+      if (!result)
+        return new Win32Exception();
 
-        return (null);
-      } finally {
-        if (unmanagedBlock != IntPtr.Zero)
-          Marshal.FreeHGlobal(unmanagedBlock);
-      }
+      return null;
+    } finally {
+      if (unmanagedBlock != IntPtr.Zero)
+        Marshal.FreeHGlobal(unmanagedBlock);
     }
       
   }
   #endregion
 
   #region methods
-  private static string _InternalGetHardLinkTarget(FileInfo @this){
-    return _InternalGetHardLinkTargets(@this).FirstOrDefault();
-  }
-        
-  public static IEnumerable<FileInfo> GetHardLinkTargets(this FileInfo @this){
-    return _InternalGetHardLinkTargets(@this).Select(f=>new FileInfo(f)).Where(f=>f.FullName!=@this.FullName);
-  }
+  private static string _InternalGetHardLinkTarget(FileInfo @this) => _InternalGetHardLinkTargets(@this).FirstOrDefault();
+  public static IEnumerable<FileInfo> GetHardLinkTargets(this FileInfo @this) => _InternalGetHardLinkTargets(@this).Select(f=>new FileInfo(f)).Where(f=>f.FullName!=@this.FullName);
 
   /// <summary>
   /// Wraps call to FindFirstFileName.
@@ -374,10 +328,6 @@ public static partial class LinkExtensions {
   /// <param name="buffer">The buffer to create.</param>
   /// <returns>The handle or throws.</returns>
   private static IntPtr _FindFirstFileName(string fileName, out StringBuilder buffer) {
-#if SUPPORTS_CONTRACTS
-          Contract.Requires(fileName!=null);
-#endif
-      
     var size = 0U;
     buffer = null;
     do {
@@ -405,10 +355,6 @@ public static partial class LinkExtensions {
   /// <param name="buffer">The buffer (which could be adjusted in size to accomodate space requirements).</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c> (end of list).</returns>
   private static bool _FindNextFileName(IntPtr handle, ref StringBuilder buffer) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(buffer!=null);
-#endif
-
     var size = (dword)buffer.Length;
     do {
       if (NativeMethods.FindNextFileName(handle, ref size, buffer))
@@ -436,10 +382,6 @@ public static partial class LinkExtensions {
   /// <returns>The target or <c>null</c>.</returns>
   /// <exception cref="System.ComponentModel.Win32Exception"></exception>
   private static string _GetTargetS(string path) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(path!=null);
-#endif
-
     NativeMethods.SymbolicLinkReparseBuffer reparseDataBuffer;
 
     using (var fileHandle = NativeMethods.CreateFile(path, NativeMethods.GenericAccessRights.Read, NativeMethods.ShareMode.All, IntPtr.Zero, NativeMethods.CreationDisposition.OpenExisting, NativeMethods._FileAttributes.BackupSemantics | NativeMethods._FileAttributes.OpenReparsePoint, IntPtr.Zero)) {
@@ -467,9 +409,9 @@ public static partial class LinkExtensions {
             return (null);
 
           if (exception.NativeErrorCode == ERROR_INVALID_FUNCTION)
-            return (null);
+            return null;
 
-          throw (exception);
+          throw exception;
         }
 
         reparseDataBuffer = (NativeMethods.SymbolicLinkReparseBuffer)Marshal.PtrToStructure(outBuffer, typeof(NativeMethods.SymbolicLinkReparseBuffer));
@@ -479,12 +421,12 @@ public static partial class LinkExtensions {
     }
 
     if (reparseDataBuffer.ReparseTag != NativeMethods.symLinkTag)
-      return (null);
+      return null;
 
     var subst = Encoding.Unicode.GetString(reparseDataBuffer.PathBuffer, reparseDataBuffer.SubstituteNameOffset, reparseDataBuffer.SubstituteNameLength);
     var target = Encoding.Unicode.GetString(reparseDataBuffer.PathBuffer, reparseDataBuffer.PrintNameOffset, reparseDataBuffer.PrintNameLength);
 
-    return (target);
+    return target;
   }
 
   /// <summary>
@@ -494,9 +436,6 @@ public static partial class LinkExtensions {
   /// <returns>The target or <c>null</c>.</returns>
   /// <exception cref="System.ComponentModel.Win32Exception"></exception>
   private static string _GetTargetJ(string path) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(path!=null);
-#endif
     NativeMethods.MountPointReparseBuffer reparseDataBuffer;
 
     using (var fileHandle = NativeMethods.CreateFile(path, NativeMethods.GenericAccessRights.Read, NativeMethods.ShareMode.All, IntPtr.Zero, NativeMethods.CreationDisposition.OpenExisting, NativeMethods._FileAttributes.BackupSemantics | NativeMethods._FileAttributes.OpenReparsePoint, IntPtr.Zero)) {
@@ -562,46 +501,66 @@ public static partial class LinkExtensions {
     var type=tuple.Item2;
 #>
   #region <#=name#> for <#=type#>
-  public static string Get<#=name#>Target(this <#=type#> This){
-    return(_InternalGet<#=name#>Target(This));
+  public static string Get<#=name#>Target(this <#=type#> @this) {
+    Against.ThisIsNull(@this);
+  
+    return _InternalGet<#=name#>Target(@this);
   }
     
-  public static bool Is<#=name#>(this <#=type#> This) {
-    return(This.Exists && _InternalGet<#=name#>TargetCount(This)>0);
+  public static bool Is<#=name#>(this <#=type#> @this) {
+    Against.ThisIsNull(@this);
+  
+    return @this.Exists && _InternalGet<#=name#>TargetCount(@this) > 0;
   }
         
-  public static bool TryCreate<#=name#>From(this <#=type#> This,string source){
-    return(_InternalCreate<#=name#>From(This,source)==null);
+  public static bool TryCreate<#=name#>From(this <#=type#> @this, string source) {
+    Against.ThisIsNull(@this);
+  
+    return _InternalCreate<#=name#>From(@this, source) == null;
   }
     
-  public static bool TryCreate<#=name#>From(this <#=type#> This,<#=type#> source){
-    return(This.TryCreate<#=name#>From(source.FullName));
+  public static bool TryCreate<#=name#>From(this <#=type#> @this, <#=type#> source) {
+    Against.ThisIsNull(@this);
+  
+    return @this.TryCreate<#=name#>From(source.FullName);
   }
     
-  public static bool TryCreate<#=name#>At(this <#=type#> This,<#=type#> target){
-    return(target.TryCreate<#=name#>From(This));
+  public static bool TryCreate<#=name#>At(this <#=type#> @this, <#=type#> target) {
+    Against.ThisIsNull(@this);
+  
+    return target.TryCreate<#=name#>From(@this);
   }
     
-  public static bool TryCreate<#=name#>At(this <#=type#> This,string target){
-    return(new <#=type#>(target).TryCreate<#=name#>From(This));
+  public static bool TryCreate<#=name#>At(this <#=type#> @this, string target) {
+    Against.ThisIsNull(@this);
+  
+    return new <#=type#>(target).TryCreate<#=name#>From(@this);
   }
     
-  public static void Create<#=name#>From(this <#=type#> This,string source){
-    var result=_InternalCreate<#=name#>From(This,source);
-    if(result!=null)
-      throw(result);
+  public static void Create<#=name#>From(this <#=type#> @this, string source) {
+    Against.ThisIsNull(@this);
+  
+    var result = _InternalCreate<#=name#>From(@this, source);
+    if(result != null)
+      throw result;
   }
 
-  public static void Create<#=name#>From(this <#=type#> This,<#=type#> source){
-    This.Create<#=name#>From(source.FullName);
+  public static void Create<#=name#>From(this <#=type#> @this, <#=type#> source) {
+    Against.ThisIsNull(@this);
+  
+    @this.Create<#=name#>From(source.FullName);
   }
 
-  public static void Create<#=name#>At(this <#=type#> This,<#=type#> target){
-    target.Create<#=name#>From(This);
+  public static void Create<#=name#>At(this <#=type#> @this, <#=type#> target) {
+    Against.ThisIsNull(@this);
+  
+    target.Create<#=name#>From(@this);
   }
     
-  public static void Create<#=name#>At(this <#=type#> This,string target){
-    new <#=type#>(target).Create<#=name#>From(This);
+  public static void Create<#=name#>At(this <#=type#> @this, string target) {
+    Against.ThisIsNull(@this);
+  
+    new <#=type#>(target).Create<#=name#>From(@this);
   }
   #endregion
 <#
@@ -628,9 +587,6 @@ public static partial class LinkExtensions {
   /// <param name="allowCreation">if set to <c>true</c> allows file creation.</param>
   /// <returns></returns>
   private static FileInfo _GetSimilarTempFile(this FileInfo This, bool allowCreation = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
     var path = This.DirectoryName;
     var name = This.GetFilenameWithoutExtension();
     const string extension = ".$$$";
@@ -649,15 +605,8 @@ public static partial class LinkExtensions {
   /// <param name="sourceFileName">The source file.</param>
   /// <param name="targetFileName">The target file.</param>
   /// <param name="overwrite">if set to <c>true</c> overwrites any existing target file.</param>
-  private static void _CopyFromTo(string sourceFileName, string targetFileName, bool overwrite) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(sourceFileName != null);
-    Contract.Requires(targetFileName != null);
-#endif
-
-    File.Copy(sourceFileName, targetFileName, overwrite);
-  }
-
+  private static void _CopyFromTo(string sourceFileName, string targetFileName, bool overwrite) => File.Copy(sourceFileName, targetFileName, overwrite);
+  
   /// <summary>
   /// Copies this file to a target location possibly allowing hard-linking.
   /// </summary>
@@ -667,10 +616,9 @@ public static partial class LinkExtensions {
   /// <param name="allowHardLinking">if set to <c>true</c> allows hard linking.</param>
   /// <exception cref="System.IO.IOException">Target file already exists</exception>
   public static void CopyTo(this FileInfo This, FileInfo targetFile, bool overwrite = false, bool allowHardLinking = false) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(targetFile != null);
-#endif
+    Against.ThisIsNull(This);
+    Against.ArgumentIsNull(targetFile);
+
     if (!allowHardLinking) {
       _CopyFromTo(This.FullName, targetFile.FullName, overwrite);
       return;
