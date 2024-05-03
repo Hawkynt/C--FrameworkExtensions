@@ -33,7 +33,25 @@
   </ItemGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
-  
+
+  <ItemGroup>
+    <Folder Include="Guard\" />
+    <Compile Include="..\Corlib.Extensions\Guard\Against.cs" Link="Guard\Against.cs" />
+    <Compile Include="..\Corlib.Extensions\Guard\Against.T4.cs" Link="Guard\Against.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Against.T4.tt</DependentUpon>
+    </Compile>
+    <None Include="..\Corlib.Extensions\Guard\Against.T4.tt" Link="Guard\Against.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Against.T4.cs</LastGenOutput>
+    </None>
+    <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
+    <None Include="Readme.md" Pack="True" PackagePath=".">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

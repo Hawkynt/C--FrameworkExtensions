@@ -12,6 +12,7 @@
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <DebugType>embedded</DebugType>
+    <LangVersion>default</LangVersion>
     <CheckEolTargetFramework>False</CheckEolTargetFramework>
     <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netcoreapp3.1;net6.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
@@ -34,6 +35,28 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Guard\" />
+    <Compile Include="..\Corlib.Extensions\Guard\Against.cs" Link="Guard\Against.cs" />
+    <Compile Include="..\Corlib.Extensions\Guard\Against.T4.cs" Link="Guard\Against.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Against.T4.tt</DependentUpon>
+    </Compile>
+    <None Include="..\Corlib.Extensions\Guard\Against.T4.tt" Link="Guard\Against.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Against.T4.cs</LastGenOutput>
+    </None>
+    <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
+    <None Include="Readme.md" Pack="True" PackagePath=".">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

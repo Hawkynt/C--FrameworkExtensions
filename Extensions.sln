@@ -30,7 +30,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "ExternalAnnotations", "{0A73474B-0AF6-47CF-B596-8E7CDC9AC001}"
 	ProjectSection(SolutionItems) = preProject
 		ExternalAnnotations\Corlib.Extensions.xml = ExternalAnnotations\Corlib.Extensions.xml
+		ExternalAnnotations\DirectoryServices.Extensions.xml = ExternalAnnotations\DirectoryServices.Extensions.xml
+		ExternalAnnotations\PresentationCore.Extensions.xml = ExternalAnnotations\PresentationCore.Extensions.xml
 		ReSharper.DotSettings = ReSharper.DotSettings
+		ExternalAnnotations\System.Drawing.Extensions.xml = ExternalAnnotations\System.Drawing.Extensions.xml
+		ExternalAnnotations\System.Windows.Forms.Extensions.xml = ExternalAnnotations\System.Windows.Forms.Extensions.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{91D58AC8-D51A-4C58-B890-8DB59D58E4E3}"

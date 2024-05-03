@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<assembly name="DirectoryServices.Extensions">
+  <member name="M:Guard.Against.ThisIsNull``1(``0,System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;" />
+    <parameter name="value">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNull``1(``0,System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;" />
+    <parameter name="value">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNullOrEmpty``1(``0[],System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;"/>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNullOrEmpty``1(System.Collections.Generic.IEnumerable{``0},System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;"/>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNullOrEmpty(System.String,System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;"/>
+  </member>
+  <member name="M:Guard.Against.ArgumentIsNullOrWhiteSpace(System.String,System.String,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;"/>
+  </member>
+</assembly>
