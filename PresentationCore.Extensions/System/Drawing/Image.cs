@@ -21,12 +21,10 @@
 
 #endregion
 
-using System.Diagnostics.Contracts;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media.Imaging;
-#if SUPPORTS_CONTRACTS
-#endif
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -39,22 +37,23 @@ public static partial class ImageExtensions {
   /// <summary>
   /// Converts a GDI+ image into a WPF BitmapImage.
   /// </summary>
-  /// <param name="image">The image.</param>
+  /// <param name="this">The image.</param>
   /// <returns>The BitmapImage</returns>
-  public static BitmapImage ToBitmapImage(this Image image) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(image != null);
-#endif
+  public static BitmapImage ToBitmapImage(this Image @this) {
+    Against.ThisIsNull(@this);
+
     using var memoryStream = new MemoryStream();
-    image.Save(memoryStream, ImageFormat.Png);
+    @this.Save(memoryStream, ImageFormat.Png);
     memoryStream.Position = 0;
+    
     var result = new BitmapImage();
     result.BeginInit();
     result.CacheOption = BitmapCacheOption.OnLoad;
     result.UriSource = null;
     result.StreamSource = memoryStream;
     result.EndInit();
-    return (result);
+    
+    return result;
   }
 
 #endif

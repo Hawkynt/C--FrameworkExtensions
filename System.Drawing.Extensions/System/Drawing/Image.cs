@@ -21,13 +21,12 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -75,10 +74,9 @@ public static partial class ImageExtensions {
   /// <param name="this">This image.</param>
   /// <param name="fileName">The file where it should be saved.</param>
   public static void SaveToPng(this Image @this, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(fileName != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(fileName);
+
     var encoder = _GetEncoder(ImageFormat.Png);
     if (encoder == null)
       throw new NotSupportedException("Png encoder not available");
@@ -92,10 +90,9 @@ public static partial class ImageExtensions {
   /// <param name="this">This image.</param>
   /// <param name="fileName">The file where it should be saved.</param>
   public static void SaveToTiff(this Image @this, string fileName) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(fileName != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(fileName);
+
     var encoder = _GetEncoder(ImageFormat.Tiff);
     if (encoder == null)
       throw new NotSupportedException("Tiff encoder not available");
@@ -110,10 +107,9 @@ public static partial class ImageExtensions {
   /// <param name="fileName">The file where it should be saved.</param>
   /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
   public static void SaveToJpeg(this Image @this, string fileName, double quality = 1) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(fileName != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(fileName);
+
     var encoder = _GetEncoder(ImageFormat.Jpeg);
     if (encoder == null)
       throw new NotSupportedException("Jpeg encoder not available");
@@ -130,10 +126,9 @@ public static partial class ImageExtensions {
   /// <param name="stream">The stream where it should be saved.</param>
   /// <param name="quality">The compression quality between 0(worst) and 1(best, default).</param>
   public static void SaveToJpeg(this Image @this, Stream stream, double quality = 1) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(stream != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(stream);
+
     var encoder = _GetEncoder(ImageFormat.Jpeg);
     if (encoder == null)
       throw new NotSupportedException("Jpeg encoder not available");
@@ -149,9 +144,8 @@ public static partial class ImageExtensions {
   /// <param name="format">The format to encode.</param>
   /// <returns>A suitable encoder or <c>null</c>.</returns>
   private static ImageCodecInfo _GetEncoder(ImageFormat format) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(format != null);
-#endif
+    Against.ArgumentIsNull(format);
+
     return (from i in ImageCodecInfo.GetImageEncoders()
       where i.FormatID == format.Guid
       select i).FirstOrDefault();
@@ -171,9 +165,7 @@ public static partial class ImageExtensions {
   ///   The icon.
   /// </returns>
   public static Icon ToIcon(this Image @this, int targetRes = 0) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
 
     if (targetRes <= 0) {
       // auto-detect
@@ -219,9 +211,8 @@ public static partial class ImageExtensions {
   /// <param name="this">The source.</param>
   /// <returns></returns>
   public static Bitmap MakeGrayscale(this Image @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this is Bitmap);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNotOfType<Bitmap>(@this);
 
     var result = new Bitmap(@this.Width, @this.Height);
     using var graphics = Graphics.FromImage(result);
@@ -246,9 +237,9 @@ public static partial class ImageExtensions {
   /// <param name="threshold">The threshold under which a pixel is considered black.</param>
   /// <returns></returns>
   public static Bitmap Threshold(this Image @this, byte threshold = 127) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this is Bitmap);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNotOfType<Bitmap>(@this);
+
     return @this.ApplyPixelProcessor(c => {
       var mean = (c.R + c.G + c.B) / 3.0;
       var color = mean < threshold ? byte.MinValue : byte.MaxValue;
@@ -263,10 +254,10 @@ public static partial class ImageExtensions {
   /// <param name="processor">The processor.</param>
   /// <returns>The processed image.</returns>
   public static Bitmap ApplyPixelProcessor(this Image @this, Func<Color, Color> processor) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this is Bitmap);
-      Contract.Requires(processor != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNotOfType<Bitmap>(@this);
+    Against.ArgumentIsNull(processor);
+
     var original = (Bitmap)@this;
     //make an empty bitmap the same size as original
     var newBitmap = new Bitmap(original.Width, original.Height);
@@ -292,9 +283,8 @@ public static partial class ImageExtensions {
   /// <param name="this">This Image.</param>
   /// <returns>A mirrored image version</returns>
   public static Image MirrorAlongX(this Image @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var result = (Image)@this.Clone();
     result.RotateFlip(RotateFlipType.RotateNoneFlipX);
     return result;
@@ -306,9 +296,8 @@ public static partial class ImageExtensions {
   /// <param name="this">This Image.</param>
   /// <returns>A mirrored image version</returns>
   public static Image MirrorAlongY(this Image @this) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var result = (Image)@this.Clone();
     result.RotateFlip(RotateFlipType.RotateNoneFlipY);
     return result;
@@ -341,6 +330,8 @@ public static partial class ImageExtensions {
   /// <param name="fillColor">Color of the fill.</param>
   /// <returns></returns>
   public static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null) {
+    Against.ThisIsNull(@this);
+
     var result = new Bitmap(width, height);
     using var graphics = Graphics.FromImage(result);
     graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -373,10 +364,8 @@ public static partial class ImageExtensions {
   /// <param name="interpolation">The interpolation.</param>
   /// <returns></returns>
   public static Bitmap Resize(this Image @this, int width = -1, int height = -1, InterpolationMode interpolation = InterpolationMode.Default) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
-    
+    Against.ThisIsNull(@this);
+
     width = width switch {
       < 1 when height < 1 => throw new ArgumentException("At least one argument has to be > 0", nameof(width)),
       // aspect ratio-preserving resize
@@ -406,9 +395,8 @@ public static partial class ImageExtensions {
   /// <param name="angle">The angle.</param>
   /// <returns></returns>
   public static Bitmap Rotate(this Image @this, float angle) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var result = new Bitmap(@this);
 
     while (angle < 0)
@@ -449,6 +437,8 @@ public static partial class ImageExtensions {
   /// <param name="rect">The rectangle.</param>
   /// <returns>A new image from the given rectangle</returns>
   public static Image GetRectangle(this Image @this, Rectangle rect) {
+    Against.ThisIsNull(@this);
+    
     var result = new Bitmap(rect.Width, rect.Height);
     using var graphics = Graphics.FromImage(result);
     graphics.DrawImage(@this, new Rectangle(Point.Empty, rect.Size), rect, GraphicsUnit.Pixel);
@@ -463,6 +453,8 @@ public static partial class ImageExtensions {
   /// <param name="color">The color to replace.</param>
   /// <returns>A new image</returns>
   public static Image ReplaceColorWithTransparency(this Image @this, Color color) {
+    Against.ThisIsNull(@this);
+    
     var result = new Bitmap(@this.Width, @this.Height);
     using var graphics = Graphics.FromImage(result);
     var imageAttributes = new ImageAttributes();
@@ -539,7 +531,7 @@ public static partial class ImageExtensions {
     if (!@this.StartsWith("data:image/"))
       return null;
 
-    var index = @this.IndexOf("base64,");
+    var index = @this.IndexOf("base64,", StringComparison.Ordinal);
     if (index < 0)
       return null;
 

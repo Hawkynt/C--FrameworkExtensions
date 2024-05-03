@@ -21,9 +21,7 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -35,64 +33,60 @@ public static partial class ToolStripProgressBarExtensions {
   /// <summary>
   ///   Sets the progress bar percentage.
   /// </summary>
-  /// <param name="This">This ToolStripProgressBar.</param>
+  /// <param name="this">This ToolStripProgressBar.</param>
   /// <param name="percentage">The percentage to set.</param>
-  public static void SetPercent(this ToolStripProgressBar This, double percentage) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    This.SetNormalizedValue(percentage * 0.01d);
+  public static void SetPercent(this ToolStripProgressBar @this, double percentage) {
+    Against.ThisIsNull(@this);
+
+    @this.SetNormalizedValue(percentage * 0.01d);
   }
 
   /// <summary>
   ///   Sets the progressbar's normalized value.
   /// </summary>
-  /// <param name="This">This ToolStripProgressBar.</param>
+  /// <param name="this">This ToolStripProgressBar.</param>
   /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
-  public static void SetNormalizedValue(this ToolStripProgressBar This, float value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
+  public static void SetNormalizedValue(this ToolStripProgressBar @this, float value) {
+    Against.ThisIsNull(@this);
+
+    @this.Value = (int)(@this.Minimum + (@this.Maximum - @this.Minimum) * Math.Min(Math.Max(value, 0), 1));
   }
 
   /// <summary>
   ///   Sets the progressbar's normalized value.
   /// </summary>
-  /// <param name="This">This ToolStripProgressBar.</param>
+  /// <param name="this">This ToolStripProgressBar.</param>
   /// <param name="value">The value between 0 and 1 both included, representing the current progress.</param>
-  public static void SetNormalizedValue(this ToolStripProgressBar This, double value) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
+  public static void SetNormalizedValue(this ToolStripProgressBar @this, double value) {
+    Against.ThisIsNull(@this);
+
+    @this.Value = (int)(@this.Minimum + (@this.Maximum - @this.Minimum) * Math.Min(Math.Max(value, 0), 1));
   }
 
   /// <summary>
   ///   Sets the progress bar according to current and max, without changing it's minimum and maximum values.
   /// </summary>
-  /// <param name="This">This ToolStripProgressBar.</param>
+  /// <param name="this">This ToolStripProgressBar.</param>
   /// <param name="current">The current value.</param>
   /// <param name="max">The maximum value to assume.</param>
-  public static void SetValue(this ToolStripProgressBar This, double current, double max) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    This.SetNormalizedValue(max == 0 ? 0 : current / max);
+  public static void SetValue(this ToolStripProgressBar @this, double current, double max) {
+    Against.ThisIsNull(@this);
+
+    @this.SetNormalizedValue(max == 0 ? 0 : current / max);
   }
 
   /// <summary>
   ///   Sets the progress bar according to current, min and max, without changing it's minimum and maximum values.
   /// </summary>
-  /// <param name="This">This ToolStripProgressBar.</param>
+  /// <param name="this">This ToolStripProgressBar.</param>
   /// <param name="current">The current value.</param>
   /// <param name="min">The minimum value to assume.</param>
   /// <param name="max">The maximum value to assume.</param>
-  public static void SetValue(this ToolStripProgressBar This, double current, double min, double max) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+  public static void SetValue(this ToolStripProgressBar @this, double current, double min, double max) {
+    Against.ThisIsNull(@this);
+
     var newMax = max - min;
-    This.SetNormalizedValue(newMax == 0 ? 0 : (current - min) / newMax);
+    @this.SetNormalizedValue(newMax == 0 ? 0 : (current - min) / newMax);
   }
+  
 }

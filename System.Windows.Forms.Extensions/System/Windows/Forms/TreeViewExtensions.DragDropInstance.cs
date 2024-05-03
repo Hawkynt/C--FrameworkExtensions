@@ -21,13 +21,10 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
-
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -89,12 +86,10 @@ public static partial class TreeViewExtensions {
 
     private TreeNode _draggedNode;
 
-    public DragDropInstance(TreeView treeView, Predicate<TreeNode> folderSelector, bool canDragRootNodes,
-      Action<TreeNode, TreeNode, int> onNodeMove) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(treeView != null);
-      Contract.Requires(!treeView.InvokeRequired, "Must be called from within the GUI thread !");
-#endif
+    public DragDropInstance(TreeView treeView, Predicate<TreeNode> folderSelector, bool canDragRootNodes, Action<TreeNode, TreeNode, int> onNodeMove) {
+      Against.ArgumentIsNull(treeView);
+      Against.True(treeView.InvokeRequired);
+
       this._treeView = treeView;
       this._folderSelector = folderSelector;
       this._canDragRootNodes = canDragRootNodes;
@@ -156,7 +151,7 @@ public static partial class TreeViewExtensions {
         node = node.PrevVisibleNode;
 
         // hide drag image
-        DragHelper.ImageList_DragShowNolock(false);
+        NativeMethods.ImageList_DragShowNolock(false);
 
         // scroll and refresh
         node.EnsureVisible();
@@ -169,7 +164,7 @@ public static partial class TreeViewExtensions {
 
         node = node.NextVisibleNode;
 
-        DragHelper.ImageList_DragShowNolock(false);
+        NativeMethods.ImageList_DragShowNolock(false);
         node.EnsureVisible();
         this._Draw();
       }
@@ -236,13 +231,13 @@ public static partial class TreeViewExtensions {
       const int dy = 16;
 
       // Begin dragging image
-      if (!DragHelper.ImageList_BeginDrag(imageList.Handle, 0, -dx, -dy))
+      if (!NativeMethods.ImageList_BeginDrag(imageList.Handle, 0, -dx, -dy))
         return;
 
       treeView.DoDragDrop(treeNode, DragDropEffects.Move);
 
       // End dragging image
-      DragHelper.ImageList_EndDrag();
+      NativeMethods.ImageList_EndDrag();
     }
 
     /// <summary>
@@ -263,7 +258,7 @@ public static partial class TreeViewExtensions {
       var screen = new Point(e.X, e.Y);
       var client = treeView.PointToClient(screen);
       var window = client;
-      DragHelper.ImageList_DragEnter(treeView.Handle, window.X, window.Y);
+      NativeMethods.ImageList_DragEnter(treeView.Handle, window.X, window.Y);
 
       // Enable timer for scrolling dragged item
       this._dragScrollTimer.Enabled = true;
@@ -285,12 +280,12 @@ public static partial class TreeViewExtensions {
       // Compute drag position and move image
       var form = treeView.FindForm();
       if (form == null)
-        DragHelper.ImageList_DragShowNolock(false);
+        NativeMethods.ImageList_DragShowNolock(false);
       else {
         var tvP = treeView.GetLocationOnForm();
         var formP = form.PointToClient(currentScreenPoint);
         formP.Offset(-tvP.X, -tvP.Y);
-        DragHelper.ImageList_DragMove(formP.X, formP.Y);
+        NativeMethods.ImageList_DragMove(formP.X, formP.Y);
       }
 
       var hoveredNode = treeView.GetNodeAt(treeView.PointToClient(currentScreenPoint));
@@ -401,7 +396,7 @@ public static partial class TreeViewExtensions {
           //this.lblDebug.Text = "folder over";
 
           if (hoveredNode.Nodes.Count > 0) {
-            DragHelper.ImageList_DragShowNolock(false);
+            NativeMethods.ImageList_DragShowNolock(false);
             hoveredNode.Expand();
 
             this._SetAndDraw(PlaceHolderType.AddToFolder, hoveredNode);
@@ -450,7 +445,7 @@ public static partial class TreeViewExtensions {
         return;
 
       // remove drag/drop image
-      DragHelper.ImageList_DragLeave(treeView.Handle);
+      NativeMethods.ImageList_DragLeave(treeView.Handle);
 
       // Disable timer for scrolling dragged item
       this._dragScrollTimer.Enabled = false;
@@ -466,7 +461,7 @@ public static partial class TreeViewExtensions {
         return;
 
       // Unlock updates
-      DragHelper.ImageList_DragShowNolock(false);
+      NativeMethods.ImageList_DragShowNolock(false);
       treeView.Refresh();
 
       if (this._draggedNode != null && this.NodeMap != "") {
@@ -518,9 +513,8 @@ public static partial class TreeViewExtensions {
     ///   <c>false</c>.
     /// </returns>
     private bool _IsFolderNode(TreeNode treeNode) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(treeNode != null);
-#endif
+      Against.ArgumentIsNull(treeNode);
+
       var folderSelector = this._folderSelector;
       return folderSelector != null && folderSelector(treeNode);
     }
@@ -587,7 +581,7 @@ public static partial class TreeViewExtensions {
 
     private void _Draw() {
       // hide image
-      DragHelper.ImageList_DragShowNolock(false);
+      NativeMethods.ImageList_DragShowNolock(false);
 
       // paint treeview
       this._treeView.Refresh();
@@ -621,15 +615,11 @@ public static partial class TreeViewExtensions {
         }
 
       // paint image
-      DragHelper.ImageList_DragShowNolock(true);
+      NativeMethods.ImageList_DragShowNolock(true);
     }
 
     private void _DrawLeafTopPlaceholders(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(treeView != null, "Node must belong to a TreeView");
-#endif
-
       var g = treeView.CreateGraphics();
 
       var nodeImage = hoveredNode.GetImage();
@@ -661,21 +651,17 @@ public static partial class TreeViewExtensions {
 
     private void _DrawLeafBottomPlaceholders(TreeNode hoveredNode, TreeNode parentNodeDragDrop) {
       var treeView = hoveredNode.TreeView;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(treeView != null, "Node must belong to a TreeView");
-#endif
-
       var g = treeView.CreateGraphics();
 
       var nodeImage = hoveredNode.GetImage();
       var imageWidth = nodeImage == null ? 0 : nodeImage.Size.Width + 8;
       // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
-      int leftPos, rightPos;
-      if (parentNodeDragDrop != null)
-        leftPos = parentNodeDragDrop.Bounds.Left - (parentNodeDragDrop.GetImage().Size.Width + 8);
-      else
-        leftPos = hoveredNode.Bounds.Left - imageWidth;
-      rightPos = treeView.Width - 4;
+      var leftPos = parentNodeDragDrop != null
+        ? parentNodeDragDrop.Bounds.Left - (parentNodeDragDrop.GetImage().Size.Width + 8)
+        : hoveredNode.Bounds.Left - imageWidth
+        ;
+
+      var rightPos = treeView.Width - 4;
 
       var leftTriangle = new[] {
         new Point(leftPos, hoveredNode.Bounds.Bottom - 4),
@@ -702,9 +688,6 @@ public static partial class TreeViewExtensions {
 
     private void _DrawFolderTopPlaceholders(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(treeView != null, "Node must belong to a TreeView");
-#endif
 
       var g = treeView.CreateGraphics();
       var nodeImage = hoveredNode.GetImage();
@@ -736,9 +719,6 @@ public static partial class TreeViewExtensions {
 
     private void _DrawAddToFolderPlaceholder(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(treeView != null, "Node must belong to a TreeView");
-#endif
 
       var g = treeView.CreateGraphics();
       var rightPos = hoveredNode.Bounds.Right + 6;
@@ -759,7 +739,8 @@ public static partial class TreeViewExtensions {
 
     #region internal class for displaying dragged items
 
-    private class DragHelper {
+    private static class NativeMethods {
+      
       [DllImport("comctl32.dll")]
       private static extern bool InitCommonControls();
 
@@ -786,7 +767,7 @@ public static partial class TreeViewExtensions {
       [DllImport("comctl32.dll", CharSet = CharSet.Auto)]
       public static extern bool ImageList_DragShowNolock(bool fShow);
 
-      static DragHelper() => InitCommonControls();
+      static NativeMethods() => InitCommonControls();
     }
 
     #endregion

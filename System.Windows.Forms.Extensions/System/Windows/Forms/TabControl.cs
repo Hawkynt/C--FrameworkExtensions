@@ -25,35 +25,25 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using Guard;
 
 // ReSharper disable UnusedMember.Global
-
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 
 namespace System.Windows.Forms;
 // ReSharper disable once PartialTypeWithSinglePart
 // ReSharper disable once UnusedMember.Global
 public static partial class TabControlExtensions {
   public static void AddImageToImageList(this TabControl @this, Image image, string key) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(image != null);
-      Contract.Requires(!string.IsNullOrEmpty(key));
-#endif
-
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(image);
+    Against.ArgumentIsNullOrEmpty(key);
+    
     var imageList = @this.ImageList;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(imageList != null, "Can only work on TabControls with assigned ImageList.");
-#endif
-
     imageList.Images.Add(key, image);
     if (!ImageAnimator.CanAnimate(image))
       return;
 
-    var uniquePart =
-      new Random().Next(); // NOTE: we shuffle the key to prevent users accidentially using the generated images
-    string KeyGenerator(string @base, int index) => @base + "\0" + uniquePart + "\0" + index;
+    var uniquePart = new Random().Next(); // NOTE: we shuffle the key to prevent users accidentially using the generated images
 
     var numImages = image.GetFrameCount(FrameDimension.Time);
     var createdImages = new Dictionary<string, Image>();
@@ -66,6 +56,23 @@ public static partial class TabControlExtensions {
     }
 
     var currentlyShownImageIndex = 0;
+
+    // start animating
+    ImageAnimator.Animate(image, OnFrameChangedHandler);
+    @this.Disposed += OnDisposed;
+    
+    return;
+
+    // remove handler and dispose image on destruction of tabcontrol
+    void OnDisposed(object _, EventArgs __) {
+      ImageAnimator.StopAnimate(image, OnFrameChangedHandler);
+      foreach (var kvp in createdImages) {
+        imageList.Images.RemoveByKey(kvp.Key);
+        kvp.Value.Dispose();
+      }
+      
+      @this.Disposed-= OnDisposed;
+    }
 
     void OnFrameChangedHandler(object _, EventArgs __) {
       currentlyShownImageIndex = (currentlyShownImageIndex + 1) % numImages;
@@ -82,17 +89,7 @@ public static partial class TabControlExtensions {
       @this.EndInvoke(result);
     }
 
-    // start animating
-    ImageAnimator.Animate(image, OnFrameChangedHandler);
-
-    // remove handler and dispose image on destruction of tabcontrol
-    @this.Disposed += (_, __) => {
-      ImageAnimator.StopAnimate(image, OnFrameChangedHandler);
-      foreach (var kvp in createdImages) {
-        imageList.Images.RemoveByKey(kvp.Key);
-        kvp.Value.Dispose();
-      }
-    };
+    string KeyGenerator(string @base, int index) => $"{@base}\0{uniquePart}\0{index}";
   }
 
   #region messing with tab color
@@ -106,10 +103,9 @@ public static partial class TabControlExtensions {
   /// <param name="page">The page.</param>
   /// <param name="color">The color.</param>
   public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-      Contract.Requires(page != null);
-#endif
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(page);
+
     if (!_MANAGED_TABCONTROLS.TryGetValue(@this, out var managedTabs)) {
       _MANAGED_TABCONTROLS.Add(@this, managedTabs = new());
 
@@ -121,7 +117,7 @@ public static partial class TabControlExtensions {
       @this.DrawMode = TabDrawMode.OwnerDrawFixed;
 
       // make sure we forget about this control when its disposed
-      @this.Disposed += (_, __) => {
+      @this.Disposed += (_, _) => {
         // remove painter
         @this.DrawItem -= _HeaderPainter;
 
@@ -146,7 +142,7 @@ public static partial class TabControlExtensions {
   /// <param name="sender">The sending tabcontrol</param>
   /// <param name="e">The <see cref="System.Windows.Forms.DrawItemEventArgs" /> instance containing the event data.</param>
   private static void _HeaderPainter(object sender, DrawItemEventArgs e) {
-    if (!(sender is TabControl tabControl))
+    if (sender is not TabControl tabControl)
       return;
 
     var page = tabControl.TabPages[e.Index];

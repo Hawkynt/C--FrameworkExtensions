@@ -21,12 +21,10 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using Guard;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -142,14 +140,12 @@ public static partial class FileInfoExtensions {
   /// <summary>
   ///   Gets the icon.
   /// </summary>
-  /// <param name="This">This FileInfo.</param>
+  /// <param name="this">This FileInfo.</param>
   /// <param name="smallIcon">if set to <c>true</c> we'll return a 16x16 version; otherwise, it will be 32x32.</param>
   /// <param name="linkOverlay">if set to <c>true</c> the link overlays on shortcuts will be returned along the icon.</param>
   /// <returns>The icon used by the windows explorer for this file.</returns>
-  public static Icon GetIcon(this FileInfo This, bool smallIcon = false, bool linkOverlay = false) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+  public static Icon GetIcon(this FileInfo @this, bool smallIcon = false, bool linkOverlay = false) {
+    Against.ThisIsNull(@this);
 
     var flags = NativeMethods.ShellFileInfoFlags.Icon | NativeMethods.ShellFileInfoFlags.UseFileAttributes |
                 (smallIcon ? NativeMethods.ShellFileInfoFlags.SmallIcon : NativeMethods.ShellFileInfoFlags.LargeIcon);
@@ -157,7 +153,7 @@ public static partial class FileInfoExtensions {
       flags |= NativeMethods.ShellFileInfoFlags.LinkOverlay;
 
     var shfi = new NativeMethods.SHFILEINFO();
-    NativeMethods.SHGetFileInfo(This.FullName, NativeMethods.FileAttribute.Normal, ref shfi, (uint)Marshal.SizeOf(shfi), flags);
+    NativeMethods.SHGetFileInfo(@this.FullName, NativeMethods.FileAttribute.Normal, ref shfi, (uint)Marshal.SizeOf(shfi), flags);
 
     var result = (Icon)Icon.FromHandle(shfi.hIcon).Clone();
     NativeMethods.DestroyIcon(shfi.hIcon);

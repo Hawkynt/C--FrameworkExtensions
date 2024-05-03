@@ -23,9 +23,7 @@
 
 using System.Collections;
 using System.Linq;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 // ReSharper disable UnusedMember.Global
 
@@ -34,30 +32,30 @@ namespace System.Windows.Controls;
 // ReSharper disable once UnusedMember.Global
 
 public static partial class ItemCollectionExtensions {
+  
   /// <summary>
   ///   Gets the element in this collection by it's name tag.
   /// </summary>
-  /// <param name="This">This ItemCollection.</param>
+  /// <param name="this">This ItemCollection.</param>
   /// <param name="name">The name.</param>
   /// <returns>The FrameworkElement that matches the given name or <c>null</c>.</returns>
-  public static FrameworkElement GetElementByName(this ItemCollection This, string name) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-#endif
-    return This.OfType<FrameworkElement>().FirstOrDefault(e => e != null && e.Name == name);
+  public static FrameworkElement GetElementByName(this ItemCollection @this, string name) {
+    Against.ThisIsNull(@this);
+    
+    return @this.OfType<FrameworkElement>().FirstOrDefault(e => e.Name == name);
   }
 
   /// <summary>
   ///   Adds a bunch of items.
   /// </summary>
-  /// <param name="This">This ItemCollection.</param>
+  /// <param name="this">This ItemCollection.</param>
   /// <param name="items">The items.</param>
-  public static void AddRange(this ItemCollection This, IEnumerable items) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(items != null);
-#endif
+  public static void AddRange(this ItemCollection @this, IEnumerable items) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
+
     foreach (var item in items)
-      This.Add(item);
+      @this.Add(item);
   }
+  
 }

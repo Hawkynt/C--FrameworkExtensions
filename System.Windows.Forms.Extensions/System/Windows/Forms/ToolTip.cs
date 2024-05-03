@@ -21,27 +21,26 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
+using Guard;
 
 namespace System.Windows.Forms;
 
 public static partial class ToolTipExtensions {
+  
   /// <summary>
   ///   Sets the tooltips on each child control of the base control.
   /// </summary>
-  /// <param name="This">This ToolTip.</param>
+  /// <param name="this">This ToolTip.</param>
   /// <param name="baseControl">The base control.</param>
   /// <param name="toolTipText">The tool tip text.</param>
-  public static void SetToolTips(this ToolTip This, Control baseControl, string toolTipText) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(baseControl != null);
-#endif
-    This.SetToolTip(baseControl, toolTipText);
+  public static void SetToolTips(this ToolTip @this, Control baseControl, string toolTipText) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(baseControl);
+
+    @this.SetToolTip(baseControl, toolTipText);
     foreach (var c in baseControl.Controls.Cast<Control>().Where(c => c != null))
-      This.SetToolTip(c, toolTipText);
+      @this.SetToolTip(c, toolTipText);
   }
+  
 }

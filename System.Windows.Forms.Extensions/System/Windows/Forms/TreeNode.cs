@@ -21,10 +21,8 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Drawing;
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -32,21 +30,21 @@ public static partial class TreeNodeExtensions {
   /// <summary>
   ///   Find out if a given node is a child of another one.
   /// </summary>
-  /// <param name="This">This TreeNode</param>
+  /// <param name="this">This TreeNode</param>
   /// <param name="parent">The parent node to check.</param>
   /// <returns>
   ///   <c>true</c> when the node is a child of the given parent, no matter how deep the level is; otherwise,
   ///   <c>false</c>.
   /// </returns>
-  public static bool IsChildOf(this TreeNode This, TreeNode parent) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-      Contract.Requires(parent != null);
-#endif
-    var start = This;
+  public static bool IsChildOf(this TreeNode @this, TreeNode parent) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(parent);
+
+    var start = @this;
     while (start != null) {
       if (start == parent)
         return true;
+      
       start = start.Parent;
     }
 
@@ -56,58 +54,50 @@ public static partial class TreeNodeExtensions {
   /// <summary>
   ///   Gets the id for that node.
   /// </summary>
-  /// <param name="This">This TreeNode.</param>
+  /// <param name="this">This TreeNode.</param>
   /// <returns>An id.</returns>
-  public static string GetId(this TreeNode This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var parent = This.Parent;
+  public static string GetId(this TreeNode @this) {
+    Against.ThisIsNull(@this);
+
+    var parent = @this.Parent;
     if (parent == null)
       return string.Empty;
+    
     var baseId = parent.GetId();
     var neighbours = parent.Nodes;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(neighbours != null);
-#endif
+
     var myId = 0;
     foreach (var neighbour in neighbours)
-      if (neighbour == This)
+      if (neighbour == @this)
         return $"{baseId}/{myId:000000000}";
       else
-        myId++;
+        ++myId;
+    
     return null;
   }
 
   /// <summary>
   ///   Gets the image for a given tree node.
   /// </summary>
-  /// <param name="This">This TreeNode.</param>
+  /// <param name="this">This TreeNode.</param>
   /// <returns>The image for that node or <c>null</c>.</returns>
-  public static Image GetImage(this TreeNode This) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
+  public static Image GetImage(this TreeNode @this) {
+    Against.ThisIsNull(@this);
 
-    var treeView = This.TreeView;
+    var treeView = @this.TreeView;
 
     var imageList = treeView?.ImageList;
     if (imageList == null)
       return null;
 
     var images = imageList.Images;
-#if SUPPORTS_CONTRACTS
-      Contract.Assert(images != null);
-#endif
     if (images.Count < 1)
       return null;
 
-    if (This.ImageIndex >= 0)
-      return images[This.ImageIndex];
+    if (@this.ImageIndex >= 0)
+      return images[@this.ImageIndex];
 
-    if (images.ContainsKey(This.ImageKey))
-      return images[This.ImageKey];
-
-    return null; //images[0]);
+    return images.ContainsKey(@this.ImageKey) ? images[@this.ImageKey] : null; //images[0]);
   }
+  
 }

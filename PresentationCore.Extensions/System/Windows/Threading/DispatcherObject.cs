@@ -21,9 +21,7 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Windows.Threading;
 
@@ -31,28 +29,24 @@ public static partial class DispatcherObjectExtensions {
   /// <summary>
   ///   Safely invokes an action on a dispatcher object.
   /// </summary>
-  /// <param name="This">This DispatcherObject.</param>
+  /// <param name="this">This DispatcherObject.</param>
   /// <param name="action">The action.</param>
   /// <param name="async">
   ///   if set to <c>true</c> we'll be going to make an asynchronous call to the dispatcher; otherwise,
   ///   we'll wait till execution ends.
   /// </param>
   /// <returns><c>true</c> when the task could be executed on the current thread immediately; otherwise, <c>false</c>.</returns>
-  public static bool SafelyInvoke(this DispatcherObject This, Action action, bool @async = false, DispatcherPriority dispatcherPriority = DispatcherPriority.Normal) {
-#if SUPPORTS_CONTRACTS
-    Contract.Requires(This != null);
-    Contract.Requires(action != null);
-#endif
-    var dispatcher = This.Dispatcher;
-#if SUPPORTS_CONTRACTS
-    Contract.Assume(dispatcher != null);
-#endif
+  public static bool SafelyInvoke(this DispatcherObject @this, Action action, bool async = false, DispatcherPriority dispatcherPriority = DispatcherPriority.Normal) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(action);
+
+    var dispatcher = @this.Dispatcher;
     if (dispatcher.CheckAccess()) {
       action();
       return true;
     }
 
-    if (@async)
+    if (async)
       dispatcher.BeginInvoke(action, dispatcherPriority);
     else
       dispatcher.Invoke(action, dispatcherPriority);

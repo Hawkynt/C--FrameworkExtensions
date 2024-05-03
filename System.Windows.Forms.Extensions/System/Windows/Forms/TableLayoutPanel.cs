@@ -23,9 +23,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -36,9 +34,8 @@ public static partial class TableLayoutPanelExtensions {
   /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="row">The row.</param>
   public static void RemoveRow(this TableLayoutPanel @this, int row) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var rowCount = @this.RowCount;
     if (row < 0 || row >= rowCount)
       return;
@@ -79,11 +76,9 @@ public static partial class TableLayoutPanelExtensions {
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, int, Control, Control> controlCallback = null,
-    bool allowSuspendingLayout = true) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, int, Control, Control> controlCallback = null, bool allowSuspendingLayout = true) {
+    Against.ThisIsNull(@this);
+
     if (allowSuspendingLayout)
       @this.SuspendLayout();
 
@@ -128,11 +123,9 @@ public static partial class TableLayoutPanelExtensions {
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel @this, Action<Control> controlCallback,
-    bool allowSuspendingLayout = true) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<Control> controlCallback, bool allowSuspendingLayout = true) {
+    Against.ThisIsNull(@this);
+
     @this.CopyLastRow((row, col, src, tgt) => controlCallback(tgt));
   }
 
@@ -145,11 +138,9 @@ public static partial class TableLayoutPanelExtensions {
   ///   if set to <c>true</c> allows suspending the This layout during this process to
   ///   prevent flickering.
   /// </param>
-  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, Control> controlCallback,
-    bool allowSuspendingLayout = true) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static void CopyLastRow(this TableLayoutPanel @this, Action<int, Control> controlCallback, bool allowSuspendingLayout = true) {
+    Against.ThisIsNull(@this);
+
     @this.CopyLastRow((row, col, src, tgt) => controlCallback(col, tgt));
   }
 
@@ -163,11 +154,9 @@ public static partial class TableLayoutPanelExtensions {
   /// <param name="columnIndex">The column in which the control should be.</param>
   /// <param name="reader">The reader delegate which reads the actual value from the given control and returns it.</param>
   /// <returns>The value that was found.</returns>
-  public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel @this, uint row, int columnIndex,
-    Func<TControl, TType> reader) where TControl : Control {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel @this, uint row, int columnIndex, Func<TControl, TType> reader) where TControl : Control {
+    Against.ThisIsNull(@this);
+
     if (row >= @this.RowCount)
       throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
 
@@ -183,19 +172,17 @@ public static partial class TableLayoutPanelExtensions {
   ///   Sets a controls' value.
   /// </summary>
   /// <typeparam name="TControl">The type of the control which should be there.</typeparam>
-  /// <param name="This">This TableLayoutPanel.</param>
+  /// <param name="this">This TableLayoutPanel.</param>
   /// <param name="row">The row in which the control should be.</param>
   /// <param name="columnIndex">The column in which the control should be.</param>
   /// <param name="writer">The writer delegate which sets a value of the control.</param>
-  public static void SetColumnValue<TControl>(this TableLayoutPanel This, uint row, int columnIndex,
-    Action<TControl> writer) where TControl : Control {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    if (row >= This.RowCount)
+  public static void SetColumnValue<TControl>(this TableLayoutPanel @this, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
+    Against.ThisIsNull(@this);
+    
+    if (row >= @this.RowCount)
       throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
 
-    var control = This.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
+    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
     if (control == null)
       throw new NotSupportedException();
 
@@ -215,11 +202,9 @@ public static partial class TableLayoutPanelExtensions {
   /// <returns>
   ///   The control or <c>null</c>.
   /// </returns>
-  public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel @this, int column, int row)
-    where TControl : Control {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+  public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel @this, int column, int row) where TControl : Control {
+    Against.ThisIsNull(@this);
+
     return @this.GetControlFromPositionFixed(column, row) as TControl;
   }
 
@@ -233,9 +218,8 @@ public static partial class TableLayoutPanelExtensions {
   /// <param name="row">The row.</param>
   /// <returns>The control or <c>null</c>.</returns>
   public static Control GetControlFromPositionFixed(this TableLayoutPanel @this, int column, int row) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(@this != null);
-#endif
+    Against.ThisIsNull(@this);
+
     var result = @this.GetControlFromPosition(column, row);
     if (result != null)
       return result;
@@ -260,6 +244,8 @@ public static partial class TableLayoutPanelExtensions {
   /// <param name="this">This.</param>
   /// <param name="cellControls">The controls to fill up with, first dimension is the rows, 2nd the columns.</param>
   public static void UseAsTable(this TableLayoutPanel @this, params Control[][] cellControls) {
+    Against.ThisIsNull(@this);
+
     //init
     @this.SuspendLayout();
     @this.RowStyles.Clear();

@@ -24,9 +24,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
@@ -234,17 +231,11 @@ public static partial class ColorExtensions {
 
   #region private methods
 
-#if SUPPORTS_CONTRACTS
-    [Pure]
-#endif
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   private static byte _ClipToByte(int value) => (byte)Math.Min(byte.MaxValue, Math.Max(byte.MinValue, value));
 
-#if SUPPORTS_CONTRACTS
-    [Pure]
-#endif
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

@@ -21,12 +21,10 @@
 
 #endregion
 
-#if SUPPORTS_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
 using System.Linq;
 using System.Windows.Form.Extensions;
 using word = System.UInt32;
+using Guard;
 
 namespace System.Windows.Forms;
 
@@ -34,42 +32,39 @@ public static partial class TextBoxExtensions {
   /// <summary>
   ///   Appends the text and scrolls.
   /// </summary>
-  /// <param name="This">This TextBox.</param>
+  /// <param name="this">This TextBox.</param>
   /// <param name="text">The text.</param>
-  public static void AppendTextAndScroll(this TextBox This, string text) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    This.AppendText(text ?? string.Empty);
+  public static void AppendTextAndScroll(this TextBox @this, string text) {
+    Against.ThisIsNull(@this);
+
+    @this.AppendText(text ?? string.Empty);
   }
 
   /// <summary>
   ///   Keeps the last n lines in the textbox removing whatever is before.
   /// </summary>
-  /// <param name="This">This TextBox.</param>
+  /// <param name="this">This TextBox.</param>
   /// <param name="count">The number of lines to keep.</param>
-  public static void KeepLastLines(this TextBox This, word count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
+  public static void KeepLastLines(this TextBox @this, word count) {
+    Against.ThisIsNull(@this);
+
+    var lines = @this.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
     var linesToRemove = Math.Max(0, lines.Count - (int)count);
-    This.Text = string.Empty;
-    This.AppendText(lines.Skip(linesToRemove)._FOS_Join(Environment.NewLine));
+    @this.Text = string.Empty;
+    @this.AppendText(lines.Skip(linesToRemove)._FOS_Join(Environment.NewLine));
   }
 
   /// <summary>
   ///   Keeps the first n lines removing whatever is after them.
   /// </summary>
-  /// <param name="This">This TextBox.</param>
+  /// <param name="this">This TextBox.</param>
   /// <param name="count">The number of lines to keep.</param>
-  public static void KeepFirstLines(this TextBox This, word count) {
-#if SUPPORTS_CONTRACTS
-      Contract.Requires(This != null);
-#endif
-    var lines = This.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-    This.Text = string.Empty;
-    This.AppendText(lines.Take((int)count)._FOS_Join(Environment.NewLine));
+  public static void KeepFirstLines(this TextBox @this, word count) {
+    Against.ThisIsNull(@this);
+
+    var lines = @this.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+    @this.Text = string.Empty;
+    @this.AppendText(lines.Take((int)count)._FOS_Join(Environment.NewLine));
   }
 
   /// <summary>
@@ -79,7 +74,9 @@ public static partial class TextBoxExtensions {
   /// <param name="newName">The new name</param>
   /// <returns>The duplicated TextBox</returns>
   public static TextBox Duplicate(this TextBox @this, string newName = null) {
-    newName = newName ?? new Guid().ToString();
+    Against.ThisIsNull(@this);
+
+    newName ??= new Guid().ToString();
 
     var newTextBox = new TextBox {
       AllowDrop = @this.AllowDrop,
