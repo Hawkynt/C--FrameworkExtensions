@@ -56,7 +56,7 @@ jobs:
           - 'Corlib.Extensions/Corlib.Extensions.csproj'
           - 'PresentationCore.Extensions/PresentationCore.Extensions.csproj'
           - 'System.Drawing.Extensions/System.Drawing.Extensions.csproj'
-          - 'System.Windows.Forms.Extensions/System.Windows.Form.Extensions.csproj'
+          - 'System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj'
           - 'System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj'
     steps:
       - uses: actions/checkout@v4

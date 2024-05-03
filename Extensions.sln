@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PresentationCore.Extensions
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASP.NET.Extensions", "ASP.NET.Extensions\ASP.NET.Extensions.csproj", "{E38E15AA-7EF9-42FD-AACC-F91368094270}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Windows.Form.Extensions", "System.Windows.Forms.Extensions\System.Windows.Form.Extensions.csproj", "{6970B073-ED87-4497-ABF9-AFA01FEBC470}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Windows.Forms.Extensions", "System.Windows.Forms.Extensions\System.Windows.Forms.Extensions.csproj", "{6970B073-ED87-4497-ABF9-AFA01FEBC470}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryServices.Extensions", "System.DirectoryServices.AccountManagement.Extensions\DirectoryServices.Extensions.csproj", "{B1BFAC14-54C8-45CA-A184-6FCAD6597B10}"
 EndProject
