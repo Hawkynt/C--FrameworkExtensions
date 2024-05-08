@@ -1,5 +1,5 @@
 ﻿namespace Utilities;
-internal class Array {
+internal static class Array {
 
 #if !SUPPORTS_ARRAY_EMPTY
 
