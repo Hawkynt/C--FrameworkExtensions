@@ -28,24 +28,7 @@ using Guard;
 namespace System.IO;
 
 public static partial class FileSystemInfoExtensions {
-  /// <summary>
-  /// Tests the RelativeTo routine.
-  /// </summary>
-  internal static void _TestRelativeTo() {
-    var tests = new Func<bool>[] {
-      ()=>RelativeTo("a/b","a")=="b",
-      ()=>RelativeTo("a","a/b")=="..",
-      ()=>RelativeTo("a/b","a/b")=="",
-      ()=>RelativeTo("c","a")=="c",
-      ()=>RelativeTo("a/b","a\\b")=="",
-      ()=>RelativeTo("\\/A","//a/b/c")=="..\\..",
-    };
-    foreach (var test in tests) {
-      if (!test())
-        throw new NotImplementedException("Implementation did not meet test requirements");
-    }
-  }
-
+  
   /// <summary>
   /// Checks whether the given FileSystemInfo does not exist.
   /// </summary>
@@ -82,7 +65,7 @@ public static partial class FileSystemInfoExtensions {
   /// <param name="tgtPath">The target path.</param>
   /// <param name="srcPath">The base path.</param>
   /// <returns>A relative path, if possible; otherwise, the absolute target path is returned.</returns>
-  public static string RelativeTo(string tgtPath, string srcPath) {
+  private static string _RelativeTo(string tgtPath, string srcPath) {
     Against.ArgumentIsNull(tgtPath);
     Against.ArgumentIsNull(srcPath);
 
@@ -130,7 +113,7 @@ public static partial class FileSystemInfoExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(source);
     
-    return RelativeTo(@this.FullName, source.FullName);
+    return FileSystemInfoExtensions._RelativeTo(@this.FullName, source.FullName);
   }
 
   /// <summary>
