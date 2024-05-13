@@ -111,10 +111,15 @@ internal static class TestUtilities {
     if (string.IsNullOrEmpty(methodName))
       throw new ArgumentNullException(nameof(methodName), "The method name cannot be null or empty.");
 
-    var privateMethod = typeof(TObject).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+    var privateMethod = typeof(TObject).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
     if (privateMethod == null)
       throw new ArgumentException($"The method '{methodName}' is not found on type '{typeof(TObject).FullName}'.", nameof(methodName));
+
+    if (privateMethod.IsGenericMethod) {
+      var resultType = typeof(TResult);
+      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType() : resultType);
+    }
 
     return args => (TResult?)privateMethod.Invoke(@this, args ?? new object[0]);
   }
@@ -178,12 +183,65 @@ internal static class TestUtilities {
     if (string.IsNullOrEmpty(methodName))
       throw new ArgumentNullException(nameof(methodName), "The method name cannot be null or empty.");
 
-    var privateMethod = @this.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static);
+    var privateMethod = @this.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
 
     if (privateMethod == null)
       throw new ArgumentException($"The method '{methodName}' is not found on type '{@this.FullName}'.", nameof(methodName));
 
+    if (privateMethod.IsGenericMethod) {
+      var resultType = typeof(TResult);
+      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType() : resultType);
+    }
+
     return args => (TResult?)privateMethod.Invoke(null, args ?? new object[0]);
   }
-  
+
+  /// <summary>
+  /// Retrieves a non-public (private or internal) type from the specified assembly by its name.
+  /// </summary>
+  /// <param name="this">The assembly from which to retrieve the non-public type.</param>
+  /// <param name="typeName">The full name of the type to retrieve.</param>
+  /// <returns>
+  /// The type if found; otherwise, null. This method returns a <see cref="Type"/> object representing
+  /// the non-public type, or null if the type is not found.
+  /// </returns>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown if <paramref name="this"/> is null, indicating that the method was called on a null assembly reference,
+  /// or if <paramref name="typeName"/> is null or an empty string, indicating that the type name was not provided.
+  /// </exception>
+  /// <remarks>
+  /// This method searches for types that are not public within the given assembly. It does not search
+  /// for public types, and it does not throw an exception if the type is not found (instead, it returns null).
+  ///
+  /// <para>This method is useful for accessing types that are typically hidden from external assemblies,
+  /// such as internal or private classes, structures, interfaces, or enums defined within the assembly.</para>
+  ///
+  /// <para>Example usage:</para>
+  /// <code>
+  /// var assembly = Assembly.Load("YourAssemblyName");
+  /// var privateType = assembly.NonPublic("Namespace.SubNamespace.PrivateClassName");
+  ///
+  /// if (privateType != null)
+  /// {
+  ///     Console.WriteLine("Private type found: " + privateType.FullName);
+  /// }
+  /// else
+  /// {
+  ///     Console.WriteLine("Private type not found.");
+  /// }
+  /// </code>
+  ///
+  /// Note that the <paramref name="typeName"/> should include the full namespace if applicable.
+  /// </remarks>
+  public static Type? NonPublic(this Assembly @this, string typeName) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this), "The assembly cannot be null.");
+
+    if (string.IsNullOrEmpty(typeName))
+      throw new ArgumentNullException(nameof(typeName), "The type name cannot be null or empty.");
+
+    return @this.GetType(typeName, false, false);
+  }
+
+
 }
