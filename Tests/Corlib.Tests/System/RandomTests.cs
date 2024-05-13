@@ -1,9 +1,8 @@
 ﻿using System;
 using NUnit.Framework;
+using System.Diagnostics;
 
 namespace Corlib.Tests.System;
-
-using global::System.Diagnostics;
 
 [TestFixture]
 internal class RandomTests {
