@@ -23,11 +23,9 @@ namespace Utilities;
 internal static class Array {
 
 #if !SUPPORTS_ARRAY_EMPTY
-
-  private static readonly System.Array _emptyArray = new object[0];
-
+  
   private static class EmptyArray<T> {
-    public static T[] Empty => (T[])Array._emptyArray;
+    public static T[] Empty = new T[0];
   }
   
 #endif
