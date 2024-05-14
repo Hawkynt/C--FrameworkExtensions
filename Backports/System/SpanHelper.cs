@@ -17,10 +17,17 @@ internal static unsafe class SpanHelper {
     #endregion
 
     public void CopyTo(MemoryHandlerBase<T> other, int length) {
+      if (length < 0)
+        throw new ArgumentOutOfRangeException(nameof(length));
+
       var source = this.Pointer;
       var target = other.Pointer;
+#if SUPPORTS_BUFFER_MEMORYCOPY
+      Buffer.MemoryCopy(source, target, length, length);
+#else
       for (var i = 0; i < length; ++i)
         target[i] = source[i];
+#endif
     }
 
     public ref T this[int index] => ref this.Pointer[index];
