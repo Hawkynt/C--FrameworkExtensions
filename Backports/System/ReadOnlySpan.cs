@@ -15,7 +15,7 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
 
   public ReadOnlySpan(T[] array) : this(array, 0, array?.Length ?? 0) { }
   
-  public ReadOnlySpan(T[] array, int start, int length):this(new SpanHelper.ArrayMemoryHandler<T>(array, start), length) { }
+  public ReadOnlySpan(T[] array, int start, int length):this(new SpanHelper.PinnedArrayMemoryHandler<T>(array, start), length) { }
 
 #pragma warning disable CS8500
   public unsafe ReadOnlySpan(void* pointer, int length):this(new SpanHelper.UnmanagedMemoryHandler<T>((T*)pointer),length) { }
@@ -38,7 +38,7 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
     if (start < 0 || length < 0 || start + length > this.Length)
       throw new ArgumentOutOfRangeException();
 
-    return new(new SpanHelper.AnotherHandler<T>(this._memoryHandler, start), length);
+    return new(this._memoryHandler.SliceFrom(start), length);
   }
 
   public T[] ToArray() {
