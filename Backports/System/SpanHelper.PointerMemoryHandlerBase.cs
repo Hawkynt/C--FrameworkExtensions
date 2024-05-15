@@ -4,9 +4,19 @@ namespace System;
 using Runtime.InteropServices;
 
 internal static unsafe partial class SpanHelper {
+
+  /// <summary>
+  /// Provides a base class for handling memory using a pointer to a block of memory of type <typeparamref name="T"/>.
+  /// </summary>
+  /// <typeparam name="T">The type of elements pointed to by the memory.</typeparam>
+  /// <remarks>
+  /// This class is intended to be inherited by more specific memory handler implementations that operate on pointers.
+  /// It provides common functionality and the basic structure needed to work with unmanaged memory in a managed environment,
+  /// adhering to the <see cref="IMemoryHandler{T}"/> interface.
+  /// </remarks>
   public abstract class PointerMemoryHandlerBase<T>(T* pointer): IMemoryHandler<T> {
 
-    protected T* Pointer { get; init; } = pointer;
+    protected T* Pointer { get; } = pointer;
 
     private void CopyTo(PointerMemoryHandlerBase<T> other, int length) {
       if (length < 0)
@@ -97,14 +107,17 @@ internal static unsafe partial class SpanHelper {
 #endif
     }
 
+    /// <inheritdoc />
     public ref T this[int index] => ref this.Pointer[index];
 
+    /// <inheritdoc />
     public void CopyTo(T[] target, int count) {
       var pointer = this.Pointer;
       for (var i = 0; i < count; ++i)
         target[i] = pointer[i];
     }
 
+    /// <inheritdoc />
     public abstract IMemoryHandler<T> SliceFrom(int offset);
 
     /// <inheritdoc />

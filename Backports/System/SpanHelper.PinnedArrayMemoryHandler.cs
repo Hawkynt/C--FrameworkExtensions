@@ -2,6 +2,16 @@
 namespace System;
 
 internal static unsafe partial class SpanHelper {
+
+  /// <summary>
+  /// Provides a memory handler that pins a managed array in memory, allowing for safe and performant access 
+  /// to its elements as if they were unmanaged, using a pointer.
+  /// </summary>
+  /// <typeparam name="T">The type of the elements in the array.</typeparam>
+  /// <remarks>
+  /// This class is useful for interoperability scenarios where a managed array needs to be passed to unmanaged code
+  /// without copying the data, by pinning its contents in memory to prevent the garbage collector from moving it.
+  /// </remarks>
   public sealed class PinnedArrayMemoryHandler<T> : PointerMemoryHandlerBase<T> {
 
     private readonly ManagedArrayPin<T> _pin;

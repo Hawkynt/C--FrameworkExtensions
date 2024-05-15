@@ -2,6 +2,13 @@
 
 internal static partial class SpanHelper {
 
+  /// <summary>
+  /// Provides a managed array implementation of <see cref="IMemoryHandler{T}"/>, allowing for array operations and manipulations based on the <see cref="IMemoryHandler{T}"/> interface.
+  /// </summary>
+  /// <typeparam name="T">The type of elements stored in the managed array.</typeparam>
+  /// <remarks>
+  /// This class manages an array segment by providing direct access and manipulation capabilities over a portion of an array, beginning at a specified index.
+  /// </remarks>
   public class ManagedArrayHandler<T>(T[] source, int start) : IMemoryHandler<T> {
     #region Implementation of IMemoryHandler<T>
 
