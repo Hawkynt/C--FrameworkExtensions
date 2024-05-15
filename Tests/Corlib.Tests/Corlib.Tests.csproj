@@ -10,6 +10,7 @@
     <SelfContained>false</SelfContained>
     <IsPackable>false</IsPackable>
     <LangVersion>default</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
