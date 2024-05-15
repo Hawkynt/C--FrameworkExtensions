@@ -6,19 +6,19 @@ using Collections;
 using Collections.Generic;
 
 public readonly struct Span<T> : IEnumerable<T> {
-  internal readonly SpanHelper.MemoryHandlerBase<T> _memoryHandler;
+  internal readonly SpanHelper.IMemoryHandler<T> pointerMemoryHandler;
 
-  private Span(SpanHelper.MemoryHandlerBase<T> handler, int length) {
-    this._memoryHandler = handler;
+  private Span(SpanHelper.IMemoryHandler<T> handler, int length) {
+    this.pointerMemoryHandler = handler;
     this.Length = length;
   }
 
   public Span(T[] array) : this(array, 0, array?.Length ?? 0) { }
 
-  public Span(T[] array, int start, int length) : this(new SpanHelper.PinnedArrayMemoryHandler<T>(array, start), length) { }
+  public Span(T[] array, int start, int length) : this(SpanHelper.PinnedArrayMemoryHandler<T>.FromManagedArray(array, start), length) { }
 
 #pragma warning disable CS8500
-  public unsafe Span(void* pointer, int length) : this(new SpanHelper.UnmanagedMemoryHandler<T>((T*)pointer), length) { }
+  public unsafe Span(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
 #pragma warning restore CS8500
 
   public int Length { get; }
@@ -30,7 +30,7 @@ public readonly struct Span<T> : IEnumerable<T> {
       if ((uint)index >= (uint)this.Length)
         throw new ArgumentOutOfRangeException();
 
-      return ref this._memoryHandler[index];
+      return ref this.pointerMemoryHandler[index];
     }
   }
 
@@ -38,12 +38,12 @@ public readonly struct Span<T> : IEnumerable<T> {
     if (start < 0 || length < 0 || start + length > this.Length)
       throw new ArgumentOutOfRangeException();
 
-    return new(this._memoryHandler.SliceFrom(start), length);
+    return new(this.pointerMemoryHandler.SliceFrom(start), length);
   }
 
   public T[] ToArray() {
     var array = new T[this.Length];
-    this._memoryHandler.CopyTo(array,this.Length);
+    this.pointerMemoryHandler.CopyTo(array,this.Length);
     
     return array;
   }
@@ -53,7 +53,7 @@ public readonly struct Span<T> : IEnumerable<T> {
     if (other.Length < length)
       throw new ArgumentOutOfRangeException();
 
-    this._memoryHandler.CopyTo(other._memoryHandler, this.Length);
+    this.pointerMemoryHandler.CopyTo(other.pointerMemoryHandler, this.Length);
   }
 
   public bool TryCopyTo(Span<T> other) {
@@ -61,11 +61,11 @@ public readonly struct Span<T> : IEnumerable<T> {
     if (other.Length < length)
       return false;
 
-    this._memoryHandler.CopyTo(other._memoryHandler, this.Length);
+    this.pointerMemoryHandler.CopyTo(other.pointerMemoryHandler, this.Length);
     return true;
   }
   
-  public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this._memoryHandler, this.Length);
+  public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this.pointerMemoryHandler, this.Length);
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
 }
