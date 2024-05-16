@@ -25,8 +25,12 @@ internal static unsafe partial class SpanHelper {
 
     #endregion
 
+    private const int PIN_THRESHOLD_ELEMENT_COUNT = 256;
+
     public static IMemoryHandler<T> FromManagedArray(T[] array, int start) 
-      => ManagedArrayPin<T>.TryPin(array, out var pin) 
+      => typeof(T).IsPrimitive && (array.Length-start) < PIN_THRESHOLD_ELEMENT_COUNT
+        ? new ManagedArrayHandler<T>(array, start) 
+        : ManagedArrayPin<T>.TryPin(array, out var pin) 
         ? new PinnedArrayMemoryHandler<T>(pin, pin.Pointer + start) 
         : new ManagedArrayHandler<T>(array, start)
     ;

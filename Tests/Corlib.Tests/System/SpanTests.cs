@@ -10,13 +10,23 @@ namespace System;
 internal class SpanTests {
 
 
-  private static IEnumerable<int> LengthGenerator(int min, int max) {
+  private static IEnumerable<int> LengthGenerator(bool allowZero) {
+    var min = allowZero ? 0 : 1;
+    var max = 256;
+    int[] others = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536];
+
     for (var i = min; i <= max; ++i)
       yield return i;
+
+    foreach (var i in others) {
+      yield return i - 1;
+      yield return i;
+      yield return i + 1;
+    }
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [0, 256])]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
   public void CopyTo_CopiesCorrectly_ManagedInt(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => i + 1).ToArray();
     var destinationArray = new int[length];
@@ -31,7 +41,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [1, 256])]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
   public unsafe void CopyTo_CopiesCorrectly_UnmanagedByte(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => (byte)(i % 255 + 1)).ToArray();
     var destinationArray = new byte[length];
@@ -139,7 +149,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [1, 256])]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_UserDefinedStruct(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
     var destinationArray = new MyStruct[length];
@@ -156,9 +166,9 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [1, 256])]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_ReferenceTypes(int length) {
-    var sourceArray = Enumerable.Range(0, length).Select(i => new string('a', i)).ToArray();
+    var sourceArray = Enumerable.Range(0, length).Select(i => new string('a', i % 128)).ToArray();
     var destinationArray = new string[length];
 
     var sourceSpan = sourceArray.AsSpan();
@@ -172,7 +182,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [1, 256])]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
   public unsafe void CopyTo_CopiesCorrectly_BlittableTypes(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
     var destinationArray = new MyStruct[length];
