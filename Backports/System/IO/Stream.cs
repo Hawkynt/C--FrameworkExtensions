@@ -91,27 +91,32 @@ public static partial class StreamPolyfills {
       }
 
       try {
-        cancellationToken.Register(() => {
-          try {
-            tcs.TrySetCanceled();
-          } catch (Exception ex) {
-            tcs.TrySetException(ex);
-          }
-        });
-
-        stream.BeginRead(buffer, offset, count, ar => {
-          try {
-            var bytesRead = stream.EndRead(ar);
-            tcs.TrySetResult(bytesRead);
-          } catch (Exception ex) {
-            tcs.TrySetException(ex);
-          }
-        }, null);
+        cancellationToken.Register(OnCancellationRequested);
+        stream.BeginRead(buffer, offset, count, OnReadComplete, (stream, tcs));
       } catch (Exception ex) {
         tcs.TrySetException(ex);
       }
 
       return tcs.Task;
+
+      void OnCancellationRequested() {
+        try {
+          tcs.TrySetCanceled();
+        } catch (Exception ex) {
+          tcs.TrySetException(ex);
+        }
+      }
+
+      static void OnReadComplete(IAsyncResult ar) {
+        var (stream, tcs) = ((Stream, TaskCompletionSource<int>))ar.AsyncState;
+        try {
+          var bytesRead = stream.EndRead(ar);
+          tcs.TrySetResult(bytesRead);
+        } catch (Exception ex) {
+          tcs.TrySetException(ex);
+        }
+      }
+
     }
   }
 
@@ -126,7 +131,7 @@ public static partial class StreamPolyfills {
       throw new ArgumentOutOfRangeException(nameof(offset));
     if (count < 0 || count > buffer.Length - offset)
       throw new ArgumentOutOfRangeException(nameof(count));
-    
+
     return Invoke(@this, buffer, offset, count, cancellationToken);
 
     static Task<int> Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
@@ -137,28 +142,32 @@ public static partial class StreamPolyfills {
       }
 
       try {
-        stream.BeginWrite(buffer, offset, count, ar => {
-          try {
-            var bytesRead = stream.EndRead(ar);
-            tcs.TrySetResult(bytesRead);
-          } catch (Exception ex) {
-            tcs.TrySetException(ex);
-          }
-        }, null);
-
-        // Register the cancellation token to cancel the read operation
-        cancellationToken.Register(() => {
-          try {
-            tcs.TrySetCanceled();
-          } catch (Exception ex) {
-            tcs.TrySetException(ex);
-          }
-        });
+        cancellationToken.Register(OnCancellationRequested);
+        stream.BeginWrite(buffer, offset, count, OnWriteComplete, (stream, tcs));
       } catch (Exception ex) {
         tcs.TrySetException(ex);
       }
 
       return tcs.Task;
+
+      void OnCancellationRequested() {
+        try {
+          tcs.TrySetCanceled();
+        } catch (Exception ex) {
+          tcs.TrySetException(ex);
+        }
+      }
+
+      static void OnWriteComplete(IAsyncResult ar) {
+        var (stream, tcs) = ((Stream, TaskCompletionSource<int>))ar.AsyncState;
+        try {
+          var bytesRead = stream.EndRead(ar);
+          tcs.TrySetResult(bytesRead);
+        } catch (Exception ex) {
+          tcs.TrySetException(ex);
+        }
+      }
+
     }
   }
 
