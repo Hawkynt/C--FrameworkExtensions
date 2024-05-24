@@ -25,8 +25,13 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
 
   private const ushort _PRIME = 31;
 
-  public JavaHash() => this.Initialize();
-  
+  public JavaHash():this(MaxOutputBits) { }
+
+  public JavaHash(int outputBits) {
+    this.OutputBits = outputBits;
+    this.Initialize();
+  }
+
   private Action _reset;
   private Action<byte[], int, int> _core;
   private Func<byte[]> _final;

@@ -588,8 +588,10 @@ public sealed class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
   private int _outputBits;
   private readonly ulong[] _state = new ulong[8];
 
-  public Whirlpool() {
-    this.OutputBits = SupportedOutputBits.First();
+  public Whirlpool(): this(MaxOutputBits) { }
+
+  public Whirlpool(int numberOfResultBits) {
+    this.OutputBits = numberOfResultBits;
     this.Initialize();
   }
 

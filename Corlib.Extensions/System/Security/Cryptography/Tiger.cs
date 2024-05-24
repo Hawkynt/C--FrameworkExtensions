@@ -560,7 +560,9 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   private bool _isFinished;
   private int _outputBits;
 
-  public Tiger(int numberOfResultBits = 192) {
+  public Tiger():this(MaxOutputBits) { }
+
+  public Tiger(int numberOfResultBits) {
     this.OutputBits = numberOfResultBits;
     this.Initialize();
   }

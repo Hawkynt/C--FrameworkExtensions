@@ -23,10 +23,7 @@ namespace System.Security.Cryptography;
 
 public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
-  public Fletcher() {
-    this.OutputBits = SupportedOutputBits.First();
-    this.Initialize();
-  }
+  public Fletcher():this(MaxOutputBits) { }
 
   public Fletcher(int outputBits) {
     this.OutputBits = outputBits;
