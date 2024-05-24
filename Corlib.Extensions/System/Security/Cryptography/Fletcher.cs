@@ -43,6 +43,30 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public override void Initialize() {
     switch (this.OutputBits) {
+      case 4: {
+        byte state = 0;
+        byte sum = 0;
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+
+        void Reset() {
+          state = 0;
+          sum = 0;
+        }
+
+        void Core(byte[] array, int index, int count) {
+          for (count += index; index < count; ++index) {
+            state = (byte)((state + array[index]) % 3);
+            sum = (byte)((sum + state) % 3);
+          }
+        }
+
+        byte[] Final() => new[] { (byte)(sum << 2 | state) };
+
+      }
       case 8: {
         byte state = 0;
         byte sum = 0;
@@ -199,9 +223,9 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  public static int MinOutputBits => 8;
+  public static int MinOutputBits => 4;
   public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64, 128 };
+  public static int[] SupportedOutputBits => new[]{ 4, 8, 16, 32, 64, 128 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
