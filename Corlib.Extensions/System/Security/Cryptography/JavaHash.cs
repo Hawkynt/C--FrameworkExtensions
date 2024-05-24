@@ -19,23 +19,13 @@
 */
 #endregion
 
-using System.Linq;
-
 namespace System.Security.Cryptography;
 
-public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
 
-  public Fletcher() {
-    this.OutputBits = SupportedOutputBits.First();
-    this.Initialize();
-  }
+  private const ushort _PRIME = 31;
 
-  public Fletcher(int outputBits) {
-    this.OutputBits = outputBits;
-    this.Initialize();
-  }
-
-  private int _outputBits;
+  public JavaHash() => this.Initialize();
   
   private Action _reset;
   private Action<byte[], int, int> _core;
@@ -44,103 +34,51 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
   #region Overrides of HashAlgorithm
 
   public override void Initialize() {
+
     switch (this.OutputBits) {
-      case 16: {
-        byte state = 0;
-        byte sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-          
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-              sum += state += array[index];
-        }
-
-        byte[] Final() => new[] { state, sum };
-
-      }
       case 32: {
-        ushort state = 0;
-        ushort sum = 0;
-
+        uint state = 0;
         this._reset = Reset;
         this._core = Core;
         this._final = Final;
         break;
 
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
+        void Reset() => state = 0;
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index)
-            sum += state += array[index];
+            state = state * _PRIME + array[index];
         }
 
-        byte[] Final() => BitConverter.GetBytes(sum << 16 | state);
+        byte[] Final() => BitConverter.GetBytes(state);
 
       }
       case 64: {
-        uint state = 0;
-        uint sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-            sum += state += array[index];
-        }
-
-        byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
-
-      }
-      case 128: {
         ulong state = 0;
-        ulong sum = 0;
-
         this._reset = Reset;
         this._core = Core;
         this._final = Final;
+
         break;
 
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
+        void Reset() => state = 0;
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index)
-            sum += state += array[index];
+            state = state * _PRIME + array[index];
         }
 
-        byte[] Final() => BitConverter.GetBytes(state).Concat(BitConverter.GetBytes(sum)).ToArray();
+        byte[] Final() => BitConverter.GetBytes(state);
 
       }
-      default: 
+      default:
         throw new NotSupportedException();
     }
-    
+
     this._reset();
   }
 
-  protected override void HashCore(byte[] array, int ibStart, int cbSize) => this._core(array, ibStart, cbSize);
+  protected override void HashCore(byte[] array, int index, int count) => this._core(array, index, count);
 
   protected override byte[] HashFinal() => this._final();
 
@@ -148,8 +86,9 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Fletcher({this.OutputBits})";
+  public string Name => $"JavaHash{this.OutputBits}";
 
+  private int _outputBits;
   public int OutputBits {
     get => this._outputBits;
     set {
@@ -162,16 +101,21 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public byte[] IV {
     get => null;
-    set => throw new NotSupportedException();
+    set => throw new NotImplementedException();
   }
 
-  public static int MinOutputBits => 16;
-  public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[]{ 16, 32, 64, 128 };
+  public static int MinOutputBits => 32;
+
+  public static int MaxOutputBits => 64;
+
+  public static int[] SupportedOutputBits => new[] { MinOutputBits, MaxOutputBits };
 
   public static bool SupportsIV => false;
+
   public static int MinIVBits => 0;
+
   public static int MaxIVBits => MinIVBits;
+
   public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
 
   #endregion

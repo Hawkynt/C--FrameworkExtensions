@@ -19,33 +19,31 @@
 */
 #endregion
 
-
 namespace System.Security.Cryptography;
 
-public class Adler32 : HashAlgorithm {
+public sealed class Adler32 : HashAlgorithm {
 
   private const ushort _DIVISOR = 65521;
 
-  public Adler32() {
-    this.Initialize();
-  }
+  public Adler32() => this.Initialize();
 
   private ushort _state;
   private ushort _sum;
 
   #region Overrides of HashAlgorithm
 
-  public sealed override void Initialize() {
+  public override void Initialize() {
     this._state = 1;
     this._sum = 0;
   }
 
-  protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-    for (var i = ibStart; i < ibStart + cbSize; ++i)
-      this._sum = (ushort)((this._sum + (this._state = (ushort)((this._state + array[i]) % _DIVISOR))) % _DIVISOR);
+  protected override void HashCore(byte[] array, int index, int count) {
+    for (count += index; index < count; ++index)
+      this._sum = (ushort)((this._sum + (this._state = (ushort)((this._state + array[index]) % _DIVISOR))) % _DIVISOR);
   }
 
-  protected override byte[] HashFinal() => BitConverter.GetBytes(this._sum << 16 | this._state);
+  protected override byte[] HashFinal() => BitConverter.GetBytes((uint)this._sum << 16 | this._state);
 
   #endregion
+  
 }

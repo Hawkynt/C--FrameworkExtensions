@@ -23,7 +23,7 @@ using System.Linq;
 
 namespace System.Security.Cryptography;
 
-public class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
 
   private static readonly byte[] _DEFAULT_S_BOX ={
     
@@ -55,49 +55,10 @@ public class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
     this.IV = sbox;
     this.Initialize();
   }
-
-  #region Implementation of IAdvancedHashAlgorithm
-  public string Name { get { return (string.Format("Pearson({0})", this._state.Length << 3)); } }
-
-  public int OutputBits {
-    get { return (this._state.Length << 3); }
-    set {
-      if (!SupportedOutputBits.Contains(value))
-        throw new ArgumentException();
-
-      this._state = new byte[value >> 3];
-      this.Initialize();
-    }
-  }
-
-  public byte[] IV {
-    get { return (this._sBox); }
-    set {
-      if (value != null && !SupportedIVBits.Contains(value.Length << 3))
-        throw new ArgumentException();
-
-      this._sBox = value ?? _DEFAULT_S_BOX;
-      this.Initialize();
-    }
-  }
-  #endregion
-
-  #region Algorithm basics
-  public static readonly int MinOutputBits = 8;
-  public static readonly int MaxOutputBits = 256 << 3;
-  public static readonly int[] SupportedOutputBits = Enumerable.Range(MinOutputBits >> 3, ((MaxOutputBits - MinOutputBits) >> 3) + 1).Select(i => i << 3).ToArray();
-
-  public static readonly bool SupportsIV = true;
-  public static readonly int MinIVBits = 256 << 3;
-  public static readonly int MaxIVBits = MinIVBits;
-  public static readonly int[] SupportedIVBits = { MinIVBits };
-  #endregion
-
+  
   #region Overrides of HashAlgorithm
-
-  public override sealed void Initialize() {
-    this._isStarted = false;
-  }
+  
+  public override void Initialize() => this._isStarted = false;
 
   protected override void HashCore(byte[] array, int ibStart, int cbSize) {
     var sBox = this._sBox;
@@ -114,9 +75,44 @@ public class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
       state[j] = sBox[state[j] ^ array[i]];
   }
 
-  protected override byte[] HashFinal() {
-    return (this._isStarted ? this._state : new byte[this._state.Length]);
+  protected override byte[] HashFinal() => this._isStarted ? this._state : new byte[this._state.Length];
+
+  #endregion
+
+  #region Implementation of IAdvancedHashAlgorithm
+
+  public string Name => $"Pearson({this._state.Length << 3})";
+
+  public int OutputBits {
+    get => this._state.Length << 3;
+    set {
+      if (!SupportedOutputBits.Contains(value))
+        throw new ArgumentException();
+
+      this._state = new byte[value >> 3];
+      this.Initialize();
+    }
   }
+
+  public byte[] IV {
+    get => this._sBox;
+    set {
+      if (value != null && !SupportedIVBits.Contains(value.Length << 3))
+        throw new ArgumentException();
+
+      this._sBox = value ?? _DEFAULT_S_BOX;
+      this.Initialize();
+    }
+  }
+
+  public static int MinOutputBits => 8;
+  public static int MaxOutputBits => 256 << 3;
+  public static int[] SupportedOutputBits => Enumerable.Range(MinOutputBits >> 3, ((MaxOutputBits - MinOutputBits) >> 3) + 1).Select(i => i << 3).ToArray();
+
+  public static bool SupportsIV => true;
+  public static int MinIVBits => 256 << 3;
+  public static int MaxIVBits => MinIVBits;
+  public static int[] SupportedIVBits => new[] { MinIVBits };
 
   #endregion
 }
