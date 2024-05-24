@@ -191,9 +191,9 @@ public static partial class StreamPolyfills {
 
       var bytesRead = await source.ReadAsync(currentBuffer, 0, bufferSize, token).ConfigureAwait(false);
       while (bytesRead > 0) {
-        var nextReadTask = source.ReadAsync(nextBuffer, 0, bufferSize, token);
+        var nextReadTask = source.ReadAsync(nextBuffer, 0, bufferSize, token).ConfigureAwait(false);
         await target.WriteAsync(currentBuffer, 0, bytesRead, token).ConfigureAwait(false);
-        bytesRead = await nextReadTask.ConfigureAwait(false);
+        bytesRead = await nextReadTask;
 
         (currentBuffer, nextBuffer) = (nextBuffer, currentBuffer);
       }
