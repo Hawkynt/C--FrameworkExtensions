@@ -23,6 +23,8 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
+using System.Security.Cryptography;
+
 namespace System;
 
 using Collections;
@@ -38,7 +40,6 @@ using Runtime.CompilerServices;
 using Text;
 using Text.RegularExpressions;
 using Guard;
-using static System.Net.Mime.MediaTypeNames;
 
 public static partial class StringExtensions {
 
@@ -46,6 +47,36 @@ public static partial class StringExtensions {
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
 #endif
 
+  /// <summary>
+  /// Computes the hash of the current string using the specified hash algorithm.
+  /// </summary>
+  /// <typeparam name="TAlgorithm">The type of the hash algorithm to use. Must be a subclass of <see cref="HashAlgorithm"/> and have a parameterless constructor.</typeparam>
+  /// <param name="this">The current string instance to hash.</param>
+  /// <returns>A hexadecimal string representation of the computed hash.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// string input = "Hello, world!";
+  /// string sha256Hash = input.ComputeHash&lt;SHA256CryptoServiceProvider&gt;();
+  /// Console.WriteLine($"SHA-256 Hash: {sha256Hash}");
+  ///
+  /// string md5Hash = input.ComputeHash&lt;MD5CryptoServiceProvider&gt;();
+  /// Console.WriteLine($"MD5 Hash: {md5Hash}");
+  /// </code>
+  /// This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method.
+  /// </example>
+  /// <remarks>
+  /// This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
+  /// </remarks>
+  public static string ComputeHash<TAlgorithm>(this string @this) where TAlgorithm:HashAlgorithm, new() {
+    Against.ThisIsNull(@this);
+
+    using var hashAlgorithm = new TAlgorithm();
+    var bytes = Encoding.UTF8.GetBytes(@this);
+    var hash = hashAlgorithm.ComputeHash(bytes);
+    return hash.ToHex();
+  }
+  
   #region ExchangeAt
 
   /// <summary>
