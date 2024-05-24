@@ -19,8 +19,6 @@
 */
 #endregion
 
-using System.Linq;
-
 namespace System.Security.Cryptography;
 
 public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
@@ -45,6 +43,30 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public override void Initialize() {
     switch (this.OutputBits) {
+      case 8: {
+        byte state = 0;
+        byte sum = 0;
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+
+        void Reset() {
+          state = 0;
+          sum = 0;
+        }
+
+        void Core(byte[] array, int index, int count) {
+          for (count += index; index < count; ++index) {
+            state = (byte)((state + array[index]) % 15);
+            sum = (byte)((sum + state) % 15);
+          }
+        }
+
+        byte[] Final() => new[] { (byte)(sum << 4 | state) };
+
+      }
       case 16: {
         byte state = 0;
         byte sum = 0;
@@ -60,8 +82,10 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-              sum += state += array[index];
+          for (count += index; index < count; ++index) {
+            state = (byte)((state + array[index]) % byte.MaxValue);
+            sum = (byte)((sum + state) % byte.MaxValue);
+          }
         }
 
         byte[] Final() => new[] { state, sum };
@@ -82,11 +106,13 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-            sum += state += array[index];
+          for (count += index; index < count; ++index) {
+            state = (ushort)((state + array[index]) % ushort.MaxValue);
+            sum = (ushort)((sum + state) % ushort.MaxValue);
+          }
         }
 
-        byte[] Final() => BitConverter.GetBytes(sum << 16 | state);
+        byte[] Final() => BitConverter.GetBytes((uint)sum << 16 | state);
 
       }
       case 64: {
@@ -104,11 +130,13 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-            sum += state += array[index];
+          for (count += index; index < count; ++index) {
+            state = (state + array[index]) % uint.MaxValue;
+            sum = (sum + state) % uint.MaxValue;
+          }
         }
 
-        byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
+          byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
 
       }
       case 128: {
@@ -126,12 +154,18 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index)
-            sum += state += array[index];
+          for (count += index; index < count; ++index) {
+            state = (state + array[index]) % ulong.MaxValue;
+            sum = (sum + state) % ulong.MaxValue;
+          }
         }
 
-        byte[] Final() => BitConverter.GetBytes(state).Concat(BitConverter.GetBytes(sum)).ToArray();
-
+        byte[] Final() {
+          var result = new byte[16];
+          Array.Copy(BitConverter.GetBytes(state),0,result,0,8);
+          Array.Copy(BitConverter.GetBytes(sum), 0, result, 8, 8);
+          return result;
+        }
       }
       default: 
         throw new NotSupportedException();
@@ -165,9 +199,9 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  public static int MinOutputBits => 16;
+  public static int MinOutputBits => 8;
   public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[]{ 16, 32, 64, 128 };
+  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64, 128 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
