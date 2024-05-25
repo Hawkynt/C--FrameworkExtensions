@@ -69,14 +69,47 @@ public static partial class StringExtensions {
   /// This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
   /// </remarks>
   public static string ComputeHash<TAlgorithm>(this string @this) where TAlgorithm:HashAlgorithm, new() {
-    Against.ThisIsNull(@this);
-
     using var hashAlgorithm = new TAlgorithm();
+    return ComputeHash(@this, hashAlgorithm);
+  }
+
+  /// <summary>
+  /// Computes the hash of the current string using the specified hash algorithm.
+  /// </summary>
+  /// <param name="this">The current string instance to hash.</param>
+  /// <param name="hashAlgorithm">The hash algorithm to use for computing the hash.</param>
+  /// <returns>A hexadecimal string representation of the computed hash.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="hashAlgorithm"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// string input = "Hello, world!";
+  /// using (var sha256 = SHA256.Create())
+  /// {
+  ///     string sha256Hash = input.ComputeHash(sha256);
+  ///     Console.WriteLine($"SHA-256 Hash: {sha256Hash}");
+  /// }
+  ///
+  /// using (var md5 = MD5.Create())
+  /// {
+  ///     string md5Hash = input.ComputeHash(md5);
+  ///     Console.WriteLine($"MD5 Hash: {md5Hash}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method with specified hash algorithms.
+  /// </example>
+  /// <remarks>
+  /// This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
+  /// </remarks>
+  public static string ComputeHash(this string @this, HashAlgorithm hashAlgorithm) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(hashAlgorithm);
+
     var bytes = Encoding.UTF8.GetBytes(@this);
     var hash = hashAlgorithm.ComputeHash(bytes);
     return hash.ToHex();
   }
-  
+
   #region ExchangeAt
 
   /// <summary>
