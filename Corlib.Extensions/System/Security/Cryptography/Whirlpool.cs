@@ -817,7 +817,7 @@ public sealed class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Whirlpool({this.OutputBits})";
+  public string Name => $"Whirlpool{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;

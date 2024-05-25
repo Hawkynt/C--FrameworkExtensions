@@ -723,7 +723,7 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Tiger({this.OutputBits})";
+  public string Name => $"Tiger{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;

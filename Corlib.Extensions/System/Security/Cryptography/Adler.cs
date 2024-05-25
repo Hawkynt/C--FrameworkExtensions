@@ -21,17 +21,17 @@
 
 namespace System.Security.Cryptography;
 
-public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
 
-  public Fletcher():this(MaxOutputBits) { }
+  public Adler() : this(MaxOutputBits) { }
 
-  public Fletcher(int outputBits) {
+  public Adler(int outputBits) {
     this.OutputBits = outputBits;
     this.Initialize();
   }
 
   private int _outputBits;
-  
+
   private Action _reset;
   private Action<byte[], int, int> _core;
   private Func<byte[]> _final;
@@ -41,6 +41,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
   public override void Initialize() {
     switch (this.OutputBits) {
       case 4: {
+        const byte PRIME = 3;
         byte state = 0;
         byte sum = 0;
 
@@ -56,8 +57,8 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % 3);
-            sum = (byte)((sum + state) % 3);
+            state = (byte)((state + array[index]) % PRIME);
+            sum = (byte)((sum + state) % PRIME);
           }
         }
 
@@ -65,6 +66,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
       }
       case 8: {
+        const byte PRIME = 13;
         byte state = 0;
         byte sum = 0;
 
@@ -80,8 +82,8 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % 15);
-            sum = (byte)((sum + state) % 15);
+            state = (byte)((state + array[index]) % PRIME);
+            sum = (byte)((sum + state) % PRIME);
           }
         }
 
@@ -89,6 +91,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
       }
       case 16: {
+        const byte PRIME = 251;
         byte state = 0;
         byte sum = 0;
 
@@ -96,7 +99,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         this._core = Core;
         this._final = Final;
         break;
-          
+
         void Reset() {
           state = 0;
           sum = 0;
@@ -113,6 +116,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
       }
       case 32: {
+        const ushort PRIME = 65521;
         ushort state = 0;
         ushort sum = 0;
 
@@ -128,8 +132,8 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (ushort)((state + array[index]) % ushort.MaxValue);
-            sum = (ushort)((sum + state) % ushort.MaxValue);
+            state = (ushort)((state + array[index]) % PRIME);
+            sum = (ushort)((sum + state) % PRIME);
           }
         }
 
@@ -137,6 +141,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
       }
       case 64: {
+        const uint PRIME = 4294967291;
         uint state = 0;
         uint sum = 0;
 
@@ -152,15 +157,16 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (state + array[index]) % uint.MaxValue;
-            sum = (sum + state) % uint.MaxValue;
+            state = (state + array[index]) % PRIME;
+            sum = (sum + state) % PRIME;
           }
         }
 
-          byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
+        byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
 
       }
       case 128: {
+        const ulong PRIME = 18446744073709551557;
         ulong state = 0;
         ulong sum = 0;
 
@@ -176,22 +182,22 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (state + array[index]) % ulong.MaxValue;
-            sum = (sum + state) % ulong.MaxValue;
+            state = (state + array[index]) % PRIME;
+            sum = (sum + state) % PRIME;
           }
         }
 
         byte[] Final() {
           var result = new byte[16];
-          Array.Copy(BitConverter.GetBytes(state),0,result,0,8);
+          Array.Copy(BitConverter.GetBytes(state), 0, result, 0, 8);
           Array.Copy(BitConverter.GetBytes(sum), 0, result, 8, 8);
           return result;
         }
       }
-      default: 
+      default:
         throw new NotSupportedException();
     }
-    
+
     this._reset();
   }
 
@@ -203,7 +209,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Fletcher{this.OutputBits}";
+  public string Name => $"Adler{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;
@@ -222,7 +228,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public static int MinOutputBits => 4;
   public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[]{ 4, 8, 16, 32, 64, 128 };
+  public static int[] SupportedOutputBits => new[] { 4, 8, 16, 32, 64, 128 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;

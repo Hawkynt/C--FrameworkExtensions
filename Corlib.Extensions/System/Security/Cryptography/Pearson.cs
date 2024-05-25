@@ -85,7 +85,7 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Pearson({this._state.Length << 3})";
+  public string Name => $"Pearson{this._state.Length << 3}";
 
   public int OutputBits {
     get => this._state.Length << 3;
