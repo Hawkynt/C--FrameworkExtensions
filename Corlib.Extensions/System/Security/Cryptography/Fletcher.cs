@@ -19,6 +19,8 @@
 */
 #endregion
 
+using System.Collections.Generic;
+
 namespace System.Security.Cryptography;
 
 public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
@@ -40,33 +42,8 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public override void Initialize() {
     switch (this.OutputBits) {
-      case 4: {
-        byte state = 0;
-        byte sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % 3);
-            sum = (byte)((sum + state) % 3);
-          }
-        }
-
-        byte[] Final() => new[] { (byte)(sum << 2 | state) };
-
-      }
       case 8: {
-        byte state = 0;
-        byte sum = 0;
+        byte state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -86,11 +63,9 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         byte[] Final() => new[] { (byte)(sum << 4 | state) };
-
       }
       case 16: {
-        byte state = 0;
-        byte sum = 0;
+        byte state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -109,83 +84,125 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { state, sum };
-
+        byte[] Final() => new[] { sum, state };
       }
       case 32: {
-        ushort state = 0;
-        ushort sum = 0;
+        ushort state = default, sum = default;
+        List<byte> carry = new(2);
 
         this._reset = Reset;
         this._core = Core;
         this._final = Final;
         break;
 
-        void Reset() {
-          state = 0;
-          sum = 0;
+        ushort ConvertFrom(byte b0, byte b1) => (ushort)((b0) | (b1 << 8));
+
+        void Round(ushort value) {
+          state = (ushort)(((uint)state + value) % ushort.MaxValue);
+          sum = (ushort)(((uint)sum + state) % ushort.MaxValue);
         }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (ushort)((state + array[index]) % ushort.MaxValue);
-            sum = (ushort)((sum + state) % ushort.MaxValue);
-          }
-        }
-
-        byte[] Final() => BitConverter.GetBytes((uint)sum << 16 | state);
-
-      }
-      case 64: {
-        uint state = 0;
-        uint sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
 
         void Reset() {
           state = 0;
           sum = 0;
+          carry.Clear();
         }
 
         void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (state + array[index]) % uint.MaxValue;
-            sum = (sum + state) % uint.MaxValue;
+          var end = index + count;
+
+          while (carry.Count > 0) {
+            if (index >= end)
+              return;
+
+            carry.Add(array[index++]);
+            if (carry.Count != 2)
+              continue;
+
+            Round(ConvertFrom(carry[0], carry[1]));
+            carry.Clear();
+            break;
           }
-        }
 
-          byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
+          while (index + 1 < end)
+            Round(ConvertFrom(array[index++], array[index++]));
 
-      }
-      case 128: {
-        ulong state = 0;
-        ulong sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (state + array[index]) % ulong.MaxValue;
-            sum = (sum + state) % ulong.MaxValue;
-          }
+          while (index < end)
+            carry.Add(array[index++]);
         }
 
         byte[] Final() {
-          var result = new byte[16];
-          Array.Copy(BitConverter.GetBytes(state),0,result,0,8);
-          Array.Copy(BitConverter.GetBytes(sum), 0, result, 8, 8);
-          return result;
+          if (carry.Count == 1)
+            Round(ConvertFrom(carry[0], 0));
+
+          return new[] {
+            (byte)(sum >> 8), (byte)sum,
+            (byte)(state >> 8), (byte)state
+          };
+        }
+      }
+      case 64: {
+        uint state = default, sum = default;
+        List <byte> carry = new(4);
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+
+        uint ConvertFrom(byte b0, byte b1, byte b2, byte b3) => (uint)((b0) | (b1 << 8) | (b2 << 16) | (b3 << 24));
+
+        void Round(uint value) {
+          state = (uint)(((ulong)state + value) % uint.MaxValue);
+          sum = (uint)(((ulong)sum + state) % uint.MaxValue);
+        }
+
+        void Reset() {
+          state = 0;
+          sum = 0;
+          carry.Clear();
+        }
+
+        void Core(byte[] array, int index, int count) {
+          var end = index + count;
+
+          while (carry.Count > 0) {
+            if (index >= end)
+              return;
+
+            carry.Add(array[index++]);
+            if (carry.Count != 4)
+              continue;
+
+            Round(ConvertFrom(carry[0], carry[1], carry[2], carry[3]));
+            carry.Clear();
+            break;
+          }
+
+          while (index + 3 < end)
+            Round(ConvertFrom(array[index++], array[index++], array[index++], array[index++]));
+
+          while (index < end)
+            carry.Add(array[index++]);
+        }
+
+        byte[] Final() {
+          switch (carry.Count) {
+            case 1:
+              Round(ConvertFrom(carry[0], 0, 0, 0));
+              break;
+            case 2:
+              Round(ConvertFrom(carry[0], carry[1], 0, 0));
+              break;
+            case 3:
+              Round(ConvertFrom(carry[0], carry[1], carry[2], 0));
+              break;
+          }
+
+          return new[] {
+            (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, 
+            (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state
+          };
         }
       }
       default: 
@@ -220,9 +237,9 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  public static int MinOutputBits => 4;
-  public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[]{ 4, 8, 16, 32, 64, 128 };
+  public static int MinOutputBits => SupportedOutputBits[0];
+  public static int MaxOutputBits => SupportedOutputBits[^1];
+  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;

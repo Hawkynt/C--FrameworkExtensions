@@ -109,18 +109,12 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotImplementedException();
   }
 
-  public static int MinOutputBits => 32;
-
-  public static int MaxOutputBits => 64;
-
-  public static int[] SupportedOutputBits => new[] { MinOutputBits, MaxOutputBits };
-
+  public static int MinOutputBits => SupportedOutputBits[0];
+  public static int MaxOutputBits => SupportedOutputBits[^1];
+  public static int[] SupportedOutputBits => new[] { 32, 64 };
   public static bool SupportsIV => false;
-
   public static int MinIVBits => 0;
-
   public static int MaxIVBits => MinIVBits;
-
   public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
 
   #endregion

@@ -102,35 +102,12 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (state + array[index]) % PRIME;
-            sum = (sum + state) % PRIME;
+            state = (uint)(((ulong)state + array[index]) % PRIME);
+            sum = (uint)(((ulong)sum + state) % PRIME);
           }
         }
 
         byte[] Final() => new[] { (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state };
-      }
-      case 128: {
-        const ulong PRIME = 18446744073709551557;
-        ulong state = default, sum = default;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 1;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (state + array[index]) % PRIME;
-            sum = (sum + state) % PRIME;
-          }
-        }
-
-        byte[] Final() => new[] { (byte)(sum >> 56), (byte)(sum >> 48), (byte)(sum >> 40), (byte)(sum >> 32), (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 56), (byte)(state >> 48), (byte)(state >> 40), (byte)(state >> 32), (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state };
       }
       default:
         throw new NotSupportedException();
@@ -164,9 +141,9 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  public static int MinOutputBits => 16;
-  public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[] { 16, 32, 64, 128 };
+  public static int MinOutputBits => SupportedOutputBits[0];
+  public static int MaxOutputBits => SupportedOutputBits[^1];
+  public static int[] SupportedOutputBits => new[] { 16, 32, 64 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
