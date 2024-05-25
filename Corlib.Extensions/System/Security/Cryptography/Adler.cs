@@ -40,60 +40,9 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public override void Initialize() {
     switch (this.OutputBits) {
-      case 4: {
-        const byte PRIME = 3;
-        byte state = 0;
-        byte sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % PRIME);
-            sum = (byte)((sum + state) % PRIME);
-          }
-        }
-
-        byte[] Final() => new[] { (byte)(sum << 2 | state) };
-
-      }
-      case 8: {
-        const byte PRIME = 13;
-        byte state = 0;
-        byte sum = 0;
-
-        this._reset = Reset;
-        this._core = Core;
-        this._final = Final;
-        break;
-
-        void Reset() {
-          state = 0;
-          sum = 0;
-        }
-
-        void Core(byte[] array, int index, int count) {
-          for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % PRIME);
-            sum = (byte)((sum + state) % PRIME);
-          }
-        }
-
-        byte[] Final() => new[] { (byte)(sum << 4 | state) };
-
-      }
       case 16: {
         const byte PRIME = 251;
-        byte state = 0;
-        byte sum = 0;
+        byte state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -101,24 +50,22 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
         break;
 
         void Reset() {
-          state = 0;
+          state = 1;
           sum = 0;
         }
 
         void Core(byte[] array, int index, int count) {
           for (count += index; index < count; ++index) {
-            state = (byte)((state + array[index]) % byte.MaxValue);
-            sum = (byte)((sum + state) % byte.MaxValue);
+            state = (byte)((state + array[index]) % PRIME);
+            sum = (byte)((sum + state) % PRIME);
           }
         }
 
-        byte[] Final() => new[] { state, sum };
-
+        byte[] Final() => new[] { sum, state };
       }
       case 32: {
         const ushort PRIME = 65521;
-        ushort state = 0;
-        ushort sum = 0;
+        ushort state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -126,7 +73,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
         break;
 
         void Reset() {
-          state = 0;
+          state = 1;
           sum = 0;
         }
 
@@ -137,13 +84,11 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => BitConverter.GetBytes((uint)sum << 16 | state);
-
+        byte[] Final() => new [] { (byte)(sum >> 8), (byte)sum, (byte)(state >> 8), (byte)state };
       }
       case 64: {
         const uint PRIME = 4294967291;
-        uint state = 0;
-        uint sum = 0;
+        uint state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -151,7 +96,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
         break;
 
         void Reset() {
-          state = 0;
+          state = 1;
           sum = 0;
         }
 
@@ -162,13 +107,11 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => BitConverter.GetBytes((ulong)sum << 32 | state);
-
+        byte[] Final() => new[] { (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state };
       }
       case 128: {
         const ulong PRIME = 18446744073709551557;
-        ulong state = 0;
-        ulong sum = 0;
+        ulong state = default, sum = default;
 
         this._reset = Reset;
         this._core = Core;
@@ -176,7 +119,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
         break;
 
         void Reset() {
-          state = 0;
+          state = 1;
           sum = 0;
         }
 
@@ -187,12 +130,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() {
-          var result = new byte[16];
-          Array.Copy(BitConverter.GetBytes(state), 0, result, 0, 8);
-          Array.Copy(BitConverter.GetBytes(sum), 0, result, 8, 8);
-          return result;
-        }
+        byte[] Final() => new[] { (byte)(sum >> 56), (byte)(sum >> 48), (byte)(sum >> 40), (byte)(sum >> 32), (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 56), (byte)(state >> 48), (byte)(state >> 40), (byte)(state >> 32), (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state };
       }
       default:
         throw new NotSupportedException();
@@ -226,9 +164,9 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  public static int MinOutputBits => 4;
+  public static int MinOutputBits => 16;
   public static int MaxOutputBits => 128;
-  public static int[] SupportedOutputBits => new[] { 4, 8, 16, 32, 64, 128 };
+  public static int[] SupportedOutputBits => new[] { 16, 32, 64, 128 };
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
