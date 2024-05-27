@@ -25,4 +25,18 @@ public interface IAdvancedHashAlgorithm {
   string Name { get; }
   int OutputBits { get; set; }
   byte[] IV { get; set; }
+
+#if SUPPORTS_STATIC_IN_INTERFACES
+
+  static abstract int MinOutputBits { get; }
+  static abstract int MaxOutputBits { get; }
+  static abstract int[] SupportedOutputBits { get; }
+
+  static abstract bool SupportsIV { get; }
+  static abstract int MinIVBits { get; }
+  static abstract int MaxIVBits { get; }
+  static abstract int[] SupportedIVBits { get; }
+
+#endif
+
 }

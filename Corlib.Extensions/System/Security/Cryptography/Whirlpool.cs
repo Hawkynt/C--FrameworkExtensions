@@ -25,7 +25,7 @@
 
 namespace System.Security.Cryptography;
 
-public class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
 
   private const int R = 10;
 
@@ -588,8 +588,10 @@ public class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
   private int _outputBits;
   private readonly ulong[] _state = new ulong[8];
 
-  public Whirlpool() {
-    this.OutputBits = SupportedOutputBits.First();
+  public Whirlpool(): this(MaxOutputBits) { }
+
+  public Whirlpool(int numberOfResultBits) {
+    this.OutputBits = numberOfResultBits;
     this.Initialize();
   }
 
@@ -799,7 +801,7 @@ public class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Overrides of HashAlgorithm
 
-  public sealed override void Initialize() {
+  public override void Initialize() {
     var state = this._state;
     for (var i = 0; i < state.Length; ++i)
       state[i] = 0;
@@ -815,7 +817,7 @@ public class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Whirlpool({this.OutputBits})";
+  public string Name => $"Whirlpool{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;
@@ -832,18 +834,14 @@ public class Whirlpool : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  #endregion
+  public static int MinOutputBits => 512;
+  public static int MaxOutputBits => 512;
+  public static int[] SupportedOutputBits => new [] { 512 };
 
-  #region Algorithm basics
-
-  public static readonly int MinOutputBits = 512;
-  public static readonly int MaxOutputBits = 512;
-  public static readonly int[] SupportedOutputBits = { 512 };
-
-  public static readonly bool SupportsIV = false;
-  public static readonly int MinIVBits = 0;
-  public static readonly int MaxIVBits = MinIVBits;
-  public static readonly int[] SupportedIVBits = { };
+  public static bool SupportsIV => false;
+  public static int MinIVBits => 0;
+  public static int MaxIVBits => MinIVBits;
+  public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
 
   #endregion
 }

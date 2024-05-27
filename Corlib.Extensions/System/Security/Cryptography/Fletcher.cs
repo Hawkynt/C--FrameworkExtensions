@@ -19,39 +19,208 @@
 */
 #endregion
 
-using System.Linq;
+using System.Collections.Generic;
 
 namespace System.Security.Cryptography;
 
-public class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
-  public Fletcher() {
-    this.OutputBits = SupportedOutputBits.First();
-    this.Initialize();
-  }
+  public Fletcher():this(MaxOutputBits) { }
+
   public Fletcher(int outputBits) {
     this.OutputBits = outputBits;
     this.Initialize();
   }
 
   private int _outputBits;
-  private Action<byte[], int, int> _core;
+  
   private Action _reset;
+  private Action<byte[], int, int> _core;
   private Func<byte[]> _final;
 
   #region Overrides of HashAlgorithm
 
-  public sealed override void Initialize() => this._reset?.Invoke();
+  public override void Initialize() {
+    switch (this.OutputBits) {
+      case 8: {
+        byte state = default, sum = default;
 
-  protected override void HashCore(byte[] array, int ibStart, int cbSize) => this._core?.Invoke(array, ibStart, cbSize);
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
 
-  protected override byte[] HashFinal() => this._final?.Invoke();
+        void Reset() {
+          state = 0;
+          sum = 0;
+        }
+
+        void Core(byte[] array, int index, int count) {
+          for (count += index; index < count; ++index) {
+            state = (byte)((state + array[index]) % 15);
+            sum = (byte)((sum + state) % 15);
+          }
+        }
+
+        byte[] Final() => new[] { (byte)(sum << 4 | state) };
+      }
+      case 16: {
+        byte state = default, sum = default;
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+          
+        void Reset() {
+          state = 0;
+          sum = 0;
+        }
+
+        void Core(byte[] array, int index, int count) {
+          for (count += index; index < count; ++index) {
+            state = (byte)((state + array[index]) % byte.MaxValue);
+            sum = (byte)((sum + state) % byte.MaxValue);
+          }
+        }
+
+        byte[] Final() => new[] { sum, state };
+      }
+      case 32: {
+        ushort state = default, sum = default;
+        List<byte> carry = new(2);
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+
+        ushort ConvertFrom(byte b0, byte b1) => (ushort)((b0) | (b1 << 8));
+
+        void Round(ushort value) {
+          state = (ushort)(((uint)state + value) % ushort.MaxValue);
+          sum = (ushort)(((uint)sum + state) % ushort.MaxValue);
+        }
+
+        void Reset() {
+          state = 0;
+          sum = 0;
+          carry.Clear();
+        }
+
+        void Core(byte[] array, int index, int count) {
+          var end = index + count;
+
+          while (carry.Count > 0) {
+            if (index >= end)
+              return;
+
+            carry.Add(array[index++]);
+            if (carry.Count != 2)
+              continue;
+
+            Round(ConvertFrom(carry[0], carry[1]));
+            carry.Clear();
+            break;
+          }
+
+          while (index + 1 < end)
+            Round(ConvertFrom(array[index++], array[index++]));
+
+          while (index < end)
+            carry.Add(array[index++]);
+        }
+
+        byte[] Final() {
+          if (carry.Count == 1)
+            Round(ConvertFrom(carry[0], 0));
+
+          return new[] {
+            (byte)(sum >> 8), (byte)sum,
+            (byte)(state >> 8), (byte)state
+          };
+        }
+      }
+      case 64: {
+        uint state = default, sum = default;
+        List <byte> carry = new(4);
+
+        this._reset = Reset;
+        this._core = Core;
+        this._final = Final;
+        break;
+
+        uint ConvertFrom(byte b0, byte b1, byte b2, byte b3) => (uint)((b0) | (b1 << 8) | (b2 << 16) | (b3 << 24));
+
+        void Round(uint value) {
+          state = (uint)(((ulong)state + value) % uint.MaxValue);
+          sum = (uint)(((ulong)sum + state) % uint.MaxValue);
+        }
+
+        void Reset() {
+          state = 0;
+          sum = 0;
+          carry.Clear();
+        }
+
+        void Core(byte[] array, int index, int count) {
+          var end = index + count;
+
+          while (carry.Count > 0) {
+            if (index >= end)
+              return;
+
+            carry.Add(array[index++]);
+            if (carry.Count != 4)
+              continue;
+
+            Round(ConvertFrom(carry[0], carry[1], carry[2], carry[3]));
+            carry.Clear();
+            break;
+          }
+
+          while (index + 3 < end)
+            Round(ConvertFrom(array[index++], array[index++], array[index++], array[index++]));
+
+          while (index < end)
+            carry.Add(array[index++]);
+        }
+
+        byte[] Final() {
+          switch (carry.Count) {
+            case 1:
+              Round(ConvertFrom(carry[0], 0, 0, 0));
+              break;
+            case 2:
+              Round(ConvertFrom(carry[0], carry[1], 0, 0));
+              break;
+            case 3:
+              Round(ConvertFrom(carry[0], carry[1], carry[2], 0));
+              break;
+          }
+
+          return new[] {
+            (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, 
+            (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state
+          };
+        }
+      }
+      default: 
+        throw new NotSupportedException();
+    }
+    
+    this._reset();
+  }
+
+  protected override void HashCore(byte[] array, int ibStart, int cbSize) => this._core(array, ibStart, cbSize);
+
+  protected override byte[] HashFinal() => this._final();
 
   #endregion
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Fletcher({this.OutputBits})";
+  public string Name => $"Fletcher{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;
@@ -60,69 +229,6 @@ public class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         throw new ArgumentException();
 
       this._outputBits = value;
-
-      switch (value) {
-        case 16: {
-          byte state = 0;
-          byte sum = 0;
-          this._reset = () => {
-            state = 0;
-            sum = 0;
-          };
-          this._final = () => new[] { state, sum };
-          this._core = (a, s, l) => {
-            for (var i = s; i < s + l; ++i)
-              sum += state += a[i];
-          };
-          break;
-        }
-        case 32: {
-          ushort state = 0;
-          ushort sum = 0;
-          this._reset = () => {
-            state = 0;
-            sum = 0;
-          };
-          this._final = () => BitConverter.GetBytes(sum << 16 | state);
-          this._core = (a, s, l) => {
-            for (var i = s; i < s + l; ++i)
-              sum += state += a[i];
-          };
-          break;
-        }
-        case 64: {
-          uint state = 0;
-          uint sum = 0;
-          this._reset = () => {
-            state = 0;
-            sum = 0;
-          };
-          this._final = () => BitConverter.GetBytes((ulong)sum << 32 | state);
-          this._core = (a, s, l) => {
-            for (var i = s; i < s + l; ++i)
-              sum += state += a[i];
-          };
-          break;
-        }
-        case 128: {
-          ulong state = 0;
-          ulong sum = 0;
-          this._reset = () => {
-            state = 0;
-            sum = 0;
-          };
-          this._final = () => BitConverter.GetBytes(state).Concat(BitConverter.GetBytes(sum)).ToArray();
-          this._core = (a, s, l) => {
-            for (var i = s; i < s + l; ++i)
-              sum += state += a[i];
-          };
-          break;
-        }
-        default: {
-          throw new NotSupportedException();
-        }
-      }
-
     }
   }
 
@@ -131,17 +237,14 @@ public class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  #endregion
+  public static int MinOutputBits => SupportedOutputBits[0];
+  public static int MaxOutputBits => SupportedOutputBits[^1];
+  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64 };
 
+  public static bool SupportsIV => false;
+  public static int MinIVBits => 0;
+  public static int MaxIVBits => MinIVBits;
+  public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
 
-  #region Algorithm basics
-  public static readonly int MinOutputBits = 16;
-  public static readonly int MaxOutputBits = 128;
-  public static readonly int[] SupportedOutputBits = { 16, 32, 64, 128 };
-
-  public static readonly bool SupportsIV = false;
-  public static readonly int MinIVBits = 0;
-  public static readonly int MaxIVBits = MinIVBits;
-  public static readonly int[] SupportedIVBits = { };
   #endregion
 }

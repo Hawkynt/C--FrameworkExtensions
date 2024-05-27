@@ -32,10 +32,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 #endif
 
-using word = System.UInt16;
-using dword = System.UInt32;
-using qword = System.UInt64;
-
 // ReSharper disable RedundantCast
 // ReSharper disable UnusedMember.Global
 // ReSharper disable PartialTypeWithSinglePart
@@ -44,7 +40,7 @@ namespace System;
 
 public static partial class TimeSpanExtensions {
     
-<#foreach(var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+<#foreach(var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
     
   /// <summary>
   /// Multiplies the time by a given factor.
@@ -55,7 +51,7 @@ public static partial class TimeSpanExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TimeSpan MultipliedWith(this TimeSpan @this, <#=type#> multiplier) => TimeSpan.FromTicks((long)(@this.Ticks * <#=(type == "qword" ? "(double)" : "")#>multiplier));
+  public static TimeSpan MultipliedWith(this TimeSpan @this, <#=type#> multiplier) => TimeSpan.FromTicks((long)(@this.Ticks * <#=(type == "ulong" ? "(double)" : "")#>multiplier));
 
   /// <summary>
   /// Divides the time by a divisor.
@@ -66,7 +62,7 @@ public static partial class TimeSpanExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TimeSpan DividedBy(this TimeSpan @this, <#=type#> divisor) => TimeSpan.FromTicks((long)(@this.Ticks / <#=(type == "qword" ? "(double)" : "")#>divisor));
+  public static TimeSpan DividedBy(this TimeSpan @this, <#=type#> divisor) => TimeSpan.FromTicks((long)(@this.Ticks / <#=(type == "ulong" ? "(double)" : "")#>divisor));
     
   /// <summary>
   /// Creates a timespan from the given milliseconds.

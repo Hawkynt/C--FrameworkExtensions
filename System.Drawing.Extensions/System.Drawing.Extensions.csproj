@@ -50,9 +50,6 @@
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
@@ -64,21 +61,12 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Point.T4.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="System\Drawing\Point.T4.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Point.T4.tt</DependentUpon>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="System\IO\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Backports\Backports.csproj" />
   </ItemGroup>
 </Project>

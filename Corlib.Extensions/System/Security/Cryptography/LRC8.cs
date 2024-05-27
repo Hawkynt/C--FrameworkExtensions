@@ -19,31 +19,25 @@
 */
 #endregion
 
-
 namespace System.Security.Cryptography;
 
-public class LRC8 : HashAlgorithm {
+public sealed class LRC8 : HashAlgorithm {
 
-  public LRC8() {
-    this.Initialize();
-  }
+  public LRC8() => this.Initialize();
 
   private byte _state;
 
   #region Overrides of HashAlgorithm
 
-  public override sealed void Initialize() {
-    this._state = 0;
+  public override void Initialize() => this._state = 0;
+
+  protected override void HashCore(byte[] array, int index, int count) {
+    for (count += index; index < count; ++index)
+      this._state += array[index];
   }
 
-  protected override void HashCore(byte[] array, int ibStart, int cbSize) {
-    for (var i = ibStart; i < ibStart + cbSize; ++i)
-      _state += array[i];
-  }
-
-  protected override byte[] HashFinal() {
-    return new[] { (byte)((_state ^ 0xff) + 1) };
-  }
+  protected override byte[] HashFinal() => new[] { (byte)((this._state ^ 0xff) + 1) };
 
   #endregion
+
 }

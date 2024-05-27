@@ -31,9 +31,6 @@
 using System.Runtime.CompilerServices;
 #endif
 using Guard;
-using word = System.UInt16;
-using dword = System.UInt32;
-using qword = System.UInt64;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast
@@ -41,7 +38,7 @@ using qword = System.UInt64;
 namespace System;
 
 public static partial class MathEx {
-<#foreach (var type in new[]{"byte","sbyte","word","short","dword","int","qword","long"}){#>
+<#foreach (var type in new[]{"byte","sbyte","ushort","short","uint","int","ulong","long"}){#>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -253,7 +250,7 @@ public static partial class MathEx {
     
 <#}#>
   
-<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
     
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -350,12 +347,12 @@ public static partial class MathEx {
 <#  }#>
 <#}#>
  
-<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","decimal"}){#>
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="word"?$"({type})":string.Empty)#>(@this * mul + add);
+  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * mul + add);
 
 <#}#>
     
@@ -381,7 +378,7 @@ public static partial class MathEx {
 
   #region fast min/max/avg
 
-<#foreach (var type in new[]{"sbyte","byte","short","word","int","dword","long","qword","float","double","decimal"}){#>
+<#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
 
   #region <#=type#>
   /// <summary>
@@ -432,7 +429,7 @@ public static partial class MathEx {
 
 <#
     var tempType = 
-      "|decimal|double|qword|long|".Contains($"|{type}|") 
+      "|decimal|double|ulong|long|".Contains($"|{type}|") 
       ? type 
       : 
         type == "float" 
@@ -440,7 +437,7 @@ public static partial class MathEx {
         : 
           "|sbyte|short|int|".Contains($"|{type}|") 
           ? "long" 
-          : "qword"
+          : "ulong"
     ;
 
     var downCast = type == tempType ? string.Empty : $"({type})";

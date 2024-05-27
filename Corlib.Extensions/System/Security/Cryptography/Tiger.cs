@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace System.Security.Cryptography;
 
-public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
+public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region S-Boxes
   private static readonly ulong[] _S0 = {
@@ -560,12 +560,14 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   private bool _isFinished;
   private int _outputBits;
 
-  public Tiger(int numberOfResultBits = 192) {
+  public Tiger():this(MaxOutputBits) { }
+
+  public Tiger(int numberOfResultBits) {
     this.OutputBits = numberOfResultBits;
     this.Initialize();
   }
 
-  private int _BufferLength => this.intermediateBuffer == null ? 0 : this.intermediateBuffer.Length;
+  private int _BufferLength => this.intermediateBuffer?.Length ?? 0;
 
   /* one round of the hash function */
   private static void _Round(ref ulong a, ref ulong b, ref ulong c, ulong x, int mul) {
@@ -644,7 +646,7 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Overrides of HashAlgorithm
 
-  public sealed override void Initialize() {
+  public override void Initialize() {
     this.state0 = 0x0123456789ABCDEF;
     this.state1 = 0xFEDCBA9876543210;
     this.state2 = 0xF096A5B4C3B2E187;
@@ -721,7 +723,7 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   #region Implementation of IAdvancedHashAlgorithm
 
-  public string Name => $"Tiger({this.OutputBits})";
+  public string Name => $"Tiger{this.OutputBits}";
 
   public int OutputBits {
     get => this._outputBits;
@@ -738,18 +740,14 @@ public class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
     set => throw new NotSupportedException();
   }
 
-  #endregion
+  public static int MinOutputBits => 8;
+  public static int MaxOutputBits => 192;
+  public static int[] SupportedOutputBits => Enumerable.Range(MinOutputBits >> 3, ((MaxOutputBits - MinOutputBits) >> 3) + 1).Select(i => i << 3).ToArray();
 
-
-  #region Algorithm basics
-  public static readonly int MinOutputBits = 8;
-  public static readonly int MaxOutputBits = 192;
-  public static readonly int[] SupportedOutputBits = Enumerable.Range(MinOutputBits >> 3, ((MaxOutputBits - MinOutputBits) >> 3) + 1).Select(i => i << 3).ToArray();
-
-  public static readonly bool SupportsIV = false;
-  public static readonly int MinIVBits = 0;
-  public static readonly int MaxIVBits = MinIVBits;
-  public static readonly int[] SupportedIVBits = { };
+  public static bool SupportsIV => false;
+  public static int MinIVBits => 0;
+  public static int MaxIVBits => MinIVBits;
+  public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
   #endregion
 
 }

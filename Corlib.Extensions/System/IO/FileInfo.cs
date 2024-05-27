@@ -35,7 +35,7 @@ using Encoding = System.Text.Encoding;
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 using System.Security.AccessControl;
 #endif
-#if SUPPORTS_STREAM_ASYNC
+#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
 using Guard;
@@ -587,6 +587,349 @@ public static partial class FileInfoExtensions {
   #endregion
 
   #region file copy/move/rename
+
+#if SUPPORTS_ASYNC
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target directory.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(targetDirectory);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a target directory with basic error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory)
+    => CopyToAsync(@this, targetDirectory, false, CancellationToken.None)
+  ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target directory, with support for cancellation.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
+  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
+  /// CancellationTokenSource cts = new CancellationTokenSource();
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(targetDirectory, cts.Token);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (OperationCanceledException)
+  /// {
+  ///     Console.WriteLine("File copy was canceled.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a target directory with support for cancellation and error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, CancellationToken token)
+    => CopyToAsync(@this, targetDirectory, false, token)
+  ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing file.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
+  /// <param name="overwrite"><see langword="true"/> to allow overwriting an existing file in the target directory; otherwise, <see langword="false"/>.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(targetDirectory, overwrite: true);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a target directory, allowing for error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
+    => CopyToAsync(@this, targetDirectory, overwrite, CancellationToken.None)
+  ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing file and support for cancellation.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
+  /// <param name="overwrite"><see langword="true"/> to allow overwriting an existing file in the target directory; otherwise, <see langword="false"/>.</param>
+  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
+  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
+  /// CancellationTokenSource cts = new CancellationTokenSource();
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(targetDirectory, overwrite: true, token: cts.Token);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (OperationCanceledException)
+  /// {
+  ///     Console.WriteLine("File copy was canceled.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a target directory, allowing for cancellation and error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite, CancellationToken token) {
+    Against.ArgumentIsNull(targetDirectory);
+    Against.False(targetDirectory.Exists);
+
+    return CopyToAsync(@this, targetDirectory.File(@this.Name), overwrite, token);
+  }
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target file.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the target file exists or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// FileInfo destinationFile = new FileInfo("destination.txt");
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(destinationFile);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a new location with basic error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile)
+    => CopyToAsync(@this, targetFile, false, CancellationToken.None)
+  ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target file, with support for cancellation.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
+  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the target file exists or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// FileInfo destinationFile = new FileInfo("destination.txt");
+  /// CancellationTokenSource cts = new CancellationTokenSource();
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(destinationFile, cts.Token);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (OperationCanceledException)
+  /// {
+  ///     Console.WriteLine("File copy was canceled.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a new location with support for cancellation and error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, CancellationToken token)
+    => CopyToAsync(@this, targetFile, false, token)
+  ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target file, with an option to overwrite the target file.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
+  /// <param name="overwrite"><see langword="true"/> to allow overwriting the target file if it exists; otherwise, <see langword="false"/>.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the target file exists and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// FileInfo destinationFile = new FileInfo("destination.txt");
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(destinationFile, overwrite: true);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a new location, allowing for error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  /// </remarks>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, bool overwrite)
+    => CopyToAsync(@this, targetFile, overwrite, CancellationToken.None)
+    ;
+
+  /// <summary>
+  /// Asynchronously copies the current file to the specified target file, with an option to overwrite the target file and support for cancellation.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
+  /// <param name="overwrite"><see langword="true"/> to allow overwriting the target file if it exists; otherwise, <see langword="false"/>.</param>
+  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the target file exists and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo sourceFile = new FileInfo("source.txt");
+  /// FileInfo destinationFile = new FileInfo("destination.txt");
+  /// CancellationTokenSource cts = new CancellationTokenSource();
+  ///
+  /// try
+  /// {
+  ///     await sourceFile.CopyToAsync(destinationFile, overwrite: true, token: cts.Token);
+  ///     Console.WriteLine("File copied successfully.");
+  /// }
+  /// catch (OperationCanceledException)
+  /// {
+  ///     Console.WriteLine("File copy was canceled.");
+  /// }
+  /// catch (IOException ex)
+  /// {
+  ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
+  /// }
+  /// </code>
+  /// This example demonstrates how to asynchronously copy a file to a new location, allowing for cancellation and error handling.
+  /// </example>
+  /// <remarks>
+  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  /// </remarks>
+  public static async Task CopyToAsync(this FileInfo @this, FileInfo targetFile, bool overwrite, CancellationToken token) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.Exists);
+    Against.ArgumentIsNull(targetFile);
+
+    if (!overwrite && targetFile.Exists)
+      throw new IOException("The target file already exists.");
+
+    const int BUFFER_SIZE_IN_BYTES = 65536;
+
+    using var sourceStream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: BUFFER_SIZE_IN_BYTES, useAsync: true);
+    using var destinationStream = new FileStream(targetFile.FullName, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: BUFFER_SIZE_IN_BYTES, useAsync: true);
+    await sourceStream.CopyToAsync(destinationStream, BUFFER_SIZE_IN_BYTES, token).ConfigureAwait(false);
+  }
+
+#endif
 
   /// <summary>
   /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, maintaining the original file name.

@@ -28,6 +28,7 @@
 namespace System.Threading.Tasks;
 
 public static partial class TaskExtensions {
+
   /// <summary>
   /// Gets the result or a default value.
   /// </summary>
@@ -48,6 +49,7 @@ public static partial class TaskExtensions {
       return defaultValue;
     }
   }
+
 }
 
 #endif

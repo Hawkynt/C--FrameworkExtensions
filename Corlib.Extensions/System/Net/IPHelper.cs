@@ -26,9 +26,6 @@ using System.Runtime.InteropServices;
 
 using Guard;
 
-using word = System.UInt16;
-using dword = System.UInt32;
-
 namespace System.Net;
 
 /// <summary>
@@ -119,34 +116,34 @@ public static class IPHelper {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_UDPROW {
-      public readonly dword dwLocalAddr;
-      public readonly dword dwLocalPort;
+      public readonly uint dwLocalAddr;
+      public readonly uint dwLocalPort;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_TCPROW {
-      public readonly dword dwState;
-      public readonly dword dwLocalAddr;
-      public readonly dword dwLocalPort;
-      public readonly dword dwRemoteAddr;
-      public readonly dword dwRemotePort;
+      public readonly uint dwState;
+      public readonly uint dwLocalAddr;
+      public readonly uint dwLocalPort;
+      public readonly uint dwRemoteAddr;
+      public readonly uint dwRemotePort;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_UDPROW_OWNER_PID {
-      public readonly dword dwLocalAddr;
-      public readonly dword dwLocalPort;
-      public readonly dword dwOwningPid;
+      public readonly uint dwLocalAddr;
+      public readonly uint dwLocalPort;
+      public readonly uint dwOwningPid;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_TCPROW_OWNER_PID {
-      public readonly dword dwState;
-      public readonly dword dwLocalAddr;
-      public readonly dword dwLocalPort;
-      public readonly dword dwRemoteAddr;
-      public readonly dword dwRemotePort;
-      public readonly dword dwOwningPid;
+      public readonly uint dwState;
+      public readonly uint dwLocalAddr;
+      public readonly uint dwLocalPort;
+      public readonly uint dwRemoteAddr;
+      public readonly uint dwRemotePort;
+      public readonly uint dwOwningPid;
     }
 
     #endregion
@@ -154,16 +151,16 @@ public static class IPHelper {
     #region native calls, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366071(v=vs.85).aspx
 
     [DllImport("iphlpapi.dll", SetLastError = true, EntryPoint = "GetUdpTable")]
-    public static extern Win32ApiError GetUdpTable(IntPtr pUdpTable, ref dword pdwSize, bool bOrder);
+    public static extern Win32ApiError GetUdpTable(nint pUdpTable, ref uint pdwSize, bool bOrder);
 
     [DllImport("iphlpapi.dll", SetLastError = true, EntryPoint = "GetTcpTable")]
-    public static extern Win32ApiError GetTcpTable(IntPtr pTcpTable, ref dword pdwSize, bool bOrder);
+    public static extern Win32ApiError GetTcpTable(nint pTcpTable, ref uint pdwSize, bool bOrder);
 
     [DllImport("iphlpapi.dll", SetLastError = true, EntryPoint = "GetExtendedUdpTable")]
-    public static extern Win32ApiError GetExtendedUdpTable(IntPtr pUdpTable, ref dword pdwSize, bool bOrder, AfInet ulAf, UdpTableClass udpTableClass, dword reserved = 0);
+    public static extern Win32ApiError GetExtendedUdpTable(nint pUdpTable, ref uint pdwSize, bool bOrder, AfInet ulAf, UdpTableClass udpTableClass, uint reserved = 0);
 
     [DllImport("iphlpapi.dll", SetLastError = true, EntryPoint = "GetExtendedTcpTable")]
-    public static extern Win32ApiError GetExtendedTcpTable(IntPtr pTcpTable, ref dword pdwSize, bool bOrder, AfInet ulAf, TcpTableClass tcpTableClass, dword reserved = 0);
+    public static extern Win32ApiError GetExtendedTcpTable(nint pTcpTable, ref uint pdwSize, bool bOrder, AfInet ulAf, TcpTableClass tcpTableClass, uint reserved = 0);
 
     #endregion
 
@@ -201,27 +198,27 @@ public static class IPHelper {
   /// <summary>
   /// A connection.
   /// </summary>
-  public class Connection {
+  public sealed class Connection {
     /// <summary>
     /// Gets the local endpoint, ie. adress and port.
     /// </summary>
-    public IPEndPoint Local { get; private set; }
+    public IPEndPoint Local { get; }
     /// <summary>
     /// Gets the remote endpoint, ie. adress and port.
     /// </summary>
-    public IPEndPoint Remote { get; private set; }
+    public IPEndPoint Remote { get; }
     /// <summary>
     /// Gets the connection state.
     /// </summary>
-    public ConnectionState State { get; private set; }
+    public ConnectionState State { get; }
     /// <summary>
     /// Gets the connection protocol.
     /// </summary>
-    public ConnectionProtocol Protocol { get; private set; }
+    public ConnectionProtocol Protocol { get; }
     /// <summary>
     /// Gets the source process, if known.
     /// </summary>
-    public Process SourceProcess { get; private set; }
+    public Process SourceProcess { get; }
 
     internal Connection(ConnectionProtocol protocol, IPAddress localAdress, int localPort, IPAddress remoteAdress, int remotePort, ConnectionState state, Process sourceProcess)
       : this(
@@ -244,7 +241,7 @@ public static class IPHelper {
     public override string ToString() => $"{this.Protocol}({this.State}): {this.Local} -> {this.Remote} ({this.SourceProcess?.ProcessName}[{this.SourceProcess?.Id ?? 0}])";
   }
 
-  private class BufferSizeAndWin32Status {
+  private sealed class BufferSizeAndWin32Status {
     public BufferSizeAndWin32Status(NativeMethods.Win32ApiError status, uint size) {
       this.Status = status;
       this.Size = size;
@@ -367,7 +364,7 @@ public static class IPHelper {
   /// <param name="call">The call to get the table.</param>
   /// <param name="rowProcessor">The row processor.</param>
   /// <returns>The connections from the table.</returns>
-  private static Connection[] _GetTable<TRowtype>(Func<IntPtr, dword, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
+  private static Connection[] _GetTable<TRowtype>(Func<nint, uint, BufferSizeAndWin32Status> call, Func<TRowtype, Connection> rowProcessor) {
     Against.ArgumentIsNull(call);
     Against.ArgumentIsNull(rowProcessor);
 
@@ -401,11 +398,11 @@ public static class IPHelper {
 
         // convert each entry to a connection instance
         for (var i = 0; i < result.Length; ++i) {
-          var row = (TRowtype)Marshal.PtrToStructure((IntPtr)rowPointer, rowType);
+          var row = (TRowtype)Marshal.PtrToStructure((nint)rowPointer, rowType);
           result[i] = rowProcessor(row);
 
           // move pointer to next entry
-          rowPointer = rowPointer + rowSizeInBytes;
+          rowPointer += rowSizeInBytes;
         }
 
         return result;
@@ -427,7 +424,7 @@ public static class IPHelper {
   /// </summary>
   /// <param name="port">The port dword.</param>
   /// <returns>The real port number</returns>
-  private static int _ConvertPort(dword port) {
+  private static int _ConvertPort(uint port) {
     var result = ((port & 0xff) << 8) | ((port >> 8) & 0xff);
     return (int)result;
   }
