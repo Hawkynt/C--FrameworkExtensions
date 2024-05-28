@@ -2573,6 +2573,74 @@ public static partial class FileInfoExtensions {
 
     return result;
   }
+  
+  /// <summary>
+  /// Determines whether the current file is a text file by checking its content.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the file to check.</param>
+  /// <returns><see langword="true"/> if the file is a text file; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if an I/O error occurs while opening or reading the file.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo file = new FileInfo("example.txt");
+  /// bool isTextFile = file.IsTextFile();
+  /// Console.WriteLine($"Is text file: {isTextFile}");
+  /// </code>
+  /// This example demonstrates how to check if a file is a text file.
+  /// </example>
+  /// <remarks>
+  /// This method attempts to determine if a file is a text file by reading a portion of its contents and checking for non-text characters.
+  /// It is not guaranteed to be foolproof and may yield false positives or negatives for certain types of files.
+  /// </remarks>
+  public static bool IsTextFile(this FileInfo @this) {
+    Against.ThisIsNull(@this);
 
+    if (@this.NotExists())
+      return false;
+
+    var buffer = new byte[65536];
+    using var fileStream = @this.OpenRead();
+    var size = fileStream.Read(buffer);
+    if (size == 0)
+      return false;
+ 
+    if (size == 1)
+      return !((char)buffer[0]).IsControlButNoWhiteSpace();
+
+    if (buffer[0] == 0xff && buffer[1] == 0xfe) // UTF-16 LE
+      return true;
+    if (buffer[0] == 0xfe && buffer[1] == 0xff) // UTF-16 BE
+      return true;
+
+    if (size < 3)
+      return !(
+        ((char)buffer[0]).IsControlButNoWhiteSpace() 
+        || ((char)buffer[1]).IsControlButNoWhiteSpace()
+      );
+
+    if (buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76) // UTF-7
+      return true;
+    if (buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf) // UTF-8
+      return true;
+
+    if (size < 4)
+      return !(
+        ((char)buffer[0]).IsControlButNoWhiteSpace()
+        || ((char)buffer[1]).IsControlButNoWhiteSpace()
+        || ((char)buffer[2]).IsControlButNoWhiteSpace()
+      );
+
+    if (buffer[0] == 0xff && buffer[1] == 0xfe && buffer[2] == 0x00 && buffer[3] == 0x00) // UTF-32 LE
+      return true;
+    if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xfe && buffer[3] == 0xff) // UTF-32 BE
+      return true;
+
+    for (var i = 0; i < size; ++i)
+      if (((char)buffer[i]).IsControlButNoWhiteSpace())
+        return false;
+
+    return true;
+  }
 
 }
