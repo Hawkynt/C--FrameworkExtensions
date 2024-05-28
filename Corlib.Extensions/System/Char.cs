@@ -165,6 +165,16 @@ public static partial class CharExtensions {
   public static bool IsNotControl(this char @this) => !char.IsControl(@this);
 
   /// <summary>
+  /// Checks whether this is a control character but not a whitespace.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a control character but not a whitespace; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsControlButNoWhiteSpace(this char @this) => char.IsControl(@this) && !char.IsWhiteSpace(@this);
+
+  /// <summary>
   /// converts the given <see cref="Char"/> to uppercase.
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
