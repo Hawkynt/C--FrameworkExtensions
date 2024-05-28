@@ -145,6 +145,26 @@ public static partial class CharExtensions {
   public static bool IsNotLetter(this char @this) => !char.IsLetter(@this);
 
   /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is a control character.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is a control character; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsControl(this char @this) => char.IsControl(@this);
+
+  /// <summary>
+  /// Determines whether the specified <see cref="Char"/> is not a control character.
+  /// </summary>
+  /// <param name="this">This <see cref="Char"/>.</param>
+  /// <returns><see langword="true"/> if the specified <see cref="Char"/> is not a control character; otherwise, <see langword="false"/>.</returns>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool IsNotControl(this char @this) => !char.IsControl(@this);
+
+  /// <summary>
   /// converts the given <see cref="Char"/> to uppercase.
   /// </summary>
   /// <param name="this">This <see cref="Char"/>.</param>
@@ -209,7 +229,7 @@ public static partial class CharExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsAnyOf(this char @this, IEnumerable<char> list) => list.Any(c => c == @this);
-  
+
   /// <summary>
   /// Repeats this <see cref="Char"/> several times.
   /// </summary>
