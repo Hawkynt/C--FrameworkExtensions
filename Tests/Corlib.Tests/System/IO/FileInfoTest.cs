@@ -5,9 +5,11 @@ using Corlib.Tests.NUnit;
 using NUnit.Framework;
 
 namespace Corlib.Tests.System.IO;
+
 using static TestUtilities;
 using LineBreakMode=StringExtensions.LineBreakMode;
 
+[TestFixture]
 internal class FileInfoTest {
 
   [TestFixture]
@@ -70,7 +72,164 @@ internal class FileInfoTest {
     public void TearDown() => this._sourceFile.TryDelete();
   }
 
+  [TestFixture]
+  public class IsTextFileTests {
+    [Test]
+    public void NullFile_ThrowsNullReferenceException() {
+      FileInfo? fileInfo = null;
+      Assert.Throws<NullReferenceException>(() => fileInfo.IsTextFile());
+    }
 
+    [Test]
+    public void NonExistentFile_ReturnsFalse() {
+      var fileInfo = new FileInfo("nonexistentfile.txt");
+      Assert.IsFalse(fileInfo.IsTextFile());
+    }
+
+    [Test]
+    public void EmptyFile_ReturnsFalse() {
+      var tempFile = Path.GetTempFileName();
+      try {
+        var fileInfo = new FileInfo(tempFile);
+        Assert.IsFalse(fileInfo.IsTextFile());
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    [TestCase(0x00, false,TestName = "Single Control Character is no Textfile")]
+    [TestCase(0x65, true, TestName = "Single Letter Character is Textfile")]
+    [TestCase(0x0A, true, TestName = "Single Whitespace Character is Textfile")]
+    public void SingleCharFile(byte character, bool expected) {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new[] { character });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.That(fileInfo.IsTextFile(),Is.EqualTo(expected));
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    [TestCase(0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x65, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x65, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x0D, 0x0A, true, TestName = "Whitespace Characters are a Textfile")]
+    [TestCase(0x65, 0x65, true, TestName = "Letter Characters are a Textfile")]
+    [TestCase(0xff, 0xfe, true, TestName = "UTF-16 LE BOM is a Textfile")]
+    [TestCase(0xfe, 0xff, true, TestName = "UTF-16 BE BOM is a Textfile")]
+    public void DualCharacterFile(byte b0, byte b1, bool expected) {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new[] { b0, b1 });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    [TestCase(0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x65, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x65, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x65, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x0D, 0x0A, 0x09, true, TestName = "Whitespace Characters are a Textfile")]
+    [TestCase(0x65, 0x65, 0x65, true, TestName = "Letter Characters are a Textfile")]
+    [TestCase(0xff, 0xfe, 0x00, true, TestName = "UTF-16 LE BOM is a Textfile")]
+    [TestCase(0xfe, 0xff, 0x00, true, TestName = "UTF-16 BE BOM is a Textfile")]
+    [TestCase(0x2b, 0x2f, 0x76, true, TestName = "UTF-7 BOM is a Textfile")]
+    [TestCase(0xef, 0xbb, 0xbf, true, TestName = "UTF-8 BOM is a Textfile")]
+    public void TripleCharacterFile(byte b0, byte b1, byte b2, bool expected) {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new[] { b0, b1, b2 });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    [TestCase(0x00, 0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x65, 0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x65, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x65, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x00, 0x65, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x0D, 0x0A, 0x09, 0x0C, true, TestName = "Whitespace Characters are a Textfile")]
+    [TestCase(0x65, 0x65, 0x65, 0x65, true, TestName = "Letter Characters are a Textfile")]
+    [TestCase(0xff, 0xfe, 0x00, 0x00, true, TestName = "UTF-16 LE BOM is a Textfile")]
+    [TestCase(0xfe, 0xff, 0x00, 0x00, true, TestName = "UTF-16 BE BOM is a Textfile")]
+    [TestCase(0x2b, 0x2f, 0x76, 0x00, true, TestName = "UTF-7 BOM is a Textfile")]
+    [TestCase(0xef, 0xbb, 0xbf, 0x00, true, TestName = "UTF-8 BOM is a Textfile")]
+    [TestCase(0xff, 0xfe, 0x00, 0x00, true, TestName = "UTF-32 LE BOM is a Textfile")]
+    [TestCase(0x00, 0x00, 0xfe, 0xff, true, TestName = "UTF-32 BE BOM is a Textfile")]
+    public void QuadrupleCharacterFile(byte b0, byte b1, byte b2, byte b3, bool expected) {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new[] { b0, b1, b2, b3 });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    [TestCase(0x00, 0x00, 0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x65, 0x00, 0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x65, 0x00, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x65, 0x00, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x00, 0x65, 0x00, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x00, 0x00, 0x00, 0x00, 0x65, false, TestName = "Control Characters are no Textfile")]
+    [TestCase(0x0D, 0x0A, 0x09, 0x0C, 0x20, true, TestName = "Whitespace Characters are a Textfile")]
+    [TestCase(0x65, 0x65, 0x65, 0x65, 0x65, true, TestName = "Letter Characters are a Textfile")]
+    [TestCase(0xff, 0xfe, 0x00, 0x00, 0x00, true, TestName = "UTF-16 LE BOM is a Textfile")]
+    [TestCase(0xfe, 0xff, 0x00, 0x00, 0x00, true, TestName = "UTF-16 BE BOM is a Textfile")]
+    [TestCase(0x2b, 0x2f, 0x76, 0x00, 0x00, true, TestName = "UTF-7 BOM is a Textfile")]
+    [TestCase(0xef, 0xbb, 0xbf, 0x00, 0x00, true, TestName = "UTF-8 BOM is a Textfile")]
+    [TestCase(0xff, 0xfe, 0x00, 0x00, 0x00, true, TestName = "UTF-32 LE BOM is a Textfile")]
+    [TestCase(0x00, 0x00, 0xfe, 0xff, 0x00, true, TestName = "UTF-32 BE BOM is a Textfile")]
+    public void QuintupleCharacterFile(byte b0, byte b1, byte b2, byte b3, byte b4, bool expected) {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new[] { b0, b1, b2, b3, b4 });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    public void IsTextFile_TextContentFile_ReturnsTrue() {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllText(tempFile, "This is a text file.");
+        var fileInfo = new FileInfo(tempFile);
+        Assert.IsTrue(fileInfo.IsTextFile());
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+
+    [Test]
+    public void IsTextFile_BinaryContentFile_ReturnsFalse() {
+      var tempFile = Path.GetTempFileName();
+      try {
+        File.WriteAllBytes(tempFile, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 });
+        var fileInfo = new FileInfo(tempFile);
+        Assert.IsFalse(fileInfo.IsTextFile());
+      } finally {
+        File.Delete(tempFile);
+      }
+    }
+  }
+
+  [TestFixture]
   public class ReplaceWithTest {
     private string? _testDirectory;
     private FileInfo? _sourceFile;
@@ -140,7 +299,8 @@ internal class FileInfoTest {
 
   }
 
-  private class CustomTextReaderTests {
+  [TestFixture]
+  public class CustomTextReaderTests {
 
     public enum TestEncoding {
       AutoDetectFromBom = -1,
