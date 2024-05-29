@@ -458,34 +458,225 @@ public static partial class DirectoryInfoExtensions {
   public static bool NotExists(this DirectoryInfo This) => !This.Exists;
 
   /// <summary>
-  /// Gets a directory under the current directory.
+  /// Gets a subdirectory under the current directory.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
-  /// <param name="subdirectories">The relative path to the sub-directory.</param>
-  /// <returns>A DirectoryInfo instance pointing to the given path.</returns>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
+  /// <param name="subdirectory">The relative path to the subdirectory.</param>
+  /// <returns>A <see cref="DirectoryInfo"/> instance pointing to the specified subdirectory.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="subdirectory"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// DirectoryInfo subDir = currentDir.Directory("SubDirectory");
+  /// Console.WriteLine(subDir.FullName); // Outputs: "C:\\CurrentDirectory\\SubDirectory"
+  /// </code>
+  /// This example demonstrates how to get a subdirectory under the current directory.
+  /// </example>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if SUPPORTS_PATH_COMBINE_ARRAYS
-  public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(Path.Combine(new[] { This.FullName }.Concat(subdirectories).ToArray()));
-#else
-  public static DirectoryInfo Directory(this DirectoryInfo This, params string[] subdirectories) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(subdirectories).ToArray()));
+  public static DirectoryInfo Directory(this DirectoryInfo @this, string subdirectory) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(subdirectory);
+
+    return new(Path.Combine(@this.FullName, subdirectory));
+  }
+
+  /// <summary>
+  /// Gets a subdirectory under the current directory.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
+  /// <param name="subdirectories">An array of relative paths to the subdirectory.</param>
+  /// <returns>A <see cref="DirectoryInfo"/> instance pointing to the specified subdirectory.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="subdirectories"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="subdirectories"/> is empty.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// DirectoryInfo subDir = currentDir.Directory("SubDir1", "SubDir2");
+  /// Console.WriteLine(subDir.FullName); // Outputs: "C:\\CurrentDirectory\\SubDir1\\SubDir2"
+  /// </code>
+  /// This example demonstrates how to get a nested subdirectory under the current directory.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static DirectoryInfo Directory(this DirectoryInfo @this, params string[] subdirectories) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(subdirectories);
+
+#if SUPPORTS_PATH_COMBINE_ARRAYS
+    return new(Path.Combine(new[] { @this.FullName }.Concat(subdirectories).ToArray()));
+#else
+    return new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { @this.FullName }.Concat(subdirectories).ToArray()));
+#endif
+  }
+
+  /// <summary>
+  /// Gets a subdirectory under the current directory, querying the filesystem to return the exact case.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
+  /// <param name="ignoreCase">If <see langword="true"/>, the case will be ignored; otherwise, the filesystem will be queried for the exact casing.</param>
+  /// <param name="subdirectories">An array of relative paths to the subdirectory.</param>
+  /// <returns>A <see cref="DirectoryInfo"/> instance pointing to the specified subdirectory.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="subdirectories"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="subdirectories"/> is empty.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// DirectoryInfo subDir = currentDir.Directory(false, "SubDir1", "SubDir2");
+  /// Console.WriteLine(subDir.FullName); // Outputs the exact case path if it exists
+  /// </code>
+  /// This example demonstrates how to get a nested subdirectory under the current directory with exact casing.
+  /// </example>
+  /// <remarks>
+  /// This method queries the filesystem to find the exact casing of the directory names which could case heavy I/O.
+  /// </remarks>
+  public static DirectoryInfo Directory(this DirectoryInfo @this, bool ignoreCase, params string[] subdirectories) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(subdirectories);
+
+    var comparisonMode = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+    
+    var result = @this;
+    foreach (var subdir in subdirectories) {
+      var current = result.Directory(subdir);
+      if (result.Exists) {
+        foreach (var existing in result.EnumerateDirectories()) {
+          if (!string.Equals(existing.Name, subdir, comparisonMode))
+            continue;
+
+          current = existing;
+          break;
+        }
+      }
+
+      result = current;
+    }
+
+    return result;
+  }
 
   /// <summary>
   /// Gets a file under the current directory.
   /// </summary>
-  /// <param name="This">This DirectoryInfo.</param>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
   /// <param name="filePath">The relative path to the file.</param>
-  /// <returns>A FileInfo instance pointing to the given path.</returns>
+  /// <returns>A <see cref="FileInfo"/> instance pointing to the specified file path.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="filePath"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is empty.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// FileInfo file = currentDir.File("example.txt");
+  /// Console.WriteLine(file.FullName); // Outputs: "C:\\CurrentDirectory\\example.txt"
+  /// </code>
+  /// This example demonstrates how to get a file under the current directory.
+  /// </example>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-#if SUPPORTS_PATH_COMBINE_ARRAYS
-  public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(Path.Combine(new[] { This.FullName }.Concat(filePath).ToArray()));
-#else
-  public static FileInfo File(this DirectoryInfo This, params string[] filePath) => new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { This.FullName }.Concat(filePath).ToArray()));
+  public static FileInfo File(this DirectoryInfo @this, string filePath) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(filePath);
+
+    return new(Path.Combine(@this.FullName, filePath));
+  }
+
+  /// <summary>
+  /// Gets a file under the current directory.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
+  /// <param name="filePath">An array of relative paths to the file.</param>
+  /// <returns>A <see cref="FileInfo"/> instance pointing to the specified file path.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="filePath"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is empty.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// FileInfo file = currentDir.File("SubDir", "example.txt");
+  /// Console.WriteLine(file.FullName); // Outputs: "C:\\CurrentDirectory\\SubDir\\example.txt"
+  /// </code>
+  /// This example demonstrates how to get a nested file under the current directory.
+  /// </example>
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static FileInfo File(this DirectoryInfo @this, params string[] filePath) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(filePath);
+
+#if SUPPORTS_PATH_COMBINE_ARRAYS
+    return new(Path.Combine(new[] { @this.FullName }.Concat(filePath).ToArray()));
+#else
+    return new(string.Join(Path.DirectorySeparatorChar + string.Empty, new[] { @this.FullName }.Concat(filePath).ToArray()));
+#endif
+  }
+
+  /// <summary>
+  /// Gets a file under the current directory, querying the filesystem to return the exact case.
+  /// </summary>
+  /// <param name="this">The <see cref="DirectoryInfo"/> instance representing the current directory.</param>
+  /// <param name="ignoreCase">If <see langword="true"/>, the case will be ignored; otherwise, the filesystem will be queried for the exact casing.</param>
+  /// <param name="filePath">An array of relative paths to the file.</param>
+  /// <returns>A <see cref="FileInfo"/> instance pointing to the specified file path.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="filePath"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is empty.</exception>
+  /// <example>
+  /// <code>
+  /// DirectoryInfo currentDir = new DirectoryInfo("C:\\CurrentDirectory");
+  /// FileInfo file = currentDir.File(false, "SubDir", "example.txt");
+  /// Console.WriteLine(file.FullName); // Outputs the exact case path if it exists
+  /// </code>
+  /// This example demonstrates how to get a nested file under the current directory with exact casing.
+  /// </example>
+  /// <remarks>
+  /// This method queries the filesystem to find the exact casing of the directory/file names which could case heavy I/O.
+  /// </remarks>
+  public static FileInfo File(this DirectoryInfo @this, bool ignoreCase, params string[] filePath) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(filePath);
+
+    var comparisonMode = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+    var parent = @this;
+    for (var i = 0; i < filePath.Length - 1; ++i) {
+      var subdir = filePath[i];
+      var current = parent.Directory(subdir);
+      if (parent.Exists) {
+        foreach (var existing in parent.EnumerateDirectories()) {
+          if (!string.Equals(existing.Name, subdir, comparisonMode))
+            continue;
+
+          current = existing;
+          break;
+        }
+      }
+
+      parent = current;
+    }
+
+    var fileName = filePath[^1];
+    var result = parent.File(fileName);
+    if (!parent.Exists)
+      return result;
+
+    foreach (var existing in parent.EnumerateFiles()) {
+      if (!string.Equals(existing.Name, fileName, comparisonMode))
+        continue;
+
+      result = existing;
+      break;
+    }
+
+    return result;
+  }
 
   /// <summary>
   /// Determines whether the specified subdirectory exists.
