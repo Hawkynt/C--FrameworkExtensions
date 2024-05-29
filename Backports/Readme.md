@@ -9,134 +9,137 @@
 
 ## Overview
 
-**FrameworkExtensions.Backports** is a NuGet package that provides a collection of extensions (Polyfills) to ensure that newer compiler features work in older versions of the .NET Framework/Standard/Core. This package allows developers to use modern C# language features and .NET APIs even when working on projects targeting earlier versions.
+__FrameworkExtensions.Backports__ is a NuGet package that provides a collection of extensions (Polyfills) to ensure that newer compiler features work in older versions of the .NET Framework/Standard/Core. This package allows developers to use modern C# language features and .NET APIs even when working on projects targeting earlier versions.
 
+__Note__: Performance is not a primary concern here. This focuses mainly on functionality and ready-to-be-built without making adjustments to code.
 ## Features
 
 ### Interfaces
 * System
-  * IGrouping&lt;out TKey, TElement&gt;
+  * [IGrouping](https://learn.microsoft.com/dotnet/api/system.linq.igrouping-2)&lt;out TKey, TElement&gt;
 * System.Collections
-  * IStructuralComparable
-  * IStructuralEquatable
+  * [IStructuralComparable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralcomparable)
+  * [IStructuralEquatable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralequatable)
 * System.Collections.Generic
-  * IReadOnlyDictionary&lt;TKey, TValue&gt;
+  * [IReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2)&lt;TKey, TValue&gt;
 * System.Runtime.CompilerServices
-  * IAsyncStateMachine
-  * ICriticalNotifyCompletion
-  * INotifyCompletion
-  * ITuple
+  * [IAsyncStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.iasyncstatemachine)
+  * [ICriticalNotifyCompletion](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.icriticalnotifycompletion)
+  * [INotifyCompletion](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.inotifycompletion)
+  * [ITuple](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
 
 ### Types
 * System
-  * Index
-  * Lazy&lt;T&gt;
-  * Range
-  * ReadOnlySpan&lt;T&gt;
-  * Span&lt;T&gt;
-  * Tuple&lt;T&gt; (up to 8 types)
-  * ValueTuple&lt;T&gt; (up to 8 types)
+  * [Index](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
+  * [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
+  * [Range](https://learn.microsoft.com/dotnet/api/system.range)
+  * [ReadOnlySpan](https://learn.microsoft.com/dotnet/api/system.readonlyspan-1)&lt;T&gt;
+  * [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
+  * [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
+  * [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
 * System.Collections.Concurrent
-  * ConcurrentBag&lt;T&gt;
-  * ConcurrentDictionary&lt;TKey, TValue&gt;
-  * ConcurrentQueue&lt;T&gt;
+  * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
+  * [ConcurrentDictionary](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2)&lt;TKey, TValue&gt;
+  * [ConcurrentQueue](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1)&lt;T&gt;
 * System.Collections.Generic
-  * HashSet&lt;T&gt;
-  * ReadOnlyDictionary&lt;TKey, TValue&gt;
+  * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
+  * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
 * System.Runtime.CompilerServices
-  * AsyncTaskMethodBuilder&lt;T&gt;
-  * ConfiguredTaskAwaitable&lt;T&gt;
-  * IsExternalInit
-  * TaskAwaiter&lt;T&gt;
+  * [AsyncTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynctaskmethodbuilder)&lt;T&gt;
+  * [ConfiguredTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredtaskawaitable)&lt;T&gt;
+  * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
+  * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
 * System.Threading
-  * ManualResetEventSlim
+  * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
 
 ### Attributes
 * System.Diagnostics
-  * StackTraceHidden
+  * [StackTraceHidden](https://learn.microsoft.com/dotnet/api/system.diagnostics.stacktracehiddenattribute)
 * System.Diagnostics.CodeAnalysis
-  * DisallowNull
-  * DoesNotReturn
-  * NotNull
-  * NotNullWhen
+  * [DisallowNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.disallownullattribute)
+  * [DoesNotReturn](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnattribute)
+  * [NotNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullattribute)
+  * [NotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullwhenattribute)
 * System.Runtime.CompilerServices
-  * CallerArgumentExpression
-  * CallerFilePath
-  * CallerLineNumber
-  * CallerMemberName
-  * Extension
-  * TupleElementNames
+  * [CallerArgumentExpression](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerargumentexpressionattribute)
+  * [CallerFilePath](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerfilepathattribute)
+  * [CallerLineNumber](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerlinenumberattribute)
+  * [CallerMemberName](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callermembernameattribute)
+  * [Extension](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.extensionattribute)
+  * [TupleElementNames](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.tupleelementnamesattribute)
 
 ### Delegates
-* System.Func&lt;T&gt; (up to 16 types)
-* System.Action&lt;T&gt; (up to 16 types)
+* System
+  * [Func](https://learn.microsoft.com/dotnet/api/system.func-1)&lt;T&gt; (up to 16 types)
+  * [Action](https://learn.microsoft.com/dotnet/api/system.action)&lt;T&gt; (up to 16 types)
 
 ### Methods
 * System.Array
-  * Span&lt;T&gt; AsSpan&lt;T&gt;(this T[] array)
+  * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1(-0()))&lt;T&gt;(this T[] array)
 * System.Collections.Generic.IEnumerable
-  * IEnumerable&lt;TItem&gt; Prepend&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
-  * IEnumerable&lt;TItem&gt; Append&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
-  * TItem MaxBy&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
-  * TItem MaxBy&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
-  * TItem MinBy&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
-  * TItem MinBy&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
-  * HashSet&lt;TItem&gt; ToHashSet&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
-  * HashSet&lt;TItem&gt; ToHashSet&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
+  * IEnumerable&lt;TItem&gt; [Prepend](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.prepend)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
+  * IEnumerable&lt;TItem&gt; [Append](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.append)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
+  * TItem [MaxBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.maxby#system-linq-queryable-maxby-2(system-linq-iqueryable((-0))-system-linq-expressions-expression((system-func((-0-1))))))&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
+  * TItem [MaxBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.maxby#system-linq-queryable-maxby-2(system-linq-iqueryable((-0))-system-linq-expressions-expression((system-func((-0-1))))-system-collections-generic-icomparer((-0))))&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
+  * TItem [MinBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.minby#system-linq-queryable-minby-2(system-linq-iqueryable((-0))-system-linq-expressions-expression((system-func((-0-1))))))&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
+  * TItem [MinBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.minby#system-linq-queryable-minby-2(system-linq-iqueryable((-0))-system-linq-expressions-expression((system-func((-0-1))))-system-collections-generic-icomparer((-0))))&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
+  * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1(system-collections-generic-ienumerable((-0))))&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
+  * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1(system-collections-generic-ienumerable((-0))-system-collections-generic-iequalitycomparer((-0))))&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
 * System.Collections.Generic.Stack
-  * bool TryPop&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
-  * bool TryPeek&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
+  * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
+  * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
 * System.Diagnostics
-  * void Restart(this Stopwatch @this)
+  * void [Restart](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.restart)(this Stopwatch @this)
 * System.Enum
-  * bool HasFlag&lt;T&gt;(this T @this, T flag)
+  * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
 * System.IO.DirectoryInfo
-  * IEnumerable&lt;FileSystemInfo&gt; EnumerateFileSystemInfos(this DirectoryInfo @this)
-  * IEnumerable&lt;FileInfo&gt; EnumerateFiles(this DirectoryInfo @this)
-  * IEnumerable&lt;DirectoryInfo&gt; EnumerateDirectories(this DirectoryInfo @this)
-  * IEnumerable&lt;FileInfo&gt; EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
-  * IEnumerable&lt;DirectoryInfo&gt; EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
+  * IEnumerable&lt;FileSystemInfo&gt; [EnumerateFileSystemInfos](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefilesysteminfos#system-io-directoryinfo-enumeratefilesysteminfos)(this DirectoryInfo @this)
+  * IEnumerable&lt;FileInfo&gt; [EnumerateFiles](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefiles#system-io-directoryinfo-enumeratefiles)(this DirectoryInfo @this)
+  * IEnumerable&lt;DirectoryInfo&gt; [EnumerateDirectories](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratedirectories#system-io-directoryinfo-enumeratedirectories)(this DirectoryInfo @this)
+  * IEnumerable&lt;FileInfo&gt; [EnumerateFiles](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefiles#system-io-directoryinfo-enumeratefiles(system-string-system-io-searchoption))(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
+  * IEnumerable&lt;DirectoryInfo&gt; [EnumerateDirectories](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratedirectories#system-io-directoryinfo-enumeratedirectories(system-string-system-io-searchoption))(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
 * System.IO.FileInfo
-  * void MoveTo(this FileInfo @this, string destFileName, bool overwrite)
+  * void [MoveTo](https://learn.microsoft.com/dotnet/api/system.io.fileinfo.moveto#system-io-fileinfo-moveto(system-string-system-boolean))(this FileInfo @this, string destFileName, bool overwrite)
 * System.IO.Stream
-  * void CopyTo(this Stream @this, Stream target)
-  * void Flush(this Stream @this, bool flush)
-  * Task&lt;int&gt; ReadAsync(this Stream @this, byte[] buffer, int offset, int count)
-  * Task&lt;int&gt; ReadAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-  * Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count)
-  * Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-  * Task CopyToAsync(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
-  * int Read(this Stream @this, Span&lt;byte&gt; buffer)
+  * void [CopyTo](https://learn.microsoft.com/dotnet/api/system.io.stream.copyto#system-io-stream-copyto(system-io-stream))(this Stream @this, Stream target)
+  * void [Flush](https://learn.microsoft.com/dotnet/api/system.io.filestream.flush#system-io-filestream-flush(system-boolean))(this Stream @this, bool flushToDisk)
+  * Task&lt;int&gt; [ReadAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.readasync#system-io-stream-readasync(system-byte()-system-int32-system-int32))(this Stream @this, byte[] buffer, int offset, int count)
+  * Task&lt;int&gt; [ReadAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.readasync#system-io-stream-readasync(system-byte()-system-int32-system-int32-system-threading-cancellationtoken))(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+  * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.writeasync#system-io-stream-writeasync(system-byte()-system-int32-system-int32))(this Stream @this, byte[] buffer, int offset, int count)
+  * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.writeasync#system-io-stream-writeasync(system-byte()-system-int32-system-int32-system-threading-cancellationtoken))(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+  * Task [CopyToAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.copytoasync#system-io-stream-copytoasync(system-io-stream-system-int32-system-threading-cancellationtoken))(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
+  * int [Read](https://learn.microsoft.com/dotnet/api/system.io.stream.read#system-io-stream-read(system-span((system-byte))))(this Stream @this, Span&lt;byte&gt; buffer)
 * System.Linq
-  * TResult[] ToArray&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
-  * IEnumerable&lt;TResult&gt; Cast&lt;TResult&gt;(this IEnumerable @this)
-  * IEnumerable&lt;TSource&gt; Where&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
-  * IEnumerable&lt;TResult&gt; Select&lt;TSource, TResult&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TResult&gt; selector)
-  * IEnumerable&lt;TResult&gt; Select&lt;TSource, TResult&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, int, TResult&gt; selector)
-  * IEnumerable&lt;TSource&gt; OrderBy&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector)
-  * IEnumerable&lt;TSource&gt; ThenBy&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector)
-  * TSource Single&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
-  * TSource Last&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
-  * TSource Min&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
-  * TSource Max&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
-  * IEnumerable&lt;IGrouping&lt;TKey, TSource&gt;&gt; GroupBy&lt;TSource, TKey&gt;(IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
+  * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
+  * IEnumerable&lt;TResult&gt; [Cast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.cast)&lt;TResult&gt;(this IEnumerable @this)
+  * IEnumerable&lt;TSource&gt; [Where](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.where#system-linq-enumerable-where-1(system-collections-generic-ienumerable((-0))-system-func((-0-system-boolean))))&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
+  * IEnumerable&lt;TSource&gt; [Where](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.where#system-linq-enumerable-where-1(system-collections-generic-ienumerable((-0))-system-func((-0-system-int32-system-boolean))))&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, int, bool&gt; predicate)
+  * IEnumerable&lt;TResult&gt; [Select](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.select#system-linq-enumerable-select-2(system-collections-generic-ienumerable((-0))-system-func((-0-1))))&lt;TSource, TResult&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TResult&gt; selector)
+  * IEnumerable&lt;TResult&gt; [Select](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.select#system-linq-enumerable-select-2(system-collections-generic-ienumerable((-0))-system-func((-0-system-int32-1))))&lt;TSource, TResult&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, int, TResult&gt; selector)
+  * IEnumerable&lt;TSource&gt; [OrderBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.orderby#system-linq-enumerable-orderby-2(system-collections-generic-ienumerable((-0))-system-func((-0-1))))&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector)
+  * IEnumerable&lt;TSource&gt; [ThenBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.thenby#system-linq-enumerable-thenby-2(system-linq-iorderedenumerable((-0))-system-func((-0-1))))&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector)
+  * TSource [Single](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.single#system-linq-enumerable-single-1(system-collections-generic-ienumerable((-0))))&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
+  * TSource [Last](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.last#system-linq-enumerable-last-1(system-collections-generic-ienumerable((-0))))&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
+  * TSource [Min](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.min)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
+  * TSource [Max](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.max)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
+  * IEnumerable&lt;IGrouping&lt;TKey, TSource&gt;&gt; [GroupBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.groupby#system-linq-enumerable-groupby-2(system-collections-generic-ienumerable((-0))-system-func((-0-1))))&lt;TSource, TKey&gt;(IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
 * System.Random
-  * long NextInt64(this Random @this)
-  * long NextInt64(this Random @this, long maxValue)
-  * long NextInt64(this Random @this, long minValue, long maxValue)
+  * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)
+  * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64(system-int64))(this Random @this, long maxValue)
+  * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64(system-int64-system-int64))(this Random @this, long minValue, long maxValue)
 * System.Reflection.MethodInfo
-  * Delegate CreateDelegate(this MethodInfo @this, Type result)
+  * Delegate [CreateDelegate](https://learn.microsoft.com/dotnet/api/system.reflection.methodinfo.createdelegate#system-reflection-methodinfo-createdelegate(system-type))(this MethodInfo @this, Type result)
 * System.String
-  * bool Contains(this string @this, string value, StringComparison comparisonType)
+  * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains(system-string-system-stringcomparison))(this string @this, string value, StringComparison comparisonType)
 * System.Text.StringBuilder
-  * void Clear(this StringBuilder @this)
+  * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
 * System.Threading.Tasks
-  * TaskAwaiter GetAwaiter(this Task task)
-  * TaskAwaiter&lt;TResult&gt; GetAwaiter&lt;TResult&gt;(this Task&lt;TResult&gt; task)
-  * ConfiguredTaskAwaitable ConfigureAwait(this Task task, bool continueOnCapturedContext)
-  * ConfiguredTaskAwaitable&lt;TResult&gt; ConfigureAwait&lt;TResult&gt;(this Task&lt;TResult&gt; task, bool continueOnCapturedContext)
+  * TaskAwaiter [GetAwaiter](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.getawaiter#system-threading-tasks-task-getawaiter)(this Task task)
+  * TaskAwaiter&lt;TResult&gt; [GetAwaiter](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.getawaiter)&lt;TResult&gt;(this Task&lt;TResult&gt; task)
+  * ConfiguredTaskAwaitable [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.configureawait#system-threading-tasks-task-configureawait(system-boolean))(this Task task, bool continueOnCapturedContext)
+  * ConfiguredTaskAwaitable&lt;TResult&gt; [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.configureawait#system-threading-tasks-task-1-configureawait(system-boolean))&lt;TResult&gt;(this Task&lt;TResult&gt; task, bool continueOnCapturedContext)
 * System.Threading.WaitHandle
-  * void Dispose(this WaitHandle @this)
+  * void [Dispose](https://learn.microsoft.com/dotnet/api/system.threading.waithandle.dispose#system-threading-waithandle-dispose)(this WaitHandle @this)
 
 ## Installation
 
@@ -236,7 +239,8 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository.
 2. Create a new branch with a descriptive name.
 3. Make your changes.
-4. Submit a pull request.
+4. __Remember__: Everything *public* in here should polyfill existing Microsoft functionality and thus should be mentioned in the [Readme](Readme.md) with a link to its original documentation.
+5. Submit a pull request.
 
 ## License
 
