@@ -19,11 +19,13 @@
 */
 #endregion
 
+using System.Reflection;
+
 namespace System.Threading;
 
-using Reflection;
-
-public static partial class WaitHandleExtensions {
+// ReSharper disable UnusedMember.Global
+// ReSharper disable once PartialTypeWithSinglePart
+public static partial class WaitHandlePolyfills {
 
 #if !SUPPORTS_WAITHANDLE_DISPOSE
   public static void Dispose(this WaitHandle @this) {

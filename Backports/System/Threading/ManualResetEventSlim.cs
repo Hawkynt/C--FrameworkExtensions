@@ -24,11 +24,10 @@
 #endregion
 
 namespace System.Threading;
-public class ManualResetEventSlim : IDisposable {
-  private readonly ManualResetEvent _manualResetEvent;
+public class ManualResetEventSlim(bool initialState) : IDisposable {
+  private readonly ManualResetEvent _manualResetEvent = new(initialState);
 
   public ManualResetEventSlim() : this(false) { }
-  public ManualResetEventSlim(bool initialState) => this._manualResetEvent = new(initialState);
   public void Set() => this._manualResetEvent.Set();
   public bool IsSet => this._manualResetEvent.WaitOne(0);
   public void Wait() => this._manualResetEvent.WaitOne();

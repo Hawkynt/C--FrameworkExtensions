@@ -202,4 +202,19 @@ public static partial class StreamPolyfills {
 
 #endif
 
+#if !SUPPORTS_SPAN
+
+  public static int Read(this Stream @this, Span<byte> buffer) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var size = buffer.Length;
+    var doubleBuffer = new byte[size];
+    var result = @this.Read(doubleBuffer, 0, size);
+    doubleBuffer.AsSpan()[..result].CopyTo(buffer[..result]);
+    return result;
+  }
+
+#endif
+
 }

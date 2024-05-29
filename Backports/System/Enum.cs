@@ -22,7 +22,9 @@
 
 namespace System;
 
-public static partial class EnumExtensions {
+// ReSharper disable UnusedMember.Global
+// ReSharper disable once PartialTypeWithSinglePart
+public static partial class EnumPolyfills {
 
   public static bool HasFlag<T>(this T @this, T flag) where T : Enum
     => ((ulong)(object)@this & (ulong)(object)flag) == (ulong)(object)flag

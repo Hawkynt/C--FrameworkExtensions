@@ -70,7 +70,7 @@ public readonly struct Span<T> : IEnumerable<T> {
 
 }
 
-public static partial class BackportArrayExtensions {
+public static partial class ArrayPolyfills {
   public static Span<T> AsSpan<T>(this T[] array) => new(array);
 
 }

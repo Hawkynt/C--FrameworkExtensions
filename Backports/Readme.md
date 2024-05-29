@@ -106,6 +106,7 @@
   * Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count)
   * Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
   * Task CopyToAsync(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
+  * int Read(this Stream @this, Span&lt;byte&gt; buffer)
 * System.Linq
   * TResult[] ToArray&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
   * IEnumerable&lt;TResult&gt; Cast&lt;TResult&gt;(this IEnumerable @this)

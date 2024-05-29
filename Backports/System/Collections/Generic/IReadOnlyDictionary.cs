@@ -30,7 +30,6 @@ namespace System.Collections.ObjectModel;
 // ReSharper disable UnusedMember.Global
 public interface IReadOnlyDictionary<K, V> : IDictionary<K, V> { }
 
-public class ReadOnlyDictionary<K, V> : Dictionary<K, V>, IReadOnlyDictionary<K, V> {
-  public ReadOnlyDictionary(IDictionary<K,V> dictionary) : base(dictionary) {}
-}
+public class ReadOnlyDictionary<K, V>(IDictionary<K, V> dictionary) : Dictionary<K, V>(dictionary), IReadOnlyDictionary<K, V>;
+
 #endif

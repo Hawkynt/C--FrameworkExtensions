@@ -21,9 +21,6 @@
 
 #endregion
 
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
 namespace System.Text;
 
 // ReSharper disable UnusedMember.Global
