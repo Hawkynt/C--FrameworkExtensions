@@ -21,10 +21,10 @@
 
 #endregion
 
+#if !SUPPORTS_LINQ
+
 using System.Collections;
 using System.Collections.Generic;
-
-#if !SUPPORTS_LINQ
 
 namespace System.Linq;
 
@@ -91,10 +91,25 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(predicate));
 
     return Invoke(@this, predicate);
-    
+
     static IEnumerable<TSource> Invoke(IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
       foreach (var item in @this)
         if (predicate(item))
+          yield return item;
+    }
+  }
+  public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> predicate) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
+
+    return Invoke(@this, predicate);
+
+    static IEnumerable<TSource> Invoke(IEnumerable<TSource> @this, Func<TSource, int, bool> predicate) {
+      var i = 0;
+      foreach (var item in @this)
+        if (predicate(item, i++))
           yield return item;
     }
   }
