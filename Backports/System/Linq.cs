@@ -190,6 +190,16 @@ public static partial class EnumerablePolyfills {
     return default;
   }
 
+  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    foreach (var item in @this)
+      return item;
+
+    return default;
+  }
+
   public static TSource Single<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
@@ -199,6 +209,27 @@ public static partial class EnumerablePolyfills {
     foreach (var item in @this) {
       if (found)
         throw new InvalidOperationException("Sequence contains more than one element");
+        
+      result = item;
+      found = true;
+    }
+
+    if (!found)
+      _ThrowNoElements();
+
+    return result;
+  }
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = default(TSource);
+    var found = false;
+    foreach (var item in @this) {
+      if (found)
+        return default;
+
       result = item;
       found = true;
     }
@@ -223,6 +254,17 @@ public static partial class EnumerablePolyfills {
     if (!found)
       _ThrowNoElements();
 
+    return result;
+  }
+
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = default(TSource);
+    foreach (var item in @this)
+      result = item;
+    
     return result;
   }
 
