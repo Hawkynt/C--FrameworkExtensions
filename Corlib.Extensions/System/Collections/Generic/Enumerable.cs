@@ -1336,23 +1336,6 @@ public static partial class EnumerableExtensions {
   /// </summary>
   /// <typeparam name="TItem">The type of the in.</typeparam>
   /// <param name="this">The this.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns></returns>
-  [DebuggerStepThrough]
-  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue) {
-    Against.ThisIsNull(@this);
-
-    foreach (var item in @this)
-      return item;
-
-    return defaultValue;
-  }
-
-  /// <summary>
-  /// Gets the first item or the default value.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the in.</typeparam>
-  /// <param name="this">The this.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
@@ -1384,26 +1367,6 @@ public static partial class EnumerableExtensions {
 
     // ReSharper disable once PossibleMultipleEnumeration
     return defaultValueFactory(@this);
-  }
-
-  /// <summary>
-  /// Gets the first item matching the condition or the given default value.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This enumeration.</param>
-  /// <param name="selector">The selector.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>The matched item or the given default value.</returns>
-  [DebuggerStepThrough]
-  public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, TItem defaultValue) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(selector);
-
-    foreach (var item in @this)
-      if (selector(item))
-        return item;
-
-    return defaultValue;
   }
 
   /// <summary>
@@ -1449,22 +1412,6 @@ public static partial class EnumerableExtensions {
     // ReSharper disable once PossibleMultipleEnumeration
     return defaultValueFactory(@this);
   }
-
-  /// <summary>
-  /// Gets the last item matching the condition or the given default value.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This enumeration.</param>
-  /// <param name="selector">The selector.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>The matched item or the given default value.</returns>
-  [DebuggerStepThrough]
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, TItem defaultValue)
-    => FirstOrDefault(@this.Reverse(), selector, defaultValue)
-  ;
 
   /// <summary>
   /// Gets the last item matching the condition or the given default value.
@@ -1572,21 +1519,6 @@ public static partial class EnumerableExtensions {
 #endif
   public static TItem? LastOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
     => @this.TryGetLast(out var result) ? result : null
-  ;
-
-  /// <summary>
-  /// Gets the last item or the default value.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the in.</typeparam>
-  /// <param name="this">This enumeration.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns></returns>
-  [DebuggerStepThrough]
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue)
-    => FirstOrDefault(@this.Reverse(), defaultValue)
   ;
 
   /// <summary>
@@ -1890,42 +1822,6 @@ public static partial class EnumerableExtensions {
 #endif
   public static TItem? SingleOrNull<TItem>(this IEnumerable<TItem> @this,__StructForcingTag<TItem> _=null) where TItem : struct 
     => TryGetSingle(@this, out var result) ? result : null
-  ;
-
-  /// <summary>
-  /// Retrieves a single element from the specified <see cref="IEnumerable{T}"/> collection, or returns the specified default value if the collection does not contain exactly one element.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items in the collection.</typeparam>
-  /// <param name="this">The <see cref="IEnumerable{TValue}"/> instance on which this extension method is called.</param>
-  /// <param name="defaultValue">The default value to return if the collection does not contain exactly one element.</param>
-  /// <returns>
-  /// The single element from the collection if it contains exactly one element; otherwise, the specified default value.
-  /// </returns>
-  /// <remarks>
-  /// This method is an extension method and can be called directly on any object that implements <see cref="IEnumerable{TValue}"/>.
-  /// </remarks>
-  /// <example>
-  /// Here is an example of using the method:
-  /// <code>
-  /// var numbers = new List&lt;int&gt; { 42 };
-  /// var singleValue = numbers.SingleOrDefault(-1);
-  /// Console.WriteLine(singleValue);
-  /// 
-  /// var emptyList = new List&lt;int&gt;();
-  /// var defaultValue = emptyList.SingleOrDefault(-1);
-  /// Console.WriteLine(defaultValue);
-  /// </code>
-  /// This example will output:
-  /// <code>
-  /// 42
-  /// -1
-  /// </code>
-  /// </example>
-#if SUPPORTS_INLINING
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, TItem defaultValue)
-    => TryGetSingle(@this, out var result) ? result : defaultValue
   ;
 
   /// <summary>

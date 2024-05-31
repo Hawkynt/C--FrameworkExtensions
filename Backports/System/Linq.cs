@@ -21,8 +21,6 @@
 
 #endregion
 
-#if !SUPPORTS_LINQ
-
 using System.Collections;
 using System.Collections.Generic;
 
@@ -33,6 +31,117 @@ using Diagnostics.CodeAnalysis;
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 public static partial class EnumerablePolyfills {
+
+#if !SUPPORTS_FIRSTLASTSINGLE_PREDICATE
+
+  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    foreach (var item in @this)
+      return item;
+
+    return defaultValue;
+  }
+
+ public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+  => FirstOrDefault(@this, predicate, default)
+  ;
+
+ public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
+
+    foreach (var item in @this)
+      if (predicate(item))
+        return item;
+
+    return defaultValue;
+  }
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = defaultValue;
+    var found = false;
+    foreach (var item in @this) {
+      if (found)
+        throw new InvalidOperationException("Sequence contains more than one element");
+
+      result = item;
+      found = true;
+    }
+
+    if (!found)
+      return defaultValue;
+
+    return result;
+  }
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
+
+    var result = defaultValue;
+    var found = false;
+    foreach (var item in @this) {
+      if(!predicate(item))
+        continue;
+
+      if (found)
+        throw new InvalidOperationException("Sequence contains more than one element");
+
+      result = item;
+      found = true;
+    }
+
+    if (!found)
+      return defaultValue;
+
+    return result;
+  }
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+    => SingleOrDefault(@this, predicate, default)
+    ;
+
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+
+    var result = defaultValue;
+    foreach (var item in @this)
+      result = item;
+    
+    return result;
+  }
+
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+   => LastOrDefault(@this, predicate, default)
+   ;
+
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
+    if (@this == null)
+      throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
+
+    var result = defaultValue;
+    foreach (var item in @this)
+      if (predicate(item))
+        result = item;
+    
+    return result;
+  }
+
+#endif
+
+#if !SUPPORTS_LINQ
 
   public static TResult[] ToArray<TResult>(this IEnumerable<TResult> @this) {
     if (@this == null)
@@ -190,15 +299,21 @@ public static partial class EnumerablePolyfills {
     return default;
   }
 
-  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this) {
+  public static TSource First<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
 
     foreach (var item in @this)
-      return item;
+      if(predicate(item))
+        return item;
 
+    _ThrowNoElements();
     return default;
   }
+
+  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this) => FirstOrDefault(@this, default(TSource));
 
   public static TSource Single<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
@@ -209,7 +324,7 @@ public static partial class EnumerablePolyfills {
     foreach (var item in @this) {
       if (found)
         throw new InvalidOperationException("Sequence contains more than one element");
-        
+
       result = item;
       found = true;
     }
@@ -220,15 +335,20 @@ public static partial class EnumerablePolyfills {
     return result;
   }
 
-  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this) {
+  public static TSource Single<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
 
     var result = default(TSource);
     var found = false;
     foreach (var item in @this) {
+      if (!predicate(item))
+        continue;
+        
       if (found)
-        return default;
+        throw new InvalidOperationException("Sequence contains more than one element");
 
       result = item;
       found = true;
@@ -239,6 +359,8 @@ public static partial class EnumerablePolyfills {
 
     return result;
   }
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this) => SingleOrDefault(@this, default(TSource));
 
   public static TSource Last<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
@@ -257,16 +379,29 @@ public static partial class EnumerablePolyfills {
     return result;
   }
 
-  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this) {
+  public static TSource Last<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
+    if (predicate == null)
+      throw new ArgumentNullException(nameof(predicate));
 
     var result = default(TSource);
-    foreach (var item in @this)
+    var found = false;
+    foreach (var item in @this) {
+      if(!predicate(item))
+        continue;
+
       result = item;
-    
+      found = true;
+    }
+
+    if (!found)
+      _ThrowNoElements();
+
     return result;
   }
+
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this) => LastOrDefault(@this, default(TSource));
 
   public static TSource Min<TSource>(this IEnumerable<TSource> source) {
     if (source == null)
@@ -370,10 +505,14 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+#endif
+
   [DoesNotReturn]
   private static void _ThrowNoElements() => throw new InvalidOperationException("Sequence contains no elements");
 
 }
+
+#if !SUPPORTS_LINQ
 
 public interface IGrouping<out TKey, TElement> : IEnumerable<TElement> {
   TKey Key { get; }
