@@ -143,13 +143,18 @@ public static partial class EnumerablePolyfills {
     }
   }
 
-  public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector) {
+  public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
+    => OrderBy(@this, keySelector, Comparer<TKey>.Default)
+    ;
+
+  public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
     if (keySelector == null)
       throw new ArgumentNullException(nameof(keySelector));
+    if (comparer == null)
+      throw new ArgumentNullException(nameof(comparer));
     
-    var comparer = Comparer<TKey>.Default;
     return Invoke(@this, keySelector, Compare);
 
     int Compare((int, TKey, TSource) x, (int, TKey, TSource) y) {
@@ -166,7 +171,12 @@ public static partial class EnumerablePolyfills {
   
   public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
-    => @this.OrderBy(keySelector)
+    => OrderBy(@this, keySelector, Comparer<TKey>.Default)
+    ;
+
+  public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
+    // Assuming source is already sorted by a previous OrderBy or ThenBy
+    => OrderBy(@this, keySelector, comparer)
     ;
 
   public static TSource First<TSource>(this IEnumerable<TSource> @this) {
