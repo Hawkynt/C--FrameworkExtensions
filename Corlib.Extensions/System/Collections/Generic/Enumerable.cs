@@ -1101,7 +1101,7 @@ public static partial class EnumerableExtensions {
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
   public static bool TryGetFirst<TItem>(this IEnumerable<TItem> @this, out TItem result) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
 
     foreach (var item in @this) {
       result = item;
@@ -1120,7 +1120,7 @@ public static partial class EnumerableExtensions {
   /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
   /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
   public static bool TryGetLast<TItem>(this IEnumerable<TItem> @this, out TItem result) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
 
     result = default;
     var foundItems = false;
@@ -1340,7 +1340,7 @@ public static partial class EnumerableExtensions {
   /// <returns></returns>
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
     foreach (var item in @this)
@@ -1358,7 +1358,7 @@ public static partial class EnumerableExtensions {
   /// <returns></returns>
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
     // ReSharper disable once PossibleMultipleEnumeration
@@ -1379,7 +1379,7 @@ public static partial class EnumerableExtensions {
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValueFactory);
       
@@ -1400,7 +1400,7 @@ public static partial class EnumerableExtensions {
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(selector);
     Against.ArgumentIsNull(defaultValueFactory);
       
@@ -1717,7 +1717,7 @@ public static partial class EnumerableExtensions {
   /// </example>
   [DebuggerStepThrough]
   public static bool TryGetSingle<TItem>(this IEnumerable<TItem> @this, out TItem result) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
 
     switch (@this) {
       case TItem[] { Length: 1 } array: {
@@ -1859,10 +1859,10 @@ public static partial class EnumerableExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
-    return TryGetSingle(@this, out var result) ? result : defaultValueFactory();
+    return SingleOrDefault(@this, _ => defaultValueFactory());
   }
 
   /// <summary>
@@ -1899,13 +1899,34 @@ public static partial class EnumerableExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>,TItem> defaultValueFactory) {
-    Against.ThisIsNull(@this);
+  public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
+    Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
-    // ReSharper disable PossibleMultipleEnumeration
-    return TryGetSingle(@this, out var result) ? result : defaultValueFactory(@this);
-    // ReSharper restore PossibleMultipleEnumeration
+    switch (@this) {
+      case TItem[] { Length: 1 } array:
+        return array[0];
+      case TItem[]:
+        return defaultValueFactory(@this);
+      case IList<TItem> { Count: 1 } list:
+        return list[0];
+      case IList<TItem>:
+        return defaultValueFactory(@this);
+      default:
+        // ReSharper disable once PossibleMultipleEnumeration
+        using (var enumerator = @this.GetEnumerator()) {
+          if (!enumerator.MoveNext())
+            
+            // ReSharper disable once PossibleMultipleEnumeration
+            return defaultValueFactory(@this);
+
+          var result = enumerator.Current;
+          if (!enumerator.MoveNext())
+            return result;
+        }
+
+        throw new InvalidOperationException("Sequence contains more than one element");
+    }
   }
 
   /// <summary>

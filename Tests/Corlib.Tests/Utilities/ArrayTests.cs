@@ -10,8 +10,8 @@ internal class ArrayTests {
   private static T[] Empty<T>() {
     var assembly = typeof(ArrayExtensions).Assembly;
     var @class=assembly.NonPublic("Utilities.Array");
-    var method = @class.NonPublic<T[]>("Empty");
-    return method(null);
+    var method = @class!.NonPublic<T[]>("Empty");
+    return method(null)!;
   }
 
   [Test]

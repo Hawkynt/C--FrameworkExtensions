@@ -104,7 +104,7 @@ public class EnumerableTests {
     => ExecuteTest(() => ConvertFromStringToTestArray(input).HasNoMultiple(s => s == search), expected, exception);
 
   [Test]
-  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase(null, false, null, typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "a")]
@@ -116,7 +116,7 @@ public class EnumerableTests {
   }
 
   [Test]
-  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase(null, false, null, typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "b")]
@@ -277,7 +277,7 @@ public class EnumerableTests {
     );
 
   [Test]
-  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase(null, null, typeof(ArgumentNullException))]
   [TestCase("", null)]
   [TestCase("a", "a")]
   [TestCase("a|b", "a")]
@@ -286,7 +286,7 @@ public class EnumerableTests {
     => ExecuteTest(() => ConvertFromStringToTestArray(input).FirstOrNull(), expected, exception);
 
   [Test]
-  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase(null, null, typeof(ArgumentNullException))]
   [TestCase("", null)]
   [TestCase("a", "a")]
   [TestCase("a|b", "b")]
@@ -295,7 +295,7 @@ public class EnumerableTests {
     => ExecuteTest(() => ConvertFromStringToTestArray(input).LastOrNull(), expected, exception);
 
   [Test]
-  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase(null, null, typeof(ArgumentNullException))]
   [TestCase("", null)]
   [TestCase("a", "a")]
   [TestCase("a|b", null)]
@@ -304,18 +304,18 @@ public class EnumerableTests {
     => ExecuteTest(() => ConvertFromStringToTestArray(input).SingleOrNull(), expected, exception);
 
   [Test]
-  [TestCase(null, null, null, typeof(NullReferenceException))]
+  [TestCase(null, null, null, typeof(ArgumentNullException))]
   [TestCase("", "a", "a")]
   [TestCase("b", "a", "b")]
-  [TestCase("b|c", "a", "a")]
+  [TestCase("b|c", "a", "a",typeof(InvalidOperationException))]
   [TestCase("!", "a", null)]
   public void SingleOrDefault(string? input, string? @default, string? expected, Type? exception = null) {
     var self = ConvertFromStringToTestArray(input);
     ExecuteTest(() => self.SingleOrDefault(@default), expected, exception);
     ExecuteTest(() => self.SingleOrDefault(() => @default), expected, exception);
     ExecuteTest(() => self.SingleOrDefault(_ => @default), expected, exception);
-    ExecuteTest(() => self.SingleOrDefault((Func<string?>)null!), expected, exception ?? typeof(ArgumentNullException));
-    ExecuteTest(() => self.SingleOrDefault((Func<IEnumerable<string?>, string?>)null!), expected, exception ?? typeof(ArgumentNullException));
+    ExecuteTest(() => self.SingleOrDefault((Func<string?>)null!), expected, typeof(ArgumentNullException));
+    ExecuteTest(() => self.SingleOrDefault((Func<IEnumerable<string?>, string?>)null!), expected, typeof(ArgumentNullException));
   }
 
 }
