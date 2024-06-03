@@ -152,7 +152,7 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits) {
-    Against.ValuesOutOfRange(@this, 0, <#=item.Item2#>);
+    Against.ValuesOutOfRange(digits, 0, <#=item.Item2#>);
 
     return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits);
   }
@@ -175,7 +175,7 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static <#=item.Item1#> Round(this <#=item.Item1#> @this, int digits, MidpointRounding method) {
-    Against.ValuesOutOfRange(@this, 0, <#=item.Item2#>);
+    Against.ValuesOutOfRange(digits, 0, <#=item.Item2#>);
 
     return <#=(item.Item1=="float"?"("+item.Item1+")":"")#>Math.Round(@this, digits, method);
   }
