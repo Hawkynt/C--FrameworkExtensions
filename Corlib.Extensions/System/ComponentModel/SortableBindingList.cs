@@ -39,7 +39,7 @@ namespace System.ComponentModel;
 /// A BindingList which is sortable in DataGridViews.
 /// </summary>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollectionChanged {
+public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectionChanged {
 
   #region nested types
 
@@ -160,15 +160,17 @@ public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollection
 
   #endregion
 
+  public bool IsAutomaticallySorted { get; set; }
+
   private bool _isSorted;
   private ListSortDirection _sortDirection = ListSortDirection.Ascending;
   private PropertyDescriptor _sortProperty;
-    
+
   public SortableBindingList() { }
 
   public SortableBindingList(IEnumerable<TValue> enumerable) {
     Against.ArgumentIsNull(enumerable);
-    
+
     this.AddRange(enumerable);
   }
 
@@ -230,27 +232,33 @@ public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollection
       this.OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
     }
   }
-    
+
   #endregion
 
   protected override bool SupportsSortingCore => true;
   protected override bool IsSortedCore => this._isSorted;
   protected override ListSortDirection SortDirectionCore => this._sortDirection;
   protected override PropertyDescriptor SortPropertyCore => this._sortProperty;
-    
+
   protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction) {
     this._sortDirection = direction;
     this._sortProperty = prop;
     this._isSorted = true;
     var list = this.Items;
-    if (list.IsReadOnly || list.Count<1)
+    if (list.IsReadOnly || list.Count < 1)
       return;
 
     this.Overhaul(li => StableSorter.InPlaceSort(li, prop, direction));
   }
 
+  protected override void RemoveSortCore() {
+    this._sortDirection = ListSortDirection.Ascending;
+    this._sortProperty = null;
+    this._isSorted = false;
+  }
+
   private bool _ReApplySortIfNeeded() {
-    if (!this.IsSortedCore)
+    if (!(this.IsAutomaticallySorted && this.IsSortedCore))
       return false;
 
     var isRaisingListChangedEvents = this.RaiseListChangedEvents;
@@ -277,7 +285,7 @@ public class SortableBindingList<TValue> : BindingList<TValue>,INotifyCollection
 public static partial class EnumerableExtensions {
   public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
-    
+
     return new(@this);
   }
 }
