@@ -32,7 +32,7 @@ using Diagnostics.CodeAnalysis;
 // ReSharper disable UnusedMember.Global
 public static partial class EnumerablePolyfills {
 
-#if !SUPPORTS_FIRSTLASTSINGLE_PREDICATE
+#if !SUPPORTS_FIRSTLASTSINGLE_DEFAULT
 
   public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
     if (@this == null)
@@ -43,12 +43,8 @@ public static partial class EnumerablePolyfills {
 
     return defaultValue;
   }
-
- public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-  => FirstOrDefault(@this, predicate, default)
-  ;
-
- public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
+  
+  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
     if (predicate == null)
@@ -90,7 +86,7 @@ public static partial class EnumerablePolyfills {
     var result = defaultValue;
     var found = false;
     foreach (var item in @this) {
-      if(!predicate(item))
+      if (!predicate(item))
         continue;
 
       if (found)
@@ -106,9 +102,6 @@ public static partial class EnumerablePolyfills {
     return result;
   }
 
-  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-    => SingleOrDefault(@this, predicate, default)
-    ;
 
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
     if (@this == null)
@@ -117,13 +110,9 @@ public static partial class EnumerablePolyfills {
     var result = defaultValue;
     foreach (var item in @this)
       result = item;
-    
+
     return result;
   }
-
-  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-   => LastOrDefault(@this, predicate, default)
-   ;
 
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
     if (@this == null)
@@ -135,10 +124,27 @@ public static partial class EnumerablePolyfills {
     foreach (var item in @this)
       if (predicate(item))
         result = item;
-    
+
     return result;
   }
 
+#endif
+
+#if !SUPPORTS_FIRSTLASTSINGLE_PREDICATE
+
+
+  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+  => FirstOrDefault(@this, predicate, default)
+  ;
+
+  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+    => SingleOrDefault(@this, predicate, default)
+    ;
+  
+  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
+   => LastOrDefault(@this, predicate, default)
+   ;
+  
 #endif
 
 #if !SUPPORTS_LINQ
