@@ -19,17 +19,55 @@
 */
 #endregion
 
+using Guard;
+
 // ReSharper disable PartialTypeWithSinglePart
-namespace System.Collections.Generic; 
+namespace System.Collections.Generic;
 
 public static partial class StackExtensions {
+
+  /// <summary>
+  /// Replaces the item at the top of the stack with the specified item and returns the original top item.
+  /// </summary>
+  /// <typeparam name="TItem">The type of elements in the stack.</typeparam>
+  /// <param name="this">The <see cref="Stack{T}"/> instance on which this extension method is called.</param>
+  /// <param name="item">The item to push onto the stack.</param>
+  /// <returns>The original top item from the stack.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if the stack is empty.</exception>
+  /// <example>
+  /// <code>
+  /// Stack&lt;int&gt; stack = new Stack&lt;int&gt;();
+  /// stack.Push(1);
+  /// stack.Push(2);
+  /// stack.Push(3);
+  ///
+  /// int top = stack.Exchange(4); // top is 3, stack now contains 4, 2, 1
+  /// Console.WriteLine($"Replaced top item: {top}");
+  /// Console.WriteLine($"New top item: {stack.Peek()}");
+  /// </code>
+  /// This example demonstrates replacing the top item of a stack and retrieving the original top item.
+  /// </example>
+  /// <remarks>
+  /// This method provides a way to replace the top item of a stack with a new item, returning the original top item for further use.
+  /// </remarks>
+  public static TItem Exchange<TItem>(this Stack<TItem> @this, TItem item) {
+    Against.ThisIsNull(@this);
+
+    var result = @this.Pop();
+    @this.Push(item);
+    
+    return result;
+  }
+
   /// <summary>
   /// Inverts the specified stack.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">The stack to invert.</param>
   public static void Invert<TItem>(this Stack<TItem> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
+    @this.ToArray();
 
     Queue<TItem> helpStack = new(@this.Count);
     while (@this.Count > 0)
@@ -46,8 +84,8 @@ public static partial class StackExtensions {
   /// <param name="this">This Stack.</param>
   /// <param name="items">The items to push on top of the stack.</param>
   public static void AddRange<TItem>(this Stack<TItem> @this, IEnumerable<TItem> items) {
-    Guard.Against.ThisIsNull(@this);
-    Guard.Against.ArgumentIsNull(items);
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     foreach (var item in items)
       @this.Push(item);
@@ -60,7 +98,7 @@ public static partial class StackExtensions {
   /// <param name="this">This Stack.</param>
   /// <param name="item">The item to push on top of the stack.</param>
   public static void Add<TItem>(this Stack<TItem> @this, TItem item) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     @this.Push(item);
   }
@@ -72,7 +110,7 @@ public static partial class StackExtensions {
   /// <param name="this">This Stack.</param>
   /// <returns>The top-most item.</returns>
   public static TItem Fetch<TItem>(this Stack<TItem> @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     return @this.Pop();
   }
