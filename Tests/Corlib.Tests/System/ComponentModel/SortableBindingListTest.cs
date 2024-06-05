@@ -42,7 +42,7 @@ public class SortableBindingListTest {
 
     // Arrange
     var numbers = new[] { 2, 4 };
-    var bs = new SortableBindingList<Item>();
+    var bs = new SortableBindingList<Item> {IsAutomaticallySorted = true};
     foreach (var i in numbers)
       bs.Add(_GetItemById(i));
 
@@ -67,7 +67,7 @@ public class SortableBindingListTest {
     
     // Arrange
     var numbers = new[] { 2, 4 };
-    var bs = new SortableBindingList<Item>();
+    var bs = new SortableBindingList<Item> { IsAutomaticallySorted = true };
     foreach (var i in numbers)
       bs.Add(_GetItemById(i));
 
