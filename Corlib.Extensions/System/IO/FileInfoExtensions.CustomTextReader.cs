@@ -323,9 +323,9 @@ public static partial class FileInfoExtensions {
         stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
       public Initialized(Stream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
-        : this(stream, false, encoding, lineBreakMode) {
-        Against.ArgumentIsNull(encoding);
-      }
+        : this(stream, false, encoding, lineBreakMode) 
+        => Against.ArgumentIsNull(encoding)
+        ;
 
       public long PreambleSize { get; }
 
