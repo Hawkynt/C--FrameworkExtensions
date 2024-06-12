@@ -75,7 +75,7 @@ public static partial class IQueryableExtensions {
   /// <param name="this">This IQueryable.</param>
   /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white").</param>
   /// <param name="selector">Which column of the record to filter.</param>
-  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query) {
+  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query, bool ignoreCase = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
 
@@ -88,9 +88,12 @@ public static partial class IQueryableExtensions {
       if (filter.IsNullOrWhiteSpace())
         continue;
 
-      var constant = Expression.Constant(filter);
+      var constant = Expression.Constant(ignoreCase ? filter.ToLower() : filter);
       var instance = Expression.Parameter(typeof(TRow), "row");
-      var resolveCall = Expression.Invoke(selector, instance);
+      Expression resolveCall = Expression.Invoke(selector, instance);
+      if (ignoreCase)
+        resolveCall = Expression.Call(resolveCall, nameof(string.ToLower), Type.EmptyTypes);
+
       var expression = Expression.Call(resolveCall, nameof(string.Contains), null, constant);
       var lambda = Expression.Lambda<Func<TRow, bool>>(expression, instance);
       results = results.Where(lambda);
