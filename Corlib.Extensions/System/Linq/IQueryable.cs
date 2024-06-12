@@ -69,16 +69,79 @@ public static partial class IQueryableExtensions {
 
   /// <summary>
   /// Modifies the result-set to include filtering based on the given query string.
-  /// Multiple filters may be present, split by whitespaces, combined with AND.
+  /// Multiple filters may be present, split by whitespaces, automatically combined with AND.
   /// </summary>
   /// <typeparam name="TRow">The type of rows.</typeparam>
-  /// <param name="this">This IQueryable.</param>
-  /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white").</param>
-  /// <param name="selector">Which column of the record to filter.</param>
-  /// <param name="ignoreCase">If set to <see langword="true"/> ignores case when comparing; defaults to <see langword="false"/></param>
-  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query, bool ignoreCase = false) {
+  /// <param name="this">The <see cref="IQueryable{T}"/> to be filtered.</param>
+  /// <param name="selector">An expression that selects the column to filter on (e.g., r => r.Name).</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="ignoreCase">If set to <see langword="true"/>, ignores case when comparing; defaults to <see langword="false"/>.</param>
+  /// <returns>A filtered <see cref="IQueryable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selector"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsQueryable();
+  /// var filteredRecords = records.FilterIfNeeded(r => r.Name, "green white", true);
+  /// </code>
+  /// This example demonstrates how to filter a queryable list of records where the "Name" column contains both "green" and "white", ignoring case.
+  /// </example>
+  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query, bool ignoreCase = false) 
+    => FilterIfNeeded(@this, query, ignoreCase, selector)
+    ;
+
+  /// <summary>
+  /// Modifies the result-set to include filtering based on the given query string across multiple columns.
+  /// Multiple filters may be present, split by whitespaces, combined with AND.
+  /// Separate expressions for columns are combined using OR within each filter term.
+  /// </summary>
+  /// <typeparam name="TRow">The type of rows.</typeparam>
+  /// <param name="this">The <see cref="IQueryable{T}"/> to be filtered.</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="selectors">An array of expressions that select the columns to filter on (e.g., r => r.Name, r => r.Description).</param>
+  /// <returns>A filtered <see cref="IQueryable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selectors"/> is <see langword="null"/> or contains null elements.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsQueryable();
+  /// var filteredRecords = records.FilterIfNeeded("green white", r => r.Name, r => r.Description);
+  /// </code>
+  /// This example demonstrates how to filter a queryable list of records where either the "Name" or "Description" column contains both "green" and "white" (but they don't need to be in the same column), with exact case.
+  /// </example>
+  /// <remarks>
+  /// This method allows for filtering across multiple columns. Each filter term is matched against each column, combining column matches with OR and combining filter terms with AND.
+  /// </remarks>
+  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, string query, params Expression<Func<TRow, string>>[] selectors)
+    => FilterIfNeeded(@this, query, false, selectors)
+    ;
+
+  /// <summary>
+  /// Modifies the result-set to include filtering based on the given query string across multiple columns.
+  /// Multiple filters may be present, split by whitespaces, combined with AND.
+  /// Separate expressions for columns are combined using OR within each filter term.
+  /// </summary>
+  /// <typeparam name="TRow">The type of rows.</typeparam>
+  /// <param name="this">The <see cref="IQueryable{T}"/> to be filtered.</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="ignoreCase">If set to <see langword="true"/>, ignores case when comparing; defaults to <see langword="false"/>.</param>
+  /// <param name="selectors">An array of expressions that select the columns to filter on (e.g., r => r.Name, r => r.Description).</param>
+  /// <returns>A filtered <see cref="IQueryable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selectors"/> is <see langword="null"/> or contains null elements.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsQueryable();
+  /// var filteredRecords = records.FilterIfNeeded("green white", true, r => r.Name, r => r.Description);
+  /// </code>
+  /// This example demonstrates how to filter a queryable list of records where either the "Name" or "Description" column contains both "green" and "white" (but they don't need to be in the same column), ignoring case.
+  /// </example>
+  /// <remarks>
+  /// This method allows for filtering across multiple columns. Each filter term is matched against each column, combining column matches with OR and combining filter terms with AND.
+  /// </remarks>
+  public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, string query, bool ignoreCase, params Expression<Func<TRow, string>>[] selectors) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(selector);
+    Against.ArgumentIsNullOrEmpty(selectors);
 
     if (query.IsNullOrWhiteSpace())
       return @this;
@@ -91,12 +154,22 @@ public static partial class IQueryableExtensions {
 
       var constant = Expression.Constant(ignoreCase ? filter.ToLower() : filter);
       var instance = Expression.Parameter(typeof(TRow), "row");
-      Expression resolveCall = Expression.Invoke(selector, instance);
-      if (ignoreCase)
-        resolveCall = Expression.Call(resolveCall, nameof(string.ToLower), Type.EmptyTypes);
 
-      var expression = Expression.Call(resolveCall, nameof(string.Contains), null, constant);
-      var lambda = Expression.Lambda<Func<TRow, bool>>(expression, instance);
+      Expression combinedExpression = null;
+      
+      foreach (var selector in selectors) {
+        var resolveCall = Expression.Invoke(selector, instance);
+        Expression selectorExpression = ignoreCase ? Expression.Call(resolveCall, nameof(string.ToLower), Type.EmptyTypes) : resolveCall;
+        var containsCall = Expression.Call(selectorExpression, nameof(string.Contains), null, constant);
+
+        if (combinedExpression == null)
+          combinedExpression = containsCall;
+        else
+          combinedExpression = Expression.OrElse(combinedExpression, containsCall);
+
+      }
+
+      var lambda = Expression.Lambda<Func<TRow, bool>>(combinedExpression!, instance);
       results = results.Where(lambda);
     }
 
