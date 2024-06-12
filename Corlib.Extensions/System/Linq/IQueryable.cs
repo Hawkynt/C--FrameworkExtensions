@@ -75,6 +75,7 @@ public static partial class IQueryableExtensions {
   /// <param name="this">This IQueryable.</param>
   /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white").</param>
   /// <param name="selector">Which column of the record to filter.</param>
+  /// <param name="ignoreCase">If set to <see langword="true"/> ignores case when comparing; defaults to <see langword="false"/></param>
   public static IQueryable<TRow> FilterIfNeeded<TRow>(this IQueryable<TRow> @this, Expression<Func<TRow, string>> selector, string query, bool ignoreCase = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
