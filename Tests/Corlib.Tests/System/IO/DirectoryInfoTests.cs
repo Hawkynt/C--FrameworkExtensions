@@ -1,13 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Corlib.Tests.NUnit;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Corlib.Tests.System.IO;
-
-using global::System.Collections.Generic;
-using static TestUtilities;
 
 [TestFixture]
 internal class DirectoryInfoTests {
@@ -196,104 +193,105 @@ internal class DirectoryInfoTests {
 
   [TestFixture]
   public class CasingTests {
+#pragma warning disable CS8618
     private DirectoryInfo _testDirectory;
+#pragma warning restore CS8618
 
     [SetUp]
     public void SetUp() {
-      _testDirectory = new(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-      _testDirectory.Create();
+      this._testDirectory = new(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+      this._testDirectory.Create();
     }
 
     [TearDown]
     public void TearDown() {
-      if (_testDirectory.Exists) {
-        _testDirectory.Delete(true);
-      }
+      if (this._testDirectory.Exists)
+        this._testDirectory.Delete(true);
     }
 
     [Test]
     public void Directory_IgnoreCase_ExistingSubdirectory_ReturnsCorrectCasing() {
       var subDirName = "TestSubDir";
-      var subDirPath = Path.Combine(_testDirectory.FullName, subDirName);
+      var subDirPath = Path.Combine(this._testDirectory.FullName, subDirName);
       Directory.CreateDirectory(subDirPath);
 
-      var result = _testDirectory.Directory(true, "testsubdir");
+      var result = this._testDirectory.Directory(true, "testsubdir");
 
       Assert.That(result.FullName, Is.EqualTo(subDirPath));
     }
 
     [Test]
     public void Directory_IgnoreCase_NonExistingSubdirectory_ReturnsGivenCasing() {
-      var result = _testDirectory.Directory(true, "testsubdir");
+      var result = this._testDirectory.Directory(true, "testsubdir");
 
-      var expectedPath = Path.Combine(_testDirectory.FullName, "testsubdir");
+      var expectedPath = Path.Combine(this._testDirectory.FullName, "testsubdir");
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
     [Test]
     public void Directory_CaseSensitive_ExistingSubdirectory_ReturnsCorrectCasing() {
       var subDirName = "TestSubDir";
-      var subDirPath = Path.Combine(_testDirectory.FullName, subDirName);
+      var subDirPath = Path.Combine(this._testDirectory.FullName, subDirName);
       Directory.CreateDirectory(subDirPath);
 
-      var result = _testDirectory.Directory(false, "TestSubDir");
+      var result = this._testDirectory.Directory(false, "TestSubDir");
 
       Assert.That(result.FullName, Is.EqualTo(subDirPath));
     }
 
     [Test]
     public void Directory_CaseSensitive_NonExistingSubdirectory_ReturnsGivenCasing() {
-      var result = _testDirectory.Directory(false, "testsubdir");
+      var result = this._testDirectory.Directory(false, "testsubdir");
 
-      var expectedPath = Path.Combine(_testDirectory.FullName, "testsubdir");
+      var expectedPath = Path.Combine(this._testDirectory.FullName, "testsubdir");
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
     [Test]
     public void File_IgnoreCase_ExistingFile_ReturnsCorrectCasing() {
       var fileName = "TestFile.txt";
-      var filePath = Path.Combine(_testDirectory.FullName, fileName);
+      var filePath = Path.Combine(this._testDirectory.FullName, fileName);
       File.WriteAllText(filePath, "Test content");
 
-      var result = _testDirectory.File(true, "testfile.txt");
+      var result = this._testDirectory.File(true, "testfile.txt");
 
       Assert.That(result.FullName, Is.EqualTo(filePath));
     }
 
     [Test]
     public void File_IgnoreCase_NonExistingFile_ReturnsGivenCasing() {
-      var result = _testDirectory.File(true, "testfile.txt");
+      var result = this._testDirectory.File(true, "testfile.txt");
 
-      var expectedPath = Path.Combine(_testDirectory.FullName, "testfile.txt");
+      var expectedPath = Path.Combine(this._testDirectory.FullName, "testfile.txt");
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
     [Test]
     public void File_CaseSensitive_ExistingFile_ReturnsCorrectCasing() {
       var fileName = "TestFile.txt";
-      var filePath = Path.Combine(_testDirectory.FullName, fileName);
+      var filePath = Path.Combine(this._testDirectory.FullName, fileName);
       File.WriteAllText(filePath, "Test content");
 
-      var result = _testDirectory.File(false, "TestFile.txt");
+      var result = this._testDirectory.File(false, "TestFile.txt");
 
       Assert.That(result.FullName, Is.EqualTo(filePath));
     }
 
     [Test]
     public void File_CaseSensitive_NonExistingFile_ReturnsGivenCasing() {
-      var result = _testDirectory.File(false, "testfile.txt");
+      var result = this._testDirectory.File(false, "testfile.txt");
 
-      var expectedPath = Path.Combine(_testDirectory.FullName, "testfile.txt");
+      var expectedPath = Path.Combine(this._testDirectory.FullName, "testfile.txt");
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
     [Test]
     public void Directory_IgnoreCase_ExistingNestedSubdirectories_ReturnsCorrectCasing() {
       var subDirs = new[] { "Dir1", "Dir2" };
-      var nestedDirPath = Combine(_testDirectory.FullName, subDirs);
+      var nestedDirPath = Combine(this._testDirectory.FullName, subDirs);
       Directory.CreateDirectory(nestedDirPath);
 
-      var result = _testDirectory.Directory(true, "dir1", "dir2");
+      var result = this._testDirectory.Directory(true, "dir1", "dir2");
 
       Assert.That(result.FullName, Is.EqualTo(nestedDirPath));
     }
@@ -301,10 +299,10 @@ internal class DirectoryInfoTests {
     [Test]
     public void Directory_CaseSensitive_ExistingNestedSubdirectories_ReturnsCorrectCasing() {
       var subDirs = new[] { "Dir1", "Dir2" };
-      var nestedDirPath = Combine(_testDirectory.FullName, subDirs);
+      var nestedDirPath = Combine(this._testDirectory.FullName, subDirs);
       Directory.CreateDirectory(nestedDirPath);
 
-      var result = _testDirectory.Directory(false, "Dir1", "Dir2");
+      var result = this._testDirectory.Directory(false, "Dir1", "Dir2");
 
       Assert.That(result.FullName, Is.EqualTo(nestedDirPath));
     }
@@ -312,18 +310,18 @@ internal class DirectoryInfoTests {
     [Test]
     public void Directory_IgnoreCase_NonExistingNestedSubdirectories_ReturnsGivenCasing() {
       var subDirs = new[] { "dir1", "dir2" };
-      var result = _testDirectory.Directory(true, subDirs);
+      var result = this._testDirectory.Directory(true, subDirs);
 
-      var expectedPath = Combine(_testDirectory.FullName, subDirs);
+      var expectedPath = Combine(this._testDirectory.FullName, subDirs);
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
     [Test]
     public void Directory_CaseSensitive_NonExistingNestedSubdirectories_ReturnsGivenCasing() {
       var subDirs = new[] { "dir1", "dir2" };
-      var result = _testDirectory.Directory(false, subDirs);
+      var result = this._testDirectory.Directory(false, subDirs);
 
-      var expectedPath = Combine(_testDirectory.FullName, subDirs);
+      var expectedPath = Combine(this._testDirectory.FullName, subDirs);
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
@@ -331,11 +329,11 @@ internal class DirectoryInfoTests {
     public void File_IgnoreCase_ExistingNestedFile_ReturnsCorrectCasing() {
       var subDirs = new[] { "Dir1", "Dir2" };
       var fileName = "TestFile.txt";
-      var nestedFilePath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
+      var nestedFilePath = Path.Combine(Combine(this._testDirectory.FullName, subDirs), fileName);
       Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath)!);
       File.WriteAllText(nestedFilePath, "Test content");
 
-      var result = _testDirectory.File(true, "dir1", "dir2", "testfile.txt");
+      var result = this._testDirectory.File(true, "dir1", "dir2", "testfile.txt");
 
       Assert.That(result.FullName, Is.EqualTo(nestedFilePath));
     }
@@ -344,11 +342,11 @@ internal class DirectoryInfoTests {
     public void File_CaseSensitive_ExistingNestedFile_ReturnsCorrectCasing() {
       var subDirs = new[] { "Dir1", "Dir2" };
       var fileName = "TestFile.txt";
-      var nestedFilePath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
+      var nestedFilePath = Path.Combine(Combine(this._testDirectory.FullName, subDirs), fileName);
       Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath)!);
       File.WriteAllText(nestedFilePath, "Test content");
 
-      var result = _testDirectory.File(false, "Dir1", "Dir2", "TestFile.txt");
+      var result = this._testDirectory.File(false, "Dir1", "Dir2", "TestFile.txt");
 
       Assert.That(result.FullName, Is.EqualTo(nestedFilePath));
     }
@@ -357,9 +355,9 @@ internal class DirectoryInfoTests {
     public void File_IgnoreCase_NonExistingNestedFile_ReturnsGivenCasing() {
       var subDirs = new[] { "dir1", "dir2" };
       var fileName = "testfile.txt";
-      var result = _testDirectory.File(true, subDirs.Append(fileName).ToArray());
+      var result = this._testDirectory.File(true, subDirs.Append(fileName).ToArray());
 
-      var expectedPath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
+      var expectedPath = Path.Combine(Combine(this._testDirectory.FullName, subDirs), fileName);
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
 
@@ -367,9 +365,9 @@ internal class DirectoryInfoTests {
     public void File_CaseSensitive_NonExistingNestedFile_ReturnsGivenCasing() {
       var subDirs = new[] { "dir1", "dir2" };
       var fileName = "testfile.txt";
-      var result = _testDirectory.File(false, subDirs.Append(fileName).ToArray());
+      var result = this._testDirectory.File(false, subDirs.Append(fileName).ToArray());
 
-      var expectedPath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
+      var expectedPath = Path.Combine(Combine(this._testDirectory.FullName, subDirs), fileName);
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
   }
