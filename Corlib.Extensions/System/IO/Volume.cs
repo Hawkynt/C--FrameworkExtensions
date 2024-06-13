@@ -165,7 +165,7 @@ public static partial class VolumeExtensions {
   /// <exception cref="System.ComponentModel.Win32Exception"></exception>
   public static IEnumerable<string> GetVolumePathNames(string volumeName) {
     uint bufferSize = 0;
-    if (NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, new char[0], 0, ref bufferSize))
+    if (NativeMethods.GetVolumePathNamesForVolumeNameW(volumeName, [], 0, ref bufferSize))
       return Utilities.Array.Empty<string>();
 
     var result = new char[bufferSize];

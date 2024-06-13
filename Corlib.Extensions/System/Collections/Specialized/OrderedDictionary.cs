@@ -28,7 +28,7 @@ using System.Linq;
 namespace System.Collections.Specialized; 
 
 public class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {
-  private readonly List<TKey> _keys = new();
+  private readonly List<TKey> _keys = [];
 
   public OrderedDictionary() {
   }

@@ -61,7 +61,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { sum, state };
+        byte[] Final() => [sum, state];
       }
       case 32: {
         const ushort PRIME = 65521;
@@ -84,7 +84,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new [] { (byte)(sum >> 8), (byte)sum, (byte)(state >> 8), (byte)state };
+        byte[] Final() => [(byte)(sum >> 8), (byte)sum, (byte)(state >> 8), (byte)state];
       }
       case 64: {
         const uint PRIME = 4294967291;
@@ -107,7 +107,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state };
+        byte[] Final() => [(byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state];
       }
       default:
         throw new NotSupportedException();
@@ -143,7 +143,7 @@ public sealed class Adler : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public static int MinOutputBits => SupportedOutputBits[0];
   public static int MaxOutputBits => SupportedOutputBits[^1];
-  public static int[] SupportedOutputBits => new[] { 16, 32, 64 };
+  public static int[] SupportedOutputBits => [16, 32, 64];
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;

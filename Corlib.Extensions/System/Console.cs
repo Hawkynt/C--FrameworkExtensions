@@ -121,7 +121,7 @@ public static partial class ConsoleExtensions {
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
   /// <returns>An escaped string version of the data.</returns>
-  public static string EscapeAdv<T>(T data) => data.ToString().Replace("\\", "\\\\").Replace("{", "\\{");
+  public static string EscapeAdv<T>(T data) => data.ToString().Replace("\\", @"\\").Replace("{", "\\{");
 
   /// <summary>
   /// Advance write text line.
@@ -192,7 +192,7 @@ public static partial class ConsoleExtensions {
               else
                 colorDefinition += format[intI];
             }
-            var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split(new[] { ',' }, 2);
+            var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split([','], 2);
             if (colors == null || colors.Length == 0) {
               // reset colors
               Console.ForegroundColor = oldForeground;
@@ -248,7 +248,7 @@ public static partial class ConsoleExtensions {
     }
   }
 
-  private static readonly ConsoleColor[] _COLORS = {
+  private static readonly ConsoleColor[] _COLORS = [
     ConsoleColor.Black,
     ConsoleColor.DarkBlue,
     ConsoleColor.DarkGreen,
@@ -264,8 +264,8 @@ public static partial class ConsoleExtensions {
     ConsoleColor.Red,
     ConsoleColor.Magenta,
     ConsoleColor.Yellow,
-    ConsoleColor.White,
-  };
+    ConsoleColor.White
+  ];
 
   private static ConsoleColor _GetColorByIndex(byte color) {
     if (color >= _COLORS.Length)
@@ -278,9 +278,7 @@ public static partial class ConsoleExtensions {
   /// </summary>
   /// <value>The color to use.</value>
   public static ConsoleColor Foreground {
-    get {
-      return _foreground;
-    }
+    get => _foreground;
     set {
       lock (Lock)
         _foreground = value;
@@ -291,9 +289,7 @@ public static partial class ConsoleExtensions {
   /// </summary>
   /// <value>The color to use.</value>
   public static ConsoleColor Background {
-    get {
-      return _background;
-    }
+    get => _background;
     set {
       lock (Lock)
         _background = value;

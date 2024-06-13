@@ -166,7 +166,7 @@ public static partial class DirectoryInfoExtensions {
       return @this.EnumerateFiles("*", SearchOption.AllDirectories).Select(f => f.Length).Sum();
 
     // otherwise, use MT approach
-    long[] itemsLeftAndResult = { 1L, 0L };
+    long[] itemsLeftAndResult = [1L, 0L];
     using AutoResetEvent pushNotification = new(false);
 
     ExecuteAsync(@this);
@@ -281,7 +281,7 @@ public static partial class DirectoryInfoExtensions {
     }
 
     static IEnumerable<FileSystemInfo> InvokeShortestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-      LinkedList<DirectoryInfo> results = new();
+      LinkedList<DirectoryInfo> results = [];
       results.Enqueue(@this);
       while (results.Any()) {
         var result = results.Dequeue();
@@ -297,7 +297,7 @@ public static partial class DirectoryInfoExtensions {
     }
 
     static IEnumerable<FileSystemInfo> InvokeDeepestPathFirst(DirectoryInfo @this, Func<DirectoryInfo, bool> recursionFilter) {
-      LinkedList<DirectoryInfo> results = new();
+      LinkedList<DirectoryInfo> results = [];
       results.Push(@this);
       while (results.Any()) {
         var result = results.Pop();

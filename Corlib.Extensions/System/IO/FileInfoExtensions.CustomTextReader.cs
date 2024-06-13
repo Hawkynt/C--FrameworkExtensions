@@ -162,7 +162,9 @@ public static partial class FileInfoExtensions {
             // UTF-8
             >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
             // UTF-7
+#pragma warning disable SYSLIB0001
             >= 3 when buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76 => Encoding.UTF7,
+#pragma warning restore SYSLIB0001
             // UTF-16, big-endian
             >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
             // UTF-16, little-endian

@@ -154,7 +154,7 @@ public static partial class PhysicalAddressExtensions {
         );
 
         IPAddress ip = new(BitConverter.GetBytes(row.dwAddr));
-        PhysicalAddress physicalAddress = new(new[] { row.mac0, row.mac1, row.mac2, row.mac3, row.mac4, row.mac5 });
+        PhysicalAddress physicalAddress = new([row.mac0, row.mac1, row.mac2, row.mac3, row.mac4, row.mac5]);
 
         if (physicalAddress.GetAddressBytes().Any(b => b != 0))
           yield return Tuple.Create(physicalAddress, ip);

@@ -395,7 +395,7 @@ public static partial class ListExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(items);
 
-    List<TItem> removeables = new(items);
+    List<TItem> removeables = [..items];
     foreach (var item in removeables)
       @this.Remove(item);
   }

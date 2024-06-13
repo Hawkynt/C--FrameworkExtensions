@@ -29,9 +29,9 @@ public static partial class SynchronizeInvokeExtensions {
     
     if (@this.InvokeRequired) {
       if (async)
-        @this.BeginInvoke(new Action<T>(call), new object[] { @this });
+        @this.BeginInvoke(new Action<T>(call), [@this]);
       else
-        @this.Invoke(new Action<T>(call), new object[] { @this });
+        @this.Invoke(new Action<T>(call), [@this]);
       return false;
     }
     

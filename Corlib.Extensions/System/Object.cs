@@ -399,7 +399,7 @@ public static partial class ObjectExtensions {
     if (type.IsPrimitive)
       return Marshal.SizeOf(type) + (withoutBoxing ? 0 : pointerSize);
 
-    visitedRefs ??= new();
+    visitedRefs ??= [];
 
     if (type.IsArray) {
       if (visitedRefs.Contains(value))

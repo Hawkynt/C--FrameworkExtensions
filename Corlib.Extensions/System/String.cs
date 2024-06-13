@@ -1298,7 +1298,7 @@ public static partial class StringExtensions {
   public static string[] Split(this string @this, string splitter, StringSplitOptions options) {
     Against.ThisIsNull(@this);
 
-    return @this.Split(new[] { splitter }, options);
+    return @this.Split([splitter], options);
   }
 
   #endregion
@@ -2937,7 +2937,7 @@ public static partial class StringExtensions {
   private static __GetLines __getLines;
 
   private class __GetLines {
-    private readonly string[] _possibleSplitters = {
+    private readonly string[] _possibleSplitters = [
       "\r\n",
       "\n\r",
       "\n",
@@ -2947,7 +2947,7 @@ public static partial class StringExtensions {
       "\x85",
       "\u2028",
       "\u2029"
-    };
+    ];
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2981,7 +2981,7 @@ public static partial class StringExtensions {
   private static string[] _GetLines(string text, bool removeEmpty, string delimiter, int count) {
     return count == 0
         ? text.Split(delimiter, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-        : text.Split(new[] { delimiter }, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+        : text.Split([delimiter], count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
       ;
   }
 
@@ -3010,7 +3010,7 @@ public static partial class StringExtensions {
           mode = DetectLineBreakMode(@this);
           continue;
         case LineBreakMode.None:
-          return new[] { @this };
+          return [@this];
         case LineBreakMode.CrLf:
           return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
         case LineBreakMode.LfCr:
@@ -4037,7 +4037,7 @@ public static partial class StringExtensions {
 
   private class __FromQuotedPrintable {
 
-    private readonly byte[] _charToHexLookup = {
+    private readonly byte[] _charToHexLookup = [
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -4054,7 +4054,7 @@ public static partial class StringExtensions {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-    };
+    ];
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

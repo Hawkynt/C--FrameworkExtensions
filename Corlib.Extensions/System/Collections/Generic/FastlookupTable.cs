@@ -121,7 +121,7 @@ public class FastLookupTable<TItem> : ICollection<TItem>, ICloneable {
   /// </returns>
   /// <filterpriority>2</filterpriority>
   public object Clone() {
-    FastLookupTable<TItem> result = new();
+    FastLookupTable<TItem> result = [];
     foreach (var kvp in this._table)
       result._table.Add(kvp.Key, kvp.Value);
     return result;

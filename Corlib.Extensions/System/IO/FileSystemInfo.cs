@@ -74,7 +74,7 @@ public static partial class FileSystemInfoExtensions {
     var srcArray = srcPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar).Split(Path.DirectorySeparatorChar);
 
     var caseSensitive = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
-    List<string> result = new();
+    List<string> result = [];
     var i = 0;
 
     // find out how many parts match

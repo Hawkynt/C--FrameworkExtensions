@@ -111,7 +111,7 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public static int MinOutputBits => SupportedOutputBits[0];
   public static int MaxOutputBits => SupportedOutputBits[^1];
-  public static int[] SupportedOutputBits => new[] { 32, 64 };
+  public static int[] SupportedOutputBits => [32, 64];
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
   public static int MaxIVBits => MinIVBits;

@@ -319,15 +319,15 @@ public static partial class TypeExtensions {
 #region type conversion
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
-    { TypeDecimal, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar } }, 
-    { TypeDouble, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar, TypeFloat } }, 
-    { TypeFloat, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar } },
-    { TypeQWord, new[] { TypeByte, TypeWord, TypeDWord, TypeChar } },
-    { TypeLong, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeChar } },
-    { TypeDWord, new[] { TypeByte, TypeWord, TypeChar } },
-    { TypeInt, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeChar } },
-    { TypeWord, new[] { TypeByte, TypeChar } },
-    { TypeShort, new[] { TypeByte } }
+    { TypeDecimal, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar] }, 
+    { TypeDouble, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar, TypeFloat] }, 
+    { TypeFloat, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar] },
+    { TypeQWord, [TypeByte, TypeWord, TypeDWord, TypeChar] },
+    { TypeLong, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeChar] },
+    { TypeDWord, [TypeByte, TypeWord, TypeChar] },
+    { TypeInt, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeChar] },
+    { TypeWord, [TypeByte, TypeChar] },
+    { TypeShort, [TypeByte] }
   };
 
   /// <summary>
@@ -1136,7 +1136,7 @@ public static partial class TypeExtensions {
         foreach (var result in @this.GetCustomAttributes(typeof(TAttribute), false))
           yield return (TAttribute)result;
 
-      HashSet<TAttribute> alreadyReturned = new();
+      HashSet<TAttribute> alreadyReturned = [];
       var baseType = @this;
       do {
         foreach (var result in baseType.GetCustomAttributes(true)) {

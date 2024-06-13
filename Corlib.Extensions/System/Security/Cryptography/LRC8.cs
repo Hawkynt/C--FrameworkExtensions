@@ -36,7 +36,7 @@ public sealed class LRC8 : HashAlgorithm {
       this._state += array[index];
   }
 
-  protected override byte[] HashFinal() => new[] { (byte)((this._state ^ 0xff) + 1) };
+  protected override byte[] HashFinal() => [(byte)((this._state ^ 0xff) + 1)];
 
   #endregion
 

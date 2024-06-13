@@ -57,15 +57,15 @@ public static partial class DefaultValueAttributeExtensions {
   }
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
-    { typeof(decimal), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
-    { typeof(double), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char) , typeof(float)  } },
-    { typeof(float), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
-    { typeof(ulong), new [] { typeof(byte), typeof(ushort), typeof(uint), typeof(char)  } },
-    { typeof(long), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)  } },
-    { typeof(uint), new [] { typeof(byte), typeof(ushort), typeof(char)  } },
-    { typeof(int), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(char)  } },
-    { typeof(ushort), new [] { typeof(byte), typeof(char) } },
-    { typeof(short), new []{ typeof(byte) } }
+    { typeof(decimal), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)] },
+    { typeof(double), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char) , typeof(float)] },
+    { typeof(float), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)] },
+    { typeof(ulong), [typeof(byte), typeof(ushort), typeof(uint), typeof(char)] },
+    { typeof(long), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)] },
+    { typeof(uint), [typeof(byte), typeof(ushort), typeof(char)] },
+    { typeof(int), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(char)] },
+    { typeof(ushort), [typeof(byte), typeof(char)] },
+    { typeof(short), [typeof(byte)] }
   };
 
   private static object _TryChangeType(Type targetType, object value) {

@@ -25,14 +25,14 @@ internal static class Array {
 #if !SUPPORTS_ARRAY_EMPTY
   
   private static class EmptyArray<T> {
-    public static T[] Empty = new T[0];
+    public static T[] Empty = [];
   }
   
 #endif
 
   public static T[] Empty<T>()
 #if SUPPORTS_ARRAY_EMPTY
-    => System.Array.Empty<T>()
+    => []
 #else
     => EmptyArray<T>.Empty
 #endif

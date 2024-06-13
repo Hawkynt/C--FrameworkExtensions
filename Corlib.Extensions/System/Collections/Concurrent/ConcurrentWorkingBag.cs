@@ -31,7 +31,7 @@ namespace System.Collections.Concurrent;
 /// <typeparam name="T">Type of items contained</typeparam>
 
 public class ConcurrentWorkingBag<T> : IEnumerable<T> {
-  private readonly List<T> _items = new();
+  private readonly List<T> _items = [];
   private readonly ReaderWriterLockSlim _readerWriterLockSlim = new();
 
   private void _ProcessAll(Action<int> callback) {
@@ -147,7 +147,7 @@ public class ConcurrentWorkingBag<T> : IEnumerable<T> {
       var matches = new bool[this._items.Count];
       this._ProcessAll(index => matches[index] = selector(this._items[index]));
 
-      List<T> results = new();
+      List<T> results = [];
       for (var i = this._items.Count - 1; i >= 0; --i) {
         if (!matches[i])
           continue;

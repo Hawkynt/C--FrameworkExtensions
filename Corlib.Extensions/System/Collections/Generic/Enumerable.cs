@@ -534,7 +534,7 @@ public static partial class EnumerableExtensions {
         chunks.Add(chunk);
       }
     } else {
-      chunks = @this is not ICollection<byte[]> collection ? new() : new List<byte[]>(collection.Count);
+      chunks = @this is not ICollection<byte[]> collection ? [] : new List<byte[]>(collection.Count);
       foreach (var chunk in @this) {
         if (chunk == null || chunk.Length < 1)
           continue;
@@ -634,7 +634,7 @@ public static partial class EnumerableExtensions {
     Against.ArgumentIsNull(list);
 
     // we'll cache all visited values from the list, so we don't have to enumerate more than once
-    List<TItem> itemCache = new();
+    List<TItem> itemCache = [];
 
     equalityComparer ??= EqualityComparer<TItem>.Default;
 

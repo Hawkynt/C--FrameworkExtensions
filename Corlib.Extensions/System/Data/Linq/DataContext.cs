@@ -134,7 +134,7 @@ public static partial class DataContextExtensions {
       Trace.WriteLine(e);
 
       exception = e;
-      results = new TResult[] { };
+      results = [];
       return false;
     }
   }

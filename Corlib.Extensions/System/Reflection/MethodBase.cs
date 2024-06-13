@@ -193,7 +193,7 @@ public static class MethodBaseExtensions {
       var module = @this.Module;
       var il = body.GetILAsByteArray();
       var position = 0;
-      List<ILInstruction> result = new();
+      List<ILInstruction> result = [];
       while (position < il.Length) {
         ILInstruction instruction = new();
 

@@ -82,12 +82,12 @@ public static partial class FastFileOperations {
 
     #region fields
 
-    private readonly IFileComparer[] _comparers =  {
+    private readonly IFileComparer[] _comparers = [
       new FileLengthComparer(),
       new FileLastWriteTimeComparer(),
       new FileSimpleAttributesComparer(),
-      new FileCreationTimeComparer(),
-    };
+      new FileCreationTimeComparer()
+    ];
 
     private readonly Action<IDirectoryReport> _callback = callback ?? (_ => { });
     private readonly Func<FileSystemInfo, bool> _filter = filter ?? (_ => true);
@@ -342,8 +342,8 @@ public static partial class FastFileOperations {
             targetDirectory.TrySetCreationTimeUtc(sourceDirectory.CreationTimeUtc);
             targetDirectory.TrySetLastWriteTimeUtc(sourceDirectory.LastWriteTimeUtc);
 
-            HashSet<string> dirs = new();
-            HashSet<string> files = new();
+            HashSet<string> dirs = [];
+            HashSet<string> files = [];
 
             // find everything in the source dir to sync
             foreach (var item in sourceDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter)) {

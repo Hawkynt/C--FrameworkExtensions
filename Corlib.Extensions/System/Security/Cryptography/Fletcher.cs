@@ -62,7 +62,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { (byte)(sum << 4 | state) };
+        byte[] Final() => [(byte)(sum << 4 | state)];
       }
       case 16: {
         byte state = default, sum = default;
@@ -84,7 +84,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { sum, state };
+        byte[] Final() => [sum, state];
       }
       case 32: {
         ushort state = default, sum = default;
@@ -135,10 +135,10 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           if (carry.Count == 1)
             Round(ConvertFrom(carry[0], 0));
 
-          return new[] {
+          return [
             (byte)(sum >> 8), (byte)sum,
             (byte)(state >> 8), (byte)state
-          };
+          ];
         }
       }
       case 64: {
@@ -199,10 +199,10 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
               break;
           }
 
-          return new[] {
+          return [
             (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, 
             (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state
-          };
+          ];
         }
       }
       default: 
@@ -239,7 +239,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public static int MinOutputBits => SupportedOutputBits[0];
   public static int MaxOutputBits => SupportedOutputBits[^1];
-  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64 };
+  public static int[] SupportedOutputBits => [8, 16, 32, 64];
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;

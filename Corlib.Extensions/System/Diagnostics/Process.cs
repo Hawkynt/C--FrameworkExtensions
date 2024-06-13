@@ -138,7 +138,7 @@ public static partial class ProcessExtensions {
         ;
 
       Stack<Process> stack = new();
-      List<Process> tempList = new();
+      List<Process> tempList = [];
       var result = @this;
       for (;;) {
         FillList(result, tempList, allProcessIdsWithChildren);

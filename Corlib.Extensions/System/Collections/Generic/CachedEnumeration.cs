@@ -36,7 +36,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
   private IEnumerator<TItem> _enumerator;
   private bool _enumerationEnded;
-  private readonly List<TItem> _cachedItems = new();
+  private readonly List<TItem> _cachedItems = [];
   private readonly IEnumerable<TItem> _sourceEnumeration;
 
   /// <summary>
@@ -78,8 +78,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
   /// </summary>
   public TItem this[int index] {
     get {
-      TItem item;
-      if (this._TryGetItemAtPosition(index, out item))
+      if (this._TryGetItemAtPosition(index, out var item))
         return item;
 
       throw new ArgumentOutOfRangeException(nameof(index), "Position out of enumeration");
@@ -221,7 +220,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
     public void Reset() {
       this._currentIndex = 0;
-      this._current = default(TItem);
+      this._current = default;
     }
 
     public TItem Current => this._current;

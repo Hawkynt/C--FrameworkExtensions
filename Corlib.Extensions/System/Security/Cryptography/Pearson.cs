@@ -25,7 +25,7 @@ namespace System.Security.Cryptography;
 
 public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
 
-  private static readonly byte[] _DEFAULT_S_BOX = {
+  private static readonly byte[] _DEFAULT_S_BOX = [
 
     // 256 values 0-255 in any (random) order suffices
     98, 6, 85, 150, 36, 23, 112, 164, 135, 207, 169, 5, 26, 64, 165, 219, //  1
@@ -44,7 +44,7 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
     3, 14, 204, 72, 21, 41, 56, 66, 28, 193, 40, 217, 25, 54, 179, 117, // 14
     238, 87, 240, 155, 180, 170, 242, 212, 191, 163, 78, 218, 137, 194, 175, 110, // 15
     43, 119, 224, 71, 122, 142, 42, 160, 104, 48, 247, 103, 15, 11, 138, 239 // 16
-  };
+  ];
 
   private byte[] _state;
   private byte[] _sBox;
@@ -117,7 +117,7 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
   public static bool SupportsIV => true;
   public static int MinIVBits => 256 << 3;
   public static int MaxIVBits => MinIVBits;
-  public static int[] SupportedIVBits => new[] { MinIVBits };
+  public static int[] SupportedIVBits => [MinIVBits];
 
   #endregion
 

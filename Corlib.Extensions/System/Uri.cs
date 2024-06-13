@@ -185,7 +185,7 @@ public static partial class UriExtensions {
     if (encoding != null)
       client.Encoding = encoding;
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
@@ -232,7 +232,7 @@ public static partial class UriExtensions {
     using WebClientFake client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
@@ -353,7 +353,7 @@ public static partial class UriExtensions {
     using WebClient client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
@@ -400,7 +400,7 @@ public static partial class UriExtensions {
     using WebClient client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);

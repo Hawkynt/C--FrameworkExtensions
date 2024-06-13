@@ -50,7 +50,7 @@ public static partial class IQueryableExtensions {
     if (ignoreCase)
       value = value.ToUpper();
 
-    var equalsMethod = typeof(string).GetMethod(nameof(string.Equals), new[] { typeof(string) });
+    var equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [typeof(string)]);
 
     var constant = Expression.Constant(value, typeof(string));
     var instance = Expression.Parameter(typeof(TRow), "row");
@@ -128,8 +128,7 @@ public static partial class IQueryableExtensions {
       .Aggregate((Expression)parameter, Expression.PropertyOrField);
 
     var keySelector = Expression.Lambda(member, parameter);
-    var methodCall = Expression.Call(typeof(Queryable), method, new[]
-        { parameter.Type, member.Type },
+    var methodCall = Expression.Call(typeof(Queryable), method, [parameter.Type, member.Type],
       @this.Expression, Expression.Quote(keySelector));
 
     return (IOrderedQueryable<T>)@this.Provider.CreateQuery(methodCall);

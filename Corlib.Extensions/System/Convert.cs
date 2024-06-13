@@ -76,7 +76,7 @@ public static partial class ConvertExtensions {
   public static byte[] FromQuotedPrintableString(string data) {
     Against.ArgumentIsNull(data);
 
-    List<byte> result = new();
+    List<byte> result = [];
     for (var i = 0; i < data.Length; ++i) {
       var c = data[i];
       if (c == '=')
@@ -135,7 +135,7 @@ public static partial class ConvertExtensions {
   public static byte[] FromBase91String(string encoded) {
     Against.ArgumentIsNull(encoded);
 
-    List<byte> result = new();
+    List<byte> result = [];
     int b, n;
     var v = (b = n = 0) - 1;
     foreach (var i in encoded) {

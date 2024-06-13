@@ -420,13 +420,13 @@ public static partial class ArrayExtensions {
     }
 
     Dictionary<TItem, List<int>> oldPositions = new(comparer);
-    List<int> nullPositions = new();
+    List<int> nullPositions = [];
     for (var i = 0; i < oldState.Length; ++i) {
       var current = oldState[i];
       if(current==null)
         nullPositions.Add(i);
       else
-        oldPositions.GetOrAdd(current,()=>new()).Add(i);
+        oldPositions.GetOrAdd(current,()=> []).Add(i);
     }
 
     var oldStateIndex = 0;

@@ -60,7 +60,7 @@ public partial class FastFileOperations {
       var bufferX = new byte[__COMPARE_BUFFER_LENGTH];
       var bufferY = new byte[__COMPARE_BUFFER_LENGTH];
       var chunks = length / __COMPARE_BUFFER_LENGTH;
-      List<long> scanFirstChunks = new() { 0 };
+      List<long> scanFirstChunks = [0];
       if (chunks > 1)
         scanFirstChunks.Insert(0, (chunks - 1) * __COMPARE_BUFFER_LENGTH);
       if (chunks > 2)
