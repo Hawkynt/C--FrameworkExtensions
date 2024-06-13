@@ -32,17 +32,23 @@ public class SortableBindingListTest {
   );
 
   [Test]
-  [TestCase(ListSortDirection.Ascending, 1, 0)]
-  [TestCase(ListSortDirection.Ascending, 3, 1)]
-  [TestCase(ListSortDirection.Ascending, 5, 2)]
-  [TestCase(ListSortDirection.Descending, 1, 2)]
-  [TestCase(ListSortDirection.Descending, 3, 1)]
-  [TestCase(ListSortDirection.Descending, 5, 0)]
-  public void AddTest(ListSortDirection direction, int value, int expected) {
+  [TestCase(ListSortDirection.Ascending, 1, true, 0)]
+  [TestCase(ListSortDirection.Ascending, 3, true,1)]
+  [TestCase(ListSortDirection.Ascending, 5, true,2)]
+  [TestCase(ListSortDirection.Descending, 1,true, 2)]
+  [TestCase(ListSortDirection.Descending, 3,true, 1)]
+  [TestCase(ListSortDirection.Descending, 5, true, 0)]
+  [TestCase(ListSortDirection.Ascending, 1, false, 2)]
+  [TestCase(ListSortDirection.Ascending, 3, false, 2)]
+  [TestCase(ListSortDirection.Ascending, 5, false, 2)]
+  [TestCase(ListSortDirection.Descending, 1, false, 2)]
+  [TestCase(ListSortDirection.Descending, 3, false, 2)]
+  [TestCase(ListSortDirection.Descending, 5, false, 2)]
+  public void AddTest(ListSortDirection direction, int value, bool isAutoSort, int expected) {
 
     // Arrange
     var numbers = new[] { 2, 4 };
-    var bs = new SortableBindingList<Item> {IsAutomaticallySorted = true};
+    var bs = new SortableBindingList<Item> {IsAutomaticallySorted = isAutoSort};
     foreach (var i in numbers)
       bs.Add(_GetItemById(i));
 
@@ -57,17 +63,23 @@ public class SortableBindingListTest {
   }
 
   [Test]
-  [TestCase(ListSortDirection.Ascending, 1, 0)]
-  [TestCase(ListSortDirection.Ascending, 3, 1)]
-  [TestCase(ListSortDirection.Ascending, 5, 2)]
-  [TestCase(ListSortDirection.Descending, 1, 2)]
-  [TestCase(ListSortDirection.Descending, 3, 1)]
-  [TestCase(ListSortDirection.Descending, 5, 0)]
-  public void AddRangeTest(ListSortDirection direction, int value,int expected) {
+  [TestCase(ListSortDirection.Ascending, 1, true, 0)]
+  [TestCase(ListSortDirection.Ascending, 3, true, 1)]
+  [TestCase(ListSortDirection.Ascending, 5, true, 2)]
+  [TestCase(ListSortDirection.Descending, 1, true, 2)]
+  [TestCase(ListSortDirection.Descending, 3, true, 1)]
+  [TestCase(ListSortDirection.Descending, 5, true, 0)]
+  [TestCase(ListSortDirection.Ascending, 1, false, 2)]
+  [TestCase(ListSortDirection.Ascending, 3, false, 2)]
+  [TestCase(ListSortDirection.Ascending, 5, false, 2)]
+  [TestCase(ListSortDirection.Descending, 1, false, 2)]
+  [TestCase(ListSortDirection.Descending, 3, false, 2)]
+  [TestCase(ListSortDirection.Descending, 5, false, 2)]
+  public void AddRangeTest(ListSortDirection direction, int value,bool isAutoSort,int expected) {
     
     // Arrange
     var numbers = new[] { 2, 4 };
-    var bs = new SortableBindingList<Item> { IsAutomaticallySorted = true };
+    var bs = new SortableBindingList<Item> { IsAutomaticallySorted = isAutoSort };
     foreach (var i in numbers)
       bs.Add(_GetItemById(i));
 
@@ -75,7 +87,7 @@ public class SortableBindingListTest {
 
     // Act
     var newItem = _GetItemById(value);
-    bs.AddRange(new []{newItem});
+    bs.AddRange([newItem]);
 
     // Assert
     Assert.AreEqual(bs[expected].IntValue, newItem.IntValue);
