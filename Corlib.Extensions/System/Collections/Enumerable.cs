@@ -85,7 +85,13 @@ public static partial class EnumerableExtensions {
   public static bool Any(this IEnumerable @this) {
     Guard.Against.ThisIsNull(@this);
 
-    return @this.GetEnumerator().MoveNext();
+    IEnumerator enumerator = null;
+    try {
+      enumerator = @this.GetEnumerator();
+      return enumerator.MoveNext();
+    } finally {
+      (enumerator as IDisposable)?.Dispose();
+    }
   }
 
   #endregion
