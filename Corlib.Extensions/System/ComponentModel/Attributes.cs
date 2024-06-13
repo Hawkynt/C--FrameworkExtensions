@@ -26,9 +26,8 @@ namespace System.ComponentModel;
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
-public class MinValueAttribute : Attribute {
-  public decimal Value { get; }
-  public MinValueAttribute(decimal value) => this.Value = value;
+public class MinValueAttribute(decimal value) : Attribute {
+  public decimal Value { get; } = value;
   public MinValueAttribute(int value) : this((decimal)value) { }
 }
 
@@ -37,9 +36,8 @@ public class MinValueAttribute : Attribute {
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 
-public class MaxValueAttribute : Attribute {
-  public decimal Value { get; }
-  public MaxValueAttribute(decimal value) => this.Value = value;
+public class MaxValueAttribute(decimal value) : Attribute {
+  public decimal Value { get; } = value;
   public MaxValueAttribute(int value) : this((decimal)value) { }
 }
 
@@ -48,9 +46,8 @@ public class MaxValueAttribute : Attribute {
 /// </summary>
 [AttributeUsage(AttributeTargets.Field)]
 
-public class EnumDisplayNameAttribute : DisplayNameAttribute {
-  public override string DisplayName { get; }
-  public EnumDisplayNameAttribute(string displayName) => this.DisplayName = displayName;
+public class EnumDisplayNameAttribute(string displayName) : DisplayNameAttribute {
+  public override string DisplayName { get; } = displayName;
   public static string GetDisplayName<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(typeof(TEnum), value);
   public static string GetDisplayName(Type type, object value) => (type.GetField(value.ToString())?.GetCustomAttributes(typeof(EnumDisplayNameAttribute), true).FirstOrDefault() as EnumDisplayNameAttribute)?.DisplayName;
   public static string GetDisplayNameOrDefault<TEnum>(TEnum value) where TEnum : struct => GetDisplayName(value) ?? value.ToString();

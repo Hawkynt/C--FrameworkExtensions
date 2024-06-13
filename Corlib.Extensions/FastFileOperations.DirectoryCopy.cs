@@ -38,7 +38,8 @@ namespace System.IO;
 
 public static partial class FastFileOperations {
   
-  private class DirectoryCopyOperation : IDirectoryOperation {
+  private class DirectoryCopyOperation(DirectoryInfo source, DirectoryInfo target, Action<IDirectoryReport> callback, Func<FileSystemInfo, bool> filter, bool allowDelete, bool allowOverwrite, bool allowHardLinks, bool dontResolveSymbolicLinks, bool allowIntegrate)
+    : IDirectoryOperation {
     #region nested types
 
     private class DirectoryCopyReport : IDirectoryReport {
@@ -88,19 +89,12 @@ public static partial class FastFileOperations {
       new FileCreationTimeComparer(),
     };
 
-    private readonly DirectoryInfo _source;
-    private readonly DirectoryInfo _target;
-    private readonly Action<IDirectoryReport> _callback;
-    private readonly Func<FileSystemInfo, bool> _filter;
+    private readonly Action<IDirectoryReport> _callback = callback ?? (_ => { });
+    private readonly Func<FileSystemInfo, bool> _filter = filter ?? (_ => true);
     private readonly ManualResetEventSlim _finishEvent = new();
 
     private readonly ConcurrentBag<string> _filesToCopy = new();
     private readonly ConcurrentQueue<string> _directoriesToParse = new();
-    private readonly bool _allowDelete;
-    private readonly bool _allowOverwrite;
-    private readonly bool _allowHardLinks;
-    private readonly bool _allowIntegrate;
-    private readonly bool _dontResolveSymbolicLinks;
     private long _totalSize;
     private long _bytesToTransfer;
     private long _bytesRead;
@@ -123,17 +117,6 @@ public static partial class FastFileOperations {
     #endregion
 
     #region ctor,dtor
-    public DirectoryCopyOperation(DirectoryInfo source, DirectoryInfo target, Action<IDirectoryReport> callback, Func<FileSystemInfo, bool> filter, bool allowDelete, bool allowOverwrite, bool allowHardLinks, bool dontResolveSymbolicLinks, bool allowIntegrate) {
-      this._source = source;
-      this._target = target;
-      this._allowDelete = allowDelete;
-      this._allowOverwrite = allowOverwrite;
-      this._allowHardLinks = allowHardLinks;
-      this._allowIntegrate = allowIntegrate;
-      this._dontResolveSymbolicLinks = dontResolveSymbolicLinks;
-      this._filter = filter ?? (_ => true);
-      this._callback = callback ?? (_ => { });
-    }
 
     private void _Dispose() {
       this._directoriesToParse.Clear();
@@ -142,8 +125,8 @@ public static partial class FastFileOperations {
     #endregion
 
     #region Implementation of IDirectoryOperation
-    public FileSystemInfo Source => this._source;
-    public FileSystemInfo Target => this._target;
+    public FileSystemInfo Source => source;
+    public FileSystemInfo Target => target;
     public long TotalSize => Interlocked.Read(ref this._totalSize);
     public long BytesToTransfer => Interlocked.Read(ref this._bytesToTransfer);
     public long BytesRead => Interlocked.Read(ref this._bytesRead);
@@ -214,7 +197,7 @@ public static partial class FastFileOperations {
       if (!targetFile.Exists)
         return true;
 
-      if (!this._allowOverwrite)
+      if (!allowOverwrite)
         return false;
 
       return !this._comparers.All(c => c.Equals(sourceFile, targetFile));
@@ -344,10 +327,10 @@ public static partial class FastFileOperations {
           try {
             Interlocked.Increment(ref this._workingCrawlers);
 
-            DirectoryInfo sourceDirectory = new(Path.Combine(this._source.FullName, directoryName));
-            DirectoryInfo targetDirectory = new(Path.Combine(this._target.FullName, directoryName));
+            DirectoryInfo sourceDirectory = new(Path.Combine(source.FullName, directoryName));
+            DirectoryInfo targetDirectory = new(Path.Combine(target.FullName, directoryName));
 
-            if (targetDirectory.Exists && !this._allowIntegrate)
+            if (targetDirectory.Exists && !allowIntegrate)
               if (this.AbortOperation(new IOException(string.Format(_EX_TARGET_DIRECTORY_ALREADY_EXISTS, targetDirectory.FullName))).ContinuationType == ContinuationType.AbortOperation)
                 return;
 
@@ -405,7 +388,7 @@ public static partial class FastFileOperations {
     /// <param name="files">The files that should be present.</param>
     /// <returns></returns>
     private bool _TrySynchronizeTargetDirectory(DirectoryInfo targetDirectory, HashSet<string> dirs, HashSet<string> files) {
-      if (!this._allowDelete)
+      if (!allowDelete)
         return true;
 
       foreach (var item in targetDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter))
@@ -447,11 +430,11 @@ public static partial class FastFileOperations {
 
           try {
             Interlocked.Increment(ref this._workingStreams);
-            FileInfo sourceFile = new(Path.Combine(this._source.FullName, fileName));
-            FileInfo targetFile = new(Path.Combine(this._target.FullName, fileName));
+            FileInfo sourceFile = new(Path.Combine(source.FullName, fileName));
+            FileInfo targetFile = new(Path.Combine(target.FullName, fileName));
             var baseOffset = this._AddBytesProcessing(sourceFile.Length);
 
-            var token = sourceFile.CopyToAsync(targetFile, this._allowOverwrite, this._allowHardLinks, this._dontResolveSymbolicLinks, t => this._HandleFileOperationCallback(t, baseOffset, index));
+            var token = sourceFile.CopyToAsync(targetFile, allowOverwrite, allowHardLinks, dontResolveSymbolicLinks, t => this._HandleFileOperationCallback(t, baseOffset, index));
             token.Operation.WaitTillDone();
             if (token.Operation.ThrewException)
               continue;
@@ -539,13 +522,13 @@ public static partial class FastFileOperations {
       this._directoriesToParse.Enqueue(".");
       this._StartCrawlerThreads();
       this._StartStreamThreads();
-      return this._CreateReport(ReportType.StartOperation, this._source, this._target, -1, 0, 0, 0);
+      return this._CreateReport(ReportType.StartOperation, source, target, -1, 0, 0, 0);
     }
 
     private DirectoryCopyReport FinishOperation() {
       this._Dispose();
       this._finishEvent.Set();
-      return this._CreateReport(ReportType.FinishedOperation, this._source, this._target, -1, 0, 0, this.TotalSize);
+      return this._CreateReport(ReportType.FinishedOperation, source, target, -1, 0, 0, this.TotalSize);
     }
     #endregion
 

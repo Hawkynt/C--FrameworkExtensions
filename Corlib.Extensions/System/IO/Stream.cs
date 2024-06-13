@@ -51,9 +51,8 @@ public static partial class StreamExtensions {
 
 #if !SUPPORTS_SPAN
 
-  private readonly struct BufferHandle : IDisposable {
-    public readonly byte[] Buffer;
-    public BufferHandle(byte[] buffer) => this.Buffer = buffer;
+  private readonly struct BufferHandle(byte[] buffer) : IDisposable {
+    public readonly byte[] Buffer = buffer;
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

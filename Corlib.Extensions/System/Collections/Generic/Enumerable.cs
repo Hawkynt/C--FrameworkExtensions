@@ -60,22 +60,15 @@ public static partial class EnumerableExtensions {
     TItem Other { get; }
   }
 
-  private class ChangeSet<TItem> : IChangeSet<TItem> {
-    public ChangeSet(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other) {
-      this.Type = type;
-      this.CurrentIndex = currentIndex;
-      this.Current = current;
-      this.OtherIndex = otherIndex;
-      this.Other = other;
-    }
-
+  private class ChangeSet<TItem>(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other)
+    : IChangeSet<TItem> {
     #region Implementation of IChangeSet<TValue>
 
-    public ChangeType Type { get; }
-    public int CurrentIndex { get; }
-    public TItem Current { get; }
-    public int OtherIndex { get; }
-    public TItem Other { get; }
+    public ChangeType Type { get; } = type;
+    public int CurrentIndex { get; } = currentIndex;
+    public TItem Current { get; } = current;
+    public int OtherIndex { get; } = otherIndex;
+    public TItem Other { get; } = other;
 
     #endregion
   }
@@ -88,9 +81,8 @@ public static partial class EnumerableExtensions {
     T this[int i] { get; }
   }
 
-  private class DisposableCollection<T> : List<T>, IDisposableCollection<T> where T : IDisposable {
-    public DisposableCollection(IEnumerable<T> collection) : base(collection) { }
-
+  private class DisposableCollection<T>(IEnumerable<T> collection) : List<T>(collection), IDisposableCollection<T>
+    where T : IDisposable {
     public void Dispose() {
       this.ForEach(i => i.Dispose());
     }

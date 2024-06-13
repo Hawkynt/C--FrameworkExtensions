@@ -67,22 +67,15 @@ public static partial class ArrayExtensions {
     TItem Other { get; }
   }
 
-  private class ChangeSet<TItem> : IChangeSet<TItem> {
-    public ChangeSet(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other) {
-      this.Type = type;
-      this.CurrentIndex = currentIndex;
-      this.Current = current;
-      this.OtherIndex = otherIndex;
-      this.Other = other;
-    }
-
+  private class ChangeSet<TItem>(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other)
+    : IChangeSet<TItem> {
     #region Implementation of IChangeSet<TValue>
 
-    public ChangeType Type { get; }
-    public int CurrentIndex { get; }
-    public TItem Current { get; }
-    public int OtherIndex { get; }
-    public TItem Other { get; }
+    public ChangeType Type { get; } = type;
+    public int CurrentIndex { get; } = currentIndex;
+    public TItem Current { get; } = current;
+    public int OtherIndex { get; } = otherIndex;
+    public TItem Other { get; } = other;
 
     #endregion
   }
@@ -189,10 +182,7 @@ public static partial class ArrayExtensions {
   }
 
   [DebuggerDisplay("{" + nameof(ToString) + "()}")]
-  public class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
-
-    public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) { }
-
+  public class ArraySlice<TItem>(TItem[] source, int start, int length) : ReadOnlyArraySlice<TItem>(source, start, length) {
     /// <summary>
     /// Gets or sets the <see cref="TItem" /> at the specified index.
     /// </summary>
@@ -233,26 +223,15 @@ public static partial class ArrayExtensions {
   }
 
   [StructLayout(LayoutKind.Sequential, Size = 32)]
-  private struct Block32 {
-    public readonly uint a;
-    public readonly uint b;
-    public readonly uint c;
-    public readonly uint d;
-    public readonly uint e;
-    public readonly uint f;
-    public readonly uint g;
-    public readonly uint h;
-
-    public Block32(uint u) {
-      this.a = u;
-      this.b = u;
-      this.c = u;
-      this.d = u;
-      this.e = u;
-      this.f = u;
-      this.g = u;
-      this.h = u;
-    }
+  private struct Block32(uint u) {
+    public readonly uint a = u;
+    public readonly uint b = u;
+    public readonly uint c = u;
+    public readonly uint d = u;
+    public readonly uint e = u;
+    public readonly uint f = u;
+    public readonly uint g = u;
+    public readonly uint h = u;
 
     public Block32(ushort u) : this(0x00010001U * u) { }
     public Block32(byte u) : this(0x01010101U * u) { }
@@ -260,26 +239,15 @@ public static partial class ArrayExtensions {
   }
 
   [StructLayout(LayoutKind.Sequential, Size = 64)]
-  private struct Block64 {
-    public readonly ulong a;
-    public readonly ulong b;
-    public readonly ulong c;
-    public readonly ulong d;
-    public readonly ulong e;
-    public readonly ulong f;
-    public readonly ulong g;
-    public readonly ulong h;
-
-    public Block64(ulong u) {
-      this.a = u;
-      this.b = u;
-      this.c = u;
-      this.d = u;
-      this.e = u;
-      this.f = u;
-      this.g = u;
-      this.h = u;
-    }
+  private struct Block64(ulong u) {
+    public readonly ulong a = u;
+    public readonly ulong b = u;
+    public readonly ulong c = u;
+    public readonly ulong d = u;
+    public readonly ulong e = u;
+    public readonly ulong f = u;
+    public readonly ulong g = u;
+    public readonly ulong h = u;
 
     public Block64(uint u) : this(0x0000000100000001UL * u) { }
     public Block64(ushort u) : this(0x0001000100010001UL * u) { }

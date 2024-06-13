@@ -55,17 +55,12 @@ public static partial class DictionaryExtensions {
   /// </summary>
   /// <typeparam name="TKey">The type of the keys.</typeparam>
   /// <typeparam name="TValue">The type of the values.</typeparam>
-  private class ChangeSet<TKey, TValue> : IChangeSet<TKey, TValue> {
-    public ChangeSet(ChangeType type, TKey key, TValue currentValue, TValue otherValue) {
-      this.Key = key;
-      this.Current = currentValue;
-      this.Other = otherValue;
-      this.Type = type;
-    }
-    public ChangeType Type { get; }
-    public TKey Key { get; }
-    public TValue Current { get; }
-    public TValue Other { get; }
+  private class ChangeSet<TKey, TValue>(ChangeType type, TKey key, TValue currentValue, TValue otherValue)
+    : IChangeSet<TKey, TValue> {
+    public ChangeType Type { get; } = type;
+    public TKey Key { get; } = key;
+    public TValue Current { get; } = currentValue;
+    public TValue Other { get; } = otherValue;
   }
 
   #endregion

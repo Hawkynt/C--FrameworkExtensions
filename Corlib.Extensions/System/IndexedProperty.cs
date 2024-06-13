@@ -28,27 +28,19 @@ namespace System;
 /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
 /// <typeparam name="TResult">The type of the result.</typeparam>
 
-public class IndexedProperty<TIndexer, TResult> {
-
-  private readonly Func<TIndexer, TResult> _getter;
-  private readonly Action<TIndexer, TResult> _setter;
-  public IndexedProperty(Func<TIndexer, TResult> getter, Action<TIndexer, TResult> setter = null) {
-    this._getter = getter;
-    this._setter = setter;
-  }
-
+public class IndexedProperty<TIndexer, TResult>(Func<TIndexer, TResult> getter, Action<TIndexer, TResult> setter = null) {
   public TResult this[TIndexer index] {
     get {
-      if (this._getter == null)
+      if (getter == null)
         throw new NotSupportedException("Has no getter");
 
-      return (this._getter(index));
+      return (getter(index));
     }
     set {
-      if (this._setter == null)
+      if (setter == null)
         throw new NotSupportedException("Has no setter");
 
-      this._setter(index, value);
+      setter(index, value);
     }
   }
 }
@@ -58,11 +50,8 @@ public class IndexedProperty<TIndexer, TResult> {
 /// </summary>
 /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
 /// <typeparam name="TResult">The type of the result.</typeparam>
-public class ReadOnlyIndexedProperty<TIndexer, TResult> {
-
-  private readonly Func<TIndexer, TResult> _getter;
-  public ReadOnlyIndexedProperty(Func<TIndexer, TResult> getter) => this._getter = getter;
-  public TResult this[TIndexer index] => (this._getter(index));
+public class ReadOnlyIndexedProperty<TIndexer, TResult>(Func<TIndexer, TResult> getter) {
+  public TResult this[TIndexer index] => (getter(index));
 }
 
 /// <summary>
@@ -70,42 +59,23 @@ public class ReadOnlyIndexedProperty<TIndexer, TResult> {
 /// </summary>
 /// <typeparam name="TIndexer">The type of the indexer.</typeparam>
 /// <typeparam name="TResult">The type of the result.</typeparam>
-public class WriteOnlyIndexedProperty<TIndexer, TResult> {
-
-  private readonly Action<TIndexer, TResult> _setter;
-  public WriteOnlyIndexedProperty(Action<TIndexer, TResult> setter) => this._setter = setter;
-
+public class WriteOnlyIndexedProperty<TIndexer, TResult>(Action<TIndexer, TResult> setter) {
   public TResult this[TIndexer index] {
-    set => this._setter(index, value);
+    set => setter(index, value);
   }
 }
 #endregion
 
-public class IndexedProperty<TIndexer, TIndexer2, TResult> {
-  private readonly Func<TIndexer, TIndexer2, TResult> _getter;
-  private readonly Action<TIndexer, TIndexer2, TResult> _setter;
-  public IndexedProperty(Func<TIndexer, TIndexer2, TResult> getter, Action<TIndexer, TIndexer2, TResult> setter) {
-    this._getter = getter;
-    this._setter = setter;
-  }
-
+public class IndexedProperty<TIndexer, TIndexer2, TResult>(Func<TIndexer, TIndexer2, TResult> getter, Action<TIndexer, TIndexer2, TResult> setter) {
   public TResult this[TIndexer index, TIndexer2 index2] {
-    get => this._getter(index, index2);
-    set => this._setter(index, index2, value);
+    get => getter(index, index2);
+    set => setter(index, index2, value);
   }
 }
 
-public class IndexedProperty<TIndexer, TIndexer2, TIndexer3, TResult> {
-  private readonly Func<TIndexer, TIndexer2, TIndexer3, TResult> _getter;
-  private readonly Action<TIndexer, TIndexer2, TIndexer3, TResult> _setter;
-  
-  public IndexedProperty(Func<TIndexer, TIndexer2, TIndexer3, TResult> getter, Action<TIndexer, TIndexer2, TIndexer3, TResult> setter) {
-    this._getter = getter;
-    this._setter = setter;
-  }
-
+public class IndexedProperty<TIndexer, TIndexer2, TIndexer3, TResult>(Func<TIndexer, TIndexer2, TIndexer3, TResult> getter, Action<TIndexer, TIndexer2, TIndexer3, TResult> setter) {
   public TResult this[TIndexer index, TIndexer2 index2, TIndexer3 index3] {
-    get => (this._getter(index, index2, index3));
-    set => this._setter(index, index2, index3, value);
+    get => (getter(index, index2, index3));
+    set => setter(index, index2, index3, value);
   }
 }

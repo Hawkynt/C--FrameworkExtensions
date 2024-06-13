@@ -52,13 +52,9 @@ public static partial class HashSetExtensions {
   /// Changeset between two hashsets.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  private class ChangeSet<TItem> : IChangeSet<TItem> {
-    public ChangeSet(ChangeType type, TItem item) {
-      this.Item = item;
-      this.Type = type;
-    }
-    public ChangeType Type { get; }
-    public TItem Item { get; }
+  private class ChangeSet<TItem>(ChangeType type, TItem item) : IChangeSet<TItem> {
+    public ChangeType Type { get; } = type;
+    public TItem Item { get; } = item;
   }
 
   #endregion

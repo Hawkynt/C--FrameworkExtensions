@@ -207,13 +207,9 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
   /// <summary>
   /// Enumerates through the cached enumeration.
   /// </summary>
-  private class CachedEnumerator : IEnumerator<TItem> {
-    private readonly CachedEnumeration<TItem> _cache;
+  private class CachedEnumerator(CachedEnumeration<TItem> cache) : IEnumerator<TItem> {
     private int _currentIndex = 0;
     private TItem _current;
-    public CachedEnumerator(CachedEnumeration<TItem> cache) {
-      this._cache = cache;
-    }
 
     #region Implementation of IDisposable
     public void Dispose() { }
@@ -221,7 +217,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
 
     #region Implementation of IEnumerator
 
-    public bool MoveNext() => this._cache._TryGetItemAtPosition(this._currentIndex++, out this._current);
+    public bool MoveNext() => cache._TryGetItemAtPosition(this._currentIndex++, out this._current);
 
     public void Reset() {
       this._currentIndex = 0;

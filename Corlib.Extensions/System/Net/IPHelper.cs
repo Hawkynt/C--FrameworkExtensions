@@ -241,15 +241,10 @@ public static class IPHelper {
     public override string ToString() => $"{this.Protocol}({this.State}): {this.Local} -> {this.Remote} ({this.SourceProcess?.ProcessName}[{this.SourceProcess?.Id ?? 0}])";
   }
 
-  private sealed class BufferSizeAndWin32Status {
-    public BufferSizeAndWin32Status(NativeMethods.Win32ApiError status, uint size) {
-      this.Status = status;
-      this.Size = size;
-    }
+  private sealed class BufferSizeAndWin32Status(NativeMethods.Win32ApiError status, uint size) {
+    public uint Size { get; } = size;
 
-    public uint Size { get; }
-
-    public NativeMethods.Win32ApiError Status { get; }
+    public NativeMethods.Win32ApiError Status { get; } = status;
   }
 
   #endregion

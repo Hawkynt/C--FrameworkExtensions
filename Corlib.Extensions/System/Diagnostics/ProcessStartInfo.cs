@@ -51,38 +51,22 @@ public static partial class ProcessStartInfoExtensions {
   private class RedirectedRunAsyncResult : IRedirectedRunAsyncResult {
     #region nested types
 
-    private class CurrentConsoleOutput : ICurrentConsoleOutput {
-      private readonly StringBuilder _totalText;
-
-      public CurrentConsoleOutput(string currentLine, StringBuilder totalText) {
-        this.CurrentLine = currentLine;
-        this._totalText = totalText;
-      }
-
+    private class CurrentConsoleOutput(string currentLine, StringBuilder totalText) : ICurrentConsoleOutput {
       #region Implementation of ICurrentConsoleOutput
 
-      public string CurrentLine { get; }
+      public string CurrentLine { get; } = currentLine;
 
-      public string TotalText => this._totalText.ToString();
+      public string TotalText => totalText.ToString();
 
       #endregion
     }
 
-    private class ConsoleResult : IConsoleResult {
-      private readonly StringBuilder _stderr;
-      private readonly StringBuilder _stdout;
-
-      public ConsoleResult(int exitCode, StringBuilder stdout, StringBuilder stderr) {
-        this.ExitCode = exitCode;
-        this._stdout = stdout;
-        this._stderr = stderr;
-      }
-
+    private class ConsoleResult(int exitCode, StringBuilder stdout, StringBuilder stderr) : IConsoleResult {
       #region Implementation of IConsoleResult
 
-      public string StandardOutput => this._stdout.ToString();
-      public string StandardError => this._stderr.ToString();
-      public int ExitCode { get; }
+      public string StandardOutput => stdout.ToString();
+      public string StandardError => stderr.ToString();
+      public int ExitCode { get; } = exitCode;
 
       #endregion
     }

@@ -45,16 +45,10 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
 
   private static class StableSorter {
 
-    private sealed class SortValueWithSourceIndex : IComparable<SortValueWithSourceIndex> {
-      private readonly int _index;
-      public readonly TValue Value;
-      private readonly object _sortValue;
-
-      public SortValueWithSourceIndex(int index, TValue value, object sortValue) {
-        this._index = index;
-        this.Value = value;
-        this._sortValue = sortValue;
-      }
+    private sealed class SortValueWithSourceIndex(int index, TValue value, object sortValue) : IComparable<SortValueWithSourceIndex> {
+      private readonly int _index = index;
+      public readonly TValue Value = value;
+      private readonly object _sortValue = sortValue;
 
       #region Relational members
 

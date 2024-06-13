@@ -42,18 +42,10 @@ public static partial class DirectoryInfoExtensions {
 
   #region nested types
 
-  private readonly struct SubdirectoryInfo {
-    public SubdirectoryInfo(DirectoryInfo directory, string pathRelativeToRoot) {
-      this._directory = directory;
-      this._pathRelativeToRoot = pathRelativeToRoot;
-    }
-
-    private readonly DirectoryInfo _directory;
-    private readonly string _pathRelativeToRoot;
-
-    public void Deconstruct(out DirectoryInfo directory, out string pathRelativeToRoot) {
-      directory = this._directory;
-      pathRelativeToRoot = this._pathRelativeToRoot;
+  private readonly struct SubdirectoryInfo(DirectoryInfo directory, string relativeToRoot) {
+    public void Deconstruct(out DirectoryInfo directory1, out string pathRelativeToRoot) {
+      directory1 = directory;
+      pathRelativeToRoot = relativeToRoot;
     }
   }
 

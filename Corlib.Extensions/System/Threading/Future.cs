@@ -103,16 +103,14 @@ public class Future<TValue> {
 /// An action that is executed on an available pool thread or immediately on first access.
 /// </summary>
 
-public class Future {
-  private readonly Future<byte> _future;
-  public Future(Action action, Action callback = null) {
-    this._future = new(() => {
-      action();
-      return (byte.MaxValue);
-    }, _ => {
-      callback?.Invoke();
-    });
-  }
+public class Future(Action action, Action callback = null) {
+  private readonly Future<byte> _future = new(() => {
+    action();
+    return (byte.MaxValue);
+  }, _ => {
+    callback?.Invoke();
+  });
+
   /// <summary>
   /// Gets a value indicating whether this instance is completed.
   /// </summary>

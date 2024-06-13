@@ -41,16 +41,10 @@ public static class StaticMethodLocal<TValue> {
   /// <summary>
   /// The internal key to distinguish values.
   /// </summary>
-  private readonly struct MethodKey : IEquatable<MethodKey> {
-    private readonly Type _owner;
-    private readonly string _filePath;
-    private readonly string _methodName;
-
-    public MethodKey(Type owner, string filePath, string methodName) {
-      this._owner = owner;
-      this._filePath = filePath;
-      this._methodName = methodName;
-    }
+  private readonly struct MethodKey(Type owner, string filePath, string methodName) : IEquatable<MethodKey> {
+    private readonly Type _owner = owner;
+    private readonly string _filePath = filePath;
+    private readonly string _methodName = methodName;
 
     public bool Equals(MethodKey other)
       => this._owner == other._owner 

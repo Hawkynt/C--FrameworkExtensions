@@ -242,7 +242,7 @@ public static partial class TypeExtensions {
           return this.__customAttributes = Utilities.Array.Empty<object>();
 
         var name = info.Name;
-        List<object> results = new();
+        List<object> results = [];
 
         // walk inheritance chain
         var declaringType = info.DeclaringType;
@@ -286,14 +286,9 @@ public static partial class TypeExtensions {
   /// <summary>
   /// Holds parameters and their type information for ctor calls.
   /// </summary>
-  private readonly struct TypeWithValue {
-    public TypeWithValue(Type type, object value) {
-      this.Type = type;
-      this.Value = value;
-    }
-
-    public readonly Type Type;
-    public readonly object Value;
+  private readonly struct TypeWithValue(Type type, object value) {
+    public readonly Type Type = type;
+    public readonly object Value = value;
   }
 
 #endregion

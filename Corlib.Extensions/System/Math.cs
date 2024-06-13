@@ -393,15 +393,12 @@ public static partial class MathEx {
   /// </summary>
   public static IEnumerable<ulong> EnumeratePrimes => _EnumeratePrimes();
 
-  private readonly struct PrimeSieve {
-    private readonly ulong[] _values;
-    public PrimeSieve(ulong[] values) => this._values = values;
-
+  private readonly struct PrimeSieve(ulong[] values) {
     public IEnumerable<ulong> Enumerate() {
       ulong prime = 3;
-      var values = this._values;
-      for (var i = 0; i < values.Length; ++i, prime += 2) {
-        if (values[i] != 0)
+      var values1 = values;
+      for (var i = 0; i < values1.Length; ++i, prime += 2) {
+        if (values1[i] != 0)
           continue;
 
 #if SUPPORTS_ASYNC
@@ -422,25 +419,23 @@ public static partial class MathEx {
 
     private void _FillSieveAction(ulong prime) {
       var doublePrime = prime << 1;
-      var values = this._values;
-      var maxNumberInSieve = ((ulong)values.Length << 1) + 3;
+      var values1 = values;
+      var maxNumberInSieve = ((ulong)values1.Length << 1) + 3;
       for (var j = prime * prime; j < maxNumberInSieve; j += doublePrime)
-        values[(int)((j - 3) >> 1)] = j;
+        values1[(int)((j - 3) >> 1)] = j;
     }
 
   }
 
-  private struct KnownPrimesStorage {
-    private readonly ulong[] _primes;
+  private struct KnownPrimesStorage(ulong[] primes) {
     private int _index;
 
     // no checks because only used internally and guaranteed to have a primes!=null && primes.Length > 0 
-    public KnownPrimesStorage(ulong[] primes) => this._primes = primes;
 
-    private bool _IsSpaceInBufferLeft() => this._index < this._primes.Length;
+    private bool _IsSpaceInBufferLeft() => this._index < primes.Length;
 
     // no checks because we guarantee, that all calls occur while there is still space in the array
-    public void Add(ulong prime) => this._primes[this._index++] = prime;
+    public void Add(ulong prime) => primes[this._index++] = prime;
 
     public IEnumerable<ulong> Enumerate() {
       foreach (var prime in this._GenerateAndFillBuffer())
@@ -457,10 +452,10 @@ public static partial class MathEx {
     private IEnumerable<ulong> _GenerateAndFillBuffer() {
 
       // array always valid
-      var primes = this._primes;
+      var primes1 = primes;
 
       // array always contains at least one prime from the sieve
-      var lastKnownPrime = primes[this._index - 1];
+      var lastKnownPrime = primes1[this._index - 1];
 
 #if SUPPORTS_ASYNC
       var task = Task.Factory.StartNew(this._FindNextPrimeWithPartiallyFilledBuffer, lastKnownPrime);
@@ -500,14 +495,14 @@ public static partial class MathEx {
 
     private bool _IsPrimeWithPartiallyFilledBuffer(ulong candidate) {
       for (var i = 0; i < this._index; ++i)
-        if (candidate % this._primes[i] == 0)
+        if (candidate % primes[i] == 0)
           return false;
 
       return true;
     }
 
     private IEnumerable<ulong> _EnumerateWithFullBuffer() {
-      var lastKnownPrime = this._primes[^1];
+      var lastKnownPrime = primes[^1];
       var upperPrimeSquare = lastKnownPrime * lastKnownPrime;
 
 #if SUPPORTS_ASYNC
@@ -546,7 +541,7 @@ public static partial class MathEx {
     }
 
     private bool _IsPrimeWithFullBuffer(ulong candidate) {
-      foreach (var prime in this._primes)
+      foreach (var prime in primes)
         if (candidate % prime == 0)
           return false;
 

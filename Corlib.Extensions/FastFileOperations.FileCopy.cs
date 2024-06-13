@@ -30,63 +30,46 @@ public partial class FastFileOperations {
 
   public delegate void FileReportCallback(IFileReport report);
 
-  private class FileCopyOperation : IFileOperation {
+  private class FileCopyOperation(FileInfo source, FileInfo target, FileReportCallback callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1)
+    : IFileOperation {
 
     #region nested types
     /// <summary>
     /// A report from a running file-copy operation.
     /// </summary>
-    private class FileCopyReport : IFileReport {
+    private class FileCopyReport(ReportType reportType, FileCopyOperation operation, int streamIndex, long chunkOffset, long chunkSize)
+      : IFileReport {
       
       #region Implementation of IFileReport
-      public ReportType ReportType { get; }
-      public IFileSystemOperation Operation { get; }
-      public int StreamIndex { get; }
-      public long StreamOffset { get; }
-      public long ChunkOffset { get; }
-      public long ChunkSize { get; }
-      public long StreamSize { get; }
-      public FileSystemInfo Source { get; }
-      public FileSystemInfo Target { get; }
-      public ContinuationType ContinuationType { get; set; }
+      public ReportType ReportType { get; } = reportType;
+      public IFileSystemOperation Operation { get; } = operation;
+      public int StreamIndex { get; } = streamIndex;
+      public long StreamOffset { get; } = 0;
+      public long ChunkOffset { get; } = chunkOffset;
+      public long ChunkSize { get; } = chunkSize;
+      public long StreamSize { get; } = operation.BytesToTransfer;
+      public FileSystemInfo Source { get; } = operation.Source;
+      public FileSystemInfo Target { get; } = operation.Target;
+      public ContinuationType ContinuationType { get; set; } = reportType == ReportType.AbortedOperation ? ContinuationType.AbortOperation : ContinuationType.Proceed;
 
       #endregion
-      public FileCopyReport(ReportType reportType, FileCopyOperation operation, int streamIndex, long chunkOffset, long chunkSize) {
-        this.ReportType = reportType;
-        this.Operation = operation;
-        this.StreamIndex = streamIndex;
-        this.ChunkOffset = chunkOffset;
-        this.ChunkSize = chunkSize;
-        this.Source = operation.Source;
-        this.Target = operation.Target;
-        this.StreamOffset = 0;
-        this.StreamSize = operation.BytesToTransfer;
-        this.ContinuationType = reportType == ReportType.AbortedOperation ? ContinuationType.AbortOperation : ContinuationType.Proceed;
-      }
     }
 
     /// <summary>
     /// A bunch of data that is read or being written.
     /// </summary>
-    private class Chunk {
-      public readonly long offset;
-      public readonly byte[] data;
-      public int length;
-      public Chunk(long offset, int size) {
-        this.offset = offset;
-        this.data = new byte[size];
-        this.length = size;
-      }
+    private class Chunk(long offset, int size) {
+      public readonly long offset = offset;
+      public readonly byte[] data = new byte[size];
+      public int length = size;
     }
     #endregion
 
     #region fields
-    private readonly FileInfo _source;
-    private readonly FileInfo _target;
-    private readonly FileReportCallback _callback;
+
+    private readonly FileReportCallback _callback = callback ?? (_ => { });
     private readonly ManualResetEventSlim _finishEvent = new();
-    private readonly bool _canReadDuringWrite;
-    private readonly long _maxReadAheadSize;
+    private readonly long _maxReadAheadSize = maxReadAheadSize > 0 ? maxReadAheadSize : _MAX_READ_AHEAD;
     private readonly ConcurrentQueue<Chunk> _readAheadCache = new();
     private int _streamCount = 1;
     private long _bytesRead;
@@ -97,7 +80,7 @@ public partial class FastFileOperations {
     #region props
     public FileStream SourceStream { private get; set; }
     public FileStream TargetStream { private get; set; }
-    public int ChunkSize { get; }
+    public int ChunkSize { get; } = chunkSize > 0 ? chunkSize : source.Length < _MAX_SMALL_FILESIZE ? _DEFAULT_BUFFER_SIZE : _DEFAULT_LARGE_BUFFER_SIZE;
 
     private long _CurrentReadAheadSize { get { return this._readAheadCache.ToArray().Sum(c => c.length); } }
 
@@ -106,7 +89,7 @@ public partial class FastFileOperations {
         if (this.IsDone)
           return false;
 
-        if (this._canReadDuringWrite)
+        if (canReadDuringWrite)
           return this._CurrentReadAheadSize < this._maxReadAheadSize;
 
         return !this._readAheadCache.Any();
@@ -125,15 +108,6 @@ public partial class FastFileOperations {
     #endregion
 
     #region ctor,dtor
-    
-    public FileCopyOperation(FileInfo source, FileInfo target, FileReportCallback callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1) {
-      this._source = source;
-      this._target = target;
-      this._callback = callback ?? (_ => { });
-      this._canReadDuringWrite = canReadDuringWrite;
-      this.ChunkSize = chunkSize > 0 ? chunkSize : source.Length < _MAX_SMALL_FILESIZE ? _DEFAULT_BUFFER_SIZE : _DEFAULT_LARGE_BUFFER_SIZE;
-      this._maxReadAheadSize = maxReadAheadSize > 0 ? maxReadAheadSize : _MAX_READ_AHEAD;
-    }
 
     private void _Dispose() {
       this._UnregisterFromAppUnload();
@@ -239,9 +213,9 @@ public partial class FastFileOperations {
 
     public IFileReport OperationFinished() {
       this._Dispose();
-      this._target.Attributes = this._source.Attributes;
-      this._target.CreationTimeUtc = this._source.CreationTimeUtc;
-      this._target.LastWriteTimeUtc = this._source.LastWriteTimeUtc;
+      target.Attributes = source.Attributes;
+      target.CreationTimeUtc = source.CreationTimeUtc;
+      target.LastWriteTimeUtc = source.LastWriteTimeUtc;
 
       this._finishEvent.Set();
       return this._CreateReport(ReportType.FinishedOperation, -1, 0, this.TotalSize);
@@ -254,7 +228,7 @@ public partial class FastFileOperations {
         return result;
       
       this._Dispose();
-      this._target.Delete();
+      target.Delete();
       this._finishEvent.Set();
       return result;
     }
@@ -411,9 +385,9 @@ public partial class FastFileOperations {
     #endregion
 
     #region Implementation of IFileOperation
-    public FileSystemInfo Source => this._source;
-    public FileSystemInfo Target => this._target;
-    public long TotalSize => this._source.Length;
+    public FileSystemInfo Source => source;
+    public FileSystemInfo Target => target;
+    public long TotalSize => source.Length;
     public long BytesToTransfer => this.TotalSize;
     public long BytesRead => Interlocked.Read(ref this._bytesRead);
     public long BytesTransferred => Interlocked.Read(ref this._bytesTransferred);

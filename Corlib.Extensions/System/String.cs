@@ -3447,21 +3447,16 @@ public static partial class StringExtensions {
   /// <summary>
   /// A host endpoint with port.
   /// </summary>
-  public class HostEndPoint {
-    public HostEndPoint(string host, int port) {
-      this.Host = host;
-      this.Port = port;
-    }
-
+  public class HostEndPoint(string host, int port) {
     /// <summary>
     /// Gets the host.
     /// </summary>
-    public string Host { get; }
+    public string Host { get; } = host;
 
     /// <summary>
     /// Gets the port.
     /// </summary>
-    public int Port { get; }
+    public int Port { get; } = port;
 
     public static explicit operator IPEndPoint(HostEndPoint @this) => new(Dns.GetHostEntry(@this.Host).AddressList[0], @this.Port);
   }
