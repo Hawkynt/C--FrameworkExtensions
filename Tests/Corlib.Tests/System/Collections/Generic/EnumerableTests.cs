@@ -311,7 +311,7 @@ public class EnumerableTests {
   [TestCase("!", "a", null)]
   public void SingleOrDefault(string? input, string? @default, string? expected, Type? exception = null) {
     var self = ConvertFromStringToTestArray(input);
-    ExecuteTest(() => self.SingleOrDefault(@default), expected, exception);
+    ExecuteTest(() => self!.SingleOrDefault(@default), expected, exception);
     ExecuteTest(() => self.SingleOrDefault(() => @default), expected, exception);
     ExecuteTest(() => self.SingleOrDefault(_ => @default), expected, exception);
     ExecuteTest(() => self.SingleOrDefault((Func<string?>)null!), expected, typeof(ArgumentNullException));

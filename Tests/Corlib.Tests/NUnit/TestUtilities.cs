@@ -37,7 +37,7 @@ internal static class TestUtilities {
 
   // ReSharper disable once UseArrayEmptyMethod
 #pragma warning disable CA1825
-  private static readonly string?[] _EMPTY_ARRAY= new string?[0];
+  private static readonly string?[] _EMPTY_ARRAY= [];
 #pragma warning restore CA1825
 
   /// <summary>
@@ -118,10 +118,10 @@ internal static class TestUtilities {
 
     if (privateMethod.IsGenericMethod) {
       var resultType = typeof(TResult);
-      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType() : resultType);
+      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType()! : resultType);
     }
 
-    return args => (TResult?)privateMethod.Invoke(@this, args ?? new object[0]);
+    return args => (TResult?)privateMethod.Invoke(@this, args ?? []);
   }
 
   /// <summary>
@@ -193,7 +193,7 @@ internal static class TestUtilities {
       privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType() : resultType);
     }
 
-    return args => (TResult?)privateMethod.Invoke(null, args ?? new object[0]);
+    return args => (TResult?)privateMethod.Invoke(null, args ?? []);
   }
 
   /// <summary>

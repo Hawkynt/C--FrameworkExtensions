@@ -60,7 +60,7 @@ internal class SpanTests {
 
   [Test]
   public unsafe void CopyTo_ShouldThrow_OnZeroLength() {
-    int[] sourceArray = { 1, 2, 3, 4, 5 };
+    int[] sourceArray = [1, 2, 3, 4, 5];
     var destinationArray = new int[5];
 
     fixed (int* sourcePtr = sourceArray)
@@ -82,7 +82,7 @@ internal class SpanTests {
 
   [Test]
   public unsafe void CopyTo_ThrowsArgumentException_OnLengthMismatch() {
-    int[] sourceArray = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    int[] sourceArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     var destinationArray = new int[5];
 
     fixed (int* sourcePtr = sourceArray)
@@ -93,7 +93,7 @@ internal class SpanTests {
       try {
         sourceSpan.CopyTo(destinationSpan);
         Assert.Fail($"Should throw exception");
-      } catch (ArgumentException e) {
+      } catch (ArgumentException) {
         Assert.Pass();
       } catch (Exception e) {
         Assert.Fail($"Got exception: {e}");
@@ -104,7 +104,7 @@ internal class SpanTests {
 
   [Test]
   public unsafe void CopyTo_HandlesDifferentTypes() {
-    double[] sourceArray = { 1.1, 2.2, 3.3, 4.4, 5.5 };
+    double[] sourceArray = [1.1, 2.2, 3.3, 4.4, 5.5];
     var destinationArray = new double[5];
 
     fixed (double* sourcePtr = sourceArray)
@@ -121,7 +121,7 @@ internal class SpanTests {
 
   [Test]
   public unsafe void CopyTo_PartialCopy() {
-    int[] sourceArray = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    int[] sourceArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     var destinationArray = new int[10];
 
     fixed (int* sourcePtr = sourceArray)

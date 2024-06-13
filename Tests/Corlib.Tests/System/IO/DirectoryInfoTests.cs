@@ -332,7 +332,7 @@ internal class DirectoryInfoTests {
       var subDirs = new[] { "Dir1", "Dir2" };
       var fileName = "TestFile.txt";
       var nestedFilePath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
-      Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath));
+      Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath)!);
       File.WriteAllText(nestedFilePath, "Test content");
 
       var result = _testDirectory.File(true, "dir1", "dir2", "testfile.txt");
@@ -345,7 +345,7 @@ internal class DirectoryInfoTests {
       var subDirs = new[] { "Dir1", "Dir2" };
       var fileName = "TestFile.txt";
       var nestedFilePath = Path.Combine(Combine(_testDirectory.FullName, subDirs), fileName);
-      Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath));
+      Directory.CreateDirectory(Path.GetDirectoryName(nestedFilePath)!);
       File.WriteAllText(nestedFilePath, "Test content");
 
       var result = _testDirectory.File(false, "Dir1", "Dir2", "TestFile.txt");
