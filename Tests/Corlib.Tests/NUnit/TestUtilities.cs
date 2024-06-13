@@ -190,7 +190,7 @@ internal static class TestUtilities {
 
     if (privateMethod.IsGenericMethod) {
       var resultType = typeof(TResult);
-      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType() : resultType);
+      privateMethod = privateMethod.MakeGenericMethod(resultType.IsArray ? resultType.GetElementType()! : resultType);
     }
 
     return args => (TResult?)privateMethod.Invoke(null, args ?? []);
