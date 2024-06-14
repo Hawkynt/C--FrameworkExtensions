@@ -1,22 +1,14 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if !SUPPORTS_RANGE_AND_INDEX
@@ -25,12 +17,12 @@ using System.Runtime.CompilerServices;
 
 namespace System;
 
-public readonly struct Index:IEquatable<Index> {
+public readonly struct Index : IEquatable<Index> {
   private readonly int _index;
 
   public static Index Start => new(0);
   public static Index End => new(~0);
-  
+
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -45,7 +37,7 @@ public readonly struct Index:IEquatable<Index> {
 #if SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
   [DoestNotReturn]
 #endif
-  private static void _ThrowValueNegative()=> throw new ArgumentOutOfRangeException("value", "value must be non-negative");
+  private static void _ThrowValueNegative() => throw new ArgumentOutOfRangeException("value", "value must be non-negative");
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,7 +48,7 @@ public readonly struct Index:IEquatable<Index> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Index FromStart(int value) {
-    if (value < 0) 
+    if (value < 0)
       _ThrowValueNegative();
 
     return new(value);
@@ -73,14 +65,14 @@ public readonly struct Index:IEquatable<Index> {
   }
 
   public int Value => this._index < 0 ? ~this._index : this._index;
-  public bool IsFromEnd=>this._index < 0;
+  public bool IsFromEnd => this._index < 0;
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public int GetOffset(int length) {
     var offset = this._index;
-    if (offset<0)
+    if (offset < 0)
       offset += length + 1;
 
     return offset;
@@ -91,7 +83,6 @@ public readonly struct Index:IEquatable<Index> {
   public override int GetHashCode() => this._index;
   public static implicit operator Index(int value) => FromStart(value);
   public override string ToString() => this._index < 0 ? "^" + ~this._index : this._index.ToString();
-
 }
 
 #endif

@@ -1,50 +1,41 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if !SUPPORTS_SPAN
 
+using System.Runtime.InteropServices;
+
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System;
 
-using Runtime.InteropServices;
-
 internal static unsafe partial class SpanHelper {
-
   /// <summary>
-  /// Provides a base class for handling memory using a pointer to a block of memory of type <typeparamref name="T"/>.
+  ///   Provides a base class for handling memory using a pointer to a block of memory of type <typeparamref name="T" />.
   /// </summary>
   /// <typeparam name="T">The type of elements pointed to by the memory.</typeparam>
   /// <remarks>
-  /// This class is intended to be inherited by more specific memory handler implementations that operate on pointers.
-  /// It provides common functionality and the basic structure needed to work with unmanaged memory in a managed environment,
-  /// adhering to the <see cref="IMemoryHandler{T}"/> interface.
+  ///   This class is intended to be inherited by more specific memory handler implementations that operate on pointers.
+  ///   It provides common functionality and the basic structure needed to work with unmanaged memory in a managed
+  ///   environment,
+  ///   adhering to the <see cref="IMemoryHandler{T}" /> interface.
   /// </remarks>
-  public abstract class PointerMemoryHandlerBase<T>(T* pointer): IMemoryHandler<T> {
-
+  public abstract class PointerMemoryHandlerBase<T>(T* pointer) : IMemoryHandler<T> {
     protected T* Pointer { get; } = pointer;
 
     private void CopyTo(PointerMemoryHandlerBase<T> other, int length) {
       if (length < 0)
         throw new ArgumentOutOfRangeException(nameof(length));
-      
+
       var source = this.Pointer;
       var target = other.Pointer;
 #if SUPPORTS_BUFFER_MEMORYCOPY
@@ -54,8 +45,7 @@ internal static unsafe partial class SpanHelper {
       if (length < 128)
         for (;;)
           switch (length) {
-            case 0:
-              return;
+            case 0: return;
             case 1:
               *target = *source;
               goto case 0;
@@ -86,7 +76,7 @@ internal static unsafe partial class SpanHelper {
                 target[4] = source[4];
                 target[5] = source[5];
                 target[6] = source[6];
-                target[7]= source[7];
+                target[7] = source[7];
                 length -= 8;
                 source += 8;
                 target += 8;
@@ -145,7 +135,7 @@ internal static unsafe partial class SpanHelper {
 
     /// <inheritdoc />
     public void CopyTo(IMemoryHandler<T> other, int length) {
-      if(other is PointerMemoryHandlerBase<T> pointerBased)
+      if (other is PointerMemoryHandlerBase<T> pointerBased)
         this.CopyTo(pointerBased, length);
 
       for (var i = 0; i < length; ++i)

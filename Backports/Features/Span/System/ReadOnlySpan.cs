@@ -1,30 +1,22 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if !SUPPORTS_SPAN
 
-namespace System;
+using System.Collections;
+using System.Collections.Generic;
 
-using Collections;
-using Collections.Generic;
+namespace System;
 
 public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
   private readonly SpanHelper.IMemoryHandler<T> _pointerMemoryHandler;
@@ -35,11 +27,11 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
   }
 
   public ReadOnlySpan(T[] array) : this(array, 0, array?.Length ?? 0) { }
-  
+
   public ReadOnlySpan(T[] array, int start, int length) : this(SpanHelper.PinnedArrayMemoryHandler<T>.FromManagedArray(array, start), length) { }
 
 #pragma warning disable CS8500
-  public unsafe ReadOnlySpan(void* pointer, int length):this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer),length) { }
+  public unsafe ReadOnlySpan(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
 #pragma warning restore CS8500
 
   public int Length { get; }
@@ -50,7 +42,7 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
     get {
       if ((uint)index >= (uint)this.Length)
         throw new ArgumentOutOfRangeException();
-      
+
       return ref this._pointerMemoryHandler[index];
     }
   }
@@ -65,7 +57,7 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
   public T[] ToArray() {
     var array = new T[this.Length];
     this._pointerMemoryHandler.CopyTo(array, this.Length);
-    
+
     return array;
   }
 
@@ -91,7 +83,6 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
 
   public static implicit operator ReadOnlySpan<T>(Span<T> @this) => new(@this.pointerMemoryHandler, @this.Length);
   public static implicit operator ReadOnlySpan<T>(T[] array) => new(array);
-  
 }
 
 #endif
