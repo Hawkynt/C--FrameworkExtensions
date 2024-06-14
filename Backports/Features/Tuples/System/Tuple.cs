@@ -23,7 +23,7 @@ using System.Globalization;
 namespace System;
 
 public static class Tuple {
-  public static Tuple<T1> Create<T1>(T1 item1) => new(item1);
+  public static Tuple<T1> Create<T1>(T1 item1) { return new(item1); }
 
   public static Tuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2) => new(item1, item2);
 
