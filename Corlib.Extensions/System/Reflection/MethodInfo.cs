@@ -23,10 +23,6 @@ using System.Linq;
 using System.Text;
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace System.Reflection;
 
 public static partial class MethodInfoExtensions {

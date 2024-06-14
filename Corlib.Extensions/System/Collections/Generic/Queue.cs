@@ -19,7 +19,6 @@
 */
 #endregion
 
-// ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic; 
 
 public static partial class QueueExtensions {

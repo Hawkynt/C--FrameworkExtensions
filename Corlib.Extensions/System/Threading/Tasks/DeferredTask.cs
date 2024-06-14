@@ -34,7 +34,7 @@ public class DeferredTask<TValue> {
   /// <summary>
   /// Stores the scheduled values, alongside their storage date.
   /// </summary>
-  private class Item {
+  private sealed class Item {
     
     public readonly DateTime createDate;
     public readonly TValue value;

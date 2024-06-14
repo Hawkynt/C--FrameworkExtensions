@@ -25,11 +25,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 #endif
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic;
 
 public static partial class DictionaryExtensions {
@@ -55,7 +50,7 @@ public static partial class DictionaryExtensions {
   /// </summary>
   /// <typeparam name="TKey">The type of the keys.</typeparam>
   /// <typeparam name="TValue">The type of the values.</typeparam>
-  private class ChangeSet<TKey, TValue>(ChangeType type, TKey key, TValue currentValue, TValue otherValue)
+  private sealed class ChangeSet<TKey, TValue>(ChangeType type, TKey key, TValue currentValue, TValue otherValue)
     : IChangeSet<TKey, TValue> {
     public ChangeType Type { get; } = type;
     public TKey Key { get; } = key;

@@ -31,7 +31,7 @@ public static partial class SemaphoreSlimExtensions {
 
 #region nested types
 
-  private class SemaphoreAcquired : IDisposable {
+  private sealed class SemaphoreAcquired : IDisposable {
     private readonly SemaphoreSlim _semaphore;
     private readonly bool _entered;
     private int _isDisposed;

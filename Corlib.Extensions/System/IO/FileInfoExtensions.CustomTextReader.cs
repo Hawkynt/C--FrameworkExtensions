@@ -41,8 +41,8 @@ public static partial class FileInfoExtensions {
       this._lineBreakMode = lineBreakMode;
     }
 
-    public class Initialized : CustomTextReader {
-      private class LineEndingNode {
+    public sealed class Initialized : CustomTextReader {
+      private sealed class LineEndingNode {
         private Dictionary<char, LineEndingNode> _children;
         private LineEndingNode(int pathLength) => this.PathLength = pathLength;
 

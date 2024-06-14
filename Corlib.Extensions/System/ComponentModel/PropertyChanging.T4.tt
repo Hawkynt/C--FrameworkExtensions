@@ -26,13 +26,6 @@
 using System.Runtime.CompilerServices;
 using Guard;
 
-// ReSharper disable UnusedParameter.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable UnusedMethodReturnValue.Global
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-
 namespace System.ComponentModel;
 
 public static partial class PropertyChangingExtensions {

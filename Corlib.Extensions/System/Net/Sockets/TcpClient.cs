@@ -21,9 +21,6 @@
 
 using System.Net.NetworkInformation;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-
 namespace System.Net.Sockets;
 
 public static partial class TcpClientExtensions {

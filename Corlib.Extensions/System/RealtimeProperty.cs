@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Threading;
@@ -25,7 +23,6 @@ using Guard;
 namespace System;
 
 public class RealtimeProperty<TType> {
-
   private const int _IS_IDLE = 0;
   private const int _IS_BUSY = 1;
   private static readonly TimeSpan _DEFAULT_TIMEOUT = TimeSpan.FromMilliseconds(100);
@@ -36,11 +33,10 @@ public class RealtimeProperty<TType> {
   private readonly bool _isAsyncSetter;
   private int _isGettingValue = _IS_IDLE;
   private readonly ManualResetEventSlim _manualResetEventSlim = new(false);
-  private bool _gotValueAtLeastOnce;
 
   public RealtimeProperty(Func<TType> getter, Action<TType> setter = null, TimeSpan? timeout = null, bool isAsyncSetter = false) {
     Against.ArgumentIsNull(getter);
-    
+
     this._getter = getter;
     this._setter = setter;
     this._isAsyncSetter = isAsyncSetter;
@@ -60,13 +56,12 @@ public class RealtimeProperty<TType> {
         setter.BeginInvoke(value, setter.EndInvoke, null);
       else
         setter(value);
-
     }
   }
 
   public TimeSpan Timeout { get; set; }
 
-  public bool GotValue => this._gotValueAtLeastOnce;
+  public bool GotValue { get; private set; }
 
   public TType GetValue(TimeSpan? timeout) {
     this._TryGetValue(timeout);
@@ -93,11 +88,10 @@ public class RealtimeProperty<TType> {
       try {
         this._lastKnownValue = getter();
         manualResetEventSlim.Set();
-        this._gotValueAtLeastOnce = true;
+        this.GotValue = true;
       } finally {
         Interlocked.CompareExchange(ref this._isGettingValue, _IS_IDLE, _IS_BUSY);
       }
     }
   }
-
 }

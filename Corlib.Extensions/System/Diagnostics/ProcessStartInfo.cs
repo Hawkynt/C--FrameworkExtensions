@@ -48,10 +48,10 @@ public static partial class ProcessStartInfoExtensions {
     public Process Process { get; }
   }
 
-  private class RedirectedRunAsyncResult : IRedirectedRunAsyncResult {
+  private sealed class RedirectedRunAsyncResult : IRedirectedRunAsyncResult {
     #region nested types
 
-    private class CurrentConsoleOutput(string currentLine, StringBuilder totalText) : ICurrentConsoleOutput {
+    private sealed class CurrentConsoleOutput(string currentLine, StringBuilder totalText) : ICurrentConsoleOutput {
       #region Implementation of ICurrentConsoleOutput
 
       public string CurrentLine { get; } = currentLine;
@@ -61,7 +61,7 @@ public static partial class ProcessStartInfoExtensions {
       #endregion
     }
 
-    private class ConsoleResult(int exitCode, StringBuilder stdout, StringBuilder stderr) : IConsoleResult {
+    private sealed class ConsoleResult(int exitCode, StringBuilder stdout, StringBuilder stderr) : IConsoleResult {
       #region Implementation of IConsoleResult
 
       public string StandardOutput => stdout.ToString();

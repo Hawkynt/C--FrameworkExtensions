@@ -34,9 +34,6 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 #endif
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System.Threading;
 

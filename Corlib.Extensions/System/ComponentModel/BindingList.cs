@@ -28,10 +28,6 @@ using System.Runtime.CompilerServices;
 
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace System.ComponentModel;
 
 

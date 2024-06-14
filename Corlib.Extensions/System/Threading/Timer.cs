@@ -19,9 +19,6 @@
 */
 #endregion
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Threading;
 
 public static partial class TimerExtensions {

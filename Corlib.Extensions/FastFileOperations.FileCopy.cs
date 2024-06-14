@@ -1,22 +1,20 @@
-﻿#region (c)2010-2020 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
+﻿#region (c)2010-2042 Hawkynt
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Concurrent;
@@ -27,20 +25,19 @@ using Guard;
 namespace System.IO;
 
 public partial class FastFileOperations {
-
   public delegate void FileReportCallback(IFileReport report);
 
-  private class FileCopyOperation(FileInfo source, FileInfo target, FileReportCallback callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1)
+  private sealed class FileCopyOperation(FileInfo source, FileInfo target, FileReportCallback callback, bool canReadDuringWrite, int chunkSize = -1, int maxReadAheadSize = -1)
     : IFileOperation {
-
     #region nested types
+
     /// <summary>
-    /// A report from a running file-copy operation.
+    ///   A report from a running file-copy operation.
     /// </summary>
-    private class FileCopyReport(ReportType reportType, FileCopyOperation operation, int streamIndex, long chunkOffset, long chunkSize)
+    private sealed class FileCopyReport(ReportType reportType, FileCopyOperation operation, int streamIndex, long chunkOffset, long chunkSize)
       : IFileReport {
-      
       #region Implementation of IFileReport
+
       public ReportType ReportType { get; } = reportType;
       public IFileSystemOperation Operation { get; } = operation;
       public int StreamIndex { get; } = streamIndex;
@@ -56,13 +53,14 @@ public partial class FastFileOperations {
     }
 
     /// <summary>
-    /// A bunch of data that is read or being written.
+    ///   A bunch of data that is read or being written.
     /// </summary>
-    private class Chunk(long offset, int size) {
+    private sealed class Chunk(long offset, int size) {
       public readonly long offset = offset;
       public readonly byte[] data = new byte[size];
       public int length = size;
     }
+
     #endregion
 
     #region fields
@@ -75,14 +73,16 @@ public partial class FastFileOperations {
     private long _bytesRead;
     private long _bytesTransferred;
     private long _readOffset;
+
     #endregion
 
     #region props
+
     public FileStream SourceStream { private get; set; }
     public FileStream TargetStream { private get; set; }
     public int ChunkSize { get; } = chunkSize > 0 ? chunkSize : source.Length < _MAX_SMALL_FILESIZE ? _DEFAULT_BUFFER_SIZE : _DEFAULT_LARGE_BUFFER_SIZE;
 
-    private long _CurrentReadAheadSize { get { return this._readAheadCache.ToArray().Sum(c => c.length); } }
+    private long _CurrentReadAheadSize => this._readAheadCache.ToArray().Sum(c => c.length);
 
     private bool _CanRead {
       get {
@@ -105,6 +105,7 @@ public partial class FastFileOperations {
         return false;
       }
     }
+
     #endregion
 
     #region ctor,dtor
@@ -115,9 +116,11 @@ public partial class FastFileOperations {
       _TryDisposeStream(this.TargetStream);
       this._readAheadCache.Clear();
     }
+
     #endregion
 
     #region chunk management
+
     private Chunk _GetReadChunk() {
       if (this.IsDone)
         return null;
@@ -150,7 +153,6 @@ public partial class FastFileOperations {
 
       this._CreateReport(ReportType.StartWrite, 0, result.offset, result.length);
       return result;
-
     }
 
     private void _ReleaseWriteChunk(Chunk chunk) {
@@ -160,30 +162,32 @@ public partial class FastFileOperations {
       if (result >= this.TotalSize)
         this.OperationFinished();
     }
+
     #endregion
 
     #region appdomain messing
+
     /// <summary>
-    /// Handles application exit and deletes any unfinished target file.
+    ///   Handles application exit and deletes any unfinished target file.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
-    /// <param name="args">The <see cref="EventArgs"/> instance containing the event data.</param>
+    /// <param name="args">The <see cref="EventArgs" /> instance containing the event data.</param>
     private void _AppDomainUnload(object sender, EventArgs args) => this.OperationAborted(new OperationCanceledException(_EX_APP_UNLOAD));
 
     /// <summary>
-    /// Registers an event handler to the ProcessExit event of the current appdomain.
+    ///   Registers an event handler to the ProcessExit event of the current appdomain.
     /// </summary>
     private void _RegisterToAppUnload() => AppDomain.CurrentDomain.ProcessExit += this._AppDomainUnload;
 
     /// <summary>
-    /// Unregisters the event handler from the ProcessExit event of the current appdomain.
+    ///   Unregisters the event handler from the ProcessExit event of the current appdomain.
     /// </summary>
     private void _UnregisterFromAppUnload() => AppDomain.CurrentDomain.ProcessExit -= this._AppDomainUnload;
 
     #endregion
 
     /// <summary>
-    /// Tries to dispose a stream.
+    ///   Tries to dispose a stream.
     /// </summary>
     /// <param name="stream">The stream.</param>
     private static bool _TryDisposeStream(FileStream stream) {
@@ -226,7 +230,7 @@ public partial class FastFileOperations {
       var result = this._CreateReport(ReportType.AbortedOperation, -1, 0, this.TotalSize);
       if (result.ContinuationType != ContinuationType.AbortOperation)
         return result;
-      
+
       this._Dispose();
       target.Delete();
       this._finishEvent.Set();
@@ -238,13 +242,14 @@ public partial class FastFileOperations {
     #endregion
 
     #region async read/write
+
     /// <summary>
-    /// Starts the reading.
+    ///   Starts the reading.
     /// </summary>
     public void StartReading() => this._ReadCallback(null);
 
     /// <summary>
-    /// The read chunk callback.
+    ///   The read chunk callback.
     /// </summary>
     /// <param name="asyncResult">The asynchronous result.</param>
     private void _ReadCallback(IAsyncResult asyncResult) {
@@ -268,10 +273,10 @@ public partial class FastFileOperations {
             case ContinuationType.RetryStream when !this.IsDone:
               // TODO: abort other threads to continue writing, reset both streams, restart reading
               throw new NotImplementedException();
-            default:
-              return;
+            default: return;
           }
         }
+
         chunk.length = bytesRead;
         this._ReleaseReadChunk(chunk);
 
@@ -288,7 +293,7 @@ public partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Begins reading the given chunk.
+    ///   Begins reading the given chunk.
     /// </summary>
     /// <param name="chunk">The chunk.</param>
     /// <exception cref="System.NotImplementedException"></exception>
@@ -307,20 +312,18 @@ public partial class FastFileOperations {
             this._BeginReadChunk(chunk);
             break;
           // TODO: abort other threads to continue writing, reset both streams, restart reading
-          case ContinuationType.RetryStream when !this.IsDone:
-            throw new NotImplementedException();
+          case ContinuationType.RetryStream when !this.IsDone: throw new NotImplementedException();
         }
       }
     }
 
     /// <summary>
-    /// The write callback.
+    ///   The write callback.
     /// </summary>
     /// <param name="asyncResult">The asynchronous result.</param>
     private void _WriteCallback(IAsyncResult asyncResult) {
       Chunk chunk;
       if (asyncResult != null) {
-
         // end write
         chunk = (Chunk)asyncResult.AsyncState;
         try {
@@ -329,16 +332,14 @@ public partial class FastFileOperations {
           var result = this.OperationAborted(e);
 
           switch (result.ContinuationType) {
-            case ContinuationType.Proceed:
-              break;
+            case ContinuationType.Proceed: break;
             case ContinuationType.RetryChunk when !this.IsDone:
               this._BeginWriteChunk(chunk);
               return;
             case ContinuationType.RetryStream when !this.IsDone:
               // TODO: abort other threads to continue writing, reset both streams, restart reading
               throw new NotImplementedException();
-            default:
-              return;
+            default: return;
           }
         }
 
@@ -357,7 +358,7 @@ public partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Begins writing the given chunk.
+    ///   Begins writing the given chunk.
     /// </summary>
     /// <param name="chunk">The chunk.</param>
     /// <exception cref="System.NotImplementedException"></exception>
@@ -376,8 +377,7 @@ public partial class FastFileOperations {
             this._BeginWriteChunk(chunk);
             break;
           // TODO: abort other threads to continue writing, reset both streams, restart reading
-          case ContinuationType.RetryStream when !this.IsDone:
-            throw new NotImplementedException();
+          case ContinuationType.RetryStream when !this.IsDone: throw new NotImplementedException();
         }
       }
     }
@@ -385,6 +385,7 @@ public partial class FastFileOperations {
     #endregion
 
     #region Implementation of IFileOperation
+
     public FileSystemInfo Source => source;
     public FileSystemInfo Target => target;
     public long TotalSize => source.Length;
@@ -399,6 +400,7 @@ public partial class FastFileOperations {
         Thread.MemoryBarrier();
       }
     }
+
     public Exception Exception { get; private set; }
     public bool IsDone => this._finishEvent.IsSet;
     public bool ThrewException => this.Exception != null;
@@ -410,8 +412,9 @@ public partial class FastFileOperations {
   }
 
   #region copy file
+
   /// <summary>
-  /// Copies the file.
+  ///   Copies the file.
   /// </summary>
   /// <param name="this">This source file.</param>
   /// <param name="target">The target file.</param>
@@ -431,8 +434,9 @@ public partial class FastFileOperations {
   }
 
   /// <summary>
-  /// Copies the file asynchronous.
-  /// This reads one chunk at a time and when the OS signals that a read is done, it starts writing that chunk while, possibly at the same time, reading the next.
+  ///   Copies the file asynchronous.
+  ///   This reads one chunk at a time and when the OS signals that a read is done, it starts writing that chunk while,
+  ///   possibly at the same time, reading the next.
   /// </summary>
   /// <param name="this">This source file.</param>
   /// <param name="target">The target file.</param>
@@ -483,7 +487,6 @@ public partial class FastFileOperations {
 
     // create link if possible and allowed
     if (allowHardLinks && @this.TryCreateHardLinkAt(target)) {
-
       // link creation successful
       mainToken.OperationStarted();
       mainToken.CreatedLink();
@@ -514,7 +517,7 @@ public partial class FastFileOperations {
   }
 
   /// <summary>
-  /// Copies a symbolic link if needed.
+  ///   Copies a symbolic link if needed.
   /// </summary>
   /// <param name="source">The source.</param>
   /// <param name="target">The target.</param>
@@ -537,7 +540,7 @@ public partial class FastFileOperations {
   }
 
   /// <summary>
-  /// Sets the file size for a given file.
+  ///   Sets the file size for a given file.
   /// </summary>
   /// <param name="target">The target.</param>
   /// <param name="length">The length.</param>
@@ -547,5 +550,4 @@ public partial class FastFileOperations {
   }
 
   #endregion
-
 }

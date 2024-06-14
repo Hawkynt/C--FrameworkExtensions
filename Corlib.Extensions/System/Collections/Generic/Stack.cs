@@ -21,7 +21,6 @@
 
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic;
 
 public static partial class StackExtensions {

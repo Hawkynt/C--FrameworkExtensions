@@ -22,9 +22,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Specialized; 
 
 public class OrderedDictionary<TKey, TValue> : Dictionary<TKey, TValue> {

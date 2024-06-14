@@ -30,9 +30,6 @@ using System.Threading;
 
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.IO;
 
 /// <summary>

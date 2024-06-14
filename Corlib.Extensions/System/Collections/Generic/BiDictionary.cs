@@ -23,8 +23,6 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using Guard;
 
-// ReSharper disable UnusedMember.Global
-
 namespace System.Collections.Generic;
 
 [Serializable]
@@ -237,8 +235,8 @@ public class BiDictionary<TFirst, TSecond> :
   }
 }
 
-internal class DictionaryDebugView<TKey, TValue> {
-  private readonly IDictionary<TKey, TValue> _dictionary;
+internal class DictionaryDebugView<TKey, TValue>(IDictionary<TKey, TValue> dictionary) {
+  private readonly IDictionary<TKey, TValue> _dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
 
   [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
   public KeyValuePair<TKey, TValue>[] Items {
@@ -248,12 +246,8 @@ internal class DictionaryDebugView<TKey, TValue> {
       return array;
     }
   }
-
-  public DictionaryDebugView(IDictionary<TKey, TValue> dictionary) => this._dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
-  
 }
 
-// ReSharper disable once PartialTypeWithSinglePart
 public static partial class KeyValuePairExtensions {
   
   public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) {

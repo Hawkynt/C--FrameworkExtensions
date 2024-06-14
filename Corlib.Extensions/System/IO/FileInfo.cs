@@ -39,11 +39,6 @@ using System.Threading.Tasks;
 #endif
 using Guard;
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable UnusedParameter.Global
-// ReSharper disable FieldCanBeMadeReadOnly.Local
-
 namespace System.IO;
 
 using LineBreakMode = StringExtensions.LineBreakMode;

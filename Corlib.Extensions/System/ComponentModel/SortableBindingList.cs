@@ -31,8 +31,6 @@ using Guard;
 using System.Linq.Expressions;
 #endif
 
-// ReSharper disable UnusedMember.Global
-
 namespace System.ComponentModel;
 
 /// <summary>
@@ -91,12 +89,12 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
         return string.Compare(a.ToString(), b.ToString(), StringComparison.Ordinal);
       }
 
-      private class _AscendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+      private sealed class _AscendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
         public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => x.CompareTo(y);
         public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
       }
 
-      private class _DescendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+      private sealed class _DescendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
         public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => -x.CompareTo(y);
         public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
       }
@@ -275,7 +273,6 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
   protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) => this.CollectionChanged?.Invoke(this, e);
 }
 
-// ReSharper disable once PartialTypeWithSinglePart
 public static partial class EnumerableExtensions {
   public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);

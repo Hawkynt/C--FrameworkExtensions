@@ -25,23 +25,18 @@ using System.Text;
 using System.Threading;
 using Guard;
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace System.IO;
 
 public static partial class PathExtensions {
 
   #region nested types
 
-  private class TemporaryTokenCleaner {
+  private sealed class TemporaryTokenCleaner {
 
     #region entries
 
     [DebuggerDisplay("{" + nameof(_DebuggerDisplay) + "}")]
-    private class Entry {
+    private sealed class Entry {
       private long _timeToKill;
       private Entry(FileSystemInfo target) => this.Target = target.FullName;
       public Entry(FileInfo target) : this((FileSystemInfo)target) => this.IsFile = true;
@@ -178,7 +173,7 @@ public static partial class PathExtensions {
     TimeSpan MinimumLifetimeLeft { get; set; }
   }
 
-  private class TemporaryFileToken : ITemporaryFileToken {
+  private sealed class TemporaryFileToken : ITemporaryFileToken {
     private bool _isDisposed;
     public FileInfo File { get; }
 
@@ -204,7 +199,7 @@ public static partial class PathExtensions {
     ~TemporaryFileToken() => this.Dispose();
   }
 
-  private class TemporaryDirectoryToken : ITemporaryDirectoryToken {
+  private sealed class TemporaryDirectoryToken : ITemporaryDirectoryToken {
     private bool _isDisposed;
     public DirectoryInfo Directory { get; }
 

@@ -22,9 +22,6 @@
 using System.Diagnostics;
 using System.Threading;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic; 
 
 /// <summary>
@@ -206,7 +203,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
   /// <summary>
   /// Enumerates through the cached enumeration.
   /// </summary>
-  private class CachedEnumerator(CachedEnumeration<TItem> cache) : IEnumerator<TItem> {
+  private sealed class CachedEnumerator(CachedEnumeration<TItem> cache) : IEnumerator<TItem> {
     private int _currentIndex = 0;
     private TItem _current;
 

@@ -1,105 +1,102 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using Guard;
 
 namespace System;
 
-using Collections;
-using Collections.Generic;
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using Diagnostics.CodeAnalysis;
 #endif
-using Globalization;
-using IO;
-using Linq;
-using Net;
-using Runtime.CompilerServices;
-using Text;
-using Text.RegularExpressions;
-using Guard;
 
 public static partial class StringExtensions {
-
 #if SUPPORTS_SPAN
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
 #endif
 
   /// <summary>
-  /// Computes the hash of the current string using the specified hash algorithm.
+  ///   Computes the hash of the current string using the specified hash algorithm.
   /// </summary>
-  /// <typeparam name="TAlgorithm">The type of the hash algorithm to use. Must be a subclass of <see cref="HashAlgorithm"/> and have a parameterless constructor.</typeparam>
+  /// <typeparam name="TAlgorithm">
+  ///   The type of the hash algorithm to use. Must be a subclass of <see cref="HashAlgorithm" />
+  ///   and have a parameterless constructor.
+  /// </typeparam>
   /// <param name="this">The current string instance to hash.</param>
   /// <returns>A hexadecimal string representation of the computed hash.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// string input = "Hello, world!";
   /// string sha256Hash = input.ComputeHash&lt;SHA256CryptoServiceProvider&gt;();
   /// Console.WriteLine($"SHA-256 Hash: {sha256Hash}");
-  ///
+  /// 
   /// string md5Hash = input.ComputeHash&lt;MD5CryptoServiceProvider&gt;();
   /// Console.WriteLine($"MD5 Hash: {md5Hash}");
   /// </code>
-  /// This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method.
+  ///   This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method.
   /// </example>
   /// <remarks>
-  /// This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
+  ///   This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
   /// </remarks>
-  public static string ComputeHash<TAlgorithm>(this string @this) where TAlgorithm:HashAlgorithm, new() {
+  public static string ComputeHash<TAlgorithm>(this string @this) where TAlgorithm : HashAlgorithm, new() {
     using var hashAlgorithm = new TAlgorithm();
     return ComputeHash(@this, hashAlgorithm);
   }
 
   /// <summary>
-  /// Computes the hash of the current string using the specified hash algorithm.
+  ///   Computes the hash of the current string using the specified hash algorithm.
   /// </summary>
   /// <param name="this">The current string instance to hash.</param>
   /// <param name="hashAlgorithm">The hash algorithm to use for computing the hash.</param>
   /// <returns>A hexadecimal string representation of the computed hash.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="hashAlgorithm"/> is <see langword="null"/>.</exception>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="hashAlgorithm" /> is <see langword="null" />.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// string input = "Hello, world!";
   /// using (var sha256 = SHA256.Create())
   /// {
   ///     string sha256Hash = input.ComputeHash(sha256);
   ///     Console.WriteLine($"SHA-256 Hash: {sha256Hash}");
   /// }
-  ///
+  /// 
   /// using (var md5 = MD5.Create())
   /// {
   ///     string md5Hash = input.ComputeHash(md5);
   ///     Console.WriteLine($"MD5 Hash: {md5Hash}");
   /// }
   /// </code>
-  /// This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method with specified hash algorithms.
+  ///   This example demonstrates how to compute the SHA-256 and MD5 hashes of a string using the <c>ComputeHash</c> method
+  ///   with specified hash algorithms.
   /// </example>
   /// <remarks>
-  /// This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
+  ///   This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
   /// </remarks>
   public static string ComputeHash(this string @this, HashAlgorithm hashAlgorithm) {
     Against.ThisIsNull(@this);
@@ -113,13 +110,13 @@ public static partial class StringExtensions {
   #region ExchangeAt
 
   /// <summary>
-  /// Exchanges a certain part of the string with the given newString.
+  ///   Exchanges a certain part of the string with the given newString.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="index">The index to start the modification at.</param>
   /// <param name="replacement">The new string to insert.</param>
   /// <returns>
-  /// The modified string
+  ///   The modified string
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,13 +137,13 @@ public static partial class StringExtensions {
 #endif
 
   /// <summary>
-  /// Exchanges a certain character of the string with the given character.
+  ///   Exchanges a certain character of the string with the given character.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="index">The index to start the modification at.</param>
   /// <param name="replacement">The character.</param>
   /// <returns>
-  /// The modified string
+  ///   The modified string
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,7 +155,6 @@ public static partial class StringExtensions {
     var length = @this.Length;
 
 #if SUPPORTS_SPAN
-
     if (index == 0 && length <= 1)
       return replacement.ToString();
 
@@ -189,18 +185,16 @@ public static partial class StringExtensions {
 
       part1 = part2;
       part2 = @this[1..];
-    } else {
+    } else
       part1 = @this;
-    }
 
     return part1 + part2;
 
 #endif
-
   }
 
   /// <summary>
-  /// Exchanges a certain part of the string with the given newString.
+  ///   Exchanges a certain part of the string with the given newString.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="index">The index to start the modification at.</param>
@@ -226,7 +220,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Repeats the specified string a certain number of times.
+  ///   Repeats the specified string a certain number of times.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="count">The count.</param>
@@ -260,7 +254,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Removes the last n chars from a string.
+  ///   Removes the last n chars from a string.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="count">The number of characters to remove.</param>
@@ -275,7 +269,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Removes the first n chars from a string.
+  ///   Removes the first n chars from a string.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="count">The number of characters to remove.</param>
@@ -290,11 +284,17 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Gets a substring.
+  ///   Gets a substring.
   /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="start">The start index of the first char that should be contained in the result; can be negative to indicate a "from the end".</param>
-  /// <param name="end">The end index of the first char not contained in the result; can be negative to indicate a "from-the-end".</param>
+  /// <param name="start">
+  ///   The start index of the first char that should be contained in the result; can be negative to
+  ///   indicate a "from the end".
+  /// </param>
+  /// <param name="end">
+  ///   The end index of the first char not contained in the result; can be negative to indicate a
+  ///   "from-the-end".
+  /// </param>
   /// <returns>the substring</returns>
   public static string SubString(this string @this, int start, int end = 0) {
     Against.ThisIsNull(@this);
@@ -304,7 +304,6 @@ public static partial class StringExtensions {
 
     // ReSharper disable once InvertIf (perf-opt)
     if (length > 0) {
-
       // if (start < 0) start += length
       // if (end <= 0) end += length
       var startMask = start;
@@ -337,7 +336,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Gets the first n chars from a string.
+  ///   Gets the first n chars from a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="count">The number of chars to get.</param>
@@ -356,7 +355,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Gets the last n chars from a string.
+  ///   Gets the last n chars from a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="count">The number of chars to get.</param>
@@ -377,42 +376,42 @@ public static partial class StringExtensions {
   #region First/Last
 
   /// <summary>
-  /// Gets the first <see cref="char"/> of the <see cref="string"/>.
+  ///   Gets the first <see cref="char" /> of the <see cref="string" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <returns>The first <see cref="char"/></returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <returns>The first <see cref="char" /></returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static char First(this string @this) => @this[0];
 
   /// <summary>
-  /// Gets the first <see cref="char"/> of the <see cref="string"/> or a default value.
+  ///   Gets the first <see cref="char" /> of the <see cref="string" /> or a default value.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <param name="default">The default <see cref="char"/> to return</param>
-  /// <returns>The first <see cref="char"/></returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <param name="default">The default <see cref="char" /> to return</param>
+  /// <returns>The first <see cref="char" /></returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static char FirstOrDefault(this string @this, char @default = default) => IsNullOrEmpty(@this) ? @default : @this[0];
 
   /// <summary>
-  /// Gets the last <see cref="char"/> of the <see cref="string"/>.
+  ///   Gets the last <see cref="char" /> of the <see cref="string" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <returns>The last <see cref="char"/></returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <returns>The last <see cref="char" /></returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static char Last(this string @this) => @this[^1];
 
   /// <summary>
-  /// Gets the last <see cref="char"/> of the <see cref="string"/> or a default value.
+  ///   Gets the last <see cref="char" /> of the <see cref="string" /> or a default value.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <param name="default">The default <see cref="char"/> to return</param>
-  /// <returns>The last <see cref="char"/></returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <param name="default">The default <see cref="char" /> to return</param>
+  /// <returns>The last <see cref="char" /></returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -427,24 +426,25 @@ public static partial class StringExtensions {
 
   private static __IsInvalidCharacter __isInvalidCharacter;
 
-  private class __IsInvalidCharacter {
+  private sealed class __IsInvalidCharacter {
     private readonly HashSet<char> _invalidFileNameChars =
-      Path.GetInvalidFileNameChars()
-      .Union("""
-             <>|:?*/\"
-             """)
-      .ToHashSet(c => c)
-      ;
+      Path
+        .GetInvalidFileNameChars()
+        .Union(
+          """
+          <>|:?*/\"
+          """
+        )
+        .ToHashSet(c => c);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public bool Invoke(char c) => c < 32 || c >= 127 || this._invalidFileNameChars.Contains(c);
-
   }
 
   /// <summary>
-  /// Sanitizes the text to use as a filename.
+  ///   Sanitizes the text to use as a filename.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="sanitation">The character to use for sanitation; defaults to underscore (_)</param>
@@ -469,7 +469,6 @@ public static partial class StringExtensions {
         result = string.Copy(@this);
 #endif
         fixed (char* dstPointer = result) {
-
           // re-base the pointer we're not gonna need the srcPointer from here on
           currentPointer += dstPointer - srcPointer;
 
@@ -495,7 +494,7 @@ public static partial class StringExtensions {
   #region Matching Regexes
 
   /// <summary>
-  /// Determines whether the specified string matches the given regex.
+  ///   Determines whether the specified string matches the given regex.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
@@ -508,7 +507,7 @@ public static partial class StringExtensions {
   public static bool IsMatch(this string @this, Regex regex) => @this != null && regex.IsMatch(@this);
 
   /// <summary>
-  /// Determines whether the specified string matches the given regex.
+  ///   Determines whether the specified string matches the given regex.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
@@ -521,7 +520,7 @@ public static partial class StringExtensions {
   public static bool IsNotMatch(this string @this, Regex regex) => !IsMatch(@this, regex);
 
   /// <summary>
-  /// Determines whether the specified string matches the given regex.
+  ///   Determines whether the specified string matches the given regex.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
@@ -533,7 +532,7 @@ public static partial class StringExtensions {
   public static bool IsMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => @this != null && @this.IsMatch(new(regex, regexOptions));
 
   /// <summary>
-  /// Determines whether the specified string matches the given regex.
+  ///   Determines whether the specified string matches the given regex.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex.</param>
@@ -545,12 +544,12 @@ public static partial class StringExtensions {
   public static bool IsNotMatch(this string @this, string regex, RegexOptions regexOptions = RegexOptions.None) => !IsMatch(@this, regex, regexOptions);
 
   /// <summary>
-  /// Matches the specified regex.
+  ///   Matches the specified regex.
   /// </summary>
   /// <param name="regex">The regex.</param>
   /// <param name="this">The data.</param>
   /// <param name="regexOptions">The regex options.</param>
-  /// <returns>A <see cref="MatchCollection"/> containing the matches.</returns>
+  /// <returns>A <see cref="MatchCollection" /> containing the matches.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -561,13 +560,13 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Matches the specified regex and returns the groups.
+  ///   Matches the specified regex and returns the groups.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="regexOptions">The regex options.</param>
   /// <returns>
-  /// A <see cref="GroupCollection"/> containing the found groups.
+  ///   A <see cref="GroupCollection" /> containing the found groups.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -583,7 +582,7 @@ public static partial class StringExtensions {
   #region Formatting
 
   /// <summary>
-  /// Uses the string as a format string.
+  ///   Uses the string as a format string.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="parameters">The parameters to use for formatting.</param>
@@ -598,7 +597,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
@@ -613,7 +612,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="comparer">The comparer.</param>
@@ -630,7 +629,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
@@ -646,7 +645,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
@@ -662,7 +661,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="fields">The fields.</param>
@@ -678,7 +677,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="object">The source to get the data from using properties of the same name.</param>
@@ -687,7 +686,6 @@ public static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string FormatWithObject<T>(this string @this, T @object) {
-
     if (@object == null)
       return @this.FormatWithEx(_ => null);
 
@@ -717,7 +715,6 @@ public static partial class StringExtensions {
 
       var genericType = returnType.GetGenericTypeDefinition();
       if (genericType == typeof(Func<,>)) {
-
         // support for Func<string,>
         var genericArguments = returnType.GetGenericArguments();
         if (genericArguments.Length == 2 && genericArguments[0] == typeof(string))
@@ -743,7 +740,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="fieldGetter">The field getter.</param>
@@ -772,7 +769,6 @@ public static partial class StringExtensions {
 
       var fieldContentLength = i - lastStartPos - 1;
       if (isInField) {
-
         // we're currently reading a field
         if (current != '}')
           continue;
@@ -790,7 +786,7 @@ public static partial class StringExtensions {
           var fieldFormat = fieldContent[(formatStartIndex + 1)..];
           result.Append(string.Format($"{{0:{fieldFormat}}}", fieldGetter(fieldName)));
         }
-      } else {
+      } else
         // we're currently copying
         switch (current) {
           case '{': {
@@ -800,15 +796,12 @@ public static partial class StringExtensions {
             result.Append(textContent);
 
             // filter out double brackets
-            if (next is "{") {
-
+            if (next is "{")
               // skip the following bracket
               ++i;
-            } else {
-
+            else
               // field start found, switch mode
               isInField = true;
-            }
 
             break;
           }
@@ -823,7 +816,6 @@ public static partial class StringExtensions {
             break;
           }
         }
-      }
     }
 
     var remainingContent = @this[lastStartPos..];
@@ -834,7 +826,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Uses the string as a regular expression.
+  ///   Uses the string as a regular expression.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns>An new instance of RegularExpression.</returns>
@@ -844,12 +836,12 @@ public static partial class StringExtensions {
   public static Regex AsRegularExpression(this string @this) => @this == null ? null : new Regex(@this);
 
   /// <summary>
-  /// Uses the string as a regular expression.
+  ///   Uses the string as a regular expression.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="options">The regex options.</param>
   /// <returns>
-  /// An new instance of RegularExpression.
+  ///   An new instance of RegularExpression.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -857,7 +849,7 @@ public static partial class StringExtensions {
   public static Regex AsRegularExpression(this string @this, RegexOptions options) => @this == null ? null : new Regex(@this, options);
 
   /// <summary>
-  /// Replaces multiple contents.
+  ///   Replaces multiple contents.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
@@ -873,7 +865,7 @@ public static partial class StringExtensions {
   public static string MultipleReplace(this string @this, string replacement, params string[] toReplace) => MultipleReplace(@this, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
 
   /// <summary>
-  /// Replaces multiple contents.
+  ///   Replaces multiple contents.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
@@ -884,7 +876,7 @@ public static partial class StringExtensions {
   public static string MultipleReplace(this string @this, params KeyValuePair<string, string>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, string>>)replacements);
 
   /// <summary>
-  /// Replaces multiple contents.
+  ///   Replaces multiple contents.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
@@ -892,7 +884,7 @@ public static partial class StringExtensions {
   public static string MultipleReplace(this string @this, IEnumerable<KeyValuePair<string, string>> replacements) => MultipleReplace(@this, replacements?.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value)));
 
   /// <summary>
-  /// Replaces multiple contents.
+  ///   Replaces multiple contents.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="replacements">The replacements.</param>
@@ -925,14 +917,13 @@ public static partial class StringExtensions {
 
       if (!found)
         result.Append(@this[i]);
-
     }
 
     return result.ToString();
   }
 
   /// <summary>
-  /// Replaces using a regular expression.
+  ///   Replaces using a regular expression.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
@@ -945,18 +936,18 @@ public static partial class StringExtensions {
   public static string ReplaceRegex(this string @this, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(regex);
-    
+
     return new Regex(regex, regexOptions).Replace(@this, newValue ?? string.Empty);
   }
 
   /// <summary>
-  /// Replaces using a regular expression.
+  ///   Replaces using a regular expression.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="regex">The regex.</param>
   /// <param name="newValue">The replacement.</param>
   /// <returns>
-  /// A string with the replacements.
+  ///   A string with the replacements.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -964,12 +955,12 @@ public static partial class StringExtensions {
   public static string Replace(this string @this, Regex regex, string newValue) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(regex);
-    
+
     return regex.Replace(@this, newValue);
   }
 
   /// <summary>
-  /// Replaces in a string but only n number of times.
+  ///   Replaces in a string but only n number of times.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="oldValue">What to replace.</param>
@@ -997,11 +988,10 @@ public static partial class StringExtensions {
       if (n < 0)
         break;
 
-      if (n == 0) {
+      if (n == 0)
         result = newValue + result[removedLength..];
-      } else {
+      else
         result = result[..n] + newValue + result[(n + removedLength)..];
-      }
 
       pos = n + newLength;
     }
@@ -1012,12 +1002,12 @@ public static partial class StringExtensions {
   #region Upper/Lower
 
   /// <summary>
-  /// Uppers the first char in a string.
+  ///   Uppers the first char in a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="culture"></param>
   /// <returns>
-  /// A string where the first char was capitalized.
+  ///   A string where the first char was capitalized.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1049,11 +1039,11 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Uppers the first char in a string.
+  ///   Uppers the first char in a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <returns>
-  /// A string where the first char was capitalized.
+  ///   A string where the first char was capitalized.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1085,12 +1075,12 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Lowers the first char in a string.
+  ///   Lowers the first char in a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="culture">The culture.</param>
   /// <returns>
-  /// A string where the first char was capitalized.
+  ///   A string where the first char was capitalized.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1122,11 +1112,11 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Lowers the first char in a string.
+  ///   Lowers the first char in a string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <returns>
-  /// A string where the first char was capitalized.
+  ///   A string where the first char was capitalized.
   /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1162,7 +1152,7 @@ public static partial class StringExtensions {
   #region Splitting
 
   /// <summary>
-  /// Splits a string into equal length parts.
+  ///   Splits a string into equal length parts.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="length">The number of chars each part should have</param>
@@ -1176,7 +1166,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the specified string by another one.
+  ///   Splits the specified string by another one.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1193,7 +1183,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the specified string by another one.
+  ///   Splits the specified string by another one.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1204,7 +1194,7 @@ public static partial class StringExtensions {
   public static IEnumerable<string> Split(this string @this, char splitter) => Split(@this, splitter, 0UL);
 
   /// <summary>
-  /// Splits the specified string by another one.
+  ///   Splits the specified string by another one.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1216,7 +1206,7 @@ public static partial class StringExtensions {
   public static IEnumerable<string> Split(this string @this, char splitter, ulong count) => Split(@this, splitter.ToString(), count);
 
   /// <summary>
-  /// Splits the specified string by another one.
+  ///   Splits the specified string by another one.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1231,7 +1221,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the specified string by another one.
+  ///   Splits the specified string by another one.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1270,7 +1260,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the specified string using a regular expression.
+  ///   Splits the specified string using a regular expression.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="regex">The regex to use.</param>
@@ -1286,7 +1276,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the specified string.
+  ///   Splits the specified string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="splitter">The splitter.</param>
@@ -1304,7 +1294,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Converts a word to pascal case.
+  ///   Converts a word to pascal case.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="culture">The culture to use; defaults to current culture.</param>
@@ -1319,7 +1309,7 @@ public static partial class StringExtensions {
 
 
   /// <summary>
-  /// Converts a word to camel case.
+  ///   Converts a word to camel case.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="culture">The culture to use; defaults to current culture.</param>
@@ -1333,13 +1323,12 @@ public static partial class StringExtensions {
   }
 
   private static string _ChangeCasing(string input, CultureInfo culture, bool pascalCase) {
-
     StringBuilder result = new(input.Length);
 
     var isFirstLetter = true;
     var hump = pascalCase;
     var lastCharWasUppercase = false;
-    foreach (var chr in input) {
+    foreach (var chr in input)
       if (chr.IsDigit()) {
         result.Append(chr);
         hump = true;
@@ -1362,13 +1351,12 @@ public static partial class StringExtensions {
         hump = false;
         isFirstLetter = false;
       }
-    }
 
     return result.ToString();
   }
 
   /// <summary>
-  /// Transforms the given connection string into a linq2sql compatible one by removing the driver.
+  ///   Transforms the given connection string into a linq2sql compatible one by removing the driver.
   /// </summary>
   /// <param name="this">This ConnectionString.</param>
   /// <returns>The transformed result.</returns>
@@ -1377,13 +1365,13 @@ public static partial class StringExtensions {
 #endif
   public static string ToLinq2SqlConnectionString(this string @this) {
     Against.ThisIsNull(@this);
-    
+
     Regex regex = new(@"Driver\s*=.*?(;|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
     return regex.Replace(@this, string.Empty);
   }
 
   /// <summary>
-  /// Escapes the string to be used as sql data.
+  ///   Escapes the string to be used as sql data.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns></returns>
@@ -1393,7 +1381,7 @@ public static partial class StringExtensions {
   public static string MsSqlDataEscape(this object @this) => @this == null ? "NULL" : "'" + string.Format(CultureInfo.InvariantCulture, "{0}", @this).Replace("'", "''") + "'";
 
   /// <summary>
-  /// Escapes the string to be used as sql identifiers eg. table or column names.
+  ///   Escapes the string to be used as sql identifiers eg. table or column names.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns></returns>
@@ -1414,12 +1402,12 @@ public static partial class StringExtensions {
 #endif
   public static bool StartsWith(this string @this, char what, StringComparer comparer) {
     Against.ThisIsNull(@this);
-    
+
     return comparer?.Equals(@this.Length > 0 ? @this[0] + string.Empty : string.Empty, what + string.Empty) ?? @this.StartsWith(what);
   }
 
   /// <summary>
-  /// Checks whether the given string starts with the specified character.
+  ///   Checks whether the given string starts with the specified character.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
@@ -1432,7 +1420,7 @@ public static partial class StringExtensions {
 #endif
   public static bool StartsWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
-    
+
     return @this.Length > 0 && string.Equals(@this[0].ToString(), value.ToString(), stringComparison);
   }
 
@@ -1463,7 +1451,7 @@ public static partial class StringExtensions {
   public static bool StartsNotWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
 
   /// <summary>
-  /// Checks whether the given string starts not with the specified text.
+  ///   Checks whether the given string starts not with the specified text.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
@@ -1498,7 +1486,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks whether the given string ends with the specified character.
+  ///   Checks whether the given string ends with the specified character.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
@@ -1532,7 +1520,7 @@ public static partial class StringExtensions {
   public static bool EndsNotWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.EndsWith(value, stringComparison);
 
   /// <summary>
-  /// Checks whether the given string ends not with the specified text.
+  ///   Checks whether the given string ends not with the specified text.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="value">The value.</param>
@@ -1548,35 +1536,44 @@ public static partial class StringExtensions {
   #region StartsWithAny/StartsNotWithAny
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any from the given list.
+  ///   Checks if the <see cref="string" /> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, params string[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any from the given list.
+  ///   Checks if the <see cref="string" /> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, StringComparison stringComparison, params string[] values) => StartsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any from the given list.
+  ///   Checks if the <see cref="string" /> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1588,12 +1585,15 @@ public static partial class StringExtensions {
   public static bool StartsWithAny(this string @this, IEnumerable<string> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any from the given list.
+  ///   Checks if the <see cref="string" /> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1605,12 +1605,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any from the given list.
+  ///   Checks if the <see cref="string" /> starts with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1622,35 +1625,44 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any character from the given list.
+  ///   Checks if the <see cref="string" /> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, params char[] values) => StartsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any character from the given list.
+  ///   Checks if the <see cref="string" /> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool StartsWithAny(this string @this, StringComparison stringComparison, params char[] values) => StartsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any character from the given list.
+  ///   Checks if the <see cref="string" /> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1662,12 +1674,15 @@ public static partial class StringExtensions {
   public static bool StartsWithAny(this string @this, IEnumerable<char> values) => StartsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any character from the given list.
+  ///   Checks if the <see cref="string" /> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1679,12 +1694,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> starts with any character from the given list.
+  ///   Checks if the <see cref="string" /> starts with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the start; otherwise, <see langword="false"/>.</returns>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the start;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1760,35 +1778,44 @@ public static partial class StringExtensions {
   #region EndsWithAny/EndsNotWithAny
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any from the given list.
+  ///   Checks if the <see cref="string" /> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, params string[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any from the given list.
+  ///   Checks if the <see cref="string" /> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, StringComparison stringComparison, params string[] values) => EndsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any from the given list.
+  ///   Checks if the <see cref="string" /> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1800,12 +1827,15 @@ public static partial class StringExtensions {
   public static bool EndsWithAny(this string @this, IEnumerable<string> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any from the given list.
+  ///   Checks if the <see cref="string" /> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1817,12 +1847,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any from the given list.
+  ///   Checks if the <see cref="string" /> ends with any from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="string"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="string" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1834,35 +1867,44 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any character from the given list.
+  ///   Checks if the <see cref="string" /> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, params char[] values) => EndsWithAny(@this, StringComparison.CurrentCulture, values);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any character from the given list.
+  ///   Checks if the <see cref="string" /> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool EndsWithAny(this string @this, StringComparison stringComparison, params char[] values) => EndsWithAny(@this, values, stringComparison);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any character from the given list.
+  ///   Checks if the <see cref="string" /> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <param name="values">The values to compare to.</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1874,12 +1916,15 @@ public static partial class StringExtensions {
   public static bool EndsWithAny(this string @this, IEnumerable<char> values) => EndsWithAny(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any character from the given list.
+  ///   Checks if the <see cref="string" /> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
   /// <param name="stringComparison">The mode to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1891,12 +1936,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks if the <see cref="string"/> ends with any character from the given list.
+  ///   Checks if the <see cref="string" /> ends with any character from the given list.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="values">The values to compare to.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if there is at least one <see cref="char"/> in the list that matches the end; otherwise, <see langword="false"/>.</returns>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one <see cref="char" /> in the list that matches the end;
+  ///   otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -1971,7 +2019,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Determines whether the given string is surrounded by another one.
+  ///   Determines whether the given string is surrounded by another one.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="text">The text that should be around the given string.</param>
@@ -1990,7 +2038,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Determines whether the given string is surrounded by two others.
+  ///   Determines whether the given string is surrounded by two others.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="prefix">The prefix.</param>
@@ -2011,7 +2059,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Replaces a specified string at the start of another if possible.
+  ///   Replaces a specified string at the start of another if possible.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="what">What to replace.</param>
@@ -2027,12 +2075,12 @@ public static partial class StringExtensions {
 
     if (@this.Length < what.Length)
       return @this;
-    
+
     return @this.StartsWith(what, stringComparison) ? replacement + @this[what.Length..] : @this;
   }
 
   /// <summary>
-  /// Replaces a specified string at the end of another if possible.
+  ///   Replaces a specified string at the end of another if possible.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="what">What to replace.</param>
@@ -2048,28 +2096,29 @@ public static partial class StringExtensions {
 
     if (@this.Length < what.Length)
       return @this;
-    
+
     return @this.EndsWith(what, stringComparison) ? @this[..^what.Length] + replacement : @this;
   }
 
   /// <summary>
-  /// Trims the specified string from the end of the current string.
+  ///   Trims the specified string from the end of the current string.
   /// </summary>
   /// <param name="this">The current string instance.</param>
   /// <param name="what">The string to remove from the end of the current string.</param>
   /// <returns>The string after removing the specified string from the end.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="what"/> is null.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="what" /> is null.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// string example = "Hello World!!!";
   /// string trimmed = example.TrimEnd("!!!");
   /// Console.WriteLine(trimmed); // Outputs: "Hello World"
   /// </code>
-  /// This example demonstrates how to remove a specific substring ("!!!") from the end of a string.
+  ///   This example demonstrates how to remove a specific substring ("!!!") from the end of a string.
   /// </example>
   /// <remarks>
-  /// If the string in <paramref name="what"/> does not appear at the end of the current string, or if it is an empty string,
-  /// the original string is returned unchanged. This method is case-sensitive.
+  ///   If the string in <paramref name="what" /> does not appear at the end of the current string, or if it is an empty
+  ///   string,
+  ///   the original string is returned unchanged. This method is case-sensitive.
   /// </remarks>
   public static unsafe string TrimEnd(this string @this, string what) {
     Against.ThisIsNull(@this);
@@ -2086,10 +2135,9 @@ public static partial class StringExtensions {
     fixed (char* cmpFix = what) {
       var srcPtr = srcFix + index;
       var cmpPtr = cmpFix;
-      while (true) {
+      while (true)
         switch (count) {
-          case 0:
-            return @this[..index];
+          case 0: return @this[..index];
           case 1:
             if (*srcPtr != *cmpPtr)
               return @this;
@@ -2176,15 +2224,13 @@ public static partial class StringExtensions {
             break;
 #endif
         }
-      }
-
     }
   }
 
   #region Null and WhiteSpace checks
 
   /// <summary>
-  /// Determines whether the string is <c>null</c> or empty.
+  ///   Determines whether the string is <c>null</c> or empty.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns>
@@ -2197,10 +2243,11 @@ public static partial class StringExtensions {
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(false)]
 #endif
-    this string @this) => string.IsNullOrEmpty(@this);
+    this string @this
+  ) => string.IsNullOrEmpty(@this);
 
   /// <summary>
-  /// Determines whether the string is not <c>null</c> or empty.
+  ///   Determines whether the string is not <c>null</c> or empty.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns>
@@ -2213,10 +2260,11 @@ public static partial class StringExtensions {
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(true)]
 #endif
-    this string @this) => !string.IsNullOrEmpty(@this);
+    this string @this
+  ) => !string.IsNullOrEmpty(@this);
 
   /// <summary>
-  /// Determines whether the string is <c>null</c> or whitespace.
+  ///   Determines whether the string is <c>null</c> or whitespace.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns>
@@ -2230,7 +2278,8 @@ public static partial class StringExtensions {
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(false)]
 #endif
-    this string @this) => string.IsNullOrWhiteSpace(@this);
+    this string @this
+  ) => string.IsNullOrWhiteSpace(@this);
 #else
   public static bool IsNullOrWhiteSpace(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
@@ -2250,7 +2299,7 @@ public static partial class StringExtensions {
 #endif
 
   /// <summary>
-  /// Determines whether the string is not <c>null</c> or whitespace.
+  ///   Determines whether the string is not <c>null</c> or whitespace.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <returns>
@@ -2263,19 +2312,24 @@ public static partial class StringExtensions {
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
       [NotNullWhen(true)]
 #endif
-    this string @this) => !IsNullOrWhiteSpace(@this);
+    this string @this
+  ) => !IsNullOrWhiteSpace(@this);
 
   #endregion
 
   #region Contains/ContainsNot
 
   /// <summary>
-  /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
+  ///   Returns a value indicating whether a specified string occurs within this string, using the specified comparison
+  ///   rules.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="value">The string to seek.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use.</param>
-  /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use.</param>
+  /// <returns>
+  ///   <see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if
+  ///   <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.
+  /// </returns>
   public static bool Contains(this string @this, string value, StringComparer comparer) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(value);
@@ -2345,12 +2399,15 @@ public static partial class StringExtensions {
   public static bool ContainsAll(this string @this, IEnumerable<string> values) => ContainsAll(@this, values, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Whether the given <see cref="string"/> contains all the given values or not.
+  ///   Whether the given <see cref="string" /> contains all the given values or not.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="values">The values that should be included</param>
-  /// <param name="comparison">The type of <see cref="StringComparison"/> to use</param>
-  /// <returns><see langword="true"/> if the given <see cref="string"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  /// <param name="comparison">The type of <see cref="StringComparison" /> to use</param>
+  /// <returns>
+  ///   <see langword="true" /> if the given <see cref="string" /> contains all the given values; otherwise,
+  ///   <see langword="false" />
+  /// </returns>
   public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparison comparison) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(values);
@@ -2360,12 +2417,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Whether the given <see cref="string"/> contains all the given values or not.
+  ///   Whether the given <see cref="string" /> contains all the given values or not.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="values">The values that should be included</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
-  /// <returns><see langword="true"/> if the given <see cref="string"/> contains all the given values; otherwise, <see langword="false"/></returns>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
+  /// <returns>
+  ///   <see langword="true" /> if the given <see cref="string" /> contains all the given values; otherwise,
+  ///   <see langword="false" />
+  /// </returns>
   public static bool ContainsAll(this string @this, IEnumerable<string> values, StringComparer comparer) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(values);
@@ -2395,12 +2455,15 @@ public static partial class StringExtensions {
   public static bool ContainsAny(this string @this, IEnumerable<string> other) => ContainsAny(@this, other, StringComparison.CurrentCulture);
 
   /// <summary>
-  /// Determines whether a given <see cref="string"/> contains one of others.
+  ///   Determines whether a given <see cref="string" /> contains one of others.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="other">The strings to look for.</param>
   /// <param name="comparisonType">Type of the comparison.</param>
-  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="string"/>; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if any of the other strings is part of the given <see cref="string" />; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2412,12 +2475,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Determines whether a given <see cref="string"/> contains one of others.
+  ///   Determines whether a given <see cref="string" /> contains one of others.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
+  /// <param name="this">This <see cref="string" />.</param>
   /// <param name="other">The strings to look for.</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons.</param>
-  /// <returns><see langword="true"/> if any of the other strings is part of the given <see cref="string"/>; otherwise, <see langword="false"/>. </returns>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons.</param>
+  /// <returns>
+  ///   <see langword="true" /> if any of the other strings is part of the given <see cref="string" />; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2464,9 +2530,9 @@ public static partial class StringExtensions {
   #region IsAnyOf/IsNotAnyOf
 
   /// <summary>
-  /// Checks whether the given string matches any of the provided
+  ///   Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="needles">String to compare to</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
 #if SUPPORTS_INLINING
@@ -2485,9 +2551,9 @@ public static partial class StringExtensions {
   public static bool IsAnyOf(this string @this, StringComparer comparer, params string[] needles) => IsAnyOf(@this, needles, comparer);
 
   /// <summary>
-  /// Checks whether the given string matches any of the provided
+  ///   Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="needles">String to compare to</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
   public static bool IsAnyOf(this string @this, IEnumerable<string> needles) {
@@ -2495,7 +2561,6 @@ public static partial class StringExtensions {
 
     switch (@this) {
       case null: {
-
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in needles)
           if (value == null)
@@ -2504,7 +2569,6 @@ public static partial class StringExtensions {
         break;
       }
       default: {
-
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in needles)
           if (value == @this)
@@ -2518,9 +2582,9 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks whether the given string matches any of the provided
+  ///   Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="needles">String to compare to</param>
   /// <param name="comparison">The comparison mode</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
@@ -2529,7 +2593,6 @@ public static partial class StringExtensions {
 
     switch (@this) {
       case null: {
-
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in needles)
           if (value == null)
@@ -2538,7 +2601,6 @@ public static partial class StringExtensions {
         break;
       }
       default: {
-
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in needles)
           if (string.Equals(value, @this, comparison))
@@ -2552,11 +2614,11 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Checks whether the given string matches any of the provided
+  ///   Checks whether the given string matches any of the provided
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="needles">String to compare to</param>
-  /// <param name="comparer">The <see cref="StringComparer"/> to use for comparisons</param>
+  /// <param name="comparer">The <see cref="StringComparer" /> to use for comparisons</param>
   /// <returns><c>true</c> if the string matches; otherwise, <c>false</c></returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2603,22 +2665,22 @@ public static partial class StringExtensions {
   #region DefaultIf
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/>.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="defaultValue">The default value</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string DefaultIfNull(this string @this, string defaultValue) => @this ?? defaultValue;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/>.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="factory">The factory to generate the default value</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2629,22 +2691,22 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or empty.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or empty.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null" />.</param>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string DefaultIfNullOrEmpty(this string @this, string defaultValue = null) => @this.IsNullOrEmpty() ? defaultValue : @this;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or empty.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or empty.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="factory">The factory to generate the default value</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2655,22 +2717,22 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or whitespace.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or whitespace.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null" />.</param>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
 
   /// <summary>
-  /// Returns a default value if the given <see cref="string"/> is <see langword="null"/> or whitespace.
+  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or whitespace.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <param name="factory">The default value; optional, defaults to <see langword="null"/>.</param>
-  /// <returns>The given <see cref="string"/> or the given default value.</returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <param name="factory">The default value; optional, defaults to <see langword="null" />.</param>
+  /// <returns>The given <see cref="string" /> or the given default value.</returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -2685,7 +2747,7 @@ public static partial class StringExtensions {
   #region Line-Breaking stuff
 
   /// <summary>
-  /// The type of line-break
+  ///   The type of line-break
   /// </summary>
   public enum LineBreakMode : short {
     All = -3,
@@ -2728,7 +2790,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// The type of delimiter to use when joining lines
+  ///   The type of delimiter to use when joining lines
   /// </summary>
   public enum LineJoinMode : ushort {
     CarriageReturn = 0x0D,
@@ -2767,10 +2829,10 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Tries to detect the used line-break mode.
+  ///   Tries to detect the used line-break mode.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <returns>The first matching line-break found or <see cref="LineBreakMode.None"/>.</returns>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <returns>The first matching line-break found or <see cref="LineBreakMode.None" />.</returns>
   public static LineBreakMode DetectLineBreakMode(this string @this) {
     Against.ThisIsNull(@this);
 
@@ -2790,51 +2852,31 @@ public static partial class StringExtensions {
 
     var previousChar = @this[0];
     switch (previousChar) {
-      case FF:
-        return LineBreakMode.FormFeed;
-      case NEL:
-        return LineBreakMode.NextLine;
-      case LS:
-        return LineBreakMode.LineSeparator;
-      case PS:
-        return LineBreakMode.ParagraphSeparator;
-      case NL:
-        return LineBreakMode.NegativeAcknowledge;
-      case EOL:
-        return LineBreakMode.EndOfLine;
-      case ZX:
-        return LineBreakMode.Zx;
-      case NUL:
-        return LineBreakMode.Null;
+      case FF: return LineBreakMode.FormFeed;
+      case NEL: return LineBreakMode.NextLine;
+      case LS: return LineBreakMode.LineSeparator;
+      case PS: return LineBreakMode.ParagraphSeparator;
+      case NL: return LineBreakMode.NegativeAcknowledge;
+      case EOL: return LineBreakMode.EndOfLine;
+      case ZX: return LineBreakMode.Zx;
+      case NUL: return LineBreakMode.Null;
     }
 
     for (var i = 1; i < @this.Length; ++i) {
       var currentChar = @this[i];
       switch (currentChar) {
-        case CR when previousChar == LF:
-          return LineBreakMode.LfCr;
-        case CR when previousChar == CR:
-          return LineBreakMode.CarriageReturn;
-        case LF when previousChar == LF:
-          return LineBreakMode.LineFeed;
-        case LF when previousChar == CR:
-          return LineBreakMode.CrLf;
-        case FF:
-          return LineBreakMode.FormFeed;
-        case NEL:
-          return LineBreakMode.NextLine;
-        case LS:
-          return LineBreakMode.LineSeparator;
-        case PS:
-          return LineBreakMode.ParagraphSeparator;
-        case NL:
-          return LineBreakMode.NegativeAcknowledge;
-        case EOL:
-          return LineBreakMode.EndOfLine;
-        case ZX:
-          return LineBreakMode.Zx;
-        case NUL:
-          return LineBreakMode.Null;
+        case CR when previousChar == LF: return LineBreakMode.LfCr;
+        case CR when previousChar == CR: return LineBreakMode.CarriageReturn;
+        case LF when previousChar == LF: return LineBreakMode.LineFeed;
+        case LF when previousChar == CR: return LineBreakMode.CrLf;
+        case FF: return LineBreakMode.FormFeed;
+        case NEL: return LineBreakMode.NextLine;
+        case LS: return LineBreakMode.LineSeparator;
+        case PS: return LineBreakMode.ParagraphSeparator;
+        case NL: return LineBreakMode.NegativeAcknowledge;
+        case EOL: return LineBreakMode.EndOfLine;
+        case ZX: return LineBreakMode.Zx;
+        case NUL: return LineBreakMode.Null;
       }
 
       previousChar = currentChar;
@@ -2866,22 +2908,17 @@ public static partial class StringExtensions {
   private static IEnumerable<string> _EnumerateLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
     for (;;)
       switch (mode) {
-        case LineBreakMode.All:
-          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
+        case LineBreakMode.All: return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
         case LineBreakMode.AutoDetect:
           mode = DetectLineBreakMode(@this);
           continue;
         case LineBreakMode.None:
 
-          static IEnumerable<string> EnumerateOneLine(string line) {
-            yield return line;
-          }
+          static IEnumerable<string> EnumerateOneLine(string line) { yield return line; }
 
           return EnumerateOneLine(@this);
-        case LineBreakMode.CrLf:
-          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
-        case LineBreakMode.LfCr:
-          return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
+        case LineBreakMode.CrLf: return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
+        case LineBreakMode.LfCr: return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
         case LineBreakMode.CarriageReturn:
         case LineBreakMode.LineFeed:
         case LineBreakMode.FormFeed:
@@ -2893,8 +2930,7 @@ public static partial class StringExtensions {
         case LineBreakMode.Zx:
         case LineBreakMode.Null:
           return _EnumerateLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
-        default:
-          throw new NotImplementedException();
+        default: throw new NotImplementedException();
       }
   }
 
@@ -2936,7 +2972,7 @@ public static partial class StringExtensions {
   private static string[] _GetLines(string text, bool removeEmpty, int count) => (__getLines ??= new()).Invoke(text, removeEmpty, count);
   private static __GetLines __getLines;
 
-  private class __GetLines {
+  private sealed class __GetLines {
     private readonly string[] _possibleSplitters = [
       "\r\n",
       "\n\r",
@@ -2955,8 +2991,7 @@ public static partial class StringExtensions {
     public string[] Invoke(string text, bool removeEmpty, int count)
       => count == 0
         ? text.Split(this._possibleSplitters, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-        : text.Split(this._possibleSplitters, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-        ;
+        : text.Split(this._possibleSplitters, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
   }
 
   // TODO: don't use the array call, do something with less memory and better performance
@@ -3004,17 +3039,13 @@ public static partial class StringExtensions {
   private static string[] _GetLines(string @this, LineBreakMode mode, int count, StringSplitOptions options) {
     for (;;)
       switch (mode) {
-        case LineBreakMode.All:
-          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
+        case LineBreakMode.All: return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, count);
         case LineBreakMode.AutoDetect:
           mode = DetectLineBreakMode(@this);
           continue;
-        case LineBreakMode.None:
-          return [@this];
-        case LineBreakMode.CrLf:
-          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
-        case LineBreakMode.LfCr:
-          return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
+        case LineBreakMode.None: return [@this];
+        case LineBreakMode.CrLf: return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\r\n", count);
+        case LineBreakMode.LfCr: return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, "\n\r", count);
         case LineBreakMode.CarriageReturn:
         case LineBreakMode.LineFeed:
         case LineBreakMode.FormFeed:
@@ -3026,8 +3057,7 @@ public static partial class StringExtensions {
         case LineBreakMode.Zx:
         case LineBreakMode.Null:
           return _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, (char)mode, count);
-        default:
-          throw new NotImplementedException();
+        default: throw new NotImplementedException();
       }
   }
 
@@ -3067,10 +3097,13 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Counts the number of lines in the given <see cref="string"/>.
+  ///   Counts the number of lines in the given <see cref="string" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="mode">
+  ///   The <see cref="LineBreakMode" /> to use for detection; optional, defaults to
+  ///   <see cref="LineBreakMode.All" />
+  /// </param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
 #if SUPPORTS_INLINING
@@ -3084,10 +3117,13 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Counts the number of lines in the given <see cref="string"/>.
+  ///   Counts the number of lines in the given <see cref="string" />.
   /// </summary>
-  /// <param name="this">This <see cref="string"/>.</param>
-  /// <param name="mode">The <see cref="LineBreakMode"/> to use for detection; optional, defaults to <see cref="LineBreakMode.All"/></param>
+  /// <param name="this">This <see cref="string" />.</param>
+  /// <param name="mode">
+  ///   The <see cref="LineBreakMode" /> to use for detection; optional, defaults to
+  ///   <see cref="LineBreakMode.All" />
+  /// </param>
   /// <param name="ignoreEmptyLines">Whether to ignore empty lines or not</param>
   /// <returns>The number of lines.</returns>
 #if SUPPORTS_INLINING
@@ -3101,13 +3137,13 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Retrieves the string representation of a line joiner based on the specified line joining mode.
+  ///   Retrieves the string representation of a line joiner based on the specified line joining mode.
   /// </summary>
-  /// <param name="mode">The line joining mode, represented by the <see cref="LineJoinMode"/> enumeration.</param>
+  /// <param name="mode">The line joining mode, represented by the <see cref="LineJoinMode" /> enumeration.</param>
   /// <returns>The string used to join lines according to the specified mode.</returns>
-  /// <exception cref="NotImplementedException">Thrown if the provided <paramref name="mode"/> is not implemented.</exception>
+  /// <exception cref="NotImplementedException">Thrown if the provided <paramref name="mode" /> is not implemented.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// var joiner = GetLineJoiner(LineJoinMode.CarriageReturn);
   /// Console.WriteLine($"CarriageReturn joiner: '{joiner}'"); // Output: '\r'
   /// 
@@ -3117,25 +3153,17 @@ public static partial class StringExtensions {
   /// joiner = GetLineJoiner(LineJoinMode.LineFeed);
   /// Console.WriteLine($"LineFeed joiner: '{joiner}'"); // Output: '\n'
   /// </code>
-  /// This example demonstrates how to get the string representation for different line joining modes.
+  ///   This example demonstrates how to get the string representation for different line joining modes.
   /// </example>
   /// <remarks>
-  /// This method supports various line joining modes, including single-character modes like CarriageReturn (`\r`) and
-  /// multi-character sequences like CrLf (`\r\n`). It leverages the <see cref="LineJoinMode"/> enumeration values directly
-  /// for single-character joiners, converting the enumeration value to its corresponding character representation.
+  ///   This method supports various line joining modes, including single-character modes like CarriageReturn (`\r`) and
+  ///   multi-character sequences like CrLf (`\r\n`). It leverages the <see cref="LineJoinMode" /> enumeration values
+  ///   directly
+  ///   for single-character joiners, converting the enumeration value to its corresponding character representation.
   /// </remarks>
   public static string GetLineJoiner(LineJoinMode mode) =>
     mode switch {
-      LineJoinMode.CarriageReturn or
-        LineJoinMode.LineFeed or
-        LineJoinMode.FormFeed or
-        LineJoinMode.NextLine or
-        LineJoinMode.LineSeparator or
-        LineJoinMode.ParagraphSeparator or
-        LineJoinMode.NegativeAcknowledge or
-        LineJoinMode.EndOfLine or
-        LineJoinMode.Zx or
-        LineJoinMode.Null
+      LineJoinMode.CarriageReturn or LineJoinMode.LineFeed or LineJoinMode.FormFeed or LineJoinMode.NextLine or LineJoinMode.LineSeparator or LineJoinMode.ParagraphSeparator or LineJoinMode.NegativeAcknowledge or LineJoinMode.EndOfLine or LineJoinMode.Zx or LineJoinMode.Null
         => ((char)mode).ToString(),
       LineJoinMode.CrLf => "\r\n",
       LineJoinMode.LfCr => "\n\r",
@@ -3143,9 +3171,9 @@ public static partial class StringExtensions {
     };
 
   /// <summary>
-  /// Does word-wrapping if needed
+  ///   Does word-wrapping if needed
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="count">The maximum number of characters per line</param>
   /// <param name="mode">How to join lines</param>
   /// <returns>The word-wrapped text</returns>
@@ -3173,14 +3201,12 @@ public static partial class StringExtensions {
 
       var proposedBreakAt = nextBreakAt;
       if (char.IsWhiteSpace(@this[nextBreakAt])) {
-
         // backtrack till last non whitespace
-        do {
+        do
           --nextBreakAt;
-        } while (nextBreakAt > lineStart && char.IsWhiteSpace(@this[nextBreakAt]));
+        while (nextBreakAt > lineStart && char.IsWhiteSpace(@this[nextBreakAt]));
 
         if (nextBreakAt > lineStart) {
-
           // found at least one character, add it
           result.Append(@this, lineStart, nextBreakAt - lineStart + 1);
           result.Append(joiner);
@@ -3188,22 +3214,18 @@ public static partial class StringExtensions {
 
         // because the current char is whitespace, we can move on
         ++proposedBreakAt;
-
       } else {
-
         // backtrack to last whitespace
-        do {
+        do
           --nextBreakAt;
-        } while (nextBreakAt > lineStart && !char.IsWhiteSpace(@this[nextBreakAt]));
+        while (nextBreakAt > lineStart && !char.IsWhiteSpace(@this[nextBreakAt]));
 
         if (nextBreakAt > lineStart) {
-
           // found at least one character, add it
           result.Append(@this, lineStart, nextBreakAt - lineStart);
           result.Append(joiner);
           proposedBreakAt = nextBreakAt + 1;
         } else {
-
           // the current word is longer than the count, hard-wrap it
           result.Append(@this, lineStart, proposedBreakAt - lineStart);
           result.Append(joiner);
@@ -3228,7 +3250,7 @@ public static partial class StringExtensions {
   #region Truncation
 
   /// <summary>
-  /// How to truncate <see cref="string"/>s that are too long
+  ///   How to truncate <see cref="string" />s that are too long
   /// </summary>
   public enum TruncateMode {
     KeepStart = 0,
@@ -3253,11 +3275,11 @@ public static partial class StringExtensions {
   public static string Truncate(this string @this, int count, string ellipse) => Truncate(@this, count, TruncateMode.KeepStart, ellipse);
 
   /// <summary>
-  /// Truncates a given <see cref="string"/> if it is too long.
+  ///   Truncates a given <see cref="string" /> if it is too long.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
-  /// <param name="count">The maximum allowed number of <see cref="char"/>s; must be &gt; 0</param>
-  /// <param name="mode">How to truncate; optional, defaults to <see cref="TruncateMode.KeepStart"/></param>
+  /// <param name="this">This <see cref="string" /></param>
+  /// <param name="count">The maximum allowed number of <see cref="char" />s; must be &gt; 0</param>
+  /// <param name="mode">How to truncate; optional, defaults to <see cref="TruncateMode.KeepStart" /></param>
   /// <param name="ellipse">What to replace the trimmed parts with; optional, defaults to "..."</param>
   /// <returns>A string that is no longer than the given count</returns>
   /// <exception cref="NotImplementedException"></exception>
@@ -3294,20 +3316,20 @@ public static partial class StringExtensions {
       var charsFromEndEllipse = count >> 1;
       return ellipse[..charsFromStartEllipse] + original[original.Length >> 1] + ellipse[^charsFromEndEllipse..];
     }
-
   }
 
   #endregion
 
   /// <summary>
-  /// Splits the given string respecting single and double quotes and allows for escape sequences to be used in these strings.
+  ///   Splits the given string respecting single and double quotes and allows for escape sequences to be used in these
+  ///   strings.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="delimiter">The delimiter to use.</param>
   /// <param name="escapeSequence">The escape sequence.</param>
   /// <param name="options">The options.</param>
   /// <returns>
-  /// A sequence containing the parts of the string.
+  ///   A sequence containing the parts of the string.
   /// </returns>
   public static IEnumerable<string> QuotedSplit(this string @this, string delimiter = ",", string escapeSequence = "\\", StringSplitOptions options = StringSplitOptions.None) {
     if (@this == null)
@@ -3351,20 +3373,17 @@ public static partial class StringExtensions {
         else
           currentPart.Append(chr);
       } else if (delimiter.StartsWith(chr) && @this.Substring(pos - 1, delimiter.Length) == delimiter) {
-
         if (options == StringSplitOptions.None || currentPart.Length > 0)
           yield return currentPart.ToString();
 
         currentPart.Clear();
         pos += delimiter.Length - 1;
-      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'')
         currentlyInSingleQuote = true;
-      } else if ( /*currentPart.Length == 0 &&*/ chr == '"') {
+      else if ( /*currentPart.Length == 0 &&*/ chr == '"')
         currentlyInDoubleQuote = true;
-      } else if (chr == ' ') { } else {
+      else if (chr == ' ') { } else
         currentPart.Append(chr);
-      }
-
     }
 
     if (options == StringSplitOptions.None || currentPart.Length > 0)
@@ -3372,14 +3391,15 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Splits the given string respecting single and double quotes and allows for escape seququences to be used in these strings.
+  ///   Splits the given string respecting single and double quotes and allows for escape seququences to be used in these
+  ///   strings.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="delimiters">The delimiters.</param>
   /// <param name="escapeSequence">The escape sequence.</param>
   /// <param name="options">The options.</param>
   /// <returns>
-  /// A sequence containing the parts of the string.
+  ///   A sequence containing the parts of the string.
   /// </returns>
   public static IEnumerable<string> QuotedSplit(this string @this, char[] delimiters, string escapeSequence = "\\", StringSplitOptions options = StringSplitOptions.None) {
     if (@this == null)
@@ -3423,19 +3443,16 @@ public static partial class StringExtensions {
         else
           currentPart.Append(chr);
       } else if (delimiters.Any(i => i == chr) && delimiters.Any(i => @this[pos - 1] == i)) {
-
         if (options == StringSplitOptions.None || currentPart.Length > 0)
           yield return currentPart.ToString();
 
         currentPart.Clear();
-      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'') {
+      } else if ( /*currentPart.Length == 0 &&*/ chr == '\'')
         currentlyInSingleQuote = true;
-      } else if ( /*currentPart.Length == 0 &&*/ chr == '"') {
+      else if ( /*currentPart.Length == 0 &&*/ chr == '"')
         currentlyInDoubleQuote = true;
-      } else if (chr == ' ') { } else {
+      else if (chr == ' ') { } else
         currentPart.Append(chr);
-      }
-
     }
 
     if (options == StringSplitOptions.None || currentPart.Length > 0)
@@ -3445,16 +3462,16 @@ public static partial class StringExtensions {
   #region nested HostEndPoint
 
   /// <summary>
-  /// A host endpoint with port.
+  ///   A host endpoint with port.
   /// </summary>
   public class HostEndPoint(string host, int port) {
     /// <summary>
-    /// Gets the host.
+    ///   Gets the host.
     /// </summary>
     public string Host { get; } = host;
 
     /// <summary>
-    /// Gets the port.
+    ///   Gets the port.
     /// </summary>
     public int Port { get; } = port;
 
@@ -3464,7 +3481,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Parses the host and port from a given string.
+  ///   Parses the host and port from a given string.
   /// </summary>
   /// <param name="this">This String, e.g. 172.17.4.3:http .</param>
   /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
@@ -3472,11 +3489,10 @@ public static partial class StringExtensions {
 
   private static __ParseHostAndPort __parseHostAndPort;
 
-  private class __ParseHostAndPort {
-
+  private sealed class __ParseHostAndPort {
     /// <summary>
-    /// This is a list of services which are registered to certain ports according to IANA.
-    /// It allows us to use names for these ports if we want to.
+    ///   This is a list of services which are registered to certain ports according to IANA.
+    ///   It allows us to use names for these ports if we want to.
     /// </summary>
     private readonly Dictionary<string, ushort> _officialPortNames = new() {
       { "tcpmux", 1 },
@@ -3541,11 +3557,10 @@ public static partial class StringExtensions {
 
       return new(host, port);
     }
-
   }
 
   /// <summary>
-  /// Replaces any of the given characters in the string.
+  ///   Replaces any of the given characters in the string.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="chars">The chars to replace.</param>
@@ -3571,7 +3586,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Returns all characters left of a certain string.
+  ///   Returns all characters left of a certain string.
   /// </summary>
   /// <param name="this">This string.</param>
   /// <param name="pattern">The pattern to find.</param>
@@ -3591,102 +3606,120 @@ public static partial class StringExtensions {
   #region Similarities
 
   /// <summary>
-  /// Defines the types of case comparison strategies for string operations, providing options suitable for different cultural and technical contexts.
+  ///   Defines the types of case comparison strategies for string operations, providing options suitable for different
+  ///   cultural and technical contexts.
   /// </summary>
   public enum CaseComparison {
     /// <summary>
-    /// Specifies that string comparisons should use ordinal (binary) sort rules.
+    ///   Specifies that string comparisons should use ordinal (binary) sort rules.
     /// </summary>
     /// <remarks>
-    /// Ordinal comparison is based on the binary values of the characters and does not take linguistic patterns into account.
-    /// It is the fastest type of comparison and is culture-insensitive, making it suitable for scenarios where performance is critical and
-    /// the text being compared is not culturally sensitive.
+    ///   Ordinal comparison is based on the binary values of the characters and does not take linguistic patterns into
+    ///   account.
+    ///   It is the fastest type of comparison and is culture-insensitive, making it suitable for scenarios where performance
+    ///   is critical and
+    ///   the text being compared is not culturally sensitive.
     /// </remarks>
     Ordinal,
 
     /// <summary>
-    /// Specifies that string comparisons should be based on culture-specific rules.
+    ///   Specifies that string comparisons should be based on culture-specific rules.
     /// </summary>
     /// <remarks>
-    /// Culture-specific comparisons take into account the cultural context of the data, such as linguistic and alphabetic rules specific to the user's culture.
-    /// This type of comparison is essential for applications that are sensitive to local language settings, as it respects locale-specific rules for comparing strings.
+    ///   Culture-specific comparisons take into account the cultural context of the data, such as linguistic and alphabetic
+    ///   rules specific to the user's culture.
+    ///   This type of comparison is essential for applications that are sensitive to local language settings, as it respects
+    ///   locale-specific rules for comparing strings.
     /// </remarks>
     CultureSpecific,
 
     /// <summary>
-    /// Specifies that string comparisons should use rules that are consistent across cultures.
+    ///   Specifies that string comparisons should use rules that are consistent across cultures.
     /// </summary>
     /// <remarks>
-    /// Invariant culture comparison is designed to offer consistency for operations that require culturally neutral results, such as formatting and sorting data in a way that does not change with the user's locale.
-    /// This comparison type is suitable for scenarios where data needs to be presented or processed in a uniform manner regardless of the local culture settings.
+    ///   Invariant culture comparison is designed to offer consistency for operations that require culturally neutral results,
+    ///   such as formatting and sorting data in a way that does not change with the user's locale.
+    ///   This comparison type is suitable for scenarios where data needs to be presented or processed in a uniform manner
+    ///   regardless of the local culture settings.
     /// </remarks>
     InvariantCulture
   }
 
   /// <summary>
-  /// Determines whether the current string and another specified string differ only by case, and are not exactly the same.
+  ///   Determines whether the current string and another specified string differ only by case, and are not exactly the same.
   /// </summary>
   /// <param name="this">The current string instance.</param>
   /// <param name="other">The string to compare with the current string.</param>
-  /// <returns><see langword="true"/> if the two strings are equivalent when case is ignored and they are not identical in case; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if the two strings are equivalent when case is ignored and they are not identical in
+  ///   case; otherwise, <see langword="false" />.
+  /// </returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// string str1 = "hello";
   /// string str2 = "HELLO";
   /// bool result = str1.OnlyCaseDiffersFrom(str2);
   /// Console.WriteLine(result); // Outputs: True
-  ///
+  /// 
   /// string str3 = "hello";
   /// string str4 = "hello";
   /// result = str3.OnlyCaseDiffersFrom(str4);
   /// Console.WriteLine(result); // Outputs: False
-  ///
+  /// 
   /// string str5 = "hello";
   /// string str6 = "world";
   /// result = str5.OnlyCaseDiffersFrom(str6);
   /// Console.WriteLine(result); // Outputs: False
   /// </code>
-  /// This example demonstrates how to check if two strings differ only by case, but are not the same string when considering case.
+  ///   This example demonstrates how to check if two strings differ only by case, but are not the same string when
+  ///   considering case.
   /// </example>
   /// <remarks>
-  /// This method checks if two strings are the same ignoring case differences but are not the same when considering case.
-  /// This can be particularly useful for situations where you want to validate that inputs are not simply cased versions of the same value.
+  ///   This method checks if two strings are the same ignoring case differences but are not the same when considering case.
+  ///   This can be particularly useful for situations where you want to validate that inputs are not simply cased versions
+  ///   of the same value.
   /// </remarks>
   public static bool OnlyCaseDiffersFrom(this string @this, string other) => OnlyCaseDiffersFrom(@this, other, CaseComparison.Ordinal);
 
   /// <summary>
-  /// Determines whether the current string and another specified string differ only by case, considering a specified case comparison strategy.
+  ///   Determines whether the current string and another specified string differ only by case, considering a specified case
+  ///   comparison strategy.
   /// </summary>
   /// <param name="this">The current string instance.</param>
   /// <param name="other">The string to compare with the current string.</param>
   /// <param name="comparison">The case comparison strategy to use when comparing the strings.</param>
-  /// <returns><see langword="true"/> if the two strings are equivalent when case is ignored according to the specified comparison strategy, and they are not identical considering case; otherwise, <see langword="false"/>.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if the two strings are equivalent when case is ignored according to the specified
+  ///   comparison strategy, and they are not identical considering case; otherwise, <see langword="false" />.
+  /// </returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// string str1 = "hello";
   /// string str2 = "HELLO";
   /// bool result = str1.OnlyCaseDiffersFrom(str2, CaseComparison.Ordinal);
   /// Console.WriteLine(result); // Outputs: True
-  ///
+  /// 
   /// string str3 = "hello";
   /// string str4 = "hello";
   /// result = str3.OnlyCaseDiffersFrom(str4, CaseComparison.Ordinal);
   /// Console.WriteLine(result); // Outputs: False
-  ///
+  /// 
   /// string str5 = "hello";
   /// string str6 = "world";
   /// result = str5.OnlyCaseDiffersFrom(str6, CaseComparison.Ordinal);
   /// Console.WriteLine(result); // Outputs: False
-  ///
+  /// 
   /// string str7 = "straﬂe";
   /// string str8 = "STRASSE";
   /// result = str7.OnlyCaseDiffersFrom(str8, CaseComparison.CultureSpecific);
   /// Console.WriteLine(result); // Outputs: True, in a culture where 'ﬂ' is equivalent to 'SS'
   /// </code>
-  /// This example demonstrates how to check if two strings differ only by case, with different case comparison strategies affecting the result.
+  ///   This example demonstrates how to check if two strings differ only by case, with different case comparison strategies
+  ///   affecting the result.
   /// </example>
   /// <remarks>
-  /// This method is useful in contexts where the sensitivity to case and cultural differences needs to be considered, such as user inputs where the intent is identical despite differences in casing and locale-specific forms.
+  ///   This method is useful in contexts where the sensitivity to case and cultural differences needs to be considered, such
+  ///   as user inputs where the intent is identical despite differences in casing and locale-specific forms.
   /// </remarks>
   public static bool OnlyCaseDiffersFrom(this string @this, string other, CaseComparison comparison) {
     Against.UnknownEnumValues(comparison);
@@ -3719,7 +3752,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Converts a given filename pattern into a regular expression.
+  ///   Converts a given filename pattern into a regular expression.
   /// </summary>
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
@@ -3727,7 +3760,7 @@ public static partial class StringExtensions {
 
   private static __ConvertFilePatternToRegex __convertFilePatternToRegex;
 
-  private class __ConvertFilePatternToRegex {
+  private sealed class __ConvertFilePatternToRegex {
     private readonly Regex _catchFilenameExtension = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
 #if SUPPORTS_INLINING
@@ -3755,11 +3788,10 @@ public static partial class StringExtensions {
       regexString += "$";
       return new(regexString, RegexOptions.IgnoreCase);
     }
-
   }
 
   /// <summary>
-  /// Determines if the given string matches a given file pattern or not.
+  ///   Determines if the given string matches a given file pattern or not.
   /// </summary>
   /// <param name="this">This String.</param>
   /// <param name="pattern">The pattern to apply.</param>
@@ -3771,7 +3803,7 @@ public static partial class StringExtensions {
 
   private static __MatchesFilePattern __matchesFilePattern;
 
-  private class __MatchesFilePattern {
+  private sealed class __MatchesFilePattern {
     private readonly Regex _illegalFilenameCharacters = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
 #if SUPPORTS_INLINING
@@ -3789,7 +3821,7 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Equivalent to SQL LIKE Statement.
+  ///   Equivalent to SQL LIKE Statement.
   /// </summary>
   /// <param name="this">The text to search.</param>
   /// <param name="toFind">The text to find.</param>
@@ -3801,68 +3833,73 @@ public static partial class StringExtensions {
 
   private static __Like __like;
 
-  private class __Like {
+  private sealed class __Like {
     private readonly Regex _sqlLikeEscaping = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
 
 #if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 # endif
     public bool Invoke(string @this, string toFind)
-      => new Regex(@"\A"
-                   + this._sqlLikeEscaping
-                     .Replace(toFind, ch => @"\" + ch)
-                     .Replace('_', '.')
-                     .Replace("%", ".*") + @"\z", RegexOptions.Singleline)
+      => new Regex(
+          @"\A"
+          + this
+            ._sqlLikeEscaping
+            .Replace(toFind, ch => @"\" + ch)
+            .Replace('_', '.')
+            .Replace("%", ".*")
+          + @"\z",
+          RegexOptions.Singleline
+        )
         .IsMatch(@this);
   }
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this)
     => GetSoundexRepresentation(@this, CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? 5 : 4, CultureInfo.CurrentCulture);
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, int maxLength)
     => GetSoundexRepresentation(@this, maxLength, CultureInfo.CurrentCulture);
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this)
     => GetSoundexRepresentation(@this, 4, CultureInfo.InvariantCulture);
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentationInvariant(this string @this, int maxLength)
     => GetSoundexRepresentation(@this, maxLength, CultureInfo.InvariantCulture);
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
   public static string GetSoundexRepresentation(this string @this, CultureInfo culture)
     => GetSoundexRepresentation(@this, culture.TwoLetterISOLanguageName == "de" ? 5 : 4, culture);
 
   /// <summary>
-  /// Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
+  ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="maxLength">The length of the soundex string</param>
   /// <param name="culture">The culture to use for phonetic matchings</param>
   /// <returns>The soundex result (phonetic representation)</returns>
@@ -3992,7 +4029,7 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  /// Converts a string to a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> version of it.
+  ///   Converts a string to a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> version of it.
   /// </summary>
   /// <param name="this">The string to convert</param>
   /// <returns>The quoted-printable string</returns>
@@ -4026,34 +4063,273 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version of it.
+  ///   Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version
+  ///   of it.
   /// </summary>
   /// <param name="this">The string to convert</param>
   /// <returns>The non-quoted-printable string</returns>
-
   public static string FromQuotedPrintable(this string @this) => (__fromQuotedPrintable ??= new()).Invoke(@this);
 
   private static __FromQuotedPrintable __fromQuotedPrintable;
 
-  private class __FromQuotedPrintable {
-
+  private sealed class __FromQuotedPrintable {
     private readonly byte[] _charToHexLookup = [
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0x0,
+      0x1,
+      0x2,
+      0x3,
+      0x4,
+      0x5,
+      0x6,
+      0x7,
+      0x8,
+      0x9,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xA,
+      0xB,
+      0xC,
+      0xD,
+      0xE,
+      0xF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xa,
+      0xb,
+      0xc,
+      0xd,
+      0xe,
+      0xf,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF,
+      0xFF
     ];
 
 #if SUPPORTS_INLINING
@@ -4072,7 +4348,7 @@ public static partial class StringExtensions {
         if ((high | low) == 0xff)
           Throw(highNibble, lowNibble);
 
-        return high << 4 | low;
+        return (high << 4) | low;
       }
 
       [MethodImpl(MethodImplOptions.NoInlining)]
@@ -4087,7 +4363,5 @@ public static partial class StringExtensions {
 
       return Encoding.UTF8.GetString(bytes.ToArray());
     }
-
   }
-
 }

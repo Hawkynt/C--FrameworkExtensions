@@ -23,9 +23,6 @@ using System.Collections.Generic;
 using Guard;
 using System.Linq;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Text.RegularExpressions;
 
 public static partial class RegexExtensions {

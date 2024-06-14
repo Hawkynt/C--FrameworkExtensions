@@ -30,9 +30,6 @@ using System.Linq;
 
 namespace System.Diagnostics;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 public static partial class ProcessExtensions {
 
   private static class NativeMethods {

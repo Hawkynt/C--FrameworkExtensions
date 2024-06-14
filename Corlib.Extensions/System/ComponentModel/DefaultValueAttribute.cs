@@ -26,9 +26,6 @@ using System.Reflection;
 
 namespace System.ComponentModel;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable once PartialTypeWithSinglePart
-// ReSharper disable once UnusedMember.Global
 public static partial class DefaultValueAttributeExtensions {
   /// <summary>
   /// Sets the properties of an instance to their default values.

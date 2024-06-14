@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -175,10 +181,10 @@ public static partial class ConsoleExtensions {
           Console.Write(current);
           isEscaping = false;
         } else {
-          if (current == '\\') {
+          if (current == '\\')
             // found escape char
             isEscaping = true;
-          } else if (current == '{') {
+          else if (current == '{') {
             // color indicator found
             var colorDefinition = string.Empty;
             var isEnded = false;
@@ -203,9 +209,8 @@ public static partial class ConsoleExtensions {
               if (colors[1].IsNotNullOrWhiteSpace())
                 Console.BackgroundColor = _GetColorByIndex(byte.Parse(colors[1]));
             }
-          } else {
+          } else
             Console.Write(current);
-          }
         }
       } // next
 

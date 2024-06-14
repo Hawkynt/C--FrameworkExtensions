@@ -28,7 +28,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-// ReSharper disable UnusedMember.Global
 #endif
 
 namespace System.Collections.Generic; 

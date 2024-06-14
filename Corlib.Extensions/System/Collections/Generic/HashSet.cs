@@ -26,11 +26,6 @@ using Guard;
 using System.Runtime.CompilerServices;
 #endif
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Collections.Generic;
 
 public static partial class HashSetExtensions {
@@ -52,7 +47,7 @@ public static partial class HashSetExtensions {
   /// Changeset between two hashsets.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  private class ChangeSet<TItem>(ChangeType type, TItem item) : IChangeSet<TItem> {
+  private sealed class ChangeSet<TItem>(ChangeType type, TItem item) : IChangeSet<TItem> {
     public ChangeType Type { get; } = type;
     public TItem Item { get; } = item;
   }

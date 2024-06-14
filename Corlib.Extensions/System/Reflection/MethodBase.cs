@@ -154,7 +154,7 @@ public static class MethodBaseExtensions {
   #endregion
 
   private static __GetInstructions _getInstructions;
-  private class __GetInstructions {
+  private sealed class __GetInstructions {
     
     private static OpCode[] _MULTI_BYTE_OP_CODES;
     private static OpCode[] _SINGLE_BYTE_OP_CODES;

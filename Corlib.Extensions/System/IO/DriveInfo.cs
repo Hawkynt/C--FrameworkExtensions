@@ -28,12 +28,6 @@ using System.ComponentModel;
 
 namespace System.IO;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
-// ReSharper disable UnusedMember.Global
-// ReSharper disable UnusedParameter.Global
-// ReSharper disable FieldCanBeMadeReadOnly.Local
 public static partial class DriveInfoExtensions {
 
   private static class NativeMethods {

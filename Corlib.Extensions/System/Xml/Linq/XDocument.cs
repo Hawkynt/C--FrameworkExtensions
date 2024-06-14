@@ -19,12 +19,6 @@
 */
 #endregion
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 using System.Linq;
 
 namespace System.Xml.Linq;

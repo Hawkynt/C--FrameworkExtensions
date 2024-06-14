@@ -1,38 +1,31 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Diagnostics;
 using System.Threading;
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace System;
 
 public static partial class FunctionExtensions {
-
   /// <summary>
-  /// Tries to invoke the given delegate, retrying on exceptions.
+  ///   Tries to invoke the given delegate, retrying on exceptions.
   /// </summary>
   /// <param name="this">This Action.</param>
   /// <param name="repeatCount">The repeat count, until execution is aborted.</param>
@@ -41,8 +34,8 @@ public static partial class FunctionExtensions {
   public static TResult RetryOnException<TResult>(this Func<TResult> @this, int repeatCount, TimeSpan? dueTime = null) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(repeatCount);
-    
-    while (--repeatCount >= 0) {
+
+    while (--repeatCount >= 0)
       try {
         return @this();
       } catch (Exception) {
@@ -52,14 +45,13 @@ public static partial class FunctionExtensions {
         } else
           throw;
       }
-    }
 
     // INFO: heuristically unreachable
     return default;
   }
 
   /// <summary>
-  /// Tries to invoke the given delegate.
+  ///   Tries to invoke the given delegate.
   /// </summary>
   /// <typeparam name="TResult">The type of the result.</typeparam>
   /// <param name="this">This Action.</param>
@@ -72,26 +64,28 @@ public static partial class FunctionExtensions {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(repeatCount);
 
-    while (repeatCount-- > 0) {
+    while (repeatCount-- > 0)
       try {
         result = @this();
         return true;
       } catch (Exception) {
         ;
       }
-    }
-    
+
     result = default;
     return false;
   }
 
   /// <summary>
-  /// Encapsulates the method so it only returns a result every n timeslices.
+  ///   Encapsulates the method so it only returns a result every n timeslices.
   /// </summary>
   /// <typeparam name="TResult">The type of the result.</typeparam>
   /// <param name="this">This Function.</param>
   /// <param name="span">The duration for which the result is valid.</param>
-  /// <param name="prolongOnAccess">if set to <c>true</c> prolongs the values lifetime on every access; defaults to <c>false</c>.</param>
+  /// <param name="prolongOnAccess">
+  ///   if set to <c>true</c> prolongs the values lifetime on every access; defaults to
+  ///   <c>false</c>.
+  /// </param>
   /// <returns></returns>
   public static Func<TResult> OnlyOnceFor<TResult>(this Func<TResult> @this, TimeSpan span, bool prolongOnAccess = false) {
     var lastResult = default(TResult);
@@ -121,5 +115,4 @@ public static partial class FunctionExtensions {
       return lastResult;
     }
   }
-
 }

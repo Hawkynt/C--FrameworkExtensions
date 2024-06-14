@@ -34,10 +34,6 @@ using System.Runtime.CompilerServices;
 #endif
 using Guard;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable PartialTypeWithSinglePart
-
 namespace System.IO;
 
 /// <summary>

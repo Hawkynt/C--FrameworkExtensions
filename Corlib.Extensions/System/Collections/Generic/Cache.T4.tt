@@ -35,7 +35,6 @@ using System.Linq;
 using System.Threading;
 
 // ReSharper disable RedundantCast
-// ReSharper disable UnusedMember.Global
 // TODO: do not gather statistics if not needed/requested
 namespace System.Collections.Generic;
 

@@ -19,10 +19,6 @@
 */
 #endregion
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif

@@ -19,10 +19,6 @@
 */
 #endregion
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 using Guard;
 
 namespace System.Collections.Generic; 

@@ -24,8 +24,6 @@ using Guard;
 using System.Runtime.CompilerServices;
 #endif
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
 namespace System.Collections.Generic;
 
 public static partial class LinkedListExtensions {

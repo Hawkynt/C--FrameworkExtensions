@@ -25,8 +25,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
 
 namespace System.IO;
 

@@ -29,12 +29,6 @@ using Guard;
 
 namespace System.IO;
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable UnusedMember.Local
-// ReSharper disable MemberCanBePrivate.Global
 public static partial class LinkExtensions {
   
   #region Nested types

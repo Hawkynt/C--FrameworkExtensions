@@ -21,10 +21,6 @@
 
 #if SUPPORTS_ASYNC
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
-
 namespace System.Threading.Tasks;
 
 public static partial class TaskExtensions {

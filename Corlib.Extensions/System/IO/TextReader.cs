@@ -22,8 +22,6 @@
 using System.Collections.Generic;
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-
 namespace System.IO;
 
 /// <summary>

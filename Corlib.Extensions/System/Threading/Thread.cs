@@ -22,9 +22,6 @@
 using System.Runtime.InteropServices;
 using Guard;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Threading;
 
 public static partial class ThreadExtensions {
@@ -32,7 +29,7 @@ public static partial class ThreadExtensions {
   /// <summary>
   /// Allows pushing the current thread into the low-IO mode introduced with Windows Vista.
   /// </summary>
-  private class IoBackgroundModeToken : IDisposable {
+  private sealed class IoBackgroundModeToken : IDisposable {
 
     private static class NativeMethods {
       private enum ThreadBackgroundMode {
