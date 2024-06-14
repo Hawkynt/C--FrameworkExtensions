@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -45,8 +35,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     get => base.CellTemplate;
     set {
       if (value != null && value is not DataGridViewNumericUpDownCell)
-        throw new InvalidCastException(
-          "Value provided for CellTemplate must be of type DataGridViewNumericUpDownElements.DataGridViewNumericUpDownCell or derive from it.");
+        throw new InvalidCastException("Value provided for CellTemplate must be of type DataGridViewNumericUpDownElements.DataGridViewNumericUpDownCell or derive from it.");
 
       base.CellTemplate = value;
     }
@@ -61,15 +50,13 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
   public int DecimalPlaces {
     get {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       return this.NumericUpDownCellTemplate.DecimalPlaces;
     }
     set {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       // Update the template cell so that subsequent cloned cells use the new value.
       this.NumericUpDownCellTemplate.DecimalPlaces = value;
@@ -104,15 +91,13 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
   public decimal Increment {
     get {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       return this.NumericUpDownCellTemplate.Increment;
     }
     set {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       this.NumericUpDownCellTemplate.Increment = value;
       var dataGridView = this.DataGridView;
@@ -142,15 +127,13 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
   public decimal Maximum {
     get {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       return this.NumericUpDownCellTemplate.Maximum;
     }
     set {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       this.NumericUpDownCellTemplate.Maximum = value;
       var dataGridView = this.DataGridView;
@@ -185,15 +168,13 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
   public decimal Minimum {
     get {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       return this.NumericUpDownCellTemplate.Minimum;
     }
     set {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       this.NumericUpDownCellTemplate.Minimum = value;
       if (this.DataGridView == null)
@@ -227,15 +208,13 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
   public bool ThousandsSeparator {
     get {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       return this.NumericUpDownCellTemplate.ThousandsSeparator;
     }
     set {
       if (this.NumericUpDownCellTemplate == null)
-        throw new InvalidOperationException(
-          "Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
+        throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.");
 
       this.NumericUpDownCellTemplate.ThousandsSeparator = value;
       if (this.DataGridView == null)
@@ -365,10 +344,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
           if (this.Controls[1] is TextBox textBox)
             // If the end of the selection is at the end of the string,
             // let the DataGridView treat the key message
-            if ((this.RightToLeft == RightToLeft.No &&
-                 !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)) ||
-                (this.RightToLeft == RightToLeft.Yes &&
-                 !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)))
+            if ((this.RightToLeft == RightToLeft.No && !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)) || (this.RightToLeft == RightToLeft.Yes && !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)))
               return true;
 
           break;
@@ -379,10 +355,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
             // If the end of the selection is at the begining of the string
             // or if the entire text is selected and we did not start editing,
             // send this character to the dataGridView, else process the key message
-            if ((this.RightToLeft == RightToLeft.No &&
-                 !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)) ||
-                (this.RightToLeft == RightToLeft.Yes &&
-                 !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)))
+            if ((this.RightToLeft == RightToLeft.No && !(textBox.SelectionLength == 0 && textBox.SelectionStart == 0)) || (this.RightToLeft == RightToLeft.Yes && !(textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length)))
               return true;
 
           break;
@@ -417,8 +390,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
         case Keys.Delete: {
           // Let the grid handle the key if the carret is at the end of the text.
           if (this.Controls[1] is TextBox textBox)
-            if (textBox.SelectionLength > 0 ||
-                textBox.SelectionStart < textBox.Text.Length)
+            if (textBox.SelectionLength > 0 || textBox.SelectionStart < textBox.Text.Length)
               return true;
 
           break;
@@ -533,13 +505,9 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     private static extern short VkKeyScan(char key);
 
     // Used in TranslateAlignment function
-    private static readonly DataGridViewContentAlignment anyRight = DataGridViewContentAlignment.TopRight |
-                                                                    DataGridViewContentAlignment.MiddleRight |
-                                                                    DataGridViewContentAlignment.BottomRight;
+    private static readonly DataGridViewContentAlignment anyRight = DataGridViewContentAlignment.TopRight | DataGridViewContentAlignment.MiddleRight | DataGridViewContentAlignment.BottomRight;
 
-    private static readonly DataGridViewContentAlignment anyCenter = DataGridViewContentAlignment.TopCenter |
-                                                                     DataGridViewContentAlignment.MiddleCenter |
-                                                                     DataGridViewContentAlignment.BottomCenter;
+    private static readonly DataGridViewContentAlignment anyCenter = DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.MiddleCenter | DataGridViewContentAlignment.BottomCenter;
 
     // Default dimensions of the static rendering bitmap used for the painting of the non-edited cells
     private const int DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapWidth = 100;
@@ -583,13 +551,15 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     /// </summary>
     public DataGridViewNumericUpDownCell() {
       // GetSingleResult a thread specific bitmap used for the painting of the non-edited cells
-      renderingBitmap ??= new(DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapWidth,
-        DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapHeight);
+      renderingBitmap ??= new(
+        DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapWidth,
+        DATAGRIDVIEWNUMERICUPDOWNCELL_defaultRenderingBitmapHeight
+      );
 
       // GetSingleResult a thread specific NumericUpDown control used for the painting of the non-edited cells
       paintingNumericUpDown ??= new() {
-        BorderStyle = BorderStyle.None,
-        Maximum = decimal.MaxValue / 10,
+        BorderStyle = BorderStyle.None, 
+        Maximum = decimal.MaxValue / 10, 
         Minimum = decimal.MinValue / 10
       };
 
@@ -608,9 +578,11 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     public int DecimalPlaces {
       get => this.decimalPlaces;
       set {
-        if (value < 0 || value > 99)
-          throw new ArgumentOutOfRangeException(nameof(value),
-            "The DecimalPlaces property cannot be smaller than 0 or larger than 99.");
+        if (value is < 0 or > 99)
+          throw new ArgumentOutOfRangeException(
+            nameof(value),
+            "The DecimalPlaces property cannot be smaller than 0 or larger than 99."
+          );
 
         if (this.decimalPlaces == value)
           return;
@@ -754,7 +726,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     /// <summary>
     ///   Adjusts the location and size of the editing control given the alignment characteristics of the cell
     /// </summary>
-    private Rectangle GetAdjustedEditingControlBounds(Rectangle editingControlBounds, DataGridViewCellStyle cellStyle) {
+    private static Rectangle GetAdjustedEditingControlBounds(Rectangle editingControlBounds, DataGridViewCellStyle cellStyle) {
       // Add a 1 pixel padding on the left and right of the editing control
       editingControlBounds.X += 1;
       editingControlBounds.Width = Math.Max(0, editingControlBounds.Width - 2);
@@ -799,15 +771,23 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   Customized implementation of the GetFormattedValue function in order to include the decimal and thousand separator
     ///   characters in the formatted representation of the cell value.
     /// </summary>
-    protected override object GetFormattedValue(object value,
+    protected override object GetFormattedValue(
+      object value,
       int rowIndex,
       ref DataGridViewCellStyle cellStyle,
       TypeConverter valueTypeConverter,
       TypeConverter formattedValueTypeConverter,
-      DataGridViewDataErrorContexts context) {
+      DataGridViewDataErrorContexts context
+    ) {
       // By default, the base implementation converts the Decimal 1234.5 into the string "1234.5"
-      var formattedValue = base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter,
-        formattedValueTypeConverter, context);
+      var formattedValue = base.GetFormattedValue(
+        value,
+        rowIndex,
+        ref cellStyle,
+        valueTypeConverter,
+        formattedValueTypeConverter,
+        context
+      );
       var formattedNumber = formattedValue as string;
       if (string.IsNullOrEmpty(formattedNumber) || value == null)
         return formattedValue;
@@ -820,8 +800,12 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   Custom implementation of the GetPreferredSize function. This implementation uses the preferred size of the base
     ///   DataGridViewTextBoxCell cell and adds room for the up/down buttons.
     /// </summary>
-    protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex,
-      Size constraintSize) {
+    protected override Size GetPreferredSize(
+      Graphics graphics,
+      DataGridViewCellStyle cellStyle,
+      int rowIndex,
+      Size constraintSize
+    ) {
       if (this.DataGridView == null)
         return new(-1, -1);
 
@@ -840,8 +824,11 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   at the beginning of an editing session. It makes sure that the properties of the NumericUpDown editing control are
     ///   set according to the cell properties.
     /// </summary>
-    public override void InitializeEditingControl(int rowIndex, object initialFormattedValue,
-      DataGridViewCellStyle dataGridViewCellStyle) {
+    public override void InitializeEditingControl(
+      int rowIndex,
+      object initialFormattedValue,
+      DataGridViewCellStyle dataGridViewCellStyle
+    ) {
       base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
       if (this.DataGridView.EditingControl is not NumericUpDown numericUpDown)
         return;
@@ -922,17 +909,36 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   an easy solution for painting controls but it's not necessarily the most performant. An alternative would be to paint
     ///   the NumericUpDown control piece by piece (text and up/down buttons).
     /// </summary>
-    protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex,
+    protected override void Paint(
+      Graphics graphics,
+      Rectangle clipBounds,
+      Rectangle cellBounds,
+      int rowIndex,
       DataGridViewElementStates cellState,
-      object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle,
-      DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts) {
+      object value,
+      object formattedValue,
+      string errorText,
+      DataGridViewCellStyle cellStyle,
+      DataGridViewAdvancedBorderStyle advancedBorderStyle,
+      DataGridViewPaintParts paintParts
+    ) {
       if (this.DataGridView == null)
         return;
 
       // First paint the borders and background of the cell.
-      base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle,
+      base.Paint(
+        graphics,
+        clipBounds,
+        cellBounds,
+        rowIndex,
+        cellState,
+        value,
+        formattedValue,
+        errorText,
+        cellStyle,
         advancedBorderStyle,
-        paintParts & ~(DataGridViewPaintParts.ErrorIcon | DataGridViewPaintParts.ContentForeground));
+        paintParts & ~(DataGridViewPaintParts.ErrorIcon | DataGridViewPaintParts.ContentForeground)
+      );
 
       var ptCurrentCell = this.DataGridView.CurrentCellAddress;
       var cellCurrent = ptCurrentCell.X == this.ColumnIndex && ptCurrentCell.Y == rowIndex;
@@ -954,13 +960,14 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
         if (cellStyle.Padding != Padding.Empty) {
           valBounds.Offset(
             this.DataGridView.RightToLeft == RightToLeft.Yes ? cellStyle.Padding.Right : cellStyle.Padding.Left,
-            cellStyle.Padding.Top);
+            cellStyle.Padding.Top
+          );
           valBounds.Width -= cellStyle.Padding.Horizontal;
           valBounds.Height -= cellStyle.Padding.Vertical;
         }
 
         // Determine the NumericUpDown control location
-        valBounds = this.GetAdjustedEditingControlBounds(valBounds, cellStyle);
+        valBounds = GetAdjustedEditingControlBounds(valBounds, cellStyle);
 
         var cellSelected = (cellState & DataGridViewElementStates.Selected) != 0;
 
@@ -1007,8 +1014,19 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
 
       if (PartPainted(paintParts, DataGridViewPaintParts.ErrorIcon))
         // Paint the potential error icon on top of the NumericUpDown control
-        base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText,
-          cellStyle, advancedBorderStyle, DataGridViewPaintParts.ErrorIcon);
+        base.Paint(
+          graphics,
+          clipBounds,
+          cellBounds,
+          rowIndex,
+          cellState,
+          value,
+          formattedValue,
+          errorText,
+          cellStyle,
+          advancedBorderStyle,
+          DataGridViewPaintParts.ErrorIcon
+        );
     }
 
     /// <summary>
@@ -1021,7 +1039,8 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   Custom implementation of the PositionEditingControl method called by the DataGridView control when it
     ///   needs to relocate and/or resize the editing control.
     /// </summary>
-    public override void PositionEditingControl(bool setLocation,
+    public override void PositionEditingControl(
+      bool setLocation,
       bool setSize,
       Rectangle cellBounds,
       Rectangle cellClip,
@@ -1029,15 +1048,18 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
       bool singleVerticalBorderAdded,
       bool singleHorizontalBorderAdded,
       bool isFirstDisplayedColumn,
-      bool isFirstDisplayedRow) {
-      var editingControlBounds = this.PositionEditingPanel(cellBounds,
+      bool isFirstDisplayedRow
+    ) {
+      var editingControlBounds = this.PositionEditingPanel(
+        cellBounds,
         cellClip,
         cellStyle,
         singleVerticalBorderAdded,
         singleHorizontalBorderAdded,
         isFirstDisplayedColumn,
-        isFirstDisplayedRow);
-      editingControlBounds = this.GetAdjustedEditingControlBounds(editingControlBounds, cellStyle);
+        isFirstDisplayedRow
+      );
+      editingControlBounds = GetAdjustedEditingControlBounds(editingControlBounds, cellStyle);
       this.DataGridView.EditingControl.Location = new(editingControlBounds.X, editingControlBounds.Y);
       this.DataGridView.EditingControl.Size = new(editingControlBounds.Width, editingControlBounds.Height);
     }
@@ -1121,8 +1143,7 @@ public class DataGridViewNumericUpDownColumn : DataGridViewColumn {
     ///   Returns a standard textual representation of the cell.
     /// </summary>
     public override string ToString()
-      => "DataGridViewNumericUpDownCell { ColumnIndex=" + this.ColumnIndex.ToString(CultureInfo.CurrentCulture) +
-         ", RowIndex=" + this.RowIndex.ToString(CultureInfo.CurrentCulture) + " }";
+      => $"DataGridViewNumericUpDownCell {{ ColumnIndex={this.ColumnIndex.ToString(CultureInfo.CurrentCulture)}, RowIndex={this.RowIndex.ToString(CultureInfo.CurrentCulture)} }}";
 
     /// <summary>
     ///   Little utility function used by both the cell and column types to translate a DataGridViewContentAlignment value into

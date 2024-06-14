@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -30,12 +20,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
-using DrawingSize = System.Drawing.Size;
 using Guard;
+using DrawingSize = System.Drawing.Size;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
@@ -108,7 +95,7 @@ public static partial class RichTextBoxExtensions {
   /// <param name="this">This RichTextBox.</param>
   public static void EndUpdate(this RichTextBox @this) {
     Against.ThisIsNull(@this);
-    
+
     NativeMethods.EndUpdate(@this.Handle);
     @this.Invalidate();
   }
@@ -275,7 +262,7 @@ public static partial class RichTextBoxExtensions {
   // ReSharper disable once SuggestBaseTypeForParameter
   private static void _DrawToBitmap(RichTextBox @this, Bitmap target) {
     using var graphics = Graphics.FromImage(target);
-    
+
     var hdc = IntPtr.Zero;
     try {
       hdc = graphics.GetHdc();
@@ -284,20 +271,20 @@ public static partial class RichTextBoxExtensions {
       var hDc = intPtr;
 
       var rect = new NativeMethods.Rect {
-        Top = 0,
-        Left = 0,
-        Bottom = (int)(target.Height + target.Height * (target.HorizontalResolution / 100) * _INCH),
+        Top = 0, 
+        Left = 0, 
+        Bottom = (int)(target.Height + target.Height * (target.HorizontalResolution / 100) * _INCH), 
         Right = (int)(target.Width + target.Width * (target.VerticalResolution / 100) * _INCH)
       };
 
       var fmtRange = new NativeMethods.Formatrange {
         chrg = {
-          cpMin = 0,
+          cpMin = 0, 
           cpMax = -1
-        },
-        hdc = hDc,
+        }, 
+        hdc = hDc, 
         hdcTarget = hDc,
-        rc = rect,
+        rc = rect, 
         rcPage = rect
       };
 
@@ -337,9 +324,9 @@ public static partial class RichTextBoxExtensions {
   #region richtextbox syntax highlighting
 
 #if !SUPPORTS_CONDITIONAL_WEAK_TABLE
-  private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new();
+  private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = [];
 #else
-  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new();
+  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = [];
 #endif
 
   public static void ApplySyntaxHighlighting(this RichTextBox @this, SyntaxHighlightingConfiguration configuration, bool reapply = false) {
@@ -391,5 +378,4 @@ public static partial class RichTextBoxExtensions {
   }
 
   #endregion
-
 }

@@ -781,9 +781,7 @@ public static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
 
-#pragma warning disable CC0031 // Check for null before calling a delegate
     @this.Select((v, i) => new Action(() => action(v, i))).ParallelForEach(i => i());
-#pragma warning restore CC0031 // Check for null before calling a delegate
   }
 
 #endif
@@ -1086,9 +1084,7 @@ public static partial class EnumerableExtensions {
       else
         gotElements = true;
 
-#pragma warning disable CC0031 // Check for null before calling a delegate
       result.Append(converter(item));
-#pragma warning restore CC0031 // Check for null before calling a delegate
     }
 
     return gotElements ? result.ToString() : string.Empty;
@@ -1759,8 +1755,8 @@ public static partial class EnumerableExtensions {
   /// <typeparam name="TItem">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
   /// <param name="this">This IEnumerable</param>
   /// <returns>An <see cref="IDisposableCollection{T}" /> containing the elements of this IEnumerable</returns>
-  public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable =>
-    new DisposableCollection<TItem>(@this);
+  public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable 
+    => new DisposableCollection<TItem>(@this);
 
   public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(
     this TItem[] @this,
@@ -1772,7 +1768,7 @@ public static partial class EnumerableExtensions {
     Against.ArgumentIsNull(keyGetter);
     Against.ArgumentIsNull(valueGetter);
 
-    var result = equalityComparer == null ? new() : new ConcurrentDictionary<TKey, TValue>(equalityComparer);
+    var result = equalityComparer == null ? [] : new ConcurrentDictionary<TKey, TValue>(equalityComparer);
     foreach (var item in @this)
       result.TryAdd(keyGetter(item), valueGetter(item));
 

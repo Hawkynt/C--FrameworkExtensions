@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -32,7 +22,7 @@ public static partial class TreeViewExtensions {
   /// <summary>
   ///   This class handles the drag and drop functionality.
   /// </summary>
-  private class DragDropInstance : IDisposable {
+  private sealed class DragDropInstance : IDisposable {
     #region consts
 
     /// <summary>
@@ -206,8 +196,10 @@ public static partial class TreeViewExtensions {
 
       var nodeImage = treeNode.GetImage();
 
-      imageList.ImageSize = new(Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)),
-        Math.Min(256, treeNode.Bounds.Height));
+      imageList.ImageSize = new(
+        Math.Min(256, treeNode.Bounds.Size.Width + (nodeImage?.Width + 1 ?? 0)),
+        Math.Min(256, treeNode.Bounds.Height)
+      );
 
       // Create new bitmap
       // This bitmap will contain the tree node image to be dragged
@@ -249,8 +241,7 @@ public static partial class TreeViewExtensions {
       if (sender is not TreeView treeView || treeView != this._treeView)
         return;
 
-      if (!e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false) ||
-          (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode") != this._draggedNode) {
+      if (!e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false) || (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode") != this._draggedNode) {
         e.Effect = DragDropEffects.None;
         return;
       }
@@ -306,8 +297,7 @@ public static partial class TreeViewExtensions {
       // A bit long, but to summarize, process the following code only if the nodeover is null
       // and either the nodeover is not the same thing as nodemoving UNLESSS nodeover happens
       // to be the last node in the branch (so we can allow drag & drop below a parent branch)
-      if (hoveredNode == draggedNode &&
-          (hoveredNode.Parent == null || hoveredNode.Index != hoveredNode.Parent.Nodes.Count - 1))
+      if (hoveredNode == draggedNode && (hoveredNode.Parent == null || hoveredNode.Index != hoveredNode.Parent.Nodes.Count - 1))
         return;
 
       var offsetY = treeView.PointToClient(Cursor.Position).Y - hoveredNode.Bounds.Top;
@@ -379,8 +369,7 @@ public static partial class TreeViewExtensions {
           #endregion
 
           this._SetAndDraw(PlaceHolderType.FolderTop, hoveredNode);
-        } else if (hoveredNode.Parent != null && hoveredNode.Index == 0 &&
-                   offsetY > hoveredNode.Bounds.Height - hoveredNode.Bounds.Height / 3) {
+        } else if (hoveredNode.Parent != null && hoveredNode.Index == 0 && offsetY > hoveredNode.Bounds.Height - hoveredNode.Bounds.Height / 3) {
           //this.lblDebug.Text = "folder bottom";
 
           #region Store the placeholder info into a pipe delimited string
@@ -537,7 +526,6 @@ public static partial class TreeViewExtensions {
         else
           this.NewNodeMap.Insert(0, tnCurNode.Index + _NODEMAP_DELIMITER.ToString());
 
-      var x = this.NewNodeMap.ToString();
     }
 
     private bool SetMapsEqual() {
@@ -591,19 +579,19 @@ public static partial class TreeViewExtensions {
       if (hoveredNode is { TreeView: not null })
         switch (this._placeHolder) {
           case PlaceHolderType.LeafTop: {
-            this._DrawLeafTopPlaceholders(hoveredNode);
+            _DrawLeafTopPlaceholders(hoveredNode);
             break;
           }
           case PlaceHolderType.LeafBottom: {
-            this._DrawLeafBottomPlaceholders(hoveredNode, this._parentDragDrop);
+            _DrawLeafBottomPlaceholders(hoveredNode, this._parentDragDrop);
             break;
           }
           case PlaceHolderType.AddToFolder: {
-            this._DrawAddToFolderPlaceholder(hoveredNode);
+            _DrawAddToFolderPlaceholder(hoveredNode);
             break;
           }
           case PlaceHolderType.FolderTop: {
-            this._DrawFolderTopPlaceholders(hoveredNode);
+            _DrawFolderTopPlaceholders(hoveredNode);
             break;
           }
           case PlaceHolderType.None: {
@@ -618,7 +606,7 @@ public static partial class TreeViewExtensions {
       NativeMethods.ImageList_DragShowNolock(true);
     }
 
-    private void _DrawLeafTopPlaceholders(TreeNode hoveredNode) {
+    private static void _DrawLeafTopPlaceholders(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
       var g = treeView.CreateGraphics();
 
@@ -642,14 +630,13 @@ public static partial class TreeViewExtensions {
         new Point(rightPos - 4, hoveredNode.Bounds.Top - 1),
         new Point(rightPos, hoveredNode.Bounds.Top - 5)
       };
-
-
+      
       g.FillPolygon(Brushes.Black, leftTriangle);
       g.FillPolygon(Brushes.Black, rightTriangle);
       g.DrawLine(new(Color.Black, 2), new(leftPos, hoveredNode.Bounds.Top), new(rightPos, hoveredNode.Bounds.Top));
     }
 
-    private void _DrawLeafBottomPlaceholders(TreeNode hoveredNode, TreeNode parentNodeDragDrop) {
+    private static void _DrawLeafBottomPlaceholders(TreeNode hoveredNode, TreeNode parentNodeDragDrop) {
       var treeView = hoveredNode.TreeView;
       var g = treeView.CreateGraphics();
 
@@ -657,8 +644,8 @@ public static partial class TreeViewExtensions {
       var imageWidth = nodeImage == null ? 0 : nodeImage.Size.Width + 8;
       // Once again, we are not dragging to node over, draw the placeholder using the ParentDragDrop bounds
       var leftPos = parentNodeDragDrop != null
-        ? parentNodeDragDrop.Bounds.Left - (parentNodeDragDrop.GetImage().Size.Width + 8)
-        : hoveredNode.Bounds.Left - imageWidth
+          ? parentNodeDragDrop.Bounds.Left - (parentNodeDragDrop.GetImage().Size.Width + 8)
+          : hoveredNode.Bounds.Left - imageWidth
         ;
 
       var rightPos = treeView.Width - 4;
@@ -678,15 +665,17 @@ public static partial class TreeViewExtensions {
         new Point(rightPos - 4, hoveredNode.Bounds.Bottom - 1),
         new Point(rightPos, hoveredNode.Bounds.Bottom - 5)
       };
-
-
+      
       g.FillPolygon(Brushes.Black, leftTriangle);
       g.FillPolygon(Brushes.Black, rightTriangle);
-      g.DrawLine(new(Color.Black, 2), new(leftPos, hoveredNode.Bounds.Bottom),
-        new(rightPos, hoveredNode.Bounds.Bottom));
+      g.DrawLine(
+        new(Color.Black, 2),
+        new(leftPos, hoveredNode.Bounds.Bottom),
+        new(rightPos, hoveredNode.Bounds.Bottom)
+      );
     }
 
-    private void _DrawFolderTopPlaceholders(TreeNode hoveredNode) {
+    private static void _DrawFolderTopPlaceholders(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
 
       var g = treeView.CreateGraphics();
@@ -717,7 +706,7 @@ public static partial class TreeViewExtensions {
       g.DrawLine(new(Color.Black, 2), new(leftPos, hoveredNode.Bounds.Top), new(rightPos, hoveredNode.Bounds.Top));
     }
 
-    private void _DrawAddToFolderPlaceholder(TreeNode hoveredNode) {
+    private static void _DrawAddToFolderPlaceholder(TreeNode hoveredNode) {
       var treeView = hoveredNode.TreeView;
 
       var g = treeView.CreateGraphics();
@@ -740,7 +729,6 @@ public static partial class TreeViewExtensions {
     #region internal class for displaying dragged items
 
     private static class NativeMethods {
-      
       [DllImport("comctl32.dll")]
       private static extern bool InitCommonControls();
 

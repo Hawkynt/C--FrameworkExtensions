@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -59,7 +49,7 @@ public static partial class ComboBoxExtensions {
   /// <param name="valueMember">The value member, if any.</param>
   public static void DataSource(this ComboBox @this, object source, string displayMember = null, string valueMember = null) {
     Against.ThisIsNull(@this);
-    
+
     var oldDis = @this.DisplayMember;
     var oldVal = @this.ValueMember;
     @this.DataSource = null;
@@ -78,11 +68,13 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">This ComboBox.</param>
   /// <param name="insertNull">Insert null-object (use as non-selected).</param>
   /// <param name="ignoreValues">Values not to be used.</param>
-  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct {
-
-    @this.DataSource(
-      (insertNull ? new[] { new Tuple<object, string>(null, null) } : new Tuple<object, string>[0])
-      .Concat(Enum.GetValues(typeof(TEnum)).Cast<object>()
+  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct 
+    => @this.DataSource(
+    (insertNull ? [new(null, null)] : new Tuple<object, string>[0])
+    .Concat(
+      Enum
+        .GetValues(typeof(TEnum))
+        .Cast<object>()
         .Where(i => ignoreValues == null || ignoreValues.Length == 0 || !ignoreValues.Contains((TEnum)i))
         .Select(
           i => {
@@ -90,9 +82,13 @@ public static partial class ComboBoxExtensions {
             var attribute =
               (DisplayNameAttribute)fieldInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false).FirstOrDefault();
             return Tuple.Create(i, attribute?.DisplayName ?? i.ToString());
-          })).ToArray(), nameof(Tuple<object, string>.Item2), nameof(Tuple<object, string>.Item1)
-    );
-  }
+          }
+        )
+    )
+    .ToArray(),
+    nameof(Tuple<object, string>.Item2),
+    nameof(Tuple<object, string>.Item1)
+  );
 
   /// <summary>
   ///   Sets the selected item based on an enum value.
@@ -100,18 +96,16 @@ public static partial class ComboBoxExtensions {
   /// <typeparam name="TEnum">The type of the enum.</typeparam>
   /// <param name="this">This ComboBox.</param>
   /// <param name="value">The value.</param>
-  public static void SetSelectedEnumItem<TEnum>(this ComboBox @this, TEnum value) where TEnum : struct 
-    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals((TEnum)i.Item1, value))
-    ;
+  public static void SetSelectedEnumItem<TEnum>(this ComboBox @this, TEnum value) where TEnum : struct
+    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals((TEnum)i.Item1, value));
 
   /// <summary>
   ///   Sets the selected item.
   /// </summary>
   /// <param name="this">This ComboBox.</param>
   /// <param name="value">The value.</param>
-  public static void SetSelectedItem(this ComboBox @this, object value) 
-    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals(i.Item1, value))
-    ;
+  public static void SetSelectedItem(this ComboBox @this, object value)
+    => SetSelectedItem<Tuple<object, string>>(@this, i => Equals(i.Item1, value));
 
   /// <summary>
   ///   Sets the selected item based on a predicate.
@@ -132,7 +126,6 @@ public static partial class ComboBoxExtensions {
   /// <param name="selectedItem">The selected item.</param>
   /// <param name="handler">The handler.</param>
   public static void SetSelectedItemAndSuppressIndexChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
-
     // no handler given? just set the given item as selected
     if (handler == null) {
       @this.SelectedItem = selectedItem;
@@ -159,7 +152,6 @@ public static partial class ComboBoxExtensions {
   /// <param name="selectedValue">The selected value.</param>
   /// <param name="handler">The handler.</param>
   public static void SetSelectedValueAndSuppressIndexChangedEvent(this ComboBox @this, object selectedValue, EventHandler handler) {
-
     // no handler given? just set the given value as selected
     if (handler == null) {
       @this.SelectedValue = selectedValue;
@@ -186,7 +178,6 @@ public static partial class ComboBoxExtensions {
   /// <param name="selectedItem">The selected item.</param>
   /// <param name="handler">The handler.</param>
   public static void SetSelectedItemAndSuppressValueChangedEvent(this ComboBox @this, object selectedItem, EventHandler handler) {
-
     // no handler given? just set the given value as selected
     if (handler == null) {
       @this.SelectedItem = selectedItem;
@@ -245,8 +236,6 @@ public static partial class ComboBoxExtensions {
   /// <typeparam name="TItem">The Type of the items of the combobox</typeparam>
   /// <param name="this">The combobox</param>
   /// <returns>The selected item in the combobox if there is a selection, and default(TItem) otherwise</returns>
-  public static TItem GetSelectedItem<TItem>(this ComboBox @this) 
-    => !TryGetSelectedItem(@this, out TItem item) ? default : item
-    ;
-  
+  public static TItem GetSelectedItem<TItem>(this ComboBox @this)
+    => !TryGetSelectedItem(@this, out TItem item) ? default : item;
 }

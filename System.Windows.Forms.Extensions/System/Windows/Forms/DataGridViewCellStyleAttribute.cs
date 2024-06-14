@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -61,11 +51,17 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
   ///   The name of the <see cref="DataGridViewTriState" />-property, retrieving the value
   ///   for <see cref="DataGridViewCellStyle.WrapMode" />.
   /// </param>
-  public DataGridViewCellStyleAttribute(string foreColor = null, string backColor = null, string format = null,
+  public DataGridViewCellStyleAttribute(
+    string foreColor = null,
+    string backColor = null,
+    string format = null,
     DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet,
-    DataGridViewTriState wrapMode = DataGridViewTriState.NotSet, string conditionalPropertyName = null,
-    string foreColorPropertyName = null, string backColorPropertyName = null,
-    string wrapModePropertyName = null) {
+    DataGridViewTriState wrapMode = DataGridViewTriState.NotSet,
+    string conditionalPropertyName = null,
+    string foreColorPropertyName = null,
+    string backColorPropertyName = null,
+    string wrapModePropertyName = null
+  ) {
     this.ForeColor = foreColor?.ParseColor();
     this.BackColor = backColor?.ParseColor();
     this.ConditionalPropertyName = conditionalPropertyName;
@@ -88,19 +84,38 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
   public string WrapModePropertyName { get; }
 
   private void _ApplyTo(DataGridViewCellStyle style, object data) {
-    var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(data, this.ForeColorPropertyName, null, null,
-      null, null) ?? this.ForeColor;
+    var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
+                  data,
+                  this.ForeColorPropertyName,
+                  null,
+                  null,
+                  null,
+                  null
+                )
+                ?? this.ForeColor;
     if (color != null)
       style.ForeColor = color.Value;
 
-    color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(data, this.BackColorPropertyName, null, null, null,
-      null) ?? this.BackColor;
+    color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
+              data,
+              this.BackColorPropertyName,
+              null,
+              null,
+              null,
+              null
+            )
+            ?? this.BackColor;
     if (color != null)
       style.BackColor = color.Value;
 
-    var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(data, this.WrapModePropertyName,
-      DataGridViewTriState.NotSet, DataGridViewTriState.NotSet, DataGridViewTriState.NotSet,
-      DataGridViewTriState.NotSet);
+    var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(
+      data,
+      this.WrapModePropertyName,
+      DataGridViewTriState.NotSet,
+      DataGridViewTriState.NotSet,
+      DataGridViewTriState.NotSet,
+      DataGridViewTriState.NotSet
+    );
     style.WrapMode = this.WrapMode != DataGridViewTriState.NotSet ? this.WrapMode : wrapMode;
 
     if (this.Format != null)
@@ -109,9 +124,8 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
     style.Alignment = this.Alignment;
   }
 
-  private bool _IsEnabled(object data) 
-    => DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false)
-    ;
+  private bool _IsEnabled(object data)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false);
 
   public static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     foreach (var attribute in @this)

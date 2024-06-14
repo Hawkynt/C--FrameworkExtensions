@@ -1,30 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
 namespace System.Windows.Forms;
 
 public partial class DataGridViewDateTimePickerColumn {
-  private class DateTimePickerEditingControl : DateTimePicker, IDataGridViewEditingControl {
+  private sealed class DateTimePickerEditingControl : DateTimePicker, IDataGridViewEditingControl {
     public int EditingControlRowIndex { get; set; }
     public DataGridView EditingControlDataGridView { get; set; }
     public bool RepositionEditingControlOnValueChange => false;
@@ -41,9 +31,8 @@ public partial class DataGridViewDateTimePickerColumn {
       }
     }
 
-    public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context) 
-      => this.EditingControlFormattedValue
-      ;
+    public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context)
+      => this.EditingControlFormattedValue;
 
     public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle) {
       this.Font = dataGridViewCellStyle.Font;
@@ -53,9 +42,8 @@ public partial class DataGridViewDateTimePickerColumn {
 
     public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey)
       // Let the DateTimePicker handle the keys listed.
-      => (key & Keys.KeyCode) is Keys.Left or Keys.Up or Keys.Down or Keys.Right or Keys.Home or Keys.End or Keys.PageDown or Keys.PageUp 
-         || !dataGridViewWantsInputKey
-         ;
+      => (key & Keys.KeyCode) is Keys.Left or Keys.Up or Keys.Down or Keys.Right or Keys.Home or Keys.End or Keys.PageDown or Keys.PageUp
+         || !dataGridViewWantsInputKey;
 
     protected override void OnValueChanged(EventArgs eventArgs) {
       this.EditingControlValueChanged = true;
@@ -64,6 +52,5 @@ public partial class DataGridViewDateTimePickerColumn {
     }
 
     public void PrepareEditingControlForEdit(bool selectAll) { }
-    
   }
 }

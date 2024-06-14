@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -27,7 +17,20 @@ namespace System.Windows.Forms;
 ///   Allows specifying a value to be used as column with multiple images
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class DataGridViewMultiImageColumnAttribute : Attribute {
+public sealed class DataGridViewMultiImageColumnAttribute(
+  string onClickMethodName,
+  string toolTipProviderMethodName,
+  int maximumImageSize,
+  int paddingLeft,
+  int paddingTop,
+  int paddingRight,
+  int paddingBottom,
+  int marginLeft,
+  int marginTop,
+  int marginRight,
+  int marginBottom
+)
+  : Attribute {
   /// <summary>
   ///   Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute" /> class.
   /// </summary>
@@ -42,24 +45,30 @@ public sealed class DataGridViewMultiImageColumnAttribute : Attribute {
   /// <param name="maximumImageSize">the maximum size of every image displayed (width and height)</param>
   /// <param name="padding">The padding within each image</param>
   /// <param name="margin">The margin around each image</param>
-  public DataGridViewMultiImageColumnAttribute(string onClickMethodName = null, string toolTipProviderMethodName = null,
-    int maximumImageSize = 24, int padding = 0, int margin = 0)
-    : this(onClickMethodName, toolTipProviderMethodName, maximumImageSize, padding, padding, padding, padding, margin,
-      margin, margin, margin) { }
+  public DataGridViewMultiImageColumnAttribute(
+    string onClickMethodName = null,
+    string toolTipProviderMethodName = null,
+    int maximumImageSize = 24,
+    int padding = 0,
+    int margin = 0
+  )
+    : this(
+      onClickMethodName,
+      toolTipProviderMethodName,
+      maximumImageSize,
+      padding,
+      padding,
+      padding,
+      padding,
+      margin,
+      margin,
+      margin,
+      margin
+    ) { }
 
-  public DataGridViewMultiImageColumnAttribute(string onClickMethodName, string toolTipProviderMethodName,
-    int maximumImageSize, int paddingLeft, int paddingTop, int paddingRight, int paddingBottom, int marginLeft,
-    int marginTop, int marginRight, int marginBottom) {
-    this.MaximumImageSize = maximumImageSize;
-    this.OnClickMethodName = onClickMethodName;
-    this.ToolTipProviderMethodName = toolTipProviderMethodName;
-    this.Padding = new(paddingLeft, paddingTop, paddingRight, paddingBottom);
-    this.Margin = new(marginLeft, marginTop, marginRight, marginBottom);
-  }
-
-  public int MaximumImageSize { get; }
-  public string OnClickMethodName { get; }
-  public string ToolTipProviderMethodName { get; }
-  public Padding Padding { get; }
-  public Padding Margin { get; }
+  public int MaximumImageSize { get; } = maximumImageSize;
+  public string OnClickMethodName { get; } = onClickMethodName;
+  public string ToolTipProviderMethodName { get; } = toolTipProviderMethodName;
+  public Padding Padding { get; } = new(paddingLeft, paddingTop, paddingRight, paddingBottom);
+  public Padding Margin { get; } = new(marginLeft, marginTop, marginRight, marginBottom);
 }

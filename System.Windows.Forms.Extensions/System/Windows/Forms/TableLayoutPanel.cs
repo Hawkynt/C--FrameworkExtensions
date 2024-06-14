@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -102,8 +92,7 @@ public static partial class TableLayoutPanelExtensions {
 
       alreadyVisitedControls.Add(control, true);
       var newControl = control.Duplicate();
-      if (controlCallback != null)
-        controlCallback(lastRow + 1, i, control, newControl);
+      controlCallback?.Invoke(lastRow + 1, i, control, newControl);
 
       @this.Controls.Add(newControl, i, lastRow + 1);
       @this.SetRowSpan(newControl, @this.GetRowSpan(control));
@@ -160,10 +149,7 @@ public static partial class TableLayoutPanelExtensions {
     if (row >= @this.RowCount)
       throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
 
-    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
-    if (control == null)
-      throw new NotSupportedException();
-
+    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row) ?? throw new NotSupportedException();
     return reader(control);
   }
 
@@ -178,14 +164,9 @@ public static partial class TableLayoutPanelExtensions {
   /// <param name="writer">The writer delegate which sets a value of the control.</param>
   public static void SetColumnValue<TControl>(this TableLayoutPanel @this, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
     Against.ThisIsNull(@this);
+    Against.ValuesAboveOrEqual(row, @this.RowCount);
     
-    if (row >= @this.RowCount)
-      throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
-
-    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row);
-    if (control == null)
-      throw new NotSupportedException();
-
+    var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row) ?? throw new NotSupportedException();
     writer(control);
   }
 

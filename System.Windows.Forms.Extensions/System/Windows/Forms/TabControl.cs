@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -27,17 +17,14 @@ using System.Drawing.Imaging;
 using System.Linq;
 using Guard;
 
-// ReSharper disable UnusedMember.Global
-
 namespace System.Windows.Forms;
-// ReSharper disable once PartialTypeWithSinglePart
-// ReSharper disable once UnusedMember.Global
+
 public static partial class TabControlExtensions {
   public static void AddImageToImageList(this TabControl @this, Image image, string key) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(image);
     Against.ArgumentIsNullOrEmpty(key);
-    
+
     var imageList = @this.ImageList;
     imageList.Images.Add(key, image);
     if (!ImageAnimator.CanAnimate(image))
@@ -60,7 +47,7 @@ public static partial class TabControlExtensions {
     // start animating
     ImageAnimator.Animate(image, OnFrameChangedHandler);
     @this.Disposed += OnDisposed;
-    
+
     return;
 
     // remove handler and dispose image on destruction of tabcontrol
@@ -70,8 +57,8 @@ public static partial class TabControlExtensions {
         imageList.Images.RemoveByKey(kvp.Key);
         kvp.Value.Dispose();
       }
-      
-      @this.Disposed-= OnDisposed;
+
+      @this.Disposed -= OnDisposed;
     }
 
     void OnFrameChangedHandler(object _, EventArgs __) {
@@ -79,12 +66,16 @@ public static partial class TabControlExtensions {
       var currentKey = KeyGenerator(key, currentlyShownImageIndex);
 
       // refresh all tabpages using this image
-      var result = @this.BeginInvoke(new Action(() => {
-        var pages = @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0"));
+      var result = @this.BeginInvoke(
+        new Action(
+          () => {
+            var pages = @this.TabPages.Cast<TabPage>().Where(t => t.ImageKey == key || t.ImageKey.StartsWith(key + "\0"));
 
-        foreach (var page in pages)
-          page.ImageKey = currentKey;
-      }));
+            foreach (var page in pages)
+              page.ImageKey = currentKey;
+          }
+        )
+      );
 
       @this.EndInvoke(result);
     }
@@ -94,7 +85,7 @@ public static partial class TabControlExtensions {
 
   #region messing with tab color
 
-  private static readonly Dictionary<TabControl, Dictionary<TabPage, Color>> _MANAGED_TABCONTROLS = new();
+  private static readonly Dictionary<TabControl, Dictionary<TabPage, Color>> _MANAGED_TABCONTROLS = [];
 
   /// <summary>
   ///   Sets the color of the tab header.
@@ -107,7 +98,7 @@ public static partial class TabControlExtensions {
     Against.ArgumentIsNull(page);
 
     if (!_MANAGED_TABCONTROLS.TryGetValue(@this, out var managedTabs)) {
-      _MANAGED_TABCONTROLS.Add(@this, managedTabs = new());
+      _MANAGED_TABCONTROLS.Add(@this, managedTabs = []);
 
       // register handler
       @this.DrawItem -= _HeaderPainter; // avoid duplicate subscription
@@ -182,10 +173,20 @@ public static partial class TabControlExtensions {
       var imgx = paddedBounds.Left + (isSelected ? 3 : 2);
       var imgy = paddedBounds.Top + (isSelected ? 3 : 2);
       e.Graphics.DrawImage(image, imgx, imgy);
-      paddedBounds = new(imgx + list.ImageSize.Width, imgy,
-        paddedBounds.Width + paddedBounds.Left - imgx - list.ImageSize.Width, list.ImageSize.Height);
-      TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, paddedBounds, textColor,
-        TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+      paddedBounds = new(
+        imgx + list.ImageSize.Width,
+        imgy,
+        paddedBounds.Width + paddedBounds.Left - imgx - list.ImageSize.Width,
+        list.ImageSize.Height
+      );
+      TextRenderer.DrawText(
+        e.Graphics,
+        page.Text,
+        tabControl.Font,
+        paddedBounds,
+        textColor,
+        TextFormatFlags.VerticalCenter | TextFormatFlags.Left
+      );
     }
   }
 

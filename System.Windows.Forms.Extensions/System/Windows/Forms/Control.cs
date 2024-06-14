@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -29,10 +19,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using Guard;
-
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 
 namespace System.Windows.Forms;
 
@@ -64,10 +50,13 @@ public static partial class ControlExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
 
-    Async(@this, t => {
-      Thread.Sleep(dueTime);
-      SafelyInvoke(t, action);
-    });
+    Async(
+      @this,
+      t => {
+        Thread.Sleep(dueTime);
+        SafelyInvoke(t, action);
+      }
+    );
   }
 
   /// <summary>
@@ -77,12 +66,12 @@ public static partial class ControlExtensions {
   /// <returns>The position of it relative to it's form.</returns>
   public static Point GetLocationOnForm(this Control @this) {
     Against.ThisIsNull(@this);
-    
+
     var result = @this.Location;
     var c = @this;
     for (; c is not Form; c = c.Parent)
       result.Offset(c.Location);
-    
+
     return result;
   }
 
@@ -93,13 +82,13 @@ public static partial class ControlExtensions {
   /// <returns>The position of it relative to it's screen.</returns>
   public static Point GetLocationOnScreen(this Control @this) {
     Against.ThisIsNull(@this);
-    
+
     return @this.PointToScreen(Point.Empty);
   }
 
   public static Point GetLocationOnClient(this Control @this) {
     Against.ThisIsNull(@this);
-    
+
     var result = Point.Empty;
     var c = @this;
     for (; c.Parent != null; c = c.Parent)
@@ -121,7 +110,7 @@ public static partial class ControlExtensions {
   public static bool SafelyInvoke(this Control @this, Action task, bool async = true) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
-    
+
     return SafelyInvoke(@this, new __ActionWithDummyParameterWrapper { method = task }.Invoke, async);
   }
 
@@ -162,10 +151,7 @@ public static partial class ControlExtensions {
 
     var context = SynchronizationContext.Current;
     if (context != null) {
-      var wrapper = new __ReturnValueWithDummyParameterWrapper<TControl, TResult> {
-        control = @this,
-        function = function
-      };
+      var wrapper = new __ReturnValueWithDummyParameterWrapper<TControl, TResult> { control = @this, function = function };
       context.Send(wrapper.Invoke, null);
       return wrapper.result;
     }
@@ -239,9 +225,7 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <param name="task">The task.</param>
   /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
-#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
   public static bool Async(this Control @this, Action task) {
-#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
 
@@ -260,9 +244,7 @@ public static partial class ControlExtensions {
   /// <param name="this">This Control.</param>
   /// <param name="task">The task.</param>
   /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
-#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
   public static bool Async<TControl>(this TControl @this, Action<TControl> task) where TControl : Control {
-#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
 
@@ -283,22 +265,23 @@ public static partial class ControlExtensions {
   /// <param name="syncPreAction">The sync pre action.</param>
   /// <param name="task">The task.</param>
   /// <param name="syncPostAction">The sync post action.</param>
-#pragma warning disable CC0072 // Remove Async termination when method is not asynchronous.
   public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task, Action<TControl> syncPostAction = null) where TControl : Control {
-#pragma warning restore CC0072 // Remove Async termination when method is not asynchronous.
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(syncPreAction);
     Against.ArgumentIsNull(task);
 
     SafelyInvoke(@this, syncPreAction, false);
-    Async(@this, () => {
-      try {
-        task();
-      } finally {
-        if (syncPostAction != null)
-          SafelyInvoke(@this, syncPostAction, false);
+    Async(
+      @this,
+      () => {
+        try {
+          task();
+        } finally {
+          if (syncPostAction != null)
+            SafelyInvoke(@this, syncPostAction, false);
+        }
       }
-    });
+    );
   }
 
   /// <summary>
@@ -335,14 +318,13 @@ public static partial class ControlExtensions {
     else
       for (var i = children.Count - 1; i >= 0; --i) {
         var child = children[i];
-#pragma warning disable CC0031
         // Check for null before calling a delegate
-        if (predicate(child)) {
-#pragma warning restore CC0031
-          // Check for null before calling a delegate
-          children.RemoveAt(i);
-          child.Dispose();
-        }
+        if (!predicate(child))
+          continue;
+        
+        // Check for null before calling a delegate
+        children.RemoveAt(i);
+        child.Dispose();
       }
   }
 
@@ -645,7 +627,7 @@ public static partial class ControlExtensions {
           var items = box.Items;
           if (items.Count <= 0)
             return comboBox;
-          
+
           comboBox.Items.AddRange(items.Cast<object>().ToArray());
           comboBox.SelectedItem = box.SelectedItem;
           comboBox.SelectedIndex = box.SelectedIndex;
@@ -656,8 +638,7 @@ public static partial class ControlExtensions {
 
         return comboBox;
       }
-      default:
-        throw new NotSupportedException();
+      default: throw new NotSupportedException();
     }
   }
 
@@ -690,7 +671,7 @@ public static partial class ControlExtensions {
     @this.DataBindings.Add(binding);
     return;
 
-    string GetBindingSourcePropertyName(Expression e) 
+    string GetBindingSourcePropertyName(Expression e)
       => e switch {
         MemberExpression member => // controlProperty = bs.PropertyName
           GetPropertyName(member),
@@ -700,16 +681,16 @@ public static partial class ControlExtensions {
       }
     ;
 
-    string GetControlPropertyName(Expression e) {
-      return e switch {
+    string GetControlPropertyName(Expression e) 
+      => e switch {
         MemberExpression { Expression: ParameterExpression parameter } member when parameter.Type == controlType => member.Member.Name,
         UnaryExpression {
           NodeType: ExpressionType.Convert,
           Operand: MemberExpression { Expression: ParameterExpression parameter } member
         } when parameter.Type == controlType => member.Member.Name,
         _ => null
-      };
-    }
+      }
+    ;
 
     string GetPropertyName(MemberExpression member) {
       if (
@@ -739,70 +720,116 @@ public static partial class ControlExtensions {
   }
 
   public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
-    => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler, bindingCompleteCallback)
-    ;
+    => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler, bindingCompleteCallback);
 
   public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
-    => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler, bindingCompleteCallback)
-    ;
+    => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler, bindingCompleteCallback);
 
   #region to make life easier
 
-  public static void AddBinding<TSource>(this Label @this, object source,
+  public static void AddBinding<TSource>(
+    this Label @this,
+    object source,
     Expression<Func<Label, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<Label, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this CheckBox @this, object source,
+  public static void AddBinding<TSource>(
+    this CheckBox @this,
+    object source,
     Expression<Func<CheckBox, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<CheckBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this TextBox @this, object source,
+  public static void AddBinding<TSource>(
+    this TextBox @this,
+    object source,
     Expression<Func<TextBox, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<TextBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this NumericUpDown @this, object source,
+  public static void AddBinding<TSource>(
+    this NumericUpDown @this,
+    object source,
     Expression<Func<NumericUpDown, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
-    AddBinding<NumericUpDown, TSource>(@this, source, expression, mode, customConversionHandler,
-      bindingCompleteCallback);
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
+    AddBinding<NumericUpDown, TSource>(
+      @this,
+      source,
+      expression,
+      mode,
+      customConversionHandler,
+      bindingCompleteCallback
+    );
 
-  public static void AddBinding<TSource>(this RadioButton @this, object source,
+  public static void AddBinding<TSource>(
+    this RadioButton @this,
+    object source,
     Expression<Func<RadioButton, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<RadioButton, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this Button @this, object source,
+  public static void AddBinding<TSource>(
+    this Button @this,
+    object source,
     Expression<Func<Button, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<Button, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this GroupBox @this, object source,
+  public static void AddBinding<TSource>(
+    this GroupBox @this,
+    object source,
     Expression<Func<GroupBox, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<GroupBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this ComboBox @this, object source,
+  public static void AddBinding<TSource>(
+    this ComboBox @this,
+    object source,
     Expression<Func<ComboBox, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
     AddBinding<ComboBox, TSource>(@this, source, expression, mode, customConversionHandler, bindingCompleteCallback);
 
-  public static void AddBinding<TSource>(this DateTimePicker @this, object source,
+  public static void AddBinding<TSource>(
+    this DateTimePicker @this,
+    object source,
     Expression<Func<DateTimePicker, TSource, bool>> expression,
     DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged,
-    ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) =>
-    AddBinding<DateTimePicker, TSource>(@this, source, expression, mode, customConversionHandler,
-      bindingCompleteCallback);
+    ConvertEventHandler customConversionHandler = null,
+    BindingCompleteEventHandler bindingCompleteCallback = null
+  ) =>
+    AddBinding<DateTimePicker, TSource>(
+      @this,
+      source,
+      expression,
+      mode,
+      customConversionHandler,
+      bindingCompleteCallback
+    );
 
   #endregion
 
@@ -814,9 +841,7 @@ public static partial class ControlExtensions {
   /// </summary>
   /// <param name="this">The control on which to check if it's in DesignMode.</param>
   /// <returns>True if DesignMode.</returns>
-  public static bool IsDesignMode(this Control @this) 
-    => LicenseManager.UsageMode == LicenseUsageMode.Designtime 
-       || IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this)
-       ;
-  
+  public static bool IsDesignMode(this Control @this)
+    => LicenseManager.UsageMode == LicenseUsageMode.Designtime
+       || IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this);
 }
