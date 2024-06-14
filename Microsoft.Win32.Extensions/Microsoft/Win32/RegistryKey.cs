@@ -14,6 +14,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+#if NET5_0_OR_GREATER
+using System.Runtime.Versioning;
+#endif
 
 namespace Microsoft.Win32;
 
@@ -50,11 +53,24 @@ public static partial class RegistryKeyExtensions {
   // TODO: 
   public static IEnumerable<RegistryKey> GetSubKeys(this RegistryKey @this, bool recursive = false) {
     var baseKey = GetBaseKeyFromKeyName(@this.Name, out var subKeyName);
-    // TIP: use a stack DEPTH_FIRST_ALGORITHM
-    foreach (var keyName in @this.GetSubKeyNames()) {
-      var fullKeyName = subKeyName + '\\' + keyName;
-      yield return baseKey.OpenSubKey(fullKeyName);
-    }
+    var stack = new Stack<string>();
+    stack.Push(subKeyName);
+
+    do {
+      var currentSubKey = stack.Pop();
+      
+      using var currentKey = baseKey.OpenSubKey(currentSubKey);
+      if (currentKey == null)
+        continue;
+
+      foreach (var keyName in currentKey.GetSubKeyNames()) {
+        var fullKeyName = $"{currentSubKey}\\{keyName}";
+        yield return baseKey.OpenSubKey(fullKeyName);
+
+        if (recursive)
+          stack.Push(fullKeyName);
+      }
+    } while (stack.Count > 0);
   }
 
   /// <summary>
@@ -68,28 +84,15 @@ public static partial class RegistryKeyExtensions {
       throw new ArgumentNullException(nameof(keyName));
 
     var length = keyName.IndexOf('\\');
-    RegistryKey registryKey;
-    switch (length == -1 ? keyName.ToUpper(CultureInfo.InvariantCulture) : keyName.Substring(0, length).ToUpper(CultureInfo.InvariantCulture)) {
-      case "HKEY_CLASSES_ROOT":
-        registryKey = Registry.ClassesRoot;
-        break;
-      case "HKEY_CURRENT_CONFIG":
-        registryKey = Registry.CurrentConfig;
-        break;
-      case "HKEY_CURRENT_USER":
-        registryKey = Registry.CurrentUser;
-        break;
-      case "HKEY_LOCAL_MACHINE":
-        registryKey = Registry.LocalMachine;
-        break;
-      case "HKEY_PERFORMANCE_DATA":
-        registryKey = Registry.PerformanceData;
-        break;
-      case "HKEY_USERS":
-        registryKey = Registry.Users;
-        break;
-      default: throw new ArgumentException("Invalid key name!", nameof(keyName));
-    }
+    var registryKey = (length == -1 ? keyName.ToUpper(CultureInfo.InvariantCulture) : keyName[..length].ToUpper(CultureInfo.InvariantCulture)) switch {
+      "HKEY_CLASSES_ROOT" or "HKCM" => Registry.ClassesRoot,
+      "HKEY_CURRENT_CONFIG" or "HKCC" => Registry.CurrentConfig,
+      "HKEY_CURRENT_USER" or "HKCU" => Registry.CurrentUser,
+      "HKEY_LOCAL_MACHINE" or "HKLM" => Registry.LocalMachine,
+      "HKEY_PERFORMANCE_DATA" or "HKPD" => Registry.PerformanceData,
+      "HKEY_USERS" or "HKU" => Registry.Users,
+      _ => throw new ArgumentException("Invalid key name!", nameof(keyName))
+    };
 
     subKeyName = length == -1 || length == keyName.Length ? string.Empty : keyName.Substring(length + 1, keyName.Length - length - 1);
     return registryKey;
