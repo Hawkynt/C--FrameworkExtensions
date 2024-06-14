@@ -263,6 +263,7 @@ resharper_remove_redundant_braces_highlighting=warning
 resharper_suggest_var_or_type_built_in_types_highlighting=hint
 resharper_suggest_var_or_type_elsewhere_highlighting=hint
 resharper_suggest_var_or_type_simple_types_highlighting=hint
+resharper_unused_member_global_highlighting=none
 
 [*.{cs}]
 file_header_template=This file is part of Hawkynt's .NET Framework extensions.\n\nHawkynt's .NET Framework extensions are free software: \nyou can redistribute and/or modify it under the terms \ngiven in the LICENSE file.\n\nHawkynt's .NET Framework extensions is distributed in the hope that \nit will be useful, but WITHOUT ANY WARRANTY; without even the implied \nwarranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nSee the LICENSEN file for more details.\n\nYou should have received a copy of the License along with Hawkynt's\n.NET Framework extensions. If not, see\n<https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.\n
