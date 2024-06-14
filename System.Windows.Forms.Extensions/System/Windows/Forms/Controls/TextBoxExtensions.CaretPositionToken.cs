@@ -17,17 +17,13 @@ namespace System.Windows.Controls;
 
 public static partial class TextBoxExtensions {
   private sealed class CaretPositionToken : ICaretPositionToken {
-    private readonly Point _point;
-
-    public CaretPositionToken() => NativeMethods._GetCaretPos(out this._point);
-
     public void Dispose() {
-      NativeMethods._SetCaretPos(this._point.X, this._point.Y);
+      NativeMethods.SetCaretPos(this.Position);
       GC.SuppressFinalize(this);
     }
 
     ~CaretPositionToken() => this.Dispose();
 
-    public Point Position => this._point;
+    public Point Position { get; } = NativeMethods.GetCaretPos();
   }
 }

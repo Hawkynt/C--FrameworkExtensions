@@ -17,22 +17,14 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 /// <summary>
-///   allows to show an image next to the displayed text when a condition is met.
+///   Allows to show an image next to the displayed text when a condition is met.
 /// </summary>
+/// <param name="imagePropertyName">The name of the property which returns the image to display</param>
+/// <param name="conditionalPropertyName">The name of the property which defines, if the image is shown</param>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-public sealed class SupportsConditionalImageAttribute : Attribute {
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="SupportsConditionalImageAttribute" /> class.
-  /// </summary>
-  /// <param name="imagePropertyName">The name of the property which returns the image to display</param>
-  /// <param name="conditionalPropertyName">The name of the property which defines, if the image is shown</param>
-  public SupportsConditionalImageAttribute(string imagePropertyName, string conditionalPropertyName = null) {
-    this.ImagePropertyName = imagePropertyName;
-    this.ConditionalPropertyName = conditionalPropertyName;
-  }
-
-  public string ImagePropertyName { get; }
-  public string ConditionalPropertyName { get; }
+public sealed class SupportsConditionalImageAttribute(string imagePropertyName, string conditionalPropertyName = null) : Attribute {
+  public string ImagePropertyName { get; } = imagePropertyName;
+  public string ConditionalPropertyName { get; } = conditionalPropertyName;
 
   public Image GetImage(object row, object value) {
     if (value is null)

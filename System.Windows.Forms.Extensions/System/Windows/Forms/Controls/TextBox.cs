@@ -30,16 +30,13 @@ public static partial class TextBoxExtensions {
   ///   Sets the caret position.
   /// </summary>
   /// <param name="p">The point on screen.</param>
-  public static void SetCaretPosition(Point p) => NativeMethods._SetCaretPos(p.X, p.Y);
+  public static void SetCaretPosition(Point p) => NativeMethods.SetCaretPos(p);
 
   /// <summary>
   ///   Gets the caret position.
   /// </summary>
   /// <returns></returns>
-  public static Point GetCaretPosition() {
-    NativeMethods._GetCaretPos(out var result);
-    return result;
-  }
+  public static Point GetCaretPosition() => NativeMethods.GetCaretPos();
 
   /// <summary>
   ///   Moves the cursor to end of the text.

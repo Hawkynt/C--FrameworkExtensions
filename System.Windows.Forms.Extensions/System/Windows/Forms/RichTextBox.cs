@@ -326,7 +326,7 @@ public static partial class RichTextBoxExtensions {
 #if !SUPPORTS_CONDITIONAL_WEAK_TABLE
   private static readonly Dictionary<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = [];
 #else
-  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = [];
+  private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new();
 #endif
 
   public static void ApplySyntaxHighlighting(this RichTextBox @this, SyntaxHighlightingConfiguration configuration, bool reapply = false) {

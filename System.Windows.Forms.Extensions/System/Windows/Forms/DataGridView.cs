@@ -921,85 +921,6 @@ public static partial class DataGridViewExtensions {
 
   #region fixing stuff
 
-  /// <summary>
-  ///   Saves the state of a DataGridView during Enable/Disable state transitions.
-  /// </summary>
-  private sealed class DataGridViewState {
-    private readonly bool _readonly;
-    private readonly Color _defaultCellStyleBackColor;
-    private readonly Color _defaultCellStyleForeColor;
-    private readonly Color _columnHeadersDefaultCellStyleBackColor;
-    private readonly Color _columnHeadersDefaultCellStyleForeColor;
-    private readonly bool _enableHeadersVisualStyles;
-    private readonly Color _backgroundColor;
-
-    private DataGridViewState(
-      bool @readonly,
-      Color defaultCellStyleBackColor,
-      Color defaultCellStyleForeColor,
-      Color columnHeadersDefaultCellStyleBackColor,
-      Color columnHeadersDefaultCellStyleForeColor,
-      bool enableHeadersVisualStyles,
-      Color backgroundColor
-    ) {
-      this._readonly = @readonly;
-      this._defaultCellStyleBackColor = defaultCellStyleBackColor;
-      this._defaultCellStyleForeColor = defaultCellStyleForeColor;
-      this._columnHeadersDefaultCellStyleBackColor = columnHeadersDefaultCellStyleBackColor;
-      this._columnHeadersDefaultCellStyleForeColor = columnHeadersDefaultCellStyleForeColor;
-      this._enableHeadersVisualStyles = enableHeadersVisualStyles;
-      this._backgroundColor = backgroundColor;
-    }
-
-    /// <summary>
-    ///   Restores the saved state to the given DataGridView.
-    /// </summary>
-    /// <param name="dataGridView">The DataGridView to restore state to.</param>
-    public void RestoreTo(DataGridView dataGridView) {
-      dataGridView.SuspendLayout();
-      {
-        dataGridView.ReadOnly = this._readonly;
-        dataGridView.DefaultCellStyle.BackColor = this._defaultCellStyleBackColor;
-        dataGridView.DefaultCellStyle.ForeColor = this._defaultCellStyleForeColor;
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor = this._columnHeadersDefaultCellStyleBackColor;
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = this._columnHeadersDefaultCellStyleForeColor;
-        dataGridView.EnableHeadersVisualStyles = this._enableHeadersVisualStyles;
-        dataGridView.BackgroundColor = this._backgroundColor;
-      }
-      dataGridView.ResumeLayout(true);
-    }
-
-    /// <summary>
-    ///   Saves the state of the given DataGridView.
-    /// </summary>
-    /// <param name="dataGridView">The DataGridView to save state from.</param>
-    /// <returns></returns>
-    public static DataGridViewState FromDataGridView(DataGridView dataGridView) =>
-      new(
-        dataGridView.ReadOnly,
-        dataGridView.DefaultCellStyle.BackColor,
-        dataGridView.DefaultCellStyle.ForeColor,
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor,
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor,
-        dataGridView.EnableHeadersVisualStyles,
-        dataGridView.BackgroundColor
-      );
-
-    public static void ChangeToDisabled(DataGridView dataGridView) {
-      dataGridView.SuspendLayout();
-      {
-        dataGridView.ReadOnly = true;
-        dataGridView.EnableHeadersVisualStyles = false;
-        dataGridView.DefaultCellStyle.ForeColor = SystemColors.GrayText;
-        dataGridView.DefaultCellStyle.BackColor = SystemColors.Control;
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = SystemColors.GrayText;
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
-        dataGridView.BackgroundColor = SystemColors.Control;
-      }
-      dataGridView.ResumeLayout(true);
-    }
-  }
-
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
   private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new();
 #else
@@ -1474,31 +1395,10 @@ public static partial class DataGridViewExtensions {
     c.Selected = true;
   }
 
-  private sealed class _CellEditState {
-    private readonly Color _foreColor;
-    private readonly Color _backColor;
-
-    private _CellEditState(Color foreColor, Color backColor) {
-      this._foreColor = foreColor;
-      this._backColor = backColor;
-    }
-
-    public static _CellEditState FromCell(DataGridViewCell cell) {
-      var style = cell.Style;
-      return new(style.ForeColor, style.BackColor);
-    }
-
-    public void ToCell(DataGridViewCell cell) {
-      var style = cell.Style;
-      style.ForeColor = this._foreColor;
-      style.BackColor = this._backColor;
-    }
-  }
-
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
-  private static readonly ConditionalWeakTable<DataGridViewCell, _CellEditState> _cellEditStates = new();
+  private static readonly ConditionalWeakTable<DataGridViewCell, CellEditState> _cellEditStates = new();
 #else
-  private static readonly Dictionary<DataGridViewCell, _CellEditState> _cellEditStates = [];
+  private static readonly Dictionary<DataGridViewCell, CellEditState> _cellEditStates = [];
 #endif
 
   /// <summary>
@@ -1515,7 +1415,7 @@ public static partial class DataGridViewExtensions {
     if (dgv.SelectedCells.Count <= 1)
       return;
 
-    _cellEditStates.Add(cell, _CellEditState.FromCell(cell));
+    _cellEditStates.Add(cell, CellEditState.FromCell(cell));
     cellStyle.ForeColor = DrawingSystemColors.HighlightText;
     cellStyle.BackColor = DrawingSystemColors.Highlight;
   }
@@ -1561,10 +1461,6 @@ public static partial class DataGridViewExtensions {
       if (cell.ColumnIndex != lastSelected.ColumnIndex)
         cell.Selected = false;
     }
-  }
-
-  private sealed class DataGridViewValidationState {
-    public bool HasStartedMultipleValueChange => true;
   }
 
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
