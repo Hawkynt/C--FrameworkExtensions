@@ -1,34 +1,27 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 namespace System;
 
 /// <summary>
-/// This is for using colored output in the console window in a thread-safe way.
+///   This is for using colored output in the console window in a thread-safe way.
 /// </summary>
 public static partial class ConsoleExtensions {
   /// <summary>
-  /// Can be locked to make console color transactions like lines with different colored words.
+  ///   Can be locked to make console color transactions like lines with different colored words.
   /// </summary>
   public static readonly object Lock = new();
+
   private static ConsoleColor _foreground = ConsoleColor.Gray;
   private static ConsoleColor _background = ConsoleColor.Black;
 
@@ -36,39 +29,41 @@ public static partial class ConsoleExtensions {
   private static ConsoleColor _backgroundBackup;
 
   /// <summary>
-  /// Safes the actual console colors to backup.
+  ///   Safes the actual console colors to backup.
   /// </summary>
   private static void _SafeColors() {
     _foregroundBackup = Console.ForegroundColor;
     _backgroundBackup = Console.BackgroundColor;
   }
+
   /// <summary>
-  /// Loads the actual console colors from backup.
+  ///   Loads the actual console colors from backup.
   /// </summary>
   private static void _LoadColors() {
     Console.ForegroundColor = _foregroundBackup;
     Console.BackgroundColor = _backgroundBackup;
   }
+
   /// <summary>
-  /// Writes the data.
+  ///   Writes the data.
   /// </summary>
   /// <param name="data">The data.</param>
   public static void Write<T>(T data) => Write(data, _foreground, _background);
 
   /// <summary>
-  /// Writes the line of data.
+  ///   Writes the line of data.
   /// </summary>
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
   public static void WriteLine<T>(T data) => WriteLine(data, _foreground, _background);
 
   /// <summary>
-  /// Writes a new line.
+  ///   Writes a new line.
   /// </summary>
   public static void WriteLine() => WriteLine(string.Empty, _foreground, _background);
 
   /// <summary>
-  /// Writes the data.
+  ///   Writes the data.
   /// </summary>
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
@@ -76,7 +71,7 @@ public static partial class ConsoleExtensions {
   public static void Write<T>(T data, ConsoleColor foreground) => Write(data, foreground, _background);
 
   /// <summary>
-  /// Writes the line of data.
+  ///   Writes the line of data.
   /// </summary>
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
@@ -84,7 +79,7 @@ public static partial class ConsoleExtensions {
   public static void WriteLine<T>(T data, ConsoleColor foreground) => WriteLine(data, foreground, _background);
 
   /// <summary>
-  /// Writes the data.
+  ///   Writes the data.
   /// </summary>
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
@@ -99,8 +94,9 @@ public static partial class ConsoleExtensions {
       _LoadColors();
     }
   }
+
   /// <summary>
-  /// Writes the line of data.
+  ///   Writes the line of data.
   /// </summary>
   /// <typeparam name="T">The type of data</typeparam>
   /// <param name="data">The data.</param>
@@ -115,8 +111,9 @@ public static partial class ConsoleExtensions {
       _LoadColors();
     }
   }
+
   /// <summary>
-  /// Escapes the data to be displayed.
+  ///   Escapes the data to be displayed.
   /// </summary>
   /// <typeparam name="T">The type of data.</typeparam>
   /// <param name="data">The data.</param>
@@ -124,12 +121,12 @@ public static partial class ConsoleExtensions {
   public static string EscapeAdv<T>(T data) => data.ToString().Replace("\\", @"\\").Replace("{", "\\{");
 
   /// <summary>
-  /// Advance write text line.
-  /// NOTE: Every { and \ in the format string must be escaped with a leading \
-  /// NOTE: Every {f} switches the foreground to that color
-  /// NOTE: Every {f,b} switches the foreground and the background color
-  /// NOTE: Every {,b} switches the background to that color
-  /// NOTE: Every {} resets to default
+  ///   Advance write text line.
+  ///   NOTE: Every { and \ in the format string must be escaped with a leading \
+  ///   NOTE: Every {f} switches the foreground to that color
+  ///   NOTE: Every {f,b} switches the foreground and the background color
+  ///   NOTE: Every {,b} switches the background to that color
+  ///   NOTE: Every {} resets to default
   /// </summary>
   /// <param name="format">The format string.</param>
   public static void WriteLineAdv(string format) {
@@ -140,9 +137,9 @@ public static partial class ConsoleExtensions {
   }
 
   /// <summary>
-  /// Advance write text line.
-  /// NOTE: Every char between 0x00 and 0x0f changes foreground color
-  /// NOTE: Every char between 0x10 and 0x1f changes background color
+  ///   Advance write text line.
+  ///   NOTE: Every char between 0x00 and 0x0f changes foreground color
+  ///   NOTE: Every char between 0x10 and 0x1f changes background color
   /// </summary>
   /// <param name="format">The format string.</param>
   public static void WriteLineNoSpecials(string format) {
@@ -153,19 +150,18 @@ public static partial class ConsoleExtensions {
   }
 
   /// <summary>
-  /// Advance write text.
-  /// NOTE: Every { and \ in the format string must be escaped with a leading \
-  /// NOTE: Every {f} switches the foreground to that color
-  /// NOTE: Every {f,b} switches the foreground and the background color
-  /// NOTE: Every {,b} switches the background to that color
-  /// NOTE: Every {} resets to default
+  ///   Advance write text.
+  ///   NOTE: Every { and \ in the format string must be escaped with a leading \
+  ///   NOTE: Every {f} switches the foreground to that color
+  ///   NOTE: Every {f,b} switches the foreground and the background color
+  ///   NOTE: Every {,b} switches the background to that color
+  ///   NOTE: Every {} resets to default
   /// </summary>
   /// <param name="format">The format string.</param>
   public static void WriteAdv(string format) {
-    if (format == null) {
+    if (format == null)
       // null means null
       return;
-    }
 
     var isEscaping = false;
     var length = format.Length;
@@ -186,12 +182,11 @@ public static partial class ConsoleExtensions {
             // color indicator found
             var colorDefinition = string.Empty;
             var isEnded = false;
-            while (intI < length && !isEnded) {
+            while (intI < length && !isEnded)
               if (format[++intI] == '}')
                 isEnded = true;
               else
                 colorDefinition += format[intI];
-            }
             var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split([','], 2);
             if (colors == null || colors.Length == 0) {
               // reset colors
@@ -213,22 +208,22 @@ public static partial class ConsoleExtensions {
           }
         }
       } // next
+
       Console.ForegroundColor = oldForeground;
       Console.BackgroundColor = oldBackground;
     }
   }
 
   /// <summary>
-  /// Advance write text.
-  /// NOTE: Every char between 0x00 and 0x0f changes foreground color
-  /// NOTE: Every char between 0x10 and 0x1f changes background color
+  ///   Advance write text.
+  ///   NOTE: Every char between 0x00 and 0x0f changes foreground color
+  ///   NOTE: Every char between 0x10 and 0x1f changes background color
   /// </summary>
   /// <param name="format">The format string.</param>
   public static void WriteNoSpecials(string format) {
-    if (format == null) {
+    if (format == null)
       // null means null
       return;
-    }
 
     var length = format.Length;
     lock (Lock) {
@@ -243,6 +238,7 @@ public static partial class ConsoleExtensions {
         else
           Console.Write(current);
       }
+
       Console.ForegroundColor = oldForeground;
       Console.BackgroundColor = oldBackground;
     }
@@ -273,8 +269,9 @@ public static partial class ConsoleExtensions {
 
     return _COLORS[color];
   }
+
   /// <summary>
-  /// Gets or sets the foreground color.
+  ///   Gets or sets the foreground color.
   /// </summary>
   /// <value>The color to use.</value>
   public static ConsoleColor Foreground {
@@ -284,8 +281,9 @@ public static partial class ConsoleExtensions {
         _foreground = value;
     }
   }
+
   /// <summary>
-  /// Gets or sets the background color.
+  ///   Gets or sets the background color.
   /// </summary>
   /// <value>The color to use.</value>
   public static ConsoleColor Background {

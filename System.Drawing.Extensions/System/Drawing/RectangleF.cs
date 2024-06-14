@@ -1,27 +1,16 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
-// ReSharper disable UnusedMember.Global
 namespace System.Drawing;
 
 public static partial class RectangleExtensions {
@@ -75,11 +64,11 @@ public static partial class RectangleExtensions {
     var bottom = other.Bottom;
     var left = other.Left;
     var right = other.Right;
-    return @this.CollidesWith(left, top) 
-           || @this.CollidesWith(left, bottom) 
-           || @this.CollidesWith(right, top) 
+    return @this.CollidesWith(left, top)
+           || @this.CollidesWith(left, bottom)
+           || @this.CollidesWith(right, top)
            || @this.CollidesWith(right, bottom)
-           ;
+      ;
   }
 
   public static bool CollidesWith(this RectangleF @this, RectangleF other) {
@@ -87,9 +76,9 @@ public static partial class RectangleExtensions {
     var bottom = other.Bottom;
     var left = other.Left;
     var right = other.Right;
-    return @this.CollidesWith(left, top) 
+    return @this.CollidesWith(left, top)
            || @this.CollidesWith(left, bottom)
-           || @this.CollidesWith(right, top) 
+           || @this.CollidesWith(right, top)
            || @this.CollidesWith(right, bottom);
   }
 
@@ -106,5 +95,4 @@ public static partial class RectangleExtensions {
   public static Rectangle Ceiling(this RectangleF @this) => Rectangle.FromLTRB((int)Math.Ceiling(@this.Left), (int)Math.Ceiling(@this.Top), (int)Math.Ceiling(@this.Right), (int)Math.Ceiling(@this.Bottom));
 
   public static Rectangle Floor(this RectangleF @this) => Rectangle.FromLTRB((int)Math.Floor(@this.Left), (int)Math.Floor(@this.Top), (int)Math.Floor(@this.Right), (int)Math.Floor(@this.Bottom));
-  
 }

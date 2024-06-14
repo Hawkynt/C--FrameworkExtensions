@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
     <UseWindowsForms>true</UseWindowsForms>
     <PackageId>FrameworkExtensions.System.Drawing</PackageId>

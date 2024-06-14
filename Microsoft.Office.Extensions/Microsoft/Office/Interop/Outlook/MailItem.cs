@@ -1,3 +1,16 @@
+#region (c)2010-2042 Hawkynt
+
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
+
+#endregion
+
 #if !NETSTANDARD
 
 using System.IO;
@@ -7,11 +20,10 @@ using Guard;
 namespace Microsoft.Office.Interop.Outlook;
 
 public static partial class MailItemExtensions {
-
   public static void AddMailToRecipients(this MailItem @this, params string[] mailTo) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(mailTo);
-    
+
     var recipients = @this.Recipients;
     foreach (var address in mailTo.Where(a => !string.IsNullOrWhiteSpace(a)))
       recipients.Add(address);
@@ -26,7 +38,6 @@ public static partial class MailItemExtensions {
     var attachments = @this.Attachments;
     foreach (var file in filesToAttach)
       attachments.Add(file.FullName, OlAttachmentType.olByValue, 1, file.Name);
-
   }
 }
 

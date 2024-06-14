@@ -1,23 +1,13 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
 #endregion
 
@@ -27,18 +17,18 @@ using System.ComponentModel;
 using System.Windows.Threading;
 
 namespace System.Collections.Specialized;
-public class ObservableList<T> : IList<T>, IList, INotifyCollectionChanged where T : INotifyPropertyChanged {
-  public Dispatcher Dispatcher { get; }
 
-  private readonly List<T> _arrList = new();
+public class ObservableList<T>(Dispatcher dispatcher = null) : IList<T>, IList, INotifyCollectionChanged
+  where T : INotifyPropertyChanged {
+  public Dispatcher Dispatcher { get; } = dispatcher ?? Dispatcher.CurrentDispatcher;
+
+  private readonly List<T> _arrList = [];
 #if USEREADERWRITERLOCKSLIM
     private const int _intTimeout = Timeout.Infinite;
     private readonly ReaderWriterLockSlim _objRWLS = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 #else
   private readonly object _objLock = new();
 #endif
-
-  public ObservableList(Dispatcher objDispatcher = null) => this.Dispatcher = objDispatcher ?? Dispatcher.CurrentDispatcher;
 
   public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -127,7 +117,7 @@ public class ObservableList<T> : IList<T>, IList, INotifyCollectionChanged where
 
       return varRet;
     }
-    set { this._voidSetItemInternal(index, value); }
+    set => this._voidSetItemInternal(index, value);
   }
 
   private void _voidSetItemInternal(int index, T item) {
@@ -357,9 +347,7 @@ public class ObservableList<T> : IList<T>, IList, INotifyCollectionChanged where
 
   public bool IsFixedSize => false;
 
-  public void Remove(object value) {
-    this.Remove((T)value);
-  }
+  public void Remove(object value) => this.Remove((T)value);
 
   object IList.this[int index] {
     get => this[index];
