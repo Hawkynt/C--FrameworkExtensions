@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -68,27 +74,27 @@ public static partial class ComboBoxExtensions {
   /// <param name="this">This ComboBox.</param>
   /// <param name="insertNull">Insert null-object (use as non-selected).</param>
   /// <param name="ignoreValues">Values not to be used.</param>
-  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct 
+  public static void DataSource<TEnum>(this ComboBox @this, bool insertNull = false, TEnum[] ignoreValues = null) where TEnum : struct
     => @this.DataSource(
-    (insertNull ? [new(null, null)] : new Tuple<object, string>[0])
-    .Concat(
-      Enum
-        .GetValues(typeof(TEnum))
-        .Cast<object>()
-        .Where(i => ignoreValues == null || ignoreValues.Length == 0 || !ignoreValues.Contains((TEnum)i))
-        .Select(
-          i => {
-            var fieldInfo = typeof(TEnum).GetField(i.ToString());
-            var attribute =
-              (DisplayNameAttribute)fieldInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false).FirstOrDefault();
-            return Tuple.Create(i, attribute?.DisplayName ?? i.ToString());
-          }
-        )
-    )
-    .ToArray(),
-    nameof(Tuple<object, string>.Item2),
-    nameof(Tuple<object, string>.Item1)
-  );
+      (insertNull ? [new(null, null)] : new Tuple<object, string>[0])
+      .Concat(
+        Enum
+          .GetValues(typeof(TEnum))
+          .Cast<object>()
+          .Where(i => ignoreValues == null || ignoreValues.Length == 0 || !ignoreValues.Contains((TEnum)i))
+          .Select(
+            i => {
+              var fieldInfo = typeof(TEnum).GetField(i.ToString());
+              var attribute =
+                (DisplayNameAttribute)fieldInfo.GetCustomAttributes(typeof(DisplayNameAttribute), false).FirstOrDefault();
+              return Tuple.Create(i, attribute?.DisplayName ?? i.ToString());
+            }
+          )
+      )
+      .ToArray(),
+      nameof(Tuple<object, string>.Item2),
+      nameof(Tuple<object, string>.Item1)
+    );
 
   /// <summary>
   ///   Sets the selected item based on an enum value.

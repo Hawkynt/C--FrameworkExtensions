@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -524,7 +530,6 @@ public static partial class TreeViewExtensions {
           this.NewNodeMap.Insert(0, tnCurNode.Index + 1 + _NODEMAP_DELIMITER.ToString());
         else
           this.NewNodeMap.Insert(0, tnCurNode.Index + _NODEMAP_DELIMITER.ToString());
-
     }
 
     private bool SetMapsEqual() {
@@ -629,7 +634,7 @@ public static partial class TreeViewExtensions {
         new Point(rightPos - 4, hoveredNode.Bounds.Top - 1),
         new Point(rightPos, hoveredNode.Bounds.Top - 5)
       };
-      
+
       g.FillPolygon(Brushes.Black, leftTriangle);
       g.FillPolygon(Brushes.Black, rightTriangle);
       g.DrawLine(new(Color.Black, 2), new(leftPos, hoveredNode.Bounds.Top), new(rightPos, hoveredNode.Bounds.Top));
@@ -664,7 +669,7 @@ public static partial class TreeViewExtensions {
         new Point(rightPos - 4, hoveredNode.Bounds.Bottom - 1),
         new Point(rightPos, hoveredNode.Bounds.Bottom - 5)
       };
-      
+
       g.FillPolygon(Brushes.Black, leftTriangle);
       g.FillPolygon(Brushes.Black, rightTriangle);
       g.DrawLine(
@@ -724,6 +729,5 @@ public static partial class TreeViewExtensions {
     }
 
     #endregion
-
   }
 }

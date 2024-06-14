@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -16,18 +22,13 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
-  private readonly struct _SyntaxStyle : ISyntaxStyle {
+  private readonly struct _SyntaxStyle(Color? foreground = null, Color? background = null, FontStyle? fontStyle = null)
+    : ISyntaxStyle {
     //TODO: maybe font cache (somehow) || maybe change FontStyle to Font Object
 
-    public Color? Foreground { get; }
-    public FontStyle? FontStyle { get; }
-    public Color? Background { get; }
-
-    public _SyntaxStyle(Color? foreground = null, Color? background = null, FontStyle? fontStyle = null) {
-      this.Foreground = foreground;
-      this.Background = background;
-      this.FontStyle = fontStyle;
-    }
+    public Color? Foreground { get; } = foreground;
+    public FontStyle? FontStyle { get; } = fontStyle;
+    public Color? Background { get; } = background;
 
     public void ApplyTo(RichTextBox rtb, int startIndex, int length) {
       rtb.SelectionStart = startIndex;

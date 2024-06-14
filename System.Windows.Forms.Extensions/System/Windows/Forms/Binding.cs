@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -25,7 +31,7 @@ public static partial class BindingExtensions {
   public static void AddTypeConverter<TType>(this Binding @this, Func<object, TType> converter) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(converter);
-    
+
     @this.Format += (_, e) => {
       if (e.DesiredType != typeof(TType))
         return;

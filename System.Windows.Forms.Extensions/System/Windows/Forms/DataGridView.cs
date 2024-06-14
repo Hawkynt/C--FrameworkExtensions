@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -33,7 +39,7 @@ public static partial class DataGridViewExtensions {
 
   public static void EnableExtendedAttributes(this DataGridView @this) {
     Against.ThisIsNull(@this);
-    
+
     // unsubscribe first to avoid duplicate subscriptions
     @this.DataSourceChanged -= _DataSourceChanged;
     @this.RowPrePaint -= _RowPrePaint;
@@ -658,7 +664,7 @@ public static partial class DataGridViewExtensions {
 
     var rowData = row.DataBoundItem;
     var columnPropertyName = column.DataPropertyName;
-    
+
     TryHandle<DataGridViewImageColumnAttribute>(DataGridViewImageColumnAttribute.OnCellFormatting);
     TryHandle<DataGridViewTextAndImageColumnAttribute>(DataGridViewTextAndImageColumnAttribute.OnCellFormatting);
     TryHandle2<SupportsConditionalImageAttribute>(SupportsConditionalImageAttribute.OnCellFormatting);
@@ -686,7 +692,6 @@ public static partial class DataGridViewExtensions {
       if (attributes != null)
         handler(attributes, row, column, rowData, columnPropertyName, e);
     }
-
   }
 
   private static void _FixDisplayTextForEnums(
@@ -1030,7 +1035,7 @@ public static partial class DataGridViewExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(target);
     Against.SameInstance(@this, target);
-    
+
     target.Columns.AddRange(@this.Columns.Cast<DataGridViewColumn>().Select(_CloneColumn).ToArray());
   }
 
@@ -1053,7 +1058,7 @@ public static partial class DataGridViewExtensions {
   ) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
-    
+
     return @this.Columns.Cast<DataGridViewColumn>().Where(predicate);
   }
 
@@ -1072,7 +1077,7 @@ public static partial class DataGridViewExtensions {
 
   public static bool TryGetColumn(this DataGridView @this, int columnIndex, out DataGridViewColumn column) {
     Against.ThisIsNull(@this);
-    
+
     if (columnIndex < 0 || columnIndex >= @this.ColumnCount) {
       column = null;
       return false;
@@ -1084,7 +1089,7 @@ public static partial class DataGridViewExtensions {
 
   public static bool TryGetColumn(this DataGridView @this, string columnName, out DataGridViewColumn column) {
     Against.ThisIsNull(@this);
-    
+
     if (!@this.Columns.Contains(columnName)) {
       column = null;
       return false;
@@ -1096,7 +1101,7 @@ public static partial class DataGridViewExtensions {
 
   public static DataGridViewColumn GetColumnByName(this DataGridView @this, string columnName) {
     Against.ThisIsNull(@this);
-    
+
     return !@this.Columns.Contains(columnName) ? null : @this.Columns[columnName];
   }
 
@@ -1220,7 +1225,7 @@ public static partial class DataGridViewExtensions {
   /// <returns>The old data source.</returns>
   public static object ExchangeDataSource(this DataGridView @this, object dataSource) {
     Against.ThisIsNull(@this);
-    
+
     var result = @this.DataSource;
     try {
       @this.DataError += OnDataError;
@@ -1252,7 +1257,7 @@ public static partial class DataGridViewExtensions {
   ) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(keyGetter);
-    
+
     try {
       @this.SuspendLayout();
 
@@ -1314,7 +1319,7 @@ public static partial class DataGridViewExtensions {
     params string[] propertyNames
   ) {
     Against.ThisIsNull(@this);
-    
+
     foreach (var propertyName in propertyNames) {
       DataGridViewColumn column;
       if ((column = @this.Columns[propertyName]) != null)
@@ -1347,7 +1352,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">The DataGridView</param>
   public static void EnableMultiCellEditing(this DataGridView @this) {
     Against.ThisIsNull(@this);
-    
+
     @this.SelectionChanged += SelectionChanged;
     @this.CellBeginEdit += CellBeginEdit;
     @this.CellEndEdit += CellEndEdit;
@@ -1360,7 +1365,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">the dgv</param>
   public static void EnableRightClickSelection(this DataGridView @this) {
     Against.ThisIsNull(@this);
-    
+
     @this.CellMouseDown += CellMouseDownRightClickEvent;
   }
 
@@ -1370,7 +1375,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">the dgv</param>
   public static void DisableRightClickSelection(this DataGridView @this) {
     Against.ThisIsNull(@this);
-    
+
     @this.CellMouseDown -= CellMouseDownRightClickEvent;
   }
 

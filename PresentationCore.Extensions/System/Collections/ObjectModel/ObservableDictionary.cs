@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -186,7 +192,7 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INo
 
   private void OnPropertyChangedEventHandler(object s, PropertyChangedEventArgs e) => this.OnPropertyChanged(e);
 
-  private void OnCollectionChangedEventHandler(object s, NotifyCollectionChangedEventArgs e) 
+  private void OnCollectionChangedEventHandler(object s, NotifyCollectionChangedEventArgs e)
     => this.OnPropertyChanged("value");
 
   #endregion

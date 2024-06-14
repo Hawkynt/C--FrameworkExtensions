@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -22,5 +28,4 @@ public static class DocumentExtensions {
   /// <param name="this">The document to get the <see cref="FileInfo" /> from.</param>
   /// <returns>The created <see cref="FileInfo" />.</returns>
   public static FileInfo File(this Document @this) => new(@this.FullName);
-  
 }

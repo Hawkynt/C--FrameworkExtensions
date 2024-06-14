@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -44,7 +50,7 @@ public static partial class TextBoxExtensions {
   /// <param name="this">This TextBox.</param>
   public static void MoveCursorToEnd(this TextBox @this) {
     Against.ThisIsNull(@this);
-    
+
     @this.SelectionStart = @this.TextLength;
     @this.SelectionLength = 0;
   }
@@ -57,7 +63,7 @@ public static partial class TextBoxExtensions {
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
   public static bool TryParseInt(this TextBox @this, ref int value) {
     Against.ThisIsNull(@this);
-    
+
     var text = @this.Text;
     if (text._FOS_IsNullOrWhiteSpace())
       return false;
@@ -81,7 +87,7 @@ public static partial class TextBoxExtensions {
   /// </returns>
   public static bool TryParseInt(this TextBox @this, NumberStyles style, IFormatProvider provider, ref int value) {
     Against.ThisIsNull(@this);
-    
+
     var text = @this.Text;
     if (text._FOS_IsNullOrWhiteSpace())
       return false;

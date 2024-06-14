@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -129,7 +135,7 @@ public static partial class ImageExtensions {
   /// <summary>
   ///   All sizes that are supported for icons.
   /// </summary>
-  private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = { 16, 24, 32, 48, 64, 128 };
+  private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = [16, 24, 32, 48, 64, 128];
 
   /// <summary>
   ///   Converts a given image to an icon.

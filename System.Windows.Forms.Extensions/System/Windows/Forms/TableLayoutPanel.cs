@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -165,7 +171,7 @@ public static partial class TableLayoutPanelExtensions {
   public static void SetColumnValue<TControl>(this TableLayoutPanel @this, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ValuesAboveOrEqual(row, @this.RowCount);
-    
+
     var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row) ?? throw new NotSupportedException();
     writer(control);
   }

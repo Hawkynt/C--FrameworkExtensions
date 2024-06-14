@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -16,7 +22,6 @@ using System.Threading;
 namespace System.Windows.Threading;
 
 public static partial class EventExtensions {
-  
   /// <summary>
   ///   Invokes an event safely from no matter what thread and makes sure that the subscribers who needs it, get the event
   ///   invocation in their own threads.
@@ -29,7 +34,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
-    
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is DispatcherObject dispatcherObject) {
@@ -53,7 +58,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
-    
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is DispatcherObject dispatcherObject) {
@@ -79,7 +84,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
-    
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList()) {
       var dispatcherObject = @delegate.Target as DispatcherObject;
@@ -111,7 +116,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
-    
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList()) {
       var dispatcherObject = @delegate.Target as DispatcherObject;

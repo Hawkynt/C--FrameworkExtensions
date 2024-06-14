@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -58,7 +64,7 @@ public static partial class RegistryKeyExtensions {
 
     do {
       var currentSubKey = stack.Pop();
-      
+
       using var currentKey = baseKey.OpenSubKey(currentSubKey);
       if (currentKey == null)
         continue;
@@ -97,5 +103,4 @@ public static partial class RegistryKeyExtensions {
     subKeyName = length == -1 || length == keyName.Length ? string.Empty : keyName.Substring(length + 1, keyName.Length - length - 1);
     return registryKey;
   }
-  
 }

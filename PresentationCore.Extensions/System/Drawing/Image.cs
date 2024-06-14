@@ -7,10 +7,15 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
-
 
 #if !NETCOREAPP && !NET5_0_OR_GREATER
 
@@ -22,9 +27,8 @@ using Guard;
 namespace System.Drawing;
 
 public static partial class ImageExtensions {
-  
   /// <summary>
-  /// Converts a GDI+ image into a WPF BitmapImage.
+  ///   Converts a GDI+ image into a WPF BitmapImage.
   /// </summary>
   /// <param name="this">The image.</param>
   /// <returns>The BitmapImage</returns>
@@ -34,17 +38,16 @@ public static partial class ImageExtensions {
     using var memoryStream = new MemoryStream();
     @this.Save(memoryStream, ImageFormat.Png);
     memoryStream.Position = 0;
-    
+
     var result = new BitmapImage();
     result.BeginInit();
     result.CacheOption = BitmapCacheOption.OnLoad;
     result.UriSource = null;
     result.StreamSource = memoryStream;
     result.EndInit();
-    
+
     return result;
   }
-
 }
 
 #endif

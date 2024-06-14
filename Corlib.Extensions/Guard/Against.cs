@@ -7,7 +7,13 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -64,7 +70,7 @@ internal static partial class Against {
     if (value == null)
       AlwaysThrow.ArgumentNullException(expression ?? nameof(value), caller);
     if (value.Length <= 0)
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must contains elements", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must contains elements""", caller);
   }
 
   [DebuggerHidden]
@@ -75,7 +81,7 @@ internal static partial class Against {
     if (value == null)
       AlwaysThrow.ArgumentNullException(expression ?? nameof(value), caller);
     if (!value.Any())
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must contains elements", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must contains elements""", caller);
   }
 
   [DebuggerHidden]
@@ -86,7 +92,7 @@ internal static partial class Against {
     if (value == null)
       AlwaysThrow.ArgumentNullException(expression ?? nameof(value), caller);
     if (value.Length <= 0)
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must contain contents", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must contain contents""", caller);
   }
 
   [DebuggerHidden]
@@ -97,12 +103,12 @@ internal static partial class Against {
     if (value == null)
       AlwaysThrow.ArgumentNullException(expression ?? nameof(value), caller);
     if (value.Length <= 0)
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must contain contents", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must contain contents""", caller);
 
     if (value.Any(c => !char.IsWhiteSpace(c)))
       return;
 
-    AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must contain non-whitespace characters", caller);
+    AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must contain non-whitespace characters""", caller);
   }
 
   [DebuggerHidden]
@@ -111,7 +117,7 @@ internal static partial class Against {
 #endif
   public static void ArgumentIsNotOfType<T>(object value, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
     if (value is not T)
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must be of type \"{typeof(T)}\"", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must be of type "{typeof(T)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -120,7 +126,7 @@ internal static partial class Against {
 #endif
   public static void ArgumentIsOfType<T>(object value, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
     if (value is T)
-      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"Parameter \"{expression ?? nameof(value)}\" must not be of type \"{typeof(T)}\"", caller);
+      AlwaysThrow.ArgumentException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be of type "{typeof(T)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -129,7 +135,7 @@ internal static partial class Against {
 #endif
   public static void False(bool value, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
     if (!value)
-      AlwaysThrow.InvalidOperationException($"Value \"{expression ?? nameof(value)}\" should not be FALSE", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{expression ?? nameof(value)}" should not be FALSE""", caller);
   }
 
   [DebuggerHidden]
@@ -138,7 +144,7 @@ internal static partial class Against {
 #endif
   public static void True(bool value, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
     if (value)
-      AlwaysThrow.InvalidOperationException($"Value \"{expression ?? nameof(value)}\" should not be TRUE", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{expression ?? nameof(value)}" should not be TRUE""", caller);
   }
 
   [DebuggerHidden]
@@ -147,7 +153,7 @@ internal static partial class Against {
 #endif
   public static void DifferentInstances<T>(T value, T other, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null, [CallerArgumentExpression(nameof(other))] string? otherExpression = null) where T : class {
     if (!ReferenceEquals(value, other))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -156,7 +162,7 @@ internal static partial class Against {
 #endif
   public static void SameInstance<T>(T value, T other, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null, [CallerArgumentExpression(nameof(other))] string? otherExpression = null) where T : class {
     if (ReferenceEquals(value, other))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" must not be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" must not be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -168,12 +174,12 @@ internal static partial class Against {
       return;
 
     if (value is null || other is null)
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should be equal to "{expression ?? nameof(value)}" """, caller);
 
     if (EqualityComparer<T>.Default.Equals(value, other))
       return;
 
-    AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should be equal to \"{expression ?? nameof(value)}\"", caller);
+    AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -185,12 +191,12 @@ internal static partial class Against {
       return;
 
     if (value is null || other is null)
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should be equal to "{expression ?? nameof(value)}" """, caller);
 
     if (string.Equals(value, other, comparisonType))
       return;
 
-    AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should be equal to \"{expression ?? nameof(value)}\"", caller);
+    AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -199,13 +205,13 @@ internal static partial class Against {
 #endif
   public static void ValuesAreEqual<T>(T? value, T? other, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null, [CallerArgumentExpression(nameof(other))] string? otherExpression = null) {
     if (ReferenceEquals(value, other))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should not be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should not be equal to "{expression ?? nameof(value)}" """, caller);
 
     if (value is null || other is null)
       return;
 
     if (EqualityComparer<T>.Default.Equals(value, other))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should not be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should not be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
@@ -214,13 +220,13 @@ internal static partial class Against {
 #endif
   public static void ValuesAreEqual(string? value, string? other, StringComparison comparisonType, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null, [CallerArgumentExpression(nameof(other))] string? otherExpression = null) {
     if (ReferenceEquals(value, other))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should not be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should not be equal to "{expression ?? nameof(value)}" """, caller);
 
     if (value is null || other is null)
       return;
 
     if (string.Equals(value, other, comparisonType))
-      AlwaysThrow.InvalidOperationException($"Value \"{otherExpression ?? nameof(other)}\" should not be equal to \"{expression ?? nameof(value)}\"", caller);
+      AlwaysThrow.InvalidOperationException($"""Value "{otherExpression ?? nameof(other)}" should not be equal to "{expression ?? nameof(value)}" """, caller);
   }
 
   [DebuggerHidden]
