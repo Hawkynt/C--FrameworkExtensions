@@ -1350,8 +1350,8 @@ public static partial class StreamExtensions {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-  public static async Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => await ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
+  public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
+    => ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
