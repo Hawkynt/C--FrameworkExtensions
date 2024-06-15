@@ -29,9 +29,8 @@ using Guard;
 #if NETFRAMEWORK
 using Microsoft.Win32;
 #endif
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -450,9 +449,7 @@ public static partial class TypeExtensions {
   /// <param name="inherit">if set to <c>true</c> inherited attributes would also be returned; otherwise, not.</param>
   /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
   /// <returns>The given attribute instance.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TAttribute GetAssemblyAttribute<TAttribute>(this Type @this, bool inherit = false, int index = 0) {
     Against.ThisIsNull(@this);
 
@@ -509,9 +506,7 @@ public static partial class TypeExtensions {
   ///   created if <paramref name="allowInstanceCreationForReferenceTypes" /> is true, otherwise, the default value (null) is
   ///   returned.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static object GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
     Against.ThisIsNull(@this);
 
@@ -543,9 +538,7 @@ public static partial class TypeExtensions {
 
     throw new NotSupportedException("Unknown type");
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     static object CreateForNullable(Type underlyingType, bool allowInstanceCreationForReferenceTypes, Random entropySource)
       => entropySource.GetBoolean() ? null : GetRandomValueFor(underlyingType, allowInstanceCreationForReferenceTypes, entropySource)
     ;
@@ -587,9 +580,7 @@ public static partial class TypeExtensions {
       }
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     static bool TryCreateForWellKnownValueType(Type type, Random entropySource, out object result) => (__tryCreateRandomValueForWellKnownType ??= new()).Invoke(type, entropySource, out result);
 
     static object CreateForEnum(Type type, Random entropySource) {
@@ -648,9 +639,7 @@ public static partial class TypeExtensions {
       { TypeDateTime, r => new DateTime(r.NextInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks)) },
     };
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public bool Invoke(Type type, Random entropySource, out object result) {
       if (this._generators.TryGetValue(type, out var generator)) {
         result = generator(entropySource);

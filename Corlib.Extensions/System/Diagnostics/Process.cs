@@ -22,9 +22,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Diagnostics;
 
@@ -62,9 +61,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Process" />.</param>
   /// <returns>The parent <see cref="Process" /> or <see langword="null" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process Parent(this Process @this) {
     Against.ThisIsNull(@this);
     return GetParentProcessOrNull(@this);
@@ -97,9 +94,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Process" /></param>
   /// <returns>An enumeration of <see cref="Process" />es</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<Process> Children(this Process @this) {
     Against.ThisIsNull(@this);
 
@@ -112,9 +107,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Process" /></param>
   /// <returns>An enumeration of <see cref="Process" />es</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<Process> AllChildren(this Process @this) {
     Against.ThisIsNull(@this);
 
@@ -160,9 +153,7 @@ public static partial class ProcessExtensions {
   ///   Gets the parent <see cref="Process" /> of the current one.
   /// </summary>
   /// <returns>An instance of the <see cref="Process" />-class.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess());
 
   /// <summary>
@@ -170,9 +161,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="processId">The process id.</param>
   /// <returns>An instance of the <see cref="Process" /> class.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcess(int processId) => GetParentProcess(Process.GetProcessById(processId));
 
   /// <summary>
@@ -180,9 +169,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="processId">The process id.</param>
   /// <returns>An instance of the <see cref="Process" /> class or <see langword="null" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcessOrNull(int processId) {
     Process process;
     try {
@@ -199,9 +186,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Process" /></param>
   /// <returns>Another <see cref="Process" />-Instance</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcess(this Process @this) {
     Against.ThisIsNull(@this);
     return GetParentProcess(@this.Handle);
@@ -212,9 +197,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Process" /></param>
   /// <returns>Another <see cref="Process" />-Instance or <see langword="null" /></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcessOrNull(this Process @this) {
     Against.ThisIsNull(@this);
     try {
@@ -229,9 +212,7 @@ public static partial class ProcessExtensions {
   /// </summary>
   /// <param name="handle">The process handle.</param>
   /// <returns>An instance of the <see cref="Process" /> class.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Process GetParentProcess(IntPtr handle) {
     var pbi = NativeMethods.NtQueryInformationProcess(handle);
     return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());

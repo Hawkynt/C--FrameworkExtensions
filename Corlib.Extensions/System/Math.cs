@@ -20,9 +20,8 @@
 
 using System.Collections.Generic;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -57,27 +56,21 @@ public static partial class MathEx {
     return current;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Floor(this float @this) => MathF.Floor(@this);
 #else
   public static float Floor(this float @this) => (float)Math.Floor(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Ceiling(this float @this) => MathF.Ceiling(@this);
 #else
   public static float Ceiling(this float @this) => (float)Math.Ceiling(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Truncate(this float @this) => MathF.Truncate(@this);
 #else
@@ -91,9 +84,7 @@ public static partial class MathEx {
   ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
   ///   returned.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Round(this float @this) => MathF.Round(@this);
 #else
@@ -108,9 +99,7 @@ public static partial class MathEx {
   ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
   ///   returned.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static float Round(this float @this, int digits) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
@@ -125,9 +114,7 @@ public static partial class MathEx {
   /// <param name="this">A number to be rounded.</param>
   /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Round(this float @this, MidpointRounding method) => MathF.Round(@this, method);
 #else
@@ -139,9 +126,7 @@ public static partial class MathEx {
   /// <param name="digits">The number of decimal places in the return value.</param>
   /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static float Round(this float @this, int digits, MidpointRounding method) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
@@ -152,46 +137,34 @@ public static partial class MathEx {
 #endif
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Log(this float @this, float @base) => MathF.Log(@this, @base);
 #else
   public static float Log(this float @this, float @base) => (float)Math.Log(@this, @base);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Log(this double @this, double @base) => Math.Log(@this, @base);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Log2(this float @this) => MathF.Log(@this, 2);
 #else
   public static float Log2(this float @this) => (float)Math.Log(@this, 2);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Log2(this double @this) => Math.Log(@this, 2);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Exp(this float @this) => MathF.Exp(@this);
 #else
   public static float Exp(this float @this) => (float)Math.Exp(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Exp(this double @this) => Math.Exp(@this);
 
   /// <summary>
@@ -199,9 +172,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Cbrt(this double @this) => Math.Pow(@this, 1d / 3);
 
   /// <summary>
@@ -209,9 +180,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Cot(this double @this) => Math.Cos(@this) / Math.Sin(@this);
 
   /// <summary>
@@ -219,9 +188,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Coth(this double @this) {
     var ex = Math.Exp(@this);
     var em = 1 / ex;
@@ -233,9 +200,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Csc(this double @this) => 1 / Math.Sin(@this);
 
   /// <summary>
@@ -243,9 +208,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Csch(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex - 1 / ex);
@@ -256,9 +219,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Sec(this double @this) => 1 / Math.Cos(@this);
 
   /// <summary>
@@ -266,9 +227,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Sech(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex + 1 / ex);
@@ -279,9 +238,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arsinh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this + 1));
 
   /// <summary>
@@ -289,9 +246,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcosh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this - 1));
 
   /// <summary>
@@ -299,9 +254,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Artanh(this double @this) => 0.5d * Math.Log((1 + @this) / (1 - @this));
 
   /// <summary>
@@ -309,9 +262,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcoth(this double @this) => 0.5d * Math.Log((@this + 1) / (@this - 1));
 
   /// <summary>
@@ -319,9 +270,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arsech(this double @this) => Math.Log((1 + Math.Sqrt(1 - @this * @this)) / @this);
 
   /// <summary>
@@ -329,9 +278,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcsch(this double @this) => Math.Log((1 + Math.Sqrt(1 + @this * @this)) / @this);
 
   /// <summary>
@@ -339,9 +286,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Asin(this double @this) => Math.Asin(@this);
 
   /// <summary>
@@ -349,9 +294,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acos(this double @this) => Math.Acos(@this);
 
   /// <summary>
@@ -359,9 +302,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Atan(this double @this) => Math.Atan(@this);
 
   /// <summary>
@@ -369,9 +310,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acot(this double @this) => Math.Atan(1 / @this);
 
   /// <summary>
@@ -379,9 +318,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Asec(this double @this) => Math.Acos(1 / @this);
 
   /// <summary>
@@ -389,9 +326,7 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acsc(this double @this) => Math.Asin(1 / @this);
 
   /// <summary>

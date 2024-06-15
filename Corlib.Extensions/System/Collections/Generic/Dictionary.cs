@@ -20,9 +20,8 @@
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
@@ -688,9 +687,7 @@ public static partial class DictionaryExtensions {
   /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
   /// <param name="this">This Dictionary.</param>
   /// <returns>A new dictionary with the casted values.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static Dictionary<TKeyTarget, TValueTarget> FullCast<TKeySource, TValueSource, TKeyTarget, TValueTarget>(this IDictionary<TKeySource, TValueSource> @this) {
     Against.ThisIsNull(@this);
@@ -706,9 +703,7 @@ public static partial class DictionaryExtensions {
   /// <param name="this">This Dictionary.</param>
   /// <param name="key">The key.</param>
   /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
     Against.ThisIsNull(@this);

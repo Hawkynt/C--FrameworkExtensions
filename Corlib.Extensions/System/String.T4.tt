@@ -26,9 +26,8 @@ using System.Drawing;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 // This file holds parsing routines to convert from normal strings to a certain primitive data type.
 <#
@@ -457,9 +456,7 @@ public static partial class StringExtensions {
   
   #region Parse
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Color ParseColor(this string @this) {
     if(TryParseColor(@this, out var result))
       return result;
@@ -572,9 +569,7 @@ public static partial class StringExtensions {
       }),
     };
   
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public bool Invoke(string @this, out Color result) {
       var match = this._colorMatch.Match(@this);
       

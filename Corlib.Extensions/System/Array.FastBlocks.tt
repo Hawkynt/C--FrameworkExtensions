@@ -55,6 +55,7 @@
 
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
 
 using Block1 = System.Byte;
@@ -241,9 +242,7 @@ public static partial class ArrayExtensions {
 <#  foreach(var typeData in typeDatas.Where(i=>!i.hasHandcraftedCopyToMethod)) {#>
 <#    var typeName = typeData.name;#>
     
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex,<#=EmitTypeDef(typeData)#> target, int tgtIndex, int count){
     for (;;) {
       switch(count){
@@ -289,9 +288,7 @@ public static partial class ArrayExtensions {
 <#    if(typeData.allowByteConversion){#>
 <#      foreach(var tgtTypeData in typeDatas.Where(i=>i.name != typeName && i.allowByteConversion)){#>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static void _CopyTo(<#=EmitTypeDef(typeData)#> source, int srcIndex, <#=EmitTypeDef(tgtTypeData)#> target, int tgtIndex, int count)
     => Buffer.BlockCopy(source, srcIndex<#=EmitFastIntegerMultiply(typeData.size)#>, target, tgtIndex<#=EmitFastIntegerMultiply(tgtTypeData.size)#>, count<#=EmitFastIntegerMultiply(typeData.size)#>)
   ;
@@ -299,9 +296,7 @@ public static partial class ArrayExtensions {
 <#    }#>
 <#  }#>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe void _CopyTo(IntPtr source, int srcIndex, IntPtr target, int tgtIndex, int count)
     => _CopyTo(&((byte*)source)[srcIndex], &((byte*)target)[tgtIndex], count)
     ;
@@ -310,9 +305,7 @@ public static partial class ArrayExtensions {
 
   #region Fill
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void Fill(this IntPtr @this, int count, byte value)
     => Fill((byte*)@this, count, value)
   ;
@@ -430,9 +423,7 @@ public static partial class ArrayExtensions {
 
   #region Clear
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void Clear(this IntPtr @this, int count)
     => Clear((byte*)@this, count)
   ;
@@ -550,9 +541,7 @@ public static partial class ArrayExtensions {
 
   #region Copy-blocks
 
-  #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
   private static unsafe void _CopyTo(byte* source, int srcIndex, byte* target, int tgtIndex, int count)
     => _CopyTo(source + srcIndex, target + tgtIndex, count)
   ;
@@ -871,9 +860,7 @@ IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount,
   yield return "}";
   yield return string.Empty;
     
-  yield return "#if SUPPORTS_INLINING";
   yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
-  yield return "#endif";
   yield return "private static unsafe void _" + name + "Unmanaged("
     + string.Join(", ", operands.Select((n, i) => "byte[] " + operands[i] + ", int "+ ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"))
     +", int count) {"
@@ -894,9 +881,7 @@ IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount,
 }
 
 IEnumerable<string> EmitUnsafeProcessor(string signature, int caseCount, int unrollCount, string[] variablesToIncrement, int byteBlockCount, Func<int, IEnumerable<string>> byteEmitter, int byteBlockCount86 = 0, Func<int, IEnumerable<string>> byteEmitter86 = null) {
-  yield return "#if SUPPORTS_INLINING";
   yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
-  yield return "#endif";
   yield return "private static unsafe void " + signature + " {";
   yield return "  for(;;) {";
   yield return "    endOfBlocks: ;";
@@ -988,9 +973,7 @@ string EmitMethodHeader(string returnType, string name, TypeData type) => string
 string EmitMethodHeader(string name, TypeData type) => EmitMethodHeader(EmitTypeDef(type), name, type);
 
 IEnumerable<string> EmitMethodHeader2(string returnType, string name, TypeData type) {
-  yield return "#if SUPPORTS_INLINING";
   yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
-  yield return "#endif";
   yield return EmitMethodHeader(returnType, name, type);
 }
 

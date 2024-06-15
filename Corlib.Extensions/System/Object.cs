@@ -32,12 +32,9 @@ using Guard;
 #if SUPPORTS_CONCURRENT_COLLECTIONS
 using System.Collections.Concurrent;
 #endif
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+using MethodImplOptions = Utilities.MethodImplOptions;
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace System;
 
@@ -56,15 +53,8 @@ public static partial class ObjectExtensions {
   ///   <see langword="true" /> when the given reference is <see langword="null" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNull<T>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-  [NotNullWhen(false)]
-#endif
-    this T @this
-  ) where T : class => @this is null;
+  public static bool IsNull<T>([NotNullWhen(false)] this T @this) where T : class => @this is null;
 
   /// <summary>
   ///   Detects whether the given <see cref="object" /> is <see langword="null" />.
@@ -75,17 +65,9 @@ public static partial class ObjectExtensions {
   ///   <see langword="true" /> when the given reference is not <see langword="null" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNotNull<T>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-  [NotNullWhen(true)]
-#endif
-    this T @this
-  ) where T : class => @this is not null;
-
-
+  public static bool IsNotNull<T>([NotNullWhen(true)] this T @this) where T : class => @this is not null;
+  
   /// <summary>
   ///   Gets the property values of the object.
   /// </summary>
@@ -187,9 +169,7 @@ public static partial class ObjectExtensions {
   /// <returns>
   ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Is<TType>(this object @this) => @this is TType;
 
   /// <summary>
@@ -208,29 +188,19 @@ public static partial class ObjectExtensions {
     return types.Any(t => t == type);
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TypeIsAnyOf<TType1, TType2>(this object @this) => TypeIsAnyOf(@this, typeof(TType1), typeof(TType2));
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TypeIsAnyOf<TType1, TType2, TType3>(this object @this) => TypeIsAnyOf(@this, typeof(TType1), typeof(TType2), typeof(TType3));
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TypeIsAnyOf<TType1, TType2, TType3, TType4>(this object @this) => TypeIsAnyOf(@this, typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4));
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TypeIsAnyOf<TType1, TType2, TType3, TType4, TType5>(this object @this) => TypeIsAnyOf(@this, typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4), typeof(TType5));
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TypeIsAnyOf<TType1, TType2, TType3, TType4, TType5, TType6>(this object @this) => TypeIsAnyOf(@this, typeof(TType1), typeof(TType2), typeof(TType3), typeof(TType4), typeof(TType5), typeof(TType6));
 
   /// <summary>
@@ -241,9 +211,7 @@ public static partial class ObjectExtensions {
   /// <returns>
   ///   <c>true</c> if the given object is of the specific type; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TType As<TType>(this object @this) where TType : class => @this as TType;
 
   /// <summary>
@@ -255,9 +223,7 @@ public static partial class ObjectExtensions {
   /// <returns>
   ///   <c>true</c> if the specified object matches the condition; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsTrue<TType>(this TType @this, Predicate<TType> condition) => condition(@this);
 
   /// <summary>
@@ -269,9 +235,7 @@ public static partial class ObjectExtensions {
   /// <returns>
   ///   <c>false</c> if the specified object matches the condition; otherwise, <c>true</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsFalse<TType>(this TType @this, Predicate<TType> condition) => !condition(@this);
 
   /// <summary>
@@ -281,9 +245,7 @@ public static partial class ObjectExtensions {
   /// <param name="this">This object.</param>
   /// <param name="values">The values.</param>
   /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf<TType>(this TType @this, IEnumerable<TType> values) => values.Any(i => Equals(i, @this));
 
   /// <summary>
@@ -293,9 +255,7 @@ public static partial class ObjectExtensions {
   /// <param name="this">This object.</param>
   /// <param name="values">The values.</param>
   /// <returns><c>true</c> if it is; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf<TType>(this TType @this, params TType[] values) => IsAnyOf(@this, (IEnumerable<TType>)values);
 
   /// <summary>
@@ -304,9 +264,7 @@ public static partial class ObjectExtensions {
   /// <typeparam name="TType">The type of the object.</typeparam>
   /// <param name="this">This object.</param>
   /// <param name="action">The action to execute.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void WhenNull<TType>(this TType @this, Action action) where TType : class {
     if (@this is null)
       action();
@@ -321,9 +279,7 @@ public static partial class ObjectExtensions {
   /// <param name="function">The function to execute.</param>
   /// <param name="defaultValue">The default value to return when not <c>null</c>.</param>
   /// <returns>The result of the function or the default value.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TResult WhenNull<TType, TResult>(this TType @this, Func<TResult> function, TResult defaultValue = default) where TType : class => @this is null ? function() : defaultValue;
 
   /// <summary>
@@ -332,9 +288,7 @@ public static partial class ObjectExtensions {
   /// <typeparam name="TType">The type of the object.</typeparam>
   /// <param name="this">This object.</param>
   /// <param name="action">The action to execute.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void WhenNotNull<TType>(this TType @this, Action<TType> action) where TType : class {
     if (@this is not null)
       action(@this);
@@ -349,9 +303,7 @@ public static partial class ObjectExtensions {
   /// <param name="function">The function to execute.</param>
   /// <param name="defaultValue">The default value to return when <c>null</c>.</param>
   /// <returns>The result of the function or the default value.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TResult WhenNotNull<TType, TResult>(this TType @this, Func<TType, TResult> function, TResult defaultValue = default) where TType : class => @this is null ? defaultValue : function(@this);
 
   /// <summary>
@@ -360,9 +312,7 @@ public static partial class ObjectExtensions {
   /// <typeparam name="TValue">The type of the value.</typeparam>
   /// <param name="this">This value.</param>
   /// <returns>The used memory in bytes.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long GetMemorySize<TValue>(this TValue @this) => _GetMemorySize(@this, typeof(TValue).IsValueType);
 
   /// <summary>
@@ -370,9 +320,7 @@ public static partial class ObjectExtensions {
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>The used memory in bytes.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long GetMemorySize(this object @this) => _GetMemorySize(@this, false);
 
   /// <summary>
@@ -456,9 +404,7 @@ public static partial class ObjectExtensions {
 
 #if !DEPRECATED_BINARY_FORMATTER
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static T DeepClone<T>(this T objectToClone) where T : class => DeepClone((object)objectToClone) as T;
 
   public static object DeepClone(this object objectToClone) {
@@ -471,9 +417,7 @@ public static partial class ObjectExtensions {
 
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static T Apply<T>(this T @this, Action<T> action) where T : class {
     action.Invoke(@this);

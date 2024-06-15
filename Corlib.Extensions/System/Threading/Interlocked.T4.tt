@@ -30,9 +30,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System.Threading;
@@ -289,73 +288,55 @@ public static partial class InterlockedEx {
   #endregion
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue CompareExchange<TValue>(ref TValue source, TValue value, TValue comparand, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.CompareExchangeImplementation(ref source, value, comparand)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue Exchange<TValue>(ref TValue source, TValue value, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.ExchangeImplementation(ref source, value)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue Read<TValue>(ref TValue source, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.CompareExchangeImplementation(ref source, default(TValue), default(TValue))
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasFlag<TValue>(ref TValue source, TValue value, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.HasFlagImplementation(ref source, value)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue SetFlag<TValue>(ref TValue source, TValue value, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.SetFlagImplementation(ref source, value)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue ClearFlag<TValue>(ref TValue source, TValue value, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.ClearFlagImplementation(ref source, value)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue ToggleFlag<TValue>(ref TValue source, TValue value, StructForcingTag<TValue> _ = null) where TValue:struct 
     => HelperForEnum<TValue>.ToggleFlagImplementation(ref source, value)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue CompareExchange<TValue>(ref TValue source, TValue value, TValue comparand, ClassForcingTag<TValue> _ = null) where TValue:class 
     => Interlocked.CompareExchange(ref source, value, comparand)
     ;
 
   // ReSharper disable once UnusedParameter.Global
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TValue Exchange<TValue>(ref TValue source, TValue value, ClassForcingTag<TValue> _ = null) where TValue:class
     => Interlocked.Exchange(ref source, value)
     ;
@@ -425,9 +406,7 @@ public static partial class InterlockedEx {
   }
 <#}#>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
 <#if(isUnsupported){#>
   public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => <#=helperClassName#>.CompareExchangeImplementation(ref source, value, comparand);
@@ -435,9 +414,7 @@ public static partial class InterlockedEx {
   public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => Interlocked.CompareExchange(ref source, value, comparand);
 <#}#>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
 <#if(isUnsupported){#>
   public static <#=type#> Read(ref <#=type#> source) => <#=helperClassName#>.CompareExchangeImplementation(ref source, 0, 0);
@@ -446,9 +423,7 @@ public static partial class InterlockedEx {
 <#}#>
 
 <#if(supportsNativeExchange){#>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Exchange(ref <#=type#> source, <#=type#> value) => Interlocked.Exchange(ref source, value);
 <#}else{#>
@@ -456,41 +431,29 @@ public static partial class InterlockedEx {
 <#}#>
 
 <#if(supportsNativeIncrementDecrement){#>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Increment(ref <#=type#> source) => Interlocked.Increment(ref source);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Decrement(ref <#=type#> source) => Interlocked.Decrement(ref source);
 <#}else{#>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Increment(ref <#=type#> source) => Add(ref source, 1);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Decrement(ref <#=type#> source) => Substract(ref source, 1);
 <#}#>
 
 <#if(supportsNativeAdd){#>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Add(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, value);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static <#=type#> Substract(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, -value);
 <#}else{#>

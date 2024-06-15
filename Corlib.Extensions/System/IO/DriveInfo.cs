@@ -18,9 +18,8 @@
 #endregion
 
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -45,9 +44,7 @@ public static partial class DriveInfoExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveInfo" />.</param>
   /// <returns>A value between 0 and 100 representing the percentage of free space.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double PercentFree(this DriveInfo @this) => @this.AvailableFreeSpace * 100.0 / @this.TotalSize;
 
   /// <summary>
@@ -55,9 +52,7 @@ public static partial class DriveInfoExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveInfo" />.</param>
   /// <returns>A value between 0 and 100 representing the percentage of used space.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double PercentUsed(this DriveInfo @this) => 100 - @this.PercentFree();
 
   /// <summary>
@@ -65,9 +60,7 @@ public static partial class DriveInfoExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveInfo" />.</param>
   /// <returns>The size of a single cluster in bytes.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long ClusterSize(this DriveInfo @this) {
     NativeMethods.GetDiskFreeSpace(
       @this.Name,
@@ -85,9 +78,7 @@ public static partial class DriveInfoExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveInfo" />.</param>
   /// <returns>The size of a single sector in bytes.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long SectorSize(this DriveInfo @this) {
     NativeMethods.GetDiskFreeSpace(
       @this.Name,

@@ -27,9 +27,8 @@
 
 using System.Text;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -86,9 +85,7 @@ public static partial class <#=type#>Extensions {
     return result.ToString();
   }
   <#} else {#>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string Times(this <#=type#> @this, string text)
     => text.Repeat(@this)
     ;
@@ -100,9 +97,7 @@ public static partial class <#=type#>Extensions {
   /// <param name="this">The number of times to repeat the <see cref="char"/></param>
   /// <param name="character">The <see cref="char"/> to repeat</param>
   /// <returns>A <see cref="string"/> with containing the <see cref="char"/> n times</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string Times(this <#=type#> @this, char character) {
     Against.ValuesBelow(@this,  <#=GetOne(type)#>);
 

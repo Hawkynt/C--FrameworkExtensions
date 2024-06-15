@@ -20,9 +20,8 @@
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
@@ -36,9 +35,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if there is at least one item in the <see cref="ICollection{T}" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this ICollection<TItem> @this) {
     Against.ThisIsNull(@this);
@@ -67,9 +64,7 @@ public static partial class CollectionExtensions {
   /// <param name="this">The collection.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TOut[] ConvertAll<TIn, TOut>(this ICollection<TIn> @this, Converter<TIn, TOut> converter) {
     Against.ThisIsNull(@this);
@@ -104,9 +99,7 @@ public static partial class CollectionExtensions {
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Collection.</param>
   /// <param name="items">The items.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void RemoveRange<TItem>(this ICollection<TItem> @this, IEnumerable<TItem> items) {
     Against.ThisIsNull(@this);
@@ -125,9 +118,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if the <see cref="ICollection" /> has one element; otherwise, <see langword="false" />
   ///   .
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsSingle<TValue>(this ICollection<TValue> @this) {
     Against.ThisIsNull(@this);
     return @this.Count == 1;
@@ -142,9 +133,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if the <see cref="ICollection" /> has more than one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsMultiple<TValue>(this ICollection<TValue> @this) {
     Against.ThisIsNull(@this);
     return @this.Count > 1;
@@ -159,9 +148,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if the <see cref="ICollection" /> has less or more than one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoSingle<TValue>(this ICollection<TValue> @this) {
     Against.ThisIsNull(@this);
     return @this.Count != 1;
@@ -176,9 +163,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if the <see cref="ICollection" /> has less than two elements; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoMultiple<TValue>(this ICollection<TValue> @this) {
     Against.ThisIsNull(@this);
     return @this.Count <= 1;

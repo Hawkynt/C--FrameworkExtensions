@@ -20,9 +20,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -32,9 +31,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns><see langword="true" /> if it is; otherwise, <see langword="false" /></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsWhiteSpace(this char @this) => char.IsWhiteSpace(@this);
 
   /// <summary>
@@ -42,9 +39,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns><see langword="true" /> if it is; otherwise, <see langword="false" /></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNullOrWhiteSpace(this char @this) => @this == default(char) || char.IsWhiteSpace(@this);
 
   /// <summary>
@@ -52,9 +47,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns><see langword="true" /> if it is; otherwise, <see langword="false" /></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotNullOrWhiteSpace(this char @this) => @this != default(char) && !char.IsWhiteSpace(@this);
 
   /// <summary>
@@ -62,9 +55,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns><see langword="true" /> if the specified <see cref="Char" /> is a digit; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsDigit(this char @this) => char.IsDigit(@this);
 
   /// <summary>
@@ -75,9 +66,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is not a digit; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotDigit(this char @this) => !char.IsDigit(@this);
 
   /// <summary>
@@ -88,9 +77,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is upper-case; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsUpper(this char @this) => char.IsUpper(@this);
 
   /// <summary>
@@ -101,9 +88,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is not upper-case; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotUpper(this char @this) => !char.IsUpper(@this);
 
   /// <summary>
@@ -114,9 +99,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is lower-case; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsLower(this char @this) => char.IsLower(@this);
 
   /// <summary>
@@ -127,9 +110,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is not lower-case; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotLower(this char @this) => !char.IsLower(@this);
 
   /// <summary>
@@ -137,9 +118,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns><see langword="true" /> if the specified <see cref="Char" /> is a letter; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsLetter(this char @this) => char.IsLetter(@this);
 
   /// <summary>
@@ -150,9 +129,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is not a letter; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotLetter(this char @this) => !char.IsLetter(@this);
 
   /// <summary>
@@ -163,9 +140,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is a control character; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsControl(this char @this) => char.IsControl(@this);
 
   /// <summary>
@@ -176,9 +151,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is not a control character; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotControl(this char @this) => !char.IsControl(@this);
 
   /// <summary>
@@ -189,9 +162,7 @@ public static partial class CharExtensions {
   ///   <see langword="true" /> if the specified <see cref="Char" /> is a control character but not a whitespace;
   ///   otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsControlButNoWhiteSpace(this char @this) => char.IsControl(@this) && !char.IsWhiteSpace(@this);
 
   /// <summary>
@@ -199,9 +170,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns>The upper-case <see cref="Char" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static char ToUpper(this char @this) => char.ToUpper(@this);
 
   /// <summary>
@@ -210,9 +179,7 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char" />.</param>
   /// <param name="culture">The <see cref="CultureInfo" /> to use.</param>
   /// <returns>The upper-case <see cref="Char" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static char ToUpper(this char @this, CultureInfo culture) => char.ToUpper(@this, culture);
 
   /// <summary>
@@ -220,9 +187,7 @@ public static partial class CharExtensions {
   /// </summary>
   /// <param name="this">This <see cref="Char" />.</param>
   /// <returns>The lower-case <see cref="Char" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static char ToLower(this char @this) => char.ToLower(@this);
 
   /// <summary>
@@ -231,9 +196,7 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char" />.</param>
   /// <param name="culture">The <see cref="CultureInfo" /> to use.</param>
   /// <returns>The lower-case <see cref="Char" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static char ToLower(this char @this, CultureInfo culture) => char.ToLower(@this, culture);
 
   /// <summary>
@@ -244,9 +207,7 @@ public static partial class CharExtensions {
   /// <returns>
   ///   <see langword="true" /> if the given <see cref="Char" /> is in the list; otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf(this char @this, params char[] list) => list.Any(c => c == @this);
 
   /// <summary>
@@ -257,9 +218,7 @@ public static partial class CharExtensions {
   /// <returns>
   ///   <see langword="true" /> if the given <see cref="Char" /> is in the list; otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsAnyOf(this char @this, IEnumerable<char> list) => list.Any(c => c == @this);
 
   /// <summary>
@@ -268,8 +227,6 @@ public static partial class CharExtensions {
   /// <param name="this">This <see cref="Char" />.</param>
   /// <param name="count">The count.</param>
   /// <returns>A new string containing the given <see cref="Char" /> the specified times.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string Repeat(this char @this, int count) => new(@this, count);
 }

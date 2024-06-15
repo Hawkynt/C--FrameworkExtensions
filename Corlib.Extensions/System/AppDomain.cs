@@ -25,77 +25,21 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+#if _SUPPORTS_APP_CONFIGURATION_PATH
 using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Principal;
+#endif
 using System.Threading;
 using Guard;
+using MethodImplOptions=Utilities.MethodImplOptions;
 
 namespace System;
 
-
-#if SUPPORTS_INLINING
-
-#endif
-
 public static partial class AppDomainExtensions {
   private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
-
-  #region nested types
-
-  /// <summary>
-  ///   A utility class to determine a process parent.
-  /// </summary>
-  [StructLayout(LayoutKind.Sequential)]
-  private struct ParentProcessUtilities {
-    // These members must match PROCESS_BASIC_INFORMATION
-    internal IntPtr Reserved1;
-    internal IntPtr PebBaseAddress;
-    internal IntPtr Reserved2_0;
-    internal IntPtr Reserved2_1;
-    internal IntPtr UniqueProcessId;
-    internal IntPtr InheritedFromUniqueProcessId;
-    
-    [DllImport("ntdll.dll")]
-    private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
-
-    /// <summary>
-    ///   Gets the parent process of the current process.
-    /// </summary>
-    /// <returns>An instance of the Process class.</returns>
-    public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
-
-    /// <summary>
-    ///   Gets the parent process of specified process.
-    /// </summary>
-    /// <param name="id">The process id.</param>
-    /// <returns>An instance of the Process class.</returns>
-    public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
-
-    /// <summary>
-    ///   Gets the parent process of a specified process.
-    /// </summary>
-    /// <param name="handle">The process handle.</param>
-    /// <returns>An instance of the Process class or null if an error occurred.</returns>
-    public static Process GetParentProcess(IntPtr handle) {
-      ParentProcessUtilities pbi = new();
-      var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
-      if (status != 0)
-        return null;
-
-      try {
-        return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
-      } catch (ArgumentException) {
-        // not found
-        return null;
-      }
-    }
-  }
-
-  #endregion
 
 #if _SUPPORTS_APP_CONFIGURATION_PATH
 
@@ -278,9 +222,7 @@ public static partial class AppDomainExtensions {
   ///   present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrThrow(this AppDomain @this)
     => EnsureSingleInstanceOrThrow(@this, _CreateStandardSemaphoreName(@this));
 
@@ -290,9 +232,7 @@ public static partial class AppDomainExtensions {
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
   /// <param name="semaphoreName">The name of the semaphore to query</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrThrow(this AppDomain @this, string semaphoreName) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
@@ -305,9 +245,7 @@ public static partial class AppDomainExtensions {
   ///   Queries the environment for another process with the same entry assembly and exits when present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrExit(this AppDomain @this)
     => EnsureSingleInstanceOrExit(@this, _CreateStandardSemaphoreName(@this));
 
@@ -316,9 +254,7 @@ public static partial class AppDomainExtensions {
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
   /// <param name="semaphoreName">The name of the semaphore to query</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrExit(this AppDomain @this, string semaphoreName) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
@@ -336,9 +272,7 @@ public static partial class AppDomainExtensions {
   ///   <c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise,
   ///   <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsSingleInstance(this AppDomain @this) => IsSingleInstance(@this, _CreateStandardSemaphoreName(@this));
 
   /// <summary>
@@ -347,9 +281,7 @@ public static partial class AppDomainExtensions {
   /// </summary>
   /// <param name="appDomain">The <see cref="AppDomain" /> to generaten the name for</param>
   /// <returns>A name to use</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static string _CreateStandardSemaphoreName(AppDomain appDomain) => Assembly.GetEntryAssembly()?.FullName ?? appDomain.FriendlyName;
 
   /// <summary>

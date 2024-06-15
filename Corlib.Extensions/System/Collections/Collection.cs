@@ -20,9 +20,8 @@
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections;
 
@@ -35,9 +34,7 @@ public static partial class CollectionExtensions {
   ///   <see langword="true" /> if there is at least one item in the <see cref="ICollection" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool Any(this ICollection @this) {
     Against.ThisIsNull(@this);
@@ -50,9 +47,7 @@ public static partial class CollectionExtensions {
   /// </summary>
   /// <param name="this">The <see cref="ICollection" />.</param>
   /// <param name="call">The call to execute.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void ForEach(this ICollection @this, Action<object> call) {
     Against.ThisIsNull(@this);
@@ -69,9 +64,7 @@ public static partial class CollectionExtensions {
   /// <param name="this">The <see cref="ICollection" /> to convert.</param>
   /// <param name="converter">The converter.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TOUT[] ConvertAll<TOUT>(this ICollection @this, Converter<object, TOUT> converter) {
     Against.ThisIsNull(@this);
@@ -88,9 +81,7 @@ public static partial class CollectionExtensions {
   /// </summary>
   /// <param name="this">This <see cref="ICollection" />.</param>
   /// <returns>An array containing all elements.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static object[] ToArray(this ICollection @this) {
     Against.ThisIsNull(@this);

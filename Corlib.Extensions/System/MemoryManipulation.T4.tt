@@ -38,10 +38,8 @@ for(var blockSize = 1; blockSize <= MAX_SIZE; ++blockSize) {
 
 namespace Corlib {
 using System.Runtime.InteropServices;
-
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 // ReSharper disable UnusedMember.Local
 internal static partial class MemoryManipulation {  
@@ -49,9 +47,7 @@ internal static partial class MemoryManipulation {
   [StructLayout(LayoutKind.Sequential, Size = <#=blockSize#>)] 
   public struct Block<#=blockSize#> {
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe bool AreEqual(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) =>
 #if PLATFORM_X86
       _AreEqualx32(@this, other)
@@ -60,9 +56,7 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe bool _AreEqualx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) {
 <#
     {
@@ -86,9 +80,7 @@ internal static partial class MemoryManipulation {
 #>
     }
         
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe bool _AreEqualx32(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) {
 <#
     {
@@ -112,9 +104,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Fill(Block<#=blockSize#>* @this, byte value) =>
 #if PLATFORM_X86
       _Fillx32(@this, value)
@@ -123,9 +113,7 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx64(Block<#=blockSize#>* @this, byte value) {
 <#
     {
@@ -161,9 +149,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx32(Block<#=blockSize#>* @this, byte value) {
 <#
     {
@@ -192,9 +178,7 @@ internal static partial class MemoryManipulation {
     }
 <#if (blockSize % 2 == 0) {#>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Fill(Block<#=blockSize#>* @this, ushort value) =>
 #if PLATFORM_X86
       _Fillx32(@this, value)
@@ -203,9 +187,7 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx64(Block<#=blockSize#>* @this, ushort value) {
 <#
     {
@@ -234,9 +216,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx32(Block<#=blockSize#>* @this, ushort value) {
 <#
     {
@@ -260,9 +240,7 @@ internal static partial class MemoryManipulation {
 <#}#>
 <#if (blockSize % 4 == 0) {#>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Fill(Block<#=blockSize#>* @this, uint value) =>
 #if PLATFORM_X86
       _Fillx32(@this, value)
@@ -271,9 +249,7 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx64(Block<#=blockSize#>* @this, uint value) {
 <#
     {
@@ -295,9 +271,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Fillx32(Block<#=blockSize#>* @this, uint value) {
 <#
     {
@@ -312,9 +286,7 @@ internal static partial class MemoryManipulation {
 <#}#>
 <#if (blockSize % 8 == 0) {#>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Fill(Block<#=blockSize#>* @this, ulong value) {
 <#
     {
@@ -328,9 +300,7 @@ internal static partial class MemoryManipulation {
     }
 <#}#>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Clear(Block<#=blockSize#>* @this) =>
 #if PLATFORM_X86
       _Clearx32(@this)
@@ -339,9 +309,7 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Clearx64(Block<#=blockSize#>* @this) {
 <#
     {
@@ -365,9 +333,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Clearx32(Block<#=blockSize#>* @this) {
 <#
     {
@@ -397,9 +363,7 @@ internal static partial class MemoryManipulation {
     GenerateThreeOperandBitwiseOperation("Xnor", "^", true, blockSize);
 #>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Not(Block<#=blockSize#>* @this, Block<#=blockSize#>* target) =>
 #if PLATFORM_X86
       _Notx32(@this, target)
@@ -408,16 +372,12 @@ internal static partial class MemoryManipulation {
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void Not(Block<#=blockSize#>* @this) =>
       Not(@this, @this)
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Notx64(Block<#=blockSize#>* @this, Block<#=blockSize#>* target) {
 <#
     {
@@ -428,9 +388,7 @@ internal static partial class MemoryManipulation {
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _Notx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* target) {
 <#
     {
@@ -475,32 +433,23 @@ GenerationEnvironment = fileManager;
 
 namespace Corlib {
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 // ReSharper disable UnusedMember.Local
 internal static partial class MemoryManipulation {
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static ulong _Not(ulong operand) => ~operand;
 
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static uint _Not(uint operand) => ~operand;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static ushort _Not(ushort operand) => (ushort)~operand;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static byte _Not(byte operand) => (byte)~operand;
 
 <#
@@ -518,9 +467,7 @@ internal static partial class MemoryManipulation {
   }
 #>
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void CopyTo(byte* source, byte* target, int count) =>
 #if PLATFORM_X86
       _CopyTox86(source, target, count)
@@ -571,9 +518,7 @@ void DoOperationLoop(string operation, ref int bytesLeft, ref int byteOffset, re
 
 void GenerateCopyToOperation(string name, int maxBlockSize) {
 #>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe void _CopyTo<#=name#>(byte* source, byte* target, int count) {
     switch (count) {
       case <= 0: break;
@@ -599,9 +544,7 @@ void GenerateCopyToOperation(string name, int maxBlockSize) {
 
 void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool negate, int blockSize) {
 #>
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void <#=name#>(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
 #if PLATFORM_X86
       _<#=name#>x32(@this, operand, target)
@@ -610,16 +553,12 @@ void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool ne
 #endif
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public static unsafe void <#=name#>(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand) =>
       <#=name#>(@this, operand, @this)
       ;
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _<#=name#>x64(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
 <#+
     {
@@ -633,9 +572,7 @@ void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool ne
 #>
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe void _<#=name#>x86(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) {
 <#+
     {
@@ -655,9 +592,7 @@ void GenerateOneOperandArbitraryCountOperation(string name, int size) {
   var dataType = GetDataTypeForByteCount(size);
 #>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, int count) {
     switch (count) {
       case <= 0: break;
@@ -684,9 +619,7 @@ void GenerateTwoOperandArbitraryCountEqual(string name, int size) {
   var dataType = GetDataTypeForByteCount(size);
 #>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe bool <#=name#>(<#=dataType#>* @this, <#=dataType#>* other, int count)
     => count switch {
       <= 0 => true,
@@ -715,9 +648,7 @@ void GenerateTwoOperandArbitraryCountFill(string name, int size) {
   var dataType = GetDataTypeForByteCount(size);
 #>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#> value, int count) {
     switch (count) {
       case <= 0: break;
@@ -744,16 +675,12 @@ void GenerateTwoOperandArbitraryCountOperation(string name, int size) {
   var dataType = GetDataTypeForByteCount(size);
 #>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, int count)
     => <#=name#>(@this, @this, count)
     ;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* target, int count) {
     switch (count) {
       case <= 0: break;
@@ -781,16 +708,12 @@ void GenerateThreeOperandArbitraryCountOperation(string name, int size) {
   var dataType = GetDataTypeForByteCount(size);
 #>
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* operand, int count)
     => <#=name#>(@this, operand, @this, count)
     ;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static unsafe void <#=name#>(<#=dataType#>* @this, <#=dataType#>* operand, <#=dataType#>* target, int count) {
     switch (count) {
       case <= 0: break;

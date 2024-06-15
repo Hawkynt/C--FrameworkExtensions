@@ -21,9 +21,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -123,19 +122,13 @@ public static partial class FileInfoExtensions {
 
         return;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         void SaveStartPosition() => startPosition = stream.Position;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         void Reset() => stream.Position = startPosition;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
           var preamble = usedEncoding.GetPreamble();
           var checkPreamble = preamble.Length > 0;
@@ -147,9 +140,7 @@ public static partial class FileInfoExtensions {
           return read == preamble.Length && buffer.SequenceEqual(preamble);
         }
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static Encoding DetectFromByteOrderMark(Stream stream) {
           var buffer = new byte[4];
           return stream.Read(buffer, 0, buffer.Length) switch {
@@ -171,9 +162,7 @@ public static partial class FileInfoExtensions {
           };
         }
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static LineEndingNode BuildLineEndingStateMachine(Initialized reader, StringExtensions.LineBreakMode lineBreakMode) {
           for (;;)
             switch (lineBreakMode) {

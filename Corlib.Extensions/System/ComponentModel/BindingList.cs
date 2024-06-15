@@ -21,9 +21,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.ComponentModel;
 
@@ -37,9 +36,7 @@ public static partial class BindingListExtensions {
   ///   <see langword="true" /> if there is at least one item in the <see cref="BindingList{T}" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this BindingList<TItem> @this) {
     Against.ThisIsNull(@this);

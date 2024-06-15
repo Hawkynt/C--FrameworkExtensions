@@ -17,9 +17,8 @@
 
 #endregion
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -29,9 +28,7 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is removable; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsRemovable(this DriveType @this) => @this == DriveType.Removable;
 
   /// <summary>
@@ -39,9 +36,7 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is not removable; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotRemovable(this DriveType @this) => @this != DriveType.Removable;
 
   /// <summary>
@@ -49,9 +44,7 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is fixed; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsFixed(this DriveType @this) => @this == DriveType.Fixed;
 
   /// <summary>
@@ -59,9 +52,7 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is not fixed; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotFixed(this DriveType @this) => @this != DriveType.Fixed;
 
   /// <summary>
@@ -69,9 +60,7 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is a network drive; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNetwork(this DriveType @this) => @this == DriveType.Network;
 
   /// <summary>
@@ -79,8 +68,6 @@ public static partial class DriveTypeExtensions {
   /// </summary>
   /// <param name="this">This <see cref="DriveType" />.</param>
   /// <returns><see langword="true" /> if the drive is not a network drive; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotNetwork(this DriveType @this) => @this != DriveType.Network;
 }

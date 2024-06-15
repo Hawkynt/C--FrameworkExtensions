@@ -23,9 +23,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -256,9 +255,7 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="this">This DirectoryInfo</param>
   /// <param name="searchOption">Whether to get all directories recursively or not.</param>
   /// <returns>An enumeration of DirectoryInfos</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<DirectoryInfo> GetDirectories(this DirectoryInfo @this, SearchOption searchOption) {
     Against.ThisIsNull(@this);
 
@@ -458,9 +455,7 @@ public static partial class DirectoryInfoExtensions {
   /// </summary>
   /// <param name="This">This DirectoryInfo.</param>
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool NotExists(this DirectoryInfo This) => !This.Exists;
 
   /// <summary>
@@ -479,9 +474,7 @@ public static partial class DirectoryInfoExtensions {
   /// </code>
   ///   This example demonstrates how to get a subdirectory under the current directory.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static DirectoryInfo Directory(this DirectoryInfo @this, string subdirectory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(subdirectory);
@@ -506,9 +499,7 @@ public static partial class DirectoryInfoExtensions {
   /// </code>
   ///   This example demonstrates how to get a nested subdirectory under the current directory.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static DirectoryInfo Directory(this DirectoryInfo @this, params string[] subdirectories) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(subdirectories);
@@ -585,9 +576,7 @@ public static partial class DirectoryInfoExtensions {
   /// </code>
   ///   This example demonstrates how to get a file under the current directory.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static FileInfo File(this DirectoryInfo @this, string filePath) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(filePath);
@@ -612,9 +601,7 @@ public static partial class DirectoryInfoExtensions {
   /// </code>
   ///   This example demonstrates how to get a nested file under the current directory.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static FileInfo File(this DirectoryInfo @this, params string[] filePath) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(filePath);
@@ -695,9 +682,7 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="searchPattern">The search pattern.</param>
   /// <param name="searchOption">The search option.</param>
   /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasDirectory(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(searchPattern, searchOption).Any();
 
   /// <summary>
@@ -707,9 +692,7 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="searchPattern">The search pattern.</param>
   /// <param name="searchOption">The search option.</param>
   /// <returns><c>true</c> if at least one match was found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasFile(this DirectoryInfo This, string searchPattern, SearchOption searchOption = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(searchPattern, searchOption).Any();
 
   /// <summary>
@@ -780,9 +763,7 @@ public static partial class DirectoryInfoExtensions {
   /// <param name="fileName">Name of the file.</param>
   /// <param name="option">The option.</param>
   /// <returns><c>true</c> if there is a matching file; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool ContainsFile(this DirectoryInfo This, string fileName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateFiles(fileName, option).Any();
 
   /// <summary>
@@ -794,9 +775,7 @@ public static partial class DirectoryInfoExtensions {
   /// <returns>
   ///   <c>true</c> if there is a matching directory; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool ContainsDirectory(this DirectoryInfo This, string directoryName, SearchOption option = SearchOption.TopDirectoryOnly) => This.EnumerateDirectories(directoryName, option).Any();
 
   /// <summary>

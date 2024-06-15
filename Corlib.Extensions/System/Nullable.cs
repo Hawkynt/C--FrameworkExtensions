@@ -17,13 +17,9 @@
 
 #endregion
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
-
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+using MethodImplOptions = Utilities.MethodImplOptions;
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace System;
 
@@ -37,15 +33,8 @@ public static partial class NullableExtensions {
   ///   <see langword="true" /> when the given reference is <see langword="null" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNull<T>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-  [NotNullWhen(false)]
-#endif
-    this T? @this
-  ) where T : struct => @this is null;
+  public static bool IsNull<T>([NotNullWhen(false)] this T? @this) where T : struct => @this is null;
 
   /// <summary>
   ///   Detects whether the given <see cref="Nullable{T}" /> is <see langword="null" />.
@@ -56,15 +45,8 @@ public static partial class NullableExtensions {
   ///   <see langword="true" /> when the given reference is not <see langword="null" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNotNull<T>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-  [NotNullWhen(true)]
-#endif
-    this T? @this
-  ) where T : struct => @this is not null;
+  public static bool IsNotNull<T>([NotNullWhen(true)] this T? @this) where T : struct => @this is not null;
 }
 
 /// <summary>

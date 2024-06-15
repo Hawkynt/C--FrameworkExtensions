@@ -23,9 +23,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -245,9 +244,7 @@ public static partial class RandomExtensions {
   /// </code>
   ///   This example simulates a coin flip and prints whether the result is heads or tails.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool GetBoolean(this Random @this) {
     Against.ThisIsNull(@this);
 
@@ -276,9 +273,7 @@ public static partial class RandomExtensions {
   /// </code>
   ///   This example demonstrates rolling a standard 6-sided dice and a 20-sided dice, printing the results to the console.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static byte RollADice(this Random @this, byte count = 6) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
@@ -301,9 +296,7 @@ public static partial class RandomExtensions {
   /// </code>
   ///   This example demonstrates generating random values for int, double, and bool types.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static T GetValueFor<T>(this Random @this) => (T)TypeExtensions.GetRandomValueFor(typeof(T), true, @this);
 
   // When higher -> less likely; must be > 6
@@ -802,8 +795,7 @@ public static partial class RandomExtensions {
   /// <param name="minimumInclusive">The min value.</param>
   /// <param name="maximumExclusive">The max value.</param>
   /// <returns>A value between the given boundaries</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double NextDouble(this Random @this, double minimumInclusive, double maximumExclusive) => @this.NextDouble() * (maximumExclusive - minimumInclusive) + minimumInclusive;
+  
 }

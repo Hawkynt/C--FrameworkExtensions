@@ -17,9 +17,9 @@
 
 #endregion
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -231,9 +231,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
   ///   exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory)
     => CopyToAsync(@this, targetDirectory, false, CancellationToken.None);
 
@@ -279,9 +277,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
   ///   exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, CancellationToken token)
     => CopyToAsync(@this, targetDirectory, false, token);
 
@@ -325,9 +321,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
   ///   exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
     => CopyToAsync(@this, targetDirectory, overwrite, CancellationToken.None);
 
@@ -378,9 +372,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
   ///   exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite, CancellationToken token) {
     Against.ArgumentIsNull(targetDirectory);
     Against.False(targetDirectory.Exists);
@@ -419,9 +411,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
   ///   directory exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile)
     => CopyToAsync(@this, targetFile, false, CancellationToken.None);
 
@@ -463,9 +453,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
   ///   directory exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, CancellationToken token)
     => CopyToAsync(@this, targetFile, false, token);
 
@@ -507,9 +495,7 @@ public static partial class FileInfoExtensions {
   ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
   ///   directory exists before calling this method.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, bool overwrite)
     => CopyToAsync(@this, targetFile, overwrite, CancellationToken.None);
 

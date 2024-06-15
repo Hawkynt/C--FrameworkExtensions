@@ -18,9 +18,8 @@
 #endregion
 
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
@@ -45,9 +44,7 @@ public static partial class LinkedListExtensions {
   ///   This example checks if a list of integers contains any elements and similarly checks if an empty list of strings
   ///   contains any elements, demonstrating the use of the method.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Any<T>(this LinkedList<T> @this) {
     Against.ThisIsNull(@this);
 
@@ -82,9 +79,7 @@ public static partial class LinkedListExtensions {
   ///   end. This is useful for scenarios where you need FIFO (First-In, First-Out) behavior with the flexibility of a linked
   ///   list.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void Enqueue<T>(this LinkedList<T> @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -189,9 +184,7 @@ public static partial class LinkedListExtensions {
   ///   It is useful for scenarios requiring LIFO behavior with the flexibility of a linked list, such as undo
   ///   functionalities in applications.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void Push<T>(this LinkedList<T> @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -378,8 +371,6 @@ public static partial class LinkedListExtensions {
   ///   indicate success or failure. This is useful in scenarios where the list might be empty and raising an exception for
   ///   such cases is undesirable.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TryDequeue<T>(this LinkedList<T> @this, out T result) => TryPop(@this, out result);
 }

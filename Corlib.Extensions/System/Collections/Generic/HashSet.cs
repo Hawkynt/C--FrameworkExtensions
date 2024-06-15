@@ -20,9 +20,8 @@
 using System.Diagnostics;
 using System.Linq;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
@@ -92,9 +91,7 @@ public static partial class HashSetExtensions {
   /// <param name="this">This HashSet.</param>
   /// <param name="item">The item.</param>
   /// <returns><c>true</c> if the item is not in the set; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool ContainsNot<TItem>(this HashSet<TItem> @this, TItem item) {
     Against.ThisIsNull(@this);
@@ -124,9 +121,7 @@ public static partial class HashSetExtensions {
   /// <param name="this">This HashSet.</param>
   /// <param name="item">The item.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool TryRemove<TItem>(this HashSet<TItem> @this, TItem item) {
     Against.ThisIsNull(@this);

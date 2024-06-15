@@ -19,9 +19,8 @@
 
 using System.Collections.Generic;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -31,9 +30,7 @@ public static partial class FileSystemInfoExtensions {
   /// </summary>
   /// <param name="this">This FileSystemInfo.</param>
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool NotExists(this FileSystemInfo @this) => !@this.Exists;
 
   /// <summary>
@@ -41,9 +38,7 @@ public static partial class FileSystemInfoExtensions {
   /// </summary>
   /// <param name="this">This FileSystemInfo</param>
   /// <returns><c>true</c> if it is either <c>null</c> or can not be found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNullOrDoesNotExist(this FileSystemInfo @this) => @this is not { Exists: true };
 
   /// <summary>
@@ -51,9 +46,7 @@ public static partial class FileSystemInfoExtensions {
   /// </summary>
   /// <param name="this">This FileSystemInfo</param>
   /// <returns><c>true</c> if it is not <c>null</c> and can not be found; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotNullAndExists(this FileSystemInfo @this) => @this is { Exists: true };
 
   /// <summary>

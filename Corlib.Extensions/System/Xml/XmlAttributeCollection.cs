@@ -17,9 +17,8 @@
 
 #endregion
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Xml;
 
@@ -32,8 +31,6 @@ public static partial class XmlAttributeCollectionExtensions {
   /// <param name="defaultValue">The default value; optional, defaults to <c>null</c>.</param>
   /// <returns>The value of that attribute or the given default value.</returns>
   /// <remarks></remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string GetValueOrDefault(this XmlAttributeCollection @this, string key, string defaultValue = null) => @this[key] == null ? defaultValue : @this[key].Value;
 }

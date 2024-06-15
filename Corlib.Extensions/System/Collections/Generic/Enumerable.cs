@@ -17,18 +17,15 @@
 
 #endregion
 
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using System.Diagnostics.CodeAnalysis;
-#endif
-
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -395,9 +392,7 @@ public static partial class EnumerableExtensions {
   ///   A hashset
   /// </returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static HashSet<TResult> ToHashSet<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, IEqualityComparer<TResult> comparer = null) {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(selector);
@@ -471,12 +466,7 @@ public static partial class EnumerableExtensions {
   }
 
   [DebuggerStepThrough]
-  public static bool IsNotNullOrEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(true)]
-#endif
-    this IEnumerable<TItem> @this
-  ) => !IsNullOrEmpty(@this);
+  public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(true)] this IEnumerable<TItem> @this) => !IsNullOrEmpty(@this);
 
   /// <summary>
   ///   Determines whether the enumeration is <c>null</c> or empty.
@@ -486,12 +476,7 @@ public static partial class EnumerableExtensions {
   ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
   /// </returns>
   [DebuggerStepThrough]
-  public static bool IsNullOrEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(false)]
-#endif
-    this IEnumerable<TItem> @this
-  ) {
+  public static bool IsNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this) {
     switch (@this) {
       case null: return true;
       case TItem[] array: return array.Length == 0;
@@ -503,13 +488,7 @@ public static partial class EnumerableExtensions {
   }
 
   [DebuggerStepThrough]
-  public static bool IsNotNullOrEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(true)]
-#endif
-    this IEnumerable<TItem> @this,
-    Func<TItem, bool> predicate
-  ) => !IsNullOrEmpty(@this, predicate);
+  public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(true)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) => !IsNullOrEmpty(@this, predicate);
 
   /// <summary>
   ///   Determines whether the enumeration is <c>null</c> or empty.
@@ -521,13 +500,7 @@ public static partial class EnumerableExtensions {
   ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
   /// </returns>
   [DebuggerStepThrough]
-  public static bool IsNullOrEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-      [NotNullWhen(false)]
-#endif
-    this IEnumerable<TItem> @this,
-    Func<TItem, bool> predicate
-  ) {
+  public static bool IsNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
     if (predicate == null)
       throw new ArgumentNullException(nameof(predicate));
 
@@ -616,9 +589,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">The this.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TItem> ConcatAll<TItem>(this IEnumerable<IEnumerable<TItem>> @this) {
     Against.ThisIsNull(@this);
 
@@ -648,9 +619,7 @@ public static partial class EnumerableExtensions {
   /// <param name="comparer">The comparer; if any.</param>
   /// <returns><c>true</c> if the enumeration does not contain the listed value; otherwise, <c>false</c>.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool ContainsNot<TItem>(this IEnumerable<TItem> @this, TItem item, IEqualityComparer<TItem> comparer = null) {
     Against.ThisIsNull(@this);
 
@@ -666,9 +635,7 @@ public static partial class EnumerableExtensions {
   /// <param name="comparer">The comparer; if any.</param>
   /// <returns><c>true</c> if the enumeration does not contain the listed values; otherwise, <c>false</c>.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool ContainsNotAny<TItem>(this IEnumerable<TItem> @this, IEnumerable<TItem> items, IEqualityComparer<TItem> comparer = null) {
     Against.ThisIsNull(@this);
 
@@ -767,9 +734,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">This enumeration.</param>
   /// <param name="action">The call to execute.</param>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn> action) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
@@ -801,9 +766,7 @@ public static partial class EnumerableExtensions {
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TResult> ConvertAll<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> converter) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(converter);
@@ -820,9 +783,7 @@ public static partial class EnumerableExtensions {
   /// <param name="converter">The converter function.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TResult> ConvertAll<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, int, TResult> converter) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(converter);
@@ -1177,9 +1138,7 @@ public static partial class EnumerableExtensions {
   /// <param name="item">The item.</param>
   /// <returns>The position of the item in the enumeration or -1</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static int IndexOf<TItem>(this IEnumerable<TItem> @this, TItem item) => IndexOrDefault(@this, a => Equals(a, item), -1);
 
   /// <summary>
@@ -1286,9 +1245,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">This <see cref="IEnumerable{T}" /></param>
   /// <param name="result">The maximum or the <see langword="default" /></param>
   /// <returns><see langword="true" /> when the enumeration contains at least one item; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TryGetMax<TItem>(this IEnumerable<TItem> @this, out TItem result)
     => TryGet(@this, t => t.Max(), out result);
 
@@ -1301,9 +1258,7 @@ public static partial class EnumerableExtensions {
   /// <param name="selector">The selector on how to get the sort-value.</param>
   /// <param name="result">The maximum or the <see langword="default" /></param>
   /// <returns><see langword="true" /> when the enumeration contains at least one item; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TryGetMaxBy<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, out TItem result) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
@@ -1318,9 +1273,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">This <see cref="IEnumerable{T}" /></param>
   /// <param name="result">The minimum or the <see langword="default" /></param>
   /// <returns><see langword="true" /> when the enumeration contains at least one item; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TryGetMin<TItem>(this IEnumerable<TItem> @this, out TItem result)
     => TryGet(@this, t => t.Min(), out result);
 
@@ -1333,9 +1286,7 @@ public static partial class EnumerableExtensions {
   /// <param name="selector">The selector on how to get the sort-value.</param>
   /// <param name="result">The minimum or the <see langword="default" /></param>
   /// <returns><see langword="true" /> when the enumeration contains at least one item; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool TryGetMinBy<TItem, TResult>(this IEnumerable<TItem> @this, Func<TItem, TResult> selector, out TItem result) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(selector);
@@ -1381,9 +1332,7 @@ public static partial class EnumerableExtensions {
   /// No element
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem FirstOrNull<TItem>(this IEnumerable<TItem> @this, __ClassForcingTag<TItem> _ = null) where TItem : class
     => @this.TryGetFirst(out var result) ? result : null;
 
@@ -1427,9 +1376,7 @@ public static partial class EnumerableExtensions {
   /// No element
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem? FirstOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
     => @this.TryGetFirst(out var result) ? result : null;
 
@@ -1524,9 +1471,7 @@ public static partial class EnumerableExtensions {
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory);
 
@@ -1539,9 +1484,7 @@ public static partial class EnumerableExtensions {
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns>The matched item or the given default value.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> selector, Func<IEnumerable<TItem>, TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), selector, defaultValueFactory);
 
@@ -1583,9 +1526,7 @@ public static partial class EnumerableExtensions {
   /// No element
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem LastOrNull<TItem>(this IEnumerable<TItem> @this, __ClassForcingTag<TItem> _ = null) where TItem : class
     => @this.TryGetLast(out var result) ? result : null;
 
@@ -1629,9 +1570,7 @@ public static partial class EnumerableExtensions {
   /// No element
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem? LastOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
     => @this.TryGetLast(out var result) ? result : null;
 
@@ -1643,9 +1582,7 @@ public static partial class EnumerableExtensions {
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), defaultValueFactory);
 
@@ -1657,9 +1594,7 @@ public static partial class EnumerableExtensions {
   /// <param name="defaultValueFactory">The default value factory.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem LastOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory)
     => FirstOrDefault(@this.Reverse(), defaultValueFactory);
 
@@ -1670,9 +1605,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">This enumeration.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TItem> OrderBy<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
 
@@ -1686,9 +1619,7 @@ public static partial class EnumerableExtensions {
   /// <param name="this">This enumeration.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static IEnumerable<TItem> OrderByDescending<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);
 
@@ -1912,9 +1843,7 @@ public static partial class EnumerableExtensions {
   /// No single item
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem SingleOrNull<TItem>(this IEnumerable<TItem> @this, __ClassForcingTag<TItem> _ = null) where TItem : class
     => TryGetSingle(@this, out var result) ? result : null;
 
@@ -1955,9 +1884,7 @@ public static partial class EnumerableExtensions {
   /// No single item
   /// </code>
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem? SingleOrNull<TItem>(this IEnumerable<TItem> @this, __StructForcingTag<TItem> _ = null) where TItem : struct
     => TryGetSingle(@this, out var result) ? result : null;
 
@@ -2000,9 +1927,7 @@ public static partial class EnumerableExtensions {
   ///   Assume <c>ComputeExpensiveDefaultValue</c> is a method defined elsewhere that computes and returns an expensive
   ///   default value.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<TItem> defaultValueFactory) {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
@@ -2049,9 +1974,7 @@ public static partial class EnumerableExtensions {
   ///   The default value factory function uses the collection to determine the default value, showcasing the method's
   ///   flexibility in handling collections that do not contain exactly one item.
   /// </example>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem SingleOrDefault<TItem>(this IEnumerable<TItem> @this, Func<IEnumerable<TItem>, TItem> defaultValueFactory) {
     Against.ArgumentIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
@@ -2113,9 +2036,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the <see cref="Enumerable" /> has less or more than one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoSingle<TItem>(this IEnumerable<TItem> @this)
     => !IsSingle(@this);
 
@@ -2157,9 +2078,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the <see cref="Enumerable" /> has zero or one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-# endif
   public static bool IsNoMultiple<TItem>(this IEnumerable<TItem> @this)
     => !IsMultiple(@this);
 
@@ -2198,9 +2117,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the item not or more than once in the <see cref="Enumerable" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasSingle(@this, value);
 
@@ -2239,9 +2156,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the item is found less than two times in the <see cref="Enumerable" />; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasMultiple(@this, value);
 
@@ -2281,9 +2196,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the predicate matches not at all or more than once in the <see cref="Enumerable" />
   ///   ; otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasSingle(@this, predicate);
 
@@ -2322,9 +2235,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="true" /> if the predicate matches less than two times in the <see cref="Enumerable" />;
   ///   otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasMultiple(@this, predicate);
 }

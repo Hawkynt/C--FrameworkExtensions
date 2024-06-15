@@ -29,9 +29,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Guard;
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -567,9 +566,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Enumeration.</param>
   /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this : null;
 
@@ -581,9 +578,7 @@ public static partial class ArrayExtensions {
   /// <param name="start">The start.</param>
   /// <param name="length">The length; negative values mean: till the end.</param>
   /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static ReadOnlySpan<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
@@ -622,9 +617,7 @@ public static partial class ArrayExtensions {
   /// <param name="start">The start.</param>
   /// <param name="length">The length; negative values mean: till the end.</param>
   /// <returns>An array slice which accesses the underlying array.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static Span<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
@@ -686,9 +679,7 @@ public static partial class ArrayExtensions {
   /// <param name="this">This Array.</param>
   /// <param name="index">The index.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) {
     Against.ThisIsNull(@this);
@@ -704,9 +695,7 @@ public static partial class ArrayExtensions {
   /// <param name="index">The index.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) {
     Against.ThisIsNull(@this);
@@ -722,9 +711,7 @@ public static partial class ArrayExtensions {
   /// <param name="index">The index.</param>
   /// <param name="factory">The factory to create default values.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) {
     Against.ThisIsNull(@this);
@@ -741,9 +728,7 @@ public static partial class ArrayExtensions {
   /// <param name="index">The index.</param>
   /// <param name="factory">The factory to create default values.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) {
     Against.ThisIsNull(@this);
@@ -758,7 +743,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
   /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
-  //[DebuggerStepThrough]
+  [DebuggerStepThrough]
   public static TItem[] SafelyClone<TItem>(this TItem[] @this) => (TItem[])@this?.Clone();
 
   /// <summary>
@@ -821,9 +806,7 @@ public static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="firstElementIndex">The first value.</param>
   /// <param name="secondElementIndex">The the second value.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
     Against.ThisIsNull(@this);
 
@@ -911,9 +894,7 @@ public static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns>An array containing the converted values.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) {
     Against.ThisIsNull(@this);
@@ -948,9 +929,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="action">The callback for each element.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) {
     Against.ThisIsNull(@this);
@@ -966,9 +945,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="action">The callback to execute for each element.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) {
     Against.ThisIsNull(@this);
@@ -1056,9 +1033,7 @@ public static partial class ArrayExtensions {
   /// <param name="this">This array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
@@ -1092,9 +1067,7 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Contains<TItem>(this TItem[] @this, TItem value) {
     Against.ThisIsNull(@this);
 
@@ -1349,9 +1322,7 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c>
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNullEmpty<TItem>(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(false)]
@@ -1367,9 +1338,7 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c>
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNotNullEmpty<TItem>(
 #if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
     [NotNullWhen(true)]
@@ -1403,26 +1372,18 @@ public static partial class ArrayExtensions {
     return (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths);
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this) => new(@this);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, @this.Length - startIndex);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, length);
 
   #region high performance linq for arrays
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this TItem[] @this) {
     Against.ThisIsNull(@this);
@@ -1605,9 +1566,7 @@ public static partial class ArrayExtensions {
     return default;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this[0] : default;
 
@@ -1672,15 +1631,11 @@ public static partial class ArrayExtensions {
     return result;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static int Count<TItem>(this TItem[] @this) => @this.Length;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static long LongCount<TItem>(this TItem[] @this) => @this.LongLength;
 
@@ -1910,9 +1865,7 @@ public static partial class ArrayExtensions {
   /// <param name="this">These Bytes</param>
   /// <param name="allUpperCase">Uses upper-case (<c>true</c>) hex letters only or lower-case (<c>false</c>).</param>
   /// <returns>A hex string or <c>null</c></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToHex(this byte[] @this, bool allUpperCase = false) {
     if (@this == null)
       return null;
@@ -1954,9 +1907,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This buffer.</param>
   /// <returns>The given buffer</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void RandomizeBuffer(this byte[] @this) {
 #if SUPPORTS_RNG_FILL
@@ -2244,9 +2195,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The result of the hash algorithm</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
@@ -2262,9 +2211,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA512Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2278,9 +2225,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA384Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2294,9 +2239,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA256Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2310,9 +2253,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA1Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2326,9 +2267,7 @@ public static partial class ArrayExtensions {
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeMD5Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2347,9 +2286,7 @@ public static partial class ArrayExtensions {
   /// <typeparam name="TValue">The type of items</typeparam>
   /// <param name="this">This <see cref="Array" /></param>
   /// <returns><see langword="true" /> if the <see cref="Array" /> has one element; otherwise, <see langword="false" />.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsSingle<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length == 1;
@@ -2364,9 +2301,7 @@ public static partial class ArrayExtensions {
   ///   <see langword="true" /> if the <see cref="Array" /> has more than one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsMultiple<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length > 1;
@@ -2381,9 +2316,7 @@ public static partial class ArrayExtensions {
   ///   <see langword="true" /> if the <see cref="Array" /> has more or less than one element; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoSingle<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length != 1;
@@ -2398,9 +2331,7 @@ public static partial class ArrayExtensions {
   ///   <see langword="true" /> if the <see cref="Array" /> has less than two elements; otherwise,
   ///   <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoMultiple<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length <= 1;
