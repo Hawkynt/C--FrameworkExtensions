@@ -2560,7 +2560,7 @@ public static partial class FileInfoExtensions {
       var hasExtension = this._CatchExtensionRegex().IsMatch(pattern);
       var matchExact = false;
 
-      if (pattern.IndexOf('?') >= 0)
+      if (pattern.Contains('?'))
         matchExact = true;
       else if (hasExtension)
         matchExact = this._CatchExtensionRegex().Match(pattern).Groups[1].Length != 3;

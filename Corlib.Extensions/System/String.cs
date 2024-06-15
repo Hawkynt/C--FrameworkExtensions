@@ -3773,7 +3773,7 @@ public static partial class StringExtensions {
       var hasExtension = match.Success;
       var matchExact = false;
 
-      if (pattern.IndexOf('?') >= 0)
+      if (pattern.Contains('?'))
         matchExact = true;
       else if (hasExtension)
         matchExact = match.Groups[1].Length != 3;

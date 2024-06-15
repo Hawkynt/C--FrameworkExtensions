@@ -53,6 +53,17 @@ public static partial class StringPolyfills {
 
     return @this.IndexOf(value, comparisonType) >= 0;
   }
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool Contains(this string @this, char value) => @this.IndexOf(value) >= 0;
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool Contains(this string @this, char value, StringComparison comparisonType) => @this.IndexOf(value.ToString(), comparisonType) >= 0;
+  
 }
 
 #endif

@@ -149,6 +149,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * Delegate [CreateDelegate](https://learn.microsoft.com/dotnet/api/system.reflection.methodinfo.createdelegate#system-reflection-methodinfo-createdelegate(system-type))(this MethodInfo @this, Type result)
 * System.String
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains(system-string-system-stringcomparison))(this string @this, string value, StringComparison comparisonType)
+  * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains(system-char))(this string @this, char value)
+  * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains(system-char-system-stringcomparison))(this string @this, char value, StringComparison comparisonType)
 * System.Text.StringBuilder
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
 * System.Threading.Tasks
