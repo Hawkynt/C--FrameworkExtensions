@@ -17,9 +17,7 @@
 
 #endregion
 
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
 using System.Diagnostics.CodeAnalysis;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -662,11 +660,7 @@ public static partial class ArrayExtensions {
     if (@this.Length == 0)
       AlwaysThrow.InvalidOperationException("No Elements!");
 
-#if SUPPORTS_RANDOM_SHARED
-    random ??= Random.Shared;
-#else
-    random ??= new((int)Stopwatch.GetTimestamp());
-#endif
+    random ??= Utilities.Random.Shared;
 
     var index = random.Next(@this.Length);
     return @this[index];
@@ -1323,12 +1317,7 @@ public static partial class ArrayExtensions {
   ///   <c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c>
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNullEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(false)]
-#endif
-    this TItem[] @this
-  ) => @this is not { Length: > 0 };
+  public static bool IsNullEmpty<TItem>([NotNullWhen(false)] this TItem[] @this) => @this is not { Length: > 0 };
 
   /// <summary>
   ///   Determines whether the given array is not empty.
@@ -1339,12 +1328,7 @@ public static partial class ArrayExtensions {
   ///   <c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c>
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNotNullEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(true)]
-#endif
-    this TItem[] @this
-  ) => @this is { Length: > 0 };
+  public static bool IsNotNullEmpty<TItem>([NotNullWhen(true)] this TItem[] @this) => @this is { Length: > 0 };
 
   /// <summary>
   ///   Initializes a jagged array with default values.

@@ -451,12 +451,7 @@ public static partial class EnumerableExtensions {
   public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> @this, Random random = null) {
     Against.ThisIsNull(@this);
 
-#if SUPPORTS_RANDOM_SHARED
-    random ??= Random.Shared;
-#else
-    random ??= new();
-#endif
-
+    random ??= Utilities.Random.Shared;
     return
       @this
         .Select(i => new { r = random.Next(), i })
@@ -596,7 +591,6 @@ public static partial class EnumerableExtensions {
     return @this.SelectMany(c => c as TItem[] ?? c.ToArray());
   }
 
-#if SUPPORTS_TUPLES
   public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
@@ -608,7 +602,6 @@ public static partial class EnumerableExtensions {
     );
     return result;
   }
-#endif
 
   /// <summary>
   ///   Determines whether the specified enumeration contains not the given item.
@@ -1636,13 +1629,7 @@ public static partial class EnumerableExtensions {
   public static IEnumerable<TItem> Randomize<TItem>(this IEnumerable<TItem> @this, Random random = null) {
     Against.ThisIsNull(@this);
 
-#if SUPPORTS_RANDOM_SHARED
-    random ??= Random.Shared;
-#else
-    random ??= new();
-#endif
-
-    return Invoke(@this, random);
+    return Invoke(@this, random ?? Utilities.Random.Shared);
 
     static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, Random random) {
       var list = @this.Select(o => o).ToList();

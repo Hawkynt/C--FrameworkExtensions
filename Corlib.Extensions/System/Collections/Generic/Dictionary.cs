@@ -363,8 +363,6 @@ public static partial class DictionaryExtensions {
       @this.Add(key, value);
   }
 
-#if SUPPORTS_TUPLES
-
   /// <summary>
   ///   Adds values or updates existings.
   /// </summary>
@@ -398,8 +396,6 @@ public static partial class DictionaryExtensions {
     foreach (var kvp in values)
       @this.AddOrUpdate(kvp.Item1, kvp.Item2);
   }
-
-#endif
 
   /// <summary>
   ///   Adds values or updates existings.

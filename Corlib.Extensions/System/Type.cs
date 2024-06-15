@@ -510,11 +510,7 @@ public static partial class TypeExtensions {
   public static object GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
     Against.ThisIsNull(@this);
 
-#if SUPPORTS_RANDOM_SHARED
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Random.Shared);
-#else
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, new Random());
-#endif
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Utilities.Random.Shared);
   }
 
   internal static object GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {

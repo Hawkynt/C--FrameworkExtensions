@@ -420,11 +420,7 @@ public static partial class ListExtensions {
 
     var i = @this.Count;
 
-#if SUPPORTS_RANDOM_SHARED
-    var random = Random.Shared;
-#else
-    Random random = new();
-#endif
+    var random = Utilities.Random.Shared;
     while (i-- > 1)
       @this.Swap(random.Next(i + 1), i);
   }
