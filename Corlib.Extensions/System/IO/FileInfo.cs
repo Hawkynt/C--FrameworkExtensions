@@ -2524,49 +2524,65 @@ public static partial class FileInfoExtensions {
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
   public static bool NotExists(this FileInfo @this) => !@this.Exists;
 
-  #region needed consts for converting filename patterns into regexes
+  private static __ConvertFilePatternToRegex __convertFilePatternToRegex;
 
-  private static readonly Regex _ILEGAL_CHARACTERS_REGEX = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
-  private static readonly Regex _CATCH_EXTENSION_REGEX = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+  private sealed partial class __ConvertFilePatternToRegex {
 
-  #endregion
+#if SUPPORTS_GENERATED_REGEX
+    [GeneratedRegex("[" + @"\/:<>|" + "\"]")]
+    private partial Regex _IllegalCharactersRegex();
+#else
+    private readonly Regex _ILLEGAL_CHARACTERS_REGEX = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
+    private Regex _IllegalCharactersRegex() => this._ILLEGAL_CHARACTERS_REGEX;
+#endif
+
+#if SUPPORTS_GENERATED_REGEX
+    [GeneratedRegex(@"^\s*.+\.([^\.]+)\s*$")]
+    private partial Regex _CatchExtensionRegex();
+#else
+    private readonly Regex _CATCH_EXTENSION_REGEX = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
+    private Regex _CatchExtensionRegex() => this._CATCH_EXTENSION_REGEX;
+#endif
+
+    public string Invoke(string pattern) {
+      Against.ArgumentIsNull(pattern);
+
+      pattern = pattern.Trim();
+
+      if (pattern.Length == 0)
+        throw new ArgumentException("Pattern is empty.", nameof(pattern));
+
+      if (this._IllegalCharactersRegex().IsMatch(pattern))
+        throw new ArgumentException("Patterns contains illegal characters.", nameof(pattern));
+
+      const string nonDotCharacters = "[^.]*";
+
+      var hasExtension = this._CatchExtensionRegex().IsMatch(pattern);
+      var matchExact = false;
+
+      if (pattern.IndexOf('?') >= 0)
+        matchExact = true;
+      else if (hasExtension)
+        matchExact = this._CatchExtensionRegex().Match(pattern).Groups[1].Length != 3;
+
+      var regexString = Regex.Escape(pattern);
+      regexString = @"(^|[\\\/])" + Regex.Replace(regexString, @"\\\*", ".*");
+      regexString = Regex.Replace(regexString, @"\\\?", ".");
+
+      if (!matchExact && hasExtension)
+        regexString += nonDotCharacters;
+
+      regexString += "$";
+      return regexString;
+    }
+  }
 
   /// <summary>
   ///   Converts a given filename pattern into a regular expression.
   /// </summary>
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
-  private static string _ConvertFilePatternToRegex(string pattern) {
-    Against.ArgumentIsNull(pattern);
-
-    pattern = pattern.Trim();
-
-    if (pattern.Length == 0)
-      throw new ArgumentException("Pattern is empty.", nameof(pattern));
-    
-    if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern))
-      throw new ArgumentException("Patterns contains illegal characters.", nameof(pattern));
-
-    const string nonDotCharacters = "[^.]*";
-
-    var hasExtension = _CATCH_EXTENSION_REGEX.IsMatch(pattern);
-    var matchExact = false;
-
-    if (pattern.IndexOf('?') >= 0)
-      matchExact = true;
-    else if (hasExtension)
-      matchExact = _CATCH_EXTENSION_REGEX.Match(pattern).Groups[1].Length != 3;
-
-    var regexString = Regex.Escape(pattern);
-    regexString = @"(^|[\\\/])" + Regex.Replace(regexString, @"\\\*", ".*");
-    regexString = Regex.Replace(regexString, @"\\\?", ".");
-
-    if (!matchExact && hasExtension)
-      regexString += nonDotCharacters;
-
-    regexString += "$";
-    return regexString;
-  }
+  private static string _ConvertFilePatternToRegex(string pattern) => (__convertFilePatternToRegex ??= new()).Invoke(pattern);
 
   public static bool MatchesFilter(this FileInfo @this, string filter) {
     var regex = _ConvertFilePatternToRegex(filter);
