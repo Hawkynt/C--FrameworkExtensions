@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using Guard;
@@ -24,11 +22,10 @@ using Guard;
 namespace System.Threading;
 
 /// <summary>
-/// Allows a block of code to be flagged with a timeout callback.
-/// Note: The executed code will not be aborted, only the timeout gets called.
+///   Allows a block of code to be flagged with a timeout callback.
+///   Note: The executed code will not be aborted, only the timeout gets called.
 /// </summary>
 public class CallOnTimeout : IDisposable {
-
   private static readonly TimeSpan _TIME_BEFORE_CHECKS = TimeSpan.FromMilliseconds(100);
   private readonly DateTime _creationTime = DateTime.UtcNow;
   private readonly Timer _timer;
@@ -39,6 +36,7 @@ public class CallOnTimeout : IDisposable {
   public TimeSpan ElapsedTime => DateTime.UtcNow - this._creationTime;
 
   #region ctor,dtor
+
   public CallOnTimeout(TimeSpan timeout, Action<CallOnTimeout> timeoutAction) {
     Against.ArgumentIsNull(timeoutAction);
 
@@ -52,6 +50,7 @@ public class CallOnTimeout : IDisposable {
   #region Implementation of IDisposable
 
   private volatile bool _isDisposed;
+
   public void Dispose() {
     if (this._isDisposed)
       return;
@@ -64,11 +63,11 @@ public class CallOnTimeout : IDisposable {
   ~CallOnTimeout() => this.Dispose();
 
   #endregion
+
   #endregion
 
   private void _CheckTimeout(object _) {
     while (!this._isDisposed) {
-
       var timeLeft = this.TimeLeft;
       if (timeLeft.TotalMilliseconds <= 0) {
         this._timeoutAction(this);
@@ -77,12 +76,11 @@ public class CallOnTimeout : IDisposable {
 
       if (timeLeft <= _TIME_BEFORE_CHECKS)
         continue;
-      
+
       this._CallbackIn(timeLeft - _TIME_BEFORE_CHECKS);
       return;
     }
   }
 
   private void _CallbackIn(TimeSpan when) => this._timer.Change((long)when.TotalMilliseconds, Threading.Timeout.Infinite);
-
 }

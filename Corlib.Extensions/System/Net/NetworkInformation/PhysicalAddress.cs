@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
@@ -28,9 +26,8 @@ using Guard;
 namespace System.Net.NetworkInformation;
 
 public static partial class PhysicalAddressExtensions {
-  
   /// <summary>
-  /// Gets the MacAdress.
+  ///   Gets the MacAdress.
   /// </summary>
   /// <param name="this">This PhysicalAddress.</param>
   /// <returns>The mac adress string, delimited with ":"</returns>
@@ -45,7 +42,7 @@ public static partial class PhysicalAddressExtensions {
   }
 
   /// <summary>
-  /// Gets the ip adresses for a MAC.
+  ///   Gets the ip adresses for a MAC.
   /// </summary>
   /// <param name="this">This PhysicalAddress.</param>
   /// <returns>A number of IPAdress instances</returns>
@@ -62,34 +59,21 @@ public static partial class PhysicalAddressExtensions {
   }
 
   private static class NativeMethods {
-
     // Define the MIB_IPNETROW structure.
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_IPNETROW {
-      [MarshalAs(UnmanagedType.U4)]
-      public uint dwIndex;
-      [MarshalAs(UnmanagedType.U4)]
-      public uint dwPhysAddrLen;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac0;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac1;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac2;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac3;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac4;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac5;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac6;
-      [MarshalAs(UnmanagedType.U1)]
-      public byte mac7;
-      [MarshalAs(UnmanagedType.U4)]
-      public int dwAddr;
-      [MarshalAs(UnmanagedType.U4)]
-      public int dwType;
+      [MarshalAs(UnmanagedType.U4)] public uint dwIndex;
+      [MarshalAs(UnmanagedType.U4)] public uint dwPhysAddrLen;
+      [MarshalAs(UnmanagedType.U1)] public byte mac0;
+      [MarshalAs(UnmanagedType.U1)] public byte mac1;
+      [MarshalAs(UnmanagedType.U1)] public byte mac2;
+      [MarshalAs(UnmanagedType.U1)] public byte mac3;
+      [MarshalAs(UnmanagedType.U1)] public byte mac4;
+      [MarshalAs(UnmanagedType.U1)] public byte mac5;
+      [MarshalAs(UnmanagedType.U1)] public byte mac6;
+      [MarshalAs(UnmanagedType.U1)] public byte mac7;
+      [MarshalAs(UnmanagedType.U4)] public int dwAddr;
+      [MarshalAs(UnmanagedType.U4)] public int dwType;
     }
 
     // Declare the GetIpNetTable function.
@@ -146,7 +130,6 @@ public static partial class PhysicalAddressExtensions {
 
       // Cycle through the entries.
       for (var index = 0; index < entries; index++) {
-
         // Call PtrToStructure, getting the structure information.
         var row = (NativeMethods.MIB_IPNETROW)Marshal.PtrToStructure(
           new(currentBuffer.ToInt64() + index * Marshal.SizeOf(typeof(NativeMethods.MIB_IPNETROW))),
@@ -159,9 +142,7 @@ public static partial class PhysicalAddressExtensions {
         if (physicalAddress.GetAddressBytes().Any(b => b != 0))
           yield return Tuple.Create(physicalAddress, ip);
       }
-
     } finally {
-
       // Release the memory.
       if (buffer != IntPtr.Zero)
         NativeMethods.FreeMibTable(buffer);

@@ -1,48 +1,48 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-using Guard;
+using System.Diagnostics;
 using System.Linq;
+using Guard;
 #if !DEPRECATED_BINARY_FORMATTER
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 #endif
-using System.Diagnostics;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
 
-namespace System.Collections.Generic; 
+namespace System.Collections.Generic;
 
 public static partial class ListExtensions {
-
   /// <summary>
-  /// Implements a faster shortcut for LINQ's .Any()
+  ///   Implements a faster shortcut for LINQ's .Any()
   /// </summary>
-  /// <param name="this">This <see cref="IList{T}"/></param>
+  /// <param name="this">This <see cref="IList{T}" /></param>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns><see langword="true"/> if there is at least one item in the <see cref="IList{T}"/>; otherwise, <see langword="false"/>.</returns>
-  #if SUPPORTS_INLINING
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one item in the <see cref="IList{T}" />; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this IList<TItem> @this) {
     Against.ThisIsNull(@this);
@@ -51,12 +51,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the first item.
+  ///   Tries to get the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="IList" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetFirst<T>(this IList<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -70,12 +70,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the last item.
+  ///   Tries to get the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="IList" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetLast<T>(this IList<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -89,13 +89,13 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the item at the given index.
+  ///   Tries to get the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="this">This <see cref="IList" /></param>
   /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetItem<T>(this IList<T> @this, int index, out T result) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -110,29 +110,29 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to set the first item.
+  ///   Tries to set the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="this">This <see cref="IList" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetFirst<T>(this IList<T> @this, T value) {
     Against.ThisIsNull(@this);
-    
+
     if (@this.Count <= 0)
       return false;
-    
+
     @this[0] = value;
     return true;
   }
 
   /// <summary>
-  /// Tries to set the last item.
+  ///   Tries to set the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="this">This <see cref="IList" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetLast<T>(this IList<T> @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -144,13 +144,13 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to set the item at the given index.
+  ///   Tries to set the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList"/></param>
+  /// <param name="this">This <see cref="IList" /></param>
   /// <param name="index">The items' position</param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetItem<T>(this IList<T> @this, int index, T value) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -163,16 +163,19 @@ public static partial class ListExtensions {
   }
 
 #if SUPPORTS_READ_ONLY_COLLECTIONS
-  
+
   /// <summary>
-  /// Implements a faster shortcut for LINQ's .Any()
+  ///   Implements a faster shortcut for LINQ's .Any()
   /// </summary>
-  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns><see langword="true"/> if there is at least one item in the <see cref="IReadOnlyList{T}"/>; otherwise, <see langword="false"/>.</returns>
-  #if SUPPORTS_INLINING
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one item in the <see cref="IReadOnlyList{T}" />; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this IReadOnlyList<TItem> @this) {
     Against.ThisIsNull(@this);
@@ -181,14 +184,17 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Implements a faster shortcut for LINQ's .Any()
+  ///   Implements a faster shortcut for LINQ's .Any()
   /// </summary>
-  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="this">This <see cref="List{T}" /></param>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns><see langword="true"/> if there is at least one item in the <see cref="List{T}"/>; otherwise, <see langword="false"/>.</returns>
-  #if SUPPORTS_INLINING
+  /// <returns>
+  ///   <see langword="true" /> if there is at least one item in the <see cref="List{T}" />; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this List<TItem> @this) {
     Against.ThisIsNull(@this);
@@ -197,12 +203,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the first item.
+  ///   Tries to get the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="List{T}" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetFirst<T>(this List<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -214,14 +220,14 @@ public static partial class ListExtensions {
     result = @this[0];
     return true;
   }
-  
+
   /// <summary>
-  /// Tries to get the last item.
+  ///   Tries to get the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="List{T}" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetLast<T>(this List<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -235,13 +241,13 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the item at the given index.
+  ///   Tries to get the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="this">This <see cref="List{T}" /></param>
   /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetItem<T>(this List<T> @this, int index, out T result) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -256,12 +262,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to set the first item.
+  ///   Tries to set the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="this">This <see cref="List{T}" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetFirst<T>(this List<T> @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -273,12 +279,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to set the last item.
+  ///   Tries to set the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="this">This <see cref="List{T}" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetLast<T>(this List<T> @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -290,13 +296,13 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to set the item at the given index.
+  ///   Tries to set the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}"/></param>
+  /// <param name="this">This <see cref="List{T}" /></param>
   /// <param name="index">The items' position</param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetItem<T>(this List<T> @this, int index, T value) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -309,12 +315,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the first item.
+  ///   Tries to get the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetFirst<T>(this IReadOnlyList<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -328,12 +334,12 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the last item.
+  ///   Tries to get the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetLast<T>(this IReadOnlyList<T> @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -347,13 +353,13 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Tries to get the item at the given index.
+  ///   Tries to get the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}"/></param>
+  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
   /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetItem<T>(this IReadOnlyList<T> @this, int index, out T result) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -370,10 +376,10 @@ public static partial class ListExtensions {
 #endif
 
   /// <summary>
-  /// Removes every occurance of the given item.
+  ///   Removes every occurance of the given item.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/>.</param>
+  /// <param name="this">This <see cref="IList{T}" />.</param>
   /// <param name="item">The item to remove.</param>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -385,7 +391,7 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Removes the given items from the list.
+  ///   Removes the given items from the list.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumerable.</param>
@@ -402,7 +408,7 @@ public static partial class ListExtensions {
   // return part 
   public static T[] Splice<T>(this IList<T> @this, int start, int count) {
     Against.ThisIsNull(@this);
-    
+
     var result = new T[count];
     for (var i = count - 1; i >= 0; --i)
       result[i] = @this[i + start];
@@ -413,14 +419,14 @@ public static partial class ListExtensions {
   // swap two elements
   public static void Swap<T>(this IList<T> @this, int i, int j) {
     Against.ThisIsNull(@this);
-    
+
     (@this[i], @this[j]) = (@this[j], @this[i]);
   }
 
   // fisher-yates shuffle array
   public static void Shuffle<T>(this IList<T> @this) {
     Against.ThisIsNull(@this);
-    
+
     var i = @this.Count;
 
 #if SUPPORTS_RANDOM_SHARED
@@ -430,7 +436,6 @@ public static partial class ListExtensions {
 #endif
     while (i-- > 1)
       @this.Swap(random.Next(i + 1), i);
-
   }
 
   public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter) {
@@ -448,7 +453,7 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Removes items at the given position.
+  ///   Removes items at the given position.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
@@ -459,9 +464,8 @@ public static partial class ListExtensions {
 
     switch (count) {
       // special case I - return when nothing to remove
-      case < 1:
-        return;
-    
+      case < 1: return;
+
       // special case II - only one item removed
       case 1:
         @this.RemoveAt(start);
@@ -480,10 +484,10 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Adds the items.
+  ///   Adds the items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/>.</param>
+  /// <param name="this">This <see cref="IList{T}" />.</param>
   /// <param name="items">The items.</param>
   [DebuggerStepThrough]
   public static void AddRange<TInput>(this IList<TInput> @this, IEnumerable<TInput> items) {
@@ -501,14 +505,14 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Adds a range of items.
+  ///   Adds a range of items.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This <see cref="ICollection{T}"/>.</param>
+  /// <param name="this">This <see cref="ICollection{T}" />.</param>
   /// <param name="items">The items.</param>
-  #if SUPPORTS_INLINING
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static void AddRange<TItem>(this List<TItem> @this, IEnumerable<TItem> items) {
     Against.ThisIsNull(@this);
@@ -518,14 +522,14 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Adds if not null.
+  ///   Adds if not null.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/>.</param>
+  /// <param name="this">This <see cref="IList{T}" />.</param>
   /// <param name="item">The item.</param>
-  #if SUPPORTS_INLINING
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static void AddIfNotNull<TInput>(this IList<TInput> @this, TInput item) {
     Against.ThisIsNull(@this);
@@ -535,7 +539,7 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Keeps the first n items.
+  ///   Keeps the first n items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
@@ -548,7 +552,7 @@ public static partial class ListExtensions {
       case < 1:
         @this.Clear();
         return;
-    
+
       // special case: keep the first element
       case 1: {
         var item = @this[0];
@@ -567,7 +571,6 @@ public static partial class ListExtensions {
     count = len - index;
 
     if (count > index) {
-
       // more to remove than to keep, copy the items and clear the list, then re-add
       var copy = new TInput[index];
       for (var i = 0; i < index; ++i)
@@ -582,7 +585,7 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Keeps the last n items.
+  ///   Keeps the last n items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
@@ -611,7 +614,6 @@ public static partial class ListExtensions {
 
     var index = len - count;
     if (count > index) {
-
       // more to remove than to keep
       var copy = new TInput[count];
       for (int i = count - 1, j = len - 1; i >= 0; --i, --j)
@@ -625,14 +627,14 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Removes the first n items.
+  ///   Removes the first n items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
-  #if SUPPORTS_INLINING
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static void RemoveFirst<TInput>(this IList<TInput> @this, int count) {
     Against.ThisIsNull(@this);
@@ -642,14 +644,14 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Removes the last n items.
+  ///   Removes the last n items.
   /// </summary>
   /// <typeparam name="TInput">The type of the input.</typeparam>
   /// <param name="this">This IList.</param>
   /// <param name="count">The count.</param>
-  #if SUPPORTS_INLINING
+#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  #endif
+#endif
   [DebuggerStepThrough]
   public static void RemoveLast<TInput>(this IList<TInput> @this, int count) {
     Against.ThisIsNull(@this);
@@ -659,19 +661,21 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Returns all permutations of the specified items.
+  ///   Returns all permutations of the specified items.
   /// </summary>
   /// <typeparam name="T"></typeparam>
   /// <param name="this">The items.</param>
-  /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+  /// <param name="separateArrays">
+  ///   if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed
+  ///   over and over again.
+  /// </param>
   /// <returns></returns>
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, bool separateArrays = false) {
     Against.ThisIsNull(@this);
 
     return Invoke(@this, separateArrays);
-    
-    static IEnumerable<T[]> Invoke(IList<T> @this, bool separateArrays) {
 
+    static IEnumerable<T[]> Invoke(IList<T> @this, bool separateArrays) {
       var length = @this.Count;
       if (length < 1)
         yield break;
@@ -683,7 +687,6 @@ public static partial class ListExtensions {
 
       var lastIndex = length - 1;
       while (true) {
-
         // return copy or working array
         if (separateArrays) {
           var result = new T[length];
@@ -695,12 +698,11 @@ public static partial class ListExtensions {
         // increment the 2nd last digit
         var index = lastIndex - 1;
         while (true) {
-
           // increment as long as there are matching slots
           HashSet<int> slotsBefore = new(state.Take(index));
-          do {
+          do
             ++state[index];
-          } while (slotsBefore.Contains(state[index]));
+          while (slotsBefore.Contains(state[index]));
 
           // if we did not ran out of digits
           if (state[index] <= lastIndex)
@@ -727,26 +729,27 @@ public static partial class ListExtensions {
 
           current[i] = @this[state[i]];
         }
-
       }
     }
   }
 
   /// <summary>
-  /// Returns all permutations of the specified items.
+  ///   Returns all permutations of the specified items.
   /// </summary>
   /// <typeparam name="T"></typeparam>
   /// <param name="this">The items.</param>
   /// <param name="length">The length of each permutation.</param>
-  /// <param name="separateArrays">if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed over and over again.</param>
+  /// <param name="separateArrays">
+  ///   if set to <c>true</c> returns separate arrays; otherwise, returns the same array changed
+  ///   over and over again.
+  /// </param>
   /// <returns></returns>
   public static IEnumerable<T[]> Permutate<T>(this IList<T> @this, int length, bool separateArrays = false) {
     Against.ThisIsNull(@this);
 
     return Invoke(@this, length, separateArrays);
-    
-    static IEnumerable<T[]> Invoke(IList<T> @this, int length, bool separateArrays) {
 
+    static IEnumerable<T[]> Invoke(IList<T> @this, int length, bool separateArrays) {
       if (length < 1)
         yield break;
 
@@ -762,7 +765,7 @@ public static partial class ListExtensions {
       --length;
 
       // this version creates a new array for each permutations and returns it
-      if (separateArrays) {
+      if (separateArrays)
         while (true) {
           var result = new T[length + 1];
           current.CopyTo(result, 0);
@@ -771,7 +774,6 @@ public static partial class ListExtensions {
           if (!_ArePermutationsLeft(@this, length, states, itemLastIndex, current))
             yield break;
         }
-      }
 
       while (true) {
         yield return current;
@@ -783,7 +785,7 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// The permutation core.
+  ///   The permutation core.
   /// </summary>
   /// <typeparam name="T"></typeparam>
   /// <param name="items">The items.</param>
@@ -793,7 +795,6 @@ public static partial class ListExtensions {
   /// <param name="current">The current.</param>
   /// <returns><c>true</c> if there are more permutations available; otherwise, <c>false</c>.</returns>
   private static bool _ArePermutationsLeft<T>(IList<T> items, int length, int[] states, int itemLastIndex, T[] current) {
-
     // set counter position back to last index
     var index = length;
     while (states[index] >= itemLastIndex) {
@@ -813,28 +814,29 @@ public static partial class ListExtensions {
   }
 
 #if !DEPRECATED_BINARY_FORMATTER
-  public static List<T> DeepClone<T>(this List<T> list) 
-  {
+  public static List<T> DeepClone<T>(this List<T> list) {
     object objResult;
-    using (var  ms = new MemoryStream()) {
-      var  bf =   new BinaryFormatter();
+    using (var ms = new MemoryStream()) {
+      var bf = new BinaryFormatter();
       bf.Serialize(ms, list);
 
       ms.Position = 0;
       objResult = bf.Deserialize(ms);
     }
+
     return (List<T>)objResult;
   }
 #endif
 
   /// <summary>
-  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  ///   Performs a binary search on a section of a list of <see cref="IComparable{T}" /> elements, optionally returning the
+  ///   index of the first item greater than the searched item if the exact match is not found.
   /// </summary>
   /// <remarks>
-  /// If no such item exists, -1 is returned.
+  ///   If no such item exists, -1 is returned.
   /// </remarks>
-  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}" />.</typeparam>
+  /// <param name="this">This <see cref="IList{T}" /> to search.</param>
   /// <param name="item">The item to search for.</param>
   /// <returns> The index of the item in the list that matches the searched item or -1.</returns>
   public static int BinarySearchIndex<T>(this IList<T> @this, T item) where T : IComparable<T> {
@@ -844,18 +846,18 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  ///   Performs a binary search on a section of a list of <see cref="IComparable{T}" /> elements, optionally returning the
+  ///   index of the first item greater than the searched item if the exact match is not found.
   /// </summary>
   /// <remarks>
-  /// If no such item exists, -1 is returned.
+  ///   If no such item exists, -1 is returned.
   /// </remarks>
-  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}" />.</typeparam>
+  /// <param name="this">This <see cref="IList{T}" /> to search.</param>
   /// <param name="item">The item to search for.</param>
   /// <param name="startAt">The index of the first element in the section to search.</param>
   /// <param name="count">The number of elements in the section to search.</param>
   /// <returns> The index of the item in the list that matches the searched item or -1.</returns>
-
   public static int BinarySearchIndex<T>(this IList<T> @this, T item, int startAt, int count) where T : IComparable<T> {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(startAt);
@@ -865,17 +867,25 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  ///   Performs a binary search on a section of a list of <see cref="IComparable{T}" /> elements, optionally returning the
+  ///   index of the first item greater than the searched item if the exact match is not found.
   /// </summary>
   /// <remarks>
-  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  ///   If <paramref name="returnNextGreater" /> is <see langword="true" /> and the exact item is not found, this method will
+  ///   return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
   /// </remarks>
-  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}" />.</typeparam>
+  /// <param name="this">This <see cref="IList{T}" /> to search.</param>
   /// <param name="item">The item to search for.</param>
-  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <param name="returnNextGreater">
+  ///   If set to <see langword="true" />, and the item is not found, the method will return
+  ///   the index of the first item greater than the searched item.
+  /// </param>
   /// <returns>
-  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  ///   The index of the item in the list that matches the searched item. If the item is not found, and
+  ///   <paramref name="returnNextGreater" /> is <see langword="false" />, -1 is returned. If
+  ///   <paramref name="returnNextGreater" /> is <see langword="true" />, the index of the first item that is greater than
+  ///   the searched item is returned, or -1 if no such item exists.
   /// </returns>
   public static int BinarySearchIndex<T>(this IList<T> @this, T item, bool returnNextGreater) where T : IComparable<T> {
     Against.ThisIsNull(@this);
@@ -884,19 +894,27 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  ///   Performs a binary search on a section of a list of <see cref="IComparable{T}" /> elements, optionally returning the
+  ///   index of the first item greater than the searched item if the exact match is not found.
   /// </summary>
   /// <remarks>
-  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  ///   If <paramref name="returnNextGreater" /> is <see langword="true" /> and the exact item is not found, this method will
+  ///   return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
   /// </remarks>
-  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}" />.</typeparam>
+  /// <param name="this">This <see cref="IList{T}" /> to search.</param>
   /// <param name="item">The item to search for.</param>
   /// <param name="startAt">The index of the first element in the section to search.</param>
   /// <param name="count">The number of elements in the section to search.</param>
-  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <param name="returnNextGreater">
+  ///   If set to <see langword="true" />, and the item is not found, the method will return
+  ///   the index of the first item greater than the searched item.
+  /// </param>
   /// <returns>
-  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  ///   The index of the item in the list that matches the searched item. If the item is not found, and
+  ///   <paramref name="returnNextGreater" /> is <see langword="false" />, -1 is returned. If
+  ///   <paramref name="returnNextGreater" /> is <see langword="true" />, the index of the first item that is greater than
+  ///   the searched item is returned, or -1 if no such item exists.
   /// </returns>
   public static int BinarySearchIndex<T>(this IList<T> @this, T item, int startAt, int count, bool returnNextGreater) where T : IComparable<T> {
     Against.ThisIsNull(@this);
@@ -907,21 +925,29 @@ public static partial class ListExtensions {
   }
 
   /// <summary>
-  /// Performs a binary search on a section of a list of <see cref="IComparable{T}"/> elements, optionally returning the index of the first item greater than the searched item if the exact match is not found.
+  ///   Performs a binary search on a section of a list of <see cref="IComparable{T}" /> elements, optionally returning the
+  ///   index of the first item greater than the searched item if the exact match is not found.
   /// </summary>
   /// <remarks>
-  /// If <paramref name="returnNextGreater"/> is <see langword="true"/> and the exact item is not found, this method will return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
+  ///   If <paramref name="returnNextGreater" /> is <see langword="true" /> and the exact item is not found, this method will
+  ///   return the index of the first item that is greater than the searched item. If no such item exists, -1 is returned.
   /// </remarks>
-  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}"/>.</typeparam>
-  /// <param name="this">This <see cref="IList{T}"/> to search.</param>
+  /// <typeparam name="T">The type of elements in the list, which must implement <see cref="IComparable{T}" />.</typeparam>
+  /// <param name="this">This <see cref="IList{T}" /> to search.</param>
   /// <param name="item">The item to search for.</param>
   /// <param name="startAt">The index of the first element in the section to search.</param>
   /// <param name="count">The number of elements in the section to search.</param>
-  /// <param name="returnNextGreater">If set to <see langword="true"/>, and the item is not found, the method will return the index of the first item greater than the searched item.</param>
+  /// <param name="returnNextGreater">
+  ///   If set to <see langword="true" />, and the item is not found, the method will return
+  ///   the index of the first item greater than the searched item.
+  /// </param>
   /// <returns>
-  /// The index of the item in the list that matches the searched item. If the item is not found, and <paramref name="returnNextGreater"/> is <see langword="false"/>, -1 is returned. If <paramref name="returnNextGreater"/> is <see langword="true"/>, the index of the first item that is greater than the searched item is returned, or -1 if no such item exists.
+  ///   The index of the item in the list that matches the searched item. If the item is not found, and
+  ///   <paramref name="returnNextGreater" /> is <see langword="false" />, -1 is returned. If
+  ///   <paramref name="returnNextGreater" /> is <see langword="true" />, the index of the first item that is greater than
+  ///   the searched item is returned, or -1 if no such item exists.
   /// </returns>
-  private static int _BinarySearchIndex<T>(this IList<T> @this, T item,int startAt,int count, bool returnNextGreater) where T : IComparable<T> {
+  private static int _BinarySearchIndex<T>(this IList<T> @this, T item, int startAt, int count, bool returnNextGreater) where T : IComparable<T> {
     const int INDEX_WHEN_NOT_FOUND = -1;
 
     var left = startAt;
@@ -939,7 +965,7 @@ public static partial class ListExtensions {
         not null when isSearchingForNull => 1,
         not null => midItem.CompareTo(item)
       };
-      
+
       switch (comparison) {
         case 0:
           // Found an item, continue to search towards the left for the first occurrence.
@@ -949,7 +975,7 @@ public static partial class ListExtensions {
         case < 0:
           left = mid + 1;
           continue;
-        case >0:
+        case > 0:
           // If we are looking for the next greater item, store this index.
           if (returnNextGreater && (foundIndex < 0 || mid < foundIndex))
             foundIndex = mid;
@@ -963,5 +989,4 @@ public static partial class ListExtensions {
     // foundIndex will be -1 if no such item exists.
     return foundIndex;
   }
-
 }

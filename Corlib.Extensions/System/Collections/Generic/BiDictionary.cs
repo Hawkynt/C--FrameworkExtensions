@@ -1,22 +1,20 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Diagnostics;
@@ -28,17 +26,15 @@ namespace System.Collections.Generic;
 [Serializable]
 [DebuggerDisplay("Count = {Count}")]
 [DebuggerTypeProxy(typeof(DictionaryDebugView<,>))]
-public class BiDictionary<TFirst, TSecond> :
-  IDictionary<TFirst, TSecond>,
+public class BiDictionary<TFirst, TSecond>
+  : IDictionary<TFirst, TSecond>,
 #if SUPPORTS_READ_ONLY_COLLECTIONS
-  IReadOnlyDictionary<TFirst, TSecond>,
+    IReadOnlyDictionary<TFirst, TSecond>,
 #endif
-  IDictionary {
+    IDictionary {
   private readonly IDictionary<TFirst, TSecond> _firstToSecond = new Dictionary<TFirst, TSecond>();
-  [NonSerialized]
-  private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
-  [NonSerialized]
-  private readonly ReverseDictionary _reverseDictionary;
+  [NonSerialized] private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
+  [NonSerialized] private readonly ReverseDictionary _reverseDictionary;
 
   public BiDictionary() => this._reverseDictionary = new(this);
   public IDictionary<TSecond, TFirst> Reverse => this._reverseDictionary;
@@ -139,8 +135,7 @@ public class BiDictionary<TFirst, TSecond> :
       this._secondToFirst.Add(item.Value, item.Key);
   }
 
-  private class ReverseDictionary(BiDictionary<TFirst, TSecond> owner) :
-    IDictionary<TSecond, TFirst>,
+  private class ReverseDictionary(BiDictionary<TFirst, TSecond> owner) : IDictionary<TSecond, TFirst>,
 #if SUPPORTS_READ_ONLY_COLLECTIONS
     IReadOnlyDictionary<TSecond, TFirst>,
 #endif
@@ -215,7 +210,7 @@ public class BiDictionary<TFirst, TSecond> :
       var firstToSecond = (IDictionary)owner._secondToFirst;
       if (!firstToSecond.Contains(key))
         return;
-      
+
       var value = firstToSecond[key];
       firstToSecond.Remove(key);
       ((IDictionary)owner._firstToSecond).Remove(value);
@@ -231,7 +226,6 @@ public class BiDictionary<TFirst, TSecond> :
 
     public void CopyTo(KeyValuePair<TSecond, TFirst>[] array, int arrayIndex) => owner._secondToFirst.CopyTo(array, arrayIndex);
     void ICollection.CopyTo(Array array, int index) => ((IDictionary)owner._secondToFirst).CopyTo(array, index);
-
   }
 }
 
@@ -249,7 +243,6 @@ internal class DictionaryDebugView<TKey, TValue>(IDictionary<TKey, TValue> dicti
 }
 
 public static partial class KeyValuePairExtensions {
-  
   public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) {
     Against.ThisIsNull(@this);
 

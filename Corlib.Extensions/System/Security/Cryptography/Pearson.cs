@@ -1,32 +1,29 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Linq;
+using Guard;
 
 namespace System.Security.Cryptography;
 
 public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
-
   private static readonly byte[] _DEFAULT_S_BOX = [
-
     // 256 values 0-255 in any (random) order suffices
     98, 6, 85, 150, 36, 23, 112, 164, 135, 207, 169, 5, 26, 64, 165, 219, //  1
     61, 20, 68, 89, 130, 63, 52, 102, 24, 229, 132, 245, 80, 216, 195, 115, //  2
@@ -90,9 +87,8 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
   public int OutputBits {
     get => this._state.Length << 3;
     set {
-      if (!SupportedOutputBits.Contains(value))
-        throw new ArgumentException();
-
+      Against.False(SupportedOutputBits.Contains(value));
+      
       this._state = new byte[value >> 3];
       this.Initialize();
     }
@@ -101,8 +97,7 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
   public byte[] IV {
     get => this._sBox;
     set {
-      if (value != null && !SupportedIVBits.Contains(value.Length << 3))
-        throw new ArgumentException();
+      Against.False(value == null || SupportedIVBits.Contains(value.Length << 3));
 
       this._sBox = value ?? _DEFAULT_S_BOX;
       this.Initialize();
@@ -120,5 +115,4 @@ public sealed class Pearson : HashAlgorithm, IAdvancedHashAlgorithm {
   public static int[] SupportedIVBits => [MinIVBits];
 
   #endregion
-
 }

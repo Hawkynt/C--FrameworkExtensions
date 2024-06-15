@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
@@ -29,39 +27,34 @@ using System.Text.RegularExpressions;
 namespace System.IO;
 
 public static partial class VolumeExtensions {
-
   #region nested types
+
   /// <summary>
-  /// A volume in the system.
+  ///   A volume in the system.
   /// </summary>
-  public class Volume {
-    
-    /// <summary>
-    /// A volume in the system.
-    /// </summary>
-    public Volume(string name) => this.Name = name;
+  public class Volume(string name) {
 
     /// <summary>
-    /// Gets the name.
+    ///   Gets the name.
     /// </summary>
     /// <value>
-    /// The name.
+    ///   The name.
     /// </value>
-    public string Name { get; }
+    public string Name { get; } = name;
 
     /// <summary>
-    /// Gets the path names.
+    ///   Gets the path names.
     /// </summary>
     /// <value>
-    /// The path names.
+    ///   The path names.
     /// </value>
     public IEnumerable<string> PathNames => GetVolumePathNames(this.Name);
 
     /// <summary>
-    /// Gets the mount points.
+    ///   Gets the mount points.
     /// </summary>
     /// <value>
-    /// The mount points.
+    ///   The mount points.
     /// </value>
     public IEnumerable<string> MountPoints => GetVolumeMountPoints(this.Name);
 
@@ -69,7 +62,7 @@ public static partial class VolumeExtensions {
   }
 
   /// <summary>
-  /// PInvoke stuff
+  ///   P/Invoke stuff
   /// </summary>
   private static class NativeMethods {
     public const int _MAX_PATH = 124;
@@ -97,11 +90,12 @@ public static partial class VolumeExtensions {
     [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "GetVolumePathNamesForVolumeNameW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetVolumePathNamesForVolumeNameW(string lpszVolumeName, char[] lpszVolumePathNames, uint cchBuferLength, ref uint lpcchReturnLength);
-
   }
+
   #endregion
+
   /// <summary>
-  /// Converts a mask like abc*def?ghi into a regex, that can be used, to match the mask.
+  ///   Converts a mask like abc*def?ghi into a regex, that can be used, to match the mask.
   /// </summary>
   /// <param name="mask">The mask.</param>
   /// <returns>The compiled regex.</returns>
@@ -121,21 +115,21 @@ public static partial class VolumeExtensions {
   }
 
   /// <summary>
-  /// Gets the volumes.
+  ///   Gets the volumes.
   /// </summary>
   /// <param name="filterMask">The filter mask.</param>
   /// <returns></returns>
   public static IEnumerable<Volume> GetVolumes(string filterMask) => GetVolumes(_ConvertMaskToRegex(filterMask));
 
   /// <summary>
-  /// Gets the volumes.
+  ///   Gets the volumes.
   /// </summary>
   /// <param name="regex">The regex.</param>
   /// <returns></returns>
   public static IEnumerable<Volume> GetVolumes(Regex regex) => GetVolumes().Where(v => regex.IsMatch(v.Name));
 
   /// <summary>
-  /// Gets the volumes.
+  ///   Gets the volumes.
   /// </summary>
   /// <returns></returns>
   public static IEnumerable<Volume> GetVolumes() {
@@ -146,9 +140,9 @@ public static partial class VolumeExtensions {
       if (volumeHandle == NativeMethods.INVALID_PTR)
         yield break;
 
-      do {
+      do
         yield return new(cVolumeName.ToString());
-      } while (NativeMethods.FindNextVolume(volumeHandle, cVolumeName, NativeMethods._MAX_PATH));
+      while (NativeMethods.FindNextVolume(volumeHandle, cVolumeName, NativeMethods._MAX_PATH));
     } finally {
       if (volumeHandle != NativeMethods.INVALID_PTR)
         NativeMethods.FindVolumeClose(volumeHandle);
@@ -156,7 +150,7 @@ public static partial class VolumeExtensions {
   }
 
   /// <summary>
-  /// Gets the volume path names.
+  ///   Gets the volume path names.
   /// </summary>
   /// <param name="volumeName">Name of the volume.</param>
   /// <returns></returns>
@@ -174,7 +168,7 @@ public static partial class VolumeExtensions {
   }
 
   /// <summary>
-  /// Gets the names of the volume mount points by volume.
+  ///   Gets the names of the volume mount points by volume.
   /// </summary>
   /// <param name="volumeName">Name of the volume.</param>
   /// <returns></returns>
@@ -186,9 +180,9 @@ public static partial class VolumeExtensions {
       if (mountHandle == NativeMethods.INVALID_PTR)
         yield break;
 
-      do {
+      do
         yield return cVolumeName.ToString();
-      } while (NativeMethods.FindNextVolumeMountPoint(mountHandle, cVolumeName, NativeMethods._MAX_PATH));
+      while (NativeMethods.FindNextVolumeMountPoint(mountHandle, cVolumeName, NativeMethods._MAX_PATH));
     } finally {
       if (mountHandle != NativeMethods.INVALID_PTR)
         NativeMethods.FindVolumeMountPointClose(mountHandle);

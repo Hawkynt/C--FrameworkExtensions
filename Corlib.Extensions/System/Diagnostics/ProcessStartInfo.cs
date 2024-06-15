@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -131,7 +127,7 @@ public static partial class ProcessStartInfoExtensions {
         this._stdout.AppendLine(line);
       }
     }
-    
+
     #region Implementation of IAsyncResult
 
     public bool IsCompleted => this.AsyncWaitHandle.WaitOne(0);
@@ -151,8 +147,7 @@ public static partial class ProcessStartInfoExtensions {
   #endregion
 
   public static IRedirectedRunAsyncResult BeginRedirectedRun(this ProcessStartInfo @this, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null, AsyncCallback callback = null, object state = null)
-    => new RedirectedRunAsyncResult(@this, stdoutCallback, stderrCallback, callback, state)
-  ;
+    => new RedirectedRunAsyncResult(@this, stdoutCallback, stderrCallback, callback, state);
 
   public static IConsoleResult EndRedirectedRun(this ProcessStartInfo @this, IAsyncResult asyncResult) {
     if (asyncResult is not RedirectedRunAsyncResult redirectedRunAsyncResult)
@@ -164,8 +159,6 @@ public static partial class ProcessStartInfoExtensions {
     return result;
   }
 
-  public static FileInfo File(this ProcessStartInfo @this) 
-    => @this.FileName.IsNullOrWhiteSpace() ? null : new FileInfo(@this.FileName)
-  ;
-  
+  public static FileInfo File(this ProcessStartInfo @this)
+    => @this.FileName.IsNullOrWhiteSpace() ? null : new FileInfo(@this.FileName);
 }

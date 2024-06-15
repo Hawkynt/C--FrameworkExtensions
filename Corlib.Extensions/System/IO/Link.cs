@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
@@ -24,21 +22,21 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Win32.SafeHandles;
 using Guard;
+using Microsoft.Win32.SafeHandles;
+using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace System.IO;
 
 public static partial class LinkExtensions {
-  
   #region Nested types
-  
+
   /// <summary>
-  /// The native methods.
+  ///   The native methods.
   /// </summary>
   private static class NativeMethods {
-    
     #region consts
+
     public const uint symLinkTag = 0xA000000C;
     public const uint junctionTag = 0xA0000003;
     public const int maxUnicodePathLength = 0x3FF0;
@@ -125,10 +123,11 @@ public static partial class LinkExtensions {
     public enum FindFirstFileNameFlags : uint {
       None = 0,
     }
-    
+
     #endregion
-    
+
     #region imports
+
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
@@ -145,7 +144,7 @@ public static partial class LinkExtensions {
     [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Auto)]
     public static extern bool DeviceIoControl(
       IntPtr hDevice,
-      [MarshalAs(UnmanagedType.I4)]IoControl dwIoControlCode,
+      [MarshalAs(UnmanagedType.I4)] IoControl dwIoControlCode,
       IntPtr lpInBuffer,
       int nInBufferSize,
       IntPtr lpOutBuffer,
@@ -162,11 +161,13 @@ public static partial class LinkExtensions {
 
     [DllImport("kernel32.dll", EntryPoint = "FindClose", SetLastError = true)]
     public static extern bool FindClose(IntPtr hFindStream);
+
     #endregion
-    
+
     #region nested types
+
     /// <remarks>
-    /// Refer to http://msdn.microsoft.com/en-us/library/windows/hardware/ff552012%28v=vs.85%29.aspx
+    ///   Refer to http://msdn.microsoft.com/en-us/library/windows/hardware/ff552012%28v=vs.85%29.aspx
     /// </remarks>
     [StructLayout(LayoutKind.Sequential)]
     public struct SymbolicLinkReparseBuffer {
@@ -178,10 +179,11 @@ public static partial class LinkExtensions {
       public ushort PrintNameOffset;
       public ushort PrintNameLength;
       public SymbolLinkTargetFlag Flags;
+
       [MarshalAs(UnmanagedType.ByValArray, SizeConst = maxUnicodePathLength)]
       public byte[] PathBuffer;
     }
-      
+
     [StructLayout(LayoutKind.Sequential)]
     public struct MountPointReparseBuffer {
       public uint ReparseTag;
@@ -191,17 +193,18 @@ public static partial class LinkExtensions {
       public ushort SubstituteNameLength;
       public ushort PrintNameOffset;
       public ushort PrintNameLength;
+
       [MarshalAs(UnmanagedType.ByValArray, SizeConst = maxUnicodePathLength)]
       public byte[] PathBuffer;
     }
-      
-      
+
+
     [StructLayout(LayoutKind.Sequential)]
     public struct BY_HANDLE_FILE_INFORMATION {
       public _FileAttributes FileAttributes;
-      public Runtime.InteropServices.ComTypes.FILETIME CreationTime;
-      public Runtime.InteropServices.ComTypes.FILETIME LastAccessTime;
-      public Runtime.InteropServices.ComTypes.FILETIME LastWriteTime;
+      public FILETIME CreationTime;
+      public FILETIME LastAccessTime;
+      public FILETIME LastWriteTime;
       public uint VolumeSerialNumber;
       public uint FileSizeHigh;
       public uint FileSizeLow;
@@ -209,23 +212,22 @@ public static partial class LinkExtensions {
       public uint FileIndexHigh;
       public uint FileIndexLow;
 
-      public ulong FileSize => (ulong)this.FileSizeHigh << 32 | this.FileSizeLow;
-      public ulong FileIndex => (ulong)this.FileIndexHigh << 32 | this.FileIndexLow;
+      public ulong FileSize => ((ulong)this.FileSizeHigh << 32) | this.FileSizeLow;
+      public ulong FileIndex => ((ulong)this.FileIndexHigh << 32) | this.FileIndexLow;
     }
 
     #endregion
-    
   }
-  
+
   #endregion
 
   #region Internal target getters
-  
+
   private static int _InternalGetSymbolicLinkTargetCount(FileSystemInfo @this) => _InternalGetSymbolicLinkTarget(@this) == null ? 0 : 1;
-  private static string _InternalGetSymbolicLinkTarget(FileSystemInfo @this)=> _GetTargetS(@this.FullName);
-  private static int _InternalGetJunctionTargetCount(DirectoryInfo @this)=> _InternalGetJunctionTarget(@this) == null ? 0 : 1;
+  private static string _InternalGetSymbolicLinkTarget(FileSystemInfo @this) => _GetTargetS(@this.FullName);
+  private static int _InternalGetJunctionTargetCount(DirectoryInfo @this) => _InternalGetJunctionTarget(@this) == null ? 0 : 1;
   private static string _InternalGetJunctionTarget(DirectoryInfo @this) => _GetTargetJ(@this.FullName);
-  
+
   private static int _InternalGetHardLinkTargetCount(FileInfo @this) {
     if (@this.IsSymbolicLink())
       return 0;
@@ -250,28 +252,29 @@ public static partial class LinkExtensions {
         var result = buffer.ToString(); // HINT: Buffer content always starts with '\'
         yield return result;
       } while (_FindNextFileName(handle, ref buffer));
-
     } finally {
       if (handle != NativeMethods.InvalidHandle)
         if (!NativeMethods.FindClose(handle))
           throw new Win32Exception();
     }
   }
+
   #endregion
 
   #region Internal creators
-  private static Exception _InternalCreateSymbolicLinkFrom(FileSystemInfo This,string source) => NativeMethods.CreateSymbolicLink(This.FullName, source, NativeMethods.SymbolLinkFlag.TargetIsFile) ? null : new Win32Exception();
+
+  private static Exception _InternalCreateSymbolicLinkFrom(FileSystemInfo This, string source) => NativeMethods.CreateSymbolicLink(This.FullName, source, NativeMethods.SymbolLinkFlag.TargetIsFile) ? null : new Win32Exception();
 
   private static Exception _InternalCreateHardLinkFrom(FileInfo This, string source) {
-    if(!File.Exists(source))
+    if (!File.Exists(source))
       throw new FileNotFoundException("HardLink source missing");
 
-    return NativeMethods.CreateHardLink(This.FullName, source, IntPtr.Zero)?null:new Win32Exception();
+    return NativeMethods.CreateHardLink(This.FullName, source, IntPtr.Zero) ? null : new Win32Exception();
   }
-    
+
   private static Exception _InternalCreateJunctionFrom(DirectoryInfo This, string source) {
     This.Refresh();
-    if(!This.Exists)
+    if (!This.Exists)
       This.Create();
 
     var fileHandle = NativeMethods.CreateFile(This.FullName, NativeMethods.GenericAccessRights.Write, NativeMethods.ShareMode.All, IntPtr.Zero, NativeMethods.CreationDisposition.OpenExisting, NativeMethods._FileAttributes.BackupSemantics | NativeMethods._FileAttributes.OpenReparsePoint, IntPtr.Zero);
@@ -282,15 +285,7 @@ public static partial class LinkExtensions {
     var substTarget = NativeMethods.UnparsedPrefix + new DirectoryInfo(source).FullName + Path.DirectorySeparatorChar;
     var substName = Encoding.Unicode.GetBytes(substTarget);
 
-    var buffer = new NativeMethods.MountPointReparseBuffer {
-      ReparseTag = NativeMethods.junctionTag,
-      ReparseDataLength = (ushort)(substName.Length + printName.Length + 12),
-      SubstituteNameOffset = 0,
-      SubstituteNameLength = (ushort)substName.Length,
-      PrintNameOffset = (ushort)(substName.Length + 2),
-      PrintNameLength = (ushort)printName.Length,
-      PathBuffer = new byte[NativeMethods.maxUnicodePathLength],
-    };
+    var buffer = new NativeMethods.MountPointReparseBuffer { ReparseTag = NativeMethods.junctionTag, ReparseDataLength = (ushort)(substName.Length + printName.Length + 12), SubstituteNameOffset = 0, SubstituteNameLength = (ushort)substName.Length, PrintNameOffset = (ushort)(substName.Length + 2), PrintNameLength = (ushort)printName.Length, PathBuffer = new byte[NativeMethods.maxUnicodePathLength], };
     Buffer.BlockCopy(substName, 0, buffer.PathBuffer, buffer.SubstituteNameOffset, substName.Length);
     Buffer.BlockCopy(printName, 0, buffer.PathBuffer, buffer.PrintNameOffset, printName.Length);
 
@@ -305,20 +300,22 @@ public static partial class LinkExtensions {
       if (unmanagedBlock != IntPtr.Zero)
         Marshal.FreeHGlobal(unmanagedBlock);
     }
-      
   }
+
   #endregion
 
   #region methods
+
   private static string _InternalGetHardLinkTarget(FileInfo @this) => _InternalGetHardLinkTargets(@this).FirstOrDefault();
+
   public static IEnumerable<FileInfo> GetHardLinkTargets(this FileInfo @this) {
     Against.ThisIsNull(@this);
-    
+
     return _InternalGetHardLinkTargets(@this).Select(f => new FileInfo(f)).Where(f => f.FullName != @this.FullName);
   }
 
   /// <summary>
-  /// Wraps call to FindFirstFileName.
+  ///   Wraps call to FindFirstFileName.
   /// </summary>
   /// <param name="fileName">Name of the file.</param>
   /// <param name="buffer">The buffer to create.</param>
@@ -326,7 +323,7 @@ public static partial class LinkExtensions {
   private static IntPtr _FindFirstFileName(string fileName, out StringBuilder buffer) {
     var size = 0U;
     buffer = null;
-    for (; ;) {
+    for (;;) {
       var handle = NativeMethods.FindFirstFileName(fileName, NativeMethods.FindFirstFileNameFlags.None, ref size, buffer);
 
       // if we got a handle, we can escape this loop
@@ -345,14 +342,14 @@ public static partial class LinkExtensions {
   }
 
   /// <summary>
-  /// Wraps calls to FindNextFileName.
+  ///   Wraps calls to FindNextFileName.
   /// </summary>
   /// <param name="handle">The handle.</param>
   /// <param name="buffer">The buffer (which could be adjusted in size to accomodate space requirements).</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c> (end of list).</returns>
   private static bool _FindNextFileName(IntPtr handle, ref StringBuilder buffer) {
     var size = (uint)buffer.Length;
-    for(;;) {
+    for (;;) {
       if (NativeMethods.FindNextFileName(handle, ref size, buffer))
         return true;
 
@@ -370,9 +367,9 @@ public static partial class LinkExtensions {
       buffer = new((int)size);
     }
   }
-        
+
   /// <summary>
-  /// Gets the target of a link.
+  ///   Gets the target of a link.
   /// </summary>
   /// <param name="path">The path.</param>
   /// <returns>The target or <c>null</c>.</returns>
@@ -389,8 +386,14 @@ public static partial class LinkExtensions {
       try {
         outBuffer = Marshal.AllocHGlobal(outBufferSize);
         var success = NativeMethods.DeviceIoControl(
-          fileHandle.DangerousGetHandle(), NativeMethods.IoControl.GetReparsePoint, IntPtr.Zero, 0,
-          outBuffer, outBufferSize, out _, IntPtr.Zero
+          fileHandle.DangerousGetHandle(),
+          NativeMethods.IoControl.GetReparsePoint,
+          IntPtr.Zero,
+          0,
+          outBuffer,
+          outBufferSize,
+          out _,
+          IntPtr.Zero
         );
 
         fileHandle.Close();
@@ -425,7 +428,7 @@ public static partial class LinkExtensions {
   }
 
   /// <summary>
-  /// Gets the target of a junction.
+  ///   Gets the target of a junction.
   /// </summary>
   /// <param name="path">The path.</param>
   /// <returns>The target or <c>null</c>.</returns>
@@ -442,8 +445,14 @@ public static partial class LinkExtensions {
       try {
         outBuffer = Marshal.AllocHGlobal(outBufferSize);
         var success = NativeMethods.DeviceIoControl(
-          fileHandle.DangerousGetHandle(), NativeMethods.IoControl.GetReparsePoint, IntPtr.Zero, 0,
-          outBuffer, outBufferSize, out _, IntPtr.Zero
+          fileHandle.DangerousGetHandle(),
+          NativeMethods.IoControl.GetReparsePoint,
+          IntPtr.Zero,
+          0,
+          outBuffer,
+          outBufferSize,
+          out _,
+          IntPtr.Zero
         );
 
         fileHandle.Close();
@@ -475,16 +484,18 @@ public static partial class LinkExtensions {
     var target = Encoding.Unicode.GetString(reparseDataBuffer.PathBuffer, reparseDataBuffer.PrintNameOffset, reparseDataBuffer.PrintNameLength);
 
     var result = subst.StartsWith(NativeMethods.UnparsedPrefix) ? subst[NativeMethods.UnparsedPrefix.Length..] : subst;
-    if(result.StartsWith("UNC\\"))
-      result= $@"\\{result[4..]}";
+    if (result.StartsWith("UNC\\"))
+      result = $@"\\{result[4..]}";
 
     return result;
   }
+
   #endregion
-  
+
   #region file copy
+
   /// <summary>
-  /// Copies this file to a target location possibly allowing hard-linking.
+  ///   Copies this file to a target location possibly allowing hard-linking.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <param name="targetFileName">Name of the target file.</param>
@@ -493,12 +504,12 @@ public static partial class LinkExtensions {
   /// <exception cref="System.IO.IOException">Target file already exists</exception>
   public static void CopyTo(this FileInfo @this, string targetFileName, bool overwrite = false, bool allowHardLinking = false) {
     Against.ThisIsNull(@this);
-    
+
     @this.CopyTo(new FileInfo(targetFileName), overwrite, allowHardLinking);
   }
 
   /// <summary>
-  /// Gets a temporary filename in the same directory with a similar name.
+  ///   Gets a temporary filename in the same directory with a similar name.
   /// </summary>
   /// <param name="This">The this.</param>
   /// <param name="allowCreation">if set to <c>true</c> allows file creation.</param>
@@ -509,23 +520,23 @@ public static partial class LinkExtensions {
     const string extension = ".$$$";
     var index = 0;
     FileInfo result;
-    do {
+    do
       result = new(Path.Combine(path, name + "." + ++index + extension));
-    } while ((allowCreation && !result.TryCreate()) || (!allowCreation && result.Exists));
+    while ((allowCreation && !result.TryCreate()) || (!allowCreation && result.Exists));
     result.Refresh();
     return result;
   }
 
   /// <summary>
-  /// Copies a file from source to target as fast as possible.
+  ///   Copies a file from source to target as fast as possible.
   /// </summary>
   /// <param name="sourceFileName">The source file.</param>
   /// <param name="targetFileName">The target file.</param>
   /// <param name="overwrite">if set to <c>true</c> overwrites any existing target file.</param>
   private static void _CopyFromTo(string sourceFileName, string targetFileName, bool overwrite) => File.Copy(sourceFileName, targetFileName, overwrite);
-  
+
   /// <summary>
-  /// Copies this file to a target location possibly allowing hard-linking.
+  ///   Copies this file to a target location possibly allowing hard-linking.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <param name="targetFile">The target file.</param>
@@ -546,12 +557,10 @@ public static partial class LinkExtensions {
       return;
 
     if (File.Exists(targetFile.FullName)) {
-
       // could not create hard link because file exists already
       FileInfo tempFile = null;
       var restoreNeeded = false;
       try {
-
         // backup old file
         tempFile = targetFile._GetSimilarTempFile(true);
         File.Replace(targetFile.FullName, tempFile.FullName, null, true);
@@ -569,13 +578,10 @@ public static partial class LinkExtensions {
           else
             File.Delete(tempFile.FullName);
       }
-
-    } else {
-
+    } else
       // could not create hard link because file is on another patition/drive
       _CopyFromTo(@this.FullName, targetFile.FullName, overwrite);
-    }
   }
-  #endregion
 
+  #endregion
 }

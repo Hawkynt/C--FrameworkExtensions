@@ -1,22 +1,20 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Concurrent;
@@ -28,11 +26,9 @@ using Guard;
 namespace System.IO;
 
 public static partial class PathExtensions {
-
   #region nested types
 
   private sealed class TemporaryTokenCleaner {
-
     #region entries
 
     [DebuggerDisplay("{" + nameof(_DebuggerDisplay) + "}")]
@@ -44,6 +40,7 @@ public static partial class PathExtensions {
 
       public string Target { get; }
       public bool IsFile { get; }
+
       public TimeSpan MinimumLifeTimeLeft {
         get => TimeSpan.FromSeconds(this.TicksLeft / (double)Stopwatch.Frequency);
         set => this._timeToKill = (long)(Stopwatch.GetTimestamp() + value.TotalSeconds * Stopwatch.Frequency);
@@ -53,7 +50,6 @@ public static partial class PathExtensions {
       public bool IsAlive { get; set; }
 
       private string _DebuggerDisplay => $"{(this.IsFile ? "File" : "Directory")} {this.Target} ({(this.IsAlive ? "alive" : "dead")}, {this.MinimumLifeTimeLeft:g} time left)";
-
     }
 
     private readonly ConcurrentDictionary<string, Entry> _entries = new(StringComparer.OrdinalIgnoreCase);
@@ -71,8 +67,7 @@ public static partial class PathExtensions {
 
     public TimeSpan GetTimeLeft(FileSystemInfo target) => this._entries.TryGetValue(target.FullName, out var result)
       ? result.MinimumLifeTimeLeft
-      : TimeSpan.Zero
-    ;
+      : TimeSpan.Zero;
 
     public void SetTimeLeft(FileSystemInfo target, TimeSpan value) {
       if (this._entries.TryGetValue(target.FullName, out var entry))
@@ -117,13 +112,14 @@ public static partial class PathExtensions {
         this._RegisterDeleteHandler();
       }
     }
-      
+
     #region make sure stuff gets deleted - even if it doesn't want to
 
     private const int _STATE_YES = -1;
     private const int _STATE_NO = 0;
     private int _isRegistered = _STATE_NO;
     private static readonly TimeSpan _CLEANER_TIMEOUT = TimeSpan.FromSeconds(30);
+
     // ReSharper disable once NotAccessedField.Local
     private Timer _cleaner;
 
@@ -160,7 +156,6 @@ public static partial class PathExtensions {
     }
 
     #endregion
-
   }
 
   public interface ITemporaryFileToken : IDisposable {
@@ -228,7 +223,7 @@ public static partial class PathExtensions {
   #endregion
 
   /// <summary>
-  /// Creates a temporary file and returns an IDisposable token which deletes the file upon dispose.
+  ///   Creates a temporary file and returns an IDisposable token which deletes the file upon dispose.
   /// </summary>
   /// <param name="name">The name of the file we're trying to create.</param>
   /// <param name="baseDirectory">The base directory if different from systems' temp.</param>
@@ -236,7 +231,7 @@ public static partial class PathExtensions {
   public static ITemporaryFileToken GetTempFileToken(string name = null, string baseDirectory = null) => new TemporaryFileToken(GetTempFile(name, baseDirectory));
 
   /// <summary>
-  /// Creates a temporary directory and returns an IDisposable token which deletes the directory upon dispose.
+  ///   Creates a temporary directory and returns an IDisposable token which deletes the directory upon dispose.
   /// </summary>
   /// <param name="name">The name of the directory we're trying to create.</param>
   /// <param name="baseDirectory">The base directory if different from systems' temp.</param>
@@ -244,7 +239,7 @@ public static partial class PathExtensions {
   public static ITemporaryDirectoryToken GetTempDirectoryToken(string name = null, string baseDirectory = null) => new TemporaryDirectoryToken(GetTempDirectory(name, baseDirectory));
 
   /// <summary>
-  /// Generates a temporary filename which is most like the given one in the temporary folder.
+  ///   Generates a temporary filename which is most like the given one in the temporary folder.
   /// </summary>
   /// <param name="name">The name.</param>
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
@@ -252,13 +247,12 @@ public static partial class PathExtensions {
   public static FileInfo GetTempFile(string name = null, string baseDirectory = null) => new(GetTempFileName(name, baseDirectory));
 
   /// <summary>
-  /// Generates a temporary filename which is most like the given one in the temporary folder.
+  ///   Generates a temporary filename which is most like the given one in the temporary folder.
   /// </summary>
   /// <param name="name">The name.</param>
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
   /// <returns>The full path of the created temporary directory.</returns>
   public static string GetTempFileName(string name = null, string baseDirectory = null) {
-
     // use fully random name if none is given
     if (name == null)
       return Path.GetTempFileName();
@@ -277,11 +271,12 @@ public static partial class PathExtensions {
     var fileName = Path.GetFileNameWithoutExtension(name);
     var ext = Path.GetExtension(name);
     while (!TryCreateFile(fullName = Path.Combine(path, $"{fileName}.{++i}{ext}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
+
     return fullName;
   }
 
   /// <summary>
-  /// Tries to create a new file.
+  ///   Tries to create a new file.
   /// </summary>
   /// <param name="fileName">The file to create.</param>
   /// <param name="attributes">The attributes.</param>
@@ -305,18 +300,16 @@ public static partial class PathExtensions {
 
       return true;
     } catch (UnauthorizedAccessException) {
-
       // in case multiple threads try to create the same file, this gets fired
       return false;
     } catch (IOException) {
-
       // file already exists
       return false;
     }
   }
 
   /// <summary>
-  /// Generates a temporary directory which is most like the given one in the temporary folder.
+  ///   Generates a temporary directory which is most like the given one in the temporary folder.
   /// </summary>
   /// <param name="name">The name.</param>
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
@@ -324,7 +317,7 @@ public static partial class PathExtensions {
   public static DirectoryInfo GetTempDirectory(string name = null, string baseDirectory = null) => new(GetTempDirectoryName(name, baseDirectory));
 
   /// <summary>
-  /// Generates a temporary directory which is most like the given one in the temporary folder.
+  ///   Generates a temporary directory which is most like the given one in the temporary folder.
   /// </summary>
   /// <param name="name">The name.</param>
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
@@ -342,7 +335,6 @@ public static partial class PathExtensions {
 
       // loop until the temporarely generated name does not exist
       do {
-
         // generate a temporary name
         StringBuilder tempName = new(PREFIX, LENGTH + PREFIX.Length);
         for (var j = LENGTH; j > 0; --j)
@@ -366,11 +358,12 @@ public static partial class PathExtensions {
     // otherwise count up
     var i = 1;
     while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed)) { }
+
     return fullName;
   }
 
   /// <summary>
-  /// Tries to create a new folder.
+  ///   Tries to create a new folder.
   /// </summary>
   /// <param name="pathName">The directory name.</param>
   /// <param name="attributes">The attributes.</param>
@@ -379,14 +372,13 @@ public static partial class PathExtensions {
   /// </returns>
   public static bool TryCreateDirectory(string pathName, FileAttributes attributes = FileAttributes.Normal) {
     Against.ArgumentIsNullOrEmpty(pathName);
-    
+
     if (Directory.Exists(pathName))
       return false;
 
     try {
       Directory.CreateDirectory(pathName);
-      DirectoryInfo directory = new(pathName);
-      directory.Attributes = attributes;
+      DirectoryInfo directory = new(pathName) { Attributes = attributes };
       return true;
     } catch (IOException) {
       return false;
@@ -394,7 +386,7 @@ public static partial class PathExtensions {
   }
 
   /// <summary>
-  /// This could contain a full network path eg. user:password@\\server\share\folder\filename.extension
+  ///   This could contain a full network path eg. user:password@\\server\share\folder\filename.extension
   /// </summary>
   public struct NetworkPath {
     private const char _pathSeparator = '\\';
@@ -410,38 +402,56 @@ public static partial class PathExtensions {
     private string _uncPath;
 
     public string Username {
-      get => this._username;
-      set { this._username = value; this._InvalidateUnc(); }
+      readonly get => this._username;
+      set {
+        this._username = value;
+        this._InvalidateUnc();
+      }
     }
+
     public string Password {
-      get => this._password;
-      set { this._password = value; this._InvalidateUnc(); }
+      readonly get => this._password;
+      set {
+        this._password = value;
+        this._InvalidateUnc();
+      }
     }
 
     public string Server {
-      get => this._server;
-      set { this._server = value; this._InvalidateFullPath(); }
+      readonly get => this._server;
+      set {
+        this._server = value;
+        this._InvalidateFullPath();
+      }
     }
 
     public string Share {
-      get => this._share;
-      set { this._share = value; this._InvalidateFullPath(); }
+      readonly get => this._share;
+      set {
+        this._share = value;
+        this._InvalidateFullPath();
+      }
     }
 
     public string DirectoryAndOrFileName {
-      get => this._directory;
-      set { this._directory = value; this._InvalidateFullPath(); }
+      readonly get => this._directory;
+      set {
+        this._directory = value;
+        this._InvalidateFullPath();
+      }
     }
+
     public string FullPath {
-      get => this._fullPath;
+      readonly get => this._fullPath;
       set {
         this._fullPath = value;
         this._SplitPath();
         this._InvalidateUnc();
       }
     }
+
     public string UncPath {
-      get => this._uncPath;
+      readonly get => this._uncPath;
       set {
         this._uncPath = value;
         this._SplitUnc();
@@ -462,12 +472,11 @@ public static partial class PathExtensions {
           this._server = value[2..];
           value = null;
         } else {
-          this._server = value.Substring(2, idx - 2);
+          this._server = value[2..(idx - 1)];
           value = value[idx..];
         }
-      } else {
+      } else
         this._server = null;
-      }
 
       // extract share
       if (!string.IsNullOrEmpty(value) && value[0] == _pathSeparator) {
@@ -476,12 +485,11 @@ public static partial class PathExtensions {
           this._share = value[1..];
           value = null;
         } else {
-          this._share = value.Substring(1, idx - 1);
+          this._share = value[1.. (idx - 1)];
           value = value[(idx + 1)..];
         }
-      } else {
+      } else
         this._share = null;
-      }
 
       this._directory = string.IsNullOrEmpty(value) ? null : value;
     }
@@ -499,9 +507,8 @@ public static partial class PathExtensions {
         if (idx >= 0) {
           user = userAndOrPassword[..idx];
           password = userAndOrPassword[(idx + 1)..];
-        } else {
+        } else
           user = userAndOrPassword;
-        }
       }
 
       this._username = string.IsNullOrEmpty(user) ? null : user;
@@ -530,6 +537,5 @@ public static partial class PathExtensions {
 
       this.UncPath = result + this._fullPath;
     }
-
   }
 }

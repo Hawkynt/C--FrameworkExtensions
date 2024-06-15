@@ -1,32 +1,31 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
+
 #if NETFRAMEWORK
 
+using System.Data.Linq.Mapping;
 using Guard;
 
 namespace System.Data.Linq {
   internal static partial class TableExtensions {
-
     /// <summary>
-    /// Updates the row by re-attaching the entity.
+    ///   Updates the row by re-attaching the entity.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <param name="this">This Table.</param>
@@ -44,7 +43,7 @@ namespace System.Data.Linq {
       Against.ArgumentIsNull(entity);
 
       foreach (var pi in typeof(TEntity).GetProperties()) {
-        if (pi.GetCustomAttributes(typeof(Mapping.AssociationAttribute), false).Length <= 0)
+        if (pi.GetCustomAttributes(typeof(AssociationAttribute), false).Length <= 0)
           continue;
 
         // Property is associated to another entity
@@ -54,9 +53,9 @@ namespace System.Data.Linq {
         if (ci != null)
           pi.SetValue(entity, ci.Invoke(null), null);
       }
+
       UpdateEntity(@this, entity);
     }
-
   }
 }
 

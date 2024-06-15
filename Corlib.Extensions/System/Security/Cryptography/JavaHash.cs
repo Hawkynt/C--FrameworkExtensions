@@ -1,31 +1,28 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 namespace System.Security.Cryptography;
 
 public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
-
   private const ushort _PRIME = 31;
 
-  public JavaHash():this(MaxOutputBits) { }
+  public JavaHash() : this(MaxOutputBits) { }
 
   public JavaHash(int outputBits) {
     this.OutputBits = outputBits;
@@ -39,7 +36,6 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
   #region Overrides of HashAlgorithm
 
   public override void Initialize() {
-
     switch (this.OutputBits) {
       case 32: {
         uint state = 0;
@@ -56,7 +52,6 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         byte[] Final() => BitConverter.GetBytes(state);
-
       }
       case 64: {
         ulong state = 0;
@@ -74,10 +69,8 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
         }
 
         byte[] Final() => BitConverter.GetBytes(state);
-
       }
-      default:
-        throw new NotSupportedException();
+      default: throw new NotSupportedException();
     }
 
     this._reset();
@@ -94,6 +87,7 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
   public string Name => $"JavaHash{this.OutputBits}";
 
   private int _outputBits;
+
   public int OutputBits {
     get => this._outputBits;
     set {

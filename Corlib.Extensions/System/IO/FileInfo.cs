@@ -1,35 +1,34 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-using System.Collections.Generic;
-using System.ComponentModel;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
+using Guard;
 using Encoding = System.Text.Encoding;
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 using System.Security.AccessControl;
@@ -37,7 +36,6 @@ using System.Security.AccessControl;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
-using Guard;
 
 namespace System.IO;
 
@@ -49,15 +47,17 @@ public static partial class FileInfoExtensions {
   private static Encoding _utf8NoBom;
 
   /// <summary>
-  /// Gets a UTF-8 encoding instance without a Byte Order Mark (BOM).
+  ///   Gets a UTF-8 encoding instance without a Byte Order Mark (BOM).
   /// </summary>
   /// <remarks>
-  /// This property provides a thread-safe, lazy-initialized UTF-8 encoding object that does not emit a Byte Order Mark (BOM).
-  /// It is useful for text operations requiring UTF-8 encoding format without the presence of a BOM, such as generating text files
-  /// that are compliant with systems or specifications that do not recognize or require a BOM.
+  ///   This property provides a thread-safe, lazy-initialized UTF-8 encoding object that does not emit a Byte Order Mark
+  ///   (BOM).
+  ///   It is useful for text operations requiring UTF-8 encoding format without the presence of a BOM, such as generating
+  ///   text files
+  ///   that are compliant with systems or specifications that do not recognize or require a BOM.
   /// </remarks>
   /// <value>
-  /// A <see cref="System.Text.UTF8Encoding"/> instance configured to not emit a Byte Order Mark (BOM).
+  ///   A <see cref="System.Text.UTF8Encoding" /> instance configured to not emit a Byte Order Mark (BOM).
   /// </value>
   internal static Encoding Utf8NoBom {
     get {
@@ -75,19 +75,19 @@ public static partial class FileInfoExtensions {
   #region native file compression
 
   /// <summary>
-  /// Enables NTFS file compression on the specified file.
+  ///   Enables NTFS file compression on the specified file.
   /// </summary>
   /// <param name="this">The file on which to enable compression.</param>
   /// <exception cref="ArgumentNullException">Thrown if the file object is null.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <exception cref="Win32Exception">Thrown if the compression operation fails.</exception>
   /// <example>
-  /// Here is how to use <see cref="EnableCompression"/> to compress a file:
-  /// <code>
+  ///   Here is how to use <see cref="EnableCompression" /> to compress a file:
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// fileInfo.EnableCompression();
   /// </code>
-  /// This example compresses "file.txt" using NTFS compression.
+  ///   This example compresses "file.txt" using NTFS compression.
   /// </example>
   public static void EnableCompression(this FileInfo @this) {
     Against.ThisIsNull(@this);
@@ -99,7 +99,7 @@ public static partial class FileInfoExtensions {
     short defaultCompressionFormat = 1;
 
     int result;
-    using (var f = File.Open(@this.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+    using (var f = File.Open(@this.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
       result = NativeMethods.DeviceIoControl(
         // ReSharper disable once PossibleNullReferenceException
         f.SafeFileHandle.DangerousGetHandle(),
@@ -111,26 +111,24 @@ public static partial class FileInfoExtensions {
         out _,
         IntPtr.Zero
       );
-    }
 
     if (result < 0)
       throw new Win32Exception();
-
   }
 
   /// <summary>
-  /// Attempts to enable NTFS file compression on the specified <see cref="FileInfo"/> instance.
+  ///   Attempts to enable NTFS file compression on the specified <see cref="FileInfo" /> instance.
   /// </summary>
   /// <param name="this">The file on which to attempt to enable compression.</param>
-  /// <returns><see langword="true"/> if compression was successfully enabled; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> if compression was successfully enabled; otherwise, <see langword="false" />.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo(@"path\to\your\file.txt");
   /// bool isCompressionEnabled = fileInfo.TryEnableCompression();
   /// Console.WriteLine(isCompressionEnabled ? "Compression enabled." : "Compression not enabled.");
   /// </code>
-  /// This example demonstrates checking if NTFS file compression can be enabled for a specified file, 
-  /// and prints the outcome.
+  ///   This example demonstrates checking if NTFS file compression can be enabled for a specified file,
+  ///   and prints the outcome.
   /// </example>
   public static bool TryEnableCompression(this FileInfo @this) {
     Against.ThisIsNull(@this);
@@ -168,18 +166,21 @@ public static partial class FileInfoExtensions {
   #region shell information
 
   /// <summary>
-  /// Retrieves the description of the file type for the specified <see cref="FileInfo"/> instance.
+  ///   Retrieves the description of the file type for the specified <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file for which to retrieve the type description.</param>
-  /// <returns>A <see cref="string"/> containing the description of the file type, such as "Text Document" for a .txt file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the provided <see cref="FileInfo"/> instance is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file for which to retrieve the type description.</param>
+  /// <returns>A <see cref="string" /> containing the description of the file type, such as "Text Document" for a .txt file.</returns>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if the provided <see cref="FileInfo" /> instance is
+  ///   <see langword="null" />.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo(@"C:\path\to\file.txt");
   /// string fileTypeDescription = fileInfo.GetTypeDescription();
   /// Console.WriteLine($"The file type is: {fileTypeDescription}");
   /// </code>
-  /// This example retrieves the file type description of "file.txt" and prints it to the console.
+  ///   This example retrieves the file type description of "file.txt" and prints it to the console.
   /// </example>
   public static string GetTypeDescription(this FileInfo @this) {
     Against.ThisIsNull(@this);
@@ -196,21 +197,24 @@ public static partial class FileInfoExtensions {
 #if SUPPORTS_ASYNC
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target directory.
+  ///   Asynchronously copies the current file to the specified target directory.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo" /> instance representing the target directory.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory" /> is <see langword="null" />.</exception>
   /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory or an I/O error occurs during the copy operation.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists in the target directory or an I/O
+  ///   error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(targetDirectory);
@@ -221,36 +225,39 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a target directory with basic error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a target directory with basic error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
+  ///   exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory)
-    => CopyToAsync(@this, targetDirectory, false, CancellationToken.None)
-  ;
+    => CopyToAsync(@this, targetDirectory, false, CancellationToken.None);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target directory, with support for cancellation.
+  ///   Asynchronously copies the current file to the specified target directory, with support for cancellation.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
-  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo" /> instance representing the target directory.</param>
+  /// <param name="token">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory" /> is <see langword="null" />.</exception>
   /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory or an I/O error occurs during the copy operation.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists in the target directory or an I/O
+  ///   error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
   /// CancellationTokenSource cts = new CancellationTokenSource();
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(targetDirectory, cts.Token);
@@ -265,35 +272,43 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a target directory with support for cancellation and error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a target directory with support for cancellation and
+  ///   error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
+  ///   exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, CancellationToken token)
-    => CopyToAsync(@this, targetDirectory, false, token)
-  ;
+    => CopyToAsync(@this, targetDirectory, false, token);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing file.
+  ///   Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing
+  ///   file.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
-  /// <param name="overwrite"><see langword="true"/> to allow overwriting an existing file in the target directory; otherwise, <see langword="false"/>.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo" /> instance representing the target directory.</param>
+  /// <param name="overwrite">
+  ///   <see langword="true" /> to allow overwriting an existing file in the target directory;
+  ///   otherwise, <see langword="false" />.
+  /// </param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory" /> is <see langword="null" />.</exception>
   /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists in the target directory and
+  ///   <paramref name="overwrite" /> is <see langword="false" /> or an I/O error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(targetDirectory, overwrite: true);
@@ -304,37 +319,44 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a target directory, allowing for error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a target directory, allowing for error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
+  ///   exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
-    => CopyToAsync(@this, targetDirectory, overwrite, CancellationToken.None)
-  ;
+    => CopyToAsync(@this, targetDirectory, overwrite, CancellationToken.None);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing file and support for cancellation.
+  ///   Asynchronously copies the current file to the specified target directory, with an option to overwrite any existing
+  ///   file and support for cancellation.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetDirectory">The <see cref="DirectoryInfo"/> instance representing the target directory.</param>
-  /// <param name="overwrite"><see langword="true"/> to allow overwriting an existing file in the target directory; otherwise, <see langword="false"/>.</param>
-  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetDirectory">The <see cref="DirectoryInfo" /> instance representing the target directory.</param>
+  /// <param name="overwrite">
+  ///   <see langword="true" /> to allow overwriting an existing file in the target directory;
+  ///   otherwise, <see langword="false" />.
+  /// </param>
+  /// <param name="token">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetDirectory" /> is <see langword="null" />.</exception>
   /// <exception cref="DirectoryNotFoundException">Thrown if the target directory does not exist.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists in the target directory and
+  ///   <paramref name="overwrite" /> is <see langword="false" /> or an I/O error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// DirectoryInfo targetDirectory = new DirectoryInfo("destinationDir");
   /// CancellationTokenSource cts = new CancellationTokenSource();
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(targetDirectory, overwrite: true, token: cts.Token);
@@ -349,10 +371,12 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a target directory, allowing for cancellation and error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a target directory, allowing for cancellation and
+  ///   error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target directory
+  ///   exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -365,20 +389,20 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target file.
+  ///   Asynchronously copies the current file to the specified target file.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo" /> instance representing the target file.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile" /> is <see langword="null" />.</exception>
   /// <exception cref="IOException">Thrown if the target file exists or an I/O error occurs during the copy operation.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// FileInfo destinationFile = new FileInfo("destination.txt");
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(destinationFile);
@@ -389,35 +413,35 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a new location with basic error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a new location with basic error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
+  ///   directory exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile)
-    => CopyToAsync(@this, targetFile, false, CancellationToken.None)
-  ;
+    => CopyToAsync(@this, targetFile, false, CancellationToken.None);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target file, with support for cancellation.
+  ///   Asynchronously copies the current file to the specified target file, with support for cancellation.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
-  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo" /> instance representing the target file.</param>
+  /// <param name="token">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile" /> is <see langword="null" />.</exception>
   /// <exception cref="IOException">Thrown if the target file exists or an I/O error occurs during the copy operation.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// FileInfo destinationFile = new FileInfo("destination.txt");
   /// CancellationTokenSource cts = new CancellationTokenSource();
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(destinationFile, cts.Token);
@@ -432,34 +456,41 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a new location with support for cancellation and error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a new location with support for cancellation and error
+  ///   handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
+  ///   directory exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, CancellationToken token)
-    => CopyToAsync(@this, targetFile, false, token)
-  ;
+    => CopyToAsync(@this, targetFile, false, token);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target file, with an option to overwrite the target file.
+  ///   Asynchronously copies the current file to the specified target file, with an option to overwrite the target file.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
-  /// <param name="overwrite"><see langword="true"/> to allow overwriting the target file if it exists; otherwise, <see langword="false"/>.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
-  /// <exception cref="IOException">Thrown if the target file exists and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo" /> instance representing the target file.</param>
+  /// <param name="overwrite">
+  ///   <see langword="true" /> to allow overwriting the target file if it exists; otherwise,
+  ///   <see langword="false" />.
+  /// </param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile" /> is <see langword="null" />.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if the target file exists and <paramref name="overwrite" /> is
+  ///   <see langword="false" /> or an I/O error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// FileInfo destinationFile = new FileInfo("destination.txt");
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(destinationFile, overwrite: true);
@@ -470,36 +501,43 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a new location, allowing for error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a new location, allowing for error handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
+  ///   directory exists before calling this method.
   /// </remarks>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static Task CopyToAsync(this FileInfo @this, FileInfo targetFile, bool overwrite)
-    => CopyToAsync(@this, targetFile, overwrite, CancellationToken.None)
-    ;
+    => CopyToAsync(@this, targetFile, overwrite, CancellationToken.None);
 
   /// <summary>
-  /// Asynchronously copies the current file to the specified target file, with an option to overwrite the target file and support for cancellation.
+  ///   Asynchronously copies the current file to the specified target file, with an option to overwrite the target file and
+  ///   support for cancellation.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the source file.</param>
-  /// <param name="targetFile">The <see cref="FileInfo"/> instance representing the target file.</param>
-  /// <param name="overwrite"><see langword="true"/> to allow overwriting the target file if it exists; otherwise, <see langword="false"/>.</param>
-  /// <param name="token">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-  /// <returns>A <see cref="Task"/> representing the asynchronous copy operation.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this"/> does not exist.</exception>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile"/> is <see langword="null"/>.</exception>
-  /// <exception cref="IOException">Thrown if the target file exists and <paramref name="overwrite"/> is <see langword="false"/> or an I/O error occurs during the copy operation.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the source file.</param>
+  /// <param name="targetFile">The <see cref="FileInfo" /> instance representing the target file.</param>
+  /// <param name="overwrite">
+  ///   <see langword="true" /> to allow overwriting the target file if it exists; otherwise,
+  ///   <see langword="false" />.
+  /// </param>
+  /// <param name="token">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
+  /// <returns>A <see cref="Task" /> representing the asynchronous copy operation.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
+  /// <exception cref="InvalidOperationException">Thrown if <paramref name="this" /> does not exist.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="targetFile" /> is <see langword="null" />.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if the target file exists and <paramref name="overwrite" /> is
+  ///   <see langword="false" /> or an I/O error occurs during the copy operation.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo("source.txt");
   /// FileInfo destinationFile = new FileInfo("destination.txt");
   /// CancellationTokenSource cts = new CancellationTokenSource();
-  ///
+  /// 
   /// try
   /// {
   ///     await sourceFile.CopyToAsync(destinationFile, overwrite: true, token: cts.Token);
@@ -514,10 +552,12 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine($"I/O error occurred: {ex.Message}");
   /// }
   /// </code>
-  /// This example demonstrates how to asynchronously copy a file to a new location, allowing for cancellation and error handling.
+  ///   This example demonstrates how to asynchronously copy a file to a new location, allowing for cancellation and error
+  ///   handling.
   /// </example>
   /// <remarks>
-  /// This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's directory exists before calling this method.
+  ///   This method uses asynchronous file operations to avoid blocking the calling thread. Ensure that the target file's
+  ///   directory exists before calling this method.
   /// </remarks>
   public static async Task CopyToAsync(this FileInfo @this, FileInfo targetFile, bool overwrite, CancellationToken token) {
     Against.ThisIsNull(@this);
@@ -537,196 +577,249 @@ public static partial class FileInfoExtensions {
 #endif
 
   /// <summary>
-  /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, maintaining the original file name.
+  ///   Copies the specified <see cref="FileInfo" /> instance to the specified target <see cref="DirectoryInfo" />,
+  ///   maintaining the original file name.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
-  /// <param name="targetDirectory">The target <see cref="DirectoryInfo"/> where the file should be copied.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to copy.</param>
+  /// <param name="targetDirectory">The target <see cref="DirectoryInfo" /> where the file should be copied.</param>
   /// <remarks>
-  /// This method copies the file to the target directory without overwriting existing files with the same name.
-  /// If a file with the same name already exists in the target directory, this method will throw an <see cref="IOException"/>.
+  ///   This method copies the file to the target directory without overwriting existing files with the same name.
+  ///   If a file with the same name already exists in the target directory, this method will throw an
+  ///   <see cref="IOException" />.
   /// </remarks>
-  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null" />.</exception>
   /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\document.txt");
   /// DirectoryInfo targetDir = new DirectoryInfo(@"C:\target");
   /// sourceFile.CopyTo(targetDir);
   /// Console.WriteLine("File copied successfully.");
   /// </code>
-  /// This example demonstrates copying a file from a source directory to a target directory.
+  ///   This example demonstrates copying a file from a source directory to a target directory.
   /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory)
     => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), false);
 
   /// <summary>
-  /// Copies the specified <see cref="FileInfo"/> instance to the specified target <see cref="DirectoryInfo"/>, 
-  /// maintaining the original file name, with an option to overwrite the existing file.
+  ///   Copies the specified <see cref="FileInfo" /> instance to the specified target <see cref="DirectoryInfo" />,
+  ///   maintaining the original file name, with an option to overwrite the existing file.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
-  /// <param name="targetDirectory">The target <see cref="DirectoryInfo"/> where the file should be copied.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file with the same name. 
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown 
-  /// if a file with the same name already exists.</param>
-  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null"/>.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists in the target directory and <paramref name="overwrite"/> is <see langword="false"/>.</exception>
+  /// <param name="this">The source <see cref="FileInfo" /> object to copy.</param>
+  /// <param name="targetDirectory">The target <see cref="DirectoryInfo" /> where the file should be copied.</param>
+  /// <param name="overwrite">
+  ///   A <see langword="bool" /> indicating whether to overwrite an existing file with the same name.
+  ///   If <see langword="true" />, the file will be overwritten; if <see langword="false" />, an <see cref="IOException" />
+  ///   will be thrown
+  ///   if a file with the same name already exists.
+  /// </param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target directory is <see langword="null" />.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists in the target directory and
+  ///   <paramref name="overwrite" /> is <see langword="false" />.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\document.txt");
   /// DirectoryInfo targetDir = new DirectoryInfo(@"C:\target");
   /// sourceFile.CopyTo(targetDir, true); // Overwrite existing file if it exists
   /// Console.WriteLine("File copied successfully.");
   /// </code>
-  /// This example demonstrates copying a file from a source directory to a target directory with the option to overwrite existing files.
+  ///   This example demonstrates copying a file from a source directory to a target directory with the option to overwrite
+  ///   existing files.
   /// </example>
   public static void CopyTo(this FileInfo @this, DirectoryInfo targetDirectory, bool overwrite)
     => @this.CopyTo(Path.Combine(targetDirectory.FullName, @this.Name), overwrite);
 
   /// <summary>
-  /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object, 
-  /// without overwriting an existing file.
+  ///   Copies the specified <see cref="FileInfo" /> instance to the location specified by a target <see cref="FileInfo" />
+  ///   object,
+  ///   without overwriting an existing file.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
-  /// <param name="targetFile">The target <see cref="FileInfo"/> object that specifies the destination path and name of the file.</param>
-  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null"/>.</exception>
+  /// <param name="this">The source <see cref="FileInfo" /> object to copy.</param>
+  /// <param name="targetFile">
+  ///   The target <see cref="FileInfo" /> object that specifies the destination path and name of the
+  ///   file.
+  /// </param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null" />.</exception>
   /// <exception cref="IOException">Thrown if a file with the same name already exists at the target location.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo targetFile = new FileInfo(@"D:\destination\example.txt");
   /// sourceFile.CopyTo(targetFile);
   /// Console.WriteLine("File copied successfully.");
   /// </code>
-  /// This example demonstrates copying a file from one location to another without overwriting an existing file at the destination.
+  ///   This example demonstrates copying a file from one location to another without overwriting an existing file at the
+  ///   destination.
   /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile)
     => @this.CopyTo(targetFile.FullName, false);
 
   /// <summary>
-  /// Copies the specified <see cref="FileInfo"/> instance to the location specified by a target <see cref="FileInfo"/> object,
-  /// with an option to overwrite an existing file.
+  ///   Copies the specified <see cref="FileInfo" /> instance to the location specified by a target <see cref="FileInfo" />
+  ///   object,
+  ///   with an option to overwrite an existing file.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to copy.</param>
-  /// <param name="targetFile">The target <see cref="FileInfo"/> object that specifies the destination path and name of the file.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file with the same name at the target location.
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
-  /// if a file with the same name already exists.</param>
-  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null"/>.</exception>
-  /// <exception cref="IOException">Thrown if a file with the same name already exists at the target location and <paramref name="overwrite"/> is <see langword="false"/>.</exception>
+  /// <param name="this">The source <see cref="FileInfo" /> object to copy.</param>
+  /// <param name="targetFile">
+  ///   The target <see cref="FileInfo" /> object that specifies the destination path and name of the
+  ///   file.
+  /// </param>
+  /// <param name="overwrite">
+  ///   A <see langword="bool" /> indicating whether to overwrite an existing file with the same name at the target location.
+  ///   If <see langword="true" />, the file will be overwritten; if <see langword="false" />, an <see cref="IOException" />
+  ///   will be thrown
+  ///   if a file with the same name already exists.
+  /// </param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file or target file is <see langword="null" />.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if a file with the same name already exists at the target location and
+  ///   <paramref name="overwrite" /> is <see langword="false" />.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo targetFile = new FileInfo(@"D:\destination\example.txt");
   /// sourceFile.CopyTo(targetFile, true); // Overwrite existing file if it exists
   /// Console.WriteLine("File copied successfully.");
   /// </code>
-  /// This example demonstrates copying a file from one location to another with the option to overwrite an existing file at the destination.
+  ///   This example demonstrates copying a file from one location to another with the option to overwrite an existing file
+  ///   at the destination.
   /// </example>
   public static void CopyTo(this FileInfo @this, FileInfo targetFile, bool overwrite)
     => @this.CopyTo(targetFile.FullName, overwrite);
 
   /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, without overwriting an existing file.
+  ///   Moves the specified <see cref="FileInfo" /> instance to a new location represented by a <see cref="FileInfo" />
+  ///   object, without overwriting an existing file.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
-  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo" /> object that represents the destination file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
   /// sourceFile.MoveTo(destFile);
   /// Console.WriteLine("File moved successfully.");
   /// </code>
-  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, without the risk of overwriting an existing file at the destination.
+  ///   This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo" /> objects,
+  ///   without the risk of overwriting an existing file at the destination.
   /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile) => @this.MoveTo(destFile.FullName, false);
 
   /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, without overwriting an existing file,
-  /// and retries deletion of the source file within a specified timeout period if necessary.
+  ///   Moves the specified <see cref="FileInfo" /> instance to a new location represented by a <see cref="FileInfo" />
+  ///   object, without overwriting an existing file,
+  ///   and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
-  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
-  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo" /> object that represents the destination file.</param>
+  /// <param name="timeout">
+  ///   The maximum <see cref="TimeSpan" /> to retry the deletion of the source file if it is locked or
+  ///   cannot be deleted immediately.
+  /// </param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
   /// TimeSpan timeout = TimeSpan.FromSeconds(5);
   /// sourceFile.MoveTo(destFile, timeout);
   /// Console.WriteLine("File moved successfully.");
   /// </code>
-  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, without overwriting an existing file
-  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  ///   This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo" /> objects,
+  ///   without overwriting an existing file
+  ///   at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
   /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, TimeSpan timeout) => @this.MoveTo(destFile.FullName, false, timeout);
 
   /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, with an option to overwrite an existing file.
+  ///   Moves the specified <see cref="FileInfo" /> instance to a new location represented by a <see cref="FileInfo" />
+  ///   object, with an option to overwrite an existing file.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
-  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
-  /// if a file with the same name already exists at the destination.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo" /> object that represents the destination file.</param>
+  /// <param name="overwrite">
+  ///   A <see langword="bool" /> indicating whether to overwrite an existing file at the destination.
+  ///   If <see langword="true" />, the file will be overwritten; if <see langword="false" />, an <see cref="IOException" />
+  ///   will be thrown
+  ///   if a file with the same name already exists at the destination.
+  /// </param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
   /// sourceFile.MoveTo(destFile, true);
   /// Console.WriteLine("File moved successfully.");
   /// </code>
-  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, with the option to overwrite an existing file
-  /// at the destination.
+  ///   This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo" /> objects,
+  ///   with the option to overwrite an existing file
+  ///   at the destination.
   /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, bool overwrite) => @this.MoveTo(destFile.FullName, overwrite);
 
   /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location represented by a <see cref="FileInfo"/> object, with an option to overwrite an existing file,
-  /// and retries deletion of the source file within a specified timeout period if necessary.
+  ///   Moves the specified <see cref="FileInfo" /> instance to a new location represented by a <see cref="FileInfo" />
+  ///   object, with an option to overwrite an existing file,
+  ///   and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
-  /// <param name="destFile">The target <see cref="FileInfo"/> object that represents the destination file.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
-  /// if a file with the same name already exists at the destination.</param>
-  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to move.</param>
+  /// <param name="destFile">The target <see cref="FileInfo" /> object that represents the destination file.</param>
+  /// <param name="overwrite">
+  ///   A <see langword="bool" /> indicating whether to overwrite an existing file at the destination.
+  ///   If <see langword="true" />, the file will be overwritten; if <see langword="false" />, an <see cref="IOException" />
+  ///   will be thrown
+  ///   if a file with the same name already exists at the destination.
+  /// </param>
+  /// <param name="timeout">
+  ///   The maximum <see cref="TimeSpan" /> to retry the deletion of the source file if it is locked or
+  ///   cannot be deleted immediately.
+  /// </param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// FileInfo destFile = new FileInfo(@"D:\destination\example.txt");
   /// TimeSpan timeout = TimeSpan.FromSeconds(5);
   /// sourceFile.MoveTo(destFile, true, timeout);
   /// Console.WriteLine("File moved successfully.");
   /// </code>
-  /// This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo"/> objects, with the option to overwrite an existing file
-  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  ///   This example demonstrates moving a file from one location to another, represented by <see cref="FileInfo" /> objects,
+  ///   with the option to overwrite an existing file
+  ///   at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
   /// </example>
   public static void MoveTo(this FileInfo @this, FileInfo destFile, bool overwrite, TimeSpan timeout) => @this.MoveTo(destFile.FullName, overwrite, timeout);
 
   /// <summary>
-  /// Moves the specified <see cref="FileInfo"/> instance to a new location with an option to overwrite an existing file,
-  /// and retries deletion of the source file within a specified timeout period if necessary.
+  ///   Moves the specified <see cref="FileInfo" /> instance to a new location with an option to overwrite an existing file,
+  ///   and retries deletion of the source file within a specified timeout period if necessary.
   /// </summary>
-  /// <param name="this">The source <see cref="FileInfo"/> object to move.</param>
+  /// <param name="this">The source <see cref="FileInfo" /> object to move.</param>
   /// <param name="destFileName">The path to the destination file. This cannot be a directory.</param>
-  /// <param name="overwrite">A <see langword="bool"/> indicating whether to overwrite an existing file at the destination.
-  /// If <see langword="true"/>, the file will be overwritten; if <see langword="false"/>, an <see cref="IOException"/> will be thrown
-  /// if a file with the same name already exists at the destination.</param>
-  /// <param name="timeout">The maximum <see cref="TimeSpan"/> to retry the deletion of the source file if it is locked or cannot be deleted immediately.</param>
-  /// <exception cref="ArgumentNullException">Thrown if the source file is <see langword="null"/>.</exception>
-  /// <exception cref="IOException">Thrown if the file cannot be moved, typically because the source or destination cannot be accessed,
-  /// or the deletion of the source file exceeds the specified timeout.</exception>
+  /// <param name="overwrite">
+  ///   A <see langword="bool" /> indicating whether to overwrite an existing file at the destination.
+  ///   If <see langword="true" />, the file will be overwritten; if <see langword="false" />, an <see cref="IOException" />
+  ///   will be thrown
+  ///   if a file with the same name already exists at the destination.
+  /// </param>
+  /// <param name="timeout">
+  ///   The maximum <see cref="TimeSpan" /> to retry the deletion of the source file if it is locked or
+  ///   cannot be deleted immediately.
+  /// </param>
+  /// <exception cref="ArgumentNullException">Thrown if the source file is <see langword="null" />.</exception>
+  /// <exception cref="IOException">
+  ///   Thrown if the file cannot be moved, typically because the source or destination cannot be accessed,
+  ///   or the deletion of the source file exceeds the specified timeout.
+  /// </exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo sourceFile = new FileInfo(@"C:\source\example.txt");
   /// string destinationPath = @"D:\destination\example.txt";
   /// TimeSpan timeout = TimeSpan.FromSeconds(5);
   /// sourceFile.MoveTo(destinationPath, true, timeout);
   /// Console.WriteLine("File moved successfully.");
   /// </code>
-  /// This example demonstrates moving a file from one location to another, with the option to overwrite an existing file
-  /// at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
+  ///   This example demonstrates moving a file from one location to another, with the option to overwrite an existing file
+  ///   at the destination and retrying the deletion of the source file for up to 5 seconds if it fails initially.
   /// </example>
   public static void MoveTo(this FileInfo @this, string destFileName, bool overwrite, TimeSpan timeout) {
     Against.ThisIsNull(@this);
@@ -738,18 +831,16 @@ public static partial class FileInfoExtensions {
     // delete source, retry during timeout
     var delay = TimeSpan.FromSeconds(1);
     var tries = (int)(timeout.Ticks / delay.Ticks);
-    while (true) {
+    while (true)
       try {
         @this.Delete();
         break;
-
       } catch (IOException) {
         if (tries-- < 1)
           throw;
 
         Thread.Sleep(delay);
       }
-    }
 
     scope.Complete();
   }
@@ -759,20 +850,21 @@ public static partial class FileInfoExtensions {
   #region hash computation
 
   /// <summary>
-  /// Computes and returns the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm.
+  ///   Computes and returns the hash of the file represented by the <see cref="FileInfo" /> instance using the specified
+  ///   hash algorithm.
   /// </summary>
-  /// <typeparam name="THashAlgorithm">The type of the hash algorithm to use, derived from <see cref="HashAlgorithm"/>.</typeparam>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the hash for.</param>
+  /// <typeparam name="THashAlgorithm">The type of the hash algorithm to use, derived from <see cref="HashAlgorithm" />.</typeparam>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the hash for.</param>
   /// <returns>A byte array containing the computed hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeHash&lt;SHA256Managed&gt;();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
@@ -783,22 +875,24 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm and block size.
+  ///   Computes the hash of the file represented by the <see cref="FileInfo" /> instance using the specified hash algorithm
+  ///   and block size.
   /// </summary>
-  /// <typeparam name="THashAlgorithm">The type of the hash algorithm to use, derived from <see cref="HashAlgorithm"/>.</typeparam>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the hash for.</param>
+  /// <typeparam name="THashAlgorithm">The type of the hash algorithm to use, derived from <see cref="HashAlgorithm" />.</typeparam>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the hash for.</param>
   /// <param name="blockSize">The size of each block of data to read from the file at a time, in bytes.</param>
   /// <returns>A byte array containing the computed hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize"/> is less than or equal to zero.</exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize" /> is less than or equal to zero.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeHash&lt;SHA256Managed&gt;(1024);
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-256 hash of "file.txt" using a block size of 1024 bytes and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-256 hash of "file.txt" using a block size of 1024 bytes and prints the hash in
+  ///   hexadecimal format.
   /// </example>
   public static byte[] ComputeHash<THashAlgorithm>(this FileInfo @this, int blockSize) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
@@ -808,15 +902,18 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm.
+  ///   Computes the hash of the file represented by the <see cref="FileInfo" /> instance using the specified hash algorithm.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the hash for.</param>
   /// <param name="provider">The hash algorithm provider used to compute the file hash.</param>
   /// <returns>A byte array containing the computed hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object or the hash algorithm provider is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if the file object or the hash algorithm provider is
+  ///   <see langword="null" />.
+  /// </exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// using (var sha256 = SHA256.Create())
   /// {
@@ -824,7 +921,7 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// }
   /// </code>
-  /// This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider) {
     Against.ThisIsNull(@this);
@@ -835,17 +932,21 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the hash of the file represented by the <see cref="FileInfo"/> instance using the specified hash algorithm and block size.
+  ///   Computes the hash of the file represented by the <see cref="FileInfo" /> instance using the specified hash algorithm
+  ///   and block size.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the hash for.</param>
   /// <param name="provider">The hash algorithm provider used to compute the file hash.</param>
   /// <param name="blockSize">The size of each block of data to read from the file at a time, in bytes.</param>
   /// <returns>A byte array containing the computed hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object or the hash algorithm provider is <see langword="null"/>.</exception>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize"/> is less than or equal to zero.</exception>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if the file object or the hash algorithm provider is
+  ///   <see langword="null" />.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize" /> is less than or equal to zero.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// using (var sha256 = SHA256.Create())
   /// {
@@ -853,7 +954,8 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// }
   /// </code>
-  /// This example computes the SHA-256 hash of "file.txt" using a block size of 1024 bytes and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-256 hash of "file.txt" using a block size of 1024 bytes and prints the hash in
+  ///   hexadecimal format.
   /// </example>
   public static byte[] ComputeHash(this FileInfo @this, HashAlgorithm provider, int blockSize) {
     Against.ThisIsNull(@this);
@@ -881,19 +983,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the SHA-512 hash of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Computes the SHA-512 hash of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the SHA-512 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the SHA-512 hash for.</param>
   /// <returns>A byte array containing the SHA-512 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeSHA512Hash();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-512 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-512 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA512Hash(this FileInfo @this) {
     using var provider = SHA512.Create();
@@ -901,21 +1003,23 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the SHA-512 hash of the file represented by the <see cref="FileInfo"/> instance using a specified block size.
+  ///   Computes the SHA-512 hash of the file represented by the <see cref="FileInfo" /> instance using a specified block
+  ///   size.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the SHA-512 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the SHA-512 hash for.</param>
   /// <param name="blockSize">The size of each block of data to read from the file at a time, in bytes.</param>
   /// <returns>A byte array containing the SHA-512 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize"/> is less than or equal to zero.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
+  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="blockSize" /> is less than or equal to zero.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeSHA512Hash(1024);
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-512 hash of "file.txt" using a block size of 1024 bytes and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-512 hash of "file.txt" using a block size of 1024 bytes and prints the hash in
+  ///   hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA512Hash(this FileInfo @this, int blockSize) {
     using var provider = SHA512.Create();
@@ -923,19 +1027,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the SHA-384 hash of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Computes the SHA-384 hash of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the SHA-384 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the SHA-384 hash for.</param>
   /// <returns>A byte array containing the SHA-384 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeSHA384Hash();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-384 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-384 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA384Hash(this FileInfo @this) {
     using var provider = SHA384.Create();
@@ -943,19 +1047,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the SHA-256 hash of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Computes the SHA-256 hash of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the SHA-256 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the SHA-256 hash for.</param>
   /// <returns>A byte array containing the SHA-256 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeSHA256Hash();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-256 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA256Hash(this FileInfo @this) {
     using var provider = SHA256.Create();
@@ -963,19 +1067,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the SHA-1 hash of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Computes the SHA-1 hash of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the SHA-1 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the SHA-1 hash for.</param>
   /// <returns>A byte array containing the SHA-1 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeSHA1Hash();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant());
   /// </code>
-  /// This example computes the SHA-1 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the SHA-1 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeSHA1Hash(this FileInfo @this) {
     using var provider = SHA1.Create();
@@ -983,19 +1087,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Computes the MD5 hash of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Computes the MD5 hash of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file to compute the MD5 hash for.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file to compute the MD5 hash for.</param>
   /// <returns>A byte array containing the MD5 hash of the file.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if the file object is <see langword="null" />.</exception>
   /// <exception cref="FileNotFoundException">Thrown if the file does not exist.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("path/to/your/file.txt");
   /// byte[] hash = fileInfo.ComputeMD5Hash();
   /// Console.WriteLine(BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant());
   /// </code>
-  /// This example computes the MD5 hash of "file.txt" and prints the hash in hexadecimal format.
+  ///   This example computes the MD5 hash of "file.txt" and prints the hash in hexadecimal format.
   /// </example>
   public static byte[] ComputeMD5Hash(this FileInfo @this) {
     using var provider = MD5.Create();
@@ -1007,17 +1111,17 @@ public static partial class FileInfoExtensions {
   #region reading
 
   /// <summary>
-  /// Determines the encoding used in the file represented by the <see cref="FileInfo"/> instance.
+  ///   Determines the encoding used in the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <returns>The detected <see cref="Encoding"/> of the file or <see lanword="null"/> when the file is empty.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <returns>The detected <see cref="Encoding" /> of the file or <see lanword="null" /> when the file is empty.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// Encoding encoding = file.GetEncoding();
   /// Console.WriteLine($"File encoding: {encoding.EncodingName}");
   /// </code>
-  /// This example determines and prints the encoding of "example.txt".
+  ///   This example determines and prints the encoding of "example.txt".
   /// </example>
   public static Encoding GetEncoding(this FileInfo @this) {
     // Read the BOM
@@ -1032,71 +1136,81 @@ public static partial class FileInfoExtensions {
 #if DEPRECATED_UTF7
     if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.Default;
 #else
-    if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
+    if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+      return Encoding.UTF7;
 #endif
-    if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) return Encoding.UTF8;
-    if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
-    if (bom[0] == 0xfe && bom[1] == 0xff) return Encoding.BigEndianUnicode; //UTF-16BE
-    if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff) return Encoding.UTF32;
+    if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
+      return Encoding.UTF8;
+    if (bom[0] == 0xff && bom[1] == 0xfe)
+      return Encoding.Unicode; //UTF-16LE
+    if (bom[0] == 0xfe && bom[1] == 0xff)
+      return Encoding.BigEndianUnicode; //UTF-16BE
+    if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
+      return Encoding.UTF32;
     return Encoding.Default;
   }
 
   /// <summary>
-  /// Reads all text from the file represented by the <see cref="FileInfo"/> instance using the detected encoding.
+  ///   Reads all text from the file represented by the <see cref="FileInfo" /> instance using the detected encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <returns>A <see cref="string"/> containing all the text from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <returns>A <see cref="string" /> containing all the text from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// string content = file.ReadAllText();
   /// Console.WriteLine(content);
   /// </code>
-  /// This example reads and prints the content of "example.txt" using the detected encoding.
+  ///   This example reads and prints the content of "example.txt" using the detected encoding.
   /// </example>
   public static string ReadAllText(this FileInfo @this) => File.ReadAllText(@this.FullName);
 
   /// <summary>
-  /// Reads all text from the file represented by the <see cref="FileInfo"/> instance using the specified <see cref="Encoding"/>.
+  ///   Reads all text from the file represented by the <see cref="FileInfo" /> instance using the specified
+  ///   <see cref="Encoding" />.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="encoding">The <see cref="Encoding"/> to use when reading the file.</param>
-  /// <returns>A <see cref="string"/> containing all the text from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="encoding">The <see cref="Encoding" /> to use when reading the file.</param>
+  /// <returns>A <see cref="string" /> containing all the text from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// string content = file.ReadAllText(Encoding.UTF8);
   /// Console.WriteLine(content);
   /// </code>
-  /// This example reads and prints the content of "example.txt" using UTF-8 encoding.
+  ///   This example reads and prints the content of "example.txt" using UTF-8 encoding.
   /// </example>
   public static string ReadAllText(this FileInfo @this, Encoding encoding) => File.ReadAllText(@this.FullName, encoding);
 
   /// <summary>
-  /// Reads all lines from the file represented by the <see cref="FileInfo"/> instance using the detected encoding.
+  ///   Reads all lines from the file represented by the <see cref="FileInfo" /> instance using the detected encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <returns>An array of <see cref="string"/> containing all the lines from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <returns>An array of <see cref="string" /> containing all the lines from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// foreach (var line in file.ReadAllLines())
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example reads and prints each line of "example.txt" using the detected encoding.
+  ///   This example reads and prints each line of "example.txt" using the detected encoding.
   /// </example>
   public static string[] ReadAllLines(this FileInfo @this) => File.ReadAllLines(@this.FullName);
 
   /// <summary>
-  /// Tries to read all lines from the file represented by the <see cref="FileInfo"/> instance using the detected encoding.
+  ///   Tries to read all lines from the file represented by the <see cref="FileInfo" /> instance using the detected
+  ///   encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="result">When this method returns, contains an array of <see cref="string"/> containing all the lines from the file if the read was successful, or <see langword="null"/> if it fails.</param>
-  /// <returns><see langword="true"/> if the lines were successfully read; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="result">
+  ///   When this method returns, contains an array of <see cref="string" /> containing all the lines from
+  ///   the file if the read was successful, or <see langword="null" /> if it fails.
+  /// </param>
+  /// <returns><see langword="true" /> if the lines were successfully read; otherwise, <see langword="false" />.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// if (file.TryReadAllLines(out string[] lines))
   /// {
@@ -1110,7 +1224,7 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine("Failed to read lines.");
   /// }
   /// </code>
-  /// This example attempts to read and print each line of "example.txt". If unsuccessful, it prints a failure message.
+  ///   This example attempts to read and print each line of "example.txt". If unsuccessful, it prints a failure message.
   /// </example>
   public static bool TryReadAllLines(this FileInfo @this, out string[] result) {
     try {
@@ -1123,32 +1237,36 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads all lines from the file represented by the <see cref="FileInfo"/> instance using the specified encoding.
+  ///   Reads all lines from the file represented by the <see cref="FileInfo" /> instance using the specified encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="encoding">The <see cref="Encoding"/> to use when reading the file.</param>
-  /// <returns>An array of <see cref="string"/> containing all the lines from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="encoding">The <see cref="Encoding" /> to use when reading the file.</param>
+  /// <returns>An array of <see cref="string" /> containing all the lines from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// foreach (var line in file.ReadAllLines(Encoding.UTF8))
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example reads and prints each line of "example.txt" using UTF-8 encoding.
+  ///   This example reads and prints each line of "example.txt" using UTF-8 encoding.
   /// </example>
   public static string[] ReadAllLines(this FileInfo @this, Encoding encoding) => File.ReadAllLines(@this.FullName, encoding);
 
   /// <summary>
-  /// Attempts to read all lines from the file represented by the <see cref="FileInfo"/> instance using the specified <see cref="Encoding"/>.
+  ///   Attempts to read all lines from the file represented by the <see cref="FileInfo" /> instance using the specified
+  ///   <see cref="Encoding" />.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="encoding">The <see cref="Encoding"/> to use for reading the file.</param>
-  /// <param name="result">When this method returns, contains an array of <see cref="string"/> containing all the lines from the file if the read was successful, or <see langword="null"/> if it fails.</param>
-  /// <returns><see langword="true"/> if the lines were successfully read; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="encoding">The <see cref="Encoding" /> to use for reading the file.</param>
+  /// <param name="result">
+  ///   When this method returns, contains an array of <see cref="string" /> containing all the lines from
+  ///   the file if the read was successful, or <see langword="null" /> if it fails.
+  /// </param>
+  /// <returns><see langword="true" /> if the lines were successfully read; otherwise, <see langword="false" />.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// if (file.TryReadAllLines(Encoding.UTF8, out string[] lines))
   /// {
@@ -1162,7 +1280,8 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine("Failed to read lines.");
   /// }
   /// </code>
-  /// This example attempts to read and print each line of "example.txt" using UTF-8 encoding. If unsuccessful, it prints a failure message.
+  ///   This example attempts to read and print each line of "example.txt" using UTF-8 encoding. If unsuccessful, it prints a
+  ///   failure message.
   /// </example>
   public static bool TryReadAllLines(this FileInfo @this, Encoding encoding, out string[] result) {
     try {
@@ -1175,12 +1294,12 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads bytes from the file represented by the <see cref="FileInfo"/> instance.
+  ///   Reads bytes from the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <returns>An <see cref="IEnumerable{Byte}"/> containing all bytes from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <returns>An <see cref="IEnumerable{Byte}" /> containing all bytes from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.bin");
   /// IEnumerable&lt;byte&gt; bytes = file.ReadBytes();
   /// foreach (byte b in bytes)
@@ -1188,12 +1307,12 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine(b);
   /// }
   /// </code>
-  /// This example reads and prints each byte of "example.bin".
+  ///   This example reads and prints each byte of "example.bin".
   /// </example>
   public static IEnumerable<byte> ReadBytes(this FileInfo @this) {
     using var stream = @this.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
     for (;;) {
-      var result= stream.ReadByte();
+      var result = stream.ReadByte();
       if (result < 0)
         yield break;
 
@@ -1202,28 +1321,31 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads all bytes from the file represented by the <see cref="FileInfo"/> instance.
+  ///   Reads all bytes from the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <returns>A byte array containing all bytes from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.bin");
   /// byte[] bytes = file.ReadAllBytes();
   /// Console.WriteLine(BitConverter.ToString(bytes));
   /// </code>
-  /// This example reads all bytes from "example.bin" and prints them as a hexadecimal string.
+  ///   This example reads all bytes from "example.bin" and prints them as a hexadecimal string.
   /// </example>
   public static byte[] ReadAllBytes(this FileInfo @this) => File.ReadAllBytes(@this.FullName);
 
   /// <summary>
-  /// Attempts to read all bytes from the file represented by the <see cref="FileInfo"/> instance.
+  ///   Attempts to read all bytes from the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="result">When this method returns, contains the byte array of all bytes from the file if the read was successful, or <see langword="null"/> if it fails.</param>
-  /// <returns><see langword="true"/> if the bytes were successfully read; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="result">
+  ///   When this method returns, contains the byte array of all bytes from the file if the read was
+  ///   successful, or <see langword="null" /> if it fails.
+  /// </param>
+  /// <returns><see langword="true" /> if the bytes were successfully read; otherwise, <see langword="false" />.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.bin");
   /// if (file.TryReadAllBytes(out byte[] bytes))
   /// {
@@ -1234,7 +1356,8 @@ public static partial class FileInfoExtensions {
   ///     Console.WriteLine("Failed to read bytes.");
   /// }
   /// </code>
-  /// This example attempts to read all bytes from "example.bin" and prints them as a hexadecimal string. If unsuccessful, it prints a failure message.
+  ///   This example attempts to read all bytes from "example.bin" and prints them as a hexadecimal string. If unsuccessful,
+  ///   it prints a failure message.
   /// </example>
   public static bool TryReadAllBytes(this FileInfo @this, out byte[] result) {
     try {
@@ -1247,19 +1370,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads lines from the file represented by the <see cref="FileInfo"/> instance using the default encoding.
+  ///   Reads lines from the file represented by the <see cref="FileInfo" /> instance using the default encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <returns>An <see cref="IEnumerable{String}"/> of lines read from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <returns>An <see cref="IEnumerable{String}" /> of lines read from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// foreach (var line in fileInfo.ReadLines())
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example demonstrates how to enumerate through each line of "example.txt".
+  ///   This example demonstrates how to enumerate through each line of "example.txt".
   /// </example>
 #if SUPPORTS_ENUMERATING_IO
   public static IEnumerable<string> ReadLines(this FileInfo @this) => File.ReadLines(@this.FullName);
@@ -1268,20 +1391,21 @@ public static partial class FileInfoExtensions {
 #endif
 
   /// <summary>
-  /// Reads lines from the file represented by the <see cref="FileInfo"/> instance using the default encoding and specified <see cref="FileShare"/> mode.
+  ///   Reads lines from the file represented by the <see cref="FileInfo" /> instance using the default encoding and
+  ///   specified <see cref="FileShare" /> mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="share">The <see cref="FileShare"/> mode to use when opening the file.</param>
-  /// <returns>An <see cref="IEnumerable{String}"/> of lines read from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="share">The <see cref="FileShare" /> mode to use when opening the file.</param>
+  /// <returns>An <see cref="IEnumerable{String}" /> of lines read from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("shared_example.txt");
   /// foreach (var line in fileInfo.ReadLines(FileShare.Read))
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example reads lines from "shared_example.txt", allowing other processes to read the file simultaneously.
+  ///   This example reads lines from "shared_example.txt", allowing other processes to read the file simultaneously.
   /// </example>
   public static IEnumerable<string> ReadLines(this FileInfo @this, FileShare share) {
     const int bufferSize = 4096;
@@ -1297,21 +1421,23 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads lines from the file represented by the <see cref="FileInfo"/> instance using the specified encoding and <see cref="FileShare"/> mode.
+  ///   Reads lines from the file represented by the <see cref="FileInfo" /> instance using the specified encoding and
+  ///   <see cref="FileShare" /> mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="encoding">The <see cref="Encoding"/> to use for reading the file.</param>
-  /// <param name="share">The <see cref="FileShare"/> mode to use when opening the file.</param>
-  /// <returns>An <see cref="IEnumerable{String}"/> of lines read from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="encoding">The <see cref="Encoding" /> to use for reading the file.</param>
+  /// <param name="share">The <see cref="FileShare" /> mode to use when opening the file.</param>
+  /// <returns>An <see cref="IEnumerable{String}" /> of lines read from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("shared_example.txt");
   /// foreach (var line in fileInfo.ReadLines(Encoding.UTF8, FileShare.Read))
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example reads lines from "shared_example.txt" using UTF-8 encoding, allowing other processes to read the file simultaneously.
+  ///   This example reads lines from "shared_example.txt" using UTF-8 encoding, allowing other processes to read the file
+  ///   simultaneously.
   /// </example>
   public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding, FileShare share) {
     const int bufferSize = 4096;
@@ -1327,20 +1453,20 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Reads lines from the file represented by the <see cref="FileInfo"/> instance using the specified encoding.
+  ///   Reads lines from the file represented by the <see cref="FileInfo" /> instance using the specified encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
-  /// <param name="encoding">The <see cref="Encoding"/> to use for reading the file.</param>
-  /// <returns>An <see cref="IEnumerable{String}"/> of lines read from the file.</returns>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
+  /// <param name="encoding">The <see cref="Encoding" /> to use for reading the file.</param>
+  /// <returns>An <see cref="IEnumerable{String}" /> of lines read from the file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// foreach (var line in fileInfo.ReadLines(Encoding.UTF8))
   /// {
   ///     Console.WriteLine(line);
   /// }
   /// </code>
-  /// This example reads lines from "example.txt" using UTF-8 encoding.
+  ///   This example reads lines from "example.txt" using UTF-8 encoding.
   /// </example>
 #if SUPPORTS_ENUMERATING_IO
   public static IEnumerable<string> ReadLines(this FileInfo @this, Encoding encoding) => File.ReadLines(@this.FullName, encoding);
@@ -1353,98 +1479,98 @@ public static partial class FileInfoExtensions {
   #region writing
 
   /// <summary>
-  /// Writes a string to a file, overwriting the file if it already exists.
+  ///   Writes a string to a file, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The string to write to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.WriteAllText("Hello World");
   /// Console.WriteLine("Text written successfully.");
   /// </code>
-  /// This example writes "Hello World" to "example.txt", overwriting any existing content.
+  ///   This example writes "Hello World" to "example.txt", overwriting any existing content.
   /// </example>
   public static void WriteAllText(this FileInfo @this, string contents) => File.WriteAllText(@this.FullName, contents);
 
   /// <summary>
-  /// Writes a string to a file using the specified encoding, overwriting the file if it already exists.
+  ///   Writes a string to a file using the specified encoding, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The string to write to the file.</param>
   /// <param name="encoding">The encoding to apply to the string.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.WriteAllText("Hello World", Encoding.UTF8);
   /// Console.WriteLine("Text written successfully with UTF-8 encoding.");
   /// </code>
-  /// This example writes "Hello World" to "example.txt" using UTF-8 encoding, overwriting any existing content.
+  ///   This example writes "Hello World" to "example.txt" using UTF-8 encoding, overwriting any existing content.
   /// </example>
   public static void WriteAllText(this FileInfo @this, string contents, Encoding encoding) => File.WriteAllText(@this.FullName, contents, encoding);
 
   /// <summary>
-  /// Writes an array of strings to a file, overwriting the file if it already exists.
+  ///   Writes an array of strings to a file, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The string array to write to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("lines.txt");
   /// string[] lines = { "First line", "Second line" };
   /// fileInfo.WriteAllLines(lines);
   /// Console.WriteLine("Lines written successfully.");
   /// </code>
-  /// This example writes two lines to "lines.txt", overwriting any existing content.
+  ///   This example writes two lines to "lines.txt", overwriting any existing content.
   /// </example>
   public static void WriteAllLines(this FileInfo @this, string[] contents) => File.WriteAllLines(@this.FullName, contents);
 
   /// <summary>
-  /// Writes an array of strings to a file using the specified encoding, overwriting the file if it already exists.
+  ///   Writes an array of strings to a file using the specified encoding, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The string array to write to the file.</param>
   /// <param name="encoding">The encoding to apply to the strings.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("lines.txt");
   /// string[] lines = { "First line", "Second line" };
   /// fileInfo.WriteAllLines(lines, Encoding.UTF8);
   /// Console.WriteLine("Lines written successfully with UTF-8 encoding.");
   /// </code>
-  /// This example writes two lines to "lines.txt" using UTF-8 encoding, overwriting any existing content.
+  ///   This example writes two lines to "lines.txt" using UTF-8 encoding, overwriting any existing content.
   /// </example>
   public static void WriteAllLines(this FileInfo @this, string[] contents, Encoding encoding) => File.WriteAllLines(@this.FullName, contents, encoding);
 
   /// <summary>
-  /// Writes a byte array to a file, overwriting the file if it already exists.
+  ///   Writes a byte array to a file, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="bytes">The byte array to write to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.bin");
   /// byte[] data = { 0x00, 0x0F, 0xF0 };
   /// fileInfo.WriteAllBytes(data);
   /// Console.WriteLine("Bytes written successfully.");
   /// </code>
-  /// This example writes a byte array to "example.bin", overwriting any existing content.
+  ///   This example writes a byte array to "example.bin", overwriting any existing content.
   /// </example>
   public static void WriteAllBytes(this FileInfo @this, byte[] bytes) => File.WriteAllBytes(@this.FullName, bytes);
 
   /// <summary>
-  /// Writes a sequence of strings to a file, overwriting the file if it already exists.
+  ///   Writes a sequence of strings to a file, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The sequence of strings to write to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("lines.txt");
   /// IEnumerable&lt;string&gt; lines = new List&lt;string&gt; { "First line", "Second line" };
   /// fileInfo.WriteAllLines(lines);
   /// Console.WriteLine("Lines written successfully.");
   /// </code>
-  /// This example writes two lines to "lines.txt", overwriting any existing content.
+  ///   This example writes two lines to "lines.txt", overwriting any existing content.
   /// </example>
   public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents) {
     using var writer = new StreamWriter(@this.FullName);
@@ -1453,19 +1579,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Writes a sequence of strings to a file using the specified encoding, overwriting the file if it already exists.
+  ///   Writes a sequence of strings to a file using the specified encoding, overwriting the file if it already exists.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The sequence of strings to write to the file.</param>
   /// <param name="encoding">The encoding to apply to the strings.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("lines.txt");
   /// IEnumerable&lt;string&gt; lines = new List&lt;string&gt; { "First line", "Second line" };
   /// fileInfo.WriteAllLines(lines, Encoding.UTF8);
   /// Console.WriteLine("Lines written successfully with UTF-8 encoding.");
   /// </code>
-  /// This example writes two lines to "lines.txt" using UTF-8 encoding, overwriting any existing content.
+  ///   This example writes two lines to "lines.txt" using UTF-8 encoding, overwriting any existing content.
   /// </example>
   public static void WriteAllLines(this FileInfo @this, IEnumerable<string> contents, Encoding encoding) {
     using var writer = new StreamWriter(@this.FullName, false, encoding);
@@ -1478,49 +1604,49 @@ public static partial class FileInfoExtensions {
   #region appending
 
   /// <summary>
-  /// Appends text to the end of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Appends text to the end of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The text to append to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.AppendAllText("Appended text");
   /// Console.WriteLine("Text appended successfully.");
   /// </code>
-  /// This example appends "Appended text" to the end of "example.txt".
+  ///   This example appends "Appended text" to the end of "example.txt".
   /// </example>
   public static void AppendAllText(this FileInfo @this, string contents) => File.AppendAllText(@this.FullName, contents);
 
   /// <summary>
-  /// Appends text to the end of the file represented by the <see cref="FileInfo"/> instance using the specified encoding.
+  ///   Appends text to the end of the file represented by the <see cref="FileInfo" /> instance using the specified encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The text to append to the file.</param>
   /// <param name="encoding">The encoding to use for the appended text.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.AppendAllText("Appended text", Encoding.UTF8);
   /// Console.WriteLine("Text appended successfully with UTF-8 encoding.");
   /// </code>
-  /// This example appends "Appended text" to the end of "example.txt" using UTF-8 encoding.
+  ///   This example appends "Appended text" to the end of "example.txt" using UTF-8 encoding.
   /// </example>
   public static void AppendAllText(this FileInfo @this, string contents, Encoding encoding) => File.AppendAllText(@this.FullName, contents, encoding);
 
   /// <summary>
-  /// Appends lines to the end of the file represented by the <see cref="FileInfo"/> instance.
+  ///   Appends lines to the end of the file represented by the <see cref="FileInfo" /> instance.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The lines to append to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// IEnumerable&lt;string&gt; lines = new List&lt;string&gt; { "First appended line", "Second appended line" };
   /// fileInfo.AppendAllLines(lines);
   /// Console.WriteLine("Lines appended successfully.");
   /// </code>
-  /// This example appends two lines to the end of "example.txt".
+  ///   This example appends two lines to the end of "example.txt".
   /// </example>
   public static void AppendAllLines(this FileInfo @this, IEnumerable<string> contents) {
     using var writer = new StreamWriter(@this.FullName, append: true);
@@ -1529,19 +1655,20 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Appends lines to the end of the file represented by the <see cref="FileInfo"/> instance using the specified encoding.
+  ///   Appends lines to the end of the file represented by the <see cref="FileInfo" /> instance using the specified
+  ///   encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The lines to append to the file.</param>
   /// <param name="encoding">The encoding to use for the appended lines.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// IEnumerable&lt;string&gt; lines = new List&lt;string&gt; { "First appended line", "Second appended line" };
   /// fileInfo.AppendAllLines(lines, Encoding.UTF8);
   /// Console.WriteLine("Lines appended successfully with UTF-8 encoding.");
   /// </code>
-  /// This example appends two lines to the end of "example.txt" using UTF-8 encoding.
+  ///   This example appends two lines to the end of "example.txt" using UTF-8 encoding.
   /// </example>
   public static void AppendAllLines(this FileInfo @this, IEnumerable<string> contents, Encoding encoding) {
     using var writer = new StreamWriter(@this.FullName, true, encoding);
@@ -1550,17 +1677,18 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Appends a line to the end of the file represented by the <see cref="FileInfo"/> instance, followed by a line terminator.
+  ///   Appends a line to the end of the file represented by the <see cref="FileInfo" /> instance, followed by a line
+  ///   terminator.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The line to append to the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.AppendLine("Appended line");
   /// Console.WriteLine("Line appended successfully.");
   /// </code>
-  /// This example appends "Appended line" followed by a line terminator to the end of "example.txt".
+  ///   This example appends "Appended line" followed by a line terminator to the end of "example.txt".
   /// </example>
   public static void AppendLine(this FileInfo @this, string contents) {
     using var writer = new StreamWriter(@this.FullName, append: true);
@@ -1568,18 +1696,19 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Appends a line to the end of the file represented by the <see cref="FileInfo"/> instance using the specified encoding, followed by a line terminator.
+  ///   Appends a line to the end of the file represented by the <see cref="FileInfo" /> instance using the specified
+  ///   encoding, followed by a line terminator.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="contents">The line to append to the file.</param>
   /// <param name="encoding">The encoding to use for the appended line.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.AppendLine("Appended line", Encoding.UTF8);
   /// Console.WriteLine("Line appended successfully with UTF-8 encoding.");
   /// </code>
-  /// This example appends "Appended line" followed by a line terminator to the end of "example.txt" using UTF-8 encoding.
+  ///   This example appends "Appended line" followed by a line terminator to the end of "example.txt" using UTF-8 encoding.
   /// </example>
   public static void AppendLine(this FileInfo @this, string contents, Encoding encoding) {
     using var writer = new StreamWriter(@this.FullName, true, encoding);
@@ -1591,33 +1720,33 @@ public static partial class FileInfoExtensions {
   #region trimming text files
 
   /// <summary>
-  /// Keeps only the specified number of first lines in the file, discarding the rest.
+  ///   Keeps only the specified number of first lines in the file, discarding the rest.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the beginning of the file to keep.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepFirstLines(10);
   /// Console.WriteLine("First 10 lines kept, others removed.");
   /// </code>
-  /// This example keeps the first 10 lines of "example.txt" and removes the rest.
+  ///   This example keeps the first 10 lines of "example.txt" and removes the rest.
   /// </example>
   public static void KeepFirstLines(this FileInfo @this, int count) => _KeepFirstLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
-  /// Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding.
+  ///   Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the beginning of the file to keep.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepFirstLines(10, Encoding.UTF8);
   /// Console.WriteLine("First 10 lines kept using UTF-8 encoding, others removed.");
   /// </code>
-  /// This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and removes the rest.
+  ///   This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and removes the rest.
   /// </example>
   public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
@@ -1626,35 +1755,37 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps only the specified number of first lines in the file, discarding the rest, based on the specified line break mode.
+  ///   Keeps only the specified number of first lines in the file, discarding the rest, based on the specified line break
+  ///   mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the beginning of the file to keep.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepFirstLines(10, LineBreakMode.CrLf);
   /// Console.WriteLine("First 10 lines kept using CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the first 10 lines of "example.txt" based on CrLf line breaks and removes the rest.
+  ///   This example keeps the first 10 lines of "example.txt" based on CrLf line breaks and removes the rest.
   /// </example>
   public static void KeepFirstLines(this FileInfo @this, int count, LineBreakMode newLine) => _KeepFirstLines(@this, count, null, newLine);
 
   /// <summary>
-  /// Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding and line break mode.
+  ///   Keeps only the specified number of first lines in the file, discarding the rest, using the provided encoding and line
+  ///   break mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the beginning of the file to keep.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepFirstLines(10, Encoding.UTF8, LineBreakMode.CrLf);
   /// Console.WriteLine("First 10 lines kept using UTF-8 encoding and CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing the rest.
+  ///   This example keeps the first 10 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing the rest.
   /// </example>
   public static void KeepFirstLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
@@ -1675,10 +1806,10 @@ public static partial class FileInfoExtensions {
       ;
 
     var lineCounter = 0;
-    do {
+    do
       if (reader.ReadLine() == null)
         break;
-    } while (++lineCounter < count);
+    while (++lineCounter < count);
 
     if (lineCounter < count)
       return;
@@ -1687,49 +1818,49 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5);
   /// Console.WriteLine("Last 5 lines kept, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines of "example.txt" and removes all other preceding lines.
+  ///   This example keeps the last 5 lines of "example.txt" and removes all other preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count) => _KeepLastLines(@this, count, null, LineBreakMode.AutoDetect, 0);
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="offsetInLines">The number of lines to keep at the start of the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, 1);
   /// Console.WriteLine("Last 5 lines and the first kept, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines and the first of "example.txt" and removes all other preceding lines.
+  ///   This example keeps the last 5 lines and the first of "example.txt" and removes all other preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, int offsetInLines) => _KeepLastLines(@this, count, null, LineBreakMode.AutoDetect, offsetInLines);
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, Encoding.UTF8);
   /// Console.WriteLine("Last 5 lines kept using UTF-8 encoding, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and removes all other preceding lines.
+  ///   This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and removes all other preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
@@ -1738,19 +1869,20 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="offsetInLines">The number of lines to keep at the start of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, 1, Encoding.UTF8);
   /// Console.WriteLine("Last 5 lines and the first kept using UTF-8 encoding, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines  and the first of "example.txt" using UTF-8 encoding and removes all other preceding lines.
+  ///   This example keeps the last 5 lines  and the first of "example.txt" using UTF-8 encoding and removes all other
+  ///   preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, int offsetInLines, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
@@ -1759,52 +1891,57 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, based on the specified line break mode.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, based on the specified line break
+  ///   mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, LineBreakMode.CrLf);
   /// Console.WriteLine("Last 5 lines kept using CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines of "example.txt" based on CrLf line breaks and removes all other preceding lines.
+  ///   This example keeps the last 5 lines of "example.txt" based on CrLf line breaks and removes all other preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, LineBreakMode newLine) => _KeepLastLines(@this, count, null, newLine, 0);
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, based on the specified line break mode.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, based on the specified line break
+  ///   mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="offsetInLines">The number of lines to keep at the start of the file.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, 1, LineBreakMode.CrLf);
   /// Console.WriteLine("Last 5 lines and the first kept using CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines and the first of "example.txt" based on CrLf line breaks and removes all other preceding lines.
+  ///   This example keeps the last 5 lines and the first of "example.txt" based on CrLf line breaks and removes all other
+  ///   preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, int offsetInLines, LineBreakMode newLine) => _KeepLastLines(@this, count, null, newLine, offsetInLines);
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line break mode.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line
+  ///   break mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, Encoding.UTF8, LineBreakMode.CrLf);
   /// Console.WriteLine("Last 5 lines kept using UTF-8 encoding and CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing all other preceding lines.
+  ///   This example keeps the last 5 lines of "example.txt" using UTF-8 encoding and CrLf line breaks, removing all other
+  ///   preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
@@ -1813,20 +1950,22 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line break mode.
+  ///   Keeps only the specified number of last lines in the file, discarding the rest, using the provided encoding and line
+  ///   break mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines from the end of the file to keep.</param>
   /// <param name="offsetInLines">The number of lines to keep at the start of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.KeepLastLines(5, 1, Encoding.UTF8, LineBreakMode.CrLf);
   /// Console.WriteLine("Last 5 lines and the first kept using UTF-8 encoding and CrLf line breaks, others removed.");
   /// </code>
-  /// This example keeps the last 5 lines and the first of "example.txt" using UTF-8 encoding and CrLf line breaks, removing all other preceding lines.
+  ///   This example keeps the last 5 lines and the first of "example.txt" using UTF-8 encoding and CrLf line breaks,
+  ///   removing all other preceding lines.
   /// </example>
   public static void KeepLastLines(this FileInfo @this, int count, int offsetInLines, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
@@ -1851,7 +1990,7 @@ public static partial class FileInfoExtensions {
       ;
 
     var writePosition = reader.PreambleSize;
-    while (offsetInLines-- > 0 && reader.ReadLine()!=null)
+    while (offsetInLines-- > 0 && reader.ReadLine() != null)
       writePosition = stream.Position;
 
     for (;;) {
@@ -1868,7 +2007,7 @@ public static partial class FileInfoExtensions {
       return;
 
     --readPosition;
-    
+
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
 
@@ -1889,85 +2028,88 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Removes a specified number of lines from the beginning of the file.
+  ///   Removes a specified number of lines from the beginning of the file.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the beginning of the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveFirstLines(3);
   /// Console.WriteLine("First 3 lines removed.");
   /// </code>
-  /// This example removes the first 3 lines from "example.txt".
+  ///   This example removes the first 3 lines from "example.txt".
   /// </example>
   public static void RemoveFirstLines(this FileInfo @this, int count) => _RemoveFirstLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
-  /// Removes a specified number of lines from the beginning of the file using the provided encoding.
+  ///   Removes a specified number of lines from the beginning of the file using the provided encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the beginning of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveFirstLines(3, Encoding.UTF8);
   /// Console.WriteLine("First 3 lines removed using UTF-8 encoding.");
   /// </code>
-  /// This example removes the first 3 lines from "example.txt" using UTF-8 encoding.
+  ///   This example removes the first 3 lines from "example.txt" using UTF-8 encoding.
   /// </example>
-  public static void RemoveFirstLines(this FileInfo @this, int count,Encoding encoding) {
+  public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
 
     _RemoveFirstLines(@this, count, encoding, LineBreakMode.AutoDetect);
   }
 
   /// <summary>
-  /// Removes a specified number of lines from the beginning of the file, recognizing line breaks based on the specified mode.
+  ///   Removes a specified number of lines from the beginning of the file, recognizing line breaks based on the specified
+  ///   mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the beginning of the file.</param>
   /// <param name="newLine">The line break mode to use for identifying line endings.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveFirstLines(3, LineBreakMode.CrLf);
   /// Console.WriteLine("First 3 lines removed using CrLf line breaks.");
   /// </code>
-  /// This example removes the first 3 lines from "example.txt", identifying lines based on carriage return and line feed (CrLf).
+  ///   This example removes the first 3 lines from "example.txt", identifying lines based on carriage return and line feed
+  ///   (CrLf).
   /// </example>
   public static void RemoveFirstLines(this FileInfo @this, int count, LineBreakMode newLine) => _RemoveFirstLines(@this, count, null, newLine);
 
   /// <summary>
-  /// Removes a specified number of lines from the beginning of the file using the provided encoding and recognizing line breaks based on the specified mode.
+  ///   Removes a specified number of lines from the beginning of the file using the provided encoding and recognizing line
+  ///   breaks based on the specified mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the beginning of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <param name="newLine">The line break mode to determine the line endings in the file.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveFirstLines(3, Encoding.UTF8, LineBreakMode.CrLf);
   /// Console.WriteLine("First 3 lines removed using UTF-8 encoding and CrLf line breaks.");
   /// </code>
-  /// This example removes the first 3 lines from "example.txt" using UTF-8 encoding and CrLf line breaks.
+  ///   This example removes the first 3 lines from "example.txt" using UTF-8 encoding and CrLf line breaks.
   /// </example>
   public static void RemoveFirstLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
     _RemoveFirstLines(@this, count, encoding, newLine);
   }
 
-  private static void _RemoveFirstLines( FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+  private static void _RemoveFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     CustomTextReader.Initialized reader = encoding == null
-      ? new(stream, true, newLine)
-      : new(stream, encoding, newLine)
+        ? new(stream, true, newLine)
+        : new(stream, encoding, newLine)
       ;
 
     var readPosition = 0L;
@@ -1992,7 +2134,7 @@ public static partial class FileInfoExtensions {
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
 
-    for(;;) {
+    for (;;) {
       stream.Position = readPosition;
       var bytesRead = stream.Read(buffer, 0, bufferSize);
       if (bytesRead <= 0)
@@ -2009,39 +2151,39 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Removes a specified number of lines from the end of the file.
+  ///   Removes a specified number of lines from the end of the file.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the end of the file.</param>
   /// <note>
-  /// Line-Endings used and encoding is automatically detected.
+  ///   Line-Endings used and encoding is automatically detected.
   /// </note>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveLastLines(2);
   /// Console.WriteLine("Last two lines removed.");
   /// </code>
-  /// This example removes the last two lines from "example.txt".
+  ///   This example removes the last two lines from "example.txt".
   /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count) => _RemoveLastLines(@this, count, null, LineBreakMode.AutoDetect);
 
   /// <summary>
-  /// Removes a specified number of lines from the end of the file using the provided encoding.
+  ///   Removes a specified number of lines from the end of the file using the provided encoding.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the end of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <note>
-  /// Line-Endings used are automatically detected.
+  ///   Line-Endings used are automatically detected.
   /// </note>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveLastLines(2, Encoding.UTF8);
   /// Console.WriteLine("Last two lines removed using UTF-8 encoding.");
   /// </code>
-  /// This example removes the last two lines from "example.txt" using UTF-8 encoding.
+  ///   This example removes the last two lines from "example.txt" using UTF-8 encoding.
   /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding) {
     Against.ArgumentIsNull(encoding);
@@ -2050,38 +2192,41 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Removes a specified number of lines from the end of the file, recognizing line breaks based on the specified mode.
+  ///   Removes a specified number of lines from the end of the file, recognizing line breaks based on the specified mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the end of the file.</param>
   /// <param name="newLine">The line break mode to use for identifying line endings.</param>
   /// <note>
-  /// Encoding is automatically detected.
+  ///   Encoding is automatically detected.
   /// </note>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveLastLines(2, LineBreakMode.CrLf);
   /// Console.WriteLine("Last two lines removed using CrLf line breaks.");
   /// </code>
-  /// This example removes the last two lines from "example.txt", identifying lines based on carriage return and line feed (CrLf).
+  ///   This example removes the last two lines from "example.txt", identifying lines based on carriage return and line feed
+  ///   (CrLf).
   /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, LineBreakMode newLine) => _RemoveLastLines(@this, count, null, newLine);
 
   /// <summary>
-  /// Removes a specified number of lines from the end of the file using the provided encoding and recognizing line breaks based on the specified mode.
+  ///   Removes a specified number of lines from the end of the file using the provided encoding and recognizing line breaks
+  ///   based on the specified mode.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> object representing the file.</param>
+  /// <param name="this">The <see cref="FileInfo" /> object representing the file.</param>
   /// <param name="count">The number of lines to remove from the end of the file.</param>
   /// <param name="encoding">The encoding to use for interpreting the file's content.</param>
   /// <param name="newLine">The line break mode to use for identifying line endings.</param>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo fileInfo = new FileInfo("example.txt");
   /// fileInfo.RemoveLastLines(2, Encoding.UTF8, LineBreakMode.CrLf);
   /// Console.WriteLine("Last two lines removed using UTF-8 encoding and CrLf line breaks.");
   /// </code>
-  /// This example removes the last two lines from "example.txt" using UTF-8 encoding and identifying lines based on carriage return and line feed (CrLf).
+  ///   This example removes the last two lines from "example.txt" using UTF-8 encoding and identifying lines based on
+  ///   carriage return and line feed (CrLf).
   /// </example>
   public static void RemoveLastLines(this FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ArgumentIsNull(encoding);
@@ -2135,22 +2280,14 @@ public static partial class FileInfoExtensions {
       return LineBreakMode.None;
 
     switch (previousCharacter) {
-      case FF:
-        return LineBreakMode.FormFeed;
-      case NEL:
-        return LineBreakMode.NextLine;
-      case LS:
-        return LineBreakMode.LineSeparator;
-      case PS:
-        return LineBreakMode.ParagraphSeparator;
-      case NL:
-        return LineBreakMode.NegativeAcknowledge;
-      case EOL:
-        return LineBreakMode.EndOfLine;
-      case ZX:
-        return LineBreakMode.Zx;
-      case NUL:
-        return LineBreakMode.Null;
+      case FF: return LineBreakMode.FormFeed;
+      case NEL: return LineBreakMode.NextLine;
+      case LS: return LineBreakMode.LineSeparator;
+      case PS: return LineBreakMode.ParagraphSeparator;
+      case NL: return LineBreakMode.NegativeAcknowledge;
+      case EOL: return LineBreakMode.EndOfLine;
+      case ZX: return LineBreakMode.Zx;
+      case NUL: return LineBreakMode.Null;
     }
 
     for (;;) {
@@ -2159,30 +2296,18 @@ public static partial class FileInfoExtensions {
         break;
 
       switch (currentCharacter) {
-        case CR when previousCharacter == LF:
-          return LineBreakMode.LfCr;
-        case CR when previousCharacter == CR:
-          return LineBreakMode.CarriageReturn;
-        case LF when previousCharacter == LF:
-          return LineBreakMode.LineFeed;
-        case LF when previousCharacter == CR:
-          return LineBreakMode.CrLf;
-        case FF:
-          return LineBreakMode.FormFeed;
-        case NEL:
-          return LineBreakMode.NextLine;
-        case LS:
-          return LineBreakMode.LineSeparator;
-        case PS:
-          return LineBreakMode.ParagraphSeparator;
-        case NL:
-          return LineBreakMode.NegativeAcknowledge;
-        case EOL:
-          return LineBreakMode.EndOfLine;
-        case ZX:
-          return LineBreakMode.Zx;
-        case NUL:
-          return LineBreakMode.Null;
+        case CR when previousCharacter == LF: return LineBreakMode.LfCr;
+        case CR when previousCharacter == CR: return LineBreakMode.CarriageReturn;
+        case LF when previousCharacter == LF: return LineBreakMode.LineFeed;
+        case LF when previousCharacter == CR: return LineBreakMode.CrLf;
+        case FF: return LineBreakMode.FormFeed;
+        case NEL: return LineBreakMode.NextLine;
+        case LS: return LineBreakMode.LineSeparator;
+        case PS: return LineBreakMode.ParagraphSeparator;
+        case NL: return LineBreakMode.NegativeAcknowledge;
+        case EOL: return LineBreakMode.EndOfLine;
+        case ZX: return LineBreakMode.Zx;
+        case NUL: return LineBreakMode.Null;
       }
 
       previousCharacter = currentCharacter;
@@ -2215,7 +2340,7 @@ public static partial class FileInfoExtensions {
   #region opening
 
   /// <summary>
-  /// Opens the specified file.
+  ///   Opens the specified file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="mode">The mode.</param>
@@ -2226,7 +2351,7 @@ public static partial class FileInfoExtensions {
   public static FileStream Open(this FileInfo @this, FileMode mode, FileAccess access, FileShare share, int bufferSize) => new(@this.FullName, mode, access, share, bufferSize);
 
   /// <summary>
-  /// Opens the specified file.
+  ///   Opens the specified file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="mode">The mode.</param>
@@ -2238,7 +2363,7 @@ public static partial class FileInfoExtensions {
   public static FileStream Open(this FileInfo @this, FileMode mode, FileAccess access, FileShare share, int bufferSize, FileOptions options) => new(@this.FullName, mode, access, share, bufferSize, options);
 
   /// <summary>
-  /// Opens the specified file.
+  ///   Opens the specified file.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <param name="mode">The mode.</param>
@@ -2252,7 +2377,7 @@ public static partial class FileInfoExtensions {
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 
   /// <summary>
-  /// Opens the specified file.
+  ///   Opens the specified file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="mode">The mode.</param>
@@ -2264,7 +2389,7 @@ public static partial class FileInfoExtensions {
   public static FileStream Open(this FileInfo @this, FileMode mode, FileSystemRights rights, FileShare share, int bufferSize, FileOptions options) => new(@this.FullName, mode, rights, share, bufferSize, options);
 
   /// <summary>
-  /// Opens the specified file.
+  ///   Opens the specified file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="mode">The mode.</param>
@@ -2283,21 +2408,21 @@ public static partial class FileInfoExtensions {
   #region get part of filename
 
   /// <summary>
-  /// Gets the filename without extension.
+  ///   Gets the filename without extension.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <returns>The filename without the extension.</returns>
   public static string GetFilenameWithoutExtension(this FileInfo @this) => Path.GetFileNameWithoutExtension(@this.FullName);
 
   /// <summary>
-  /// Gets the filename.
+  ///   Gets the filename.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <returns>The filename.</returns>
   public static string GetFilename(this FileInfo @this) => Path.GetFileName(@this.FullName);
 
   /// <summary>
-  /// Creates an instance with a new extension.
+  ///   Creates an instance with a new extension.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="extension">The extension.</param>
@@ -2307,7 +2432,7 @@ public static partial class FileInfoExtensions {
   #endregion
 
   /// <summary>
-  /// Tries to delete the given file.
+  ///   Tries to delete the given file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
@@ -2327,7 +2452,7 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Tries to create a new file.
+  ///   Tries to create a new file.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="attributes">The attributes.</param>
@@ -2346,24 +2471,22 @@ public static partial class FileInfoExtensions {
       @this.Attributes = attributes;
       return true;
     } catch (UnauthorizedAccessException) {
-
       // in case multiple threads try to create the same file, this gets fired
       return false;
     } catch (IOException) {
-
       // file already exists
       return false;
     }
   }
 
   /// <summary>
-  /// Changes the last write time of the given file to the current date/time.
+  ///   Changes the last write time of the given file to the current date/time.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc = DateTime.UtcNow;
 
   /// <summary>
-  /// Tries to change the last write time of the given file to the current date/time.
+  ///   Tries to change the last write time of the given file to the current date/time.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
@@ -2377,7 +2500,7 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Tries to change the last write time of the given file to the current date/time.
+  ///   Tries to change the last write time of the given file to the current date/time.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="waitTime">The wait time.</param>
@@ -2395,7 +2518,7 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Checks whether the given file does not exist.
+  ///   Checks whether the given file does not exist.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <returns><c>true</c> if it does not exist; otherwise, <c>false</c>.</returns>
@@ -2409,7 +2532,7 @@ public static partial class FileInfoExtensions {
   #endregion
 
   /// <summary>
-  /// Converts a given filename pattern into a regular expression.
+  ///   Converts a given filename pattern into a regular expression.
   /// </summary>
   /// <param name="pattern">The pattern.</param>
   /// <returns>The regex.</returns>
@@ -2418,8 +2541,11 @@ public static partial class FileInfoExtensions {
 
     pattern = pattern.Trim();
 
-    if (pattern.Length == 0) throw new ArgumentException("Pattern is empty.", nameof(pattern));
-    if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern)) throw new ArgumentException("Patterns contains illegal characters.", nameof(pattern));
+    if (pattern.Length == 0)
+      throw new ArgumentException("Pattern is empty.", nameof(pattern));
+    
+    if (_ILEGAL_CHARACTERS_REGEX.IsMatch(pattern))
+      throw new ArgumentException("Patterns contains illegal characters.", nameof(pattern));
 
     const string nonDotCharacters = "[^.]*";
 
@@ -2450,7 +2576,7 @@ public static partial class FileInfoExtensions {
 #if SUPPORTS_STREAM_ASYNC
 
   /// <summary>
-  /// Compares two files for content equality.
+  ///   Compares two files for content equality.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
   /// <param name="other">The other FileInfo.</param>
@@ -2459,7 +2585,7 @@ public static partial class FileInfoExtensions {
   public static bool IsContentEqualTo(this FileInfo @this, FileInfo other, int bufferSize = 65536) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(other);
-    
+
     if (@this.FullName == other.FullName)
       return true;
 
@@ -2473,7 +2599,6 @@ public static partial class FileInfoExtensions {
     using FileStream sourceStream = new(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
     using FileStream comparisonStream = new(other.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
     {
-
       // NOTE: we're going to compare buffers (A, A') while reading the next blocks (B, B') in already
       var sourceBufferA = new byte[bufferSize];
       var comparisonBufferA = new byte[bufferSize];
@@ -2525,7 +2650,7 @@ public static partial class FileInfoExtensions {
       comparisonBytes = comparisonAsync.Result;
       return sourceBytes == comparisonBytes && sourceBufferA.SequenceEqual(0, comparisonBufferA, 0, sourceBytes);
     }
-    
+
     static IEnumerable<long> BlockIndexShuffler(long blockCount) {
       var lowerBlockIndex = 0;
       var upperBlockIndex = blockCount - 1;
@@ -2538,46 +2663,50 @@ public static partial class FileInfoExtensions {
       // if odd number of elements, return the last element (which is in the middle)
       if ((blockCount & 1) == 1)
         yield return lowerBlockIndex;
-
     }
-    
   }
 
 #endif
 
   /// <summary>
-  /// Replaces the contents of the file with that from another file.
+  ///   Replaces the contents of the file with that from another file.
   /// </summary>
-  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="this">This <see cref="FileInfo" /></param>
   /// <param name="other">The file that should replace this file</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other)
     => ReplaceWith(@this, other, null, false);
 
   /// <summary>
-  /// Replaces the contents of the file with that from another file.
+  ///   Replaces the contents of the file with that from another file.
   /// </summary>
-  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="this">This <see cref="FileInfo" /></param>
   /// <param name="other">The file that should replace this file</param>
-  /// <param name="ignoreMetaDataErrors"><see langword="true"/> when metadata errors should be ignored; otherwise, <see langword="false"/>.</param>
+  /// <param name="ignoreMetaDataErrors">
+  ///   <see langword="true" /> when metadata errors should be ignored; otherwise,
+  ///   <see langword="false" />.
+  /// </param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, bool ignoreMetaDataErrors)
     => ReplaceWith(@this, other, null, ignoreMetaDataErrors);
 
   /// <summary>
-  /// Replaces the contents of the file with that from another file.
+  ///   Replaces the contents of the file with that from another file.
   /// </summary>
-  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="this">This <see cref="FileInfo" /></param>
   /// <param name="other">The file that should replace this file</param>
   /// <param name="backupFile">The file that gets a backup from this file; optional</param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile)
     => ReplaceWith(@this, other, backupFile, false);
 
   /// <summary>
-  /// Replaces the contents of the file with that from another file.
+  ///   Replaces the contents of the file with that from another file.
   /// </summary>
-  /// <param name="this">This <see cref="FileInfo"/></param>
+  /// <param name="this">This <see cref="FileInfo" /></param>
   /// <param name="other">The file that should replace this file</param>
   /// <param name="backupFile">The file that gets a backup from this file; optional</param>
-  /// <param name="ignoreMetaDataErrors"><see langword="true"/> when metadata errors should be ignored; otherwise, <see langword="false"/>.</param>
+  /// <param name="ignoreMetaDataErrors">
+  ///   <see langword="true" /> when metadata errors should be ignored; otherwise,
+  ///   <see langword="false" />.
+  /// </param>
   public static void ReplaceWith(this FileInfo @this, FileInfo other, FileInfo backupFile, bool ignoreMetaDataErrors) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(other);
@@ -2618,13 +2747,13 @@ public static partial class FileInfoExtensions {
   }
 
   /// <summary>
-  /// Initiates a work-in-progress operation on a file, optionally copying its contents to a temporary working file.
+  ///   Initiates a work-in-progress operation on a file, optionally copying its contents to a temporary working file.
   /// </summary>
   /// <param name="this">The source file to start the operation on.</param>
   /// <param name="copyContents">Specifies whether the contents of the source file should be copied to the temporary file.</param>
-  /// <returns>An <see cref="IFileInProgress"/> instance for managing the work-in-progress file.</returns>
+  /// <returns>An <see cref="IFileInProgress" /> instance for managing the work-in-progress file.</returns>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo originalFile = new FileInfo("path/to/file.txt");
   /// using (var workInProgress = originalFile.StartWorkInProgress(copyContents: true))
   /// {
@@ -2636,8 +2765,8 @@ public static partial class FileInfoExtensions {
   /// }
   /// // Changes are automatically saved unless canceled.
   /// </code>
-  /// This example demonstrates starting a work-in-progress operation on a file, 
-  /// modifying its content, and optionally canceling the changes.
+  ///   This example demonstrates starting a work-in-progress operation on a file,
+  ///   modifying its content, and optionally canceling the changes.
   /// </example>
   public static IFileInProgress StartWorkInProgress(this FileInfo @this, bool copyContents = false) {
     Against.ThisIsNull(@this);
@@ -2648,25 +2777,26 @@ public static partial class FileInfoExtensions {
 
     return result;
   }
-  
+
   /// <summary>
-  /// Determines whether the current file is a text file by checking its content.
+  ///   Determines whether the current file is a text file by checking its content.
   /// </summary>
-  /// <param name="this">The <see cref="FileInfo"/> instance representing the file to check.</param>
-  /// <returns><see langword="true"/> if the file is a text file; otherwise, <see langword="false"/>.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="FileInfo" /> instance representing the file to check.</param>
+  /// <returns><see langword="true" /> if the file is a text file; otherwise, <see langword="false" />.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="IOException">Thrown if an I/O error occurs while opening or reading the file.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// FileInfo file = new FileInfo("example.txt");
   /// bool isTextFile = file.IsTextFile();
   /// Console.WriteLine($"Is text file: {isTextFile}");
   /// </code>
-  /// This example demonstrates how to check if a file is a text file.
+  ///   This example demonstrates how to check if a file is a text file.
   /// </example>
   /// <remarks>
-  /// This method attempts to determine if a file is a text file by reading a portion of its contents and checking for non-text characters.
-  /// It is not guaranteed to be foolproof and may yield false positives or negatives for certain types of files.
+  ///   This method attempts to determine if a file is a text file by reading a portion of its contents and checking for
+  ///   non-text characters.
+  ///   It is not guaranteed to be foolproof and may yield false positives or negatives for certain types of files.
   /// </remarks>
   public static unsafe bool IsTextFile(this FileInfo @this) {
     Against.ThisIsNull(@this);
@@ -2681,13 +2811,11 @@ public static partial class FileInfoExtensions {
       size = fileStream.Read(new Span<byte>(buffer, BUFFER_SIZE));
 
     switch (size) {
-      case 0:
-        return false;
-      case 1:
-        return !((char)buffer[0]).IsControlButNoWhiteSpace();
-      case >= 2 when 
-        (*(ushort*)buffer == 0xfffe)    // UTF-16 LE
-        || (*(ushort*)buffer == 0xfeff) // UTF-16 BE
+      case 0: return false;
+      case 1: return !((char)buffer[0]).IsControlButNoWhiteSpace();
+      case >= 2 when
+        *(ushort*)buffer == 0xfffe // UTF-16 LE
+        || *(ushort*)buffer == 0xfeff // UTF-16 BE
         :
         return true;
       case 2:
@@ -2696,8 +2824,8 @@ public static partial class FileInfoExtensions {
           || ((char)buffer[1]).IsControlButNoWhiteSpace()
         );
       case >= 3 when
-        (buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76)     // UTF-7
-        || (buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)  // UTF-8
+        (buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76) // UTF-7
+        || (buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf) // UTF-8
         :
         return true;
       case 3:
@@ -2706,9 +2834,9 @@ public static partial class FileInfoExtensions {
           || ((char)buffer[1]).IsControlButNoWhiteSpace()
           || ((char)buffer[2]).IsControlButNoWhiteSpace()
         );
-      case >= 4 when 
-        (*(uint*)buffer == 0xfffe0000)    // UTF-32 LE
-        || (*(uint*)buffer == 0x0000feff) // UTF-32 BE
+      case >= 4 when
+        *(uint*)buffer == 0xfffe0000 // UTF-32 LE
+        || *(uint*)buffer == 0x0000feff // UTF-32 BE
         :
         return true;
       default:
@@ -2719,5 +2847,4 @@ public static partial class FileInfoExtensions {
         return true;
     }
   }
-
 }

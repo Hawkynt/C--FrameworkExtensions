@@ -1,22 +1,20 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Diagnostics;
@@ -29,7 +27,6 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic;
 
 public static partial class HashSetExtensions {
-
   #region nested types
 
   public enum ChangeType {
@@ -44,7 +41,7 @@ public static partial class HashSetExtensions {
   }
 
   /// <summary>
-  /// Changeset between two hashsets.
+  ///   Changeset between two hashsets.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   private sealed class ChangeSet<TItem>(ChangeType type, TItem item) : IChangeSet<TItem> {
@@ -55,7 +52,7 @@ public static partial class HashSetExtensions {
   #endregion
 
   /// <summary>
-  /// Compares two hashes against each other.
+  ///   Compares two hashes against each other.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This HashSet.</param>
@@ -69,7 +66,7 @@ public static partial class HashSetExtensions {
     Against.ArgumentIsNull(other);
 
     return Invoke(@this, other);
-    
+
     static IEnumerable<IChangeSet<TItem>> Invoke(HashSet<TItem> @this, HashSet<TItem> other) {
       var keys = @this.Concat(other).Distinct(@this.Comparer);
       foreach (var key in keys) {
@@ -89,7 +86,7 @@ public static partial class HashSetExtensions {
   }
 
   /// <summary>
-  /// Determines whether the specified HashSet does not contain the given item.
+  ///   Determines whether the specified HashSet does not contain the given item.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This HashSet.</param>
@@ -101,12 +98,12 @@ public static partial class HashSetExtensions {
   [DebuggerStepThrough]
   public static bool ContainsNot<TItem>(this HashSet<TItem> @this, TItem item) {
     Against.ThisIsNull(@this);
-    
+
     return !@this.Contains(item);
   }
 
   /// <summary>
-  /// Tries to add a value.
+  ///   Tries to add a value.
   /// </summary>
   /// <typeparam name="TItem">The type of the values.</typeparam>
   /// <param name="this">This HashSet.</param>
@@ -121,7 +118,7 @@ public static partial class HashSetExtensions {
   }
 
   /// <summary>
-  /// Tries to remove the given item.
+  ///   Tries to remove the given item.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This HashSet.</param>
@@ -133,8 +130,7 @@ public static partial class HashSetExtensions {
   [DebuggerStepThrough]
   public static bool TryRemove<TItem>(this HashSet<TItem> @this, TItem item) {
     Against.ThisIsNull(@this);
-    
+
     return @this.Remove(item);
   }
-  
 }

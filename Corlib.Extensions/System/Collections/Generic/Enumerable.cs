@@ -7,19 +7,25 @@
 // given in the LICENSE file.
 // 
 // Hawkynt's .NET Framework extensions is distributed in the hope that
-// it will be useful, but WITHOUT ANY WARRANTY
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
+
+#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Guard;
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-using System.Diagnostics.CodeAnalysis;
-#endif
-
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
@@ -623,7 +629,7 @@ public static partial class EnumerableExtensions {
   public static Tuple<IEnumerable<TItem>, IEnumerable<TItem>> Split<TItem>(this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
-      
+
     var groups = @this.GroupBy(predicate).ToArray();
     var result = Tuple.Create(
       groups.Where(i => i.Key).SelectMany(i => i),
@@ -755,7 +761,7 @@ public static partial class EnumerableExtensions {
 
 #if SUPPORTS_ASYNC
   /// <summary>
-  /// Executes a callback for each item in parallel.
+  ///   Executes a callback for each item in parallel.
   /// </summary>
   /// <typeparam name="TIn">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
@@ -767,12 +773,12 @@ public static partial class EnumerableExtensions {
   public static void ParallelForEach<TIn>(this IEnumerable<TIn> @this, Action<TIn> action) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
-      
+
     Parallel.ForEach(@this, action);
   }
 
   /// <summary>
-  /// Executes a callback for each item in parallel.
+  ///   Executes a callback for each item in parallel.
   /// </summary>
   /// <typeparam name="TIn">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
@@ -1755,7 +1761,7 @@ public static partial class EnumerableExtensions {
   /// <typeparam name="TItem">The type of the items in the IEnumerable (has to be IDisposable)</typeparam>
   /// <param name="this">This IEnumerable</param>
   /// <returns>An <see cref="IDisposableCollection{T}" /> containing the elements of this IEnumerable</returns>
-  public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable 
+  public static IDisposableCollection<TItem> WrapAsDisposableCollection<TItem>(this IEnumerable<TItem> @this) where TItem : IDisposable
     => new DisposableCollection<TItem>(@this);
 
   public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TItem, TKey, TValue>(
@@ -1777,7 +1783,7 @@ public static partial class EnumerableExtensions {
 
 #if SUPPORTS_TASK_RUN
   /// <summary>
-  /// Iterates through the given enumeration in a separate thread and executes an action for every item
+  ///   Iterates through the given enumeration in a separate thread and executes an action for every item
   /// </summary>
   /// <typeparam name="TItem">The type of the items in the IEnumerable</typeparam>
   /// <param name="this">This IEnumerable</param>
@@ -1786,11 +1792,13 @@ public static partial class EnumerableExtensions {
   public static async Task DoForEveryItemAsync<TItem>(this IEnumerable<TItem> @this, Action<TItem> action) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
-  
-    await Task.Run(() => {
-      foreach (var item in @this)
-        action.Invoke(item);
-    });
+
+    await Task.Run(
+      () => {
+        foreach (var item in @this)
+          action.Invoke(item);
+      }
+    );
   }
 #endif
 
@@ -2106,7 +2114,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool IsNoSingle<TItem>(this IEnumerable<TItem> @this)
     => !IsSingle(@this);
@@ -2150,7 +2158,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 # endif
   public static bool IsNoMultiple<TItem>(this IEnumerable<TItem> @this)
     => !IsMultiple(@this);
@@ -2191,7 +2199,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasSingle(@this, value);
@@ -2232,7 +2240,7 @@ public static partial class EnumerableExtensions {
   ///   <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, TItem value)
     => !HasMultiple(@this, value);
@@ -2274,7 +2282,7 @@ public static partial class EnumerableExtensions {
   ///   ; otherwise, <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool HasNoSingle<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasSingle(@this, predicate);
@@ -2315,7 +2323,7 @@ public static partial class EnumerableExtensions {
   ///   otherwise, <see langword="false" />.
   /// </returns>
 #if SUPPORTS_INLINING
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
   public static bool HasNoMultiple<TItem>(this IEnumerable<TItem> @this, Predicate<TItem> predicate)
     => !HasMultiple(@this, predicate);

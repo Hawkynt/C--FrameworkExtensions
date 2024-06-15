@@ -1,50 +1,46 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-
 using Guard;
 
 namespace System.Net;
 
 /// <summary>
-/// This is the managed class for the routines in IPHLPAPI
+///   This is the managed class for the routines in IPHLPAPI
 /// </summary>
 public static class IPHelper {
-
   #region nested types
 
   /// <summary>
-  /// This class contains all native declarations.
+  ///   This class contains all native declarations.
   /// </summary>
   private static class NativeMethods {
-
     #region consts
+
     // ReSharper disable UnusedMember.Local
 
     /// <summary>
-    /// MIB TCP state enumeration, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366909(v=vs.85).aspx
+    ///   MIB TCP state enumeration, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366909(v=vs.85).aspx
     /// </summary>
     public enum MibTcpState {
       Closed = 1,
@@ -62,7 +58,7 @@ public static class IPHelper {
     }
 
     /// <summary>
-    /// Adress family, see socket.h
+    ///   Adress family, see socket.h
     /// </summary>
     public enum AfInet {
       Unspecified = 0,
@@ -76,7 +72,7 @@ public static class IPHelper {
     }
 
     /// <summary>
-    /// UDP table classes, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366388(v=vs.85).aspx
+    ///   UDP table classes, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366388(v=vs.85).aspx
     /// </summary>
     public enum UdpTableClass {
       Basic,
@@ -85,7 +81,7 @@ public static class IPHelper {
     }
 
     /// <summary>
-    /// TCP table classes, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366386(v=vs.85).aspx
+    ///   TCP table classes, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366386(v=vs.85).aspx
     /// </summary>
     public enum TcpTableClass {
       BasicListener,
@@ -100,7 +96,7 @@ public static class IPHelper {
     }
 
     /// <summary>
-    /// Windows Error Codes, see http://msdn.microsoft.com/en-us/library/windows/desktop/ms681382(v=vs.85).aspx
+    ///   Windows Error Codes, see http://msdn.microsoft.com/en-us/library/windows/desktop/ms681382(v=vs.85).aspx
     /// </summary>
     public enum Win32ApiError {
       Success = 0,
@@ -112,7 +108,7 @@ public static class IPHelper {
 
     #endregion
 
-    #region structs, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366889(v=vs.85).aspx
+    #region structs, see http: //msdn.microsoft.com/en-us/library/windows/desktop/aa366889(v=vs.85).aspx
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MIB_UDPROW {
@@ -148,7 +144,7 @@ public static class IPHelper {
 
     #endregion
 
-    #region native calls, see http://msdn.microsoft.com/en-us/library/windows/desktop/aa366071(v=vs.85).aspx
+    #region native calls, see http: //msdn.microsoft.com/en-us/library/windows/desktop/aa366071(v=vs.85).aspx
 
     [DllImport("iphlpapi.dll", SetLastError = true, EntryPoint = "GetUdpTable")]
     public static extern Win32ApiError GetUdpTable(nint pUdpTable, ref uint pdwSize, bool bOrder);
@@ -163,12 +159,11 @@ public static class IPHelper {
     public static extern Win32ApiError GetExtendedTcpTable(nint pTcpTable, ref uint pdwSize, bool bOrder, AfInet ulAf, TcpTableClass tcpTableClass, uint reserved = 0);
 
     #endregion
-
   } // end NativeMethods
 
 
   /// <summary>
-  /// The state of a connection.
+  ///   The state of a connection.
   /// </summary>
   public enum ConnectionState {
     Unknown = 0,
@@ -187,7 +182,7 @@ public static class IPHelper {
   }
 
   /// <summary>
-  /// The protocol used.
+  ///   The protocol used.
   /// </summary>
   public enum ConnectionProtocol {
     Unknown,
@@ -196,27 +191,31 @@ public static class IPHelper {
   }
 
   /// <summary>
-  /// A connection.
+  ///   A connection.
   /// </summary>
   public sealed class Connection {
     /// <summary>
-    /// Gets the local endpoint, ie. adress and port.
+    ///   Gets the local endpoint, ie. adress and port.
     /// </summary>
     public IPEndPoint Local { get; }
+
     /// <summary>
-    /// Gets the remote endpoint, ie. adress and port.
+    ///   Gets the remote endpoint, ie. adress and port.
     /// </summary>
     public IPEndPoint Remote { get; }
+
     /// <summary>
-    /// Gets the connection state.
+    ///   Gets the connection state.
     /// </summary>
     public ConnectionState State { get; }
+
     /// <summary>
-    /// Gets the connection protocol.
+    ///   Gets the connection protocol.
     /// </summary>
     public ConnectionProtocol Protocol { get; }
+
     /// <summary>
-    /// Gets the source process, if known.
+    ///   Gets the source process, if known.
     /// </summary>
     public Process SourceProcess { get; }
 
@@ -227,8 +226,7 @@ public static class IPHelper {
         new(remoteAdress, remotePort),
         state,
         sourceProcess
-      ) {
-    }
+      ) { }
 
     internal Connection(ConnectionProtocol protocol, IPEndPoint local, IPEndPoint remote, ConnectionState state, Process sourceProcess) {
       this.State = state;
@@ -250,14 +248,14 @@ public static class IPHelper {
   #endregion
 
   /// <summary>
-  /// Gets the active connections.
+  ///   Gets the active connections.
   /// </summary>
   /// <returns>An array of all active connections.</returns>
   public static Connection[] GetActiveConnections() => GetTcpTable().Concat(GetUdpTable()).ToArray();
 
   /// <summary>
-  /// Gets the TCP table.
-  /// Note: Tries the new method first and if this is unsupported on your system, uses the old one.
+  ///   Gets the TCP table.
+  ///   Note: Tries the new method first and if this is unsupported on your system, uses the old one.
   /// </summary>
   /// <returns>An array with all active TCP connections.</returns>
   public static Connection[] GetTcpTable() {
@@ -271,8 +269,8 @@ public static class IPHelper {
   }
 
   /// <summary>
-  /// Gets the UDP table.
-  /// Note: Tries the new method first and if this is unsupported on your system, uses the old one.
+  ///   Gets the UDP table.
+  ///   Note: Tries the new method first and if this is unsupported on your system, uses the old one.
   /// </summary>
   /// <returns>An array with all active UDP connections.</returns>
   public static Connection[] GetUdpTable() {
@@ -286,10 +284,10 @@ public static class IPHelper {
   }
 
   /// <summary>
-  /// Gets the TCP table using the pre-Vista method and without process id's.
+  ///   Gets the TCP table using the pre-Vista method and without process id's.
   /// </summary>
   /// <returns>An array with all active TCP connections.</returns>
-  private static Connection[] _GetTcpTableOld() 
+  private static Connection[] _GetTcpTableOld()
     => _GetTable<NativeMethods.MIB_TCPROW>(
       (pointer, size) => {
         var status = NativeMethods.GetTcpTable(pointer, ref size, false);
@@ -299,10 +297,10 @@ public static class IPHelper {
     );
 
   /// <summary>
-  /// Gets the UDP table using the pre-Vista method and without process id's.
+  ///   Gets the UDP table using the pre-Vista method and without process id's.
   /// </summary>
   /// <returns>An array with all active UDP connections.</returns>
-  private static Connection[] _GetUdpTableOld() 
+  private static Connection[] _GetUdpTableOld()
     => _GetTable<NativeMethods.MIB_UDPROW>(
       (pointer, size) => {
         var status = NativeMethods.GetUdpTable(pointer, ref size, false);
@@ -312,10 +310,10 @@ public static class IPHelper {
     );
 
   /// <summary>
-  /// Gets the TCP table using the Vista+ method and with process id's.
+  ///   Gets the TCP table using the Vista+ method and with process id's.
   /// </summary>
   /// <returns>An array with all active TCP connections.</returns>
-  private static Connection[] _GetTcpTableNew() 
+  private static Connection[] _GetTcpTableNew()
     => _GetTable<NativeMethods.MIB_TCPROW_OWNER_PID>(
       (pointer, size) => {
         var status = NativeMethods.GetExtendedTcpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.TcpTableClass.OwnerPidAll);
@@ -328,14 +326,16 @@ public static class IPHelper {
         } catch {
           process = null;
         }
+
         return new(ConnectionProtocol.Tcp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), new(row.dwRemoteAddr), _ConvertPort(row.dwRemotePort), (ConnectionState)row.dwState, process);
-      });
+      }
+    );
 
   /// <summary>
-  /// Gets the UDP table using the Vista+ method and with process id's.
+  ///   Gets the UDP table using the Vista+ method and with process id's.
   /// </summary>
   /// <returns>An array with all active UDP connections.</returns>
-  private static Connection[] _GetUdpTableNew() 
+  private static Connection[] _GetUdpTableNew()
     => _GetTable<NativeMethods.MIB_UDPROW_OWNER_PID>(
       (pointer, size) => {
         var status = NativeMethods.GetExtendedUdpTable(pointer, ref size, false, NativeMethods.AfInet.Inet, NativeMethods.UdpTableClass.OwnerPid);
@@ -348,12 +348,14 @@ public static class IPHelper {
         } catch {
           process = null;
         }
+
         return new(ConnectionProtocol.Udp, new(row.dwLocalAddr), _ConvertPort(row.dwLocalPort), IPAddress.None, 0, ConnectionState.Unknown, process);
-      });
+      }
+    );
 
   /// <summary>
-  /// Gets a connection table.
-  /// Note: Asks for space requirements first, allocates buffer, calls, casts, processes, deallocates, returns.
+  ///   Gets a connection table.
+  ///   Note: Asks for space requirements first, allocates buffer, calls, casts, processes, deallocates, returns.
   /// </summary>
   /// <typeparam name="TRowtype">The type of the rows.</typeparam>
   /// <param name="call">The call to get the table.</param>
@@ -372,7 +374,6 @@ public static class IPHelper {
       return Utilities.Array.Empty<Connection>();
 
     while (status == NativeMethods.Win32ApiError.InsufficientBuffer) {
-
       // allocate buffer and make sure it is de-allocated in every case
       var buffer = IntPtr.Zero;
       try {
@@ -381,7 +382,8 @@ public static class IPHelper {
         size = tuple.Size;
         status = tuple.Status;
 
-        if (status != NativeMethods.Win32ApiError.Success) continue;
+        if (status != NativeMethods.Win32ApiError.Success)
+          continue;
 
         // the first 32-Bits of the buffer are always the number of table entries in each table type
         var count = Marshal.ReadInt32(buffer);
@@ -402,12 +404,10 @@ public static class IPHelper {
 
         return result;
       } finally {
-
         // free buffer if allocated
         if (buffer != IntPtr.Zero)
           Marshal.FreeHGlobal(buffer);
       }
-
     } // retry as long as the buffer is too small
 
     // we failed somehow in all cases when we land here
@@ -415,7 +415,7 @@ public static class IPHelper {
   }
 
   /// <summary>
-  /// Convert the strangely Motorola port number DWord. (Swaps low and high bytes)
+  ///   Convert the strangely Motorola port number DWord. (Swaps low and high bytes)
   /// </summary>
   /// <param name="port">The port dword.</param>
   /// <returns>The real port number</returns>

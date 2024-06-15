@@ -1,23 +1,22 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
+
 #if !NET5_0_OR_GREATER && !NETSTANDARD && !NETCOREAPP
 // as long as fake db is defined, this will not execute any statement on the sql server, instead it will print statement to the console and do not use sql parameters, so values can be seen
 #undef FAKE_DB
@@ -38,12 +37,11 @@ using System.Text.RegularExpressions;
 namespace System.Data.SqlClient;
 
 /// <summary>
-/// Extensions for the sql command.
+///   Extensions for the sql command.
 /// </summary>
 public static partial class CommandExtensions {
-  
   /// <summary>
-  /// Executes something that is not a query on the given command.
+  ///   Executes something that is not a query on the given command.
   /// </summary>
   /// <param name="This">This SqlCommand.</param>
   /// <param name="commandText">The command text.</param>
@@ -61,7 +59,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Executes a query and returns the first row and the first columns' value.
+  ///   Executes a query and returns the first row and the first columns' value.
   /// </summary>
   /// <param name="This">This SqlCommand.</param>
   /// <param name="commandText">The command text.</param>
@@ -79,7 +77,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Executes an sql statement and returns a reader to the ResultSet.
+  ///   Executes an sql statement and returns a reader to the ResultSet.
   /// </summary>
   /// <param name="This">This SqlCommand.</param>
   /// <param name="commandText">The command text.</param>
@@ -96,7 +94,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Executes an update.
+  ///   Executes an update.
   /// </summary>
   /// <param name="this">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -104,7 +102,7 @@ public static partial class CommandExtensions {
   /// <param name="whereStatement">The where statement; if any.</param>
   /// <param name="dontUseParameters">if set to <c>true</c> doesn't use parameters.</param>
   /// <returns>
-  /// The number of updated rows.
+  ///   The number of updated rows.
   /// </returns>
   public static int ExecuteUpdate(this SqlCommand @this, string tableName, IEnumerable<KeyValuePair<string, object>> values, string whereStatement = null, bool dontUseParameters = false) {
     Debug.Assert(@this != null);
@@ -131,6 +129,7 @@ public static partial class CommandExtensions {
         sqlCommand.Append(kvp.ColumnName.MsSqlIdentifierEscape() + " = @val" + paramIndex);
         @this.Parameters.AddWithValue("@val" + paramIndex, kvp.Value ?? DBNull.Value);
       }
+
       paramIndex++;
     }
 
@@ -147,7 +146,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Executes a single insert statement.
+  ///   Executes a single insert statement.
   /// </summary>
   /// <param name="this">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -160,7 +159,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Executes a single insert statement.
+  ///   Executes a single insert statement.
   /// </summary>
   /// <param name="this">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -175,13 +174,15 @@ public static partial class CommandExtensions {
     StringBuilder sqlCommandTextWithoutParameters = new();
     _AppendToBuilders($"INSERT INTO {tableName.MsSqlIdentifierEscape()}", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
 
-    var realValues = values == null ? null : (
-      from i in values
+    var realValues = values == null
+      ? null
+      : (
+        from i in values
       select new {
         ColumnName = i.Key,
         Value = _ConvertDataValue(i.Value)
       }
-    ).ToArray();
+      ).ToArray();
 
     // if there are any columns to insert
     if (realValues != null && realValues.Any()) {
@@ -199,28 +200,37 @@ public static partial class CommandExtensions {
 #endif
 
 #if !DO_NOT_USE_PARAMETERS
-      _AppendToBuilders(string.Join(", ", realValues.Select(i => {
-        var name = "@" + _ConvertParameterName(i.ColumnName);
+      _AppendToBuilders(
+        string.Join(
+          ", ",
+          realValues
+            .Select(
+              i => {
+                var name = "@" + _ConvertParameterName(i.ColumnName);
 
-        // find a name for the param if it already exists using a counter postfix
-        var index = 1;
-        while (@this.Parameters.Contains(name + (index < 2 ? string.Empty : index.ToString())))
-          ++index;
+                // find a name for the param if it already exists using a counter postfix
+                var index = 1;
+                while (@this.Parameters.Contains(name + (index < 2 ? string.Empty : index.ToString())))
+                  ++index;
 
-        // add value and mark "allow null" when the value is null
-        @this.Parameters.AddWithValue(name, i.Value ?? DBNull.Value);
-        if (i.Value == null)
-          @this.Parameters[name].IsNullable = true;
+                // add value and mark "allow null" when the value is null
+                @this.Parameters.AddWithValue(name, i.Value ?? DBNull.Value);
+                if (i.Value == null)
+                  @this.Parameters[name].IsNullable = true;
 
-        return name;
-      }).ToArray()), sqlCommandTextWithParameters);
+                return name;
+              }
+            )
+            .ToArray()
+        ),
+        sqlCommandTextWithParameters
+      );
 #endif
       _AppendToBuilders(")", sqlCommandTextWithParameters, sqlCommandTextWithoutParameters);
     }
 
     // no identity column, return number of rows affected, usually 1
     if (!tableContainsId) {
-
 #if DO_NOT_USE_PARAMETERS
       var numberOfAffectedRows = This.ExecuteNonQuery(sqlCommandNoParams.ToString());
 #else
@@ -255,7 +265,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Gets the records.
+  ///   Gets the records.
   /// </summary>
   /// <param name="This">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -267,7 +277,7 @@ public static partial class CommandExtensions {
     sqlCommand += " WHERE " + whereStatement;
 
     using var results = This.ExecuteReader(sqlCommand);
-    
+
     foreach (IDataRecord record in results) {
       var result = (
         from i in Enumerable.Range(0, results.FieldCount)
@@ -280,16 +290,15 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Converts parameter names.
+  ///   Converts parameter names.
   /// </summary>
   /// <param name="name">The name.</param>
   /// <returns></returns>
-  private static string _ConvertParameterName(string name) 
-    => new Regex("[^a-z0-9]+", RegexOptions.IgnoreCase).Replace(name, string.Empty)
-    ;
+  private static string _ConvertParameterName(string name)
+    => new Regex("[^a-z0-9]+", RegexOptions.IgnoreCase).Replace(name, string.Empty);
 
   /// <summary>
-  /// Converts all enum values to longs, all bools to 1/0
+  ///   Converts all enum values to longs, all bools to 1/0
   /// </summary>
   /// <param name="value">The value.</param>
   /// <returns>The converted value</returns>
@@ -298,7 +307,6 @@ public static partial class CommandExtensions {
       return null;
 
     if (!value.GetType().IsEnum) {
-
       // convert bools to ints
       if (value is bool b)
         return b ? 1 : 0;
@@ -316,7 +324,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Checks if the given column in a table exists.
+  ///   Checks if the given column in a table exists.
   /// </summary>
   /// <param name="This">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -344,7 +352,7 @@ public static partial class CommandExtensions {
   }
 
   /// <summary>
-  /// Adds the column to an existing table.
+  ///   Adds the column to an existing table.
   /// </summary>
   /// <param name="this">This SqlCommand.</param>
   /// <param name="tableName">Name of the table.</param>
@@ -352,11 +360,25 @@ public static partial class CommandExtensions {
   /// <param name="dbType">Type of the column.</param>
   /// <param name="isNotNull">if set to <c>true</c> this column will not allow NULL-values.</param>
   /// <param name="defaultValue">The default value; if any.</param>
-  /// <param name="useDefaultValueForExistingRecords">if set to <c>true</c> the default value will be immediately applied to existing rows.</param>
+  /// <param name="useDefaultValueForExistingRecords">
+  ///   if set to <c>true</c> the default value will be immediately applied to
+  ///   existing rows.
+  /// </param>
   /// <param name="charLength">Length of the char/varchar/text column, 0=max, &lt;0 means use database default.</param>
   /// <param name="totalDigits">The total digits in a decimal datatype.</param>
   /// <param name="decimalDigits">The decimal digits in a decimal datatype.</param>
-  public static void AddColumnToTable(this SqlCommand @this, string tableName, string columnName, SqlDbType dbType, bool isNotNull = false, object defaultValue = null, bool useDefaultValueForExistingRecords = false, int charLength = 0, uint totalDigits = 0, uint decimalDigits = 0) {
+  public static void AddColumnToTable(
+    this SqlCommand @this,
+    string tableName,
+    string columnName,
+    SqlDbType dbType,
+    bool isNotNull = false,
+    object defaultValue = null,
+    bool useDefaultValueForExistingRecords = false,
+    int charLength = 0,
+    uint totalDigits = 0,
+    uint decimalDigits = 0
+  ) {
     Debug.Assert(@this != null);
     Debug.Assert(!tableName.IsNullOrWhiteSpace());
     Debug.Assert(!columnName.IsNullOrWhiteSpace());
@@ -371,15 +393,13 @@ public static partial class CommandExtensions {
     sql.Append(dbType.ToString());
 
     if (charLength >= 0 && dbType is SqlDbType.Char or SqlDbType.VarChar or SqlDbType.NChar or SqlDbType.NVarChar) {
-
       if (charLength == 0) {
         var version = @this.Connection.ServerVersion?.Split('.');
 
         // HACK: work-around for sql server <2005(<v9.0.0), limit string columns to 1024 chars
         sql.Append(version == null || version.Length < 1 || int.Parse(version[0]) < 9 ? "(1024)" : "(MAX)");
-      } else {
+      } else
         sql.Append("(" + charLength + ")");
-      }
     } else if ((decimalDigits != 0 || totalDigits != 0) && dbType == SqlDbType.Decimal)
       sql.Append("(" + totalDigits + "," + decimalDigits + ")");
 
