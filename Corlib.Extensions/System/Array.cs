@@ -406,7 +406,7 @@ public static partial class ArrayExtensions {
     List<int> nullPositions = [];
     for (var i = 0; i < oldState.Length; ++i) {
       var current = oldState[i];
-      if (current == null)
+      if (current is null)
         nullPositions.Add(i);
       else
         oldPositions.GetOrAdd(current, () => []).Add(i);
@@ -420,7 +420,7 @@ public static partial class ArrayExtensions {
 
       // use the oldPositions and nullPositions and call LookupIndex to find the item
       var foundAt =
-          item == null
+          item is null
             ? LookupIndex(nullPositions, oldStateIndex)
             : oldPositions.TryGetValue(item, out var indexes)
               ? LookupIndex(indexes, oldStateIndex)
