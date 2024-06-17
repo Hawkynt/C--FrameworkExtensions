@@ -83,4 +83,18 @@ public static partial class GraphicsExtensions {
   public static void DrawCross(this Graphics @this, Point p, int size, Pen pen) => DrawCross(@this, p.X, p.Y, size, pen);
 
   public static void DrawCross(this Graphics @this, PointF p, int size, Pen pen) => DrawCross(@this, p.X, p.Y, size, pen);
+
+  public static void DrawCircle(this Graphics g, Pen pen,
+    float centerX, float centerY, float radius) {
+    g.DrawEllipse(pen, centerX, centerY,
+      radius + radius, radius + radius);
+  }
+
+  public static void FillCircle(this Graphics g, Brush brush,
+    float centerX, float centerY, float radius) {
+    var diameter = radius + radius;
+    g.FillEllipse(brush, centerX - radius, centerY - radius,
+      diameter, diameter);
+  }
+
 }
