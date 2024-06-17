@@ -15,7 +15,7 @@ public class StringTests {
   public readonly record struct SplitParametersTestData(
     string? Input,
     string? Splitter,
-    ulong? Max,
+    int? Max,
     IEnumerable<string>? Expected,
     Type? Exception = null
   );

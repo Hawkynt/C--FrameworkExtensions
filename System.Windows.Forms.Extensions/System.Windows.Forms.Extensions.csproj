@@ -40,9 +40,7 @@
     <Compile Update="System\Windows\Forms\BindableToolStripButton.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="System\Windows\Forms\BindableToolStripSpringTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="System\Windows\Forms\BindableToolStripSpringTextBox.cs" />
     <Compile Update="System\Windows\Forms\ToolStripSpringTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

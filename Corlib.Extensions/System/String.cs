@@ -1088,91 +1088,7 @@ public static partial class StringExtensions {
     for (var i = 0; i < @this.Length; i += length)
       yield return @this.Substring(i, length);
   }
-
-  /// <summary>
-  ///   Splits the specified string by another one.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <param name="count">The maximum count of returned parts, 0 means unlimited.</param>
-  /// <returns>The parts.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, char splitter, int count) {
-    Against.ThisIsNull(@this);
-    Against.NegativeValues(count);
-
-    return Split(@this, splitter.ToString(), (ulong)count).ToArray();
-  }
-
-  /// <summary>
-  ///   Splits the specified string by another one.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <returns>The parts.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<string> Split(this string @this, char splitter) => Split(@this, splitter, 0UL);
-
-  /// <summary>
-  ///   Splits the specified string by another one.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <param name="count">The maximum number of splits, 0 means unlimited.</param>
-  /// <returns>The parts.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<string> Split(this string @this, char splitter, ulong count) => Split(@this, splitter.ToString(), count);
-
-  /// <summary>
-  ///   Splits the specified string by another one.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <returns>The parts.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<string> Split(this string @this, string splitter) {
-    Against.ThisIsNull(@this);
-
-    return _Split(@this, splitter, 0UL);
-  }
-
-  /// <summary>
-  ///   Splits the specified string by another one.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <param name="count">The maximum count of returned parts, 0 means unlimited.</param>
-  /// <returns>The parts.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<string> Split(this string @this, string splitter, ulong count) {
-    Against.ThisIsNull(@this);
-
-    return _Split(@this, splitter, count);
-  }
-
-  private static IEnumerable<string> _Split(this string @this, string splitter, ulong count) {
-    splitter ??= string.Empty;
-
-    var splitterLength = splitter.Length;
-    if (splitterLength == 0 || splitterLength > @this.Length) {
-      yield return @this;
-      yield break;
-    }
-
-    int nextIndex;
-    if (count == 0)
-      count = ulong.MaxValue;
-
-    var startIndex = 0;
-
-    while (--count > 0 && (nextIndex = @this.IndexOf(splitter, startIndex, StringComparison.Ordinal)) >= 0) {
-      yield return @this[startIndex..nextIndex];
-      startIndex = nextIndex + splitterLength;
-    }
-
-    yield return @this[startIndex..];
-  }
-
+  
   /// <summary>
   ///   Splits the specified string using a regular expression.
   /// </summary>
@@ -1186,21 +1102,7 @@ public static partial class StringExtensions {
 
     return regex.Split(@this);
   }
-
-  /// <summary>
-  ///   Splits the specified string.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="splitter">The splitter.</param>
-  /// <param name="options">The options.</param>
-  /// <returns>The parts</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, string splitter, StringSplitOptions options) {
-    Against.ThisIsNull(@this);
-
-    return @this.Split([splitter], options);
-  }
-
+  
   #endregion
 
   /// <summary>
@@ -2657,8 +2559,8 @@ public static partial class StringExtensions {
     => _GetLines(text, removeEmpty, delimiter, count);
 
   private static string[] _GetLines(string text, bool removeEmpty, char delimiter, int count) => count == 0
-    ? text.Split([delimiter], removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-    : text.Split([delimiter], count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
+    ? text.Split(delimiter, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
+    : text.Split(delimiter, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
 
   // TODO: don't use the array call, do something with less memory and better performance
   private static IEnumerable<string> _EnumerateLines(string text, bool removeEmpty, string delimiter, int count)
@@ -2666,7 +2568,7 @@ public static partial class StringExtensions {
 
   private static string[] _GetLines(string text, bool removeEmpty, string delimiter, int count) => count == 0
     ? text.Split(delimiter, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None)
-    : text.Split([delimiter], count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
+    : text.Split(delimiter, count, removeEmpty ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Lines(this string @this, StringSplitOptions options = StringSplitOptions.None) => _GetLines(@this, options == StringSplitOptions.RemoveEmptyEntries, 0);

@@ -193,7 +193,7 @@ public static partial class ConsoleExtensions {
                 isEnded = true;
               else
                 colorDefinition += format[intI];
-            var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split([','], 2);
+            var colors = colorDefinition.IsNullOrWhiteSpace() ? null : colorDefinition.Split(',', 2);
             if (colors == null || colors.Length == 0) {
               // reset colors
               Console.ForegroundColor = oldForeground;
