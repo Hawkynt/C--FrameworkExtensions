@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -26,35 +22,24 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Guard;
-
 #if SUPPORTS_LINQ_PARAMETERS
 using System.Linq.Expressions;
 #endif
 
-// ReSharper disable UnusedMember.Global
-
 namespace System.ComponentModel;
 
 /// <summary>
-/// A BindingList which is sortable in DataGridViews.
+///   A BindingList which is sortable in DataGridViews.
 /// </summary>
 /// <typeparam name="TValue">The type of the value.</typeparam>
 public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectionChanged {
-
   #region nested types
 
   private static class StableSorter {
-
-    private sealed class SortValueWithSourceIndex : IComparable<SortValueWithSourceIndex> {
-      private readonly int _index;
-      public readonly TValue Value;
-      private readonly object _sortValue;
-
-      public SortValueWithSourceIndex(int index, TValue value, object sortValue) {
-        this._index = index;
-        this.Value = value;
-        this._sortValue = sortValue;
-      }
+    private sealed class SortValueWithSourceIndex(int index, TValue value, object sortValue) : IComparable<SortValueWithSourceIndex> {
+      private readonly int _index = index;
+      public readonly TValue Value = value;
+      private readonly object _sortValue = sortValue;
 
       #region Relational members
 
@@ -66,7 +51,7 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
       }
 
       /// <summary>
-      /// Compares two arbitrary values of the same type with another
+      ///   Compares two arbitrary values of the same type with another
       /// </summary>
       /// <param name="a">One value</param>
       /// <param name="b">The other value</param>
@@ -97,12 +82,12 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
         return string.Compare(a.ToString(), b.ToString(), StringComparison.Ordinal);
       }
 
-      private class _AscendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+      private sealed class _AscendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
         public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => x.CompareTo(y);
         public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
       }
 
-      private class _DescendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
+      private sealed class _DescendingComparer : IComparer<SortValueWithSourceIndex>, IComparer {
         public int Compare(SortValueWithSourceIndex x, SortValueWithSourceIndex y) => -x.CompareTo(y);
         public int Compare(object x, object y) => this.Compare((SortValueWithSourceIndex)x!, (SortValueWithSourceIndex)y!);
       }
@@ -111,11 +96,9 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
       public static IComparer DescendingComparer { get; } = new _DescendingComparer();
 
       #endregion
-
     }
 
     public static void InPlaceSort(IList<TValue> input, PropertyDescriptor prop, ListSortDirection direction) {
-
 #if SUPPORTS_LINQ_PARAMETERS
       var getter = _propertyGetterCache.GetOrAdd(prop.Name, _CreatePropertyGetter);
 #else
@@ -140,13 +123,13 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
     }
 
 #if SUPPORTS_LINQ_PARAMETERS
-    private static readonly Dictionary<string, Func<TValue, object>> _propertyGetterCache = new();
+    private static readonly Dictionary<string, Func<TValue, object>> _propertyGetterCache = [];
 
     private static Func<TValue, object> _CreatePropertyGetter(string name) {
       var type = typeof(TValue);
       var property = type.GetProperty(name)!;
       var get = property.GetGetMethod()!;
-        
+
       var parameter = Expression.Parameter(type);
       var callGetMethod = Expression.Call(parameter, get);
       var castToObject = Expression.Convert(callGetMethod, typeof(object));
@@ -155,7 +138,6 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
       return result;
     }
 #endif
-
   }
 
   #endregion
@@ -174,14 +156,12 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
     this.AddRange(enumerable);
   }
 
-  public SortableBindingList(IList<TValue> list) {
+  public SortableBindingList(IList<TValue> list) =>
     // WARNING: do not use the base.ctor(IEnumerable<TValue>) as it marks the collections as read-only thus making it impossible to be sorted
     this.AddRange(list);
-  }
 
   public void Sort(string propertyName, ListSortDirection direction)
-    => this.ApplySortCore(TypeDescriptor.GetProperties(typeof(TValue))[propertyName], direction)
-  ;
+    => this.ApplySortCore(TypeDescriptor.GetProperties(typeof(TValue))[propertyName], direction);
 
   /// <summary>
   ///   Adds multiple elements to this instance.
@@ -190,14 +170,16 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
   public void AddRange(IEnumerable<TValue> items) {
     Against.ArgumentIsNull(items);
 
-    this.Overhaul(l => {
-      foreach (var item in items)
-        l.Add(item);
-    });
+    this.Overhaul(
+      l => {
+        foreach (var item in items)
+          l.Add(item);
+      }
+    );
   }
 
   /// <summary>
-  /// Adds items in the range if they not exist.
+  ///   Adds items in the range if they not exist.
   /// </summary>
   /// <param name="items">The items.</param>
   public void AddRangeIfNotExists(IEnumerable<TValue> items) {
@@ -213,10 +195,12 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
   public void RemoveRange(IEnumerable<TValue> items) {
     Against.ArgumentIsNull(items);
 
-    this.Overhaul(l => {
-      foreach (var item in items)
-        l.Remove(item);
-    });
+    this.Overhaul(
+      l => {
+        foreach (var item in items)
+          l.Remove(item);
+      }
+    );
   }
 
   #region Overrides of BindingList<TValue>
@@ -281,7 +265,6 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
   protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) => this.CollectionChanged?.Invoke(this, e);
 }
 
-// ReSharper disable once PartialTypeWithSinglePart
 public static partial class EnumerableExtensions {
   public static SortableBindingList<TItem> ToSortableBindingList<TItem>(this IEnumerable<TItem> @this) {
     Against.ThisIsNull(@this);

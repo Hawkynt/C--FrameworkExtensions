@@ -1,31 +1,28 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
-using Guard;
 using System.Linq;
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
 using System.Text;
+using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
@@ -41,8 +38,8 @@ public static partial class FileInfoExtensions {
       this._lineBreakMode = lineBreakMode;
     }
 
-    public class Initialized : CustomTextReader {
-      private class LineEndingNode {
+    public sealed class Initialized : CustomTextReader {
+      private sealed class LineEndingNode {
         private Dictionary<char, LineEndingNode> _children;
         private LineEndingNode(int pathLength) => this.PathLength = pathLength;
 
@@ -73,14 +70,14 @@ public static partial class FileInfoExtensions {
 
         public static LineEndingNode BuildTree(string lineEnding) {
           LineEndingNode root = new(0);
-          LineEndingNode._UpdateTree(root, lineEnding);
+          _UpdateTree(root, lineEnding);
           return root;
         }
 
         public static LineEndingNode BuildTree(params string[] lineEndings) {
           LineEndingNode root = new(0);
           foreach (var lineEnding in lineEndings)
-            LineEndingNode._UpdateTree(root, lineEnding);
+            _UpdateTree(root, lineEnding);
 
           return root;
         }
@@ -125,19 +122,13 @@ public static partial class FileInfoExtensions {
 
         return;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         void SaveStartPosition() => startPosition = stream.Position;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         void Reset() => stream.Position = startPosition;
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
           var preamble = usedEncoding.GetPreamble();
           var checkPreamble = preamble.Length > 0;
@@ -149,9 +140,7 @@ public static partial class FileInfoExtensions {
           return read == preamble.Length && buffer.SequenceEqual(preamble);
         }
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static Encoding DetectFromByteOrderMark(Stream stream) {
           var buffer = new byte[4];
           return stream.Read(buffer, 0, buffer.Length) switch {
@@ -162,7 +151,9 @@ public static partial class FileInfoExtensions {
             // UTF-8
             >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
             // UTF-7
+#pragma warning disable SYSLIB0001
             >= 3 when buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76 => Encoding.UTF7,
+#pragma warning restore SYSLIB0001
             // UTF-16, big-endian
             >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
             // UTF-16, little-endian
@@ -171,16 +162,13 @@ public static partial class FileInfoExtensions {
           };
         }
 
-#if SUPPORTS_INLINING
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         static LineEndingNode BuildLineEndingStateMachine(Initialized reader, StringExtensions.LineBreakMode lineBreakMode) {
           for (;;)
             switch (lineBreakMode) {
-              case StringExtensions.LineBreakMode.None:
-                return null;
+              case StringExtensions.LineBreakMode.None: return null;
               case StringExtensions.LineBreakMode.AutoDetect:
-                lineBreakMode = FileInfoExtensions._DetectLineBreakMode(reader);
+                lineBreakMode = _DetectLineBreakMode(reader);
                 break;
               case StringExtensions.LineBreakMode.All:
                 return LineEndingNode.BuildTree(
@@ -206,7 +194,6 @@ public static partial class FileInfoExtensions {
         }
 
         int ReadOneChar() {
-
           // Attempt to read enough bytes for at least one character
           var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
 
@@ -215,7 +202,18 @@ public static partial class FileInfoExtensions {
             return -1;
 
           // Use the decoder to decode the bytes into the char buffer
-          decoder.Convert(largestBufferForOneCharacter, 0, bytesRead, oneCharacterOnly, 0, 1, true, out var bytesUsed, out var charsUsed, out _);
+          decoder.Convert(
+            largestBufferForOneCharacter,
+            0,
+            bytesRead,
+            oneCharacterOnly,
+            0,
+            1,
+            true,
+            out var bytesUsed,
+            out var charsUsed,
+            out _
+          );
 
           // should never happen, because decoding did fail at this point, assume we just reached EOF mid character
           if (charsUsed <= 0)
@@ -275,7 +273,6 @@ public static partial class FileInfoExtensions {
 
             // End of stream handling
             if (read < 0) {
-
               // If there was a pending terminal node, rollback to its position
               if (lastTerminalNode != null) {
                 stream.Position = lastTerminalPosition;
@@ -296,7 +293,6 @@ public static partial class FileInfoExtensions {
 
             currentNode = currentNode.GetNodeOrNull(currentChar);
             if (currentNode == null) {
-
               // If a terminal node was previously encountered but the current character does not continue a valid line ending
               if (lastTerminalNode != null) {
                 stream.Position = lastTerminalPosition;
@@ -319,21 +315,17 @@ public static partial class FileInfoExtensions {
         }
       }
 
-      public Initialized(Stream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(
-        stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
+      public Initialized(Stream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
       public Initialized(Stream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
-        : this(stream, false, encoding, lineBreakMode) 
-        => Against.ArgumentIsNull(encoding)
-        ;
+        : this(stream, false, encoding, lineBreakMode)
+        => Against.ArgumentIsNull(encoding);
 
       public long PreambleSize { get; }
 
       public int Read() => this._singleCharacterReader();
 
       public string ReadLine() => this._fullLineReader();
-
     }
-
   }
 }

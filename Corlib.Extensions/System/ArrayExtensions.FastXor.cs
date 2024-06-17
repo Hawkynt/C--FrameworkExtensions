@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if SUPPORTS_ASYNC
@@ -27,7 +25,6 @@ using System.Threading.Tasks;
 namespace System;
 
 static partial class ArrayExtensions {
-
   private static class FastXor {
     private static void _DoBytes(byte[] source, byte[] operand, int offset, int length) {
       var end = offset + length;
@@ -93,7 +90,6 @@ static partial class ArrayExtensions {
     }
 
     private static void _DoQWords(ulong[] source, ulong[] operand) {
-
 #if SUPPORTS_ASYNC
       if (source.Length < RuntimeConfiguration.MIN_ITEMS_FOR_PARALELLISM) {
 #endif
@@ -132,12 +128,10 @@ static partial class ArrayExtensions {
 
       // long part
       if (RuntimeConfiguration.Has64BitRegisters && count > RuntimeConfiguration.ALLOCATION_QWORD) {
-
         var chunk = new ulong[maxChunkSize >> 3];
         var secondChunk = new ulong[maxChunkSize >> 3];
 
         while (count > RuntimeConfiguration.BLOCKCOPY_QWORD) {
-
           var chunkLength = Math.Min(count, maxChunkSize);
           var itemCount = chunkLength >> 3;
           chunkLength = itemCount << 3;
@@ -151,7 +145,6 @@ static partial class ArrayExtensions {
           offset += chunkLength;
           operandOffset += chunkLength;
         }
-
       }
 
       // int part
@@ -160,7 +153,6 @@ static partial class ArrayExtensions {
         var secondChunk = new uint[maxChunkSize >> 2];
 
         while (count > RuntimeConfiguration.BLOCKCOPY_DWORD) {
-
           var chunkLength = Math.Min(count, maxChunkSize);
           var itemCount = chunkLength >> 2;
           chunkLength = itemCount << 2;
@@ -183,7 +175,6 @@ static partial class ArrayExtensions {
         var secondChunk = new ushort[maxChunkSize >> 1];
 
         while (count > RuntimeConfiguration.BLOCKCOPY_WORD) {
-
           var chunkLength = Math.Min(count, maxChunkSize);
           var itemCount = chunkLength >> 1;
           chunkLength = itemCount << 1;
@@ -203,7 +194,6 @@ static partial class ArrayExtensions {
       // remaining bytes
       if (count > 0)
         _DoBytes(source, operand, offset, count);
-
     }
   }
 }

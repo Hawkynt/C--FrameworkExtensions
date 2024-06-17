@@ -1,33 +1,32 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
 using System.Linq;
+using Guard;
 
 namespace System.Security.Cryptography;
 
 public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
-
   #region S-Boxes
-  private static readonly ulong[] _S0 = {
+
+  private static readonly ulong[] _S0 = [
     0x02AAB17CF7E90C5E /*    0 */, 0xAC424B03E243A8EC /*    1 */,
     0x72CD5BE30DD5FCD3 /*    2 */, 0x6D019B93F6F97F3A /*    3 */,
     0xCD9978FFD21F9193 /*    4 */, 0x7573A1C9708029E2 /*    5 */,
@@ -155,10 +154,10 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
     0x1F1A412891BC038E /*  248 */, 0xD6E2E71D82E56648 /*  249 */,
     0x74036C3A497732B7 /*  250 */, 0x89B67ED96361F5AB /*  251 */,
     0xFFED95D8F1EA02A2 /*  252 */, 0xE72B3BD61464D43D /*  253 */,
-    0xA6300F170BDC4820 /*  254 */, 0xEBC18760ED78A77A /*  255 */,
-  };
+    0xA6300F170BDC4820 /*  254 */, 0xEBC18760ED78A77A /*  255 */
+  ];
 
-  private static readonly ulong[] _S1 = {
+  private static readonly ulong[] _S1 = [
     0xE6A6BE5A05A12138 /*  256 */, 0xB5A122A5B4F87C98 /*  257 */,
     0x563C6089140B6990 /*  258 */, 0x4C46CB2E391F5DD5 /*  259 */,
     0xD932ADDBC9B79434 /*  260 */, 0x08EA70E42015AFF5 /*  261 */,
@@ -286,10 +285,10 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
     0x5DC9645506E55444 /*  504 */, 0x50DE418F317DE40A /*  505 */,
     0x388CB31A69DDE259 /*  506 */, 0x2DB4A83455820A86 /*  507 */,
     0x9010A91E84711AE9 /*  508 */, 0x4DF7F0B7B1498371 /*  509 */,
-    0xD62A2EABC0977179 /*  510 */, 0x22FAC097AA8D5C0E /*  511 */,
-  };
+    0xD62A2EABC0977179 /*  510 */, 0x22FAC097AA8D5C0E /*  511 */
+  ];
 
-  private static readonly ulong[] _S2 = {
+  private static readonly ulong[] _S2 = [
     0xF49FCC2FF1DAF39B /*  512 */, 0x487FD5C66FF29281 /*  513 */,
     0xE8A30667FCDCA83F /*  514 */, 0x2C9B4BE3D2FCCE63 /*  515 */,
     0xDA3FF74B93FBBBC2 /*  516 */, 0x2FA165D2FE70BA66 /*  517 */,
@@ -417,10 +416,10 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
     0x6F31238275655982 /*  760 */, 0x5AE488713E45CF05 /*  761 */,
     0xBF619F9954C21157 /*  762 */, 0xEABAC46040A8EAE9 /*  763 */,
     0x454C6FE9F2C0C1CD /*  764 */, 0x419CF6496412691C /*  765 */,
-    0xD3DC3BEF265B0F70 /*  766 */, 0x6D0E60F5C3578A9E /*  767 */,
-  };
+    0xD3DC3BEF265B0F70 /*  766 */, 0x6D0E60F5C3578A9E /*  767 */
+  ];
 
-  private static readonly ulong[] _S3 = {
+  private static readonly ulong[] _S3 = [
     0x5B0E608526323C55 /*  768 */, 0x1A46C1A9FA1B59F5 /*  769 */,
     0xA9E245A17C4C8FFA /*  770 */, 0x65CA5159DB2955D7 /*  771 */,
     0x05DB0A76CE35AFC2 /*  772 */, 0x81EAC77EA9113D45 /*  773 */,
@@ -548,8 +547,9 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
     0xBF6C70E5F776CBB1 /* 1016 */, 0x411218F2EF552BED /* 1017 */,
     0xCB0C0708705A36A3 /* 1018 */, 0xE74D14754F986044 /* 1019 */,
     0xCD56D9430EA8280E /* 1020 */, 0xC12591D7535F5065 /* 1021 */,
-    0xC83223F1720AEF96 /* 1022 */, 0xC3A0396F7363A51F /* 1023 */,
-  };
+    0xC83223F1720AEF96 /* 1022 */, 0xC3A0396F7363A51F /* 1023 */
+  ];
+
   #endregion
 
   private ulong state0;
@@ -560,7 +560,7 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   private bool _isFinished;
   private int _outputBits;
 
-  public Tiger():this(MaxOutputBits) { }
+  public Tiger() : this(MaxOutputBits) { }
 
   public Tiger(int numberOfResultBits) {
     this.OutputBits = numberOfResultBits;
@@ -665,6 +665,7 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
       Buffer.BlockCopy(this.intermediateBuffer, 0, newBuffer, 0, bufferLength);
       Buffer.BlockCopy(array, ibStart, newBuffer, bufferLength, cbSize);
     }
+
     this.length += cbSize;
 
     for (var i = 0; newBuffer.Length - i >= 64; i += 64)
@@ -682,7 +683,7 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
 
   protected override byte[] HashFinal() {
     while (!this._isFinished) {
-      List<byte> buffer = this.intermediateBuffer == null ? new() : new(this.intermediateBuffer);
+      List<byte> buffer = this.intermediateBuffer == null ? [] : [..this.intermediateBuffer];
 
       /* convert length of the message to bits */
       var len = this.length << 3;
@@ -728,8 +729,7 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   public int OutputBits {
     get => this._outputBits;
     set {
-      if (!SupportedOutputBits.Contains(value))
-        throw new ArgumentException();
+      Against.False(SupportedOutputBits.Contains(value));
 
       this._outputBits = value;
     }
@@ -748,6 +748,6 @@ public sealed class Tiger : HashAlgorithm, IAdvancedHashAlgorithm {
   public static int MinIVBits => 0;
   public static int MaxIVBits => MinIVBits;
   public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
-  #endregion
 
+  #endregion
 }

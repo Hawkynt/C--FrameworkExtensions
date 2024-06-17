@@ -28,10 +28,6 @@ using Guard;
 
 // This file holds statistical routines on enumerations.
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace System.Collections.Generic;
 
 public static partial class EnumerableExtensions {

@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -28,7 +24,6 @@ using System.Windows;
 using System.Windows.Threading;
 
 namespace System.Collections.ObjectModel;
-// ReSharper disable once UnusedMember.Global
 
 public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged {
   private readonly IDictionary<TKey, TValue> _dictionary;
@@ -39,8 +34,8 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INo
 
   public ObservableDictionary(Dispatcher dispatcher = null) {
     this._dictionary = new Dictionary<TKey, TValue>();
-    this._dispatcher = dispatcher ??
-                       (Application.Current != null
+    this._dispatcher = dispatcher
+                       ?? (Application.Current != null
                          ? Application.Current.Dispatcher
                          : Dispatcher.CurrentDispatcher);
   }
@@ -70,13 +65,8 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INo
 
       this._dictionary.Clear();
       this.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
-    } else {
-#if SUPPORTS_DISPATCHER_LAMBDA
-      this._dispatcher.Invoke(this.Clear);
-#else
+    } else
       this._dispatcher.Invoke(new Action(this.Clear));
-#endif
-    }
   }
 
 
@@ -202,8 +192,8 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INo
 
   private void OnPropertyChangedEventHandler(object s, PropertyChangedEventArgs e) => this.OnPropertyChanged(e);
 
-  private void OnCollectionChangedEventHandler(object s, NotifyCollectionChangedEventArgs e) =>
-    this.OnPropertyChanged("value");
+  private void OnCollectionChangedEventHandler(object s, NotifyCollectionChangedEventArgs e)
+    => this.OnPropertyChanged("value");
 
   #endregion
 }

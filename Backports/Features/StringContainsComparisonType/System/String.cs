@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -28,17 +24,18 @@ using System.Runtime.CompilerServices;
 #endif
 namespace System;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable once PartialTypeWithSinglePart
 public static partial class StringPolyfills {
-
   /// <summary>
-  /// Returns a value indicating whether a specified string occurs within this string, using the specified comparison rules.
+  ///   Returns a value indicating whether a specified string occurs within this string, using the specified comparison
+  ///   rules.
   /// </summary>
-  /// <param name="this">This <see cref="string"/></param>
+  /// <param name="this">This <see cref="string" /></param>
   /// <param name="value">The string to seek.</param>
   /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
-  /// <returns><see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.</returns>
+  /// <returns>
+  ///   <see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if
+  ///   <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.
+  /// </returns>
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -47,7 +44,7 @@ public static partial class StringPolyfills {
       throw new NullReferenceException(nameof(@this));
     if (value == null)
       throw new ArgumentNullException(nameof(value));
-    
+
     if (value.Length <= 0)
       return true;
 
@@ -57,6 +54,16 @@ public static partial class StringPolyfills {
     return @this.IndexOf(value, comparisonType) >= 0;
   }
 
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool Contains(this string @this, char value) => @this.IndexOf(value) >= 0;
+
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static bool Contains(this string @this, char value, StringComparison comparisonType) => @this.IndexOf(value.ToString(), comparisonType) >= 0;
+  
 }
 
 #endif

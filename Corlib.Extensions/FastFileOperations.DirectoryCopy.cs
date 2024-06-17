@@ -1,23 +1,22 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
+
 // TODO: base file offset in dircopy event tokens
 // TODO: exception interceptor callback to allow continue or retry on exceptions in dircopy and filecopy
 // TODO: more events to allow logging actions in dircopy
@@ -30,18 +29,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace System.IO; 
+namespace System.IO;
 
 /// <summary>
-/// The fastest copy/move/delete/sync ops for files and directories.
+///   The fastest copy/move/delete/sync ops for files and directories.
 /// </summary>
-
 public static partial class FastFileOperations {
-  
-  private class DirectoryCopyOperation : IDirectoryOperation {
+  private sealed class DirectoryCopyOperation(
+    DirectoryInfo source,
+    DirectoryInfo target,
+    Action<IDirectoryReport> callback,
+    Func<FileSystemInfo, bool> filter,
+    bool allowDelete,
+    bool allowOverwrite,
+    bool allowHardLinks,
+    bool dontResolveSymbolicLinks,
+    bool allowIntegrate
+  )
+    : IDirectoryOperation {
     #region nested types
 
-    private class DirectoryCopyReport : IDirectoryReport {
+    private sealed class DirectoryCopyReport : IDirectoryReport {
       #region fields
 
       private readonly DirectoryCopyOperation _operation;
@@ -49,6 +57,7 @@ public static partial class FastFileOperations {
       #endregion
 
       #region Implementation of IDirectoryReport
+
       public ReportType ReportType { get; }
 
       public IFileSystemOperation Operation => this._operation;
@@ -75,32 +84,25 @@ public static partial class FastFileOperations {
         this.StreamSize = source is FileInfo info ? info.Length : 0;
         this.ContinuationType = reportType == ReportType.AbortedOperation ? ContinuationType.AbortOperation : ContinuationType.Proceed;
       }
-
     }
+
     #endregion
 
     #region fields
 
-    private readonly IFileComparer[] _comparers =  {
-      new FileLengthComparer(),
-      new FileLastWriteTimeComparer(),
-      new FileSimpleAttributesComparer(),
-      new FileCreationTimeComparer(),
-    };
+    private readonly IFileComparer[] _comparers = [
+      new FileLengthComparer(), 
+      new FileLastWriteTimeComparer(), 
+      new FileSimpleAttributesComparer(), 
+      new FileCreationTimeComparer()
+    ];
 
-    private readonly DirectoryInfo _source;
-    private readonly DirectoryInfo _target;
-    private readonly Action<IDirectoryReport> _callback;
-    private readonly Func<FileSystemInfo, bool> _filter;
+    private readonly Action<IDirectoryReport> _callback = callback ?? (_ => { });
+    private readonly Func<FileSystemInfo, bool> _filter = filter ?? (_ => true);
     private readonly ManualResetEventSlim _finishEvent = new();
 
     private readonly ConcurrentBag<string> _filesToCopy = new();
     private readonly ConcurrentQueue<string> _directoriesToParse = new();
-    private readonly bool _allowDelete;
-    private readonly bool _allowOverwrite;
-    private readonly bool _allowHardLinks;
-    private readonly bool _allowIntegrate;
-    private readonly bool _dontResolveSymbolicLinks;
     private long _totalSize;
     private long _bytesToTransfer;
     private long _bytesRead;
@@ -118,32 +120,24 @@ public static partial class FastFileOperations {
     #endregion
 
     #region props
+
     private bool IsSuccessfulEndConditionReached => Interlocked.Read(ref this._bytesTransferred) == Interlocked.Read(ref this._bytesToTransfer) && !this._filesToCopy.Any() && !this._directoriesToParse.Any();
 
     #endregion
 
     #region ctor,dtor
-    public DirectoryCopyOperation(DirectoryInfo source, DirectoryInfo target, Action<IDirectoryReport> callback, Func<FileSystemInfo, bool> filter, bool allowDelete, bool allowOverwrite, bool allowHardLinks, bool dontResolveSymbolicLinks, bool allowIntegrate) {
-      this._source = source;
-      this._target = target;
-      this._allowDelete = allowDelete;
-      this._allowOverwrite = allowOverwrite;
-      this._allowHardLinks = allowHardLinks;
-      this._allowIntegrate = allowIntegrate;
-      this._dontResolveSymbolicLinks = dontResolveSymbolicLinks;
-      this._filter = filter ?? (_ => true);
-      this._callback = callback ?? (_ => { });
-    }
 
     private void _Dispose() {
       this._directoriesToParse.Clear();
       this._filesToCopy.Clear();
     }
+
     #endregion
 
     #region Implementation of IDirectoryOperation
-    public FileSystemInfo Source => this._source;
-    public FileSystemInfo Target => this._target;
+
+    public FileSystemInfo Source => source;
+    public FileSystemInfo Target => target;
     public long TotalSize => Interlocked.Read(ref this._totalSize);
     public long BytesToTransfer => Interlocked.Read(ref this._bytesToTransfer);
     public long BytesRead => Interlocked.Read(ref this._bytesRead);
@@ -182,6 +176,7 @@ public static partial class FastFileOperations {
     #region methods
 
     #region statistics
+
     private void _AddTotalBytes(long count) => Interlocked.Add(ref this._totalSize, count);
 
     private void _AddBytesToTransfer(long count) => Interlocked.Add(ref this._bytesToTransfer, count);
@@ -195,14 +190,14 @@ public static partial class FastFileOperations {
     #endregion
 
     /// <summary>
-    /// Tests if a fileinfo matches the given filter.
+    ///   Tests if a fileinfo matches the given filter.
     /// </summary>
     /// <param name="info">The file/folder information.</param>
     /// <returns><c>true</c> if it matches; otherwise, <c>false</c>.</returns>
     private bool _MatchesFilter(FileSystemInfo info) => this._filter(info);
 
     /// <summary>
-    /// Determines whether the given file needs to be copied to the target.
+    ///   Determines whether the given file needs to be copied to the target.
     /// </summary>
     /// <param name="sourceFile">The source file.</param>
     /// <param name="targetFile">The expected target file.</param>
@@ -214,13 +209,14 @@ public static partial class FastFileOperations {
       if (!targetFile.Exists)
         return true;
 
-      if (!this._allowOverwrite)
+      if (!allowOverwrite)
         return false;
 
       return !this._comparers.All(c => c.Equals(sourceFile, targetFile));
     }
 
     #region threads
+
     private void _StartStreamThreads() {
       for (var i = this._lastStreamIndex; i < this.StreamCount; ++i)
         this._TryStartStreamThread();
@@ -232,20 +228,20 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Creates the index for a new crawler thread.
+    ///   Creates the index for a new crawler thread.
     /// </summary>
     /// <returns>The new index or -1, if no more free crawlers available.</returns>
     private int _CreateCrawlerIndex() {
       var result = Interlocked.Increment(ref this._lastCrawlerIndex) - 1;
       if (result < this._crawlerCount)
         return result;
-      
+
       Interlocked.Decrement(ref this._lastCrawlerIndex);
       return -1;
     }
 
     /// <summary>
-    /// Releases a crawler thread.
+    ///   Releases a crawler thread.
     /// </summary>
     private void _ReleaseCrawler() {
       var result = Interlocked.Decrement(ref this._lastCrawlerIndex);
@@ -259,20 +255,20 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Creates the index for a new stream thread.
+    ///   Creates the index for a new stream thread.
     /// </summary>
     /// <returns>The new index or -1, if no more free streams available.</returns>
     private int _CreateStreamIndex() {
       var result = Interlocked.Increment(ref this._lastStreamIndex) - 1;
       if (result < this._streamCount)
         return result;
-      
+
       Interlocked.Decrement(ref this._lastStreamIndex);
       return -1;
     }
 
     /// <summary>
-    /// Releases a stream thread.
+    ///   Releases a stream thread.
     /// </summary>
     private void _ReleaseStream() {
       var result = Interlocked.Decrement(ref this._lastStreamIndex);
@@ -286,7 +282,7 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Tries to start a new crawler thread.
+    ///   Tries to start a new crawler thread.
     /// </summary>
     /// <returns>The created thread instance or <c>null</c>.</returns>
     private Thread _TryStartCrawlerThread() {
@@ -303,7 +299,7 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Tries to start a new stream thread.
+    ///   Tries to start a new stream thread.
     /// </summary>
     /// <returns>The created thread instance or <c>null</c>.</returns>
     private Thread _TryStartStreamThread() {
@@ -312,7 +308,7 @@ public static partial class FastFileOperations {
         return null;
 
       Thread result = new(this._StreamThread) {
-        IsBackground = true,
+        IsBackground = true, 
         Name = $"Stream #{index}"
       };
       result.Start(index);
@@ -321,8 +317,8 @@ public static partial class FastFileOperations {
 
 
     /// <summary>
-    /// Crawls for files and directories to be copied.
-    /// Note: Creates target directories and checks file sync status.
+    ///   Crawls for files and directories to be copied.
+    ///   Note: Creates target directories and checks file sync status.
     /// </summary>
     /// <param name="state">The current crawler index.</param>
     private void _CrawlerThread(object state) {
@@ -330,7 +326,6 @@ public static partial class FastFileOperations {
         var index = (int)state;
         while (!this.IsDone && index < this.CrawlerCount) {
           if (!this._directoriesToParse.TryDequeue(out var directoryName)) {
-
             // check end condition
             if (!this._directoriesToParse.Any() && this._workingCrawlers < 1 && !this._filesToCopy.Any() && this._workingStreams < 1) {
               this.FinishOperation();
@@ -344,10 +339,10 @@ public static partial class FastFileOperations {
           try {
             Interlocked.Increment(ref this._workingCrawlers);
 
-            DirectoryInfo sourceDirectory = new(Path.Combine(this._source.FullName, directoryName));
-            DirectoryInfo targetDirectory = new(Path.Combine(this._target.FullName, directoryName));
+            DirectoryInfo sourceDirectory = new(Path.Combine(source.FullName, directoryName));
+            DirectoryInfo targetDirectory = new(Path.Combine(target.FullName, directoryName));
 
-            if (targetDirectory.Exists && !this._allowIntegrate)
+            if (targetDirectory.Exists && !allowIntegrate)
               if (this.AbortOperation(new IOException(string.Format(_EX_TARGET_DIRECTORY_ALREADY_EXISTS, targetDirectory.FullName))).ContinuationType == ContinuationType.AbortOperation)
                 return;
 
@@ -359,12 +354,11 @@ public static partial class FastFileOperations {
             targetDirectory.TrySetCreationTimeUtc(sourceDirectory.CreationTimeUtc);
             targetDirectory.TrySetLastWriteTimeUtc(sourceDirectory.LastWriteTimeUtc);
 
-            HashSet<string> dirs = new();
-            HashSet<string> files = new();
+            HashSet<string> dirs = [];
+            HashSet<string> files = [];
 
             // find everything in the source dir to sync
             foreach (var item in sourceDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter)) {
-
               if (item is DirectoryInfo) {
                 dirs.Add(item.Name);
                 this._directoriesToParse.Enqueue(Path.Combine(directoryName, item.Name));
@@ -387,7 +381,6 @@ public static partial class FastFileOperations {
             // delete everything in target dir, that is too much
             if (!this._TrySynchronizeTargetDirectory(targetDirectory, dirs, files))
               return;
-
           } finally {
             Interlocked.Decrement(ref this._workingCrawlers);
           }
@@ -398,14 +391,14 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Synchronizes the target directory if necessary.
+    ///   Synchronizes the target directory if necessary.
     /// </summary>
     /// <param name="targetDirectory">The target directory.</param>
     /// <param name="dirs">The directories that should be present.</param>
     /// <param name="files">The files that should be present.</param>
     /// <returns></returns>
     private bool _TrySynchronizeTargetDirectory(DirectoryInfo targetDirectory, HashSet<string> dirs, HashSet<string> files) {
-      if (!this._allowDelete)
+      if (!allowDelete)
         return true;
 
       foreach (var item in targetDirectory.EnumerateFileSystemInfos().Where(this._MatchesFilter))
@@ -433,7 +426,7 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// Copies files in the files list.
+    ///   Copies files in the files list.
     /// </summary>
     /// <param name="state">The current stream index.</param>
     private void _StreamThread(object state) {
@@ -447,11 +440,11 @@ public static partial class FastFileOperations {
 
           try {
             Interlocked.Increment(ref this._workingStreams);
-            FileInfo sourceFile = new(Path.Combine(this._source.FullName, fileName));
-            FileInfo targetFile = new(Path.Combine(this._target.FullName, fileName));
+            FileInfo sourceFile = new(Path.Combine(source.FullName, fileName));
+            FileInfo targetFile = new(Path.Combine(target.FullName, fileName));
             var baseOffset = this._AddBytesProcessing(sourceFile.Length);
 
-            var token = sourceFile.CopyToAsync(targetFile, this._allowOverwrite, this._allowHardLinks, this._dontResolveSymbolicLinks, t => this._HandleFileOperationCallback(t, baseOffset, index));
+            var token = sourceFile.CopyToAsync(targetFile, allowOverwrite, allowHardLinks, dontResolveSymbolicLinks, t => this._HandleFileOperationCallback(t, baseOffset, index));
             token.Operation.WaitTillDone();
             if (token.Operation.ThrewException)
               continue;
@@ -468,7 +461,7 @@ public static partial class FastFileOperations {
     }
 
     /// <summary>
-    /// This handles status callbacks from a file copy and invokes status updates from the current directory copy operation.
+    ///   This handles status callbacks from a file copy and invokes status updates from the current directory copy operation.
     /// </summary>
     /// <param name="fileSystemReport">The fileSystemReport.</param>
     /// <param name="streamOffset">The stream offset.</param>
@@ -507,16 +500,17 @@ public static partial class FastFileOperations {
           fileSystemReport.ContinuationType = result.ContinuationType;
           break;
         }
-        case ReportType.StartOperation:
-          break;
-        default:
-          throw new ArgumentOutOfRangeException();
+        case ReportType.StartOperation: break;
+        default: throw new ArgumentOutOfRangeException();
       }
     }
+
     #endregion
+
     #endregion
 
     #region generate reports
+
     private DirectoryCopyReport _CreateReport(ReportType reportType, FileSystemInfo source, FileSystemInfo target, int streamIndex, long streamOffset, long offset, long size) {
       DirectoryCopyReport result = new(reportType, this, source, target, streamIndex, streamOffset, offset, size);
       this._callback(result);
@@ -539,27 +533,31 @@ public static partial class FastFileOperations {
       this._directoriesToParse.Enqueue(".");
       this._StartCrawlerThreads();
       this._StartStreamThreads();
-      return this._CreateReport(ReportType.StartOperation, this._source, this._target, -1, 0, 0, 0);
+      return this._CreateReport(ReportType.StartOperation, source, target, -1, 0, 0, 0);
     }
 
     private DirectoryCopyReport FinishOperation() {
       this._Dispose();
       this._finishEvent.Set();
-      return this._CreateReport(ReportType.FinishedOperation, this._source, this._target, -1, 0, 0, this.TotalSize);
+      return this._CreateReport(ReportType.FinishedOperation, source, target, -1, 0, 0, this.TotalSize);
     }
-    #endregion
 
+    #endregion
   }
 
   #region copy directory
+
   /// <summary>
-  /// Copies a directory asynchronous.
+  ///   Copies a directory asynchronous.
   /// </summary>
   /// <param name="this">This DirectoryInfo.</param>
   /// <param name="target">The target directory.</param>
   /// <param name="overwrite">if set to <c>true</c> overwrites all target files.</param>
   /// <param name="allowHardLinks">if set to <c>true</c> allows hard links instead of real copy.</param>
-  /// <param name="dontResolveSymbolicLinks">if set to <c>true</c> doesnt resolve symbolic links (ie copies links instead of content).</param>
+  /// <param name="dontResolveSymbolicLinks">
+  ///   if set to <c>true</c> doesnt resolve symbolic links (ie copies links instead of
+  ///   content).
+  /// </param>
   /// <param name="allowIntegrate">if set to <c>true</c> allows integrating new files into existing directories.</param>
   /// <param name="synchronizeTarget">if set to <c>true</c> synchronizes target (ie delete files, not present in source).</param>
   /// <param name="predicate">The predicate to use for filtering source items.</param>
@@ -569,18 +567,36 @@ public static partial class FastFileOperations {
   /// <returns></returns>
   /// <exception cref="System.IO.FileNotFoundException"></exception>
   /// <exception cref="System.IO.IOException"></exception>
-  public static IDirectoryReport CopyToAsync(this DirectoryInfo @this, DirectoryInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, bool allowIntegrate = false, bool synchronizeTarget = false, Func<FileSystemInfo, bool> predicate = null, Action<IDirectoryReport> callback = null, int crawlerThreads = -1, int streamThreads = -1) {
+  public static IDirectoryReport CopyToAsync(
+    this DirectoryInfo @this,
+    DirectoryInfo target,
+    bool overwrite = false,
+    bool allowHardLinks = false,
+    bool dontResolveSymbolicLinks = false,
+    bool allowIntegrate = false,
+    bool synchronizeTarget = false,
+    Func<FileSystemInfo, bool> predicate = null,
+    Action<IDirectoryReport> callback = null,
+    int crawlerThreads = -1,
+    int streamThreads = -1
+  ) {
     if (!Directory.Exists(@this.FullName))
       throw new FileNotFoundException(string.Format(_EX_SOURCE_DIRECTORY_DOES_NOT_EXIST, @this.FullName));
 
-    if (Directory.Exists(target.FullName)) {
+    if (Directory.Exists(target.FullName))
       if (!(overwrite || synchronizeTarget || allowIntegrate))
         throw new IOException(string.Format(_EX_TARGET_DIRECTORY_ALREADY_EXISTS, target.FullName));
 
-    }
-
     DirectoryCopyOperation operation = new(
-      @this, target, callback, predicate, synchronizeTarget, overwrite, allowHardLinks, dontResolveSymbolicLinks, allowIntegrate
+      @this,
+      target,
+      callback,
+      predicate,
+      synchronizeTarget,
+      overwrite,
+      allowHardLinks,
+      dontResolveSymbolicLinks,
+      allowIntegrate
     );
 
     if (!Directory.Exists(target.FullName))
@@ -590,13 +606,16 @@ public static partial class FastFileOperations {
   }
 
   /// <summary>
-  /// Copies a directory.
+  ///   Copies a directory.
   /// </summary>
   /// <param name="this">This DirectoryInfo.</param>
   /// <param name="target">The target directory.</param>
   /// <param name="overwrite">if set to <c>true</c> overwrites all target files.</param>
   /// <param name="allowHardLinks">if set to <c>true</c> allows hard links instead of real copy.</param>
-  /// <param name="dontResolveSymbolicLinks">if set to <c>true</c> doesnt resolve symbolic links (ie copies links instead of content).</param>
+  /// <param name="dontResolveSymbolicLinks">
+  ///   if set to <c>true</c> doesnt resolve symbolic links (ie copies links instead of
+  ///   content).
+  /// </param>
   /// <param name="allowIntegrate">if set to <c>true</c> allows integrating new files into existing directories.</param>
   /// <param name="synchronizeTarget">if set to <c>true</c> synchronizes target (ie delete files, not present in source).</param>
   /// <param name="predicate">The predicate to use for filtering source items.</param>
@@ -606,11 +625,36 @@ public static partial class FastFileOperations {
   /// <returns></returns>
   /// <exception cref="System.IO.FileNotFoundException"></exception>
   /// <exception cref="System.IO.IOException"></exception>
-  public static void CopyTo(this DirectoryInfo @this, DirectoryInfo target, bool overwrite = false, bool allowHardLinks = false, bool dontResolveSymbolicLinks = false, bool allowIntegrate = false, bool synchronizeTarget = false, Func<FileSystemInfo, bool> predicate = null, Action<IDirectoryReport> callback = null, int crawlerThreads = -1, int streamThreads = -1) {
-    var token = CopyToAsync(@this, target, overwrite, allowHardLinks, dontResolveSymbolicLinks, allowIntegrate, synchronizeTarget, predicate, callback, crawlerThreads, streamThreads);
+  public static void CopyTo(
+    this DirectoryInfo @this,
+    DirectoryInfo target,
+    bool overwrite = false,
+    bool allowHardLinks = false,
+    bool dontResolveSymbolicLinks = false,
+    bool allowIntegrate = false,
+    bool synchronizeTarget = false,
+    Func<FileSystemInfo, bool> predicate = null,
+    Action<IDirectoryReport> callback = null,
+    int crawlerThreads = -1,
+    int streamThreads = -1
+  ) {
+    var token = CopyToAsync(
+      @this,
+      target,
+      overwrite,
+      allowHardLinks,
+      dontResolveSymbolicLinks,
+      allowIntegrate,
+      synchronizeTarget,
+      predicate,
+      callback,
+      crawlerThreads,
+      streamThreads
+    );
     token.Operation.WaitTillDone();
     if (token.Operation.ThrewException)
       throw token.Operation.Exception;
   }
+
   #endregion
 }

@@ -1,120 +1,54 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if !NETSTANDARD && !NETCOREAPP
 #define _SUPPORTS_APP_CONFIGURATION_PATH
 #endif
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
-using Guard;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+#if _SUPPORTS_APP_CONFIGURATION_PATH
+using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Principal;
+#endif
 using System.Threading;
+using Guard;
+using MethodImplOptions=Utilities.MethodImplOptions;
 
 namespace System;
 
-
-#if SUPPORTS_INLINING
-using Runtime.CompilerServices;
-#endif
-
 public static partial class AppDomainExtensions {
-
   private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
-
-#region nested types
-
-  /// <summary>
-  /// A utility class to determine a process parent.
-  /// </summary>
-  [StructLayout(LayoutKind.Sequential)]
-  private struct ParentProcessUtilities {
-    // These members must match PROCESS_BASIC_INFORMATION
-    // ReSharper disable MemberCanBePrivate.Local
-    internal IntPtr Reserved1;
-    internal IntPtr PebBaseAddress;
-    internal IntPtr Reserved2_0;
-    internal IntPtr Reserved2_1;
-    internal IntPtr UniqueProcessId;
-    internal IntPtr InheritedFromUniqueProcessId;
-    // ReSharper restore MemberCanBePrivate.Local
-
-    [DllImport("ntdll.dll")]
-    private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtilities processInformation, int processInformationLength, out int returnLength);
-
-    /// <summary>
-    /// Gets the parent process of the current process.
-    /// </summary>
-    /// <returns>An instance of the Process class.</returns>
-    public static Process GetParentProcess() => GetParentProcess(Process.GetCurrentProcess().Handle);
-
-    /// <summary>
-    /// Gets the parent process of specified process.
-    /// </summary>
-    /// <param name="id">The process id.</param>
-    /// <returns>An instance of the Process class.</returns>
-    public static Process GetParentProcess(int id) => GetParentProcess(Process.GetProcessById(id).Handle);
-
-    /// <summary>
-    /// Gets the parent process of a specified process.
-    /// </summary>
-    /// <param name="handle">The process handle.</param>
-    /// <returns>An instance of the Process class or null if an error occurred.</returns>
-    public static Process GetParentProcess(IntPtr handle) {
-      ParentProcessUtilities pbi = new();
-      var status = NtQueryInformationProcess(handle, 0, ref pbi, Marshal.SizeOf(pbi), out _);
-      if (status != 0)
-        return null;
-
-      try {
-        return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
-      } catch (ArgumentException) {
-        // not found
-        return null;
-      }
-    }
-  }
-
-  #endregion
 
 #if _SUPPORTS_APP_CONFIGURATION_PATH
 
   /// <summary>
-  /// Saves the parent process' environment to disk.
+  ///   Saves the parent process' environment to disk.
   /// </summary>
   /// <param name="stream">The stream.</param>
   /// <param name="targetDirectory">The target directory.</param>
   /// <param name="domain">The domain.</param>
-  // ReSharper disable once SuggestBaseTypeForParameter
   private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
     Dictionary<string, string> environment = new() {
       { "baseDirectory", domain.BaseDirectory },
@@ -127,7 +61,7 @@ public static partial class AppDomainExtensions {
   }
 
   /// <summary>
-  /// Loads a saved environment from the parent process.
+  ///   Loads a saved environment from the parent process.
   /// </summary>
   /// <param name="stream">The stream.</param>
   /// <param name="domain">The domain.</param>
@@ -159,8 +93,7 @@ public static partial class AppDomainExtensions {
           case ConsoleSpecialKey.ControlC:
             _SelfDestruct(directoryToDeleteOnExit);
             return;
-          default:
-            return;
+          default: return;
         }
       };
   }
@@ -168,7 +101,7 @@ public static partial class AppDomainExtensions {
 #endif
 
   /// <summary>
-  /// Removes the given directory by spawning a child-process, thus allowing to remove ourselves.
+  ///   Removes the given directory by spawning a child-process, thus allowing to remove ourselves.
   /// </summary>
   /// <param name="myDirectory">My directory.</param>
   private static void _SelfDestruct(DirectoryInfo myDirectory) {
@@ -189,8 +122,8 @@ public static partial class AppDomainExtensions {
   }
 
   /// <summary>
-  /// Writes a batch file deleting a given directory and itself afterwards.
-  /// Note: Batch file is written to the directories parent directory.
+  ///   Writes a batch file deleting a given directory and itself afterwards.
+  ///   Note: Batch file is written to the directories parent directory.
   /// </summary>
   /// <param name="directoryToDelete">The directory to delete.</param>
   /// <returns>The generated batch file</returns>
@@ -199,36 +132,39 @@ public static partial class AppDomainExtensions {
     if (result.Exists)
       return null;
 
-    File.WriteAllText(result.FullName, $"""
-@echo off
-:repeat
-echo Trying to delete...
-rd /q /s "{directoryToDelete.FullName}"
-if exist "{directoryToDelete.FullName}" (
-  ping 127.0.0.1 -n 3 >NUL
-  goto repeat
-)
-del "%~0"
-""");
+    File.WriteAllText(
+      result.FullName,
+      $"""
+       @echo off
+       :repeat
+       echo Trying to delete...
+       rd /q /s "{directoryToDelete.FullName}"
+       if exist "{directoryToDelete.FullName}" (
+         ping 127.0.0.1 -n 3 >NUL
+         goto repeat
+       )
+       del "%~0"
+       """
+    );
     return result;
   }
 
 #if _SUPPORTS_APP_CONFIGURATION_PATH
 
   /// <summary>
-  /// Reruns the given app domain from a temporary directory.
-  /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
-  ///       * this first creates a temporary directory
-  ///       * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
-  ///       * saves the current environment to a file
-  ///       * spawns the new process at the temporary location
-  ///       * restores the saved environment
-  ///       * makes sure that the temporary location is deleted by the child-process upon exit
+  ///   Reruns the given app domain from a temporary directory.
+  ///   Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
+  ///   * this first creates a temporary directory
+  ///   * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
+  ///   * saves the current environment to a file
+  ///   * spawns the new process at the temporary location
+  ///   * restores the saved environment
+  ///   * makes sure that the temporary location is deleted by the child-process upon exit
   /// </summary>
   /// <param name="this">This AppDomain.</param>
   /// <exception cref="System.Exception">Semaphore already present?</exception>
   public static void RerunInTemporaryDirectory(this AppDomain @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var executable = GetExecutable(@this);
     var semaphoreName = executable.Name;
@@ -277,30 +213,26 @@ del "%~0"
 
       Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
     }
-
   }
 
 #endif
 
   /// <summary>
-  /// Queries the environment for another process with the same entry assembly and throws an <see cref="Exception"/> when present.
+  ///   Queries the environment for another process with the same entry assembly and throws an <see cref="Exception" /> when
+  ///   present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrThrow(this AppDomain @this)
-    => EnsureSingleInstanceOrThrow(@this, _CreateStandardSemaphoreName(@this))
-  ;
+    => EnsureSingleInstanceOrThrow(@this, _CreateStandardSemaphoreName(@this));
 
   /// <summary>
-  /// Queries the environment for another process with the same entry assembly and throws an <see cref="Exception"/> when present.
+  ///   Queries the environment for another process with the same entry assembly and throws an <see cref="Exception" /> when
+  ///   present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
   /// <param name="semaphoreName">The name of the semaphore to query</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrThrow(this AppDomain @this, string semaphoreName) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
@@ -310,60 +242,58 @@ del "%~0"
   }
 
   /// <summary>
-  /// Queries the environment for another process with the same entry assembly and exits when present.
+  ///   Queries the environment for another process with the same entry assembly and exits when present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrExit(this AppDomain @this)
-    => EnsureSingleInstanceOrExit(@this, _CreateStandardSemaphoreName(@this))
-    ;
+    => EnsureSingleInstanceOrExit(@this, _CreateStandardSemaphoreName(@this));
 
   /// <summary>
-  /// Queries the environment for another process with the same entry assembly and exits when present.
+  ///   Queries the environment for another process with the same entry assembly and exits when present.
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
   /// <param name="semaphoreName">The name of the semaphore to query</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void EnsureSingleInstanceOrExit(this AppDomain @this, string semaphoreName) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
 
-    if(!IsSingleInstance(@this,semaphoreName))
+    if (!IsSingleInstance(@this, semaphoreName))
       Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
   }
 
   /// <summary>
-  /// Queries the environment for another process with the same entry assembly.
-  /// Note: Creates a semaphore which is held until process exit
+  ///   Queries the environment for another process with the same entry assembly.
+  ///   Note: Creates a semaphore which is held until process exit
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
-  /// <returns><c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
+  /// <returns>
+  ///   <c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise,
+  ///   <c>false</c>.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsSingleInstance(this AppDomain @this) => IsSingleInstance(@this, _CreateStandardSemaphoreName(@this));
 
   /// <summary>
-  /// Create a standard semaphore name for a given AppDomain. Defaults to entry assemblies' fullname or friendlyname of the domain.
+  ///   Create a standard semaphore name for a given AppDomain. Defaults to entry assemblies' fullname or friendlyname of the
+  ///   domain.
   /// </summary>
-  /// <param name="appDomain">The <see cref="AppDomain"/> to generaten the name for</param>
+  /// <param name="appDomain">The <see cref="AppDomain" /> to generaten the name for</param>
   /// <returns>A name to use</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static string _CreateStandardSemaphoreName(AppDomain appDomain) => Assembly.GetEntryAssembly()?.FullName ?? appDomain.FriendlyName;
 
   /// <summary>
-  /// Queries the environment for a given semaphore and acquires it if not present.
-  /// Note: Semaphore is held until process exit
+  ///   Queries the environment for a given semaphore and acquires it if not present.
+  ///   Note: Semaphore is held until process exit
   /// </summary>
   /// <param name="this">The AppDomain to store the semaphore instance in</param>
   /// <param name="semaphoreName">The name of the semaphore to query</param>
-  /// <returns><c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise, <c>false</c>.</returns>
+  /// <returns>
+  ///   <c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise,
+  ///   <c>false</c>.
+  /// </returns>
   public static bool IsSingleInstance(this AppDomain @this, string semaphoreName) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
@@ -377,17 +307,16 @@ del "%~0"
     return createNew;
   }
 
-    /// <summary>
-    /// Creates a new process from the given executable using the same command line.
-    /// </summary>
-    /// <param name="executable">The executable.</param>
-    /// <param name="semaphoreName">Name of the semaphore to share.</param>
-    /// <returns>
-    ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.
-    /// </returns>
-    /// <exception cref="Exception">Semaphore already present?</exception>
-    // ReSharper disable once SuggestBaseTypeForParameter
-    private static bool _Fork(FileInfo executable, string semaphoreName) {
+  /// <summary>
+  ///   Creates a new process from the given executable using the same command line.
+  /// </summary>
+  /// <param name="executable">The executable.</param>
+  /// <param name="semaphoreName">Name of the semaphore to share.</param>
+  /// <returns>
+  ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.
+  /// </returns>
+  /// <exception cref="Exception">Semaphore already present?</exception>
+  private static bool _Fork(FileInfo executable, string semaphoreName) {
     var parentProcess = ParentProcessUtilities.GetParentProcess();
     var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
     bool createNew;
@@ -395,7 +324,6 @@ del "%~0"
     // try to get parent semaphore first
     using (Semaphore parentSemaphore = new(0, 1, parentSemaphoreName, out createNew))
       if (!createNew) {
-
         // we couldn't create it, because we're a child process
         parentSemaphore.Release();
         return true;
@@ -428,20 +356,23 @@ del "%~0"
   }
 
   /// <summary>
-  /// Creates a new process from the given appdomain using the same executable and command line.
-  /// Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
+  ///   Creates a new process from the given appdomain using the same executable and command line.
+  ///   Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
   /// </summary>
   /// <param name="this">This AppDomain.</param>
-  /// <returns><c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.</returns>
+  /// <returns>
+  ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent
+  ///   process.
+  /// </returns>
   public static bool Fork(this AppDomain @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var executable = GetExecutable(@this);
     return _Fork(executable, executable.Name);
   }
 
   /// <summary>
-  /// Creates a temporary directory.
+  ///   Creates a temporary directory.
   /// </summary>
   /// <returns>The temporary directory.</returns>
   [DebuggerStepThrough]
@@ -455,7 +386,7 @@ del "%~0"
   }
 
   /// <summary>
-  /// Copies an assembly file (.exe/.dll) to a target directory and keeps PDB debugging files.
+  ///   Copies an assembly file (.exe/.dll) to a target directory and keeps PDB debugging files.
   /// </summary>
   /// <param name="source">The source.</param>
   /// <param name="target">The target.</param>
@@ -478,7 +409,8 @@ del "%~0"
   }
 
   /// <summary>
-  /// Copies the given executable file and all other executables in the same directory to the given location, retaining original directory structure.
+  ///   Copies the given executable file and all other executables in the same directory to the given location, retaining
+  ///   original directory structure.
   /// </summary>
   /// <param name="source">The source executable.</param>
   /// <param name="target">The target directory.</param>
@@ -497,13 +429,13 @@ del "%~0"
   }
 
   /// <summary>
-  /// Gets the executable for the given app domain.
+  ///   Gets the executable for the given app domain.
   /// </summary>
   /// <param name="this">This AppDomain.</param>
   /// <returns></returns>
   [DebuggerStepThrough]
   public static FileInfo GetExecutable(this AppDomain @this) {
-    Guard.Against.ThisIsNull(@this);
+    Against.ThisIsNull(@this);
 
     var fileName = @this.FriendlyName;
     const string vsHostPostfix = ".vshost.exe";
@@ -514,7 +446,7 @@ del "%~0"
   }
 
   /// <summary>
-  /// Gets the debugging information file for the given assembly file.
+  ///   Gets the debugging information file for the given assembly file.
   /// </summary>
   /// <param name="assemblyFile">The assembly file.</param>
   /// <returns></returns>
@@ -524,5 +456,4 @@ del "%~0"
     FileInfo result = new(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
     return result;
   }
-
 }

@@ -99,17 +99,17 @@ public class StringTests {
   private static IEnumerable<MatchesTestData> _TestMatchesTestData() {
     yield return new(null, "^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
-    yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sprEad" }, RegexOptions.None);
-    yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", new[] { "sAid", "sheD", "sprEad" }, RegexOptions.IgnoreCase);
+    yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", ["sAid", "sprEad"], RegexOptions.None);
+    yield return new("sAid sheD seE spear sprEad Super", @"s\w+d", ["sAid", "sheD", "sprEad"], RegexOptions.IgnoreCase);
   }
 
   private static IEnumerable<MatchGroupsTestData> _TestMatchGroupsTestData() {
     yield return new(null, "^.*mp3$", null, RegexOptions.None, typeof(NullReferenceException));
     yield return new("", null, null, RegexOptions.None, typeof(ArgumentNullException));
-    yield return new("said shed see spear spread super", @"s\w+d", new[] { "said" }, RegexOptions.None);
-    yield return new("saiD shed see spear spread super", @"s\w+d", new[] { "shed" }, RegexOptions.None);
-    yield return new("saiD sheD see spear spread super", @"s\w+d", new[] { "spread" }, RegexOptions.None);
-    yield return new("SAid sheD seE spear sprEaD Super", @"s\w+d", new[] { "SAid" }, RegexOptions.IgnoreCase);
+    yield return new("said shed see spear spread super", @"s\w+d", ["said"], RegexOptions.None);
+    yield return new("saiD shed see spear spread super", @"s\w+d", ["shed"], RegexOptions.None);
+    yield return new("saiD sheD see spear spread super", @"s\w+d", ["spread"], RegexOptions.None);
+    yield return new("SAid sheD seE spear sprEaD Super", @"s\w+d", ["SAid"], RegexOptions.IgnoreCase);
   }
 
   private static IEnumerable<FormatWithParametersTestData> _TestFormatWithParameters() {

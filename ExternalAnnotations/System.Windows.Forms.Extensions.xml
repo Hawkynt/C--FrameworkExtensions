@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<assembly name="System.Windows.Form.Extensions">
+<assembly name="System.Windows.Forms.Extensions">
   <member name="M:Guard.Against.ThisIsNull``1(``0,System.String,System.String)">
     <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor" arguments="&quot;value:null=&gt;halt&quot;" />
     <parameter name="value">

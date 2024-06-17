@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -25,12 +21,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Guard;
-
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Global
-// ReSharper disable PartialTypeWithSinglePart
 
 namespace System.Drawing;
 
@@ -77,10 +68,7 @@ public static partial class ImageExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(fileName);
 
-    var encoder = _GetEncoder(ImageFormat.Png);
-    if (encoder == null)
-      throw new NotSupportedException("Png encoder not available");
-
+    _ = _GetEncoder(ImageFormat.Png) ?? throw new NotSupportedException("Png encoder not available");
     @this.Save(fileName, ImageFormat.Png);
   }
 
@@ -93,10 +81,7 @@ public static partial class ImageExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(fileName);
 
-    var encoder = _GetEncoder(ImageFormat.Tiff);
-    if (encoder == null)
-      throw new NotSupportedException("Tiff encoder not available");
-
+    _ = _GetEncoder(ImageFormat.Tiff) ?? throw new NotSupportedException("Tiff encoder not available");
     @this.Save(fileName, ImageFormat.Tiff);
   }
 
@@ -110,9 +95,7 @@ public static partial class ImageExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(fileName);
 
-    var encoder = _GetEncoder(ImageFormat.Jpeg);
-    if (encoder == null)
-      throw new NotSupportedException("Jpeg encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Jpeg) ?? throw new NotSupportedException("Jpeg encoder not available");
 
     using var encoderParameters = new EncoderParameters(1);
     encoderParameters.Param[0] = new(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
@@ -129,9 +112,7 @@ public static partial class ImageExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(stream);
 
-    var encoder = _GetEncoder(ImageFormat.Jpeg);
-    if (encoder == null)
-      throw new NotSupportedException("Jpeg encoder not available");
+    var encoder = _GetEncoder(ImageFormat.Jpeg) ?? throw new NotSupportedException("Jpeg encoder not available");
 
     using var encoderParameters = new EncoderParameters(1);
     encoderParameters.Param[0] = new(Encoder.Quality, (long)(Math.Min(Math.Max(quality, 0), 1) * 100));
@@ -154,7 +135,7 @@ public static partial class ImageExtensions {
   /// <summary>
   ///   All sizes that are supported for icons.
   /// </summary>
-  private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = { 16, 24, 32, 48, 64, 128 };
+  private static readonly int[] _SUPPORTED_ICON_RESOLUTIONS = [16, 24, 32, 48, 64, 128];
 
   /// <summary>
   ///   Converts a given image to an icon.
@@ -216,13 +197,13 @@ public static partial class ImageExtensions {
 
     var result = new Bitmap(@this.Width, @this.Height);
     using var graphics = Graphics.FromImage(result);
-    var matrix = new ColorMatrix(new[] {
-      new[] { 0.3f, 0.3f, 0.3f, 0, 0 },
-      new[] { 0.59f, 0.59f, 0.59f, 0, 0 },
-      new[] { 0.11f, 0.11f, 0.11f, 0, 0 },
-      new[] { 0, 0, 0, 1f, 0 },
-      new[] { 0, 0, 0, 0, 1f }
-    });
+    var matrix = new ColorMatrix([
+      [0.3f, 0.3f, 0.3f, 0, 0], 
+      [0.59f, 0.59f, 0.59f, 0, 0],
+      [0.11f, 0.11f, 0.11f, 0, 0],
+      [0, 0, 0, 1f, 0],
+      [0, 0, 0, 0, 1f]
+    ]);
     var attributes = new ImageAttributes();
     attributes.SetColorMatrix(matrix);
     graphics.DrawImage(@this, new(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, attributes);
@@ -240,11 +221,13 @@ public static partial class ImageExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNotOfType<Bitmap>(@this);
 
-    return @this.ApplyPixelProcessor(c => {
-      var mean = (c.R + c.G + c.B) / 3.0;
-      var color = mean < threshold ? byte.MinValue : byte.MaxValue;
-      return Color.FromArgb(c.A, color, color, color);
-    });
+    return @this.ApplyPixelProcessor(
+      c => {
+        var mean = (c.R + c.G + c.B) / 3.0;
+        var color = mean < threshold ? byte.MinValue : byte.MaxValue;
+        return Color.FromArgb(c.A, color, color, color);
+      }
+    );
   }
 
   /// <summary>
@@ -406,8 +389,7 @@ public static partial class ImageExtensions {
       angle %= 360;
 
     switch (angle) {
-      case 0:
-        return result;
+      case 0: return result;
       case 90:
         result.RotateFlip(RotateFlipType.Rotate90FlipNone);
         return result;
@@ -427,7 +409,6 @@ public static partial class ImageExtensions {
         return result;
       }
     }
-    
   }
 
   /// <summary>
@@ -438,7 +419,7 @@ public static partial class ImageExtensions {
   /// <returns>A new image from the given rectangle</returns>
   public static Image GetRectangle(this Image @this, Rectangle rect) {
     Against.ThisIsNull(@this);
-    
+
     var result = new Bitmap(rect.Width, rect.Height);
     using var graphics = Graphics.FromImage(result);
     graphics.DrawImage(@this, new Rectangle(Point.Empty, rect.Size), rect, GraphicsUnit.Pixel);
@@ -454,11 +435,11 @@ public static partial class ImageExtensions {
   /// <returns>A new image</returns>
   public static Image ReplaceColorWithTransparency(this Image @this, Color color) {
     Against.ThisIsNull(@this);
-    
+
     var result = new Bitmap(@this.Width, @this.Height);
     using var graphics = Graphics.FromImage(result);
     var imageAttributes = new ImageAttributes();
-    imageAttributes.SetRemapTable(new[] { new ColorMap { OldColor = color, NewColor = Color.Transparent } }, ColorAdjustType.Bitmap);
+    imageAttributes.SetRemapTable([new() { OldColor = color, NewColor = Color.Transparent }], ColorAdjustType.Bitmap);
     graphics.DrawImage(@this, new(Point.Empty, @this.Size), 0, 0, @this.Width, @this.Height, GraphicsUnit.Pixel, imageAttributes);
 
     return result;

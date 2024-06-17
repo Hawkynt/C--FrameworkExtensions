@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Threading;
@@ -25,8 +23,8 @@ using Guard;
 namespace System;
 
 /// <summary>
-/// Represents a slow property for INotifyPropertyChanged classes.
-/// Allows showing intermediate values while retrieving the values.
+///   Represents a slow property for INotifyPropertyChanged classes.
+///   Allows showing intermediate values while retrieving the values.
 /// </summary>
 /// <typeparam name="TValue">The type of the value.</typeparam>
 /// <typeparam name="TIntermediateValue">The type of the intermediate value.</typeparam>
@@ -35,10 +33,12 @@ public class SlowProperty<TValue, TIntermediateValue> {
   private const int _FALSE = 0;
 
   #region fields
+
   /// <summary>
-  /// Whether the value is currently generated. (eg. thread is running to fetch value)
+  ///   Whether the value is currently generated. (eg. thread is running to fetch value)
   /// </summary>
   private int _isGeneratingValue = _FALSE;
+
   private TValue _value;
   private readonly TIntermediateValue _intermediateValue;
   private readonly Func<SlowProperty<TValue, TIntermediateValue>, TValue> _valueGetter;
@@ -72,30 +72,32 @@ public class SlowProperty<TValue, TIntermediateValue> {
 
     this._context = context;
   }
+
   #endregion
 
   #region props
+
   /// <summary>
-  /// Gets the value (returns intermediate value as long as the real value is not ready).
+  ///   Gets the value (returns intermediate value as long as the real value is not ready).
   /// </summary>
   /// <value>
-  /// The value.
+  ///   The value.
   /// </value>
   public TIntermediateValue Value {
     get {
       if (this._valueWaiter.IsSet)
-        return (this._valueConverter(this._value));
+        return this._valueConverter(this._value);
 
       this._TryStartGeneratingValue();
-      return (this._intermediateValue);
+      return this._intermediateValue;
     }
   }
 
   /// <summary>
-  /// Gets the raw value (waits for it to be created if not yet done).
+  ///   Gets the raw value (waits for it to be created if not yet done).
   /// </summary>
   /// <value>
-  /// The raw value.
+  ///   The raw value.
   /// </value>
   public TValue RawValue {
     get {
@@ -103,15 +105,16 @@ public class SlowProperty<TValue, TIntermediateValue> {
         this._TryStartGeneratingValue();
 
       this._valueWaiter.Wait();
-      return (this._value);
+      return this._value;
     }
   }
 
   #endregion
 
   #region methods
+
   /// <summary>
-  /// Resets this instance and clears the cached value.
+  ///   Resets this instance and clears the cached value.
   /// </summary>
   public void Reset() {
     this._value = default;
@@ -119,7 +122,7 @@ public class SlowProperty<TValue, TIntermediateValue> {
   }
 
   /// <summary>
-  /// Tries to start the thread to fetch the real value.
+  ///   Tries to start the thread to fetch the real value.
   /// </summary>
   private void _TryStartGeneratingValue() {
     if (Interlocked.CompareExchange(ref this._isGeneratingValue, _TRUE, _FALSE) == _TRUE)
@@ -130,22 +133,22 @@ public class SlowProperty<TValue, TIntermediateValue> {
   }
 
   /// <summary>
-  /// Fetches the value from the given generator and executes callback when done.
+  ///   Fetches the value from the given generator and executes callback when done.
   /// </summary>
   private void _GenerateValue() {
     try {
       this._value = this._valueGetter(this);
       this._valueWaiter.Set();
-      
+
       if (this._context == null)
         this._valueGeneratedCallback?.Invoke(this);
       else
         this._context.Send(_ => this._valueGeneratedCallback?.Invoke(this), null);
-
     } finally {
       Interlocked.CompareExchange(ref this._isGeneratingValue, _FALSE, _TRUE);
     }
   }
+
   #endregion
 
   public static implicit operator TIntermediateValue(SlowProperty<TValue, TIntermediateValue> This) => This.Value;
@@ -158,11 +161,10 @@ public class SlowProperty<TValue, TIntermediateValue> {
 }
 
 /// <summary>
-/// Represents a slow property for INotifyPropertyChanged classes.
-/// Allows showing intermediate values while retrieving the values.
+///   Represents a slow property for INotifyPropertyChanged classes.
+///   Allows showing intermediate values while retrieving the values.
 /// </summary>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-
 public class SlowProperty<TValue> : SlowProperty<TValue, TValue> {
   public SlowProperty(Func<SlowProperty<TValue>, TValue> valueGetter, TValue intermediateValue = default, Action<SlowProperty<TValue>> valueGeneratedCallback = null, bool captureSynchronizationContext = false)
     : base(

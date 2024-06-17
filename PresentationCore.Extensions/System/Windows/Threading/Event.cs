@@ -1,29 +1,26 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
 using System.Threading;
 
 namespace System.Windows.Threading;
+
 public static partial class EventExtensions {
   /// <summary>
   ///   Invokes an event safely from no matter what thread and makes sure that the subscribers who needs it, get the event
@@ -37,8 +34,9 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
+
     var copy = @this;
-    foreach (var @delegate in copy.GetInvocationList()) {
+    foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is DispatcherObject dispatcherObject) {
         if (dispatcherObject.Dispatcher.CheckAccess())
           @delegate.DynamicInvoke(sender, eventArgs);
@@ -48,7 +46,6 @@ public static partial class EventExtensions {
         }
       } else
         @delegate.DynamicInvoke(sender, eventArgs);
-    }
   }
 
   /// <summary>
@@ -61,8 +58,9 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
+
     var copy = @this;
-    foreach (var @delegate in copy.GetInvocationList()) {
+    foreach (var @delegate in copy.GetInvocationList())
       if (@delegate.Target is DispatcherObject dispatcherObject) {
         if (dispatcherObject.Dispatcher.CheckAccess())
           @delegate.DynamicInvoke(arguments);
@@ -72,7 +70,6 @@ public static partial class EventExtensions {
         }
       } else
         @delegate.DynamicInvoke(arguments);
-    }
   }
 
   /// <summary>
@@ -87,6 +84,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList()) {
       var dispatcherObject = @delegate.Target as DispatcherObject;
@@ -97,8 +95,10 @@ public static partial class EventExtensions {
           if (dispatcherObject.Dispatcher.CheckAccess())
             delegateCopy.DynamicInvoke(sender, eventArgs);
           else
-            dispatcherObject.Dispatcher.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)),
-              null);
+            dispatcherObject.Dispatcher.BeginInvoke(
+              new Action(() => delegateCopy.DynamicInvoke(sender, eventArgs)),
+              null
+            );
         };
       else
         call = () => delegateCopy.DynamicInvoke(sender, eventArgs);
@@ -116,6 +116,7 @@ public static partial class EventExtensions {
     if (@this == null)
       // no subscribers
       return;
+
     var copy = @this;
     foreach (var @delegate in copy.GetInvocationList()) {
       var dispatcherObject = @delegate.Target as DispatcherObject;
@@ -129,8 +130,10 @@ public static partial class EventExtensions {
             var i = 30;
             while (i > 0)
               try {
-                dispatcherObject.Dispatcher.BeginInvoke(new Action(() => delegateCopy.DynamicInvoke(arguments)),
-                  null);
+                dispatcherObject.Dispatcher.BeginInvoke(
+                  new Action(() => delegateCopy.DynamicInvoke(arguments)),
+                  null
+                );
                 i = 0;
               } catch (Exception) {
                 --i;

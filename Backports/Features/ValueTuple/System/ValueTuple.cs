@@ -1,36 +1,32 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
-
-# endregion
+#endregion
 
 #if !SUPPORTS_VALUE_TUPLE
 
-namespace System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
-using Collections;
-using Collections.Generic;
-using ComponentModel;
-using Diagnostics;
-using Numerics;
-using Runtime.InteropServices;
+namespace System;
 
 /// <summary>
 ///   The ValueTuple types (from arity 0 to 8) comprise the runtime implementation that underlies tuples in C# and struct
@@ -441,8 +437,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2)
     );
@@ -524,8 +519,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2)
     );
@@ -632,17 +626,16 @@ public struct ValueTuple<T1, T2, T3>
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its fields
   ///   are equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
-  public bool Equals(ValueTuple<T1, T2, T3> other) =>    EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
-    && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2)
-    && EqualityComparer<T3>.Default.Equals(this.Item3, other.Item3);
+  public bool Equals(ValueTuple<T1, T2, T3> other) => EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
+                                                      && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2)
+                                                      && EqualityComparer<T3>.Default.Equals(this.Item3, other.Item3);
 
   /// <summary>
   ///   Returns the hash code for the current <see cref="ValueTuple{T1, T2, T3}" /> instance.
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2),
       EqualityComparer<T3>.Default.GetHashCode(this.Item3)
@@ -701,8 +694,7 @@ public struct ValueTuple<T1, T2, T3>
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2),
       comparer.GetHashCode(this.Item3)
@@ -832,8 +824,7 @@ public struct ValueTuple<T1, T2, T3, T4> : IEquatable<ValueTuple<T1, T2, T3, T4>
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2),
       EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -898,8 +889,7 @@ public struct ValueTuple<T1, T2, T3, T4> : IEquatable<ValueTuple<T1, T2, T3, T4>
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2),
       comparer.GetHashCode(this.Item3),
@@ -1043,8 +1033,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5> : IEquatable<ValueTuple<T1, T2, T3,
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2),
       EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -1115,8 +1104,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5> : IEquatable<ValueTuple<T1, T2, T3,
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2),
       comparer.GetHashCode(this.Item3),
@@ -1274,8 +1262,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6> : IEquatable<ValueTuple<T1, T2,
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2),
       EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -1352,8 +1339,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6> : IEquatable<ValueTuple<T1, T2,
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2),
       comparer.GetHashCode(this.Item3),
@@ -1525,8 +1511,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7> : IEquatable<ValueTuple<T1,
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
       EqualityComparer<T2>.Default.GetHashCode(this.Item2),
       EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -1609,8 +1594,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7> : IEquatable<ValueTuple<T1,
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) =>
-    NumericsHelpers.CombineHash
-    (
+    NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2),
       comparer.GetHashCode(this.Item3),
@@ -1802,8 +1786,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   public override int GetHashCode() {
     // We want to have a limited hash in this case.  We'll use the last 8 elements of the tuple
     if (this.Rest is not ITupleInternal rest)
-      return NumericsHelpers.CombineHash
-      (
+      return NumericsHelpers.CombineHash(
         EqualityComparer<T1>.Default.GetHashCode(this.Item1),
         EqualityComparer<T2>.Default.GetHashCode(this.Item2),
         EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -1820,23 +1803,20 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
     // In this case, the rest member has less than 8 elements so we need to combine some our elements with the elements in rest
     switch (8 - size) {
       case 1:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T7>.Default.GetHashCode(this.Item7),
           rest.GetHashCode()
         );
 
       case 2:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T6>.Default.GetHashCode(this.Item6),
           EqualityComparer<T7>.Default.GetHashCode(this.Item7),
           rest.GetHashCode()
         );
 
       case 3:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T5>.Default.GetHashCode(this.Item5),
           EqualityComparer<T6>.Default.GetHashCode(this.Item6),
           EqualityComparer<T7>.Default.GetHashCode(this.Item7),
@@ -1844,8 +1824,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
         );
 
       case 4:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T4>.Default.GetHashCode(this.Item4),
           EqualityComparer<T5>.Default.GetHashCode(this.Item5),
           EqualityComparer<T6>.Default.GetHashCode(this.Item6),
@@ -1854,8 +1833,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
         );
 
       case 5:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T3>.Default.GetHashCode(this.Item3),
           EqualityComparer<T4>.Default.GetHashCode(this.Item4),
           EqualityComparer<T5>.Default.GetHashCode(this.Item5),
@@ -1865,8 +1843,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
         );
 
       case 6:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T2>.Default.GetHashCode(this.Item2),
           EqualityComparer<T3>.Default.GetHashCode(this.Item3),
           EqualityComparer<T4>.Default.GetHashCode(this.Item4),
@@ -1878,8 +1855,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
 
       case 7:
       case 8:
-        return NumericsHelpers.CombineHash
-        (
+        return NumericsHelpers.CombineHash(
           EqualityComparer<T1>.Default.GetHashCode(this.Item1),
           EqualityComparer<T2>.Default.GetHashCode(this.Item2),
           EqualityComparer<T3>.Default.GetHashCode(this.Item3),
@@ -1977,10 +1953,13 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   private int GetHashCodeCore(IEqualityComparer comparer) {
     // We want to have a limited hash in this case.  We'll use the last 8 elements of the tuple
     if (this.Rest is not ITupleInternal rest)
-      return NumericsHelpers.CombineHash
-      (
-        comparer.GetHashCode(this.Item1), comparer.GetHashCode(this.Item2), comparer.GetHashCode(this.Item3),
-        comparer.GetHashCode(this.Item4), comparer.GetHashCode(this.Item5), comparer.GetHashCode(this.Item6),
+      return NumericsHelpers.CombineHash(
+        comparer.GetHashCode(this.Item1),
+        comparer.GetHashCode(this.Item2),
+        comparer.GetHashCode(this.Item3),
+        comparer.GetHashCode(this.Item4),
+        comparer.GetHashCode(this.Item5),
+        comparer.GetHashCode(this.Item6),
         comparer.GetHashCode(this.Item7)
       );
 
@@ -1990,48 +1969,59 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
 
     // In this case, the rest member has less than 8 elements so we need to combine some our elements with the elements in rest
     switch (8 - size) {
-      case 1:
-        return NumericsHelpers.CombineHash(comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer));
+      case 1: return NumericsHelpers.CombineHash(comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer));
 
-      case 2:
-        return NumericsHelpers.CombineHash(comparer.GetHashCode(this.Item6), comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer));
+      case 2: return NumericsHelpers.CombineHash(comparer.GetHashCode(this.Item6), comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer));
 
       case 3:
-        return NumericsHelpers.CombineHash
-        (
-          comparer.GetHashCode(this.Item5), comparer.GetHashCode(this.Item6), comparer.GetHashCode(this.Item7),
+        return NumericsHelpers.CombineHash(
+          comparer.GetHashCode(this.Item5),
+          comparer.GetHashCode(this.Item6),
+          comparer.GetHashCode(this.Item7),
           rest.GetHashCode(comparer)
         );
 
       case 4:
-        return NumericsHelpers.CombineHash
-        (
-          comparer.GetHashCode(this.Item4), comparer.GetHashCode(this.Item5), comparer.GetHashCode(this.Item6),
-          comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer)
+        return NumericsHelpers.CombineHash(
+          comparer.GetHashCode(this.Item4),
+          comparer.GetHashCode(this.Item5),
+          comparer.GetHashCode(this.Item6),
+          comparer.GetHashCode(this.Item7),
+          rest.GetHashCode(comparer)
         );
 
       case 5:
-        return NumericsHelpers.CombineHash
-        (
-          comparer.GetHashCode(this.Item3), comparer.GetHashCode(this.Item4), comparer.GetHashCode(this.Item5),
-          comparer.GetHashCode(this.Item6), comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer)
+        return NumericsHelpers.CombineHash(
+          comparer.GetHashCode(this.Item3),
+          comparer.GetHashCode(this.Item4),
+          comparer.GetHashCode(this.Item5),
+          comparer.GetHashCode(this.Item6),
+          comparer.GetHashCode(this.Item7),
+          rest.GetHashCode(comparer)
         );
 
       case 6:
-        return NumericsHelpers.CombineHash
-        (
-          comparer.GetHashCode(this.Item2), comparer.GetHashCode(this.Item3), comparer.GetHashCode(this.Item4),
-          comparer.GetHashCode(this.Item5), comparer.GetHashCode(this.Item6), comparer.GetHashCode(this.Item7),
+        return NumericsHelpers.CombineHash(
+          comparer.GetHashCode(this.Item2),
+          comparer.GetHashCode(this.Item3),
+          comparer.GetHashCode(this.Item4),
+          comparer.GetHashCode(this.Item5),
+          comparer.GetHashCode(this.Item6),
+          comparer.GetHashCode(this.Item7),
           rest.GetHashCode(comparer)
         );
 
       case 7:
       case 8:
-        return NumericsHelpers.CombineHash
-        (
-          comparer.GetHashCode(this.Item1), comparer.GetHashCode(this.Item2), comparer.GetHashCode(this.Item3),
-          comparer.GetHashCode(this.Item4), comparer.GetHashCode(this.Item5), comparer.GetHashCode(this.Item6),
-          comparer.GetHashCode(this.Item7), rest.GetHashCode(comparer)
+        return NumericsHelpers.CombineHash(
+          comparer.GetHashCode(this.Item1),
+          comparer.GetHashCode(this.Item2),
+          comparer.GetHashCode(this.Item3),
+          comparer.GetHashCode(this.Item4),
+          comparer.GetHashCode(this.Item5),
+          comparer.GetHashCode(this.Item6),
+          comparer.GetHashCode(this.Item7),
+          rest.GetHashCode(comparer)
         );
 
       default:
@@ -2059,7 +2049,9 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2>(
     this Tuple<T1, T2> value,
-    out T1 item1, out T2 item2) {
+    out T1 item1,
+    out T2 item2
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2070,7 +2062,10 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3>(
     this Tuple<T1, T2, T3> value,
-    out T1 item1, out T2 item2, out T3 item3) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2082,7 +2077,11 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4>(
     this Tuple<T1, T2, T3, T4> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2095,7 +2094,12 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5>(
     this Tuple<T1, T2, T3, T4, T5> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2109,7 +2113,13 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6>(
     this Tuple<T1, T2, T3, T4, T5, T6> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2124,7 +2134,14 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2140,7 +2157,15 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2157,7 +2182,16 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2175,7 +2209,17 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2194,7 +2238,18 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2214,7 +2269,19 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2235,7 +2302,20 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2257,7 +2337,21 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2280,7 +2374,22 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2304,7 +2413,23 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2329,7 +2454,24 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16, out T17 item17) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16,
+    out T17 item17
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2355,7 +2497,25 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16, out T17 item17, out T18 item18) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16,
+    out T17 item17,
+    out T18 item18
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2382,7 +2542,26 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16, out T17 item17, out T18 item18, out T19 item19) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16,
+    out T17 item17,
+    out T18 item18,
+    out T19 item19
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2410,7 +2589,27 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16, out T17 item17, out T18 item18, out T19 item19, out T20 item20) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16,
+    out T17 item17,
+    out T18 item18,
+    out T19 item19,
+    out T20 item20
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2439,7 +2638,28 @@ public static class TupleExtensions {
   [EditorBrowsable(EditorBrowsableState.Never)]
   public static void Deconstruct<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>(
     this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20, T21>>> value,
-    out T1 item1, out T2 item2, out T3 item3, out T4 item4, out T5 item5, out T6 item6, out T7 item7, out T8 item8, out T9 item9, out T10 item10, out T11 item11, out T12 item12, out T13 item13, out T14 item14, out T15 item15, out T16 item16, out T17 item17, out T18 item18, out T19 item19, out T20 item20, out T21 item21) {
+    out T1 item1,
+    out T2 item2,
+    out T3 item3,
+    out T4 item4,
+    out T5 item5,
+    out T6 item6,
+    out T7 item7,
+    out T8 item8,
+    out T9 item9,
+    out T10 item10,
+    out T11 item11,
+    out T12 item12,
+    out T13 item13,
+    out T14 item14,
+    out T15 item15,
+    out T16 item16,
+    out T17 item17,
+    out T18 item18,
+    out T19 item19,
+    out T20 item20,
+    out T21 item21
+  ) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2467,197 +2687,280 @@ public static class TupleExtensions {
   }
 
   public static Tuple<T1>
-    ToTuple<T1>(
-      this ValueTuple<T1> value) =>
+    ToTuple<T1>(this ValueTuple<T1> value) =>
     Tuple.Create(value.Item1);
 
   public static Tuple<T1, T2>
-    ToTuple<T1, T2>(
-      this ValueTuple<T1, T2> value) =>
+    ToTuple<T1, T2>(this ValueTuple<T1, T2> value) =>
     Tuple.Create(value.Item1, value.Item2);
 
   public static Tuple<T1, T2, T3>
-    ToTuple<T1, T2, T3>(
-      this ValueTuple<T1, T2, T3> value) =>
+    ToTuple<T1, T2, T3>(this ValueTuple<T1, T2, T3> value) =>
     Tuple.Create(value.Item1, value.Item2, value.Item3);
 
   public static Tuple<T1, T2, T3, T4>
-    ToTuple<T1, T2, T3, T4>(
-      this ValueTuple<T1, T2, T3, T4> value) =>
+    ToTuple<T1, T2, T3, T4>(this ValueTuple<T1, T2, T3, T4> value) =>
     Tuple.Create(value.Item1, value.Item2, value.Item3, value.Item4);
 
   public static Tuple<T1, T2, T3, T4, T5>
-    ToTuple<T1, T2, T3, T4, T5>(
-      this ValueTuple<T1, T2, T3, T4, T5> value) =>
+    ToTuple<T1, T2, T3, T4, T5>(this ValueTuple<T1, T2, T3, T4, T5> value) =>
     Tuple.Create(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5);
 
   public static Tuple<T1, T2, T3, T4, T5, T6>
-    ToTuple<T1, T2, T3, T4, T5, T6>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6> value) =>
+    ToTuple<T1, T2, T3, T4, T5, T6>(this ValueTuple<T1, T2, T3, T4, T5, T6> value) =>
     Tuple.Create(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6);
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7> value) =>
+    ToTuple<T1, T2, T3, T4, T5, T6, T7>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7> value) =>
     Tuple.Create(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7);
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       Tuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7)
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5, value.Rest.Rest.Item6)
       )
     );
 
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20, T21>>>
-    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>(
-      this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20, T21>>> value) =>
-    CreateLongRef
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLongRef
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    ToTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>(this ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20, T21>>> value) =>
+    CreateLongRef(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLongRef(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         Tuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5, value.Rest.Rest.Item6, value.Rest.Rest.Item7)
       )
     );
 
   public static ValueTuple<T1>
-    ToValueTuple<T1>(
-      this Tuple<T1> value) {
+    ToValueTuple<T1>(this Tuple<T1> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2665,8 +2968,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2>
-    ToValueTuple<T1, T2>(
-      this Tuple<T1, T2> value) {
+    ToValueTuple<T1, T2>(this Tuple<T1, T2> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2674,8 +2976,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3>
-    ToValueTuple<T1, T2, T3>(
-      this Tuple<T1, T2, T3> value) {
+    ToValueTuple<T1, T2, T3>(this Tuple<T1, T2, T3> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2683,8 +2984,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3, T4>
-    ToValueTuple<T1, T2, T3, T4>(
-      this Tuple<T1, T2, T3, T4> value) {
+    ToValueTuple<T1, T2, T3, T4>(this Tuple<T1, T2, T3, T4> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2692,8 +2992,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5>
-    ToValueTuple<T1, T2, T3, T4, T5>(
-      this Tuple<T1, T2, T3, T4, T5> value) {
+    ToValueTuple<T1, T2, T3, T4, T5>(this Tuple<T1, T2, T3, T4, T5> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2701,8 +3000,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6>
-    ToValueTuple<T1, T2, T3, T4, T5, T6>(
-      this Tuple<T1, T2, T3, T4, T5, T6> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6>(this Tuple<T1, T2, T3, T4, T5, T6> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2710,8 +3008,7 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7>(this Tuple<T1, T2, T3, T4, T5, T6, T7> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
@@ -2719,210 +3016,301 @@ public static class TupleExtensions {
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
       ValueTuple.Create(value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7)
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5, value.Rest.Rest.Item6)
       )
     );
   }
 
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8, T9, T10, T11, T12, T13, T14, ValueTuple<T15, T16, T17, T18, T19, T20, T21>>>
-    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>(
-      this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20, T21>>> value) {
+    ToValueTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>(this Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8, T9, T10, T11, T12, T13, T14, Tuple<T15, T16, T17, T18, T19, T20, T21>>> value) {
     if (value == null)
       throw new NullReferenceException(nameof(value));
 
-    return CreateLong
-    (
-      value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7,
-      CreateLong
-      (
-        value.Rest.Item1, value.Rest.Item2, value.Rest.Item3, value.Rest.Item4, value.Rest.Item5, value.Rest.Item6, value.Rest.Item7,
+    return CreateLong(
+      value.Item1,
+      value.Item2,
+      value.Item3,
+      value.Item4,
+      value.Item5,
+      value.Item6,
+      value.Item7,
+      CreateLong(
+        value.Rest.Item1,
+        value.Rest.Item2,
+        value.Rest.Item3,
+        value.Rest.Item4,
+        value.Rest.Item5,
+        value.Rest.Item6,
+        value.Rest.Item7,
         ValueTuple.Create(value.Rest.Rest.Item1, value.Rest.Rest.Item2, value.Rest.Rest.Item3, value.Rest.Rest.Item4, value.Rest.Rest.Item5, value.Rest.Rest.Item6, value.Rest.Rest.Item7)
       )
     );

@@ -1,51 +1,37 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
 #if !SUPPORTS_HASHSET
-
 using System.Diagnostics;
 using System.Linq;
 
-// ReSharper disable UnusedMember.Global
 
 namespace System.Collections.Generic {
-
   [DebuggerDisplay("Count = {Count}")]
   public class HashSet<T> : ICollection<T> {
-
     /// <summary>
-    /// Wraps values to allow <see langword="null"/> values to be used as keys.
+    ///   Wraps values to allow <see langword="null" /> values to be used as keys.
     /// </summary>
-    private readonly struct Wrapper {
-      private readonly T value;
-      private readonly HashSet<T> parent;
+    private readonly struct Wrapper(T value, HashSet<T> parent) {
+      private readonly T value = value;
 
-      public Wrapper(T value, HashSet<T> parent) {
-        this.value = value;
-        this.parent = parent;
-      }
-
-      private IEqualityComparer<T> Comparer => this.parent.Comparer;
+      private IEqualityComparer<T> Comparer => parent.Comparer;
 
       public override int GetHashCode() => this.value == null ? 0 : this.Comparer.GetHashCode(this.value);
 
@@ -93,12 +79,12 @@ namespace System.Collections.Generic {
 
     void ICollection<T>.Add(T item) => this.Add(item);
 
-    /// <summary>Removes all elements from the <see cref="HashSet{T}"/> object.</summary>
+    /// <summary>Removes all elements from the <see cref="HashSet{T}" /> object.</summary>
     public void Clear() => this._hashtable.Clear();
 
-    /// <summary>Determines whether the <see cref="HashSet{T}"/> contains the specified element.</summary>
-    /// <param name="item">The element to locate in the <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object contains the specified element; otherwise, false.</returns>
+    /// <summary>Determines whether the <see cref="HashSet{T}" /> contains the specified element.</summary>
+    /// <param name="item">The element to locate in the <see cref="HashSet{T}" /> object.</param>
+    /// <returns>true if the <see cref="HashSet{T}" /> object contains the specified element; otherwise, false.</returns>
     public bool Contains(T item) => this._hashtable.ContainsKey(new(item, this));
 
     public bool Remove(T item) {
@@ -132,9 +118,9 @@ namespace System.Collections.Generic {
 
     #region HashSet methods
 
-    /// <summary>Adds the specified element to the <see cref="HashSet{T}"/>.</summary>
+    /// <summary>Adds the specified element to the <see cref="HashSet{T}" />.</summary>
     /// <param name="item">The element to add to the set.</param>
-    /// <returns>true if the element is added to the <see cref="HashSet{T}"/> object; false if the element is already present.</returns>
+    /// <returns>true if the element is added to the <see cref="HashSet{T}" /> object; false if the element is already present.</returns>
     public bool Add(T item) {
       Wrapper wrapper = new(item, this);
       if (this._hashtable.ContainsKey(wrapper))
@@ -146,19 +132,25 @@ namespace System.Collections.Generic {
 
     /// <summary>Searches the set for a given value and returns the equal value it finds, if any.</summary>
     /// <param name="equalValue">The value to search for.</param>
-    /// <param name="actualValue">The value from the set that the search found, or the default value of <typeparamref name="T"/> when the search yielded no match.</param>
+    /// <param name="actualValue">
+    ///   The value from the set that the search found, or the default value of
+    ///   <typeparamref name="T" /> when the search yielded no match.
+    /// </param>
     /// <returns>A value indicating whether the search was successful.</returns>
     /// <remarks>
-    /// This can be useful when you want to reuse a previously stored reference instead of
-    /// a newly constructed one (so that more sharing of references can occur) or to look up
-    /// a value that has more complete data than the value you currently have, although their
-    /// comparer functions indicate they are equal.
+    ///   This can be useful when you want to reuse a previously stored reference instead of
+    ///   a newly constructed one (so that more sharing of references can occur) or to look up
+    ///   a value that has more complete data than the value you currently have, although their
+    ///   comparer functions indicate they are equal.
     /// </remarks>
     public bool TryGetValue(T equalValue, out T actualValue)
       => this._hashtable.TryGetValue(new(equalValue, this), out actualValue);
 
-    /// <summary>Modifies the current <see cref="HashSet{T}"/> object to contain all elements that are present in itself, the specified collection, or both.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
+    /// <summary>
+    ///   Modifies the current <see cref="HashSet{T}" /> object to contain all elements that are present in itself, the
+    ///   specified collection, or both.
+    /// </summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void UnionWith(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -167,8 +159,11 @@ namespace System.Collections.Generic {
         this.Add(item);
     }
 
-    /// <summary>Modifies the current <see cref="HashSet{T}"/> object to contain only elements that are present in that object and in the specified collection.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
+    /// <summary>
+    ///   Modifies the current <see cref="HashSet{T}" /> object to contain only elements that are present in that object
+    ///   and in the specified collection.
+    /// </summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void IntersectWith(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -187,8 +182,8 @@ namespace System.Collections.Generic {
           this._hashtable.Remove(item);
     }
 
-    /// <summary>Removes all elements in the specified collection from the current <see cref="HashSet{T}"/> object.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
+    /// <summary>Removes all elements in the specified collection from the current <see cref="HashSet{T}" /> object.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void ExceptWith(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -205,8 +200,11 @@ namespace System.Collections.Generic {
         this.Remove(element);
     }
 
-    /// <summary>Modifies the current <see cref="HashSet{T}"/> object to contain only elements that are present either in that object or in the specified collection, but not both.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
+    /// <summary>
+    ///   Modifies the current <see cref="HashSet{T}" /> object to contain only elements that are present either in that
+    ///   object or in the specified collection, but not both.
+    /// </summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void SymmetricExceptWith(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -222,35 +220,36 @@ namespace System.Collections.Generic {
       }
 
       var tempSet = new HashSet<T>();
-      foreach (var item in other) {
+      foreach (var item in other)
         // Try to add to temporary set, if item exists in current, it will be removed
         if (!this.Add(item)) // This checks if the item is already present in this set
           tempSet.Add(item);
-      }
 
       // Remove items that are in both sets
       foreach (var item in tempSet)
         this.Remove(item);
     }
 
-    /// <summary>Determines whether a <see cref="HashSet{T}"/> object is a subset of the specified collection.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object is a subset of <paramref name="other"/>; otherwise, false.</returns>
+    /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a subset of the specified collection.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>true if the <see cref="HashSet{T}" /> object is a subset of <paramref name="other" />; otherwise, false.</returns>
     public bool IsSubsetOf(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
 
-      if (this.Count == 0 || ReferenceEquals(other, this)) {
+      if (this.Count == 0 || ReferenceEquals(other, this))
         return true;
-      }
 
       var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
       return uniqueCount == this.Count && unfoundCount >= 0;
     }
 
-    /// <summary>Determines whether a <see cref="HashSet{T}"/> object is a proper subset of the specified collection.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object is a proper subset of <paramref name="other"/>; otherwise, false.</returns>
+    /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a proper subset of the specified collection.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>
+    ///   true if the <see cref="HashSet{T}" /> object is a proper subset of <paramref name="other" />; otherwise,
+    ///   false.
+    /// </returns>
     public bool IsProperSubsetOf(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -262,9 +261,9 @@ namespace System.Collections.Generic {
       return uniqueCount == this.Count && unfoundCount > 0;
     }
 
-    /// <summary>Determines whether a <see cref="HashSet{T}"/> object is a proper superset of the specified collection.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object is a superset of <paramref name="other"/>; otherwise, false.</returns>
+    /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a proper superset of the specified collection.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>true if the <see cref="HashSet{T}" /> object is a superset of <paramref name="other" />; otherwise, false.</returns>
     public bool IsSupersetOf(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -279,9 +278,12 @@ namespace System.Collections.Generic {
       return true;
     }
 
-    /// <summary>Determines whether a <see cref="HashSet{T}"/> object is a proper superset of the specified collection.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object is a proper superset of <paramref name="other"/>; otherwise, false.</returns>
+    /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a proper superset of the specified collection.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>
+    ///   true if the <see cref="HashSet{T}" /> object is a proper superset of <paramref name="other" />; otherwise,
+    ///   false.
+    /// </returns>
     public bool IsProperSupersetOf(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -293,9 +295,15 @@ namespace System.Collections.Generic {
       return uniqueCount < this.Count && unfoundCount == 0;
     }
 
-    /// <summary>Determines whether the current <see cref="HashSet{T}"/> object and a specified collection share common elements.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object and <paramref name="other"/> share at least one common element; otherwise, false.</returns>
+    /// <summary>
+    ///   Determines whether the current <see cref="HashSet{T}" /> object and a specified collection share common
+    ///   elements.
+    /// </summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>
+    ///   true if the <see cref="HashSet{T}" /> object and <paramref name="other" /> share at least one common element;
+    ///   otherwise, false.
+    /// </returns>
     public bool Overlaps(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -313,9 +321,9 @@ namespace System.Collections.Generic {
       return false;
     }
 
-    /// <summary>Determines whether a <see cref="HashSet{T}"/> object and the specified collection contain the same elements.</summary>
-    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}"/> object.</param>
-    /// <returns>true if the <see cref="HashSet{T}"/> object is equal to <paramref name="other"/>; otherwise, false.</returns>
+    /// <summary>Determines whether a <see cref="HashSet{T}" /> object and the specified collection contain the same elements.</summary>
+    /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
+    /// <returns>true if the <see cref="HashSet{T}" /> object is equal to <paramref name="other" />; otherwise, false.</returns>
     public bool SetEquals(IEnumerable<T> other) {
       if (other == null)
         throw new ArgumentNullException(nameof(other));
@@ -359,7 +367,7 @@ namespace System.Collections.Generic {
 
     public void CopyTo(T[] array) => this.CopyTo(array, 0, this.Count);
 
-    /// <summary>Copies the elements of a <see cref="HashSet{T}"/> object to an array, starting at the specified array index.</summary>
+    /// <summary>Copies the elements of a <see cref="HashSet{T}" /> object to an array, starting at the specified array index.</summary>
     /// <param name="array">The destination array.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
     public void CopyTo(T[] array, int arrayIndex) => this.CopyTo(array, arrayIndex, this.Count);
@@ -382,7 +390,10 @@ namespace System.Collections.Generic {
       }
     }
 
-    /// <summary>Removes all elements that match the conditions defined by the specified predicate from a <see cref="HashSet{T}"/> collection.</summary>
+    /// <summary>
+    ///   Removes all elements that match the conditions defined by the specified predicate from a
+    ///   <see cref="HashSet{T}" /> collection.
+    /// </summary>
     public int RemoveWhere(Predicate<T> match) {
       if (match == null)
         throw new ArgumentNullException(nameof(match));
@@ -397,20 +408,19 @@ namespace System.Collections.Generic {
       return result;
     }
 
-    /// <summary>Gets the <see cref="IEqualityComparer"/> object that is used to determine equality for the values in the set.</summary>
+    /// <summary>Gets the <see cref="IEqualityComparer" /> object that is used to determine equality for the values in the set.</summary>
     public IEqualityComparer<T> Comparer { get; }
 
     /// <summary>Ensures that this hash set can hold the specified number of elements without growing.</summary>
     public int EnsureCapacity(int capacity) => capacity;
 
     /// <summary>
-    /// Sets the capacity of a <see cref="HashSet{T}"/> object to the actual number of elements it contains,
-    /// rounded up to a nearby, implementation-specific value.
+    ///   Sets the capacity of a <see cref="HashSet{T}" /> object to the actual number of elements it contains,
+    ///   rounded up to a nearby, implementation-specific value.
     /// </summary>
     public void TrimExcess() { }
 
     #endregion
-
   }
 }
 

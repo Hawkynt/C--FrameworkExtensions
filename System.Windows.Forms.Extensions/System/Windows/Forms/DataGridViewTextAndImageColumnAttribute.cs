@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -28,35 +24,32 @@ namespace System.Windows.Forms;
 /// <summary>
 ///   allows to show an image alongside to the displayed text.
 /// </summary>
-public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
-  public string ImageListPropertyName { get; }
-  public string ImageKeyPropertyName { get; }
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class DataGridViewTextAndImageColumnAttribute(
+  string imageListPropertyName,
+  string imageKeyPropertyName,
+  TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
+  uint fixedImageWidth = 0,
+  uint fixedImageHeight = 0,
+  bool keepAspectRatio = true
+)
+  : Attribute {
+  public string ImageListPropertyName { get; } = imageListPropertyName;
+  public string ImageKeyPropertyName { get; } = imageKeyPropertyName;
   public string ImagePropertyName { get; }
-  public TextImageRelation TextImageRelation { get; }
-  public uint FixedImageWidth { get; }
-  public uint FixedImageHeight { get; }
-  public bool KeepAspectRatio { get; }
+  public TextImageRelation TextImageRelation { get; } = textImageRelation;
+  public uint FixedImageWidth { get; } = fixedImageWidth;
+  public uint FixedImageHeight { get; } = fixedImageHeight;
+  public bool KeepAspectRatio { get; } = keepAspectRatio;
 
-  public DataGridViewTextAndImageColumnAttribute(string imageListPropertyName, string imageKeyPropertyName,
-    TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText, uint fixedImageWidth = 0,
-    uint fixedImageHeight = 0, bool keepAspectRatio = true) {
-    this.ImageListPropertyName = imageListPropertyName;
-    this.ImageKeyPropertyName = imageKeyPropertyName;
-    this.TextImageRelation = textImageRelation;
-    this.FixedImageWidth = fixedImageWidth;
-    this.FixedImageHeight = fixedImageHeight;
-    this.KeepAspectRatio = keepAspectRatio;
-  }
-
-  public DataGridViewTextAndImageColumnAttribute(string imagePropertyName,
-    TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText, uint fixedImageWidth = 0,
-    uint fixedImageHeight = 0, bool keepAspectRatio = true) {
-    this.ImagePropertyName = imagePropertyName;
-    this.TextImageRelation = textImageRelation;
-    this.FixedImageWidth = fixedImageWidth;
-    this.FixedImageHeight = fixedImageHeight;
-    this.KeepAspectRatio = keepAspectRatio;
-  }
+  public DataGridViewTextAndImageColumnAttribute(
+    string imagePropertyName,
+    TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
+    uint fixedImageWidth = 0,
+    uint fixedImageHeight = 0,
+    bool keepAspectRatio = true
+  ) : this(null, null, textImageRelation, fixedImageWidth, fixedImageHeight, keepAspectRatio)
+    => this.ImagePropertyName = imagePropertyName;
 
   private Image _GetImage(object row, object value) {
     if (value is null)
@@ -68,14 +61,26 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
       image = DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, imagePropertyName, null, null, null, null);
     else {
       var imageList =
-        DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(row, this.ImageListPropertyName, null, null, null,
-          null);
+        DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(
+          row,
+          this.ImageListPropertyName,
+          null,
+          null,
+          null,
+          null
+        );
       if (imageList == null)
         return null;
 
       var imageKey =
-        DataGridViewExtensions.GetPropertyValueOrDefault<object>(row, this.ImageKeyPropertyName, null, null, null,
-          null);
+        DataGridViewExtensions.GetPropertyValueOrDefault<object>(
+          row,
+          this.ImageKeyPropertyName,
+          null,
+          null,
+          null,
+          null
+        );
       if (imageKey != null)
         image = imageKey is int index && !index.GetType().IsEnum
             ? imageList.Images[index]

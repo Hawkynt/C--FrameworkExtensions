@@ -1,32 +1,30 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
+
 using System.Collections.Generic;
+using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
-using Guard;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast
@@ -34,16 +32,16 @@ using Guard;
 namespace System;
 
 public static partial class MathEx {
-
   /// <summary>
-  /// Calculate a more accurate square root, see http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
+  ///   Calculate a more accurate square root, see
+  ///   http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
   /// </summary>
   /// <param name="this">The x.</param>
   /// <param name="epsilon">The epsilon.</param>
   /// <returns>The square root of x</returns>
   public static decimal Sqrt(this decimal @this, decimal epsilon = 0) {
     Against.NegativeValues(@this);
-    
+
     decimal current = (decimal)Math.Sqrt((double)@this), previous;
     const decimal factor = 2m;
     const decimal zero = decimal.Zero;
@@ -53,33 +51,26 @@ public static partial class MathEx {
       if (previous == zero)
         return zero;
       current = (previous + @this / previous) / factor;
-    }
-    while (Math.Abs(previous - current) > epsilon);
-    
+    } while (Math.Abs(previous - current) > epsilon);
+
     return current;
   }
- 
-#if SUPPORTS_INLINING
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Floor(this float @this) => MathF.Floor(@this);
 #else
   public static float Floor(this float @this) => (float)Math.Floor(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Ceiling(this float @this) => MathF.Ceiling(@this);
 #else
   public static float Ceiling(this float @this) => (float)Math.Ceiling(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Truncate(this float @this) => MathF.Truncate(@this);
 #else
@@ -88,10 +79,12 @@ public static partial class MathEx {
 
   /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
   /// <param name="this">A number to be rounded.</param>
-  /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
-#if SUPPORTS_INLINING
+  /// <returns>
+  ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+  ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+  ///   returned.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Round(this float @this) => MathF.Round(@this);
 #else
@@ -101,10 +94,12 @@ public static partial class MathEx {
   /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
   /// <param name="this">A number to be rounded.</param>
   /// <param name="digits">The number of decimal places in the return value.</param>
-  /// <returns>The integer nearest the <paramref name="this" /> parameter. If the fractional component of <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is returned.</returns>
-#if SUPPORTS_INLINING
+  /// <returns>
+  ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+  ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+  ///   returned.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static float Round(this float @this, int digits) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
@@ -119,9 +114,7 @@ public static partial class MathEx {
   /// <param name="this">A number to be rounded.</param>
   /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Round(this float @this, MidpointRounding method) => MathF.Round(@this, method);
 #else
@@ -133,9 +126,7 @@ public static partial class MathEx {
   /// <param name="digits">The number of decimal places in the return value.</param>
   /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static float Round(this float @this, int digits, MidpointRounding method) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
@@ -146,76 +137,58 @@ public static partial class MathEx {
 #endif
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Log(this float @this, float @base) => MathF.Log(@this, @base);
 #else
   public static float Log(this float @this, float @base) => (float)Math.Log(@this, @base);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Log(this double @this, double @base) => Math.Log(@this, @base);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Log2(this float @this) => MathF.Log(@this, 2);
 #else
   public static float Log2(this float @this) => (float)Math.Log(@this, 2);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Log2(this double @this) => Math.Log(@this, 2);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 #if SUPPORTS_MATHF
   public static float Exp(this float @this) => MathF.Exp(@this);
 #else
   public static float Exp(this float @this) => (float)Math.Exp(@this);
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Exp(this double @this) => Math.Exp(@this);
 
   /// <summary>
-  /// Calculates the cubic root.
+  ///   Calculates the cubic root.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Cbrt(this double @this) => Math.Pow(@this, 1d / 3);
 
   /// <summary>
-  /// Calculates the cotangent.
+  ///   Calculates the cotangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Cot(this double @this) => Math.Cos(@this) / Math.Sin(@this);
 
   /// <summary>
-  /// Calculates the hyperbolic cotangent.
+  ///   Calculates the hyperbolic cotangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Coth(this double @this) {
     var ex = Math.Exp(@this);
     var em = 1 / ex;
@@ -223,185 +196,150 @@ public static partial class MathEx {
   }
 
   /// <summary>
-  /// Calculates the cosecant.
+  ///   Calculates the cosecant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Csc(this double @this) => 1 / Math.Sin(@this);
 
   /// <summary>
-  /// Calculates the hyperbolic cosecant.
+  ///   Calculates the hyperbolic cosecant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Csch(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex - 1 / ex);
   }
 
   /// <summary>
-  /// Calculates the secant.
+  ///   Calculates the secant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Sec(this double @this) => 1 / Math.Cos(@this);
 
   /// <summary>
-  /// Calculates the hyperbolic secant.
+  ///   Calculates the hyperbolic secant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Sech(this double @this) {
     var ex = Math.Exp(@this);
     return 2 / (ex + 1 / ex);
   }
 
   /// <summary>
-  /// Calculates the area hyperbolic sine.
+  ///   Calculates the area hyperbolic sine.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arsinh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this + 1));
 
   /// <summary>
-  /// Calculates the area hyperbolic cosine.
+  ///   Calculates the area hyperbolic cosine.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcosh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this - 1));
 
   /// <summary>
-  /// Calculates the area hyperbolic tangent.
+  ///   Calculates the area hyperbolic tangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Artanh(this double @this) => 0.5d * Math.Log((1 + @this) / (1 - @this));
 
   /// <summary>
-  /// Calculates the area hyperbolic cotangent.
+  ///   Calculates the area hyperbolic cotangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcoth(this double @this) => 0.5d * Math.Log((@this + 1) / (@this - 1));
 
   /// <summary>
-  /// Calculates the area hyperbolic secant.
+  ///   Calculates the area hyperbolic secant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arsech(this double @this) => Math.Log((1 + Math.Sqrt(1 - @this * @this)) / @this);
 
   /// <summary>
-  /// Calculates the area hyperbolic cosecant.
+  ///   Calculates the area hyperbolic cosecant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Arcsch(this double @this) => Math.Log((1 + Math.Sqrt(1 + @this * @this)) / @this);
 
   /// <summary>
-  /// Calculates the arcus sine.
+  ///   Calculates the arcus sine.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Asin(this double @this) => Math.Asin(@this);
 
   /// <summary>
-  /// Calculates the arcus cosine.
+  ///   Calculates the arcus cosine.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acos(this double @this) => Math.Acos(@this);
 
   /// <summary>
-  /// Calculates the arcus tangent.
+  ///   Calculates the arcus tangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Atan(this double @this) => Math.Atan(@this);
 
   /// <summary>
-  /// Calculates the arcus cotangent.
+  ///   Calculates the arcus cotangent.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acot(this double @this) => Math.Atan(1 / @this);
 
   /// <summary>
-  /// Calculates the arcus secant.
+  ///   Calculates the arcus secant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Asec(this double @this) => Math.Acos(1 / @this);
 
   /// <summary>
-  /// Calculates the arcus cosecant.
+  ///   Calculates the arcus cosecant.
   /// </summary>
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static double Acsc(this double @this) => Math.Asin(1 / @this);
 
   /// <summary>
-  /// Enumerates all primes in the ulong value space.
+  ///   Enumerates all primes in the ulong value space.
   /// </summary>
   public static IEnumerable<ulong> EnumeratePrimes => _EnumeratePrimes();
 
-  private readonly struct PrimeSieve {
-    private readonly ulong[] _values;
-    public PrimeSieve(ulong[] values) => this._values = values;
-
+  private readonly struct PrimeSieve(ulong[] values) {
     public IEnumerable<ulong> Enumerate() {
       ulong prime = 3;
-      var values = this._values;
-      for (var i = 0; i < values.Length; ++i, prime += 2) {
-        if (values[i] != 0)
+      var values1 = values;
+      for (var i = 0; i < values1.Length; ++i, prime += 2) {
+        if (values1[i] != 0)
           continue;
 
 #if SUPPORTS_ASYNC
@@ -422,25 +360,22 @@ public static partial class MathEx {
 
     private void _FillSieveAction(ulong prime) {
       var doublePrime = prime << 1;
-      var values = this._values;
-      var maxNumberInSieve = ((ulong)values.Length << 1) + 3;
+      var values1 = values;
+      var maxNumberInSieve = ((ulong)values1.Length << 1) + 3;
       for (var j = prime * prime; j < maxNumberInSieve; j += doublePrime)
-        values[(int)((j - 3) >> 1)] = j;
+        values1[(int)((j - 3) >> 1)] = j;
     }
-
   }
 
-  private struct KnownPrimesStorage {
-    private readonly ulong[] _primes;
+  private struct KnownPrimesStorage(ulong[] primes) {
     private int _index;
 
     // no checks because only used internally and guaranteed to have a primes!=null && primes.Length > 0 
-    public KnownPrimesStorage(ulong[] primes) => this._primes = primes;
 
-    private bool _IsSpaceInBufferLeft() => this._index < this._primes.Length;
+    private bool _IsSpaceInBufferLeft() => this._index < primes.Length;
 
     // no checks because we guarantee, that all calls occur while there is still space in the array
-    public void Add(ulong prime) => this._primes[this._index++] = prime;
+    public void Add(ulong prime) => primes[this._index++] = prime;
 
     public IEnumerable<ulong> Enumerate() {
       foreach (var prime in this._GenerateAndFillBuffer())
@@ -455,16 +390,15 @@ public static partial class MathEx {
     }
 
     private IEnumerable<ulong> _GenerateAndFillBuffer() {
-
       // array always valid
-      var primes = this._primes;
+      var primes1 = primes;
 
       // array always contains at least one prime from the sieve
-      var lastKnownPrime = primes[this._index - 1];
+      var lastKnownPrime = primes1[this._index - 1];
 
 #if SUPPORTS_ASYNC
       var task = Task.Factory.StartNew(this._FindNextPrimeWithPartiallyFilledBuffer, lastKnownPrime);
-      for(;;) {
+      for (;;) {
         task.Wait();
         lastKnownPrime = task.Result;
         this.Add(lastKnownPrime);
@@ -491,23 +425,23 @@ public static partial class MathEx {
 
     private ulong _FindNextPrimeWithPartiallyFilledBuffer(ulong lastKnownPrime) {
       var candidate = lastKnownPrime;
-      do {
+      do
         candidate += 2;
-      } while (!this._IsPrimeWithPartiallyFilledBuffer(candidate));
+      while (!this._IsPrimeWithPartiallyFilledBuffer(candidate));
 
       return candidate;
     }
 
     private bool _IsPrimeWithPartiallyFilledBuffer(ulong candidate) {
       for (var i = 0; i < this._index; ++i)
-        if (candidate % this._primes[i] == 0)
+        if (candidate % primes[i] == 0)
           return false;
 
       return true;
     }
 
     private IEnumerable<ulong> _EnumerateWithFullBuffer() {
-      var lastKnownPrime = this._primes[^1];
+      var lastKnownPrime = primes[^1];
       var upperPrimeSquare = lastKnownPrime * lastKnownPrime;
 
 #if SUPPORTS_ASYNC
@@ -538,26 +472,25 @@ public static partial class MathEx {
 
     private ulong _FindNextPrimeWithFullBuffer(ulong lastKnownPrime) {
       var candidate = lastKnownPrime;
-      do {
+      do
         candidate += 2;
-      } while (!this._IsPrimeWithFullBuffer(candidate));
+      while (!this._IsPrimeWithFullBuffer(candidate));
 
       return candidate;
     }
 
     private bool _IsPrimeWithFullBuffer(ulong candidate) {
-      foreach (var prime in this._primes)
+      foreach (var prime in primes)
         if (candidate % prime == 0)
           return false;
 
       return true;
     }
-
   }
 
   private static IEnumerable<ulong> _EnumeratePrimes() {
 #if COLOR_PRIME_GENERATION
-    Console.ForegroundColor= ConsoleColor.White;
+    Console.ForegroundColor = ConsoleColor.White;
 #endif
     yield return 2;
 
@@ -592,7 +525,7 @@ public static partial class MathEx {
       var candidate = largestKnownPrime * largestKnownPrime + 2;
 
 #if SUPPORTS_ASYNC
-      var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT,candidate);
+      var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
       for (;;) {
         task.Wait();
         var isPrime = task.Result;
@@ -601,7 +534,7 @@ public static partial class MathEx {
           yield return candidate;
 
         candidate += 2; // Ensure we only check odd numbers
-        task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT,candidate);
+        task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
       }
 #else
       for (; ; ) {
@@ -634,8 +567,5 @@ public static partial class MathEx {
 
       return true;
     }
-
-
   }
-
 }

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
     <PackageId>FrameworkExtensions.Microsoft.Win32</PackageId>
     <Version>1.0.0</Version>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
-  
+
   <ItemGroup>
     <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="Microsoft.Win32.Registry" Version="*" />
   </ItemGroup>

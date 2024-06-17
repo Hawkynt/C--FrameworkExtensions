@@ -1,23 +1,19 @@
 #region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -31,9 +27,8 @@ using Guard;
 namespace System.Reflection;
 
 public static class MemberInfoExtensions {
-
   /// <summary>
-  /// Gets the custom attribute.
+  ///   Gets the custom attribute.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
@@ -50,7 +45,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attribute's value.
+  ///   Gets the custom attribute's value.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -59,7 +54,7 @@ public static class MemberInfoExtensions {
   /// <param name="inherit">if set to <c>true</c> inherits attributes.</param>
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>
-  /// The attribute's value if present; otherwise, throws exception.
+  ///   The attribute's value if present; otherwise, throws exception.
   /// </returns>
   public static TValue GetCustomAttributeValue<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
     Against.ThisIsNull(@this);
@@ -69,7 +64,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attribute or a default value.
+  ///   Gets the custom attribute or a default value.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
@@ -84,7 +79,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attribute's value or a default value.
+  ///   Gets the custom attribute's value or a default value.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -93,7 +88,7 @@ public static class MemberInfoExtensions {
   /// <param name="inherit">if set to <c>true</c> inherits attributes.</param>
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>
-  /// The attribute's value if present; otherwise, the default value.
+  ///   The attribute's value if present; otherwise, the default value.
   /// </returns>
   public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, TValue defaultValue = default, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
     Against.ThisIsNull(@this);
@@ -103,7 +98,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attribute or generates a default value.
+  ///   Gets the custom attribute or generates a default value.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
@@ -118,7 +113,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attribute's value or a constructs a default value.
+  ///   Gets the custom attribute's value or a constructs a default value.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -128,7 +123,7 @@ public static class MemberInfoExtensions {
   /// <param name="inherit">if set to <c>true</c> inherits attributes.</param>
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>
-  /// The attribute's value if present; otherwise, the default value.
+  ///   The attribute's value if present; otherwise, the default value.
   /// </returns>
   public static TValue GetCustomAttributeValueOrDefault<TAttribute, TValue>(this MemberInfo @this, Func<TAttribute, TValue> valueGetter, Func<TValue> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
     Against.ThisIsNull(@this);
@@ -139,7 +134,7 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Tries to get the custom attribute.
+  ///   Tries to get the custom attribute.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
@@ -161,14 +156,14 @@ public static class MemberInfoExtensions {
   }
 
   /// <summary>
-  /// Gets the custom attributes.
+  ///   Gets the custom attributes.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="inherit">if set to <c>true</c> inherits attributes.</param>
   /// <param name="inheritInterfaces">if set to <c>true</c> inherits interfaces' attributes.</param>
   /// <returns>
-  /// The custom attributes of the given type.
+  ///   The custom attributes of the given type.
   /// </returns>
   public static TAttribute[] GetCustomAttributes<TAttribute>(this MemberInfo @this, bool inherit = true, bool inheritInterfaces = false) where TAttribute : Attribute {
     Against.ThisIsNull(@this);
@@ -179,7 +174,7 @@ public static class MemberInfoExtensions {
   #region designer-relevant attributes
 
   /// <summary>
-  /// Gets the display name attribute value or a default.
+  ///   Gets the display name attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -189,7 +184,7 @@ public static class MemberInfoExtensions {
   public static string GetDisplayNameOrDefault(this MemberInfo @this, string defaultValue = null, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<DisplayNameAttribute, string>(@this, d => d.DisplayName, defaultValue, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the display name attribute value or a default.
+  ///   Gets the display name attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -199,7 +194,7 @@ public static class MemberInfoExtensions {
   public static string GetDisplayNameOrDefault(this MemberInfo @this, Func<string> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<DisplayNameAttribute, string>(@this, d => d.DisplayName, defaultValueFactory, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the description attribute value or a default.
+  ///   Gets the description attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -209,7 +204,7 @@ public static class MemberInfoExtensions {
   public static string GetDescriptionOrDefault(this MemberInfo @this, string defaultValue = null, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<DescriptionAttribute, string>(@this, d => d.Description, defaultValue, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the description attribute value or a default.
+  ///   Gets the description attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -219,7 +214,7 @@ public static class MemberInfoExtensions {
   public static string GetDescriptionOrDefault(this MemberInfo @this, Func<string> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<DescriptionAttribute, string>(@this, d => d.Description, defaultValueFactory, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the category attribute value or a default.
+  ///   Gets the category attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -229,7 +224,7 @@ public static class MemberInfoExtensions {
   public static string GetCategoryOrDefault(this MemberInfo @this, string defaultValue = null, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<CategoryAttribute, string>(@this, d => d.Category, defaultValue, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the category attribute value or a default.
+  ///   Gets the category attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -239,7 +234,7 @@ public static class MemberInfoExtensions {
   public static string GetCategoryOrDefault(this MemberInfo @this, Func<string> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<CategoryAttribute, string>(@this, d => d.Category, defaultValueFactory, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the browsable attribute value or a default.
+  ///   Gets the browsable attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -249,7 +244,7 @@ public static class MemberInfoExtensions {
   public static bool GetBrowsableOrDefault(this MemberInfo @this, bool defaultValue = false, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<BrowsableAttribute, bool>(@this, d => d.Browsable, defaultValue, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the browsable attribute value or a default.
+  ///   Gets the browsable attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>
@@ -259,7 +254,7 @@ public static class MemberInfoExtensions {
   public static bool GetBrowsableOrDefault(this MemberInfo @this, Func<bool> defaultValueFactory, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<BrowsableAttribute, bool>(@this, d => d.Browsable, defaultValueFactory, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the read-only attribute value or a default.
+  ///   Gets the read-only attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValue">The default value.</param>
@@ -269,7 +264,7 @@ public static class MemberInfoExtensions {
   public static bool GetReadOnlyOrDefault(this MemberInfo @this, bool defaultValue = false, bool inherit = true, bool inheritInterfaces = false) => GetCustomAttributeValueOrDefault<ReadOnlyAttribute, bool>(@this, d => d.IsReadOnly, defaultValue, inherit, inheritInterfaces);
 
   /// <summary>
-  /// Gets the read-only attribute value or a default.
+  ///   Gets the read-only attribute value or a default.
   /// </summary>
   /// <param name="this">This MemberInfo.</param>
   /// <param name="defaultValueFactory">The default value factory.</param>

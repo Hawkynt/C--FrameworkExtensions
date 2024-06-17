@@ -5,27 +5,18 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-// ReSharper disable UnusedMember.Global
 namespace Guard;
 
 using System.Diagnostics;
@@ -48,7 +39,7 @@ partial class Against {
 #endif
   public static void ValueIsZero(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value == 0)
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be zero.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be zero.""", caller);
   }
 
   /// <summary>
@@ -86,7 +77,7 @@ partial class Against {
 #endif
   public static void ValuesInRange(<#=type#> value, <#=type#> minimum, <#=type#> maximum, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (value >= minimum && value <=maximum)
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be {value} < {minimum} or {value} > {maximum}.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be {value} < {minimum} or {value} > {maximum}.""", caller);
   }
 
   /// <summary>
@@ -242,7 +233,7 @@ partial class Against {
 #endif
   public static void ValueIsInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (<#=type#>.IsInfinity(value))
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be infinity.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be infinity.""", caller);
   }
 
   /// <summary>
@@ -258,7 +249,7 @@ partial class Against {
 #endif
   public static void ValueIsPositiveInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (<#=type#>.IsPositiveInfinity(value))
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be +infinity.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be +infinity.""", caller);
   }
 
   /// <summary>
@@ -274,7 +265,7 @@ partial class Against {
 #endif
   public static void ValueIsNegativeInfinity(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (<#=type#>.IsNegativeInfinity(value))
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be -infinity.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be -infinity.""", caller);
   }
 
   /// <summary>
@@ -290,7 +281,7 @@ partial class Against {
 #endif
   public static void ValueIsNaN(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (<#=type#>.IsNaN(value))
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be NaN.", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be NaN.""", caller);
   }
 
   /// <summary>
@@ -306,7 +297,7 @@ partial class Against {
 #endif
   public static void ValueIsNonNumeric(<#=type#> value, [CallerMemberName] string caller = null, [CallerArgumentExpression(nameof(value))] string expression = null) {
     if (<#=type#>.IsInfinity(value) || <#=type#>.IsNaN(value))
-      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $@"Parameter ""{expression ?? nameof(value)}"" must not be numeric value ({value}).", caller);
+      AlwaysThrow.ArgumentOutOfRangeException(expression ?? nameof(value), $"""Parameter "{expression ?? nameof(value)}" must not be numeric value ({value}).""", caller);
   }
 
 <#}#>

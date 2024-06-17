@@ -1,4 +1,21 @@
-﻿// Aggregated and sourced from https://github.com/theraot/Theraot
+﻿#region (c)2010-2042 Hawkynt
+
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
+
+#endregion
 
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
@@ -32,25 +49,53 @@ public static class Tuple {
   public static Tuple<T1, T2, T3, T4> Create<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4) => new(item1, item2, item3, item4);
 
   public static Tuple<T1, T2, T3, T4, T5>
-    Create<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) =>
-    new(item1, item2, item3, item4, item5);
+    Create<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5)
+    => new(item1, item2, item3, item4, item5);
 
-  public static Tuple<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item4,
-    T5 item5, T6 item6) =>
-    new(item1, item2, item3, item4, item5, item6);
+  public static Tuple<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(
+    T1 item1,
+    T2 item2,
+    T3 item3,
+    T4 item4,
+    T5 item5,
+    T6 item6
+  )
+    => new(item1, item2, item3, item4, item5, item6);
 
-  public static Tuple<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3,
-    T4 item4, T5 item5, T6 item6, T7 item7) =>
-    new(item1, item2, item3, item4, item5, item6, item7);
+  public static Tuple<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(
+    T1 item1,
+    T2 item2,
+    T3 item3,
+    T4 item4,
+    T5 item5,
+    T6 item6,
+    T7 item7
+  )
+    => new(item1, item2, item3, item4, item5, item6, item7);
 
-  public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 item1,
-    T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8) =>
-    new(item1, item2, item3, item4, item5, item6, item7,
-      new(item8));
+  public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+    T1 item1,
+    T2 item2,
+    T3 item3,
+    T4 item4,
+    T5 item5,
+    T6 item6,
+    T7 item7,
+    T8 item8
+  )
+    => new(
+      item1,
+      item2,
+      item3,
+      item4,
+      item5,
+      item6,
+      item7,
+      new(item8)
+    );
 }
 
 [Serializable]
-
 public class Tuple<T1> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1) => this.Item1 = item1;
 
@@ -82,7 +127,6 @@ public class Tuple<T1> : IStructuralEquatable, IStructuralComparable, IComparabl
 }
 
 [Serializable]
-
 public class Tuple<T1, T2> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2) {
     this.Item1 = item1;
@@ -133,7 +177,6 @@ public class Tuple<T1, T2> : IStructuralEquatable, IStructuralComparable, ICompa
 }
 
 [Serializable]
-
 public class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2, T3 item3) {
     this.Item1 = item1;
@@ -192,7 +235,6 @@ public class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IC
 }
 
 [Serializable]
-
 public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4) {
     this.Item1 = item1;
@@ -235,9 +277,14 @@ public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable
     return hash;
   }
 
-  public override string ToString() =>
-    string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2}, {3})", this.Item1, this.Item2, this.Item3,
-      this.Item4);
+  public override string ToString() => string.Format(
+    CultureInfo.InvariantCulture,
+    "({0}, {1}, {2}, {3})",
+    this.Item1,
+    this.Item2,
+    this.Item3,
+    this.Item4
+  );
 
   private int CompareTo(object other, IComparer comparer) {
     if (other == null)
@@ -261,7 +308,6 @@ public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable
 }
 
 [Serializable]
-
 public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) {
     this.Item1 = item1;
@@ -309,9 +355,15 @@ public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralCompar
     return hash;
   }
 
-  public override string ToString() =>
-    string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2}, {3}, {4})", this.Item1, this.Item2,
-      this.Item3, this.Item4, this.Item5);
+  public override string ToString() => string.Format(
+    CultureInfo.InvariantCulture,
+    "({0}, {1}, {2}, {3}, {4})",
+    this.Item1,
+    this.Item2,
+    this.Item3,
+    this.Item4,
+    this.Item5
+  );
 
   private int CompareTo(object other, IComparer comparer) {
     if (other == null)
@@ -338,7 +390,6 @@ public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralCompar
 }
 
 [Serializable]
-
 public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) {
     this.Item1 = item1;
@@ -391,9 +442,16 @@ public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralCo
     return hash;
   }
 
-  public override string ToString() =>
-    string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2}, {3}, {4}, {5})", this.Item1, this.Item2,
-      this.Item3, this.Item4, this.Item5, this.Item6);
+  public override string ToString() => string.Format(
+    CultureInfo.InvariantCulture,
+    "({0}, {1}, {2}, {3}, {4}, {5})",
+    this.Item1,
+    this.Item2,
+    this.Item3,
+    this.Item4,
+    this.Item5,
+    this.Item6
+  );
 
   private int CompareTo(object other, IComparer comparer) {
     if (other == null)
@@ -423,7 +481,6 @@ public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralCo
 }
 
 [Serializable]
-
 public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructuralComparable, IComparable {
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) {
     this.Item1 = item1;
@@ -481,9 +538,17 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructur
     return hash;
   }
 
-  public override string ToString() =>
-    string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2}, {3}, {4}, {5}, {6})", this.Item1, this.Item2,
-      this.Item3, this.Item4, this.Item5, this.Item6, this.Item7);
+  public override string ToString() => string.Format(
+    CultureInfo.InvariantCulture,
+    "({0}, {1}, {2}, {3}, {4}, {5}, {6})",
+    this.Item1,
+    this.Item2,
+    this.Item3,
+    this.Item4,
+    this.Item5,
+    this.Item6,
+    this.Item7
+  );
 
   private int CompareTo(object other, IComparer comparer) {
     if (other == null)
@@ -581,9 +646,18 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
 
   public override string ToString() {
     var restString = this.Rest.ToString();
-    return string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", this.Item1,
-      this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7,
-      restString.Substring(1, restString.Length - 2));
+    return string.Format(
+      CultureInfo.InvariantCulture,
+      "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+      this.Item1,
+      this.Item2,
+      this.Item3,
+      this.Item4,
+      this.Item5,
+      this.Item6,
+      this.Item7,
+      restString.Substring(1, restString.Length - 2)
+    );
   }
 
   private static void CheckType(TRest rest) {

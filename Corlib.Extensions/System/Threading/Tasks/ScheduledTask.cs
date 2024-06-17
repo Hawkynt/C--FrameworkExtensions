@@ -1,23 +1,22 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
+
 #define SUPPORTTHREADTIMERS
 
 using System.Collections.Concurrent;
@@ -26,7 +25,8 @@ using Guard;
 namespace System.Threading.Tasks;
 
 /// <summary>
-/// Creates a scheduled task, that combines all calls within a given timespan and than executes only once with the last known value.
+///   Creates a scheduled task, that combines all calls within a given timespan and than executes only once with the last
+///   known value.
 /// </summary>
 /// <typeparam name="TValue">The type of item to pass for execution.</typeparam>
 public class ScheduledTask<TValue> {
@@ -44,7 +44,7 @@ public class ScheduledTask<TValue> {
 #endif
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time the task is deferred by.</param>
@@ -52,82 +52,80 @@ public class ScheduledTask<TValue> {
   public ScheduledTask(
     Action<TValue> action,
     TimeSpan deferredTime,
-    bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+    bool waitUntilTaskReturnedBeforeNextSchedule = false
+  ) : this(
     action,
     (int)deferredTime.TotalMilliseconds,
     waitUntilTaskReturnedBeforeNextSchedule
-  ) {
-  }
+  ) { }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledTask&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledTask(Action<TValue> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
     Against.ArgumentIsNull(action);
-    
+
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
 #if SUPPORTTHREADTIMERS
-    if (deferredTime < 500) {
+    if (deferredTime < 500)
       this._allowThreadSleep = true;
-    } else {
+    else {
       this._allowThreadSleep = false;
       this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
     }
 #endif
   }
-  
+
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Execute(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Restart(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Schedule(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Executes the handler immediately with the given value.
+  ///   Executes the handler immediately with the given value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Now(TValue value) => this._action(value);
 
   /// <summary>
-  /// Schedule an execution with the specified value in at least this timespan.
+  ///   Schedule an execution with the specified value in at least this timespan.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="deferredBy">The time to defer by.</param>
   public void Schedule(TValue value, TimeSpan deferredBy) => this._Schedule(value, (int)deferredBy.TotalMilliseconds);
 
   /// <summary>
-  /// Schedule an execution with the specified value in at least this timespan.
+  ///   Schedule an execution with the specified value in at least this timespan.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="deferredBy">The time in ms to defer by.</param>
   public void Schedule(TValue value, int deferredBy) => this._Schedule(value, deferredBy);
 
   /// <summary>
-  /// Is called when the time is over.
+  ///   Is called when the time is over.
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-
     // as long as there is fresh data available, re-use the thread
     while (this._dataAvailable != 0) {
-
       // sleep if needed);
       if (sleepTime != null)
         Thread.Sleep((int)sleepTime);
@@ -150,17 +148,15 @@ public class ScheduledTask<TValue> {
       try {
         this._action(currentValue);
       } finally {
-
         // reset scheduler so more tasks can be scheduled
         if (this._waitUntilTaskReturnedBeforeNextSchedule)
           Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
       }
-
     }
   }
 
   /// <summary>
-  /// Schedules the task to be run with this value.
+  ///   Schedules the task to be run with this value.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="sleepTime">The sleep time to wait before the task is executed.</param>
@@ -170,7 +166,6 @@ public class ScheduledTask<TValue> {
 
       // indicate fresh data
       Interlocked.CompareExchange(ref this._dataAvailable, 1, 0);
-
     }
 
     // return if its already running
@@ -183,17 +178,15 @@ public class ScheduledTask<TValue> {
       var action = this._OnTimeIsUp;
       action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
-    } else {
+    } else
       this._timer.Change(sleepTime, Timeout.Infinite);
-    }
 #endif
   }
 }
 
 /// <summary>
-/// Creates a scheduled task, that combines all calls within a given timespan and than executes only once.
+///   Creates a scheduled task, that combines all calls within a given timespan and than executes only once.
 /// </summary>
-/// 
 public class ScheduledTask {
   private readonly Action _action;
   private readonly int _deferredTime;
@@ -208,7 +201,7 @@ public class ScheduledTask {
   public ManualResetEventSlim WaitHandle { get; } = new(true);
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledTask" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time the task is deferred by.</param>
@@ -216,71 +209,72 @@ public class ScheduledTask {
   public ScheduledTask(
     Action action,
     TimeSpan deferredTime,
-    bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+    bool waitUntilTaskReturnedBeforeNextSchedule = false
+  ) : this(
     action,
     (int)deferredTime.TotalMilliseconds,
-    waitUntilTaskReturnedBeforeNextSchedule) {
-  }
+    waitUntilTaskReturnedBeforeNextSchedule
+  ) { }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledTask"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledTask" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledTask(Action action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
     Against.ArgumentIsNull(action);
-    
+
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
 #if SUPPORTTHREADTIMERS
-    if (deferredTime < 500) {
+    if (deferredTime < 500)
       this._allowThreadSleep = true;
-    } else {
+    else {
       this._allowThreadSleep = false;
       this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
     }
 #endif
   }
+
   /// <summary>
-  /// Forces the execution now.
+  ///   Forces the execution now.
   /// </summary>
   public void ForceExecuteNow() => this._action();
 
   /// <summary>
-  /// Schedule an execution.
+  ///   Schedule an execution.
   /// </summary>
   public void Execute() => this._Schedule(this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution.
+  ///   Schedule an execution.
   /// </summary>
   public void Restart() => this._Schedule(this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution.
+  ///   Schedule an execution.
   /// </summary>
   public void Schedule() => this._Schedule(this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution.
+  ///   Schedule an execution.
   /// </summary>
   /// <param name="deferredBy">The ms to defer by at least.</param>
   public void Schedule(int deferredBy) => this._Schedule(deferredBy);
 
   /// <summary>
-  /// Schedule an execution.
+  ///   Schedule an execution.
   /// </summary>
   /// <param name="deferredBy">The time to defer by at least.</param>
   public void Schedule(TimeSpan deferredBy) => this._Schedule((int)deferredBy.TotalMilliseconds);
 
   /// <summary>
-  /// Is called when the time is up.
+  ///   Is called when the time is up.
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-
     // sleep if needed
     if (sleepTime != null)
       Thread.Sleep((int)sleepTime);
@@ -301,7 +295,7 @@ public class ScheduledTask {
   }
 
   /// <summary>
-  /// Schedules a new task.
+  ///   Schedules a new task.
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _Schedule(int sleepTime) {
@@ -317,19 +311,18 @@ public class ScheduledTask {
       var action = this._OnTimeIsUp;
       action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
-    } else {
+    } else
       this._timer.Change(sleepTime, Timeout.Infinite);
-    }
 #endif
   }
 }
 
 /// <summary>
-/// Creates a scheduled task that collects all values between different calls until the time is up and then executes them all.
-/// Note: does not guarantee that the values are in the right order.
+///   Creates a scheduled task that collects all values between different calls until the time is up and then executes them
+///   all.
+///   Note: does not guarantee that the values are in the right order.
 /// </summary>
 /// <typeparam name="TValue">The type of the values.</typeparam>
-
 public class ScheduledCombinedTask<TValue> {
   private readonly ConcurrentBag<TValue> _scheduledValues = new();
   private readonly Action<TValue[]> _action;
@@ -345,7 +338,7 @@ public class ScheduledCombinedTask<TValue> {
 #endif
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
@@ -353,77 +346,77 @@ public class ScheduledCombinedTask<TValue> {
   public ScheduledCombinedTask(
     Action<TValue[]> action,
     TimeSpan deferredTime,
-    bool waitUntilTaskReturnedBeforeNextSchedule = false) : this(
+    bool waitUntilTaskReturnedBeforeNextSchedule = false
+  ) : this(
     action,
     (int)deferredTime.TotalMilliseconds,
     waitUntilTaskReturnedBeforeNextSchedule
-  ) {
-  }
+  ) { }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;"/> class.
+  ///   Initializes a new instance of the <see cref="ScheduledCombinedTask&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="action">The task to execute.</param>
   /// <param name="deferredTime">The default time in ms the task is deferred by.</param>
   /// <param name="waitUntilTaskReturnedBeforeNextSchedule">if set to <c>true</c> waits till executed before next schedule.</param>
   public ScheduledCombinedTask(Action<TValue[]> action, int deferredTime = 500, bool waitUntilTaskReturnedBeforeNextSchedule = false) {
     Against.ArgumentIsNull(action);
-    
+
     this._action = action;
     this._deferredTime = deferredTime;
     this._waitUntilTaskReturnedBeforeNextSchedule = waitUntilTaskReturnedBeforeNextSchedule;
 #if SUPPORTTHREADTIMERS
-    if (deferredTime < 500) {
+    if (deferredTime < 500)
       this._allowThreadSleep = true;
-    } else {
+    else {
       this._allowThreadSleep = false;
       this._timer = new(this._OnTimeIsUp, null, Timeout.Infinite, Timeout.Infinite);
     }
 #endif
   }
+
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Execute(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Restart(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution with the specified value.
+  ///   Schedule an execution with the specified value.
   /// </summary>
   /// <param name="value">The value.</param>
   public void Schedule(TValue value) => this._Schedule(value, this._deferredTime);
 
   /// <summary>
-  /// Schedule an execution with the specified value in at least this timespan.
+  ///   Schedule an execution with the specified value in at least this timespan.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="deferredBy">The time to defer by.</param>
   public void Schedule(TValue value, TimeSpan deferredBy) => this._Schedule(value, (int)deferredBy.TotalMilliseconds);
 
   /// <summary>
-  /// Schedule an execution with the specified value in at least this timespan.
+  ///   Schedule an execution with the specified value in at least this timespan.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="deferredBy">The time in ms to defer by.</param>
   public void Schedule(TValue value, int deferredBy) => this._Schedule(value, deferredBy);
 
   /// <summary>
-  /// Aborts a running schedule if any.
+  ///   Aborts a running schedule if any.
   /// </summary>
   public void Abort() => Interlocked.CompareExchange(ref this._taskIsAborted, 1, 0);
 
   /// <summary>
-  /// Is called the the time is up.
+  ///   Is called the the time is up.
   /// </summary>
   /// <param name="sleepTime">The sleep time.</param>
   private void _OnTimeIsUp(object sleepTime) {
-
     // sleep if needed););
     if (sleepTime != null)
       Thread.Sleep((int)sleepTime);
@@ -434,17 +427,16 @@ public class ScheduledCombinedTask<TValue> {
       scheduledValues = this._scheduledValues.ToArray();
 
       // clear the bag
-      while (this._scheduledValues.TryTake(out _)) {
-      }
+      while (this._scheduledValues.TryTake(out _)) { }
     }
+
     // reset scheduler so more task can be scheduled
     if (!this._waitUntilTaskReturnedBeforeNextSchedule)
       Interlocked.CompareExchange(ref this._taskIsRunning, 0, 1);
     // execute task
     try {
-      if (Interlocked.CompareExchange(ref this._taskIsAborted, 1, 0) == 0) {
+      if (Interlocked.CompareExchange(ref this._taskIsAborted, 1, 0) == 0)
         this._action(scheduledValues);
-      }
     } finally {
       // reset scheduler so more tasks can be scheduled
       if (this._waitUntilTaskReturnedBeforeNextSchedule)
@@ -453,7 +445,7 @@ public class ScheduledCombinedTask<TValue> {
   }
 
   /// <summary>
-  /// Schedules a value to be used.
+  ///   Schedules a value to be used.
   /// </summary>
   /// <param name="value">The value.</param>
   /// <param name="sleepTime">The sleep time.</param>
@@ -472,10 +464,8 @@ public class ScheduledCombinedTask<TValue> {
       var action = this._OnTimeIsUp;
       action.BeginInvoke(sleepTime, action.EndInvoke, null);
 #if SUPPORTTHREADTIMERS
-    } else {
+    } else
       this._timer.Change(sleepTime, Timeout.Infinite);
-    }
 #endif
-
   }
 }

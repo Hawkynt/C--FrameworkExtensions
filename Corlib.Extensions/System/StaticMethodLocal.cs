@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -28,56 +24,46 @@ using Guard;
 namespace System;
 
 /// <summary>
-/// Allows methods to have a private local value that is kept during method invocations
+///   Allows methods to have a private local value that is kept during method invocations
 /// </summary>
 /// <remarks>
-/// All methods within the same source file and the same name share the same value.
-/// To make overloads with the same name of different source files share the same name, use the owner parameter.
-/// If a source file implements several classes with the same method name, values are shared across classes.
+///   All methods within the same source file and the same name share the same value.
+///   To make overloads with the same name of different source files share the same name, use the owner parameter.
+///   If a source file implements several classes with the same method name, values are shared across classes.
 /// </remarks>
 /// <typeparam name="TValue">The type of value to keep</typeparam>
 public static class StaticMethodLocal<TValue> {
-
   /// <summary>
-  /// The internal key to distinguish values.
+  ///   The internal key to distinguish values.
   /// </summary>
-  private readonly struct MethodKey : IEquatable<MethodKey> {
-    private readonly Type _owner;
-    private readonly string _filePath;
-    private readonly string _methodName;
-
-    public MethodKey(Type owner, string filePath, string methodName) {
-      this._owner = owner;
-      this._filePath = filePath;
-      this._methodName = methodName;
-    }
+  private readonly struct MethodKey(Type owner, string filePath, string methodName) : IEquatable<MethodKey> {
+    private readonly Type _owner = owner;
+    private readonly string _filePath = filePath;
+    private readonly string _methodName = methodName;
 
     public bool Equals(MethodKey other)
-      => this._owner == other._owner 
-        && this._filePath == other._filePath 
-        && this._methodName == other._methodName
-      ;
+      => this._owner == other._owner
+         && this._filePath == other._filePath
+         && this._methodName == other._methodName;
 
-    public override bool Equals(object obj) 
-      => obj is MethodKey key && this.Equals(key)
-      ;
-    
+    public override bool Equals(object obj)
+      => obj is MethodKey key && this.Equals(key);
+
     public static bool operator ==(MethodKey left, MethodKey right) => left.Equals(right);
 
     public static bool operator !=(MethodKey left, MethodKey right) => !left.Equals(right);
-    
+
     /// <inheritdoc />
     public override int GetHashCode() {
       unchecked {
-        var hashCode = (this._owner != null ? this._owner.GetHashCode() : 0);
+        var hashCode = this._owner != null ? this._owner.GetHashCode() : 0;
         hashCode = (hashCode * 127) ^ (this._filePath != null ? this._filePath.GetHashCode() : 0);
         hashCode = (hashCode * 257) ^ (this._methodName != null ? this._methodName.GetHashCode() : 0);
         return hashCode;
       }
     }
-    
   }
-  
+
   private static readonly Dictionary<MethodKey, TValue> _VALUES = new();
 
   private static TValue _Get(Type owner, string methodName, TValue startValue) {
@@ -101,7 +87,7 @@ public static class StaticMethodLocal<TValue> {
   }
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <typeparam name="TOwner">The method owner</typeparam>
   /// <param name="startValue">The initial value</param>
@@ -111,7 +97,7 @@ public static class StaticMethodLocal<TValue> {
     => _Get(typeof(TOwner), memberName, startValue);
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <param name="owner">The method owner</param>
   /// <param name="startValue">The initial value</param>
@@ -121,7 +107,7 @@ public static class StaticMethodLocal<TValue> {
     => _Get(owner, memberName, startValue);
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <param name="startValue">The initial value</param>
   /// <param name="memberName">The name of the method; let the compiler fill this</param>
@@ -131,7 +117,7 @@ public static class StaticMethodLocal<TValue> {
     => _Get(null, filePath + memberName, startValue);
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <typeparam name="TOwner">The method owner</typeparam>
   /// <param name="startValueFactory">The factory that generates the initial value</param>
@@ -144,7 +130,7 @@ public static class StaticMethodLocal<TValue> {
   }
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <param name="owner">The method owner</param>
   /// <param name="startValueFactory">The factory that generates the initial value</param>
@@ -157,7 +143,7 @@ public static class StaticMethodLocal<TValue> {
   }
 
   /// <summary>
-  /// Gets the method local static value
+  ///   Gets the method local static value
   /// </summary>
   /// <param name="startValueFactory">The factory that generates the initial value</param>
   /// <param name="memberName">The name of the method; let the compiler fill this</param>
@@ -169,7 +155,7 @@ public static class StaticMethodLocal<TValue> {
     [CallerFilePath] string filePath = null
   ) {
     Against.ArgumentIsNull(startValueFactory);
-    
+
     return _Get(null, filePath + memberName, startValueFactory);
   }
 
@@ -180,7 +166,7 @@ public static class StaticMethodLocal<TValue> {
   }
 
   /// <summary>
-  /// Sets the method local static to a new value.
+  ///   Sets the method local static to a new value.
   /// </summary>
   /// <typeparam name="TOwner">The method owner</typeparam>
   /// <param name="value">The new value</param>
@@ -189,7 +175,7 @@ public static class StaticMethodLocal<TValue> {
     => _Set(typeof(TOwner), memberName, value);
 
   /// <summary>
-  /// Sets the method local static to a new value.
+  ///   Sets the method local static to a new value.
   /// </summary>
   /// <param name="owner">The method owner</param>
   /// <param name="value">The new value</param>
@@ -198,12 +184,11 @@ public static class StaticMethodLocal<TValue> {
     => _Set(owner, memberName, value);
 
   /// <summary>
-  /// Sets the method local static to a new value.
+  ///   Sets the method local static to a new value.
   /// </summary>
   /// <param name="value">The new value</param>
   /// <param name="memberName">The name of the method; let the compiler fill this</param>
   /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
   public static void Set(TValue value, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
     => _Set(null, filePath + memberName, value);
-
 }

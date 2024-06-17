@@ -1,26 +1,24 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace System.Timers;
 
@@ -50,7 +48,6 @@ public class HighPrecisionTimerElapsedEventArgs : EventArgs {
   public DateTime SignalTime { get; internal set; }
 
   internal HighPrecisionTimerElapsedEventArgs() => this.SignalTime = DateTime.Now;
-  
 }
 
 // Summary:
@@ -58,7 +55,7 @@ public class HighPrecisionTimerElapsedEventArgs : EventArgs {
 public class HighPrecisionTimer : IDisposable {
   //Lib API declarations
   /// <summary>
-  /// Times the set event.
+  ///   Times the set event.
   /// </summary>
   /// <param name="uDelay">The u delay.</param>
   /// <param name="uResolution">The u resolution.</param>
@@ -70,7 +67,7 @@ public class HighPrecisionTimer : IDisposable {
   private static extern uint timeSetEvent(uint uDelay, uint uResolution, TimerCallback lpTimeProc, UIntPtr dwUser, uint fuEvent);
 
   /// <summary>
-  /// Times the kill event.
+  ///   Times the kill event.
   /// </summary>
   /// <param name="uTimerID">The u timer ID.</param>
   /// <returns></returns>
@@ -78,14 +75,14 @@ public class HighPrecisionTimer : IDisposable {
   private static extern uint timeKillEvent(uint uTimerID);
 
   /// <summary>
-  /// Times the get time.
+  ///   Times the get time.
   /// </summary>
   /// <returns></returns>
   [DllImport("Winmm.dll", CharSet = CharSet.Auto)]
   private static extern uint timeGetTime();
 
   /// <summary>
-  /// Times the begin period.
+  ///   Times the begin period.
   /// </summary>
   /// <param name="uPeriod">The u period.</param>
   /// <returns></returns>
@@ -93,7 +90,7 @@ public class HighPrecisionTimer : IDisposable {
   private static extern uint timeBeginPeriod(uint uPeriod);
 
   /// <summary>
-  /// Times the end period.
+  ///   Times the end period.
   /// </summary>
   /// <param name="uPeriod">The u period.</param>
   /// <returns></returns>
@@ -102,51 +99,51 @@ public class HighPrecisionTimer : IDisposable {
 
 
   /// <summary>
-  ///Timer type definitions
+  ///   Timer type definitions
   /// </summary>
   [Flags]
   private enum fuEvent : uint {
     /// <summary>
-    /// OneHzSignalEvent occurs once, after uDelay milliseconds. 
+    ///   OneHzSignalEvent occurs once, after uDelay milliseconds.
     /// </summary>
     TIME_ONESHOT = 0,
+
     /// <summary>
-    /// Event occurs periodically.
+    ///   Event occurs periodically.
     /// </summary>
     TIME_PERIODIC = 1,
+
     /// <summary>
-    ///  callback is function
+    ///   callback is function
     /// </summary>
     TIME_CALLBACK_FUNCTION = 0x0000,
-
   }
 
   /// <summary>
-  /// Delegate definition for the API callback
+  ///   Delegate definition for the API callback
   /// </summary>
   private delegate void TimerCallback(uint uTimerID, uint uMsg, UIntPtr dwUser, UIntPtr dw1, UIntPtr dw2);
 
   /// <summary>
-  /// The current timer instance ID
+  ///   The current timer instance ID
   /// </summary>
   private uint id;
 
   /// <summary>
-  /// To assure the callback is pinned by the GC, we use this handle.
+  ///   To assure the callback is pinned by the GC, we use this handle.
   /// </summary>
   private GCHandle __gcHandle;
 
   /// <summary>
-  /// The callback used by the the API
+  ///   The callback used by the the API
   /// </summary>
   private readonly TimerCallback timerCallback;
-  
+
   public HighPrecisionTimer()
-    : this(100) {
-  }
+    : this(100) { }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="HighPrecisionTimer"/> class.
+  ///   Initializes a new instance of the <see cref="HighPrecisionTimer" /> class.
   /// </summary>
   /// <param name="interval">The interval.</param>
   /// <param name="action">The action.</param>
@@ -155,35 +152,32 @@ public class HighPrecisionTimer : IDisposable {
     this.Elapsed += action;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="HighPrecisionTimer"/> class.
+  ///   Initializes a new instance of the <see cref="HighPrecisionTimer" /> class.
   /// </summary>
   /// <param name="interval">The interval.</param>
   public HighPrecisionTimer(TimeSpan interval)
-    : this((uint)interval.TotalMilliseconds) {
-  }
+    : this((uint)interval.TotalMilliseconds) { }
+
   /// <summary>
-  /// Initializes a new instance of the <see cref="HighPrecisionTimer"/> class.
+  ///   Initializes a new instance of the <see cref="HighPrecisionTimer" /> class.
   /// </summary>
   /// <param name="interval">The interval.</param>
   /// <param name="action">The action.</param>
   public HighPrecisionTimer(TimeSpan interval, HighPrecisionTimerElapsedEventHandler action)
-    : this((uint)interval.TotalMilliseconds, action) {
-  }
+    : this((uint)interval.TotalMilliseconds, action) { }
 
   /// <summary>
-  ///    Initializes a new instance of the System.Timers.HighPrecisionTimer 
-  ///    class, and sets the
-  ///    System.Timers.HighPrecisionTimer.Interval property to the specified 
-  ///    time period.
-  ///
-  /// Parameters:
+  ///   Initializes a new instance of the System.Timers.HighPrecisionTimer
+  ///   class, and sets the
+  ///   System.Timers.HighPrecisionTimer.Interval property to the specified
+  ///   time period.
+  ///   Parameters:
   ///   interval:
-  ///     The time, in milliseconds, between events.
-  ///
-  /// Exceptions:
+  ///   The time, in milliseconds, between events.
+  ///   Exceptions:
   ///   System.ArgumentException:
-  ///     The value of the interval parameter is less than or equal to 
-  ///     zero, or greater than System.Int32.MaxValue.
+  ///   The value of the interval parameter is less than or equal to
+  ///   zero, or greater than System.Int32.MaxValue.
   /// </summary>
   /// <param name="interval">The interval.</param>
   public HighPrecisionTimer(uint interval) {
@@ -197,33 +191,30 @@ public class HighPrecisionTimer : IDisposable {
 
 
   /// <summary>
-  /// Gets or sets a value indicating whether the 
-  /// System.Timers.HighPrecisionTimer should raise
-  /// the System.Timers.HighPrecisionTimer.Elapsed event each time the 
-  /// specified interval elapses
-  /// or only after the first time it elapses.
-  ///
-  /// Returns:
-  ///     true if the System.Timers.HighPrecisionTimer should raise the 
-  ///     System.Timers.HighPrecisionTimer.Elapsed
-  ///     event each time the interval elapses; false if it should raise 
-  ///     the System.Timers.HighPrecisionTimer.Elapsed
-  ///     event only once, after the first time the interval elapses. The 
-  ///     default is true.
+  ///   Gets or sets a value indicating whether the
+  ///   System.Timers.HighPrecisionTimer should raise
+  ///   the System.Timers.HighPrecisionTimer.Elapsed event each time the
+  ///   specified interval elapses
+  ///   or only after the first time it elapses.
+  ///   Returns:
+  ///   true if the System.Timers.HighPrecisionTimer should raise the
+  ///   System.Timers.HighPrecisionTimer.Elapsed
+  ///   event each time the interval elapses; false if it should raise
+  ///   the System.Timers.HighPrecisionTimer.Elapsed
+  ///   event only once, after the first time the interval elapses. The
+  ///   default is true.
   /// </summary>
   /// <value><c>true</c> if [auto reset]; otherwise, <c>false</c>.</value>
   public bool AutoReset { get; set; }
 
   /// <summary>
-  /// Gets or sets a value indicating whether the 
-  /// System.Timers.HighPrecisionTimer should raise
-  /// the System.Timers.HighPrecisionTimer.Elapsed event.
-  ///
-  /// Returns:
-  ///     true if the System.Timers.HighPrecisionTimer should raise the 
-  ///     System.Timers.HighPrecisionTimer.Elapsed
-  ///     event; otherwise, false. The default is false.
-  ///        
+  ///   Gets or sets a value indicating whether the
+  ///   System.Timers.HighPrecisionTimer should raise
+  ///   the System.Timers.HighPrecisionTimer.Elapsed event.
+  ///   Returns:
+  ///   true if the System.Timers.HighPrecisionTimer should raise the
+  ///   System.Timers.HighPrecisionTimer.Elapsed
+  ///   event; otherwise, false. The default is false.
   /// </summary>
   /// <value><c>true</c> if enabled; otherwise, <c>false</c>.</value>
   public bool Enabled { get; private set; }
@@ -231,46 +222,41 @@ public class HighPrecisionTimer : IDisposable {
   private readonly object syncLock = new();
 
   /// <summary>
-  /// Gets or sets the interval at which to raise the    
-  /// System.Timers.HighPrecisionTimer.Elapsed event.
-  ///
-  /// Returns:
-  ///     The time, in milliseconds, between raisings of the 
-  ///     System.Timers.HighPrecisionTimer.Elapsed
-  ///     event. The default is 100 milliseconds.
-  ///
-  /// Exceptions:
+  ///   Gets or sets the interval at which to raise the
+  ///   System.Timers.HighPrecisionTimer.Elapsed event.
+  ///   Returns:
+  ///   The time, in milliseconds, between raisings of the
+  ///   System.Timers.HighPrecisionTimer.Elapsed
+  ///   event. The default is 100 milliseconds.
+  ///   Exceptions:
   ///   System.ArgumentException:
-  ///     The interval is less than or equal to zero.
+  ///   The interval is less than or equal to zero.
   /// </summary>
   /// <value>The interval.</value>
   public uint Interval { get; set; }
 
 
   /// <summary>
-  /// Occurs when the interval elapses.  
+  ///   Occurs when the interval elapses.
   /// </summary>
   public event HighPrecisionTimerElapsedEventHandler Elapsed;
 
 
   /// <summary>
-  /// Releases the resources used by the System.Timers.HighPrecisionTimer.
+  ///   Releases the resources used by the System.Timers.HighPrecisionTimer.
   /// </summary>
-  public void Close() {
-    this.Dispose();
-  }
+  public void Close() => this.Dispose();
 
 
   /// <summary>
-  /// Starts raising the System.Timers.HighPrecisionTimer.Elapsed event by 
-  /// setting System.Timers.HighPrecisionTimer.Enabled
-  /// to true.
-  ///
-  /// Exceptions:
+  ///   Starts raising the System.Timers.HighPrecisionTimer.Elapsed event by
+  ///   setting System.Timers.HighPrecisionTimer.Enabled
+  ///   to true.
+  ///   Exceptions:
   ///   System.ArgumentOutOfRangeException:
-  ///     The System.Timers.HighPrecisionTimer is created with an interval 
-  ///     equal to or greater than
-  ///     System.Int32.MaxValue + 1, or set to an interval less than zero.
+  ///   The System.Timers.HighPrecisionTimer is created with an interval
+  ///   equal to or greater than
+  ///   System.Int32.MaxValue + 1, or set to an interval less than zero.
   /// </summary>
   public void Start() {
     lock (this.syncLock) {
@@ -292,9 +278,9 @@ public class HighPrecisionTimer : IDisposable {
 
 
   /// <summary>
-  /// Stops raising the System.Timers.HighPrecisionTimer.Elapsed event by 
-  /// setting System.Timers.HighPrecisionTimer.Enabled
-  ///  to false.
+  ///   Stops raising the System.Timers.HighPrecisionTimer.Elapsed event by
+  ///   setting System.Timers.HighPrecisionTimer.Enabled
+  ///   to false.
   /// </summary>
   public void Stop() {
     lock (this.syncLock) {
@@ -308,28 +294,22 @@ public class HighPrecisionTimer : IDisposable {
   }
 
   /// <summary>
-  /// Called when [timer].
+  ///   Called when [timer].
   /// </summary>
-  protected virtual void OnTimer() {
-    var onElapsed = this.Elapsed;
-    if (onElapsed == null)
-      return;
-    onElapsed(this, new());
-  }
+  protected virtual void OnTimer() => this.Elapsed?.Invoke(this, new());
 
   /// <summary>
-  /// CBs the func.
+  ///   CBs the func.
   /// </summary>
   /// <param name="uTimerID">The u timer ID.</param>
   /// <param name="uMsg">The u MSG.</param>
   /// <param name="dwUser">The dw user.</param>
   /// <param name="dw1">The DW1.</param>
   /// <param name="dw2">The DW2.</param>
-  private void CallbackFunction(uint uTimerID, uint uMsg, UIntPtr dwUser, UIntPtr dw1, UIntPtr dw2) {
+  private void CallbackFunction(uint uTimerID, uint uMsg, UIntPtr dwUser, UIntPtr dw1, UIntPtr dw2) =>
     //Callback from the HighPrecisionTimer API that fires the Timer event. 
     // Note we are in a different thread here
     this.OnTimer();
-  }
 
   #region IDisposable Members
 
@@ -337,29 +317,25 @@ public class HighPrecisionTimer : IDisposable {
 
 
   /// <summary>
-  /// Performs application-defined tasks associated with freeing, 
-  ///  releasing, or resetting unmanaged resources.
-  /// Releases all resources used by the current 
-  /// System.Timers.HighPrecisionTimer.
-  ///
-  /// Parameters:
+  ///   Performs application-defined tasks associated with freeing,
+  ///   releasing, or resetting unmanaged resources.
+  ///   Releases all resources used by the current
+  ///   System.Timers.HighPrecisionTimer.
+  ///   Parameters:
   ///   disposing:
-  ///     true to release both managed and unmanaged resources; false to 
-  ///     release only
-  ///     unmanaged resources.
+  ///   true to release both managed and unmanaged resources; false to
+  ///   release only
+  ///   unmanaged resources.
   /// </summary>
   public void Dispose() {
-    this.Dispose(true);
+    this._Dispose();
     GC.SuppressFinalize(this);
   }
 
   /// <summary>
-  /// Releases unmanaged and - optionally - managed resources
+  ///   Releases unmanaged and - optionally - managed resources
   /// </summary>
-  /// <param name="disposing"><c>true</c> to release both managed and 
-  ///    unmanaged resources; <c>false</c> to release only unmanaged 
-  ///  resources.</param>
-  private void Dispose(bool disposing) {
+  private void _Dispose() {
     if (!this._disposed) {
       this.Stop();
       this.__gcHandle.Free();
@@ -369,13 +345,11 @@ public class HighPrecisionTimer : IDisposable {
   }
 
   /// <summary>
-  /// Releases unmanaged resources and performs other cleanup operations 
-  /// before the
-  /// <see cref="HighPrecisionTimer"/> is reclaimed by garbage collection.
+  ///   Releases unmanaged resources and performs other cleanup operations
+  ///   before the
+  ///   <see cref="HighPrecisionTimer" /> is reclaimed by garbage collection.
   /// </summary>
-  ~HighPrecisionTimer() {
-    this.Dispose(false);
-  }
+  ~HighPrecisionTimer() => this._Dispose();
 
   #endregion
 }

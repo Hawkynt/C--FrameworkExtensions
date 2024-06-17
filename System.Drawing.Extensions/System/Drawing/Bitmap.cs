@@ -1,43 +1,33 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
-using System.Runtime.InteropServices;
-
-// ReSharper disable UnusedMember.Global
-// ReSharper disable UnusedMemberInSuper.Global
-
 
 namespace System.Drawing;
-// ReSharper disable once PartialTypeWithSinglePart
 
 public static partial class BitmapExtensions {
   #region nested types
@@ -135,7 +125,19 @@ public static partial class BitmapExtensions {
     void BlendWithUnchecked(IBitmapLocker other, Rectangle source);
     void BlendWithUnchecked(IBitmapLocker other, Rectangle source, Point target);
 
-    void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
+    void CopyFromGrid(
+      IBitmapLocker other,
+      int column,
+      int row,
+      int width,
+      int height,
+      int dx = 0,
+      int dy = 0,
+      int offsetX = 0,
+      int offsetY = 0,
+      int targetX = 0,
+      int targetY = 0
+    );
 
     void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
     void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
@@ -158,14 +160,10 @@ public static partial class BitmapExtensions {
     int Height { get; }
   }
 
-  private abstract class BitmapLockerBase : IBitmapLocker {
-    private readonly Bitmap _bitmap;
-    public BitmapData BitmapData { get; }
-
-    protected BitmapLockerBase(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) {
-      this._bitmap = bitmap ?? throw new ArgumentNullException(nameof(bitmap));
-      this.BitmapData = bitmap.LockBits(rect, flags, format);
-    }
+  private abstract class BitmapLockerBase(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format)
+    : IBitmapLocker {
+    private readonly Bitmap _bitmap = bitmap ?? throw new ArgumentNullException(nameof(bitmap));
+    public BitmapData BitmapData { get; } = bitmap.LockBits(rect, flags, format);
 
     #region Implementation of IDisposable
 
@@ -184,7 +182,7 @@ public static partial class BitmapExtensions {
 
     #endregion
 
-    protected virtual int _BytesPerPixel 
+    protected virtual int _BytesPerPixel
       => this.BitmapData.PixelFormat switch {
         PixelFormat.Format32bppArgb => 4,
         PixelFormat.Format32bppRgb => 4,
@@ -339,8 +337,7 @@ public static partial class BitmapExtensions {
 
     public void FillRectangleUnchecked(int x, int y, int width, int height, Color color) {
       switch (color.A) {
-        case byte.MinValue:
-          return;
+        case byte.MinValue: return;
         case < byte.MaxValue:
           this._BlendRectangleNaiive(x, y, width, height, color);
           return;
@@ -365,26 +362,16 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (height) {
-          case 0:
-            goto height0;
-          case 1:
-            goto height1;
-          case 2:
-            goto height2;
-          case 3:
-            goto height3;
-          case 4:
-            goto height4;
-          case 5:
-            goto height5;
-          case 6:
-            goto height6;
-          case 7:
-            goto height7;
-          case 8:
-            goto height8;
-          default:
-            goto heightAbove8;
+          case 0: goto height0;
+          case 1: goto height1;
+          case 2: goto height2;
+          case 3: goto height3;
+          case 4: goto height4;
+          case 5: goto height5;
+          case 6: goto height6;
+          case 7: goto height7;
+          case 8: goto height8;
+          default: goto heightAbove8;
         }
 
         height8:
@@ -428,26 +415,16 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (height) {
-          case 0:
-            goto height0;
-          case 1:
-            goto height1;
-          case 2:
-            goto height2;
-          case 3:
-            goto height3;
-          case 4:
-            goto height4;
-          case 5:
-            goto height5;
-          case 6:
-            goto height6;
-          case 7:
-            goto height7;
-          case 8:
-            goto height8;
-          default:
-            goto heightAbove8;
+          case 0: goto height0;
+          case 1: goto height1;
+          case 2: goto height2;
+          case 3: goto height3;
+          case 4: goto height4;
+          case 5: goto height5;
+          case 6: goto height6;
+          case 7: goto height7;
+          case 8: goto height8;
+          default: goto heightAbove8;
         }
 
         height8:
@@ -507,40 +484,23 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (height) {
-          case 0:
-            goto height0;
-          case 1:
-            goto height1;
-          case 2:
-            goto height2;
-          case 3:
-            goto height3;
-          case 4:
-            goto height4;
-          case 5:
-            goto height5;
-          case 6:
-            goto height6;
-          case 7:
-            goto height7;
-          case 8:
-            goto height8;
-          case 9:
-            goto height9;
-          case 10:
-            goto height10;
-          case 11:
-            goto height11;
-          case 12:
-            goto height12;
-          case 13:
-            goto height13;
-          case 14:
-            goto height14;
-          case 15:
-            goto height15;
-          default:
-            goto heightAbove15;
+          case 0: goto height0;
+          case 1: goto height1;
+          case 2: goto height2;
+          case 3: goto height3;
+          case 4: goto height4;
+          case 5: goto height5;
+          case 6: goto height6;
+          case 7: goto height7;
+          case 8: goto height8;
+          case 9: goto height9;
+          case 10: goto height10;
+          case 11: goto height11;
+          case 12: goto height12;
+          case 13: goto height13;
+          case 14: goto height14;
+          case 15: goto height15;
+          default: goto heightAbove15;
         }
 
         height15:
@@ -785,7 +745,17 @@ public static partial class BitmapExtensions {
         this[xct, yt] = other[xcs, ys];
     }
 
-    private static void _CopyFromUncheckedFast(int xs, int ys, int width, int height, int xt, int yt, BitmapData bitmapDataSource, BitmapData bitmapDataTarget, int bytesPerPixel) {
+    private static void _CopyFromUncheckedFast(
+      int xs,
+      int ys,
+      int width,
+      int height,
+      int xt,
+      int yt,
+      BitmapData bitmapDataSource,
+      BitmapData bitmapDataTarget,
+      int bytesPerPixel
+    ) {
       var sourceStride = bitmapDataSource.Stride;
       var targetStride = bitmapDataTarget.Stride;
 
@@ -801,24 +771,15 @@ public static partial class BitmapExtensions {
       do {
         // handle all cases less than 8 lines - usind a Duff's device eliminating all jumps and loops except one
         switch (height) {
-          case 0:
-            goto height0;
-          case 1:
-            goto height1;
-          case 2:
-            goto height2;
-          case 3:
-            goto height3;
-          case 4:
-            goto height4;
-          case 5:
-            goto height5;
-          case 6:
-            goto height6;
-          case 7:
-            goto height7;
-          default:
-            goto heightAbove7;
+          case 0: goto height0;
+          case 1: goto height1;
+          case 2: goto height2;
+          case 3: goto height3;
+          case 4: goto height4;
+          case 5: goto height5;
+          case 6: goto height6;
+          case 7: goto height7;
+          default: goto heightAbove7;
         }
 
         height7:
@@ -962,7 +923,17 @@ public static partial class BitmapExtensions {
         if (pixelFormat == bitmapDataSource.PixelFormat) {
           var bytesPerPixel = this._BytesPerPixel;
           if (bytesPerPixel > 0) {
-            _CopyFromUncheckedFast(xs, ys, width, height, xt, yt, bitmapDataSource, bitmapDataTarget, bytesPerPixel);
+            _CopyFromUncheckedFast(
+              xs,
+              ys,
+              width,
+              height,
+              xt,
+              yt,
+              bitmapDataSource,
+              bitmapDataTarget,
+              bytesPerPixel
+            );
             return;
           }
         }
@@ -1005,7 +976,19 @@ public static partial class BitmapExtensions {
 
     #region CopyFromGrid
 
-    public void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0) {
+    public void CopyFromGrid(
+      IBitmapLocker other,
+      int column,
+      int row,
+      int width,
+      int height,
+      int dx = 0,
+      int dy = 0,
+      int offsetX = 0,
+      int offsetY = 0,
+      int targetX = 0,
+      int targetY = 0
+    ) {
       var sourceX = column * (width + dx) + offsetX;
       var sourceY = row * (height + dy) + offsetY;
       this.CopyFromChecked(other, sourceX, sourceY, width, height, targetX, targetY);
@@ -1024,17 +1007,51 @@ public static partial class BitmapExtensions {
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset) => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height);
+    public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset) => this.CopyFromGrid(
+      other,
+      tile.X,
+      tile.Y,
+      tileSize.Width,
+      tileSize.Height,
+      distance.Width,
+      distance.Height,
+      offset.Width,
+      offset.Height
+    );
 
 #if SUPPORTS_INLINING
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height, target.X, target.Y);
+    public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target) => this.CopyFromGrid(
+      other,
+      tile.X,
+      tile.Y,
+      tileSize.Width,
+      tileSize.Height,
+      distance.Width,
+      distance.Height,
+      offset.Width,
+      offset.Height,
+      target.X,
+      target.Y
+    );
 
     public Bitmap CopyFromGrid(int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0) {
       var result = new Bitmap(width, height);
       using var target = result.Lock(ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-      target.CopyFromGrid(this, column, row, width, height, dx, dy, offsetX, offsetY, 0, 0);
+      target.CopyFromGrid(
+        this,
+        column,
+        row,
+        width,
+        height,
+        dx,
+        dy,
+        offsetX,
+        offsetY,
+        0,
+        0
+      );
       return result;
     }
 
@@ -1276,8 +1293,7 @@ public static partial class BitmapExtensions {
       var source = this[x, y];
       var alpha = color.A;
       switch (alpha) {
-        case byte.MinValue:
-          return;
+        case byte.MinValue: return;
         case byte.MaxValue:
           this[x, y] = color;
           return;
@@ -1299,24 +1315,15 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (count) {
-          case 0:
-            goto count0;
-          case 1:
-            goto count1;
-          case 2:
-            goto count2;
-          case 3:
-            goto count3;
-          case 4:
-            goto count4;
-          case 5:
-            goto count5;
-          case 6:
-            goto count6;
-          case 7:
-            goto count7;
-          default:
-            goto countAbove7;
+          case 0: goto count0;
+          case 1: goto count1;
+          case 2: goto count2;
+          case 3: goto count3;
+          case 4: goto count4;
+          case 5: goto count5;
+          case 6: goto count6;
+          case 7: goto count7;
+          default: goto countAbove7;
         }
 
         count7:
@@ -1358,24 +1365,15 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (count) {
-          case 0:
-            goto count0;
-          case 1:
-            goto count1;
-          case 2:
-            goto count2;
-          case 3:
-            goto count3;
-          case 4:
-            goto count4;
-          case 5:
-            goto count5;
-          case 6:
-            goto count6;
-          case 7:
-            goto count7;
-          default:
-            goto countAbove7;
+          case 0: goto count0;
+          case 1: goto count1;
+          case 2: goto count2;
+          case 3: goto count3;
+          case 4: goto count4;
+          case 5: goto count5;
+          case 6: goto count6;
+          case 7: goto count7;
+          default: goto countAbove7;
         }
 
         count7:
@@ -1417,24 +1415,15 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (count) {
-          case 0:
-            goto count0;
-          case 1:
-            goto count1;
-          case 2:
-            goto count2;
-          case 3:
-            goto count3;
-          case 4:
-            goto count4;
-          case 5:
-            goto count5;
-          case 6:
-            goto count6;
-          case 7:
-            goto count7;
-          default:
-            goto countAbove7;
+          case 0: goto count0;
+          case 1: goto count1;
+          case 2: goto count2;
+          case 3: goto count3;
+          case 4: goto count4;
+          case 5: goto count5;
+          case 6: goto count6;
+          case 7: goto count7;
+          default: goto countAbove7;
         }
 
         count7:
@@ -1476,24 +1465,15 @@ public static partial class BitmapExtensions {
       do {
         // Duff's device
         switch (count) {
-          case 0:
-            goto count0;
-          case 1:
-            goto count1;
-          case 2:
-            goto count2;
-          case 3:
-            goto count3;
-          case 4:
-            goto count4;
-          case 5:
-            goto count5;
-          case 6:
-            goto count6;
-          case 7:
-            goto count7;
-          default:
-            goto countAbove7;
+          case 0: goto count0;
+          case 1: goto count1;
+          case 2: goto count2;
+          case 3: goto count3;
+          case 4: goto count4;
+          case 5: goto count5;
+          case 6: goto count6;
+          case 7: goto count7;
+          default: goto countAbove7;
         }
 
         count7:
@@ -1585,9 +1565,7 @@ public static partial class BitmapExtensions {
       this._DrawDiagonalLine(x0, y0, dx, dy, color);
     }
 
-    public void DrawLine(int x0, int y0, int x1, int y1, int thickness) {
-      throw new NotImplementedException();
-    }
+    public void DrawLine(int x0, int y0, int x1, int y1, int thickness) { throw new NotImplementedException(); }
 
     private void _DrawDiagonalLine(int x0, int y0, int dx, int dy, Color color) {
       int incx, incy, pdx, pdy, ddx, ddy, deltaslowdirection, deltafastdirection;
@@ -1687,17 +1665,21 @@ public static partial class BitmapExtensions {
         new(rect.Right, rect.Top),
         new(rect.Left, rect.Bottom),
         thickness,
-        color);
+        color
+      );
 
     #endregion
   }
 
   #region optimized pixel format handlers
 
-  private sealed class ARGB32BitmapLocker : BitmapLockerBase {
-    public ARGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap,
-      rect, flags, format) { }
-
+  private sealed class ARGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format)
+    : BitmapLockerBase(
+      bitmap,
+      rect,
+      flags,
+      format
+    ) {
     protected override int _BytesPerPixel => 4;
 
     public override Color this[int x, int y] {
@@ -1844,8 +1826,7 @@ public static partial class BitmapExtensions {
         for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
           var op = *(uint*)oo;
           switch (op) {
-            case < 0x01000000:
-              continue;
+            case < 0x01000000: continue;
             case >= 0xff000000:
               *(uint*)to = op;
               continue;
@@ -1958,9 +1939,8 @@ public static partial class BitmapExtensions {
 #endif
   } // ARGB32BitmapLocker
 
-  private sealed class RGB32BitmapLocker : BitmapLockerBase {
-    public RGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) { }
-
+  private sealed class RGB32BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format)
+    : BitmapLockerBase(bitmap, rect, flags, format) {
     protected override int _BytesPerPixel => 4;
 
     public override Color this[int x, int y] {
@@ -2090,10 +2070,13 @@ public static partial class BitmapExtensions {
 #endif
   } // RGB32BitmapLocker
 
-  private sealed class RGB24BitmapLocker : BitmapLockerBase {
-    public RGB24BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap,
-      rect, flags, format) { }
-
+  private sealed class RGB24BitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format)
+    : BitmapLockerBase(
+      bitmap,
+      rect,
+      flags,
+      format
+    ) {
     protected override int _BytesPerPixel => 3;
 
     public override Color this[int x, int y] {
@@ -2282,11 +2265,7 @@ public static partial class BitmapExtensions {
   } // RGB24BitmapLocker
 
   private sealed class UnsupportedDrawingBitmapLocker : BitmapLockerBase {
-    public UnsupportedDrawingBitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) {
-      this._exception = new(
-        $"Wrong pixel format {format} (supported: {string.Join(",", _LOCKER_TYPES.Keys.Select(i => i.ToString()).ToArray())})"
-      );
-    }
+    public UnsupportedDrawingBitmapLocker(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format) : base(bitmap, rect, flags, format) => this._exception = new($"Wrong pixel format {format} (supported: {string.Join(",", _LOCKER_TYPES.Keys.Select(i => i.ToString()).ToArray())})");
 
     private readonly NotSupportedException _exception;
 
@@ -2300,11 +2279,7 @@ public static partial class BitmapExtensions {
 
   private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
 
-  private static readonly Dictionary<PixelFormat, LockerFactory> _LOCKER_TYPES = new() {
-    { PixelFormat.Format32bppArgb, (b, r, f, f2) => new ARGB32BitmapLocker(b, r, f, f2) },
-    { PixelFormat.Format32bppRgb, (b, r, f, f2) => new RGB32BitmapLocker(b, r, f, f2) },
-    { PixelFormat.Format24bppRgb, (b, r, f, f2) => new RGB24BitmapLocker(b, r, f, f2) },
-  };
+  private static readonly Dictionary<PixelFormat, LockerFactory> _LOCKER_TYPES = new() { { PixelFormat.Format32bppArgb, (b, r, f, f2) => new ARGB32BitmapLocker(b, r, f, f2) }, { PixelFormat.Format32bppRgb, (b, r, f, f2) => new RGB32BitmapLocker(b, r, f, f2) }, { PixelFormat.Format24bppRgb, (b, r, f, f2) => new RGB24BitmapLocker(b, r, f, f2) }, };
 
   #endregion
 

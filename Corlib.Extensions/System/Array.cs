@@ -1,55 +1,45 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-using System.Diagnostics.CodeAnalysis;
-#endif
 using System.IO;
 using System.IO.Compression;
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
-using System.Runtime.InteropServices;
 #if !UNSAFE
 using System.Security.Permissions;
 #endif
-using Guard;
 
-// ReSharper disable UnusedMemberInSuper.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
+
 namespace System;
 
 public static partial class ArrayExtensions {
-
   #region nested types
 
   public enum ChangeType {
@@ -67,29 +57,21 @@ public static partial class ArrayExtensions {
     TItem Other { get; }
   }
 
-  private class ChangeSet<TItem> : IChangeSet<TItem> {
-    public ChangeSet(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other) {
-      this.Type = type;
-      this.CurrentIndex = currentIndex;
-      this.Current = current;
-      this.OtherIndex = otherIndex;
-      this.Other = other;
-    }
-
+  private sealed class ChangeSet<TItem>(ChangeType type, int currentIndex, TItem current, int otherIndex, TItem other)
+    : IChangeSet<TItem> {
     #region Implementation of IChangeSet<TValue>
 
-    public ChangeType Type { get; }
-    public int CurrentIndex { get; }
-    public TItem Current { get; }
-    public int OtherIndex { get; }
-    public TItem Other { get; }
+    public ChangeType Type { get; } = type;
+    public int CurrentIndex { get; } = currentIndex;
+    public TItem Current { get; } = current;
+    public int OtherIndex { get; } = otherIndex;
+    public TItem Other { get; } = other;
 
     #endregion
   }
 
   [DebuggerDisplay("{" + nameof(ToString) + "()}")]
   public class ReadOnlyArraySlice<TItem> : IEnumerable<TItem> {
-
     protected readonly TItem[] _source;
     protected readonly int _start;
 
@@ -105,34 +87,34 @@ public static partial class ArrayExtensions {
     }
 
     /// <summary>
-    /// Gets the number of elements in this slice.
+    ///   Gets the number of elements in this slice.
     /// </summary>
     /// <value>
-    /// The length.
+    ///   The length.
     /// </value>
     public int Length { get; }
 
     /// <summary>
-    /// Gets the <see cref="TItem"/> at the specified index.
+    ///   Gets the <see cref="TItem" /> at the specified index.
     /// </summary>
     /// <value>
-    /// The <see cref="TItem"/>.
+    ///   The <see cref="TItem" />.
     /// </value>
     /// <param name="index">The index.</param>
     /// <returns>The item at the given index.</returns>
     public TItem this[int index] {
       get {
         Against.IndexOutOfRange(index, this.Length);
-        
+
         return this._source[index + this._start];
       }
     }
 
     /// <summary>
-    /// Gets the values.
+    ///   Gets the values.
     /// </summary>
     /// <value>
-    /// The values.
+    ///   The values.
     /// </value>
     public IEnumerable<TItem> Values {
       get {
@@ -143,7 +125,7 @@ public static partial class ArrayExtensions {
     }
 
     /// <summary>
-    /// Slices the specified array.
+    ///   Slices the specified array.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="start">The start.</param>
@@ -160,7 +142,7 @@ public static partial class ArrayExtensions {
     }
 
     /// <summary>
-    /// Copies this slice into a new array.
+    ///   Copies this slice into a new array.
     /// </summary>
     /// <returns></returns>
     public TItem[] ToArray() {
@@ -189,15 +171,12 @@ public static partial class ArrayExtensions {
   }
 
   [DebuggerDisplay("{" + nameof(ToString) + "()}")]
-  public class ArraySlice<TItem> : ReadOnlyArraySlice<TItem> {
-
-    public ArraySlice(TItem[] source, int start, int length) : base(source, start, length) { }
-
+  public class ArraySlice<TItem>(TItem[] source, int start, int length) : ReadOnlyArraySlice<TItem>(source, start, length) {
     /// <summary>
-    /// Gets or sets the <see cref="TItem" /> at the specified index.
+    ///   Gets or sets the <see cref="TItem" /> at the specified index.
     /// </summary>
     /// <value>
-    /// The <see cref="TItem" />.
+    ///   The <see cref="TItem" />.
     /// </value>
     /// <param name="index">The index.</param>
     /// <returns>The item at the given index</returns>
@@ -215,7 +194,7 @@ public static partial class ArrayExtensions {
     }
 
     /// <summary>
-    /// Slices the specified array.
+    ///   Slices the specified array.
     /// </summary>
     /// <typeparam name="TItem">The type of the items.</typeparam>
     /// <param name="start">The start.</param>
@@ -233,53 +212,30 @@ public static partial class ArrayExtensions {
   }
 
   [StructLayout(LayoutKind.Sequential, Size = 32)]
-  private struct Block32 {
-    public readonly uint a;
-    public readonly uint b;
-    public readonly uint c;
-    public readonly uint d;
-    public readonly uint e;
-    public readonly uint f;
-    public readonly uint g;
-    public readonly uint h;
-
-    public Block32(uint u) {
-      this.a = u;
-      this.b = u;
-      this.c = u;
-      this.d = u;
-      this.e = u;
-      this.f = u;
-      this.g = u;
-      this.h = u;
-    }
+  private struct Block32(uint u) {
+    public readonly uint a = u;
+    public readonly uint b = u;
+    public readonly uint c = u;
+    public readonly uint d = u;
+    public readonly uint e = u;
+    public readonly uint f = u;
+    public readonly uint g = u;
+    public readonly uint h = u;
 
     public Block32(ushort u) : this(0x00010001U * u) { }
     public Block32(byte u) : this(0x01010101U * u) { }
-
   }
 
   [StructLayout(LayoutKind.Sequential, Size = 64)]
-  private struct Block64 {
-    public readonly ulong a;
-    public readonly ulong b;
-    public readonly ulong c;
-    public readonly ulong d;
-    public readonly ulong e;
-    public readonly ulong f;
-    public readonly ulong g;
-    public readonly ulong h;
-
-    public Block64(ulong u) {
-      this.a = u;
-      this.b = u;
-      this.c = u;
-      this.d = u;
-      this.e = u;
-      this.f = u;
-      this.g = u;
-      this.h = u;
-    }
+  private struct Block64(ulong u) {
+    public readonly ulong a = u;
+    public readonly ulong b = u;
+    public readonly ulong c = u;
+    public readonly ulong d = u;
+    public readonly ulong e = u;
+    public readonly ulong f = u;
+    public readonly ulong g = u;
+    public readonly ulong h = u;
 
     public Block64(uint u) : this(0x0000000100000001UL * u) { }
     public Block64(ushort u) : this(0x0001000100010001UL * u) { }
@@ -287,7 +243,6 @@ public static partial class ArrayExtensions {
   }
 
 #if !UNSAFE
-
   private sealed class DisposableGCHandle<TValue> : IDisposable where TValue : class {
     private GCHandle handle;
 
@@ -334,7 +289,7 @@ public static partial class ArrayExtensions {
   private const int _INDEX_WHEN_NOT_FOUND = -1;
 
   /// <summary>
-  /// Compares two arrays against each other.
+  ///   Compares two arrays against each other.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
@@ -347,9 +302,9 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(other);
 
     comparer ??= EqualityComparer<TItem>.Default;
-    
-    var thisElements=@this.Length;
-    var otherElements=other.Length;
+
+    var thisElements = @this.Length;
+    var otherElements = other.Length;
 
     const int _SMALL_THRESHOLD = 10_000;
     const int _MID_THRESHOLD = 1_000_000;
@@ -362,7 +317,6 @@ public static partial class ArrayExtensions {
   }
 
   private static IEnumerable<IChangeSet<TItem>> _CompareToNaïve<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
-    
     var oldStateIndex = 0;
     Queue<int> currentSourceBuffer = new();
 
@@ -398,7 +352,7 @@ public static partial class ArrayExtensions {
     }
 
     var targetLen = oldState.Length;
-    while (currentSourceBuffer.Count > 0) {
+    while (currentSourceBuffer.Count > 0)
       if (oldStateIndex < targetLen) {
         var index = currentSourceBuffer.Dequeue();
         yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
@@ -407,7 +361,6 @@ public static partial class ArrayExtensions {
         var index = currentSourceBuffer.Dequeue();
         yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
       }
-    }
 
     while (oldStateIndex < targetLen) {
       yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
@@ -416,14 +369,12 @@ public static partial class ArrayExtensions {
   }
 
   private static IEnumerable<IChangeSet<TItem>> _CompareToLookupTable<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
-
     // 'indexes' contains all indices where a value was found in ascending order without duplicates
     // 'start' is the first index we would accept, higher or equal is OK if present, lower is not
-    int LookupIndex(IList<int> indexes, int start) {
-      var right = indexes.Count-1;
+    static int LookupIndex(IList<int> indexes, int start) {
+      var right = indexes.Count - 1;
       switch (right) {
-        case < 0:
-          return _INDEX_WHEN_NOT_FOUND;
+        case < 0: return _INDEX_WHEN_NOT_FOUND;
         case 0:
           // Only one element present
           return indexes[0] >= start ? indexes[0] : _INDEX_WHEN_NOT_FOUND;
@@ -452,29 +403,29 @@ public static partial class ArrayExtensions {
     }
 
     Dictionary<TItem, List<int>> oldPositions = new(comparer);
-    List<int> nullPositions = new();
+    List<int> nullPositions = [];
     for (var i = 0; i < oldState.Length; ++i) {
       var current = oldState[i];
-      if(current==null)
+      if (current is null)
         nullPositions.Add(i);
       else
-        oldPositions.GetOrAdd(current,()=>new()).Add(i);
+        oldPositions.GetOrAdd(current, () => []).Add(i);
     }
 
     var oldStateIndex = 0;
-    Queue<int> currentSourceBuffer = new();
+    Queue<int> currentSourceBuffer = [];
 
     for (var i = 0; i < currentState.Length; ++i) {
       var item = currentState[i];
 
       // use the oldPositions and nullPositions and call LookupIndex to find the item
-      var foundAt = 
-        item == null 
-          ? LookupIndex(nullPositions, oldStateIndex) 
-          : oldPositions.TryGetValue(item, out var indexes) 
-            ? LookupIndex(indexes, oldStateIndex) 
-            : _INDEX_WHEN_NOT_FOUND
-            ;
+      var foundAt =
+          item is null
+            ? LookupIndex(nullPositions, oldStateIndex)
+            : oldPositions.TryGetValue(item, out var indexes)
+              ? LookupIndex(indexes, oldStateIndex)
+              : _INDEX_WHEN_NOT_FOUND
+        ;
 
       if (foundAt < 0) {
         // does not exist in target
@@ -505,7 +456,7 @@ public static partial class ArrayExtensions {
     }
 
     var targetLen = oldState.Length;
-    while (currentSourceBuffer.Count > 0) {
+    while (currentSourceBuffer.Count > 0)
       if (oldStateIndex < targetLen) {
         var index = currentSourceBuffer.Dequeue();
         yield return new ChangeSet<TItem>(ChangeType.Changed, index, currentState[index], oldStateIndex, oldState[oldStateIndex]);
@@ -514,7 +465,6 @@ public static partial class ArrayExtensions {
         var index = currentSourceBuffer.Dequeue();
         yield return new ChangeSet<TItem>(ChangeType.Added, index, currentState[index], _INDEX_WHEN_NOT_FOUND, default);
       }
-    }
 
     while (oldStateIndex < targetLen) {
       yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldStateIndex, oldState[oldStateIndex]);
@@ -523,7 +473,6 @@ public static partial class ArrayExtensions {
   }
 
   private static IEnumerable<IChangeSet<TItem>> _CompareToLCS<TItem>(TItem[] currentState, TItem[] oldState, IEqualityComparer<TItem> comparer) {
-
     static List<T> LongestCommonSubsequence<T>(T[] seq1, T[] seq2, IEqualityComparer<T> comparer) {
       var seq1Length = seq1.Length;
       var seq2Length = seq2.Length;
@@ -531,18 +480,17 @@ public static partial class ArrayExtensions {
 
       // Build the LCS table
       for (var i = 0; i <= seq1Length; ++i)
-      for (var j = 0; j <= seq2Length; ++j) {
+      for (var j = 0; j <= seq2Length; ++j)
         if (i == 0 || j == 0)
           lcsTable[i, j] = 0;
         else if (comparer.Equals(seq1[i - 1], seq2[j - 1]))
           lcsTable[i, j] = lcsTable[i - 1, j - 1] + 1;
         else
           lcsTable[i, j] = Math.Max(lcsTable[i - 1, j], lcsTable[i, j - 1]);
-      }
 
       // Recover the LCS from the table
       var lcsList = new List<T>();
-      for (int k = seq1Length, l = seq2Length; k > 0 && l > 0;) {
+      for (int k = seq1Length, l = seq2Length; k > 0 && l > 0;)
         if (comparer.Equals(seq1[k - 1], seq2[l - 1])) {
           lcsList.Add(seq1[k - 1]);
           --k;
@@ -551,7 +499,6 @@ public static partial class ArrayExtensions {
           --k;
         else
           --l;
-      }
 
       lcsList.Reverse();
       return lcsList;
@@ -561,14 +508,14 @@ public static partial class ArrayExtensions {
     // Calculate the LCS between currentState and oldState
     var lcs = LongestCommonSubsequence(currentState, oldState, comparer);
 
-    var currentIndex = 0; 
+    var currentIndex = 0;
     var oldIndex = 0;
-    for (var lcsIndex = 0;currentIndex < currentState.Length && oldIndex < oldState.Length;) {
+    for (var lcsIndex = 0; currentIndex < currentState.Length && oldIndex < oldState.Length;) {
       var itemsInLcsLeft = lcsIndex < lcs.Count;
       switch (itemsInLcsLeft) {
         // If the current item in both currentState and oldState matches the item in LCS, it is unchanged
-        case true 
-          when comparer.Equals(currentState[currentIndex], lcs[lcsIndex]) 
+        case true
+          when comparer.Equals(currentState[currentIndex], lcs[lcsIndex])
                && comparer.Equals(oldState[oldIndex], lcs[lcsIndex]):
           yield return new ChangeSet<TItem>(ChangeType.Equal, currentIndex, currentState[currentIndex], oldIndex, oldState[oldIndex]);
           ++currentIndex;
@@ -576,17 +523,17 @@ public static partial class ArrayExtensions {
           ++lcsIndex;
 
           continue;
-      
+
         // If the current item in currentState matches the item in LCS, but the oldState does not, it was removed
-        case true 
+        case true
           when comparer.Equals(currentState[currentIndex], lcs[lcsIndex]):
           yield return new ChangeSet<TItem>(ChangeType.Removed, _INDEX_WHEN_NOT_FOUND, default, oldIndex, oldState[oldIndex]);
           ++oldIndex;
 
           continue;
-        
+
         // If the current item in oldState matches the item in LCS, but the currentState does not, it was added
-        case true 
+        case true
           when comparer.Equals(oldState[oldIndex], lcs[lcsIndex]):
           yield return new ChangeSet<TItem>(ChangeType.Added, currentIndex, currentState[currentIndex], _INDEX_WHEN_NOT_FOUND, default);
           ++currentIndex;
@@ -612,43 +559,39 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Returns the enumeration or <c>null</c> if it is empty.
+  ///   Returns the enumeration or <c>null</c> if it is empty.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Enumeration.</param>
   /// <returns><c>null</c> if the enumeration is empty; otherwise, the enumeration itself </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem[] ToNullIfEmpty<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this : null;
 
   /// <summary>
-  /// Slices the specified array.
+  ///   Slices the specified array.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="start">The start.</param>
   /// <param name="length">The length; negative values mean: till the end.</param>
   /// <returns>An array slice which accesses the underlying array but can only be read.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static ReadOnlySpan<TItem> ReadOnlySlice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
-    
+
     return new(@this, start, length < 0 ? @this.Length - start : length);
   }
 
   /// <summary>
-  /// Slices the specified array for read-only access.
+  ///   Slices the specified array for read-only access.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="size">The size of the slices.</param>
   /// <returns>
-  /// An enumeration of read-only slices
+  ///   An enumeration of read-only slices
   /// </returns>
   [DebuggerStepThrough]
   public static IEnumerable<ReadOnlyArraySlice<TItem>> ReadOnlySlices<TItem>(this TItem[] @this, int size) {
@@ -656,7 +599,7 @@ public static partial class ArrayExtensions {
     Against.NegativeValuesAndZero(size);
 
     return Invoke(@this, size);
-    
+
     static IEnumerable<ReadOnlyArraySlice<TItem>> Invoke(TItem[] @this, int size) {
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
@@ -665,16 +608,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Slices the specified array.
+  ///   Slices the specified array.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="start">The start.</param>
   /// <param name="length">The length; negative values mean: till the end.</param>
   /// <returns>An array slice which accesses the underlying array.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static Span<TItem> Slice<TItem>(this TItem[] @this, int start, int length = -1) {
     Against.ThisIsNull(@this);
@@ -683,7 +624,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Slices the specified array.
+  ///   Slices the specified array.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
@@ -695,7 +636,7 @@ public static partial class ArrayExtensions {
     Against.NegativeValuesAndZero(size);
 
     return Invoke(@this, size);
-    
+
     static IEnumerable<ArraySlice<TItem>> Invoke(TItem[] @this, int size) {
       var length = @this.Length;
       for (var index = 0; index < length; index += size)
@@ -704,13 +645,13 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets a random element.
+  ///   Gets a random element.
   /// </summary>
   /// <typeparam name="TItem">The type of the values.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="random">The random number generator, if any.</param>
   /// <returns>
-  /// A random element from the array.
+  ///   A random element from the array.
   /// </returns>
   [DebuggerStepThrough]
   public static TItem GetRandomElement<TItem>(this TItem[] @this, Random random = null) {
@@ -719,26 +660,20 @@ public static partial class ArrayExtensions {
     if (@this.Length == 0)
       AlwaysThrow.InvalidOperationException("No Elements!");
 
-#if SUPPORTS_RANDOM_SHARED
-    random ??= Random.Shared;
-#else
-    random ??= new((int)Stopwatch.GetTimestamp());
-#endif
+    random ??= Utilities.Random.Shared;
 
     var index = random.Next(@this.Length);
     return @this[index];
   }
 
   /// <summary>
-  /// Gets the value or default.
+  ///   Gets the value or default.
   /// </summary>
   /// <typeparam name="TItem">The type of the value.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="index">The index.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index) {
     Against.ThisIsNull(@this);
@@ -747,16 +682,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the value or default.
+  ///   Gets the value or default.
   /// </summary>
   /// <typeparam name="TItem">The type of the value.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="index">The index.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, TItem defaultValue) {
     Against.ThisIsNull(@this);
@@ -765,16 +698,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the value or default.
+  ///   Gets the value or default.
   /// </summary>
   /// <typeparam name="TItem">The type of the value.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="index">The index.</param>
   /// <param name="factory">The factory to create default values.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<TItem> factory) {
     Against.ThisIsNull(@this);
@@ -784,16 +715,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the value or default.
+  ///   Gets the value or default.
   /// </summary>
   /// <typeparam name="TItem">The type of the value.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="index">The index.</param>
   /// <param name="factory">The factory to create default values.</param>
   /// <returns></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem GetValueOrDefault<TItem>(this TItem[] @this, int index, Func<int, TItem> factory) {
     Against.ThisIsNull(@this);
@@ -803,16 +732,16 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Clones the specified array.
+  ///   Clones the specified array.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This Array.</param>
   /// <returns>A new array or <c>null</c> if this array was <c>null</c>.</returns>
-  //[DebuggerStepThrough]
+  [DebuggerStepThrough]
   public static TItem[] SafelyClone<TItem>(this TItem[] @this) => (TItem[])@this?.Clone();
 
   /// <summary>
-  /// Joins the specified elements into a string.
+  ///   Joins the specified elements into a string.
   /// </summary>
   /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This enumeration.</param>
@@ -847,7 +776,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Splices the specified array (returns part of that array).
+  ///   Splices the specified array (returns part of that array).
   /// </summary>
   /// <typeparam name="TItem">Type of data in the array.</typeparam>
   /// <param name="this">This array.</param>
@@ -858,22 +787,20 @@ public static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(startIndex);
     Against.CountOutOfRange(count, @this.Length - startIndex);
-    
+
     var result = new TItem[count];
     Array.Copy(@this, startIndex, result, 0, count);
     return result;
   }
 
   /// <summary>
-  /// Swaps the specified data in an array.
+  ///   Swaps the specified data in an array.
   /// </summary>
   /// <typeparam name="TItem">Type of data in the array.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="firstElementIndex">The first value.</param>
   /// <param name="secondElementIndex">The the second value.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void Swap<TItem>(this TItem[] @this, int firstElementIndex, int secondElementIndex) {
     Against.ThisIsNull(@this);
 
@@ -881,7 +808,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Shuffles the specified data.
+  ///   Shuffles the specified data.
   /// </summary>
   /// <typeparam name="TItem">Type of elements in the array.</typeparam>
   /// <param name="this">This array.</param>
@@ -895,7 +822,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Quick-sort the given array.
+  ///   Quick-sort the given array.
   /// </summary>
   /// <typeparam name="TItem">The type of the elements</typeparam>
   /// <param name="this">This array.</param>
@@ -910,7 +837,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Quick-sort the given array.
+  ///   Quick-sort the given array.
   /// </summary>
   /// <typeparam name="TItem">The type of the elements.</typeparam>
   /// <param name="this">This array.</param>
@@ -922,10 +849,9 @@ public static partial class ArrayExtensions {
   }
 
   private static void _QuickSort_Comparable<TValue>(TValue[] @this, int left, int right) where TValue : IComparable<TValue> {
-    if (@this == null) {
+    if (@this == null)
       // nothing to sort
       return;
-    }
 
     var comparer = Comparer<TValue>.Default;
     var leftIndex = left;
@@ -955,16 +881,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Converts all elements.
+  ///   Converts all elements.
   /// </summary>
   /// <typeparam name="TItem">The type the elements.</typeparam>
   /// <typeparam name="TOutput">The output type.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="converter">The converter function.</param>
   /// <returns>An array containing the converted values.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TOutput[] ConvertAll<TItem, TOutput>(this TItem[] @this, Converter<TItem, TOutput> converter) {
     Against.ThisIsNull(@this);
@@ -974,7 +898,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Converts all elements.
+  ///   Converts all elements.
   /// </summary>
   /// <typeparam name="TItem">The type the elements.</typeparam>
   /// <typeparam name="TOutput">The output type.</typeparam>
@@ -994,14 +918,12 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Executes a callback with each element in an array.
+  ///   Executes a callback with each element in an array.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="action">The callback for each element.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void ForEach<TItem>(this TItem[] @this, Action<TItem> action) {
     Against.ThisIsNull(@this);
@@ -1012,14 +934,12 @@ public static partial class ArrayExtensions {
 
 #if SUPPORTS_ASYNC
   /// <summary>
-  /// Executes a callback with each element in an array in parallel.
+  ///   Executes a callback with each element in an array in parallel.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="action">The callback to execute for each element.</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void ParallelForEach<TItem>(this TItem[] @this, Action<TItem> action) {
     Against.ThisIsNull(@this);
@@ -1031,7 +951,7 @@ public static partial class ArrayExtensions {
 #endif
 
   /// <summary>
-  /// Executes a callback with each element in an array.
+  ///   Executes a callback with each element in an array.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1045,7 +965,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Executes a callback with each element in an array.
+  ///   Executes a callback with each element in an array.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1059,7 +979,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Executes a callback with each element in an array and writes back the result.
+  ///   Executes a callback with each element in an array and writes back the result.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1073,7 +993,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Executes a callback with each element in an array and writes back the result.
+  ///   Executes a callback with each element in an array and writes back the result.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1087,7 +1007,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Executes a callback with each element in an array and writes back the result.
+  ///   Executes a callback with each element in an array and writes back the result.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1101,15 +1021,13 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Returns true if there exists an array
+  ///   Returns true if there exists an array
   /// </summary>
   /// <typeparam name="TItem">The type of the input.</typeparam>
   /// <param name="this">This array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <returns><c>true</c> if a given element exists; otherwise, <c>false</c>.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Exists<TItem>(this TItem[] @this, Predicate<TItem> predicate) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(predicate);
@@ -1118,7 +1036,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the reverse.
+  ///   Gets the reverse.
   /// </summary>
   /// <typeparam name="TItem">The type of the input array.</typeparam>
   /// <param name="this">This array.</param>
@@ -1135,7 +1053,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Determines whether the given array contains the specified value.
+  ///   Determines whether the given array contains the specified value.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">The this.</param>
@@ -1143,9 +1061,7 @@ public static partial class ArrayExtensions {
   /// <returns>
   ///   <c>true</c> if [contains] [the specified this]; otherwise, <c>false</c>.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Contains<TItem>(this TItem[] @this, TItem value) {
     Against.ThisIsNull(@this);
 
@@ -1153,7 +1069,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Determines whether an array contains the specified value or not.
+  ///   Determines whether an array contains the specified value or not.
   /// </summary>
   /// <param name="this">This array.</param>
   /// <param name="value">The value.</param>
@@ -1172,7 +1088,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Converts the array instance to a real array.
+  ///   Converts the array instance to a real array.
   /// </summary>
   /// <param name="this">This Array.</param>
   /// <returns>An array of objects holding the contents.</returns>
@@ -1193,25 +1109,25 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the index of the first item matching the predicate, if any or -1.
+  ///   Gets the index of the first item matching the predicate, if any or -1.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <returns>
-  /// The index of the item in the array or -1.
+  ///   The index of the item in the array or -1.
   /// </returns>
   public static int IndexOf<TItem>(this TItem[] @this, Predicate<TItem> predicate) => IndexOfOrDefault(@this, predicate, _INDEX_WHEN_NOT_FOUND);
 
   /// <summary>
-  /// Gets the index of the first item matching the predicate, if any or the given default value.
+  ///   Gets the index of the first item matching the predicate, if any or the given default value.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <param name="defaultValue">The default value.</param>
   /// <returns>
-  /// The index of the item in the array or the default value.
+  ///   The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, int defaultValue) {
     Against.ThisIsNull(@this);
@@ -1225,14 +1141,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the index of the first item matching the predicate, if any or the given default value.
+  ///   Gets the index of the first item matching the predicate, if any or the given default value.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <param name="defaultValueFactory">The function that generates the default value.</param>
   /// <returns>
-  /// The index of the item in the array or the default value.
+  ///   The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<int> defaultValueFactory) {
     Against.ThisIsNull(@this);
@@ -1246,14 +1162,14 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the index of the first item matching the predicate, if any or the given default value.
+  ///   Gets the index of the first item matching the predicate, if any or the given default value.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="predicate">The predicate.</param>
   /// <param name="defaultValueFactory">The function that generates the default value.</param>
   /// <returns>
-  /// The index of the item in the array or the default value.
+  ///   The index of the item in the array or the default value.
   /// </returns>
   public static int IndexOfOrDefault<TItem>(this TItem[] @this, Predicate<TItem> predicate, Func<TItem[], int> defaultValueFactory) {
     Against.ThisIsNull(@this);
@@ -1267,43 +1183,42 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the index of the first item matching the given, if any or -1.
+  ///   Gets the index of the first item matching the given, if any or -1.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="value">The value.</param>
   /// <returns>
-  /// The index of the item in the array or -1.
+  ///   The index of the item in the array or -1.
   /// </returns>
-
   public static int IndexOf<TItem>(this TItem[] @this, TItem value) => IndexOf(@this, value, 0, EqualityComparer<TItem>.Default);
 
   /// <summary>
-  /// Gets the index of the first item matching the given, if any or -1.
+  ///   Gets the index of the first item matching the given, if any or -1.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="value">The value.</param>
   /// <param name="offset">The index to start searching</param>
   /// <returns>
-  /// The index of the item in the array or -1.
+  ///   The index of the item in the array or -1.
   /// </returns>
-  public static int IndexOf<TItem>(this TItem[] @this, TItem value,int offset) => IndexOf(@this, value, offset, EqualityComparer<TItem>.Default);
+  public static int IndexOf<TItem>(this TItem[] @this, TItem value, int offset) => IndexOf(@this, value, offset, EqualityComparer<TItem>.Default);
 
   /// <summary>
-  /// Gets the index of the first item matching the given, if any or -1.
+  ///   Gets the index of the first item matching the given, if any or -1.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
   /// <param name="value">The value.</param>
   /// <param name="comparer">The comparer.</param>
   /// <returns>
-  /// The index of the item in the array or -1.
+  ///   The index of the item in the array or -1.
   /// </returns>
   public static int IndexOf<TItem>(this TItem[] @this, TItem value, IEqualityComparer<TItem> comparer) => IndexOf(@this, value, 0, comparer);
-  
+
   /// <summary>
-  /// Gets the index of the first item matching the given, if any or -1.
+  ///   Gets the index of the first item matching the given, if any or -1.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Array.</param>
@@ -1311,13 +1226,13 @@ public static partial class ArrayExtensions {
   /// <param name="offset">The index to start searching</param>
   /// <param name="comparer">The comparer.</param>
   /// <returns>
-  /// The index of the item in the array or -1.
+  ///   The index of the item in the array or -1.
   /// </returns>
   public static int IndexOf<TItem>(this TItem[] @this, TItem value, int offset, IEqualityComparer<TItem> comparer) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(offset);
     Against.ArgumentIsNull(comparer);
-    
+
     for (var i = offset; i < @this.Length; ++i)
       if (ReferenceEquals(value, @this[i]) || comparer.Equals(value, @this[i]))
         return i;
@@ -1326,7 +1241,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets the index of the first item matching the predicate, if any or -1.
+  ///   Gets the index of the first item matching the predicate, if any or -1.
   /// </summary>
   /// <param name="this">This Array.</param>
   /// <param name="predicate">The predicate.</param>
@@ -1344,7 +1259,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Rotates all elements in the array one index down.
+  ///   Rotates all elements in the array one index down.
   /// </summary>
   /// <typeparam name="TItem">The type of the array elements</typeparam>
   /// <param name="this">This array</param>
@@ -1362,7 +1277,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Allows processing an array in chunks
+  ///   Allows processing an array in chunks
   /// </summary>
   /// <typeparam name="TItem">The type of the items</typeparam>
   /// <param name="this">This Array</param>
@@ -1372,7 +1287,7 @@ public static partial class ArrayExtensions {
     => ProcessInChunks(@this, chunkSize, processor, @this.Length, 0);
 
   /// <summary>
-  /// Allows processing an array in chunks
+  ///   Allows processing an array in chunks
   /// </summary>
   /// <typeparam name="TItem">The type of the items</typeparam>
   /// <param name="this">This Array</param>
@@ -1391,50 +1306,39 @@ public static partial class ArrayExtensions {
       processor(@this, offset, size);
       offset += size;
     }
-
   }
 
   /// <summary>
-  /// Determines whether the given array is empty.
+  ///   Determines whether the given array is empty.
   /// </summary>
   /// <typeparam name="TItem">The type of the elements</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns>
+  ///   <c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c>
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNullEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(false)]
-#endif
-    this TItem[] @this) => @this is not { Length: > 0 };
+  public static bool IsNullEmpty<TItem>([NotNullWhen(false)] this TItem[] @this) => @this is not { Length: > 0 };
 
   /// <summary>
-  /// Determines whether the given array is not empty.
+  ///   Determines whether the given array is not empty.
   /// </summary>
   /// <typeparam name="TItem">The type of the elements</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c></returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns>
+  ///   <c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c>
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-  public static bool IsNotNullEmpty<TItem>(
-#if SUPPORTS_NOT_NULL_WHEN_ATTRIBUTE
-    [NotNullWhen(true)]
-#endif
-    this TItem[] @this) => @this is { Length: > 0 };
+  public static bool IsNotNullEmpty<TItem>([NotNullWhen(true)] this TItem[] @this) => @this is { Length: > 0 };
 
   /// <summary>
-  /// Initializes a jagged array with default values.
+  ///   Initializes a jagged array with default values.
   /// </summary>
   /// <typeparam name="TArray">The type of the array</typeparam>
   /// <param name="lengths">The lengths in all dimensions</param>
   /// <returns>The resulting array</returns>
   public static TArray CreatedJaggedArray<TArray>(params int[] lengths) {
-
     // ReSharper disable once VariableHidesOuterVariable
     object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
-
       // create array in current dimension
       var result = Array.CreateInstance(arrayType, lengths[index]);
       var elementType = arrayType.GetElementType();
@@ -1452,26 +1356,18 @@ public static partial class ArrayExtensions {
     return (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths);
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this) => new(@this);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, @this.Length - startIndex);
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, length);
 
   #region high performance linq for arrays
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static bool Any<TItem>(this TItem[] @this) {
     Against.ThisIsNull(@this);
@@ -1513,12 +1409,12 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to get the first item.
+  ///   Tries to get the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetFirst<T>(this T[] @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -1532,12 +1428,12 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to get the last item.
+  ///   Tries to get the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetLast<T>(this T[] @this, out T result) {
     Against.ThisIsNull(@this);
 
@@ -1551,13 +1447,13 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to get the item at the given index.
+  ///   Tries to get the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="this">This <see cref="Array" /></param>
   /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default"/> for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be retrieved; otherwise, <see langword="false"/>.</returns>
+  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
+  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetItem<T>(this T[] @this, int index, out T result) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -1572,12 +1468,12 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to set the first item.
+  ///   Tries to set the first item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="this">This <see cref="Array" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetFirst<T>(this T[] @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -1589,12 +1485,12 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to set the last item.
+  ///   Tries to set the last item.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="this">This <see cref="Array" /></param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetLast<T>(this T[] @this, T value) {
     Against.ThisIsNull(@this);
 
@@ -1606,13 +1502,13 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Tries to set the item at the given index.
+  ///   Tries to set the item at the given index.
   /// </summary>
   /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
+  /// <param name="this">This <see cref="Array" /></param>
   /// <param name="index">The items' position</param>
   /// <param name="value">The value for the given datatype.</param>
-  /// <returns><see langword="true"/> when the item could be assigned; otherwise, <see langword="false"/>.</returns>
+  /// <returns><see langword="true" /> when the item could be assigned; otherwise, <see langword="false" />.</returns>
   public static bool TrySetItem<T>(this T[] @this, int index, T value) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
@@ -1654,9 +1550,7 @@ public static partial class ArrayExtensions {
     return default;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static TItem FirstOrDefault<TItem>(this TItem[] @this) => @this is { Length: > 0 } ? @this[0] : default;
 
@@ -1721,15 +1615,11 @@ public static partial class ArrayExtensions {
     return result;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static int Count<TItem>(this TItem[] @this) => @this.Length;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static long LongCount<TItem>(this TItem[] @this) => @this.LongLength;
 
@@ -1782,7 +1672,7 @@ public static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
 
     return Invoke(@this);
-    
+
     static IEnumerable<TResult> Invoke(Array @this) {
       for (var i = 0; i < @this.LongLength; ++i) {
         var item = @this.GetValue(i);
@@ -1809,7 +1699,7 @@ public static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
 
     return Invoke(@this);
-    
+
     static IEnumerable<object> Invoke(Array @this) {
       for (var i = @this.GetUpperBound(0); i >= @this.GetLowerBound(0); --i)
         yield return @this.GetValue(i);
@@ -1833,7 +1723,7 @@ public static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
 
     return Invoke(@this);
-    
+
     static IEnumerable<TResult> Invoke(Array @this) {
       for (var i = @this.GetLowerBound(0); i <= @this.GetUpperBound(0); ++i)
         yield return (TResult)@this.GetValue(i);
@@ -1848,7 +1738,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(selector);
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, TResult> selector) {
       var length = @this.Length;
       for (var i = 0; i < length; ++i)
@@ -1862,7 +1752,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(selector);
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, TResult> selector) {
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i)
@@ -1876,7 +1766,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(selector);
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, int, TResult> selector) {
       var length = @this.Length;
       for (var i = 0; i < length; ++i)
@@ -1890,7 +1780,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(selector);
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(TItem[] @this, Func<TItem, long, TResult> selector) {
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i)
@@ -1904,7 +1794,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(predicate);
 
     return Invoke(@this, predicate);
-    
+
     static IEnumerable<TItem> Invoke(TItem[] @this, Predicate<TItem> predicate) {
       var length = @this.LongLength;
       for (var i = 0; i < length; ++i) {
@@ -1921,7 +1811,7 @@ public static partial class ArrayExtensions {
     Against.ArgumentIsNull(predicate);
 
     return Invoke(@this, predicate);
-    
+
     static IEnumerable<TItem> Invoke(TItem[] @this, Func<TItem, int, bool> predicate) {
       var length = @this.Length;
       for (var i = 0; i < length; ++i) {
@@ -1952,16 +1842,14 @@ public static partial class ArrayExtensions {
   #endregion
 
   #region byte-array specials
-  
+
   /// <summary>
-  /// Converts the bytes to a hex representation.
+  ///   Converts the bytes to a hex representation.
   /// </summary>
   /// <param name="this">These Bytes</param>
   /// <param name="allUpperCase">Uses upper-case (<c>true</c>) hex letters only or lower-case (<c>false</c>).</param>
   /// <returns>A hex string or <c>null</c></returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static string ToHex(this byte[] @this, bool allUpperCase = false) {
     if (@this == null)
       return null;
@@ -1999,13 +1887,11 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Creates random data in the given buffer; thus effectively overwriting it in-place.
+  ///   Creates random data in the given buffer; thus effectively overwriting it in-place.
   /// </summary>
   /// <param name="this">This buffer.</param>
   /// <returns>The given buffer</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static void RandomizeBuffer(this byte[] @this) {
 #if SUPPORTS_RNG_FILL
@@ -2021,7 +1907,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Gets a small portion of a byte array.
+  ///   Gets a small portion of a byte array.
   /// </summary>
   /// <param name="this">This byte[].</param>
   /// <param name="offset">The offset.</param>
@@ -2043,7 +1929,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Padds the specified byte array to a certain length if it is smaller.
+  ///   Padds the specified byte array to a certain length if it is smaller.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <param name="length">The final length.</param>
@@ -2071,7 +1957,7 @@ public static partial class ArrayExtensions {
   #region compression
 
   /// <summary>
-  /// GZips the given bytes.
+  ///   GZips the given bytes.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>A GZipped byte array.</returns>
@@ -2087,7 +1973,7 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Un-GZips the given bytes.
+  ///   Un-GZips the given bytes.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The unzipped byte array.</returns>
@@ -2098,7 +1984,6 @@ public static partial class ArrayExtensions {
     using MemoryStream targetStream = new();
     using (MemoryStream sourceStream = new(@this))
     using (GZipStream gZipStream = new(sourceStream, CompressionMode.Decompress, false)) {
-
       // decompress all bytes
       var buffer = new byte[64 * 1024];
       var bytesRead = gZipStream.Read(buffer, 0, buffer.Length);
@@ -2264,7 +2149,7 @@ public static partial class ArrayExtensions {
     var i = offset; // First index to check.
 
     // Loop while there's still room for search term
-    while (i <= (dataStringLength - searchStringLength)) {
+    while (i <= dataStringLength - searchStringLength) {
       // Look if we have a match at this position
       var j = searchStringLength - 1;
       while (j >= 0 && needle[j] == haystack[i + j])
@@ -2287,17 +2172,14 @@ public static partial class ArrayExtensions {
 
   #region hash computation
 
-
 #if !NET6_0_OR_GREATER
   /// <summary>
-  /// Computes the hash.
+  ///   Computes the hash.
   /// </summary>
   /// <typeparam name="THashAlgorithm">The type of the hash algorithm.</typeparam>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The result of the hash algorithm</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeHash<THashAlgorithm>(this byte[] @this) where THashAlgorithm : HashAlgorithm, new() {
     Against.ThisIsNull(@this);
@@ -2309,13 +2191,11 @@ public static partial class ArrayExtensions {
 #endif
 
   /// <summary>
-  /// Calculates the SHA512 hash.
+  ///   Calculates the SHA512 hash.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA512Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2325,13 +2205,11 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Calculates the SHA384 hash.
+  ///   Calculates the SHA384 hash.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA384Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2341,13 +2219,11 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Calculates the SHA256 hash.
+  ///   Calculates the SHA256 hash.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA256Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2357,13 +2233,11 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Calculates the SHA-1 hash.
+  ///   Calculates the SHA-1 hash.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeSHA1Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2373,13 +2247,11 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  /// Calculates the MD5 hash.
+  ///   Calculates the MD5 hash.
   /// </summary>
   /// <param name="this">This Byte-Array.</param>
   /// <returns>The hash</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   [DebuggerStepThrough]
   public static byte[] ComputeMD5Hash(this byte[] @this) {
     Against.ThisIsNull(@this);
@@ -2393,56 +2265,57 @@ public static partial class ArrayExtensions {
   #endregion
 
   /// <summary>
-  /// Determines whether a given <see cref="Array"/> contains exactly one element.
+  ///   Determines whether a given <see cref="Array" /> contains exactly one element.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><see langword="true"/> if the <see cref="Array"/> has one element; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns><see langword="true" /> if the <see cref="Array" /> has one element; otherwise, <see langword="false" />.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsSingle<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length == 1;
   }
 
   /// <summary>
-  /// Determines whether a given <see cref="Array"/> contains exactly more than one element.
+  ///   Determines whether a given <see cref="Array" /> contains exactly more than one element.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><see langword="true"/> if the <see cref="Array"/> has more than one element; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns>
+  ///   <see langword="true" /> if the <see cref="Array" /> has more than one element; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsMultiple<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length > 1;
   }
 
   /// <summary>
-  /// Determines whether a given <see cref="Array"/> contains not exactly one element.
+  ///   Determines whether a given <see cref="Array" /> contains not exactly one element.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><see langword="true"/> if the <see cref="Array"/> has more or less than one element; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns>
+  ///   <see langword="true" /> if the <see cref="Array" /> has more or less than one element; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoSingle<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length != 1;
   }
 
   /// <summary>
-  /// Determines whether a given <see cref="Array"/> contains less than two elements.
+  ///   Determines whether a given <see cref="Array" /> contains less than two elements.
   /// </summary>
   /// <typeparam name="TValue">The type of items</typeparam>
-  /// <param name="this">This <see cref="Array"/></param>
-  /// <returns><see langword="true"/> if the <see cref="Array"/> has less than two elements; otherwise, <see langword="false"/>.</returns>
-#if SUPPORTS_INLINING
+  /// <param name="this">This <see cref="Array" /></param>
+  /// <returns>
+  ///   <see langword="true" /> if the <see cref="Array" /> has less than two elements; otherwise,
+  ///   <see langword="false" />.
+  /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool IsNoMultiple<TValue>(this TValue[] @this) {
     Against.ThisIsNull(@this);
     return @this.Length <= 1;

@@ -1,161 +1,154 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-#if NETFRAMEWORK
-using Microsoft.Win32;
-#endif
 using System.Diagnostics;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Guard;
 using System.Runtime.InteropServices;
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
+using Guard;
+#if NETFRAMEWORK
+using Microsoft.Win32;
 #endif
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 namespace System;
 
 public static partial class TypeExtensions {
-
-#region nested types
+  #region nested types
 
   /// <summary>
-  /// Holds information about properties which are important for designer components.
+  ///   Holds information about properties which are important for designer components.
   /// </summary>
   public struct PropertyDesignerDetails {
     /// <summary>
-    /// The underlying PropertyInfo
+    ///   The underlying PropertyInfo
     /// </summary>
     public readonly PropertyInfo Info;
 
     /// <summary>
-    /// Cache
+    ///   Cache
     /// </summary>
     private string __name;
 
     /// <summary>
-    /// Gets the name.
+    ///   Gets the name.
     /// </summary>
     public string Name => this.__name ??= this.Info?.Name;
 
     /// <summary>
-    /// Gets a value indicating whether this instance is readable.
+    ///   Gets a value indicating whether this instance is readable.
     /// </summary>
     /// <value>
-    /// 	<c>true</c> if this instance is readable; otherwise, <c>false</c>.
+    ///   <c>true</c> if this instance is readable; otherwise, <c>false</c>.
     /// </value>
     public bool IsReadable => this.Info is { CanRead: true };
 
     /// <summary>
-    /// Gets a value indicating whether this instance is writable.
+    ///   Gets a value indicating whether this instance is writable.
     /// </summary>
     /// <value>
-    /// 	<c>true</c> if this instance is writable; otherwise, <c>false</c>.
+    ///   <c>true</c> if this instance is writable; otherwise, <c>false</c>.
     /// </value>
     public bool IsWritable => this.Info is { CanWrite: true } && !this.ReadOnly;
 
     private TResult _GetCachedFieldOrAttributeValue<TResult, TValue, TAttribute>(ref TResult backingField, Func<TAttribute, TValue> getter, Func<IEnumerable<TValue>, TResult> transformer)
-      => backingField ??= transformer(this._CustomAttributes.OfType<TAttribute>().Where(i => i != null).Select(getter))
-      ;
+      => backingField ??= transformer(this._CustomAttributes.OfType<TAttribute>().Where(i => i != null).Select(getter));
 
     /// <summary>
-    /// Gets the descriptions.
+    ///   Gets the descriptions.
     /// </summary>
     public string[] Descriptions => this._GetCachedFieldOrAttributeValue(ref this.__description, (DescriptionAttribute i) => i.Description, i => i.ToArray());
+
     private string[] __description;
 
     /// <summary>
-    /// Gets the descriptions.
+    ///   Gets the descriptions.
     /// </summary>
     public string DisplayName => this._GetCachedFieldOrAttributeValue(ref this.__displayName, (DisplayNameAttribute i) => i.DisplayName, i => i.FirstOrDefault());
+
     private string __displayName;
 
     /// <summary>
-    /// Gets the categories.
+    ///   Gets the categories.
     /// </summary>
     public string Category => this._GetCachedFieldOrAttributeValue(ref this.__category, (CategoryAttribute i) => i.Category, i => i.FirstOrDefault());
+
     private string __category;
 
     /// <summary>
-    /// Gets the categories.
+    ///   Gets the categories.
     /// </summary>
     public bool ReadOnly => this._GetCachedFieldOrAttributeValue(ref this.__readOnly, (ReadOnlyAttribute i) => i.IsReadOnly, i => i.Contains(true)) ?? false;
+
     private bool? __readOnly;
 
     /// <summary>
-    /// Gets the categories.
+    ///   Gets the categories.
     /// </summary>
     public bool Browsable => this._GetCachedFieldOrAttributeValue(ref this.__browsable, (BrowsableAttribute i) => i.Browsable, i => !i.Contains(false)) ?? true;
+
     private bool? __browsable;
 
     /// <summary>
-    /// Gets the editor browseable states.
+    ///   Gets the editor browseable states.
     /// </summary>
     public IEnumerable<EditorBrowsableState> EditorBrowseableStates => this._GetCachedFieldOrAttributeValue(ref this.__editorBrowseableStates, (EditorBrowsableAttribute i) => i.State, i => i);
+
     private IEnumerable<EditorBrowsableState> __editorBrowseableStates;
 
     /// <summary>
-    /// Gets the type of the property.
+    ///   Gets the type of the property.
     /// </summary>
     /// <value>
-    /// The type of the property.
+    ///   The type of the property.
     /// </value>
     public Type PropertyType => this.__propertyType ??= this.Info?.PropertyType ?? TypeObject;
+
     private Type __propertyType;
 
-#region value getter
+    #region value getter
 
     public readonly object GetValue(object instance) => this.Info.GetValue(instance, null);
     public readonly TValue GetValue<TValue>(object instance) => (TValue)this.GetValue(instance);
 
-    public readonly object GetValueOrDefault(object instance, object defaultValue) 
-      => this.TryGetValue(instance, out var result) ? result : defaultValue
-      ;
+    public readonly object GetValueOrDefault(object instance, object defaultValue)
+      => this.TryGetValue(instance, out var result) ? result : defaultValue;
 
     public readonly TValue GetValueOrDefault<TValue>(object instance)
-      => this.TryGetValue<TValue>(instance, out var result) ? result : default
-      ;
+      => this.TryGetValue<TValue>(instance, out var result) ? result : default;
 
     public readonly TValue GetValueOrDefault<TValue>(object instance, TValue defaultValue)
-      => this.TryGetValue<TValue>(instance, out var result) ? result : defaultValue
-      ;
+      => this.TryGetValue<TValue>(instance, out var result) ? result : defaultValue;
 
     public readonly object GetValueOrDefault(object defaultValue = null)
-      => this.TryGetValue(out var result) ? result : defaultValue
-    ;
+      => this.TryGetValue(out var result) ? result : defaultValue;
 
     public readonly TValue GetValueOrDefault<TValue>()
-      => this.TryGetValue<TValue>(out var result) ? result : default
-    ;
+      => this.TryGetValue<TValue>(out var result) ? result : default;
 
     public readonly TValue GetValueOrDefault<TValue>(TValue defaultValue)
-      => this.TryGetValue<TValue>(out var result) ? result : defaultValue
-    ; 
+      => this.TryGetValue<TValue>(out var result) ? result : defaultValue;
 
     public readonly bool TryGetValue(out object value) {
       try {
@@ -197,9 +190,9 @@ public static partial class TypeExtensions {
       }
     }
 
-#endregion
+    #endregion
 
-#region value setter
+    #region value setter
 
     public readonly void SetValue(object value) => this.Info.SetValue(null, value, null);
 
@@ -227,10 +220,10 @@ public static partial class TypeExtensions {
       }
     }
 
-#endregion
+    #endregion
 
     /// <summary>
-    /// Gets all custom attributes.
+    ///   Gets all custom attributes.
     /// </summary>
     private object[] _CustomAttributes {
       get {
@@ -242,18 +235,17 @@ public static partial class TypeExtensions {
           return this.__customAttributes = Utilities.Array.Empty<object>();
 
         var name = info.Name;
-        List<object> results = new();
+        List<object> results = [];
 
         // walk inheritance chain
         var declaringType = info.DeclaringType;
         var type = declaringType;
         while (type != null) {
           var pInfo = type.GetProperty(name);
-          if (pInfo != null) {
+          if (pInfo != null)
             foreach (var attribute in pInfo.GetCustomAttributes(true))
               if (!results.Contains(attribute))
                 results.Add(attribute);
-          }
 
           type = type.BaseType;
         }
@@ -284,21 +276,16 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Holds parameters and their type information for ctor calls.
+  ///   Holds parameters and their type information for ctor calls.
   /// </summary>
-  private readonly struct TypeWithValue {
-    public TypeWithValue(Type type, object value) {
-      this.Type = type;
-      this.Value = value;
-    }
-
-    public readonly Type Type;
-    public readonly object Value;
+  private readonly struct TypeWithValue(Type type, object value) {
+    public readonly Type Type = type;
+    public readonly object Value = value;
   }
 
-#endregion
+  #endregion
 
-#region specific type
+  #region specific type
 
   public static readonly Type TypeVoid = typeof(void);
   public static readonly Type TypeBool = typeof(bool);
@@ -319,24 +306,59 @@ public static partial class TypeExtensions {
   public static readonly Type TypeTimeSpan = typeof(TimeSpan);
   public static readonly Type TypeDateTime = typeof(DateTime);
 
-#endregion
+  #endregion
 
-#region type conversion
+  #region type conversion
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
-    { TypeDecimal, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar } }, 
-    { TypeDouble, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar, TypeFloat } }, 
-    { TypeFloat, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeLong, TypeQWord, TypeChar } },
-    { TypeQWord, new[] { TypeByte, TypeWord, TypeDWord, TypeChar } },
-    { TypeLong, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeChar } },
-    { TypeDWord, new[] { TypeByte, TypeWord, TypeChar } },
-    { TypeInt, new[] { TypeSByte, TypeByte, TypeShort, TypeWord, TypeChar } },
-    { TypeWord, new[] { TypeByte, TypeChar } },
-    { TypeShort, new[] { TypeByte } }
+    {
+      TypeDecimal, [
+        TypeSByte,
+        TypeByte,
+        TypeShort,
+        TypeWord,
+        TypeInt,
+        TypeDWord,
+        TypeLong,
+        TypeQWord,
+        TypeChar
+      ]
+    }, {
+      TypeDouble, [
+        TypeSByte,
+        TypeByte,
+        TypeShort,
+        TypeWord,
+        TypeInt,
+        TypeDWord,
+        TypeLong,
+        TypeQWord,
+        TypeChar,
+        TypeFloat
+      ]
+    }, {
+      TypeFloat, [
+        TypeSByte,
+        TypeByte,
+        TypeShort,
+        TypeWord,
+        TypeInt,
+        TypeDWord,
+        TypeLong,
+        TypeQWord,
+        TypeChar
+      ]
+    },
+    { TypeQWord, [TypeByte, TypeWord, TypeDWord, TypeChar] },
+    { TypeLong, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeInt, TypeDWord, TypeChar] },
+    { TypeDWord, [TypeByte, TypeWord, TypeChar] },
+    { TypeInt, [TypeSByte, TypeByte, TypeShort, TypeWord, TypeChar] },
+    { TypeWord, [TypeByte, TypeChar] },
+    { TypeShort, [TypeByte] }
   };
 
   /// <summary>
-  /// Determines whether a given type can be casted to another one.
+  ///   Determines whether a given type can be casted to another one.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <param name="target">Target type.</param>
@@ -356,16 +378,13 @@ public static partial class TypeExtensions {
       return true;
 
     return
-      @this.GetMethods(BindingFlags.Public | BindingFlags.Static)
-        .Any(
-          m => m.ReturnType == target &&
-               m.Name == "op_Implicit" ||
-               m.Name == "op_Explicit"
-        );
+      @this
+        .GetMethods(BindingFlags.Public | BindingFlags.Static)
+        .Any(m => (m.ReturnType == target && m.Name == "op_Implicit") || m.Name == "op_Explicit");
   }
 
   /// <summary>
-  /// Determines whether the given type can be casted from the given source type.
+  ///   Determines whether the given type can be casted from the given source type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <param name="source">The source type.</param>
@@ -379,17 +398,17 @@ public static partial class TypeExtensions {
     return source.IsCastableTo(@this);
   }
 
-#endregion
+  #endregion
 
-#region messing for designers
+  #region messing for designers
 
   /// <summary>
-  /// Cache
+  ///   Cache
   /// </summary>
   private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<BindingFlags, PropertyDesignerDetails[]>> _typeCache = new();
 
   /// <summary>
-  /// Gets the designer detailed properties from a given type.
+  ///   Gets the designer detailed properties from a given type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <param name="bindingFlags">The bindingflags to use, defaults to Public and Instance.</param>
@@ -404,8 +423,8 @@ public static partial class TypeExtensions {
 
     // try to get from cache first
     if (
-      _typeCache.TryGetValue(@this, out var inner) 
-      && inner != null 
+      _typeCache.TryGetValue(@this, out var inner)
+      && inner != null
       && inner.TryGetValue(bindingFlags.Value, out var result)
     )
       return result;
@@ -420,19 +439,17 @@ public static partial class TypeExtensions {
     return result;
   }
 
-#endregion
+  #endregion
 
   /// <summary>
-  /// Gets the assembly attribute.
+  ///   Gets the assembly attribute.
   /// </summary>
   /// <typeparam name="TAttribute">The type of the attribute.</typeparam>
   /// <param name="this">This type.</param>
   /// <param name="inherit">if set to <c>true</c> inherited attributes would also be returned; otherwise, not.</param>
   /// <param name="index">The index to use if multiple attributes were found of that kind.</param>
   /// <returns>The given attribute instance.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TAttribute GetAssemblyAttribute<TAttribute>(this Type @this, bool inherit = false, int index = 0) {
     Against.ThisIsNull(@this);
 
@@ -440,7 +457,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Simples the name.
+  ///   Simples the name.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <param name="useLanguageTypes">Whether to use language type names like eg int for Int32; defaults to <c>false</c>.</param>
@@ -458,41 +475,44 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Generates a random value of the specified type. For reference types, an instance can optionally be created.
+  ///   Generates a random value of the specified type. For reference types, an instance can optionally be created.
   /// </summary>
   /// <param name="this">The type for which to generate a random value.</param>
-  /// <param name="allowInstanceCreationForReferenceTypes">If set to <see langword="true"/>, allows the creation of a new instance for reference types. Default is false.</param>
-  /// <returns>A random value of the specified type or a new instance of the type if it's a reference type and instance creation is allowed.</returns>
+  /// <param name="allowInstanceCreationForReferenceTypes">
+  ///   If set to <see langword="true" />, allows the creation of a new
+  ///   instance for reference types. Default is false.
+  /// </param>
+  /// <returns>
+  ///   A random value of the specified type or a new instance of the type if it's a reference type and instance
+  ///   creation is allowed.
+  /// </returns>
   /// <exception cref="ArgumentException">Thrown if it's not possible to create a value of the specified type.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// Type intType = typeof(int);
   /// object randomInt = intType.GetRandomValue();
   /// Console.WriteLine($"Random int: {randomInt}");
-  ///
+  /// 
   /// Type stringType = typeof(string);
   /// // Note that without instance creation, the default for reference types like string is null.
   /// object randomString = stringType.GetRandomValue(true);
   /// Console.WriteLine($"Random string: {randomString ?? "null"}");
   /// </code>
-  /// This example shows how to generate a random integer and an instance of a string. For the string, instance creation is allowed.
+  ///   This example shows how to generate a random integer and an instance of a string. For the string, instance creation is
+  ///   allowed.
   /// </example>
   /// <remarks>
-  /// This method can handle primitive types, structs, and reference types. For reference types, a new instance is only created if <paramref name="allowInstanceCreationForReferenceTypes"/> is true, otherwise, the default value (null) is returned.
+  ///   This method can handle primitive types, structs, and reference types. For reference types, a new instance is only
+  ///   created if <paramref name="allowInstanceCreationForReferenceTypes" /> is true, otherwise, the default value (null) is
+  ///   returned.
   /// </remarks>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static object GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
     Against.ThisIsNull(@this);
 
-#if SUPPORTS_RANDOM_SHARED
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Random.Shared);
-#else
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, new Random());
-#endif
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Utilities.Random.Shared);
   }
-  
+
   internal static object GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
     Against.ArgumentIsNull(type);
     Against.ArgumentIsNull(entropySource);
@@ -503,7 +523,7 @@ public static partial class TypeExtensions {
     if (Nullable.GetUnderlyingType(type) is { } ul)
       return CreateForNullable(ul, allowInstanceCreationForReferenceTypes, entropySource);
 
-    if(type.IsEnum)
+    if (type.IsEnum)
       return CreateForEnum(type, entropySource);
 
     if (type.IsClass)
@@ -514,9 +534,7 @@ public static partial class TypeExtensions {
 
     throw new NotSupportedException("Unknown type");
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     static object CreateForNullable(Type underlyingType, bool allowInstanceCreationForReferenceTypes, Random entropySource)
       => entropySource.GetBoolean() ? null : GetRandomValueFor(underlyingType, allowInstanceCreationForReferenceTypes, entropySource)
     ;
@@ -546,7 +564,7 @@ public static partial class TypeExtensions {
       var size = Marshal.SizeOf(type);
       var data = new byte[size];
 
-      if(entropySource.GetBoolean()) 
+      if (entropySource.GetBoolean())
         entropySource.NextBytes(data);
 
       var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
@@ -558,19 +576,15 @@ public static partial class TypeExtensions {
       }
     }
 
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     static bool TryCreateForWellKnownValueType(Type type, Random entropySource, out object result) => (__tryCreateRandomValueForWellKnownType ??= new()).Invoke(type, entropySource, out result);
 
     static object CreateForEnum(Type type, Random entropySource) {
-
       // Return any integer value in the range of the underlying enum type
       if (entropySource.GetBoolean()) {
-
         var underlyingType = Enum.GetUnderlyingType(type);
         return
-          underlyingType == TypeInt || underlyingType == TypeDWord || underlyingType == TypeChar ? Enum.ToObject(type, entropySource.NextInt64(uint.MaxValue+1L))
+          underlyingType == TypeInt || underlyingType == TypeDWord || underlyingType == TypeChar ? Enum.ToObject(type, entropySource.NextInt64(uint.MaxValue + 1L))
           : underlyingType == TypeLong || underlyingType == TypeQWord ? Enum.ToObject(type, entropySource.NextInt64())
           : underlyingType == TypeShort || underlyingType == TypeWord ? Enum.ToObject(type, entropySource.Next(ushort.MaxValue))
           : underlyingType == TypeByte || underlyingType == TypeSByte ? Enum.ToObject(type, entropySource.Next(byte.MaxValue))
@@ -583,7 +597,6 @@ public static partial class TypeExtensions {
 
       // For a flagged enum, start with no flags and randomly combine them
       if (isFlagged) {
-
         var combinedValue = 0UL;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var value in enumValues)
@@ -597,13 +610,11 @@ public static partial class TypeExtensions {
       var randomIndex = entropySource.Next(enumValues.Length);
       return enumValues.GetValue(randomIndex);
     }
-
   }
 
   private static __TryCreateRandomValueForWellKnownType __tryCreateRandomValueForWellKnownType;
 
-  private class __TryCreateRandomValueForWellKnownType {
-
+  private sealed class __TryCreateRandomValueForWellKnownType {
     private readonly Dictionary<Type, Func<Random, object>> _generators = new() {
       { TypeBool, r => r.GetBoolean() },
       { TypeChar, r => r.GetChar() },
@@ -623,10 +634,8 @@ public static partial class TypeExtensions {
       { TypeTimeSpan, r => new TimeSpan(r.NextInt64()) },
       { TypeDateTime, r => new DateTime(r.NextInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks)) },
     };
-   
-#if SUPPORTS_INLINING
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public bool Invoke(Type type, Random entropySource, out object result) {
       if (this._generators.TryGetValue(type, out var generator)) {
         result = generator(entropySource);
@@ -639,22 +648,25 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Retrieves the default value for the specified type.
+  ///   Retrieves the default value for the specified type.
   /// </summary>
-  /// <param name="this">The <see cref="Type"/> for which to retrieve the default value.</param>
-  /// <returns>The default value for the type specified. This returns <see langword="null"/> for reference types and zero or equivalent for value types.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <param name="this">The <see cref="Type" /> for which to retrieve the default value.</param>
+  /// <returns>
+  ///   The default value for the type specified. This returns <see langword="null" /> for reference types and zero or
+  ///   equivalent for value types.
+  /// </returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <example>
-  /// <code>
+  ///   <code>
   /// Type intType = typeof(int);
   /// object defaultInt = intType.GetDefaultValue();
   /// Console.WriteLine($"Default value for int: {defaultInt}"); // Outputs "Default value for int: 0"
-  ///
+  /// 
   /// Type stringType = typeof(string);
   /// object defaultString = stringType.GetDefaultValue();
   /// Console.WriteLine($"Default value for string: {defaultString}"); // Outputs "Default value for string: null"
   /// </code>
-  /// This example demonstrates retrieving the default values for an integer and a string.
+  ///   This example demonstrates retrieving the default values for an integer and a string.
   /// </example>
   public static object GetDefaultValue(this Type @this) {
     Against.ThisIsNull(@this);
@@ -700,24 +712,24 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Determines whether the specified type is an integer type.
+  ///   Determines whether the specified type is an integer type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
   ///   <c>true</c> if the specified type is integer; otherwise, <c>false</c>.
   /// </returns>
   public static bool IsIntegerType(this Type @this) =>
-    @this == TypeByte 
-    || @this == TypeSByte 
-    || @this == TypeShort 
-    || @this == TypeWord 
-    || @this == TypeInt 
+    @this == TypeByte
+    || @this == TypeSByte
+    || @this == TypeShort
+    || @this == TypeWord
+    || @this == TypeInt
     || @this == TypeDWord
-    || @this == TypeLong 
+    || @this == TypeLong
     || @this == TypeQWord;
 
   /// <summary>
-  /// Gets the minimum value of an int type.
+  ///   Gets the minimum value of an int type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>The minimum value supported for this type.</returns>
@@ -745,7 +757,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Gets the maximum value of an int type.
+  ///   Gets the maximum value of an int type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>The maximum value supported for this type.</returns>
@@ -772,18 +784,24 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Determines whether the specified this is signed.
+  ///   Determines whether the specified this is signed.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <returns>
   ///   <c>true</c> if the specified this is signed; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsSigned(this Type @this) 
-    => @this == TypeSByte || @this == TypeShort || @this == TypeInt || @this == TypeLong || @this == TypeFloat 
-       || @this == TypeDouble || @this == TypeDecimal || (@this.IsNullable() && IsSigned(@this.GetGenericArguments()[0]));
+  public static bool IsSigned(this Type @this)
+    => @this == TypeSByte
+       || @this == TypeShort
+       || @this == TypeInt
+       || @this == TypeLong
+       || @this == TypeFloat
+       || @this == TypeDouble
+       || @this == TypeDecimal
+       || (@this.IsNullable() && IsSigned(@this.GetGenericArguments()[0]));
 
   /// <summary>
-  /// Determines whether the specified this is unsigned.
+  ///   Determines whether the specified this is unsigned.
   /// </summary>
   /// <param name="this">The this.</param>
   /// <returns>
@@ -792,7 +810,7 @@ public static partial class TypeExtensions {
   public static bool IsUnsigned(this Type @this) => !IsSigned(@this);
 
   /// <summary>
-  /// Determines whether the specified type is a float type.
+  ///   Determines whether the specified type is a float type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -801,7 +819,7 @@ public static partial class TypeExtensions {
   public static bool IsFloatType(this Type @this) => @this == TypeFloat || @this == TypeDouble || @this == TypeDecimal;
 
   /// <summary>
-  /// Determines whether the specified type is a float type.
+  ///   Determines whether the specified type is a float type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -810,7 +828,7 @@ public static partial class TypeExtensions {
   public static bool IsDecimalType(this Type @this) => @this == TypeDecimal;
 
   /// <summary>
-  /// Determines whether the specified type is a string.
+  ///   Determines whether the specified type is a string.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -819,7 +837,7 @@ public static partial class TypeExtensions {
   public static bool IsStringType(this Type @this) => @this == TypeString;
 
   /// <summary>
-  /// Determines whether the specified type is a boolean type.
+  ///   Determines whether the specified type is a boolean type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -828,7 +846,7 @@ public static partial class TypeExtensions {
   public static bool IsBooleanType(this Type @this) => @this == TypeBool;
 
   /// <summary>
-  /// Determines whether the specified type is a TimeSpan type.
+  ///   Determines whether the specified type is a TimeSpan type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -837,7 +855,7 @@ public static partial class TypeExtensions {
   public static bool IsTimeSpanType(this Type @this) => @this == TypeTimeSpan;
 
   /// <summary>
-  /// Determines whether the specified type is a DateTime type.
+  ///   Determines whether the specified type is a DateTime type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -846,7 +864,7 @@ public static partial class TypeExtensions {
   public static bool IsDateTimeType(this Type @this) => @this == TypeDateTime;
 
   /// <summary>
-  /// Determines whether the specified type is an enum.
+  ///   Determines whether the specified type is an enum.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>
@@ -855,14 +873,14 @@ public static partial class TypeExtensions {
   public static bool IsEnumType(this Type @this) => @this.IsEnum;
 
   /// <summary>
-  /// Determines whether the specified type is nullable.
+  ///   Determines whether the specified type is nullable.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns><c>true</c> if it is Nullable; otherwise, <c>false</c>.</returns>
   public static bool IsNullable(this Type @this) => @this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Nullable<>);
 
   /// <summary>
-  /// Gets the attribute value.
+  ///   Gets the attribute value.
   /// </summary>
   /// <typeparam name="TAttributeType">The type of the attribute type.</typeparam>
   /// <typeparam name="TValue">The type of the value.</typeparam>
@@ -877,11 +895,12 @@ public static partial class TypeExtensions {
 
     object[] attributes;
     var field = @this.GetField(fieldName);
-    if (field != null) {
+    if (field != null)
       attributes = field.GetCustomAttributes(typeof(TAttributeType), true);
-    } else {
+    else {
       var prop = @this.GetProperty(fieldName);
-      if (prop == null) throw new ArgumentException();
+      if (prop == null)
+        throw new ArgumentException();
       attributes = prop.GetCustomAttributes(typeof(TAttributeType), true);
     }
 
@@ -890,7 +909,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Gets the display name.
+  ///   Gets the display name.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>The value of the displayname attribute if any</returns>
@@ -901,7 +920,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Gets the description name.
+  ///   Gets the description name.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>The value of the description attribute if any.</returns>
@@ -912,7 +931,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Gets the implemented types of the given interface/base type.
+  ///   Gets the implemented types of the given interface/base type.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>Every type in the current app domain, which implements the given type.</returns>
@@ -935,7 +954,7 @@ public static partial class TypeExtensions {
   private static readonly ConcurrentDictionary<Type, Constructor> _ctorCache = new();
 
   /// <summary>
-  /// Creates the instance.
+  ///   Creates the instance.
   /// </summary>
   /// <typeparam name="TType">The type of the instance.</typeparam>
   /// <param name="this">This Type.</param>
@@ -952,11 +971,11 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Creates a delegate to construct an object of the given type.
+  ///   Creates a delegate to construct an object of the given type.
   /// </summary>
   /// <param name="this">The type of the instance.</param>
   /// <returns>
-  /// A delegate to be called.
+  ///   A delegate to be called.
   /// </returns>
   private static Constructor _GetConstructorFactory(this Type @this) {
     var parameterTypes = Type.EmptyTypes;
@@ -972,13 +991,13 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Creates the instance.
+  ///   Creates the instance.
   /// </summary>
   /// <typeparam name="TType">The type of the instance.</typeparam>
   /// <param name="this">This Type.</param>
   /// <param name="parameters">The parameters.</param>
   /// <returns>
-  /// An instance of the given type.
+  ///   An instance of the given type.
   /// </returns>
   public static TType CreateInstance<TType>(this Type @this, params object[] parameters) {
     Against.ThisIsNull(@this);
@@ -988,7 +1007,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Compares two arrays of types for complete equality.
+  ///   Compares two arrays of types for complete equality.
   /// </summary>
   /// <param name="array1">The 1st array.</param>
   /// <param name="array2">The 2nd array.</param>
@@ -998,15 +1017,13 @@ public static partial class TypeExtensions {
   /// </returns>
   private static bool _TypeArrayEquals(TypeWithValue[] array1, ParameterInfo[] array2, bool allowImplicitConversion) {
     switch (array1) {
-
       // if only one of the arrays is null, return false
       case null when array2 != null:
       case not null when array2 == null:
         return false;
 
       // both arrays are null, return true
-      case null:
-        return true;
+      case null: return true;
     }
 
     // no array is null, compare
@@ -1018,23 +1035,22 @@ public static partial class TypeExtensions {
       for (var i = 0; i < array1.Length; ++i)
         if (!array2[i].ParameterType.IsAssignableFrom(array1[i].Type))
           return false;
-    } else {
+    } else
       for (var i = 0; i < array1.Length; ++i)
         if (array1[i].Type != array2[i].ParameterType)
           return false;
-    }
 
     return true;
   }
 
   /// <summary>
-  /// Creates an instance from a ctor matching the given parameter types.
+  ///   Creates an instance from a ctor matching the given parameter types.
   /// </summary>
   /// <typeparam name="TType">The type to create.</typeparam>
   /// <param name="type">The type.</param>
   /// <param name="parameters">The parameters.</param>
   /// <returns>
-  /// Anew types' instance.
+  ///   Anew types' instance.
   /// </returns>
   private static TType _FromConstructor<TType>(Type type, params TypeWithValue[] parameters) {
     Against.ThisIsNull(type);
@@ -1043,20 +1059,19 @@ public static partial class TypeExtensions {
     var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
     var matchingCtor = (
-
-      // try to find an exact matching ctor first
-      from i in ctors
-      let par = i.GetParameters()
-      where _TypeArrayEquals(parameters, par, false)
-      select i
-    ).FirstOrDefault() ?? (
-
-      // if none found, try to get a ctor that could be filled by implicit parameter conversions
-      from i in ctors
-      let par = i.GetParameters()
-      where _TypeArrayEquals(parameters, par, true)
-      select i
-    ).FirstOrDefault();
+                         // try to find an exact matching ctor first
+                         from i in ctors
+                         let par = i.GetParameters()
+                         where _TypeArrayEquals(parameters, par, false)
+                         select i
+                       ).FirstOrDefault()
+                       ?? (
+                         // if none found, try to get a ctor that could be filled by implicit parameter conversions
+                         from i in ctors
+                         let par = i.GetParameters()
+                         where _TypeArrayEquals(parameters, par, true)
+                         select i
+                       ).FirstOrDefault();
 
     return matchingCtor == null
         ? throw new NotSupportedException("No matching ctor found")
@@ -1065,9 +1080,9 @@ public static partial class TypeExtensions {
   }
 
 #if NETFRAMEWORK
-  
+
   /// <summary>
-  /// Returns the file location for the given type or COM object.
+  ///   Returns the file location for the given type or COM object.
   /// </summary>
   /// <param name="this">This Type.</param>
   /// <returns>The path to the executable or type library or <c>null</c>.</returns>
@@ -1093,7 +1108,7 @@ public static partial class TypeExtensions {
 #endif
 
   /// <summary>
-  /// Gets the static property value.
+  ///   Gets the static property value.
   /// </summary>
   /// <typeparam name="TType">The type of the property.</typeparam>
   /// <param name="this">This Type.</param>
@@ -1103,8 +1118,10 @@ public static partial class TypeExtensions {
   public static TType GetStaticPropertyValue<TType>(this Type @this, string name) {
     Against.ThisIsNull(@this);
 
-    var prop = @this.GetProperty(name,
-      BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty);
+    var prop = @this.GetProperty(
+      name,
+      BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetProperty
+    );
     return prop == null
         ? throw new ArgumentException("Property not found", nameof(name))
         : (TType)prop.GetValue(null, null)
@@ -1112,7 +1129,7 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  /// Gets the static field value.
+  ///   Gets the static field value.
   /// </summary>
   /// <typeparam name="TType">The type of the field.</typeparam>
   /// <param name="this">This Type.</param>
@@ -1122,8 +1139,10 @@ public static partial class TypeExtensions {
   public static TType GetStaticFieldValue<TType>(this Type @this, string name) {
     Against.ThisIsNull(@this);
 
-    var prop = @this.GetField(name,
-      BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField);
+    var prop = @this.GetField(
+      name,
+      BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.GetField
+    );
     return prop == null
         ? throw new ArgumentException("Field not found", nameof(name))
         : (TType)prop.GetValue(null)
@@ -1141,7 +1160,7 @@ public static partial class TypeExtensions {
         foreach (var result in @this.GetCustomAttributes(typeof(TAttribute), false))
           yield return (TAttribute)result;
 
-      HashSet<TAttribute> alreadyReturned = new();
+      HashSet<TAttribute> alreadyReturned = [];
       var baseType = @this;
       do {
         foreach (var result in baseType.GetCustomAttributes(true)) {
@@ -1163,5 +1182,4 @@ public static partial class TypeExtensions {
       }
     }
   }
-
 }

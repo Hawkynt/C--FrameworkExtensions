@@ -1,38 +1,34 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 #if DEBUG && !PLATFORM_X86
 using System.Runtime.InteropServices;
 #endif
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
+
 static partial class ArrayExtensions {
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceUnsafe(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
     fixed (byte* sourceFixedPointer = &source[sourceOffset])
     fixed (byte* targetFixedPointer = &target[targetOffset]) {
@@ -41,7 +37,8 @@ static partial class ArrayExtensions {
 
       const int THRESHOLD = 4;
 
-      { // try 2048-Bit
+      {
+        // try 2048-Bit
         var localCount = count >> 8;
         if (localCount >= THRESHOLD) {
           var result = _SequenceEqual256Bytewise(ref sourcePointer, ref targetPointer, localCount);
@@ -55,7 +52,8 @@ static partial class ArrayExtensions {
       }
 
 #if !PLATFORM_X86
-      { // try 512-Bit
+      {
+        // try 512-Bit
         var localCount = count >> 6;
         if (localCount >= THRESHOLD) {
           var result = _SequenceEqual64Bytewise(ref sourcePointer, ref targetPointer, localCount);
@@ -69,7 +67,8 @@ static partial class ArrayExtensions {
       }
 #endif
 
-      { // try 256-Bit
+      {
+        // try 256-Bit
         var localCount = count >> 5;
         if (localCount >= THRESHOLD) {
           var result = _SequenceEqual32Bytewise(ref sourcePointer, ref targetPointer, localCount);
@@ -83,7 +82,8 @@ static partial class ArrayExtensions {
       }
 
 #if !PLATFORM_X86
-      { // try 64-Bit
+      {
+        // try 64-Bit
         var localCount = count >> 3;
         if (localCount >= THRESHOLD) {
           var result = _SequenceEqual8Bytewise(ref sourcePointer, ref targetPointer, localCount);
@@ -97,7 +97,8 @@ static partial class ArrayExtensions {
       }
 #endif
 
-      { // try 32-Bit
+      {
+        // try 32-Bit
         var localCount = count >> 2;
         if (localCount >= THRESHOLD) {
           var result = _SequenceEqual4Bytewise(ref sourcePointer, ref targetPointer, localCount);
@@ -117,9 +118,7 @@ static partial class ArrayExtensions {
     }
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqualBytewise(ref byte* source, ref byte* target, int count) {
     while (count > 0) {
       if (*source != *target)
@@ -133,9 +132,7 @@ static partial class ArrayExtensions {
     return true;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqual4Bytewise(ref byte* s, ref byte* t, int count) {
     var source = (uint*)s;
     var target = (uint*)t;
@@ -155,9 +152,7 @@ static partial class ArrayExtensions {
 
 #if !PLATFORM_X86
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqual8Bytewise(ref byte* s, ref byte* t, int count) {
     var source = (ulong*)s;
     var target = (ulong*)t;
@@ -178,9 +173,7 @@ static partial class ArrayExtensions {
 
 #endif
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqual32Bytewise(ref byte* s, ref byte* t, int count) {
     var source = (Block32*)s;
     var target = (Block32*)t;
@@ -210,9 +203,7 @@ static partial class ArrayExtensions {
 
 #if !PLATFORM_X86
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqual64Bytewise(ref byte* s, ref byte* t, int count) {
     var source = (Block64*)s;
     var target = (Block64*)t;
@@ -240,9 +231,7 @@ static partial class ArrayExtensions {
     return true;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
     var source = (Block64*)s;
     var target = (Block64*)t;
@@ -257,7 +246,6 @@ static partial class ArrayExtensions {
         || (*source).f != (*target).f
         || (*source).g != (*target).g
         || (*source).h != (*target).h
-
         || source[1].a != target[1].a
         || source[1].b != target[1].b
         || source[1].c != target[1].c
@@ -266,7 +254,6 @@ static partial class ArrayExtensions {
         || source[1].f != target[1].f
         || source[1].g != target[1].g
         || source[1].h != target[1].h
-
         || source[2].a != target[2].a
         || source[2].b != target[2].b
         || source[2].c != target[2].c
@@ -275,7 +262,6 @@ static partial class ArrayExtensions {
         || source[2].f != target[2].f
         || source[2].g != target[2].g
         || source[2].h != target[2].h
-
         || source[3].a != target[3].a
         || source[3].b != target[3].b
         || source[3].c != target[3].c
@@ -284,7 +270,6 @@ static partial class ArrayExtensions {
         || source[3].f != target[3].f
         || source[3].g != target[3].g
         || source[3].h != target[3].h
-
       )
         return false;
 
@@ -299,10 +284,7 @@ static partial class ArrayExtensions {
   }
 
 #else
-
-#if SUPPORTS_INLINING
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     private static unsafe bool _SequenceEqual256Bytewise(ref byte* s, ref byte* t, int count) {
       var source = (Block32*)s;
       var target = (Block32*)t;
@@ -395,9 +377,8 @@ static partial class ArrayExtensions {
 
 #endif
 
-  private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) 
-    => _SequenceUnsafe(source, sourceOffset, target, targetOffset, count)
-    ;
+  private static bool _SequenceEqual(byte[] source, int sourceOffset, byte[] target, int targetOffset, int count)
+    => _SequenceUnsafe(source, sourceOffset, target, targetOffset, count);
 
   public static bool SequenceEqual(this byte[] source, int sourceOffset, byte[] target, int targetOffset, int count) {
     if (ReferenceEquals(source, target) && sourceOffset == targetOffset)
@@ -446,6 +427,4 @@ static partial class ArrayExtensions {
 
     return _SequenceEqual(source, 0, target, 0, sourceLeft);
   }
-
 }
-

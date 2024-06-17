@@ -1,33 +1,32 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
-#if !SUPPORTS_HTTPCLIENT
-using System.Collections.Specialized;
-#endif
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Text;
+using Guard;
+#if !SUPPORTS_HTTPCLIENT
+using System.Collections.Specialized;
+#endif
 #if SUPPORTS_WEBCLIENT_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -35,43 +34,32 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Net.Http;
 #endif
-using Guard;
-
-// ReSharper disable PartialTypeWithSinglePart
 
 namespace System;
 
 public static partial class UriExtensions {
-
-  private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new() {
-    {HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12"},
-    {HttpRequestHeader.Accept, "*/*"},
-    {HttpRequestHeader.AcceptLanguage, "en-gb,en;q=0.5"},
-    {HttpRequestHeader.AcceptCharset, "ISO-8859-1,utf-8;q=0.7,*;q=0.7"},
-  };
+  private static readonly Dictionary<HttpRequestHeader, string> _DEFAULT_HEADERS = new() { { HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12" }, { HttpRequestHeader.Accept, "*/*" }, { HttpRequestHeader.AcceptLanguage, "en-gb,en;q=0.5" }, { HttpRequestHeader.AcceptCharset, "ISO-8859-1,utf-8;q=0.7,*;q=0.7" }, };
 
   private static void _Execute(Action call, int retryCount) {
     Exception ex = null;
-    while (retryCount-- >= 0) {
+    while (retryCount-- >= 0)
       try {
         call();
       } catch (Exception e) {
         ex = e;
       }
-    }
 
     throw ex ?? new NotSupportedException("Should never be here");
   }
 
   private static TResult _Execute<TResult>(Func<TResult> call, int retryCount) {
     Exception ex = null;
-    while (retryCount-- >= 0) {
+    while (retryCount-- >= 0)
       try {
         return call();
       } catch (Exception e) {
         ex = e;
       }
-    }
 
     throw ex ?? new NotSupportedException("Should never be here");
   }
@@ -80,13 +68,12 @@ public static partial class UriExtensions {
 
   private static async Task<TResult> _Execute<TResult>(Func<Task<TResult>> call, int retryCount) {
     Exception ex = null;
-    while (retryCount-- >= 0) {
+    while (retryCount-- >= 0)
       try {
         return await call();
       } catch (Exception e) {
         ex = e;
       }
-    }
 
     throw ex ?? new NotSupportedException("Should never be here");
   }
@@ -94,7 +81,6 @@ public static partial class UriExtensions {
 #endif
 
 #if SUPPORTS_HTTPCLIENT
-
   private static readonly ConcurrentDictionary<HttpRequestHeader, string> _httpHeaderNameCache = new();
 
   private static string _Convert(HttpRequestHeader header) {
@@ -145,7 +131,7 @@ public static partial class UriExtensions {
 #endif
 
   /// <summary>
-  /// Reads all text.
+  ///   Reads all text.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="encoding">The encoding.</param>
@@ -153,19 +139,18 @@ public static partial class UriExtensions {
   /// <param name="headers">The headers.</param>
   /// <param name="postValues">The post values.</param>
   /// <returns>
-  /// The text of the target url
+  ///   The text of the target url
   /// </returns>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static string ReadAllText(this Uri @this, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
-    
+
     Trace.WriteLine(@this.AbsoluteUri);
 
     if (@this.IsFile)
       return encoding == null ? File.ReadAllText(@this.LocalPath) : File.ReadAllText(@this.LocalPath, encoding);
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client,headers);
     var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
@@ -185,7 +170,7 @@ public static partial class UriExtensions {
     if (encoding != null)
       client.Encoding = encoding;
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
@@ -206,18 +191,17 @@ public static partial class UriExtensions {
       webClient.Headers.Add(header.Key, header.Value);
   }
 #endif
-    
+
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static Uri GetResponseUri(this Uri @this, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
-    
+
     Trace.WriteLine(@this.AbsoluteUri);
 
     if (@this.IsFile)
       return @this;
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client, headers);
     var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
@@ -232,31 +216,34 @@ public static partial class UriExtensions {
     using WebClientFake client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
 
-    return _Execute(() => {
-      if (postValues == null) {
-        client.DownloadData(@this);
-        return client.ResponseUri;
-      }
+    return _Execute(
+      () => {
+        if (postValues == null) {
+          client.DownloadData(@this);
+          return client.ResponseUri;
+        }
 
-      client.UploadValues(@this, nameValCollection);
-      return client.ResponseUri;
-    },retryCount);
+        client.UploadValues(@this, nameValCollection);
+        return client.ResponseUri;
+      },
+      retryCount
+    );
 
 #endif
-
   }
 
 #if !SUPPORTS_HTTPCLIENT
 
-  private class WebClientFake : WebClient {
+  private sealed class WebClientFake : WebClient {
     public Uri ResponseUri { get; private set; }
 
     #region Overrides of WebClient
+
     protected override WebResponse GetWebResponse(WebRequest request) {
       try {
         var response = base.GetWebResponse(request);
@@ -280,7 +267,7 @@ public static partial class UriExtensions {
 
 #if SUPPORTS_WEBCLIENT_ASYNC || SUPPORTS_HTTPCLIENT
   /// <summary>
-  /// Reads all text.
+  ///   Reads all text.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="encoding">The encoding.</param>
@@ -294,7 +281,6 @@ public static partial class UriExtensions {
       return await new Task<string>(() => encoding == null ? File.ReadAllText(@this.AbsolutePath) : File.ReadAllText(@this.AbsolutePath, encoding));
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client, headers);
     return await _Execute(async() => {
@@ -316,29 +302,27 @@ public static partial class UriExtensions {
     return await _Execute(async () => await client.DownloadStringTaskAsync(@this), retryCount);
 
 #endif
-
   }
 #endif
 
   /// <summary>
-  /// Reads all bytes.
+  ///   Reads all bytes.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="retryCount">The retry count.</param>
   /// <param name="headers">The headers.</param>
   /// <param name="postValues">The post values.</param>
   /// <returns>
-  /// The bytes of the target url
+  ///   The bytes of the target url
   /// </returns>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static byte[] ReadAllBytes(this Uri @this, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
-    
+
     if (@this.IsFile)
       return File.ReadAllBytes(@this.LocalPath);
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client, headers);
     var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
@@ -353,7 +337,7 @@ public static partial class UriExtensions {
     using WebClient client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
@@ -361,11 +345,10 @@ public static partial class UriExtensions {
     return _Execute(() => postValues == null ? client.DownloadData(@this) : client.UploadValues(@this, nameValCollection), retryCount);
 
 #endif
-
   }
 
   /// <summary>
-  /// Downloads to file.
+  ///   Downloads to file.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="file">The file.</param>
@@ -377,14 +360,13 @@ public static partial class UriExtensions {
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static void DownloadToFile(this Uri @this, FileInfo file, bool overwrite = false, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
-    
+
     if (@this.IsFile) {
       File.Copy(@this.LocalPath, file.FullName, overwrite);
       return;
     }
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client, headers);
     var content = postValues == null ? null : new FormUrlEncodedContent(postValues);
@@ -400,44 +382,45 @@ public static partial class UriExtensions {
     using WebClient client = new();
     _SetClientHeaders(client, headers);
 
-    NameValueCollection nameValCollection = new();
+    NameValueCollection nameValCollection = [];
     if (postValues != null)
       foreach (var kvp in postValues)
         nameValCollection.Add(kvp.Key, kvp.Value);
 
-    _Execute(() => {
-      if (file.Exists && !overwrite)
-        throw new("Target file already exists");
+    _Execute(
+      () => {
+        if (file.Exists && !overwrite)
+          throw new("Target file already exists");
 
-      if (postValues == null)
-        client.DownloadFile(@this, file.FullName);
-      else
-        File.WriteAllBytes(file.FullName, client.UploadValues(@this, nameValCollection));
-    }, retryCount);
+        if (postValues == null)
+          client.DownloadFile(@this, file.FullName);
+        else
+          File.WriteAllBytes(file.FullName, client.UploadValues(@this, nameValCollection));
+      },
+      retryCount
+    );
 
 #endif
-
   }
 
 #if SUPPORTS_WEBCLIENT_ASYNC || SUPPORTS_HTTPCLIENT
   /// <summary>
-  /// Reads all bytes.
+  ///   Reads all bytes.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="retryCount">The retry count.</param>
   /// <param name="headers">The headers.</param>
   /// <returns>
-  /// The bytes of the target url
+  ///   The bytes of the target url
   /// </returns>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static async Task<byte[]> ReadAllBytesTaskAsync(this Uri @this, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null) {
     Against.ThisIsNull(@this);
-    
+
     if (@this.IsFile)
       return await new Task<byte[]>(() => File.ReadAllBytes(@this.AbsolutePath));
 
 #if SUPPORTS_HTTPCLIENT
-
     using HttpClient client = new();
     _SetClientHeaders(client, headers);
     return await _Execute(async () => {
@@ -454,36 +437,37 @@ public static partial class UriExtensions {
     return await _Execute(async () => await client.DownloadDataTaskAsync(@this), retryCount);
 
 #endif
-
   }
 #endif
 
   /// <summary>
-  /// Gets the base part of the uri.
+  ///   Gets the base part of the uri.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <returns></returns>
   public static Uri BaseUri(this Uri @this) {
     Against.ThisIsNull(@this);
-    
-    return new($"{@this.Scheme}://{(
-      @this.IsFile
-        ? @this.IsUnc
-          ? @this.DnsSafeHost
-          : IO.Path.GetPathRoot(@this.LocalPath)
-        : @this.DnsSafeHost + (@this.IsDefaultPort ? string.Empty : ":" + @this.Port)
-    )}");
+
+    return new(
+      $"{@this.Scheme}://{(
+        @this.IsFile
+          ? @this.IsUnc
+            ? @this.DnsSafeHost
+            : IO.Path.GetPathRoot(@this.LocalPath)
+          : @this.DnsSafeHost + (@this.IsDefaultPort ? string.Empty : ":" + @this.Port)
+      )}"
+    );
   }
 
   /// <summary>
-  /// Gets a new uri from this one using a relative path.
+  ///   Gets a new uri from this one using a relative path.
   /// </summary>
   /// <param name="this">This Uri.</param>
   /// <param name="path">The path.</param>
   /// <returns></returns>
   public static Uri Path(this Uri @this, string path) {
     Against.ThisIsNull(@this);
-    
+
     const char SLASH = '/';
     return path.IsNullOrWhiteSpace()
         ? @this

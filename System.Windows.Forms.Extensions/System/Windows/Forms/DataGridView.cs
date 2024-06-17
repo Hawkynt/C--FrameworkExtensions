@@ -1,23 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -31,13 +27,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Form.Extensions;
+using Guard;
 using DrawingSystemColors = System.Drawing.SystemColors;
 using DrawingFontStyle = System.Drawing.FontStyle;
-
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 
 // TODO: buttoncolumn with image support
 namespace System.Windows.Forms;
@@ -46,8 +38,7 @@ public static partial class DataGridViewExtensions {
   #region messing with auto-generated columns
 
   public static void EnableExtendedAttributes(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     // unsubscribe first to avoid duplicate subscriptions
     @this.DataSourceChanged -= _DataSourceChanged;
@@ -133,7 +124,8 @@ public static partial class DataGridViewExtensions {
       return;
 
     var item = dgv.Rows[e.RowIndex].DataBoundItem;
-    _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()
+    _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)
+      ?.FirstOrDefault()
       ?.OnDoubleClick(item);
   }
 
@@ -158,10 +150,12 @@ public static partial class DataGridViewExtensions {
     var item = row.DataBoundItem;
 
     if (column is DataGridViewButtonColumn)
-      _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault()
+      _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)
+        ?.FirstOrDefault()
         ?.OnClick(item);
 
-    _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)?.FirstOrDefault()
+    _QueryPropertyAttribute<DataGridViewClickableAttribute>(type, column.DataPropertyName)
+      ?.FirstOrDefault()
       ?.OnClick(item);
   }
 
@@ -197,8 +191,7 @@ public static partial class DataGridViewExtensions {
         continue;
 
       //if needed replace DataGridViewTextBoxColumns with DataGridViewDateTimePickerColumns
-      if (!column.ReadOnly &&
-          (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))) {
+      if (!column.ReadOnly && (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))) {
         var newColumn = _ConstructDateTimePickerColumn(column);
         columns.RemoveAt(i);
         columns.Insert(i, newColumn);
@@ -207,7 +200,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewTextBoxColumns with DataGridViewButtonColumn
       var buttonColumnAttribute = (DataGridViewButtonColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewButtonColumnAttribute), true)
+        .FirstOrDefault();
       if (buttonColumnAttribute != null) {
         var newColumn = _ConstructDisableButtonColumn(column);
         columns.RemoveAt(i);
@@ -217,7 +211,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewTextBoxColumns with DataGridViewProgressBarColumn
       var progressBarColumnAttribute = (DataGridViewProgressBarColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewProgressBarColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewProgressBarColumnAttribute), true)
+        .FirstOrDefault();
       if (progressBarColumnAttribute != null) {
         var newColumn = _ConstructProgressBarColumn(progressBarColumnAttribute, column);
         columns.RemoveAt(i);
@@ -241,7 +236,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewImageColumn
       var imageColumnAttribute = (DataGridViewImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewImageColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewImageColumnAttribute), true)
+        .FirstOrDefault();
       if (imageColumnAttribute != null) {
         var newColumn = _ConstructImageColumn(column);
         columns.RemoveAt(i);
@@ -251,7 +247,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewMultiImageColumn
       var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true)
+        .FirstOrDefault();
       if (multiImageColumnAttribute != null) {
         var newColumn = _ConstructMultiImageColumn(column, multiImageColumnAttribute);
         columns.RemoveAt(i);
@@ -261,7 +258,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
       var conditionalImageColumnAttribute = (SupportsConditionalImageAttribute)property
-        .GetCustomAttributes(typeof(SupportsConditionalImageAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(SupportsConditionalImageAttribute), true)
+        .FirstOrDefault();
       if (conditionalImageColumnAttribute != null) {
         var newColumn = _ConstructImageAndTextColumn(column);
         columns.RemoveAt(i);
@@ -271,7 +269,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
       var imageAndTextColumnAttribute = (DataGridViewTextAndImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewTextAndImageColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewTextAndImageColumnAttribute), true)
+        .FirstOrDefault();
       if (imageAndTextColumnAttribute != null) {
         var newColumn = _ConstructImageAndTextColumn(column);
         columns.RemoveAt(i);
@@ -281,7 +280,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewCheckboxColumn
       var checkboxColumnAttribute = (DataGridViewCheckboxColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewCheckboxColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewCheckboxColumnAttribute), true)
+        .FirstOrDefault();
       if (checkboxColumnAttribute != null) {
         var newColumn = _ConstructCheckboxColumn(column, propType == typeof(bool?));
         columns.RemoveAt(i);
@@ -291,7 +291,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewNumericUpDownColumn
       var numericUpDownColumnAttribute = (DataGridViewNumericUpDownColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewNumericUpDownColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewNumericUpDownColumnAttribute), true)
+        .FirstOrDefault();
       if (numericUpDownColumnAttribute != null) {
         var newColumn = _ConstructNumericUpDownColumn(column, numericUpDownColumnAttribute);
         columns.RemoveAt(i);
@@ -301,7 +302,8 @@ public static partial class DataGridViewExtensions {
 
       // if needed replace DataGridViewColumns with DataGridViewDropDownColumn
       var comboBoxColumnAttribute = (DataGridViewComboboxColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewComboboxColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewComboboxColumnAttribute), true)
+        .FirstOrDefault();
       if (comboBoxColumnAttribute != null) {
         var newColumn = _ConstructComboBoxColumn(column, comboBoxColumnAttribute);
         newColumn.DataPropertyName = property.Name;
@@ -324,7 +326,8 @@ public static partial class DataGridViewExtensions {
       _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, propertyName)?.FirstOrDefault()?.ApplyTo(column);
 
       //apply column sort mode
-      _QueryPropertyAttribute<DataGridViewColumnSortModeAttribute>(type, propertyName)?.FirstOrDefault()
+      _QueryPropertyAttribute<DataGridViewColumnSortModeAttribute>(type, propertyName)
+        ?.FirstOrDefault()
         ?.ApplyTo(column);
     }
 
@@ -346,7 +349,8 @@ public static partial class DataGridViewExtensions {
       DataGridViewColumn newColumn = null;
 
       var multiImageColumnAttribute = (DataGridViewMultiImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true).FirstOrDefault();
+        .GetCustomAttributes(typeof(DataGridViewMultiImageColumnAttribute), true)
+        .FirstOrDefault();
       if (multiImageColumnAttribute != null) {
         var displayText =
           (DisplayNameAttribute)property.GetCustomAttributes(typeof(DisplayNameAttribute), true).FirstOrDefault();
@@ -358,15 +362,22 @@ public static partial class DataGridViewExtensions {
         continue;
 
       // apply column width
-      _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, property.Name)?.FirstOrDefault()
+      _QueryPropertyAttribute<DataGridViewColumnWidthAttribute>(type, property.Name)
+        ?.FirstOrDefault()
         ?.ApplyTo(newColumn);
     }
   }
 
-  private static BoundDataGridViewComboBoxColumn _ConstructComboBoxColumn(DataGridViewColumn column,
-    DataGridViewComboboxColumnAttribute attribute) =>
-    new(attribute.DataSourcePropertyName, attribute.EnabledWhenPropertyName, attribute.ValueMember,
-      attribute.DisplayMember) {
+  private static BoundDataGridViewComboBoxColumn _ConstructComboBoxColumn(
+    DataGridViewColumn column,
+    DataGridViewComboboxColumnAttribute attribute
+  ) =>
+    new(
+      attribute.DataSourcePropertyName,
+      attribute.EnabledWhenPropertyName,
+      attribute.ValueMember,
+      attribute.DisplayMember
+    ) {
       Name = column.Name,
       DataPropertyName = column.DataPropertyName,
       HeaderText = column.HeaderText,
@@ -402,8 +413,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="progressBarColumnAttribute">The progress bar column attribute.</param>
   /// <param name="column">The column.</param>
   /// <returns></returns>
-  private static DataGridViewProgressBarColumn _ConstructProgressBarColumn(
-    DataGridViewProgressBarColumnAttribute progressBarColumnAttribute, DataGridViewColumn column) =>
+  private static DataGridViewProgressBarColumn _ConstructProgressBarColumn(DataGridViewProgressBarColumnAttribute progressBarColumnAttribute, DataGridViewColumn column) =>
     new() {
       Minimum = progressBarColumnAttribute.Minimum,
       Maximum = progressBarColumnAttribute.Maximum,
@@ -489,8 +499,10 @@ public static partial class DataGridViewExtensions {
   /// <param name="column">The column.</param>
   /// <param name="state">The Visibility State</param>
   /// <returns></returns>
-  private static DataGridViewCheckBoxColumn _ConstructVisibleColumn(DataGridViewColumn column,
-    EditorBrowsableState state) =>
+  private static DataGridViewCheckBoxColumn _ConstructVisibleColumn(
+    DataGridViewColumn column,
+    EditorBrowsableState state
+  ) =>
     new() {
       Name = column.Name,
       DataPropertyName = column.DataPropertyName,
@@ -514,17 +526,18 @@ public static partial class DataGridViewExtensions {
   /// <param name="headerText">The Text which should be displayed as header</param>
   /// <param name="attribute">the MultiImageColumn attribute from the data bound property</param>
   /// <returns>a new instance of <see cref="DataGridViewMultiImageColumn" /></returns>
-  private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(string propertyName, string headerText,
-    DataGridViewMultiImageColumnAttribute attribute) =>
-    new(attribute.MaximumImageSize, attribute.Padding, attribute.Margin, attribute.OnClickMethodName,
-      attribute.ToolTipProviderMethodName) {
-      Name = propertyName,
-      DataPropertyName = propertyName,
-      HeaderText = headerText ?? propertyName,
-      ReadOnly = true,
-      AutoSizeMode = DataGridViewAutoSizeColumnMode.NotSet,
-      Visible = true,
-    };
+  private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(
+    string propertyName,
+    string headerText,
+    DataGridViewMultiImageColumnAttribute attribute
+  ) =>
+    new(
+      attribute.MaximumImageSize,
+      attribute.Padding,
+      attribute.Margin,
+      attribute.OnClickMethodName,
+      attribute.ToolTipProviderMethodName
+    ) { Name = propertyName, DataPropertyName = propertyName, HeaderText = headerText ?? propertyName, ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.NotSet, Visible = true, };
 
   /// <summary>
   ///   Constructs a multi image column.
@@ -532,10 +545,17 @@ public static partial class DataGridViewExtensions {
   /// <param name="column">The column which was originally created by the dataGridView</param>
   /// <param name="attribute">the MultiImageColumn attribute from the data bound property</param>
   /// <returns>a new instance of <see cref="DataGridViewMultiImageColumn" /></returns>
-  private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(DataGridViewColumn column,
-    DataGridViewMultiImageColumnAttribute attribute) =>
-    new(attribute.MaximumImageSize, attribute.Padding, attribute.Margin, attribute.OnClickMethodName,
-      attribute.ToolTipProviderMethodName) {
+  private static DataGridViewMultiImageColumn _ConstructMultiImageColumn(
+    DataGridViewColumn column,
+    DataGridViewMultiImageColumnAttribute attribute
+  ) =>
+    new(
+      attribute.MaximumImageSize,
+      attribute.Padding,
+      attribute.Margin,
+      attribute.OnClickMethodName,
+      attribute.ToolTipProviderMethodName
+    ) {
       Name = column.Name,
       DataPropertyName = column.DataPropertyName,
       HeaderText = column.HeaderText,
@@ -552,8 +572,10 @@ public static partial class DataGridViewExtensions {
   /// <param name="column"></param>
   /// <param name="attribute"></param>
   /// <returns></returns>
-  private static DataGridViewColumn _ConstructNumericUpDownColumn(DataGridViewColumn column,
-    DataGridViewNumericUpDownColumnAttribute attribute) =>
+  private static DataGridViewColumn _ConstructNumericUpDownColumn(
+    DataGridViewColumn column,
+    DataGridViewNumericUpDownColumnAttribute attribute
+  ) =>
     new DataGridViewNumericUpDownColumn {
       Name = column.Name,
       DataPropertyName = column.DataPropertyName,
@@ -576,8 +598,10 @@ public static partial class DataGridViewExtensions {
   /// <param name="enumType">Type of the enum.</param>
   /// <param name="originalColumn">The original column.</param>
   /// <returns></returns>
-  private static DataGridViewComboBoxColumn _ConstructEnumComboboxColumn(Type enumType,
-    DataGridViewColumn originalColumn) {
+  private static DataGridViewComboBoxColumn _ConstructEnumComboboxColumn(
+    Type enumType,
+    DataGridViewColumn originalColumn
+  ) {
     var fields = enumType.GetFields();
     var values = (
       from field in fields
@@ -641,22 +665,6 @@ public static partial class DataGridViewExtensions {
     var rowData = row.DataBoundItem;
     var columnPropertyName = column.DataPropertyName;
 
-    void TryHandle<TAttribute>(
-      Action<TAttribute, DataGridViewRow, DataGridViewColumn, object, string, DataGridViewCellFormattingEventArgs>
-        handler) where TAttribute : Attribute {
-      var attribute = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName)?.FirstOrDefault();
-      if (attribute != null)
-        handler(attribute, row, column, rowData, columnPropertyName, e);
-    }
-
-    void TryHandle2<TAttribute>(
-      Action<IEnumerable<TAttribute>, DataGridViewRow, DataGridViewColumn, object, string,
-        DataGridViewCellFormattingEventArgs> handler) where TAttribute : Attribute {
-      var attributes = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName);
-      if (attributes != null)
-        handler(attributes, row, column, rowData, columnPropertyName, e);
-    }
-
     TryHandle<DataGridViewImageColumnAttribute>(DataGridViewImageColumnAttribute.OnCellFormatting);
     TryHandle<DataGridViewTextAndImageColumnAttribute>(DataGridViewTextAndImageColumnAttribute.OnCellFormatting);
     TryHandle2<SupportsConditionalImageAttribute>(SupportsConditionalImageAttribute.OnCellFormatting);
@@ -664,10 +672,34 @@ public static partial class DataGridViewExtensions {
     _FixDisplayTextForEnums(column, rowData, columnPropertyName, e);
     TryHandle<DataGridViewCellTooltipAttribute>(DataGridViewCellTooltipAttribute.OnCellFormatting);
     TryHandle2<DataGridViewCellStyleAttribute>(DataGridViewCellStyleAttribute.OnCellFormatting);
+
+    return;
+
+    void TryHandle<TAttribute>(
+      Action<TAttribute, DataGridViewRow, DataGridViewColumn, object, string, DataGridViewCellFormattingEventArgs>
+        handler
+    ) where TAttribute : Attribute {
+      var attribute = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName)?.FirstOrDefault();
+      if (attribute != null)
+        handler(attribute, row, column, rowData, columnPropertyName, e);
+    }
+
+    void TryHandle2<TAttribute>(
+      Action<IEnumerable<TAttribute>, DataGridViewRow, DataGridViewColumn, object, string,
+        DataGridViewCellFormattingEventArgs> handler
+    ) where TAttribute : Attribute {
+      var attributes = _QueryPropertyAttribute<TAttribute>(type, columnPropertyName);
+      if (attributes != null)
+        handler(attributes, row, column, rowData, columnPropertyName, e);
+    }
   }
 
-  private static void _FixDisplayTextForEnums(DataGridViewColumn column, object data, string columnPropertyName,
-    DataGridViewCellFormattingEventArgs e) {
+  private static void _FixDisplayTextForEnums(
+    DataGridViewColumn column,
+    object data,
+    string columnPropertyName,
+    DataGridViewCellFormattingEventArgs e
+  ) {
     if (column is not DataGridViewTextBoxColumn)
       return;
 
@@ -708,8 +740,7 @@ public static partial class DataGridViewExtensions {
 
     var value = row.DataBoundItem;
 
-    bool TryHandle2<TAttribute>(
-      Action<IEnumerable<TAttribute>, DataGridViewRow, object, DataGridViewRowPrePaintEventArgs> handler)
+    bool TryHandle2<TAttribute>(Action<IEnumerable<TAttribute>, DataGridViewRow, object, DataGridViewRowPrePaintEventArgs> handler)
       where TAttribute : Attribute {
       var attribute = _QueryPropertyAttribute<TAttribute>(type);
       if (attribute == null)
@@ -725,9 +756,13 @@ public static partial class DataGridViewExtensions {
     _QueryPropertyAttribute<DataGridViewRowHeightAttribute>(type).FirstOrDefault()?.ApplyTo(value, row);
   }
 
-  private static void _FixCellStyleForReadOnlyAndDisabled(DataGridView dgv, DataGridViewRow row, Type type,
+  private static void _FixCellStyleForReadOnlyAndDisabled(
+    DataGridView dgv,
+    DataGridViewRow row,
+    Type type,
     object value,
-    bool isAlreadyStyled) {
+    bool isAlreadyStyled
+  ) {
     var cells = row.Cells;
     foreach (DataGridViewColumn column in dgv.Columns) {
       if (column.DataPropertyName == null)
@@ -764,13 +799,13 @@ public static partial class DataGridViewExtensions {
         ? new(e.InheritedRowStyle.SelectionForeColor)
         : new SolidBrush(e.InheritedRowStyle.ForeColor);
 
-    using var boldFont = new Font(e.InheritedRowStyle.Font.FontFamily,
-      rowHeaderAttribute.TextSize ?? e.InheritedRowStyle.Font.Size, DrawingFontStyle.Bold);
+    using var boldFont = new Font(
+      e.InheritedRowStyle.Font.FontFamily,
+      rowHeaderAttribute.TextSize ?? e.InheritedRowStyle.Font.Size,
+      DrawingFontStyle.Bold
+    );
 
-    var drawFormat = new StringFormat {
-      LineAlignment = StringAlignment.Center,
-      Alignment = StringAlignment.Center
-    };
+    var drawFormat = new StringFormat { LineAlignment = StringAlignment.Center, Alignment = StringAlignment.Center };
 
     var borderWidthLeft = dgv.AdvancedCellBorderStyle.Left is DataGridViewAdvancedCellBorderStyle.InsetDouble
       or DataGridViewAdvancedCellBorderStyle.OutsetDouble
@@ -789,11 +824,14 @@ public static partial class DataGridViewExtensions {
       e.RowBounds.X + borderWidthLeft,
       e.RowBounds.Y,
       e.RowBounds.Width - borderWidthLeft - borderWidthRight,
-      e.RowBounds.Height - borderWidthBottom);
+      e.RowBounds.Height - borderWidthBottom
+    );
 
-    using (var backBrush = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
-             ? e.InheritedRowStyle.SelectionBackColor
-             : e.InheritedRowStyle.BackColor))
+    using (var backBrush = new SolidBrush(
+        e.State.HasFlag(DataGridViewElementStates.Selected)
+          ? e.InheritedRowStyle.SelectionBackColor
+          : e.InheritedRowStyle.BackColor
+      ))
       e.Graphics.FillRectangle(backBrush, rowBoundsWithoutBorder);
 
     e.Graphics.DrawString(rowHeaderAttribute.GetHeadingText(value), boldFont, brush, e.RowBounds, drawFormat);
@@ -806,13 +844,17 @@ public static partial class DataGridViewExtensions {
   /// <param name="column">The column.</param>
   /// <param name="cell">The cell.</param>
   /// <param name="value">The value.</param>
-  private static void _FixDisabledButtonCellStyle(Type type, DataGridViewColumn column, DataGridViewCell cell,
-    object value) {
+  private static void _FixDisabledButtonCellStyle(
+    Type type,
+    DataGridViewColumn column,
+    DataGridViewCell cell,
+    object value
+  ) {
     var dgvButtonColumnAttribute =
       _QueryPropertyAttribute<DataGridViewButtonColumnAttribute>(type, column.DataPropertyName)?.FirstOrDefault();
     if (column is DataGridViewDisableButtonColumn)
       ((DataGridViewDisableButtonColumn.DataGridViewDisableButtonCell)cell).Enabled =
-        dgvButtonColumnAttribute?.IsEnabled(value) ?? !ReferenceEquals(null, value);
+        dgvButtonColumnAttribute?.IsEnabled(value) ?? value is not null;
   }
 
   /// <summary>
@@ -823,8 +865,13 @@ public static partial class DataGridViewExtensions {
   /// <param name="cell">The cell.</param>
   /// <param name="value">The value.</param>
   /// <param name="alreadyStyled"><c>true</c> if the cell was already styled; otherwise, <c>false</c></param>
-  private static void _FixReadOnlyCellStyle(Type type, DataGridViewColumn column, DataGridViewCell cell, object value,
-    bool alreadyStyled) {
+  private static void _FixReadOnlyCellStyle(
+    Type type,
+    DataGridViewColumn column,
+    DataGridViewCell cell,
+    object value,
+    bool alreadyStyled
+  ) {
     var readOnlyAttribute = _QueryPropertyAttribute<ReadOnlyAttribute>(type, column.DataPropertyName)?.FirstOrDefault();
     if (readOnlyAttribute != null)
       cell.ReadOnly = readOnlyAttribute.IsReadOnly;
@@ -879,83 +926,10 @@ public static partial class DataGridViewExtensions {
 
   #region fixing stuff
 
-  /// <summary>
-  ///   Saves the state of a DataGridView during Enable/Disable state transitions.
-  /// </summary>
-  private class DataGridViewState {
-    private readonly bool _readonly;
-    private readonly Color _defaultCellStyleBackColor;
-    private readonly Color _defaultCellStyleForeColor;
-    private readonly Color _columnHeadersDefaultCellStyleBackColor;
-    private readonly Color _columnHeadersDefaultCellStyleForeColor;
-    private readonly bool _enableHeadersVisualStyles;
-    private readonly Color _backgroundColor;
-
-    private DataGridViewState(bool @readonly, Color defaultCellStyleBackColor, Color defaultCellStyleForeColor,
-      Color columnHeadersDefaultCellStyleBackColor, Color columnHeadersDefaultCellStyleForeColor,
-      bool enableHeadersVisualStyles, Color backgroundColor) {
-      this._readonly = @readonly;
-      this._defaultCellStyleBackColor = defaultCellStyleBackColor;
-      this._defaultCellStyleForeColor = defaultCellStyleForeColor;
-      this._columnHeadersDefaultCellStyleBackColor = columnHeadersDefaultCellStyleBackColor;
-      this._columnHeadersDefaultCellStyleForeColor = columnHeadersDefaultCellStyleForeColor;
-      this._enableHeadersVisualStyles = enableHeadersVisualStyles;
-      this._backgroundColor = backgroundColor;
-    }
-
-    /// <summary>
-    ///   Restores the saved state to the given DataGridView.
-    /// </summary>
-    /// <param name="dataGridView">The DataGridView to restore state to.</param>
-    public void RestoreTo(DataGridView dataGridView) {
-      dataGridView.SuspendLayout();
-      {
-        dataGridView.ReadOnly = this._readonly;
-        dataGridView.DefaultCellStyle.BackColor = this._defaultCellStyleBackColor;
-        dataGridView.DefaultCellStyle.ForeColor = this._defaultCellStyleForeColor;
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor = this._columnHeadersDefaultCellStyleBackColor;
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = this._columnHeadersDefaultCellStyleForeColor;
-        dataGridView.EnableHeadersVisualStyles = this._enableHeadersVisualStyles;
-        dataGridView.BackgroundColor = this._backgroundColor;
-      }
-      dataGridView.ResumeLayout(true);
-    }
-
-    /// <summary>
-    ///   Saves the state of the given DataGridView.
-    /// </summary>
-    /// <param name="dataGridView">The DataGridView to save state from.</param>
-    /// <returns></returns>
-    public static DataGridViewState FromDataGridView(DataGridView dataGridView) =>
-      new(
-        dataGridView.ReadOnly,
-        dataGridView.DefaultCellStyle.BackColor,
-        dataGridView.DefaultCellStyle.ForeColor,
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor,
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor,
-        dataGridView.EnableHeadersVisualStyles,
-        dataGridView.BackgroundColor
-      );
-
-    public static void ChangeToDisabled(DataGridView dataGridView) {
-      dataGridView.SuspendLayout();
-      {
-        dataGridView.ReadOnly = true;
-        dataGridView.EnableHeadersVisualStyles = false;
-        dataGridView.DefaultCellStyle.ForeColor = SystemColors.GrayText;
-        dataGridView.DefaultCellStyle.BackColor = SystemColors.Control;
-        dataGridView.ColumnHeadersDefaultCellStyle.ForeColor = SystemColors.GrayText;
-        dataGridView.ColumnHeadersDefaultCellStyle.BackColor = SystemColors.Control;
-        dataGridView.BackgroundColor = SystemColors.Control;
-      }
-      dataGridView.ResumeLayout(true);
-    }
-  }
-
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
-    private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new();
+  private static readonly ConditionalWeakTable<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new();
 #else
-  private static readonly Dictionary<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = new();
+  private static readonly Dictionary<DataGridView, DataGridViewState> _DGV_STATUS_BACKUPS = [];
 #endif
 
   /// <summary>
@@ -1001,8 +975,7 @@ public static partial class DataGridViewExtensions {
   #endregion
 
   public static void EnableDoubleBuffering(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     if (SystemInformation.TerminalServerSession)
       return;
@@ -1018,8 +991,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <returns>The identified item type or <c>null</c>.</returns>
   public static Type FindItemType(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     var source = @this.DataSource;
     if (source == null)
@@ -1040,8 +1012,7 @@ public static partial class DataGridViewExtensions {
   /// </summary>
   /// <param name="this">This DataGridView.</param>
   public static void ScrollToEnd(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     var rowCount = @this.RowCount;
     if (rowCount <= 0)
@@ -1061,14 +1032,9 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <param name="target">The target DataGridView.</param>
   public static void CloneColumns(this DataGridView @this, DataGridView target) {
-    if (@this == null)
-      throw new NullReferenceException();
-
-    if (target == null)
-      throw new ArgumentNullException(nameof(target));
-
-    if (ReferenceEquals(@this, target))
-      throw new ArgumentException("Source and target are equal.", nameof(target));
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(target);
+    Against.SameInstance(@this, target);
 
     target.Columns.AddRange(@this.Columns.Cast<DataGridViewColumn>().Select(_CloneColumn).ToArray());
   }
@@ -1086,13 +1052,12 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <param name="predicate">The predicate.</param>
   /// <returns>An enumeration of columns.</returns>
-  public static IEnumerable<DataGridViewColumn> FindColumns(this DataGridView @this,
-    Func<DataGridViewColumn, bool> predicate) {
-    if (@this == null)
-      throw new NullReferenceException();
-
-    if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+  public static IEnumerable<DataGridViewColumn> FindColumns(
+    this DataGridView @this,
+    Func<DataGridViewColumn, bool> predicate
+  ) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
 
     return @this.Columns.Cast<DataGridViewColumn>().Where(predicate);
   }
@@ -1104,14 +1069,15 @@ public static partial class DataGridViewExtensions {
   /// <param name="predicate">The predicate.</param>
   /// <returns>The first matching column or <c>null</c>.</returns>
   public static DataGridViewColumn FindFirstColumn(this DataGridView @this, Func<DataGridViewColumn, bool> predicate) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     var matches = FindColumns(@this, predicate);
     return matches?.FirstOrDefault();
   }
 
   public static bool TryGetColumn(this DataGridView @this, int columnIndex, out DataGridViewColumn column) {
+    Against.ThisIsNull(@this);
+
     if (columnIndex < 0 || columnIndex >= @this.ColumnCount) {
       column = null;
       return false;
@@ -1122,6 +1088,8 @@ public static partial class DataGridViewExtensions {
   }
 
   public static bool TryGetColumn(this DataGridView @this, string columnName, out DataGridViewColumn column) {
+    Against.ThisIsNull(@this);
+
     if (!@this.Columns.Contains(columnName)) {
       column = null;
       return false;
@@ -1131,8 +1099,11 @@ public static partial class DataGridViewExtensions {
     return column?.IsDataBound ?? false;
   }
 
-  public static DataGridViewColumn GetColumnByName(this DataGridView @this, string columnName) =>
-    !@this.Columns.Contains(columnName) ? null : @this.Columns[columnName];
+  public static DataGridViewColumn GetColumnByName(this DataGridView @this, string columnName) {
+    Against.ThisIsNull(@this);
+
+    return !@this.Columns.Contains(columnName) ? null : @this.Columns[columnName];
+  }
 
   /// <summary>
   ///   Gets the selected items.
@@ -1140,8 +1111,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <returns>The currently selected items</returns>
   public static IEnumerable<object> GetSelectedItems(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     return
       @this
@@ -1162,8 +1132,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <returns>The currently selected items</returns>
   public static IEnumerable<TItem> GetSelectedItems<TItem>(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     return @this.GetSelectedItems().Cast<TItem>();
   }
@@ -1176,8 +1145,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="item">out variable to store the first selected item in display order</param>
   /// <returns>true, if an item is currently selected, false otherwise</returns>
   public static bool TryGetFirstSelectedItem<TItem>(this DataGridView @this, out TItem item) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     using var enumerator = @this.GetSelectedItems<TItem>().GetEnumerator();
 
@@ -1194,8 +1162,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="index">the index of the first selected item in display order</param>
   /// <returns>true if at least one item  was selected, false otherwise</returns>
   private static bool _TryGetFirstSelectedItemIndex(this DataGridView @this, out int index) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     var result = @this
       .SelectedCells
@@ -1218,8 +1185,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <returns><c>true</c> if any cell is currently selected; otherwise <c>false</c>.</returns>
   public static bool IsAnyCellSelected(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     return @this.SelectedCells.Count > 0;
   }
@@ -1231,11 +1197,8 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <param name="items">The items to select.</param>
   public static void SelectItems<TItem>(this DataGridView @this, IEnumerable<TItem> items) {
-    if (@this == null)
-      throw new NullReferenceException();
-
-    if (items == null)
-      throw new ArgumentNullException(nameof(items));
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(items);
 
     var bucket = new HashSet<TItem>(items);
     foreach (var row in @this.Rows.Cast<DataGridViewRow>())
@@ -1248,8 +1211,7 @@ public static partial class DataGridViewExtensions {
   /// </summary>
   /// <param name="this">This DataGridView.</param>
   public static void ResetSelection(this DataGridView @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     foreach (DataGridViewRow row in @this.SelectedRows)
       row.Selected = false;
@@ -1262,16 +1224,18 @@ public static partial class DataGridViewExtensions {
   /// <param name="dataSource">The new data source.</param>
   /// <returns>The old data source.</returns>
   public static object ExchangeDataSource(this DataGridView @this, object dataSource) {
+    Against.ThisIsNull(@this);
+
     var result = @this.DataSource;
-    void OnThisOnDataError(object _, DataGridViewDataErrorEventArgs e) => e.ThrowException = false;
     try {
-      @this.DataError += OnThisOnDataError;
+      @this.DataError += OnDataError;
       @this.DataSource = dataSource;
     } finally {
-      @this.DataError -= OnThisOnDataError;
+      @this.DataError -= OnDataError;
     }
 
     return result;
+    static void OnDataError(object _, DataGridViewDataErrorEventArgs e) => e.ThrowException = false;
   }
 
   /// <summary>
@@ -1284,13 +1248,15 @@ public static partial class DataGridViewExtensions {
   /// <param name="keyGetter">The key getter.</param>
   /// <param name="preAction">The pre action.</param>
   /// <param name="postAction">The post action.</param>
-  public static void RefreshDataSource<TItem, TKey>(this DataGridView @this, IList<TItem> source,
-    Func<TItem, TKey> keyGetter, Action preAction = null, Action postAction = null) {
-    if (@this == null)
-      throw new NullReferenceException();
-
-    if (keyGetter == null)
-      throw new ArgumentNullException(nameof(keyGetter));
+  public static void RefreshDataSource<TItem, TKey>(
+    this DataGridView @this,
+    IList<TItem> source,
+    Func<TItem, TKey> keyGetter,
+    Action preAction = null,
+    Action postAction = null
+  ) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(keyGetter);
 
     try {
       @this.SuspendLayout();
@@ -1347,8 +1313,13 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">The DataGridView</param>
   /// <param name="visibilityState">the new visibility state</param>
   /// <param name="propertyNames">collection of property names, which visibility should be changed</param>
-  public static void ChangeVisibleStateOfColumn(this DataGridView @this, bool visibilityState,
-    params string[] propertyNames) {
+  public static void ChangeVisibleStateOfColumn(
+    this DataGridView @this,
+    bool visibilityState,
+    params string[] propertyNames
+  ) {
+    Against.ThisIsNull(@this);
+
     foreach (var propertyName in propertyNames) {
       DataGridViewColumn column;
       if ((column = @this.Columns[propertyName]) != null)
@@ -1362,8 +1333,7 @@ public static partial class DataGridViewExtensions {
   /// <param name="this">This DataGridView.</param>
   /// <param name="maxRowCount">The maximum row count, if any.</param>
   public static void AutoAdjustHeight(this DataGridView @this, int maxRowCount = -1) {
-    if (@this == null)
-      throw new NullReferenceException();
+    Against.ThisIsNull(@this);
 
     var headerHeight = @this.ColumnHeadersVisible ? @this.ColumnHeadersHeight : 0;
     var rows = @this.Rows.Cast<DataGridViewRow>();
@@ -1381,6 +1351,8 @@ public static partial class DataGridViewExtensions {
   /// </summary>
   /// <param name="this">The DataGridView</param>
   public static void EnableMultiCellEditing(this DataGridView @this) {
+    Against.ThisIsNull(@this);
+
     @this.SelectionChanged += SelectionChanged;
     @this.CellBeginEdit += CellBeginEdit;
     @this.CellEndEdit += CellEndEdit;
@@ -1391,15 +1363,21 @@ public static partial class DataGridViewExtensions {
   ///   Enables Right Click Selection on DGV
   /// </summary>
   /// <param name="this">the dgv</param>
-  public static void EnableRightClickSelection(this DataGridView @this) =>
+  public static void EnableRightClickSelection(this DataGridView @this) {
+    Against.ThisIsNull(@this);
+
     @this.CellMouseDown += CellMouseDownRightClickEvent;
+  }
 
   /// <summary>
   ///   Disables Right Click Selection on DGV
   /// </summary>
   /// <param name="this">the dgv</param>
-  public static void DisableRightClickSelection(this DataGridView @this) =>
+  public static void DisableRightClickSelection(this DataGridView @this) {
+    Against.ThisIsNull(@this);
+
     @this.CellMouseDown -= CellMouseDownRightClickEvent;
+  }
 
   /// <summary>
   ///   The cell mouse event that enables the right click selection
@@ -1422,31 +1400,10 @@ public static partial class DataGridViewExtensions {
     c.Selected = true;
   }
 
-  private sealed class _CellEditState {
-    private readonly Color _foreColor;
-    private readonly Color _backColor;
-
-    private _CellEditState(Color foreColor, Color backColor) {
-      this._foreColor = foreColor;
-      this._backColor = backColor;
-    }
-
-    public static _CellEditState FromCell(DataGridViewCell cell) {
-      var style = cell.Style;
-      return new(style.ForeColor, style.BackColor);
-    }
-
-    public void ToCell(DataGridViewCell cell) {
-      var style = cell.Style;
-      style.ForeColor = this._foreColor;
-      style.BackColor = this._backColor;
-    }
-  }
-
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
-    private static readonly ConditionalWeakTable<DataGridViewCell, _CellEditState> _cellEditStates = new();
+  private static readonly ConditionalWeakTable<DataGridViewCell, CellEditState> _cellEditStates = new();
 #else
-  private static readonly Dictionary<DataGridViewCell, _CellEditState> _cellEditStates = new();
+  private static readonly Dictionary<DataGridViewCell, CellEditState> _cellEditStates = [];
 #endif
 
   /// <summary>
@@ -1463,7 +1420,7 @@ public static partial class DataGridViewExtensions {
     if (dgv.SelectedCells.Count <= 1)
       return;
 
-    _cellEditStates.Add(cell, _CellEditState.FromCell(cell));
+    _cellEditStates.Add(cell, CellEditState.FromCell(cell));
     cellStyle.ForeColor = DrawingSystemColors.HighlightText;
     cellStyle.BackColor = DrawingSystemColors.Highlight;
   }
@@ -1511,23 +1468,17 @@ public static partial class DataGridViewExtensions {
     }
   }
 
-  private sealed class DataGridViewValidationState {
-    public bool HasStartedMultipleValueChange => true;
-  }
-
 #if SUPPORTS_CONDITIONAL_WEAK_TABLE
-    private static readonly ConditionalWeakTable<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates
- = new();
+  private static readonly ConditionalWeakTable<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new();
 #else
-  private static readonly Dictionary<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = new();
+  private static readonly Dictionary<DataGridView, DataGridViewValidationState> _dataGridViewValidationStates = [];
 #endif
 
   private static void This_OnCellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
     if (sender is not DataGridView dgv)
       return;
 
-    if (dgv.SelectedCells.Count <= 1 || (_dataGridViewValidationStates.TryGetValue(dgv, out var state) &&
-                                         state.HasStartedMultipleValueChange))
+    if (dgv.SelectedCells.Count <= 1 || (_dataGridViewValidationStates.TryGetValue(dgv, out var state) && state.HasStartedMultipleValueChange))
       return;
 
     _dataGridViewValidationStates.Add(dgv, new());
@@ -1541,7 +1492,7 @@ public static partial class DataGridViewExtensions {
 
   #region various reflection caches
 
-  private static readonly ConcurrentDictionary<Type, object[]> _TYPE_ATTRIBUTE_CACHE = new();
+  private static readonly ConcurrentDictionary<Type, object[]> _TYPE_ATTRIBUTE_CACHE = [];
 
   /// <summary>
   ///   Queries for certain class/struct attribute in given type and all inherited interfaces.
@@ -1553,10 +1504,12 @@ public static partial class DataGridViewExtensions {
     where TAttribute : Attribute {
     // find all attributes, even in inherited interfaces
 
-    var results = _TYPE_ATTRIBUTE_CACHE.GetOrAdd(baseType, type => type
-      .GetCustomAttributes(true)
-      .Concat(baseType.GetInterfaces().SelectMany(_GetInheritedCustomAttributes))
-      .ToArray()
+    var results = _TYPE_ATTRIBUTE_CACHE.GetOrAdd(
+      baseType,
+      type => type
+        .GetCustomAttributes(true)
+        .Concat(baseType.GetInterfaces().SelectMany(_GetInheritedCustomAttributes))
+        .ToArray()
     );
 
     return results.OfType<TAttribute>();
@@ -1565,8 +1518,8 @@ public static partial class DataGridViewExtensions {
   private static object[] _GetInheritedCustomAttributes(ICustomAttributeProvider property) =>
     property.GetCustomAttributes(true);
 
-  private static readonly ConcurrentDictionary<string, object[]> _PROPERTY_ATTRIBUTE_CACHE = new();
-  private static readonly ConcurrentDictionary<string, string> _ENUM_DISPLAYNAME_CACHE = new();
+  private static readonly ConcurrentDictionary<string, object[]> _PROPERTY_ATTRIBUTE_CACHE = [];
+  private static readonly ConcurrentDictionary<string, string> _ENUM_DISPLAYNAME_CACHE = [];
 
   private static string _GetEnumDisplayName(object value) {
     if (value == null)
@@ -1576,17 +1529,21 @@ public static partial class DataGridViewExtensions {
     if (!type.IsEnum)
       return null;
 
-    var key = type.FullName + "\0" + value;
+    var key = $"{type.FullName}\0{value}";
     if (!_ENUM_DISPLAYNAME_CACHE.TryGetValue(key, out var result))
-      result = _ENUM_DISPLAYNAME_CACHE.GetOrAdd(key, _ => {
-        var displayText = (DisplayNameAttribute)
-            type
-              .GetField(value.ToString())?
-              .GetCustomAttributes(typeof(DisplayNameAttribute), false)
-              .FirstOrDefault()
-          ;
-        return displayText?.DisplayName;
-      });
+      result = _ENUM_DISPLAYNAME_CACHE.GetOrAdd(
+        key,
+        _ => {
+          var displayText = (DisplayNameAttribute)
+              type
+                .GetField(value.ToString())
+                ?
+                .GetCustomAttributes(typeof(DisplayNameAttribute), false)
+                .FirstOrDefault()
+            ;
+          return displayText?.DisplayName;
+        }
+      );
 
     return result;
   }
@@ -1607,8 +1564,11 @@ public static partial class DataGridViewExtensions {
       ;
   }
 
-  private static IEnumerable<TAttribute> _QueryPropertyAttributeAndCache<TAttribute>(string key, Type baseType,
-    string propertyName) where TAttribute : Attribute {
+  private static IEnumerable<TAttribute> _QueryPropertyAttributeAndCache<TAttribute>(
+    string key,
+    Type baseType,
+    string propertyName
+  ) where TAttribute : Attribute {
     TAttribute[] ValueFactory(string _) => _GetAttributesForProperty<TAttribute>(baseType, propertyName).ToArray();
     return _PROPERTY_ATTRIBUTE_CACHE.GetOrAdd(key, ValueFactory)?.OfType<TAttribute>();
   }
@@ -1628,8 +1588,10 @@ public static partial class DataGridViewExtensions {
       list.RemoveFirst();
       type = first.Value;
 
-      var p = type.GetProperty(propertyName,
-        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+      var p = type.GetProperty(
+        propertyName,
+        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
+      );
       if (p != null)
         yield return p;
 
@@ -1646,7 +1608,7 @@ public static partial class DataGridViewExtensions {
     }
   }
 
-  private static readonly ConcurrentDictionary<string, Func<object, object>> _PROPERTY_GETTER_CACHE = new();
+  private static readonly ConcurrentDictionary<string, Func<object, object>> _PROPERTY_GETTER_CACHE = [];
 
   /// <summary>
   ///   Gets the property value or default.
@@ -1659,9 +1621,14 @@ public static partial class DataGridViewExtensions {
   /// <param name="defaultValuePropertyNotFound">The default value to return when property not found.</param>
   /// <param name="defaultValuePropertyWrongType">The default value to return when property type does not match.</param>
   /// <returns></returns>
-  internal static TValue GetPropertyValueOrDefault<TValue>(object value, string propertyName,
-    TValue defaultValueNullValue, TValue defaultValueNoProperty, TValue defaultValuePropertyNotFound,
-    TValue defaultValuePropertyWrongType) {
+  internal static TValue GetPropertyValueOrDefault<TValue>(
+    object value,
+    string propertyName,
+    TValue defaultValueNullValue,
+    TValue defaultValueNoProperty,
+    TValue defaultValuePropertyNotFound,
+    TValue defaultValuePropertyWrongType
+  ) {
     // null value, return default
     if (value is null)
       return defaultValueNullValue;
@@ -1705,8 +1672,12 @@ public static partial class DataGridViewExtensions {
   /// <param name="propertyName">Name of the property.</param>
   /// <param name="defaultValueNullValue">The default value to return when value is <c>null</c>.</param>
   /// <returns></returns>
-  internal static TValue GetPropertyValue<TValue>(string callerName, object value, string propertyName,
-    TValue defaultValueNullValue) {
+  internal static TValue GetPropertyValue<TValue>(
+    string callerName,
+    object value,
+    string propertyName,
+    TValue defaultValueNullValue
+  ) {
     // null value, return default
     if (value is null)
       return defaultValueNullValue;
@@ -1734,15 +1705,11 @@ public static partial class DataGridViewExtensions {
       throw new($"{callerName}: Could not find {type.FullName}.{propertyName}");
 
     var result = property(value);
-    switch (result) {
-      case TValue i:
-        return i;
-      case null when !typeof(TValue).IsValueType:
-        return default;
-      default:
-        throw new(
-          $"{callerName}: Property {type.FullName}.{propertyName} has wrong type '{(result == null ? "null" : result.GetType().FullName)}', expected '{typeof(TValue).FullName}'");
-    }
+    return result switch {
+      TValue i => i,
+      null when !typeof(TValue).IsValueType => default,
+      _ => throw new($"{callerName}: Property {type.FullName}.{propertyName} has wrong type '{(result == null ? "null" : result.GetType().FullName)}', expected '{typeof(TValue).FullName}'")
+    };
   }
 
   /// <summary>
@@ -1762,11 +1729,13 @@ public static partial class DataGridViewExtensions {
     }
 
     // use helper method to get weakly typed version
-    var createWeaklyTypedDelegateMethod = typeof(DataGridViewExtensions).GetMethod(nameof(_CreateWeaklyTypedDelegate),
-      BindingFlags.Static | BindingFlags.NonPublic);
+    var createWeaklyTypedDelegateMethod = typeof(DataGridViewExtensions).GetMethod(
+      nameof(_CreateWeaklyTypedDelegate),
+      BindingFlags.Static | BindingFlags.NonPublic
+    );
     Debug.Assert(createWeaklyTypedDelegateMethod != null);
     var constructor = createWeaklyTypedDelegateMethod.MakeGenericMethod(method.DeclaringType, method.ReturnType);
-    return (Func<object, object>)constructor.Invoke(null, new object[] { method });
+    return (Func<object, object>)constructor.Invoke(null, [method]);
   }
 
   // ReSharper disable once UnusedMethodReturnValue.Local
@@ -1794,7 +1763,7 @@ public static partial class DataGridViewExtensions {
   /// <returns>An object representing the return value of the called method, or null if the methods return type is void</returns>
   [DebuggerStepThrough]
   internal static void CallLateBoundMethod(object instance, string methodName) {
-    if (ReferenceEquals(null, instance))
+    if (instance is null)
       return;
 
     if (methodName == null || methodName.Trim().Length < 1)
@@ -1802,10 +1771,8 @@ public static partial class DataGridViewExtensions {
 
     var type = instance.GetType();
     var method = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-    if (method == null)
-      return;
 
-    method.Invoke(instance, null);
+    method?.Invoke(instance, null);
   }
 
   #endregion

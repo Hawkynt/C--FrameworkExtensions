@@ -1,46 +1,40 @@
 #region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using Guard;
 
-// ReSharper disable UnusedMember.Global
-
 namespace System.Collections.Generic;
 
 [Serializable]
 [DebuggerDisplay("Count = {Count}")]
 [DebuggerTypeProxy(typeof(DictionaryDebugView<,>))]
-public class BiDictionary<TFirst, TSecond> :
-  IDictionary<TFirst, TSecond>,
+public class BiDictionary<TFirst, TSecond>
+  : IDictionary<TFirst, TSecond>,
 #if SUPPORTS_READ_ONLY_COLLECTIONS
-  IReadOnlyDictionary<TFirst, TSecond>,
+    IReadOnlyDictionary<TFirst, TSecond>,
 #endif
-  IDictionary {
+    IDictionary {
   private readonly IDictionary<TFirst, TSecond> _firstToSecond = new Dictionary<TFirst, TSecond>();
-  [NonSerialized]
-  private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
-  [NonSerialized]
-  private readonly ReverseDictionary _reverseDictionary;
+  [NonSerialized] private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
+  [NonSerialized] private readonly ReverseDictionary _reverseDictionary;
 
   public BiDictionary() => this._reverseDictionary = new(this);
   public IDictionary<TSecond, TFirst> Reverse => this._reverseDictionary;
@@ -141,108 +135,102 @@ public class BiDictionary<TFirst, TSecond> :
       this._secondToFirst.Add(item.Value, item.Key);
   }
 
-  private class ReverseDictionary :
-    IDictionary<TSecond, TFirst>,
+  private class ReverseDictionary(BiDictionary<TFirst, TSecond> owner) : IDictionary<TSecond, TFirst>,
 #if SUPPORTS_READ_ONLY_COLLECTIONS
-    IReadOnlyDictionary<TSecond, TFirst>, 
+    IReadOnlyDictionary<TSecond, TFirst>,
 #endif
     IDictionary {
-    private readonly BiDictionary<TFirst, TSecond> _owner;
-
-    public ReverseDictionary(BiDictionary<TFirst, TSecond> owner) => this._owner = owner;
-
-    public int Count => this._owner._secondToFirst.Count;
-    object ICollection.SyncRoot => ((ICollection)this._owner._secondToFirst).SyncRoot;
-    bool ICollection.IsSynchronized => ((ICollection)this._owner._secondToFirst).IsSynchronized;
-    bool IDictionary.IsFixedSize => ((IDictionary)this._owner._secondToFirst).IsFixedSize;
-    public bool IsReadOnly => this._owner._secondToFirst.IsReadOnly || this._owner._firstToSecond.IsReadOnly;
+    public int Count => owner._secondToFirst.Count;
+    object ICollection.SyncRoot => ((ICollection)owner._secondToFirst).SyncRoot;
+    bool ICollection.IsSynchronized => ((ICollection)owner._secondToFirst).IsSynchronized;
+    bool IDictionary.IsFixedSize => ((IDictionary)owner._secondToFirst).IsFixedSize;
+    public bool IsReadOnly => owner._secondToFirst.IsReadOnly || owner._firstToSecond.IsReadOnly;
 
     public TFirst this[TSecond key] {
-      get => this._owner._secondToFirst[key];
+      get => owner._secondToFirst[key];
       set {
-        this._owner._secondToFirst[key] = value;
-        this._owner._firstToSecond[value] = key;
+        owner._secondToFirst[key] = value;
+        owner._firstToSecond[value] = key;
       }
     }
 
     object IDictionary.this[object key] {
-      get => ((IDictionary)this._owner._secondToFirst)[key];
+      get => ((IDictionary)owner._secondToFirst)[key];
       set {
-        ((IDictionary)this._owner._secondToFirst)[key] = value;
-        ((IDictionary)this._owner._firstToSecond)[value] = key;
+        ((IDictionary)owner._secondToFirst)[key] = value;
+        ((IDictionary)owner._firstToSecond)[value] = key;
       }
     }
 
-    public ICollection<TSecond> Keys => this._owner._secondToFirst.Keys;
-    ICollection IDictionary.Keys => ((IDictionary)this._owner._secondToFirst).Keys;
+    public ICollection<TSecond> Keys => owner._secondToFirst.Keys;
+    ICollection IDictionary.Keys => ((IDictionary)owner._secondToFirst).Keys;
 
 #if SUPPORTS_READ_ONLY_COLLECTIONS
 
-    IEnumerable<TSecond> IReadOnlyDictionary<TSecond, TFirst>.Keys => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Keys;
-    IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values => ((IReadOnlyDictionary<TSecond, TFirst>)this._owner._secondToFirst).Values;
+    IEnumerable<TSecond> IReadOnlyDictionary<TSecond, TFirst>.Keys => ((IReadOnlyDictionary<TSecond, TFirst>)owner._secondToFirst).Keys;
+    IEnumerable<TFirst> IReadOnlyDictionary<TSecond, TFirst>.Values => ((IReadOnlyDictionary<TSecond, TFirst>)owner._secondToFirst).Values;
 
 #endif
 
-    public ICollection<TFirst> Values => this._owner._secondToFirst.Values;
-    ICollection IDictionary.Values => ((IDictionary)this._owner._secondToFirst).Values;
-    public IEnumerator<KeyValuePair<TSecond, TFirst>> GetEnumerator() => this._owner._secondToFirst.GetEnumerator();
+    public ICollection<TFirst> Values => owner._secondToFirst.Values;
+    ICollection IDictionary.Values => ((IDictionary)owner._secondToFirst).Values;
+    public IEnumerator<KeyValuePair<TSecond, TFirst>> GetEnumerator() => owner._secondToFirst.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-    IDictionaryEnumerator IDictionary.GetEnumerator() => ((IDictionary)this._owner._secondToFirst).GetEnumerator();
+    IDictionaryEnumerator IDictionary.GetEnumerator() => ((IDictionary)owner._secondToFirst).GetEnumerator();
 
     public void Add(TSecond key, TFirst value) {
-      this._owner._secondToFirst.Add(key, value);
-      this._owner._firstToSecond.Add(value, key);
+      owner._secondToFirst.Add(key, value);
+      owner._firstToSecond.Add(value, key);
     }
 
     void IDictionary.Add(object key, object value) {
-      ((IDictionary)this._owner._secondToFirst).Add(key, value);
-      ((IDictionary)this._owner._firstToSecond).Add(value, key);
+      ((IDictionary)owner._secondToFirst).Add(key, value);
+      ((IDictionary)owner._firstToSecond).Add(value, key);
     }
 
     public void Add(KeyValuePair<TSecond, TFirst> item) {
-      this._owner._secondToFirst.Add(item);
-      this._owner._firstToSecond.Add(item.Reverse());
+      owner._secondToFirst.Add(item);
+      owner._firstToSecond.Add(item.Reverse());
     }
 
-    public bool ContainsKey(TSecond key) => this._owner._secondToFirst.ContainsKey(key);
-    public bool Contains(KeyValuePair<TSecond, TFirst> item) => this._owner._secondToFirst.Contains(item);
-    public bool TryGetValue(TSecond key, out TFirst value) => this._owner._secondToFirst.TryGetValue(key, out value);
+    public bool ContainsKey(TSecond key) => owner._secondToFirst.ContainsKey(key);
+    public bool Contains(KeyValuePair<TSecond, TFirst> item) => owner._secondToFirst.Contains(item);
+    public bool TryGetValue(TSecond key, out TFirst value) => owner._secondToFirst.TryGetValue(key, out value);
 
     public bool Remove(TSecond key) {
-      if (!this._owner._secondToFirst.TryGetValue(key, out var value))
+      if (!owner._secondToFirst.TryGetValue(key, out var value))
         return false;
 
-      this._owner._secondToFirst.Remove(key);
-      this._owner._firstToSecond.Remove(value);
+      owner._secondToFirst.Remove(key);
+      owner._firstToSecond.Remove(value);
       return true;
     }
 
     void IDictionary.Remove(object key) {
-      var firstToSecond = (IDictionary)this._owner._secondToFirst;
+      var firstToSecond = (IDictionary)owner._secondToFirst;
       if (!firstToSecond.Contains(key))
         return;
-      
+
       var value = firstToSecond[key];
       firstToSecond.Remove(key);
-      ((IDictionary)this._owner._firstToSecond).Remove(value);
+      ((IDictionary)owner._firstToSecond).Remove(value);
     }
 
-    public bool Remove(KeyValuePair<TSecond, TFirst> item) => this._owner._secondToFirst.Remove(item);
-    public bool Contains(object key) => ((IDictionary)this._owner._secondToFirst).Contains(key);
+    public bool Remove(KeyValuePair<TSecond, TFirst> item) => owner._secondToFirst.Remove(item);
+    public bool Contains(object key) => ((IDictionary)owner._secondToFirst).Contains(key);
 
     public void Clear() {
-      this._owner._secondToFirst.Clear();
-      this._owner._firstToSecond.Clear();
+      owner._secondToFirst.Clear();
+      owner._firstToSecond.Clear();
     }
 
-    public void CopyTo(KeyValuePair<TSecond, TFirst>[] array, int arrayIndex) => this._owner._secondToFirst.CopyTo(array, arrayIndex);
-    void ICollection.CopyTo(Array array, int index) => ((IDictionary)this._owner._secondToFirst).CopyTo(array, index);
-
+    public void CopyTo(KeyValuePair<TSecond, TFirst>[] array, int arrayIndex) => owner._secondToFirst.CopyTo(array, arrayIndex);
+    void ICollection.CopyTo(Array array, int index) => ((IDictionary)owner._secondToFirst).CopyTo(array, index);
   }
 }
 
-internal class DictionaryDebugView<TKey, TValue> {
-  private readonly IDictionary<TKey, TValue> _dictionary;
+internal class DictionaryDebugView<TKey, TValue>(IDictionary<TKey, TValue> dictionary) {
+  private readonly IDictionary<TKey, TValue> _dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
 
   [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
   public KeyValuePair<TKey, TValue>[] Items {
@@ -252,14 +240,9 @@ internal class DictionaryDebugView<TKey, TValue> {
       return array;
     }
   }
-
-  public DictionaryDebugView(IDictionary<TKey, TValue> dictionary) => this._dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
-  
 }
 
-// ReSharper disable once PartialTypeWithSinglePart
 public static partial class KeyValuePairExtensions {
-  
   public static KeyValuePair<TValue, TKey> Reverse<TKey, TValue>(this KeyValuePair<TKey, TValue> @this) {
     Against.ThisIsNull(@this);
 

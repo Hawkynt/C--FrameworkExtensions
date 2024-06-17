@@ -104,7 +104,7 @@ internal class FileInfoTest {
     public void SingleCharFile(byte character, bool expected) {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new[] { character });
+        File.WriteAllBytes(tempFile, [character]);
         var fileInfo = new FileInfo(tempFile);
         Assert.That(fileInfo.IsTextFile(),Is.EqualTo(expected));
       } finally {
@@ -123,7 +123,7 @@ internal class FileInfoTest {
     public void DualCharacterFile(byte b0, byte b1, bool expected) {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new[] { b0, b1 });
+        File.WriteAllBytes(tempFile, [b0, b1]);
         var fileInfo = new FileInfo(tempFile);
         Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
       } finally {
@@ -145,7 +145,7 @@ internal class FileInfoTest {
     public void TripleCharacterFile(byte b0, byte b1, byte b2, bool expected) {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new[] { b0, b1, b2 });
+        File.WriteAllBytes(tempFile, [b0, b1, b2]);
         var fileInfo = new FileInfo(tempFile);
         Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
       } finally {
@@ -170,7 +170,7 @@ internal class FileInfoTest {
     public void QuadrupleCharacterFile(byte b0, byte b1, byte b2, byte b3, bool expected) {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new[] { b0, b1, b2, b3 });
+        File.WriteAllBytes(tempFile, [b0, b1, b2, b3]);
         var fileInfo = new FileInfo(tempFile);
         Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
       } finally {
@@ -196,7 +196,7 @@ internal class FileInfoTest {
     public void QuintupleCharacterFile(byte b0, byte b1, byte b2, byte b3, byte b4, bool expected) {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new[] { b0, b1, b2, b3, b4 });
+        File.WriteAllBytes(tempFile, [b0, b1, b2, b3, b4]);
         var fileInfo = new FileInfo(tempFile);
         Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
       } finally {
@@ -220,7 +220,7 @@ internal class FileInfoTest {
     public void IsTextFile_BinaryContentFile_ReturnsFalse() {
       var tempFile = Path.GetTempFileName();
       try {
-        File.WriteAllBytes(tempFile, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 });
+        File.WriteAllBytes(tempFile, [0x00, 0x01, 0x02, 0x03, 0x04]);
         var fileInfo = new FileInfo(tempFile);
         Assert.IsFalse(fileInfo.IsTextFile());
       } finally {

@@ -1,39 +1,32 @@
 ﻿#region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software:
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
 #if !SUPPORTS_LINQ
-
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Linq;
-
-using Diagnostics.CodeAnalysis;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 public static partial class EnumerablePolyfills {
-
   public static TResult[] ToArray<TResult>(this IEnumerable<TResult> @this) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
@@ -77,7 +70,7 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(@this));
 
     return Invoke(@this);
-    
+
     static IEnumerable<TResult> Invoke(IEnumerable @this) {
       foreach (var item in @this)
         yield return (TResult)item;
@@ -98,6 +91,7 @@ public static partial class EnumerablePolyfills {
           yield return item;
     }
   }
+
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> predicate) {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
@@ -121,7 +115,7 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(selector));
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
       foreach (var item in @this)
         yield return selector(item);
@@ -135,7 +129,7 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(selector));
 
     return Invoke(@this, selector);
-    
+
     static IEnumerable<TResult> Invoke(IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
       var index = 0;
       foreach (var item in @this)
@@ -144,8 +138,7 @@ public static partial class EnumerablePolyfills {
   }
 
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
-    => OrderBy(@this, keySelector, Comparer<TKey>.Default)
-    ;
+    => OrderBy(@this, keySelector, Comparer<TKey>.Default);
 
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
@@ -154,7 +147,7 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(keySelector));
     if (comparer == null)
       throw new ArgumentNullException(nameof(comparer));
-    
+
     return Invoke(@this, keySelector, Compare);
 
     int Compare((int, TKey, TSource) x, (int, TKey, TSource) y) {
@@ -168,16 +161,14 @@ public static partial class EnumerablePolyfills {
       return sortedList.Select(i => i.Item3);
     }
   }
-  
+
   public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
-    => OrderBy(@this, keySelector, Comparer<TKey>.Default)
-    ;
+    => OrderBy(@this, keySelector, Comparer<TKey>.Default);
 
   public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
-    => OrderBy(@this, keySelector, comparer)
-    ;
+    => OrderBy(@this, keySelector, comparer);
 
   public static TSource First<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
@@ -197,7 +188,7 @@ public static partial class EnumerablePolyfills {
       throw new ArgumentNullException(nameof(predicate));
 
     foreach (var item in @this)
-      if(predicate(item))
+      if (predicate(item))
         return item;
 
     _ThrowNoElements();
@@ -237,7 +228,7 @@ public static partial class EnumerablePolyfills {
     foreach (var item in @this) {
       if (!predicate(item))
         continue;
-        
+
       if (found)
         throw new InvalidOperationException("Sequence contains more than one element");
 
@@ -279,7 +270,7 @@ public static partial class EnumerablePolyfills {
     var result = default(TSource);
     var found = false;
     foreach (var item in @this) {
-      if(!predicate(item))
+      if (!predicate(item))
         continue;
 
       result = item;
@@ -337,20 +328,14 @@ public static partial class EnumerablePolyfills {
     return max;
   }
 
-  private readonly struct Wrapper<T> {
-    private readonly T value;
-    private readonly IEqualityComparer<T> _comparer;
+  private readonly struct Wrapper<T>(T value, IEqualityComparer<T> comparer) {
+    private readonly T value = value;
 
-    public Wrapper(T value, IEqualityComparer<T> comparer) {
-      this.value = value;
-      this._comparer = comparer;
-    }
-
-    public override int GetHashCode() => this.value == null ? 0 : this._comparer.GetHashCode(this.value);
+    public override int GetHashCode() => this.value == null ? 0 : comparer.GetHashCode(this.value);
 
     #region Overrides of ValueType
 
-    public override bool Equals(object obj) => obj is Wrapper<T> w && this._comparer.Equals(this.value, w.value);
+    public override bool Equals(object obj) => obj is Wrapper<T> w && comparer.Equals(this.value, w.value);
 
     #endregion
   }
@@ -386,9 +371,8 @@ public static partial class EnumerablePolyfills {
       foreach (var element in @this) {
         var key = keySelector(element);
         var wrapper = new Wrapper<TKey>(key, comparer);
-        if (!groups.ContainsKey(wrapper)) {
+        if (!groups.ContainsKey(wrapper))
           groups[wrapper] = new(key);
-        }
         groups[wrapper].Add(element);
       }
 
@@ -398,7 +382,6 @@ public static partial class EnumerablePolyfills {
 
   [DoesNotReturn]
   private static void _ThrowNoElements() => throw new InvalidOperationException("Sequence contains no elements");
-
 }
 
 #endif

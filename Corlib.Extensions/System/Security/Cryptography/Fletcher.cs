@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
@@ -24,8 +22,7 @@ using System.Collections.Generic;
 namespace System.Security.Cryptography;
 
 public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
-
-  public Fletcher():this(MaxOutputBits) { }
+  public Fletcher() : this(MaxOutputBits) { }
 
   public Fletcher(int outputBits) {
     this.OutputBits = outputBits;
@@ -33,7 +30,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
   }
 
   private int _outputBits;
-  
+
   private Action _reset;
   private Action<byte[], int, int> _core;
   private Func<byte[]> _final;
@@ -62,7 +59,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { (byte)(sum << 4 | state) };
+        byte[] Final() => [(byte)((sum << 4) | state)];
       }
       case 16: {
         byte state = default, sum = default;
@@ -71,7 +68,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         this._core = Core;
         this._final = Final;
         break;
-          
+
         void Reset() {
           state = 0;
           sum = 0;
@@ -84,7 +81,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           }
         }
 
-        byte[] Final() => new[] { sum, state };
+        byte[] Final() => [sum, state];
       }
       case 32: {
         ushort state = default, sum = default;
@@ -95,7 +92,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
         this._final = Final;
         break;
 
-        ushort ConvertFrom(byte b0, byte b1) => (ushort)((b0) | (b1 << 8));
+        ushort ConvertFrom(byte b0, byte b1) => (ushort)(b0 | (b1 << 8));
 
         void Round(ushort value) {
           state = (ushort)(((uint)state + value) % ushort.MaxValue);
@@ -135,22 +132,19 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
           if (carry.Count == 1)
             Round(ConvertFrom(carry[0], 0));
 
-          return new[] {
-            (byte)(sum >> 8), (byte)sum,
-            (byte)(state >> 8), (byte)state
-          };
+          return [(byte)(sum >> 8), (byte)sum, (byte)(state >> 8), (byte)state];
         }
       }
       case 64: {
         uint state = default, sum = default;
-        List <byte> carry = new(4);
+        List<byte> carry = new(4);
 
         this._reset = Reset;
         this._core = Core;
         this._final = Final;
         break;
 
-        uint ConvertFrom(byte b0, byte b1, byte b2, byte b3) => (uint)((b0) | (b1 << 8) | (b2 << 16) | (b3 << 24));
+        uint ConvertFrom(byte b0, byte b1, byte b2, byte b3) => (uint)(b0 | (b1 << 8) | (b2 << 16) | (b3 << 24));
 
         void Round(uint value) {
           state = (uint)(((ulong)state + value) % uint.MaxValue);
@@ -199,16 +193,12 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
               break;
           }
 
-          return new[] {
-            (byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, 
-            (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state
-          };
+          return [(byte)(sum >> 24), (byte)(sum >> 16), (byte)(sum >> 8), (byte)sum, (byte)(state >> 24), (byte)(state >> 16), (byte)(state >> 8), (byte)state];
         }
       }
-      default: 
-        throw new NotSupportedException();
+      default: throw new NotSupportedException();
     }
-    
+
     this._reset();
   }
 
@@ -239,7 +229,7 @@ public sealed class Fletcher : HashAlgorithm, IAdvancedHashAlgorithm {
 
   public static int MinOutputBits => SupportedOutputBits[0];
   public static int MaxOutputBits => SupportedOutputBits[^1];
-  public static int[] SupportedOutputBits => new[]{ 8, 16, 32, 64 };
+  public static int[] SupportedOutputBits => [8, 16, 32, 64];
 
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;

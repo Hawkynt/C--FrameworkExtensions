@@ -1,22 +1,20 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
 #endregion
 
 using System.Collections.Generic;
@@ -26,19 +24,16 @@ using System.Reflection;
 
 namespace System.ComponentModel;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable once PartialTypeWithSinglePart
-// ReSharper disable once UnusedMember.Global
 public static partial class DefaultValueAttributeExtensions {
   /// <summary>
-  /// Sets the properties of an instance to their default values.
+  ///   Sets the properties of an instance to their default values.
   /// </summary>
   /// <typeparam name="TType">The type of the instance.</typeparam>
   /// <param name="this">This Instance.</param>
   /// <param name="alsoNonPublic">if set to <c>true</c> non-public properties are also set.</param>
   /// <param name="flattenHierarchies">if set to <c>true</c> [flatten hierarchies].</param>
   public static void SetPropertiesToDefaultValues<TType>(this TType @this, bool alsoNonPublic = false, bool flattenHierarchies = true) {
-    var type = ReferenceEquals(@this, null) ? typeof(TType) : @this.GetType();
+    var type = @this is null ? typeof(TType) : @this.GetType();
     var properties = type.GetProperties(BindingFlags.Instance | (alsoNonPublic ? BindingFlags.NonPublic : 0) | BindingFlags.Public | (flattenHierarchies ? BindingFlags.FlattenHierarchy : 0));
     var writableProperties = properties.Where(p => p.CanWrite);
     foreach (var prop in writableProperties) {
@@ -57,15 +52,50 @@ public static partial class DefaultValueAttributeExtensions {
   }
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
-    { typeof(decimal), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
-    { typeof(double), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char) , typeof(float)  } },
-    { typeof(float), new [] { typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)  } },
-    { typeof(ulong), new [] { typeof(byte), typeof(ushort), typeof(uint), typeof(char)  } },
-    { typeof(long), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)  } },
-    { typeof(uint), new [] { typeof(byte), typeof(ushort), typeof(char)  } },
-    { typeof(int), new []{ typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(char)  } },
-    { typeof(ushort), new [] { typeof(byte), typeof(char) } },
-    { typeof(short), new []{ typeof(byte) } }
+    {
+      typeof(decimal), [
+        typeof(sbyte),
+        typeof(byte),
+        typeof(short),
+        typeof(ushort),
+        typeof(int),
+        typeof(uint),
+        typeof(long),
+        typeof(ulong),
+        typeof(char)
+      ]
+    }, {
+      typeof(double), [
+        typeof(sbyte),
+        typeof(byte),
+        typeof(short),
+        typeof(ushort),
+        typeof(int),
+        typeof(uint),
+        typeof(long),
+        typeof(ulong),
+        typeof(char),
+        typeof(float)
+      ]
+    }, {
+      typeof(float), [
+        typeof(sbyte),
+        typeof(byte),
+        typeof(short),
+        typeof(ushort),
+        typeof(int),
+        typeof(uint),
+        typeof(long),
+        typeof(ulong),
+        typeof(char)
+      ]
+    },
+    { typeof(ulong), [typeof(byte), typeof(ushort), typeof(uint), typeof(char)] },
+    { typeof(long), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)] },
+    { typeof(uint), [typeof(byte), typeof(ushort), typeof(char)] },
+    { typeof(int), [typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(char)] },
+    { typeof(ushort), [typeof(byte), typeof(char)] },
+    { typeof(short), [typeof(byte)] }
   };
 
   private static object _TryChangeType(Type targetType, object value) {
@@ -75,6 +105,14 @@ public static partial class DefaultValueAttributeExtensions {
     var sourceType = value.GetType();
     if (sourceType == targetType)
       return value;
+
+    if (IsCastableTo(sourceType, targetType))
+      return Convert.ChangeType(value, targetType);
+
+    if (IsIntegerType(targetType) && IsIntegerType(sourceType) && IsSigned(sourceType) && !IsSigned(targetType) && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
+      return Convert.ChangeType(value, targetType);
+
+    throw new InvalidOperationException($"Can not convert from {sourceType.FullName} to {targetType.FullName}");
 
     bool IsCastableTo(Type @this, Type target) {
       // check inheritance
@@ -93,16 +131,10 @@ public static partial class DefaultValueAttributeExtensions {
         );
     }
 
-    if (IsCastableTo(sourceType, targetType))
-      return Convert.ChangeType(value, targetType);
-
     bool IsNullable(Type @this) => @this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Nullable<>);
+
     bool IsIntegerType(Type @this) => @this == typeof(byte) || @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(ushort) || @this == typeof(int) || @this == typeof(uint) || @this == typeof(long) || @this == typeof(ulong);
-    bool IsSigned(Type @this) => @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(int) || @this == typeof(long) || @this == typeof(float) || @this == typeof(double) || @this == typeof(decimal) || IsNullable(@this) && IsSigned(@this.GetGenericArguments()[0]);
 
-    if (IsIntegerType(targetType) && IsIntegerType(sourceType) && IsSigned(sourceType) && !IsSigned(targetType) && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
-      return Convert.ChangeType(value, targetType);
-
-    throw new InvalidOperationException($"Can not convert from {sourceType.FullName} to {targetType.FullName}");
+    bool IsSigned(Type @this) => @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(int) || @this == typeof(long) || @this == typeof(float) || @this == typeof(double) || @this == typeof(decimal) || (IsNullable(@this) && IsSigned(@this.GetGenericArguments()[0]));
   }
 }

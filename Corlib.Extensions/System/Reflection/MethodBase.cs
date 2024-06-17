@@ -1,43 +1,35 @@
 #region (c)2010-2042 Hawkynt
 
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
-
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Guard;
 
 namespace System.Reflection;
 
 public static class MethodBaseExtensions {
-  
   #region nested types
 
   public class ILInstruction {
     // Fields
     private OpCode code;
-    private object operand;
-    private int offset;
 
     // Properties
     public OpCode Code {
@@ -45,68 +37,63 @@ public static class MethodBaseExtensions {
       set => this.code = value;
     }
 
-    public object Operand {
-      get => this.operand;
-      set => this.operand = value;
-    }
+    public object Operand { get; set; }
 
     public byte[] OperandData { get; set; }
 
-    public int Offset {
-      get => this.offset;
-      set => this.offset = value;
-    }
+    public int Offset { get; set; }
 
     /// <summary>
-    /// Returns a friendly strign representation of this instruction
+    ///   Returns a friendly strign representation of this instruction
     /// </summary>
     /// <returns></returns>
     public string GetCode() {
       var result = "";
-      result += $"{this.GetExpandedOffset(this.offset)} : {this.code}";
-      if (this.operand == null)
+      result += $"{this.GetExpandedOffset(this.Offset)} : {this.code}";
+      if (this.Operand == null)
         return result;
-      
+
       result += " ";
       switch (this.code.OperandType) {
         case OperandType.InlineField: {
-          var fOperand = (FieldInfo)this.operand;
+          var fOperand = (FieldInfo)this.Operand;
           result += $"{fOperand.FieldType} {fOperand.ReflectedType}::{fOperand.Name}";
           break;
         }
         case OperandType.InlineMethod: {
-          if (this.operand is MethodInfo mOperand) {
+          if (this.Operand is MethodInfo mOperand) {
             if (!mOperand.IsStatic)
               result += "instance ";
 
             result += $"{mOperand.ReturnType} {mOperand.ReflectedType}::{mOperand.Name}()";
           } else {
-            var cOperand = (ConstructorInfo)this.operand;
+            var cOperand = (ConstructorInfo)this.Operand;
             result += " ";
             if (!cOperand.IsStatic)
               result += "instance ";
             result += $"void {cOperand.ReflectedType}::{cOperand.Name}()";
           }
+
           break;
         }
         case OperandType.ShortInlineBrTarget:
         case OperandType.InlineBrTarget: {
-          result += this.GetExpandedOffset((int)this.operand);
+          result += this.GetExpandedOffset((int)this.Operand);
           break;
         }
         case OperandType.InlineType: {
-          result += this.operand;
+          result += this.Operand;
           break;
         }
         case OperandType.InlineString: {
-          if (this.operand.ToString() == "\r\n")
+          if (this.Operand.ToString() == "\r\n")
             result += "\"\\r\\n\"";
           else
-            result += "\"" + this.operand + "\"";
+            result += "\"" + this.Operand + "\"";
           break;
         }
         case OperandType.ShortInlineVar: {
-          result += this.operand.ToString();
+          result += this.Operand.ToString();
           break;
         }
         case OperandType.InlineI:
@@ -114,11 +101,11 @@ public static class MethodBaseExtensions {
         case OperandType.InlineR:
         case OperandType.ShortInlineI:
         case OperandType.ShortInlineR: {
-          result += this.operand.ToString();
+          result += this.Operand.ToString();
           break;
         }
         case OperandType.InlineTok: {
-          if (this.operand is Type type)
+          if (this.Operand is Type type)
             result += type.FullName;
           else
             result += "not supported";
@@ -129,14 +116,15 @@ public static class MethodBaseExtensions {
           break;
         }
       }
+
       return result;
     }
 
     /// <summary>
-    /// Add enough zeros to a number as to be represented on 4 characters
+    ///   Add enough zeros to a number as to be represented on 4 characters
     /// </summary>
     /// <param name="offset">
-    /// The number that must be represented on 4 characters
+    ///   The number that must be represented on 4 characters
     /// </param>
     /// <returns>
     /// </returns>
@@ -144,7 +132,7 @@ public static class MethodBaseExtensions {
       var result = offset.ToString();
       for (var i = 0; result.Length < 4; ++i)
         result = "0" + result;
-      
+
       return result;
     }
 
@@ -154,13 +142,13 @@ public static class MethodBaseExtensions {
   #endregion
 
   private static __GetInstructions _getInstructions;
-  private class __GetInstructions {
-    
+
+  private sealed class __GetInstructions {
     private static OpCode[] _MULTI_BYTE_OP_CODES;
     private static OpCode[] _SINGLE_BYTE_OP_CODES;
-    
+
     /// <summary>
-    /// Loads the opcode list on demand.
+    ///   Loads the opcode list on demand.
     /// </summary>
     public __GetInstructions() {
       _SINGLE_BYTE_OP_CODES = new OpCode[0x100];
@@ -189,11 +177,11 @@ public static class MethodBaseExtensions {
       var body = @this.GetMethodBody();
       if (body == null)
         return null;
-      
+
       var module = @this.Module;
       var il = body.GetILAsByteArray();
       var position = 0;
-      List<ILInstruction> result = new();
+      List<ILInstruction> result = [];
       while (position < il.Length) {
         ILInstruction instruction = new();
 
@@ -207,6 +195,7 @@ public static class MethodBaseExtensions {
           code = _MULTI_BYTE_OP_CODES[value];
           value = (ushort)(value | 0xfe00);
         }
+
         instruction.Code = code;
         instruction.Offset = position - 1;
 
@@ -214,12 +203,13 @@ public static class MethodBaseExtensions {
         position = _ReadOperand(@this, code, position, il, module, instruction);
         result.Add(instruction);
       }
+
       return result.ToArray();
     }
   }
 
   /// <summary>
-  /// Gets the il instructions.
+  ///   Gets the il instructions.
   /// </summary>
   /// <param name="this">This MethodBase.</param>
   /// <returns>A list of instructions.</returns>
@@ -246,6 +236,7 @@ public static class MethodBaseExtensions {
         } catch {
           instruction.Operand = module.ResolveMember(metadataToken);
         }
+
         break;
       }
       case OperandType.InlineSig: {
@@ -258,6 +249,7 @@ public static class MethodBaseExtensions {
         try {
           instruction.Operand = module.ResolveType(metadataToken);
         } catch { }
+
         // SSS : see what to do here
         break;
       }
@@ -331,6 +323,7 @@ public static class MethodBaseExtensions {
         throw new("Unknown operand type.");
       }
     }
+
     return position;
   }
 
@@ -373,7 +366,7 @@ public static class MethodBaseExtensions {
   #endregion
 
   /// <summary>
-  /// Determines whether this method is compiler generated or not.
+  ///   Determines whether this method is compiler generated or not.
   /// </summary>
   /// <param name="this">This MethodBase.</param>
   /// <returns>
@@ -387,7 +380,7 @@ public static class MethodBaseExtensions {
   }
 
   /// <summary>
-  /// Determines whether this method is a getter or setter.
+  ///   Determines whether this method is a getter or setter.
   /// </summary>
   /// <param name="this">This MethodBase.</param>
   /// <returns>

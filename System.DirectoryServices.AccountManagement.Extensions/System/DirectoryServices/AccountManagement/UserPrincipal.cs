@@ -1,22 +1,19 @@
 ﻿#region (c)2010-2042 Hawkynt
-/*
-  This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
-    you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
-    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
-    If not, see <http://www.gnu.org/licenses/>.
-*/
+// This file is part of Hawkynt's .NET Framework extensions.
+// 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
+// given in the LICENSE file.
+// 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the LICENSE file for more details.
+// 
+// You should have received a copy of the License along with Hawkynt's
+// .NET Framework extensions. If not, see
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -24,37 +21,33 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Text;
+using System.Threading;
 #if NET5_0_OR_GREATER
 using System.Runtime.Versioning;
 #endif
-using System.Text;
-using System.Threading;
-// ReSharper disable UnusedMember.Global
 
 namespace System.DirectoryServices.AccountManagement;
-/// <summary>
-/// Extensions for the UserPrincipal objects from System.DirectoryServices.AccountManagement
-/// </summary>
+
 #if NET5_0_OR_GREATER
 [SupportedOSPlatform("windows")]
 #endif
 public static partial class UserPrincipalExtensions {
-
   private static bool _FOS_IsNotNullOrWhiteSpace(this string text)
 #if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
     => !string.IsNullOrWhiteSpace(text)
 #else
     => text != null && text.Trim().Length > 0
 #endif
-    ;
+  ;
 
   /// <summary>
-  /// Gets the full name.
+  ///   Gets the full name.
   /// </summary>
   /// <param name="this">This UserPrincipal.</param>
   /// <param name="surnameFirst">if set to <c>true</c> surname goes first, separated by a comma.</param>
   /// <returns>
-  /// The full name.
+  ///   The full name.
   /// </returns>
   public static string GetFullName(this UserPrincipal @this, bool surnameFirst = false) {
     var result = new StringBuilder(128);
@@ -69,7 +62,7 @@ public static partial class UserPrincipalExtensions {
       result.Append(@this.MiddleName);
     }
 
-    if (@this.Surname._FOS_IsNotNullOrWhiteSpace()) {
+    if (@this.Surname._FOS_IsNotNullOrWhiteSpace())
       switch (surnameFirst) {
         case true when result.Length > 0:
           result.Insert(0, ", ");
@@ -86,7 +79,6 @@ public static partial class UserPrincipalExtensions {
           result.Append(@this.Surname);
           break;
       }
-    }
 
     if (result.Length < 1)
       result.Append(@this.SamAccountName);
@@ -105,7 +97,7 @@ public static partial class UserPrincipalExtensions {
   public static UserPrincipal FindFirstDomainUserByAnyName(string name, bool allowCached = false) {
     UserPrincipal FindDomainUserByName() => _FindDomainUserBySamAccountName(name) ?? _FindDomainUserByDisplayName(name) ?? _FindDomainUserBySurname(name);
 
-    return allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(name, _=>FindDomainUserByName()) : FindDomainUserByName();
+    return allowCached ? _DOMAIN_USER_CACHE.GetOrAdd(name, _ => FindDomainUserByName()) : FindDomainUserByName();
   }
 
   private static UserPrincipal _FindDomainUserBySamAccountName(string samAccountName) {
@@ -124,38 +116,31 @@ public static partial class UserPrincipalExtensions {
   private static UserPrincipal _FindDomainUserBySurname(string surname) {
     using var context = new PrincipalContext(ContextType.Domain);
     using var searcher = new PrincipalSearcher();
-    var user = new UserPrincipal(context) {Surname = surname};
+    var user = new UserPrincipal(context) { Surname = surname };
     searcher.QueryFilter = user;
-    return (UserPrincipal) searcher.FindOne();
+    return (UserPrincipal)searcher.FindOne();
   }
 
-#region LDAP stuff 
+  #region LDAP stuff
 
-#region caching
+  #region caching
 
   public interface ILDAPCache {
     int CacheEntryCount { get; set; }
   }
 
-  private class LDAPCache : ILDAPCache {
-
+  private sealed class LDAPCache : ILDAPCache {
     /// <summary>
-    /// NOTE: Using struct to avoid excessive pressure on the garbage collector
+    ///   NOTE: Using struct to avoid excessive pressure on the garbage collector
     /// </summary>
-    private readonly struct Entry {
-      private readonly DateTime _lastAccessed;
-      public readonly DirectoryEntry item;
+    private readonly struct Entry(DirectoryEntry entry) {
+      private readonly DateTime _lastAccessed = DateTime.UtcNow;
+      public readonly DirectoryEntry item = entry;
       public TimeSpan Age => DateTime.UtcNow - this._lastAccessed;
-
-      public Entry(DirectoryEntry entry) {
-        this.item = entry;
-        this._lastAccessed = DateTime.UtcNow;
-      }
 
       public Entry MarkUsage() => new(this.item);
 
       public void Destroy() {
-
         // if the item wasn't accessed in the last second, dispose immediately
         var directoryEntry = this.item;
         if (this.Age.TotalSeconds > 1) {
@@ -175,7 +160,7 @@ public static partial class UserPrincipalExtensions {
     private readonly ConcurrentDictionary<string, Entry> _entries = new();
 
     /// <summary>
-    /// Gets or adds the given element to the cache.
+    ///   Gets or adds the given element to the cache.
     /// </summary>
     /// <param name="distinguishedName">Distinguished name of the element.</param>
     /// <returns></returns>
@@ -192,8 +177,8 @@ public static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    /// Clears this cache entirely.
-    /// Note: Clearing while adding might leave elements in the cache.
+    ///   Clears this cache entirely.
+    ///   Note: Clearing while adding might leave elements in the cache.
     /// </summary>
     public void Clear() {
       foreach (var distinguishedName in this._entries.Keys.ToArray())
@@ -201,7 +186,7 @@ public static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    /// Removes the element with the given distinguished name.
+    ///   Removes the element with the given distinguished name.
     /// </summary>
     /// <param name="distinguishedName">Distinguished name of the element.</param>
     public void Remove(string distinguishedName) {
@@ -213,7 +198,7 @@ public static partial class UserPrincipalExtensions {
     }
 
     /// <summary>
-    /// Clear unneeded elements from the cache.
+    ///   Clear unneeded elements from the cache.
     /// </summary>
     private void _CheckCache() {
       if (this._entries.Count <= this.CacheEntryCount)
@@ -225,23 +210,22 @@ public static partial class UserPrincipalExtensions {
         this.Remove(distinguishedName);
     }
 
-#region Implementation of ILDAPCache
+    #region Implementation of ILDAPCache
 
     public int CacheEntryCount { get; set; }
 
-#endregion
-
+    #endregion
   }
 
   /// <summary>
-  /// This holds the last 512 used entries, because there is a chance that they will be heavily re-used.
+  ///   This holds the last 512 used entries, because there is a chance that they will be heavily re-used.
   /// </summary>
   private static readonly LDAPCache _LDAP_CACHE = new() { CacheEntryCount = 512 };
 
-#endregion
+  #endregion
 
   /// <summary>
-  /// LDAP Group properties, see http://www.selfadsi.de/group-attributes.htm
+  ///   LDAP Group properties, see http://www.selfadsi.de/group-attributes.htm
   /// </summary>
   public interface ILDAPGroup {
     string AdminDescription { get; }
@@ -306,26 +290,19 @@ public static partial class UserPrincipalExtensions {
   }
 
   /// <summary>
-  /// Wraps an LDAP group.
-  /// Dtor tries to remove the associated cache elements; this is not needed but nice.
-  /// We don't care if elements are removed twice or removed but still used and stuff,
-  /// because the cache will re-created them if needed.
+  ///   Wraps an LDAP group.
+  ///   Dtor tries to remove the associated cache elements; this is not needed but nice.
+  ///   We don't care if elements are removed twice or removed but still used and stuff,
+  ///   because the cache will re-created them if needed.
   /// </summary>
-  private class LDAPGroup : ILDAPGroup {
-    private readonly string _distinguishedName;
-    public LDAPGroup(string distinguishedName) {
-      this._distinguishedName = distinguishedName;
-    }
+  private sealed class LDAPGroup(string distinguishedName) : ILDAPGroup {
+    ~LDAPGroup() => _LDAP_CACHE.Remove(distinguishedName);
 
-    ~LDAPGroup() {
-      _LDAP_CACHE.Remove(this._distinguishedName);
-    }
-
-    private DirectoryEntry _GetEntry() => _LDAP_CACHE.GetOrAdd(this._distinguishedName);
+    private DirectoryEntry _GetEntry() => _LDAP_CACHE.GetOrAdd(distinguishedName);
 
     private string _ReadProperty(string propertyName) => this._GetEntry().Properties[propertyName].Cast<string>().FirstOrDefault();
 
-#region Implementation of ILDAPGroup
+    #region Implementation of ILDAPGroup
 
     public string AdminDescription => this._ReadProperty("adminDescription");
     public string AdminDisplayName => this._ReadProperty("adminDisplayName");
@@ -395,7 +372,7 @@ public static partial class UserPrincipalExtensions {
     public string WhenChanged => this._ReadProperty("whenChanged");
     public string WhenCreated => this._ReadProperty("whenCreated");
 
-#endregion
+    #endregion
   }
 
   public static IEnumerable<ILDAPGroup> GetLDAPGroups(this UserPrincipal @this) {
@@ -412,16 +389,14 @@ public static partial class UserPrincipalExtensions {
       var currentEnumeration = stack.Pop();
       foreach (var group in currentEnumeration) {
         var distinguishedName = group.DistinguishedName;
-        if (alreadyReturned.Contains(distinguishedName))
+        if (!alreadyReturned.Add(distinguishedName))
           continue;
 
-        alreadyReturned.Add(distinguishedName);
         yield return group;
         stack.Push(group.MemberOf);
       }
     }
   }
 
-#endregion
-
+  #endregion
 }
