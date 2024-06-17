@@ -185,30 +185,104 @@ public static partial class EnumerableExtensions {
   }
 
   /// <summary>
-  ///   Modifies the resultset to include filtering based on the given query string.
+  ///   Modifies the result-set to include filtering based on the given query string.
   ///   Multiple filters may be present, split by whitespaces, combined with AND.
   /// </summary>
-  /// <typeparam name="TRow">The type of rows</typeparam>
-  /// <param name="this">This IEnumerable</param>
-  /// <param name="query">The query, eg. "green white" (means only entries with "green" AND "white")</param>
-  /// <param name="selector">Which column of the record to filter</param>
-  public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> @this, Func<TRow, string> selector, string query) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(selector);
+  /// <typeparam name="TRow">The type of rows.</typeparam>
+  /// <param name="source">The <see cref="IEnumerable{T}"/> to be filtered.</param>
+  /// <param name="selector">A function that selects the column to filter on (e.g., r => r.Name).</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="ignoreCase">If set to <see langword="true"/>, ignores case when comparing; defaults to <see langword="false"/>.</param>
+  /// <returns>A filtered <see cref="IEnumerable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selector"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsEnumerable();
+  /// var filteredRecords = records.FilterIfNeeded(r => r.Name, "green white", true);
+  /// </code>
+  /// This example demonstrates how to filter a list of records where the "Name" column contains both "green" and "white", ignoring case.
+  /// </example>
+  public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> source, Func<TRow, string> selector, string query, bool ignoreCase = false)
+      => FilterIfNeeded(source, query, ignoreCase, selector);
 
-    if (query.IsNullOrWhiteSpace())
-      return @this;
+  /// <summary>
+  /// Modifies the result-set to include filtering based on the given query string across multiple columns.
+  /// Multiple filters may be present, split by whitespaces, combined with AND.
+  /// Separate functions for columns are combined using OR within each filter term.
+  /// </summary>
+  /// <typeparam name="TRow">The type of rows.</typeparam>
+  /// <param name="source">The <see cref="IEnumerable{T}"/> to be filtered.</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="selectors">An array of functions that select the columns to filter on (e.g., r => r.Name, r => r.Description).</param>
+  /// <returns>A filtered <see cref="IEnumerable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selectors"/> is <see langword="null"/> or contains null elements.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsEnumerable();
+  /// var filteredRecords = records.FilterIfNeeded("green white", r => r.Name, r => r.Description);
+  /// </code>
+  /// This example demonstrates how to filter a list of records where either the "Name" or "Description" column contains both "green" and "white" (but they don't need to be in the same column), with exact case.
+  /// </example>
+  /// <remarks>
+  /// This method allows for filtering across multiple columns. Each filter term is matched against each column, combining column matches with OR and combining filter terms with AND.
+  /// </remarks>
+  public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> source, string query, params Func<TRow, string>[] selectors)
+      => FilterIfNeeded(source, query, false, selectors);
 
-    var results = @this;
-    // ReSharper disable once LoopCanBeConvertedToQuery
-    foreach (var filter in query.Trim().Split(' ')) {
-      if (filter.IsNullOrWhiteSpace())
-        continue;
+  /// <summary>
+  /// Modifies the result-set to include filtering based on the given query string across multiple columns.
+  /// Multiple filters may be present, split by whitespaces, combined with AND.
+  /// Separate functions for columns are combined using OR within each filter term.
+  /// </summary>
+  /// <typeparam name="TRow">The type of rows.</typeparam>
+  /// <param name="source">The <see cref="IEnumerable{T}"/> to be filtered.</param>
+  /// <param name="query">The query string containing terms to filter by, separated by spaces (e.g., "green white" means only entries with both "green" AND "white").</param>
+  /// <param name="ignoreCase">If set to <see langword="true"/>, ignores case when comparing; defaults to <see langword="false"/>.</param>
+  /// <param name="selectors">An array of functions that select the columns to filter on (e.g., r => r.Name, r => r.Description).</param>
+  /// <returns>A filtered <see cref="IEnumerable{T}"/> based on the specified query.</returns>
+  /// <exception cref="NullReferenceException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown if <paramref name="selectors"/> is <see langword="null"/> or contains null elements.</exception>
+  /// <example>
+  /// <code>
+  /// var records = dbContext.Records.AsEnumerable();
+  /// var filteredRecords = records.FilterIfNeeded("green white", true, r => r.Name, r => r.Description);
+  /// </code>
+  /// This example demonstrates how to filter a list of records where either the "Name" or "Description" column contains both "green" and "white" (but they don't need to be in the same column), ignoring case.
+  /// </example>
+  /// <remarks>
+  /// This method allows for filtering across multiple columns. Each filter term is matched against each column, combining column matches with OR and combining filter terms with AND.
+  /// </remarks>
+  public static IEnumerable<TRow> FilterIfNeeded<TRow>(this IEnumerable<TRow> source, string query, bool ignoreCase, params Func<TRow, string>[] selectors) {
+    if (source == null)
+      throw new NullReferenceException(nameof(source));
+    if (selectors == null || selectors.Length == 0 || selectors.Any(s => s == null))
+      throw new ArgumentNullException(nameof(selectors));
 
-      results = results.Where(i => selector(i)?.Contains(filter) ?? false);
-    }
+    return query.IsNullOrWhiteSpace()
+      ? source
+      : query
+        .Trim()
+        .Split(" ")
+        .Where(filter => !filter.IsNullOrWhiteSpace())
+        .Aggregate(
+          source,
+          (current, filter) => current.Where(
+            row => {
+              var filterValue = ignoreCase ? filter.ToLower() : filter;
+              return selectors.Any(
+                selector => {
+                  var columnValue = selector(row);
+                  if (ignoreCase)
+                    columnValue = columnValue?.ToLower();
 
-    return results;
+                  return columnValue?.Contains(filterValue) ?? false;
+                }
+              );
+            }
+          )
+        );
   }
 
   /// <summary>
