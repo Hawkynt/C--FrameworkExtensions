@@ -86,10 +86,10 @@ public readonly struct Span<T> : IEnumerable<T> {
 
   public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this.pointerMemoryHandler, this.Length);
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-}
 
-public static partial class ArrayPolyfills {
-  public static Span<T> AsSpan<T>(this T[] array) => new(array);
+  /// <inheritdoc />
+  public override string ToString() => typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
+  
 }
 
 #endif
