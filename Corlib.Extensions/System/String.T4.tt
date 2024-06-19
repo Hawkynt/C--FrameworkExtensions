@@ -30,16 +30,6 @@ using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 // This file holds parsing routines to convert from normal strings to a certain primitive data type.
-<#
-  Func<string,string,string> GenerateDefaultValueStubs=(typeName,code)=>{
-    var result=new System.Text.StringBuilder();
-    result.Append(string.Format(code,"","","default"));
-    result.Append(string.Format(code,", "+typeName,"defaultValue","defaultValue"));
-    result.Append(string.Format(code,", Func<"+typeName+">","defaultValueFactory","defaultValueFactory()"));
-    result.Append(string.Format(code,", Func<string, "+typeName+">","defaultValueFactory","defaultValueFactory(@this)"));
-    return result.ToString();
-  };
-  #>
 // ReSharper disable ExpressionIsAlwaysNull
 namespace System;
 
@@ -67,93 +57,225 @@ public static partial class StringExtensions {
   #region Parsing <#=i.Item1#>
   #region Parse
 
-  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this){
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.Parse(@this);
   }
-    
-  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, IFormatProvider provider){
+   
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this ReadOnlySpan<char> @this) =>
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.Parse(@this)
+#else
+    <#=i.Item2#>.Parse(@this.ToString())
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.Parse(@this, provider);
   }
 
-  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, NumberStyles style){
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this ReadOnlySpan<char> @this, IFormatProvider provider) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.Parse(@this, provider: provider)
+#else
+    <#=i.Item2#>.Parse(@this.ToString(), provider)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, NumberStyles style) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.Parse(@this, style);
   }
-    
-  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, NumberStyles style, IFormatProvider provider){
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this ReadOnlySpan<char> @this, NumberStyles style) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.Parse(@this, style)
+#else
+    <#=i.Item2#>.Parse(@this.ToString(), style)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this string @this, NumberStyles style, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.Parse(@this, style, provider);
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#> Parse<#=i.Item1#>(this ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider provider) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.Parse(@this, style, provider)
+#else
+    <#=i.Item2#>.Parse(@this.ToString(), style, provider)
+#endif
+  ;
 
   #endregion
 
   #region TryParse
 
-  public static bool TryParse<#=i.Item1#>(this string @this, out <#=i.Item2#> result){
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this string @this, out <#=i.Item2#> result) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.TryParse(@this, out result);
   }
-    
-  public static bool TryParse<#=i.Item1#>(this string @this, IFormatProvider provider, out <#=i.Item2#> result){
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this ReadOnlySpan<char> @this, out <#=i.Item2#> result) =>
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.TryParse(@this, out result)
+#else
+    <#=i.Item2#>.TryParse(@this.ToString(), out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this string @this, IFormatProvider provider, out <#=i.Item2#> result) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.TryParse(@this, _STYLE_<#=i.Item3#>, provider, out result);
   }
 
-  public static bool TryParse<#=i.Item1#>(this string @this, NumberStyles style, out <#=i.Item2#> result){
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this ReadOnlySpan<char> @this, IFormatProvider provider, out <#=i.Item2#> result) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.TryParse(@this, _STYLE_<#=i.Item3#>, provider, out result)
+#else
+    <#=i.Item2#>.TryParse(@this.ToString(), _STYLE_<#=i.Item3#>, provider, out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this string @this, NumberStyles style, out <#=i.Item2#> result) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.TryParse(@this, style, Thread.CurrentThread.CurrentCulture, out result);
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this ReadOnlySpan<char> @this, NumberStyles style, out <#=i.Item2#> result) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.TryParse(@this, style, Thread.CurrentThread.CurrentCulture, out result)
+#else
+    <#=i.Item2#>.TryParse(@this.ToString(), style, Thread.CurrentThread.CurrentCulture, out result)
+#endif
+  ;
     
-  public static bool TryParse<#=i.Item1#>(this string @this, NumberStyles style, IFormatProvider provider, out <#=i.Item2#> result){
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this string @this, NumberStyles style, IFormatProvider provider, out <#=i.Item2#> result) {
     Against.ThisIsNull(@this);
     return <#=i.Item2#>.TryParse(@this, style, provider, out result);
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParse<#=i.Item1#>(this ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider provider, out <#=i.Item2#> result) => 
+#if SUPPORTS_SPAN
+    <#=i.Item2#>.TryParse(@this, style, provider, out result)
+#else
+    <#=i.Item2#>.TryParse(@this.ToString(), style, provider, out result)
+#endif
+  ;
 
   #endregion
 
   #region ParseOrDefault
 
 <#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this{0} {1})
     => @this == null ? {2} : TryParse"+i.Item1+@"(@this, out var result) ? result : {2}
     ;
 ")#>
 <#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this ReadOnlySpan<char> @this{0} {1})
+    => TryParse"+i.Item1+@"(@this, out var result) ? result : {2}
+    ;
+", true)#>
+<#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, IFormatProvider provider{0} {1})
     => @this == null ? {2} : TryParse"+i.Item1+@"(@this, provider, out var result) ? result : {2}
     ;
-")#>    
+")#>
 <#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this ReadOnlySpan<char> @this, IFormatProvider provider{0} {1})
+    => TryParse"+i.Item1+@"(@this, provider, out var result) ? result : {2}
+    ;
+", true)#>
+<#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, NumberStyles style{0} {1})
     => @this == null ? {2} : TryParse"+i.Item1+@"(@this, style, out var result) ? result : {2}
     ;
-")#>    
+")#>
 <#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this ReadOnlySpan<char> @this, NumberStyles style{0} {1})
+    => TryParse"+i.Item1+@"(@this, style, out var result) ? result : {2}
+    ;
+", true)#>
+<#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this string @this, NumberStyles style, IFormatProvider provider{0} {1})
     => @this == null ? {2} : TryParse"+i.Item1+@"(@this, style, provider, out var result) ? result : {2}
     ;
-")#>    
+")#>
+<#=GenerateDefaultValueStubs(i.Item2,@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static "+i.Item2+@" Parse"+i.Item1+@"OrDefault(this ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider provider{0} {1})
+    => TryParse"+i.Item1+@"(@this, style, provider, out var result) ? result : {2}
+    ;
+", true)#>
 
   #endregion
 
   #region ParseOrNull
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this)
     => @this == null ? null : TryParse<#=i.Item1#>(@this, out var result) ? result : null
     ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this ReadOnlySpan<char> @this)
+    => TryParse<#=i.Item1#>(@this, out var result) ? result : null
+    ;
     
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this, IFormatProvider provider)
     => @this == null ? null : TryParse<#=i.Item1#>(@this, provider, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this ReadOnlySpan<char> @this, IFormatProvider provider)
+    => TryParse<#=i.Item1#>(@this, provider, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this, NumberStyles style)
     => @this == null ? null : TryParse<#=i.Item1#>(@this, style, out var result) ? result : null
     ;
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this ReadOnlySpan<char> @this, NumberStyles style)
+    => TryParse<#=i.Item1#>(@this, style, out var result) ? result : null
+    ;
     
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this string @this, NumberStyles style, IFormatProvider provider)
     => @this == null ? null : TryParse<#=i.Item1#>(@this, style, provider, out var result) ? result : null
+    ;
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=i.Item2#>? Parse<#=i.Item1#>OrNull(this ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider provider)
+    => TryParse<#=i.Item1#>(@this, style, provider, out var result) ? result : null
     ;
 
   #endregion
@@ -163,58 +285,124 @@ public static partial class StringExtensions {
 
   #region Parsing TimeSpan
   #region Parse
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan ParseTimeSpan(this string @this) {
     Against.ThisIsNull(@this);
     return TimeSpan.Parse(@this);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan ParseTimeSpan(this ReadOnlySpan<char> @this) =>
+#if SUPPORTS_SPAN
+    TimeSpan.Parse(@this)
+#else
+    TimeSpan.Parse(@this.ToString())
+#endif
+  ;
+
 #if SUPPORTS_TIMESPAN_PROVIDER
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan ParseTimeSpan(this string @this, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return TimeSpan.Parse(@this, provider);
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan ParseTimeSpan(this ReadOnlySpan<char> @this, IFormatProvider provider) =>
+#if SUPPORTS_SPAN
+    TimeSpan.Parse(@this, provider)
+#else
+    TimeSpan.Parse(@this.ToString(), provider)
+#endif
+  ;
+
 #endif
   #endregion
 
   #region TryParse
-  public static bool TryParseTimeSpan(this string @this, out TimeSpan result)
-    => TimeSpan.TryParse(@this, out result)
-    ;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseTimeSpan(this string @this, out TimeSpan result) => TimeSpan.TryParse(@this, out result);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseTimeSpan(this ReadOnlySpan<char> @this, out TimeSpan result) => 
+#if SUPPORTS_SPAN
+    TimeSpan.TryParse(@this, out result)
+#else
+    TimeSpan.TryParse(@this.ToString(), out result)
+#endif  
+  ;
 
 #if SUPPORTS_TIMESPAN_PROVIDER
-  public static bool TryParseTimeSpan(this string @this, IFormatProvider provider, out TimeSpan result) 
-    => TimeSpan.TryParse(@this, provider, out result)
-    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseTimeSpan(this string @this, IFormatProvider provider, out TimeSpan result) => TimeSpan.TryParse(@this, provider, out result);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if SUPPORTS_SPAN
+  public static bool TryParseTimeSpan(this ReadOnlySpan<char> @this, IFormatProvider provider, out TimeSpan result) => TimeSpan.TryParse(@this, provider, out result);
+#else
+  public static bool TryParseTimeSpan(this ReadOnlySpan<char> @this, IFormatProvider provider, out TimeSpan result) => TimeSpan.TryParse(@this.ToString(), provider, out result);
+#endif
+
 #endif
 
   #endregion
 
   #region ParseOrDefault
 <#=GenerateDefaultValueStubs("TimeSpan",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan ParseTimeSpanOrDefault(this string @this{0} {1})
     => @this == null ? {2} : TryParseTimeSpan(@this, out var result) ? result : {2}
     ;
 ")#>
+<#=GenerateDefaultValueStubs("TimeSpan",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan ParseTimeSpanOrDefault(this ReadOnlySpan<char> @this{0} {1})
+    => TryParseTimeSpan(@this, out var result) ? result : {2}
+    ;
+", true)#>
 
 #if SUPPORTS_TIMESPAN_PROVIDER
+
 <#=GenerateDefaultValueStubs("TimeSpan",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan ParseTimeSpanOrDefault(this string @this, IFormatProvider provider{0} {1})
     => @this == null ? {2} : TryParseTimeSpan(@this, provider, out var result) ? result : {2}
     ;
 ")#>
+<#=GenerateDefaultValueStubs("TimeSpan",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan ParseTimeSpanOrDefault(this ReadOnlySpan<char> @this, IFormatProvider provider{0} {1})
+    => TryParseTimeSpan(@this, provider, out var result) ? result : {2}
+    ;
+", true)#>
+
 #endif
 
   #endregion
 
   #region ParseOrNull
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan? ParseTimeSpanOrNull(this string @this)
     => @this == null ? null : TryParseTimeSpan(@this, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan? ParseTimeSpanOrNull(this ReadOnlySpan<char> @this)
+    => TryParseTimeSpan(@this, out var result) ? result : null
+    ;
+
 #if SUPPORTS_TIMESPAN_PROVIDER
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TimeSpan? ParseTimeSpanOrNull(this string @this, IFormatProvider provider)
     => @this == null ? null : TryParseTimeSpan(@this, provider, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TimeSpan? ParseTimeSpanOrNull(this ReadOnlySpan<char> @this, IFormatProvider provider)
+    => TryParseTimeSpan(@this, provider, out var result) ? result : null
     ;
 
 #endif
@@ -225,143 +413,353 @@ public static partial class StringExtensions {
 
   #region Parsing DateTime
   #region Parse
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this) {
     Against.ThisIsNull(@this);
     return DateTime.Parse(@this);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this) =>
+#if SUPPORTS_SPAN
+    DateTime.Parse(@this)
+#else
+    DateTime.Parse(@this.ToString())
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return DateTime.Parse(@this, provider);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this, IFormatProvider provider) =>
+#if SUPPORTS_SPAN
+    DateTime.Parse(@this, provider)
+#else
+    DateTime.Parse(@this.ToString(), provider)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this, string exactFormat) {
     Against.ThisIsNull(@this);
     return DateTime.ParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture, DateTimeStyles.None);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this, string exactFormat) =>
+#if SUPPORTS_SPAN
+    DateTime.ParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture)
+#else
+    DateTime.ParseExact(@this.ToString(), exactFormat, Thread.CurrentThread.CurrentCulture, DateTimeStyles.None)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this, string exactFormat, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return DateTime.ParseExact(@this, exactFormat, provider, DateTimeStyles.None);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, IFormatProvider provider) =>
+#if SUPPORTS_SPAN
+    DateTime.ParseExact(@this, exactFormat, provider)
+#else
+    DateTime.ParseExact(@this.ToString(), exactFormat, provider, DateTimeStyles.None)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this, string exactFormat, DateTimeStyles style) {
     Against.ThisIsNull(@this);
     return DateTime.ParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture, style);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, DateTimeStyles style) =>
+#if SUPPORTS_SPAN
+    DateTime.ParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture, style)
+#else
+    DateTime.ParseExact(@this.ToString(), exactFormat, Thread.CurrentThread.CurrentCulture, style)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTime(this string @this, string exactFormat, DateTimeStyles style, IFormatProvider provider) {
     Against.ThisIsNull(@this);
     return DateTime.ParseExact(@this, exactFormat, provider, style);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, DateTimeStyles style, IFormatProvider provider) =>
+#if SUPPORTS_SPAN
+    DateTime.ParseExact(@this, exactFormat, provider, style)
+#else
+    DateTime.ParseExact(@this.ToString(), exactFormat, provider, style)
+#endif
+  ;
+
   #endregion
 
   #region TryParse
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParse(@this, out result);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParse(@this, out result)
+#else
+    DateTime.TryParse(@this.ToString(), out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, IFormatProvider provider, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParse(@this, provider, DateTimeStyles.None, out result);
   }
 
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, IFormatProvider provider, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParse(@this, provider, DateTimeStyles.None, out result)
+#else
+    DateTime.TryParse(@this.ToString(), provider, DateTimeStyles.None, out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, DateTimeStyles style, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParse(@this, Thread.CurrentThread.CurrentCulture,style, out result);
   }
         
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, DateTimeStyles style, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParse(@this, Thread.CurrentThread.CurrentCulture,style, out result)
+#else
+    DateTime.TryParse(@this.ToString(), Thread.CurrentThread.CurrentCulture,style, out result)
+#endif
+  ;
+        
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, string exactFormat, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture,DateTimeStyles.None, out result);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture,DateTimeStyles.None, out result)
+#else
+    DateTime.TryParseExact(@this.ToString(), exactFormat, Thread.CurrentThread.CurrentCulture,DateTimeStyles.None, out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, string exactFormat, DateTimeStyles style, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture, style, out result);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, DateTimeStyles style, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParseExact(@this, exactFormat, Thread.CurrentThread.CurrentCulture, style, out result)
+#else
+    DateTime.TryParseExact(@this.ToString(), exactFormat, Thread.CurrentThread.CurrentCulture, style, out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, string exactFormat, IFormatProvider provider, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParseExact(@this, exactFormat, provider, DateTimeStyles.None, out result);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, IFormatProvider provider, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParseExact(@this, exactFormat, provider, DateTimeStyles.None, out result)
+#else
+    DateTime.TryParseExact(@this.ToString(), exactFormat, provider, DateTimeStyles.None, out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, string exactFormat, DateTimeStyles style, IFormatProvider provider, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParseExact(@this, exactFormat, provider, style, out result);
   }
     
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, string exactFormat, DateTimeStyles style, IFormatProvider provider, out DateTime result) =>
+#if SUPPORTS_SPAN
+    DateTime.TryParseExact(@this, exactFormat, provider, style, out result)
+#else
+    DateTime.TryParseExact(@this.ToString(), exactFormat, provider, style, out result)
+#endif
+  ;
+    
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseDateTime(this string @this, DateTimeStyles style, IFormatProvider provider, out DateTime result) {
     Against.ThisIsNull(@this);
     return DateTime.TryParse(@this, provider, style, out result);
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseDateTime(this ReadOnlySpan<char> @this, DateTimeStyles style, IFormatProvider provider, out DateTime result) =>
+ # if SUPPORTS_SPAN
+    DateTime.TryParse(@this, provider, style, out result)
+#else
+    DateTime.TryParse(@this.ToString(), provider, style, out result)
+#endif
+  ;
+
   #endregion
 
   #region ParseOrDefault
 
 <#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTimeOrDefault(this string @this{0} {1})
     => @this == null ? {2} : TryParseDateTime(@this, out var result) ? result : {2}
     ;
 ")#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTimeOrDefault(this ReadOnlySpan<char> @this{0} {1})
+    => TryParseDateTime(@this, out var result) ? result : {2}
+    ;
+", true)#>
 <#=GenerateDefaultValueStubs("DateTime",@"    
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTimeOrDefault(this string @this, IFormatProvider provider{0} {1})
     => @this == null ? {2} : TryParseDateTime(@this, provider, out var result) ? result : {2}
     ;
 ")#>
+<#=GenerateDefaultValueStubs("DateTime",@"    
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTimeOrDefault(this ReadOnlySpan<char> @this, IFormatProvider provider{0} {1})
+    => TryParseDateTime(@this, provider, out var result) ? result : {2}
+    ;
+", true)#>
 <#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTimeOrDefault(this string @this, DateTimeStyles style{0} {1})
     => @this == null ? {2} : TryParseDateTime(@this, style, out var result) ? result : {2}
     ;
 ")#>
 <#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTimeOrDefault(this ReadOnlySpan<char> @this, DateTimeStyles style{0} {1})
+    => TryParseDateTime(@this, style, out var result) ? result : {2}
+    ;
+", true)#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTimeOrDefault(this string @this, string exactFormat{0} {1})
     => @this == null ? {2} : TryParseDateTime(@this,exactFormat, out var result) ? result : {2}
     ;
 ")#>
 <#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTimeOrDefault(this ReadOnlySpan<char> @this, string exactFormat{0} {1})
+    => TryParseDateTime(@this,exactFormat, out var result) ? result : {2}
+    ;
+", true)#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime ParseDateTimeOrDefault(this string @this, DateTimeStyles style, IFormatProvider provider{0} {1})
     => @this == null ? {2} : TryParseDateTime(@this, style, provider, out var result) ? result : {2}
     ;
 ")#>
+<#=GenerateDefaultValueStubs("DateTime",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime ParseDateTimeOrDefault(this ReadOnlySpan<char> @this, DateTimeStyles style, IFormatProvider provider{0} {1})
+    => TryParseDateTime(@this, style, provider, out var result) ? result : {2}
+    ;
+", true)#>
   #endregion
 
   #region ParseOrNull
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime? ParseDateTimeOrNull(this string @this)
     => @this == null ? null : TryParseDateTime(@this, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime? ParseDateTimeOrNull(this ReadOnlySpan<char> @this)
+    => TryParseDateTime(@this, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime? ParseDateTimeOrNull(this string @this, IFormatProvider provider)
     => @this == null ? null : TryParseDateTime(@this, provider, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime? ParseDateTimeOrNull(this ReadOnlySpan<char> @this, IFormatProvider provider)
+    => TryParseDateTime(@this, provider, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime? ParseDateTimeOrNull(this string @this, DateTimeStyles style)
     => @this == null ? null : TryParseDateTime(@this, style, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime? ParseDateTimeOrNull(this ReadOnlySpan<char> @this, DateTimeStyles style)
+    =>  TryParseDateTime(@this, style, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime? ParseDateTimeOrNull(this string @this, string exactFormat)
     => @this == null ? null : TryParseDateTime(@this, exactFormat, out var result) ? result : null
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime? ParseDateTimeOrNull(this ReadOnlySpan<char> @this, string exactFormat)
+    => TryParseDateTime(@this, exactFormat, out var result) ? result : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static DateTime? ParseDateTimeOrNull(this string @this, DateTimeStyles style, IFormatProvider provider)
     => @this == null ? null : TryParseDateTime(@this, style, provider, out var result) ? result : null
     ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static DateTime? ParseDateTimeOrNull(this ReadOnlySpan<char> @this, DateTimeStyles style, IFormatProvider provider)
+    => TryParseDateTime(@this, style, provider, out var result) ? result : null
+    ;
+
   #endregion
   #endregion
 
   #region Parsing Boolean
   #region Parse
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBoolean(this string @this, string trueValue)
     => @this == trueValue
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBoolean(this string @this, string trueValue, StringComparison stringComparison)
     => string.Equals(@this, trueValue, stringComparison)
     ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBoolean(this string @this, string trueValue, string falseValue)
     => @this switch {
       _ when @this == trueValue => true,
@@ -369,6 +767,7 @@ public static partial class StringExtensions {
       _ => throw new ArgumentException($"{@this} is an unsupported value.")
     };
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBoolean(this string @this, string trueValue, string falseValue, StringComparison stringComparison)
     => @this switch {
       _ when string.Equals(@this, trueValue, stringComparison) => true,
@@ -380,6 +779,7 @@ public static partial class StringExtensions {
 
   #region TryParse
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseBoolean(this string @this, string trueValue, string falseValue, out bool result) {
     if (@this == trueValue) {
       result = true;
@@ -395,6 +795,7 @@ public static partial class StringExtensions {
     return false;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryParseBoolean(this string @this, string trueValue, string falseValue, StringComparison stringComparison, out bool result) {
     if (string.Equals(@this, trueValue, stringComparison)) {
       result = true;
@@ -414,6 +815,7 @@ public static partial class StringExtensions {
 
   #region ParseOrDefault
     <#=GenerateDefaultValueStubs("bool",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBooleanOrDefault(this string @this, string trueValue, string falseValue{0} {1})
     => @this switch {{
       _ when @this == trueValue => true,
@@ -423,6 +825,7 @@ public static partial class StringExtensions {
 ")#>
 
     <#=GenerateDefaultValueStubs("bool",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ParseBooleanOrDefault(this string @this, string trueValue, string falseValue, StringComparison stringComparison{0} {1})
     => @this switch {{
       _ when string.Equals(@this, trueValue, stringComparison) => true,
@@ -435,6 +838,7 @@ public static partial class StringExtensions {
 
   #region ParseOrNull
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool? ParseBooleanOrNull(this string @this, string trueValue, string falseValue)
      => @this switch {
       _ when @this == trueValue => true,
@@ -442,6 +846,7 @@ public static partial class StringExtensions {
       _ => null
     };
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool? ParseBooleanOrNull(this string @this, string trueValue, string falseValue, StringComparison stringComparison)
     => @this switch {
       _ when string.Equals(@this, trueValue, stringComparison) => true,
@@ -471,7 +876,7 @@ public static partial class StringExtensions {
 
   public static bool TryParseColor(this string @this, out Color result) => (__tryParseColor ??= new()).Invoke(@this, out result);
   private static __TryParseColor __tryParseColor;
-  private class __TryParseColor {
+  private sealed class __TryParseColor {
 
     private const string _hexNum = "[0-9a-f]";
     private const string _byteNum = "(?:0*?(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))";
@@ -502,20 +907,12 @@ public static partial class StringExtensions {
       @")\s*$"
       ;
 
-    private readonly struct ParserHandler {
-      private readonly string _groupName;
-      private readonly Func<string, Color> _parser;
-
-      public ParserHandler(string groupName, Func<string, Color> parser) {
-        this._groupName = groupName;
-        this._parser = parser;
-      }
-
+    private readonly struct ParserHandler(string groupName, Func<string, Color> parser) {
       public bool TryParse(Match match, out Color result) {
-        var group = match.Groups[this._groupName];
+        var group = match.Groups[groupName];
         switch (group.Success) {
           case true:
-            result = this._parser(group.Value);
+            result = parser(group.Value);
             return true;
           default:
             result = default;
@@ -526,28 +923,28 @@ public static partial class StringExtensions {
 
     private readonly Regex _colorMatch = new(_pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly ParserHandler[] _colorParsers = {
+    private readonly ParserHandler[] _colorParsers = [
       new("eightdigit", v => Color.FromArgb(
-        Convert.ToByte(string.Empty + v[0] + v[1], 16),
-        Convert.ToByte(string.Empty + v[2] + v[3], 16),
-        Convert.ToByte(string.Empty + v[4] + v[5], 16),
-        Convert.ToByte(string.Empty + v[6] + v[7], 16)
+        ConvertHexToByte(v[0], v[1]),
+        ConvertHexToByte(v[2], v[3]),
+        ConvertHexToByte(v[4], v[5]),
+        ConvertHexToByte(v[6], v[7])
       )),
       new("sixdigit", v => Color.FromArgb(
-        Convert.ToByte(string.Empty + v[0] + v[1], 16),
-        Convert.ToByte(string.Empty + v[2] + v[3], 16),
-        Convert.ToByte(string.Empty + v[4] + v[5], 16)
+        ConvertHexToByte(v[0], v[1]),
+        ConvertHexToByte(v[2], v[3]),
+        ConvertHexToByte(v[4], v[5])
       )),
       new("fourdigit", v => Color.FromArgb(
-        Convert.ToByte(string.Empty + v[0] + v[0], 16),
-        Convert.ToByte(string.Empty + v[1] + v[1], 16),
-        Convert.ToByte(string.Empty + v[2] + v[2], 16),
-        Convert.ToByte(string.Empty + v[3] + v[3], 16)
+        ConvertHexToByte(v[0], v[0]),
+        ConvertHexToByte(v[1], v[1]),
+        ConvertHexToByte(v[2], v[2]),
+        ConvertHexToByte(v[3], v[3])
       )),
       new("threedigit", v => Color.FromArgb(
-        Convert.ToByte(string.Empty + v[0] + v[0], 16),
-        Convert.ToByte(string.Empty + v[1] + v[1], 16),
-        Convert.ToByte(string.Empty + v[2] + v[2], 16)
+        ConvertHexToByte(v[0], v[0]),
+        ConvertHexToByte(v[1], v[1]),
+        ConvertHexToByte(v[2], v[2])
       )),
       new("knowncolor", Color.FromName),
       new("systemcolor", Color.FromName),
@@ -567,7 +964,7 @@ public static partial class StringExtensions {
         var parts = v.Split(',');
         return Color.FromArgb((int)(255 * double.Parse(parts[0], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[1], CultureInfo.InvariantCulture)), (int)(255 * double.Parse(parts[2], CultureInfo.InvariantCulture)));
       }),
-    };
+    ];
   
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Invoke(string @this, out Color result) {
@@ -590,6 +987,7 @@ public static partial class StringExtensions {
   #region ParseOrDefault
 
     <#=GenerateDefaultValueStubs("Color",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Color ParseColorOrDefault(this string @this{0} {1}) => TryParseColor(@this, out var result) ? result : {2};
 ")#>
 
@@ -597,6 +995,7 @@ public static partial class StringExtensions {
 
   #region ParseOrNull
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Color? ParseColorOrNull(this string @this) => TryParseColor(@this, out var result) ? result : null;
 
   #endregion
@@ -604,3 +1003,17 @@ public static partial class StringExtensions {
   #endregion
 
 }
+<#+
+  
+  string GenerateDefaultValueStubs(string typeName, string code, bool useCharArray = false) {
+    var result=new System.Text.StringBuilder();
+    result.Append(string.Format(code, "","","default"));
+    result.Append(string.Format(code, ", " + typeName, "defaultValue","defaultValue"));
+    result.Append(string.Format(code, ", Func<" + typeName + ">", "defaultValueFactory", "defaultValueFactory()"));
+    if (!useCharArray)
+      result.Append(string.Format(code, ", Func<string, " + typeName + ">", "defaultValueFactory", "defaultValueFactory(@this)"));
+
+    return result.ToString();
+  }
+
+#>

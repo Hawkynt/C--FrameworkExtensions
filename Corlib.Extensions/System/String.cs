@@ -3576,302 +3576,69 @@ public static partial class StringExtensions {
     return result.ToString();
   }
 
+  internal static byte ConvertHexToByte(char upperChar, char lowerChar) => (__convertHexToByte ??= new()).Invoke(upperChar, lowerChar);
+
+  private static __ConvertHexToByte __convertHexToByte;
+
+  private sealed class __ConvertHexToByte {
+
+    private readonly byte[] _charToHexLookup;
+
+    public __ConvertHexToByte() {
+
+      var table = new byte[256];
+      for (var i = 0; i < table.Length; ++i)
+        table[i] = 0xff;
+
+      for (byte i = (byte)'0', j = 0; i <= '9'; ++j, ++i)
+        table[i] = j;
+
+      for (byte i = (byte)'A', k = (byte)'a', j = 10; i <= 'F'; ++j, ++k, ++i) {
+        table[i] = j;
+        table[k] = j;
+      }
+      
+      this._charToHexLookup = table;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte Invoke(char highNibble, char lowNibble) {
+      var high = this._charToHexLookup[highNibble];
+      var low = this._charToHexLookup[lowNibble];
+      if ((high | low) <= 0x0f)
+        return (byte)((high << 4) | low);
+
+      if (high > 0xf)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(highNibble), $"'{highNibble}' is not a hexadecimal digit");
+      else
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(lowNibble), $"'{lowNibble}' is not a hexadecimal digit");
+
+      return (byte)((high << 4) | low);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
+
+  }
+  
   /// <summary>
   ///   Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version
   ///   of it.
   /// </summary>
   /// <param name="this">The string to convert</param>
   /// <returns>The non-quoted-printable string</returns>
-  public static string FromQuotedPrintable(this string @this) => (__fromQuotedPrintable ??= new()).Invoke(@this);
+  public static string FromQuotedPrintable(this string @this) {
+    if (string.IsNullOrEmpty(@this))
+      return @this;
 
-  private static __FromQuotedPrintable __fromQuotedPrintable;
+    List<byte> bytes = new(@this.Length);
+    for (var index = 0; index < @this.Length; ++index)
+      if (@this[index] == '=')
+        bytes.Add(StringExtensions.ConvertHexToByte(@this[++index], @this[++index]));
+      else
+        bytes.Add((byte)@this[index]);
 
-  private sealed class __FromQuotedPrintable {
-    private readonly byte[] _charToHexLookup = [
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0x0,
-      0x1,
-      0x2,
-      0x3,
-      0x4,
-      0x5,
-      0x6,
-      0x7,
-      0x8,
-      0x9,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xA,
-      0xB,
-      0xC,
-      0xD,
-      0xE,
-      0xF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xa,
-      0xb,
-      0xc,
-      0xd,
-      0xe,
-      0xf,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF,
-      0xFF
-    ];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string Invoke(string @this) {
-      if (string.IsNullOrEmpty(@this))
-        return @this;
-
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      int Hex2Short(char highNibble, char lowNibble) {
-        var high = this._charToHexLookup[highNibble];
-        var low = this._charToHexLookup[lowNibble];
-        if ((high | low) == 0xff)
-          Throw(highNibble, lowNibble);
-
-        return (high << 4) | low;
-      }
-
-      [MethodImpl(MethodImplOptions.NoInlining)]
-      void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
-
-      List<byte> bytes = new(@this.Length);
-      for (var index = 0; index < @this.Length; ++index)
-        if (@this[index] == '=')
-          bytes.Add((byte)Hex2Short(@this[++index], @this[++index]));
-        else
-          bytes.Add((byte)@this[index]);
-
-      return Encoding.UTF8.GetString(bytes.ToArray());
-    }
+    return Encoding.UTF8.GetString(bytes.ToArray());
   }
+
 }
