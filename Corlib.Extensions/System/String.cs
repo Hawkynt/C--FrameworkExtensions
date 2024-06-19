@@ -3584,20 +3584,28 @@ public static partial class StringExtensions {
 
     private readonly byte[] _charToHexLookup;
 
-    public __ConvertHexToByte() {
+    public unsafe __ConvertHexToByte() {
 
       var table = new byte[256];
-      for (var i = 0; i < table.Length; ++i)
-        table[i] = 0xff;
+      fixed (byte* ptr = &table[0]) {
 
-      for (byte i = (byte)'0', j = 0; i <= '9'; ++j, ++i)
-        table[i] = j;
+        var i = 0;
+        do {
+          ((ulong*)ptr)[i] = 0xffffffffffffffffUL;
+          ++i;
+        } while (i < 32);
 
-      for (byte i = (byte)'A', k = (byte)'a', j = 10; i <= 'F'; ++j, ++k, ++i) {
-        table[i] = j;
-        table[k] = j;
+        *(uint*)&ptr['0'] = 0x03020100U;
+        *(uint*)&ptr['4'] = 0x07060504U;
+        *(ushort*)&ptr['8'] = 0x0908;
+
+        *(uint*)&ptr['A'] = 0x0D0C0B0AU;
+        *(ushort*)&ptr['E'] = 0x0F0E;
+
+        *(uint*)&ptr['a'] = 0x0D0C0B0AU;
+        *(ushort*)&ptr['e'] = 0x0F0E;
       }
-      
+
       this._charToHexLookup = table;
     }
 
