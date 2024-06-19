@@ -12,6 +12,7 @@
     <LangVersion>default</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+  <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />

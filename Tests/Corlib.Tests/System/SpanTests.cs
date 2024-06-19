@@ -201,5 +201,39 @@ internal class SpanTests {
     }
   }
 
+  [Test]
+  public void CopyTo_StringToCharArray() {
+    var source = "TEST";
+    var sourceSpan = source.AsSpan();
+
+    var targetChars = sourceSpan.ToArray();
+    var target=new string(targetChars);
+    
+    Assert.AreEqual(source, target);
+  }
+
+  [Test]
+  public void CopyTo_StringPartsToCharArray() {
+    var source = "TEST";
+    var sourceSpan = source.AsSpan()[1..2];
+
+    var targetChars = sourceSpan.ToArray();
+    var target = new string(targetChars);
+
+    Assert.AreEqual(source[1..2], target);
+  }
+
+  [Test]
+  public void CopyTo_PlainStringsShouldBeTheSameReference() {
+    var source = "TEST";
+    var sourceSpan = source.AsSpan();
+    var target = sourceSpan.ToString();
+
+#if SUPPORTS_SPAN
+    Assert.AreEqual(source, target);
+#else
+    Assert.AreSame(source, target);
+#endif
+  }
 }
 

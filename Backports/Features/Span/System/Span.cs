@@ -88,7 +88,7 @@ public readonly struct Span<T> : IEnumerable<T> {
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
   /// <inheritdoc />
-  public override string ToString() => typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
+  public override string ToString() => typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.Span<{typeof(T).Name}>[{this.Length}]";
   
 }
 

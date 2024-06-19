@@ -29,9 +29,9 @@ public static partial class MemoryExtensions {
     return new(@this, offsetAndLength.Offset, offsetAndLength.Length);
   }
 
-  public static ReadOnlySpan<char> AsSpan(this string @this) => new(@this.ToCharArray());
-  public static ReadOnlySpan<char> AsSpan(this string @this, int start) => new(@this.ToCharArray(start, @this.Length - start));
-  public static ReadOnlySpan<char> AsSpan(this string @this, int start, int length) => new(@this.ToCharArray(start, length));
+  public static ReadOnlySpan<char> AsSpan(this string @this) => new(@this);
+  public static ReadOnlySpan<char> AsSpan(this string @this, int start) => new(@this, start, @this.Length - start);
+  public static ReadOnlySpan<char> AsSpan(this string @this, int start, int length) => new(@this, start, length);
   public static ReadOnlySpan<char> AsSpan(this string @this, Index startIndex) => AsSpan(@this, startIndex.GetOffset(@this.Length));
 
   public static ReadOnlySpan<char> AsSpan(this string @this, Range range) {
