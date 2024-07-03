@@ -17,6 +17,13 @@
 
 #endregion
 
+#if !SUPPORTS_ARRAY_FILL
+using Guard;
+#endif
+
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 namespace Utilities;
 
 internal static class Array {
@@ -28,6 +35,7 @@ internal static class Array {
 
 #endif
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T[] Empty<T>()
 #if SUPPORTS_ARRAY_EMPTY
     => []
@@ -35,4 +43,16 @@ internal static class Array {
     => EmptyArray<T>.Empty
 #endif
   ;
+
+#if SUPPORTS_ARRAY_FILL
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill<T>(T[] array, T value) => System.Array.Fill(array, value);
+#else
+  public static void Fill<T>(T[] array, T value) {
+    Against.ArgumentIsNull(array);
+    for (var index = 0; index < array.Length; ++index)
+      array[index] = value;
+  }
+#endif
+
 }
