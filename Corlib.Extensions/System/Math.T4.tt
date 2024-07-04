@@ -270,7 +270,16 @@ public static partial class MathEx {
 <#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","decimal"}){#>
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * mul + add);
+  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * factor + addend);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * factor - subtrahend);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this / divisor + addend);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this / divisor - subtrahend);
 
 <#}#>
     
@@ -278,16 +287,46 @@ public static partial class MathEx {
 <#foreach (var type in new[]{"float","double"}){#>
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, mul, add);
-<#}#>
+  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, factor, addend);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, factor, -subtrahend);
+
+#if SUPPORTS_MATH_RECIPROCAL_ESTIMATE
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), addend);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), -subtrahend);
+
+#else
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
+
+#endif
+
+<#}#>
 #else
 <#foreach (var type in new[]{"float","double"}){#>
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> mul, <#=type#> add) => @this * mul + add;
-<#}#>
+  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => @this * factor + addend;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => @this * factor - subtrahend;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
+
+<#}#>
 #endif
 
   #region fast min/max/avg
