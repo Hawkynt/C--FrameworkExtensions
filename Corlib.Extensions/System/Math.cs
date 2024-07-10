@@ -32,6 +32,119 @@ using System.Threading.Tasks;
 namespace System;
 
 public static partial class MathEx {
+
+  /// <summary>
+  /// Extracts the lower nibble of the specified byte.
+  /// </summary>
+  /// <param name="this">The byte from which to extract the lower half.</param>
+  /// <returns>A byte containing the lower 4 bits of the input byte.</returns>
+  /// <example>
+  /// <code>
+  /// byte value = 0xAB;
+  /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0x0B
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LowerHalf(this byte @this) => (byte)(@this & 0x0F);
+
+  /// <summary>
+  /// Extracts the upper nibble of the specified byte.
+  /// </summary>
+  /// <param name="this">The byte from which to extract the upper half.</param>
+  /// <returns>A byte containing the upper 4 bits of the input byte.</returns>
+  /// <example>
+  /// <code>
+  /// byte value = 0xAB;
+  /// byte upperHalf = value.UpperHalf(); // upperHalf is 0x0A
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte UpperHalf(this byte @this) => (byte)(@this >> 4);
+
+  /// <summary>
+  /// Extracts the lower byte of the specified word.
+  /// </summary>
+  /// <param name="this">The ushort from which to extract the lower half.</param>
+  /// <returns>A byte containing the lower 8 bits of the input ushort.</returns>
+  /// <example>
+  /// <code>
+  /// ushort value = 0xABCD;
+  /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0xCD
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LowerHalf(this ushort @this) => (byte)@this;
+
+  /// <summary>
+  /// Extracts the upper byte of the specified word.
+  /// </summary>
+  /// <param name="this">The ushort from which to extract the upper half.</param>
+  /// <returns>A byte containing the upper 8 bits of the input ushort.</returns>
+  /// <example>
+  /// <code>
+  /// ushort value = 0xABCD;
+  /// byte upperHalf = value.UpperHalf(); // upperHalf is 0xAB
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte UpperHalf(this ushort @this) => (byte)(@this >> 8);
+
+  /// <summary>
+  /// Extracts the lower word of the specified dword.
+  /// </summary>
+  /// <param name="this">The uint from which to extract the lower half.</param>
+  /// <returns>A ushort containing the lower 16 bits of the input uint.</returns>
+  /// <example>
+  /// <code>
+  /// uint value = 0xABCDEF12;
+  /// ushort lowerHalf = value.LowerHalf(); // lowerHalf is 0xEF12
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort LowerHalf(this uint @this) => (ushort)@this;
+
+  /// <summary>
+  /// Extracts the upper word of the specified dword.
+  /// </summary>
+  /// <param name="this">The uint from which to extract the upper half.</param>
+  /// <returns>A ushort containing the upper 16 bits of the input uint.</returns>
+  /// <example>
+  /// <code>
+  /// uint value = 0xABCDEF12;
+  /// ushort upperHalf = value.UpperHalf(); // upperHalf is 0xABCD
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort UpperHalf(this uint @this) => (ushort)(@this >> 16);
+
+  /// <summary>
+  /// Extracts the lower dword of the specified qword.
+  /// </summary>
+  /// <param name="this">The ulong from which to extract the lower half.</param>
+  /// <returns>A uint containing the lower 32 bits of the input ulong.</returns>
+  /// <example>
+  /// <code>
+  /// ulong value = 0xABCDEF1234567890;
+  /// uint lowerHalf = value.LowerHalf(); // lowerHalf is 0x34567890
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint LowerHalf(this ulong @this) => (uint)@this;
+
+  /// <summary>
+  /// Extracts the upper dword of the specified qword.
+  /// </summary>
+  /// <param name="this">The ulong from which to extract the upper half.</param>
+  /// <returns>A uint containing the upper 32 bits of the input ulong.</returns>
+  /// <example>
+  /// <code>
+  /// ulong value = 0xABCDEF1234567890;
+  /// uint upperHalf = value.UpperHalf(); // upperHalf is 0xABCDEF12
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint UpperHalf(this ulong @this) => (uint)(@this >> 32);
+
   /// <summary>
   ///   Calculate a more accurate square root, see
   ///   http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
