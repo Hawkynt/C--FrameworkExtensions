@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -8378,7 +8379,7 @@ public class MathTest {
       1299289, 1299299, 1299317, 1299323, 1299341, 1299343, 1299349, 1299359, 1299367, 1299377, 1299379,
       1299437, 1299439, 1299449, 1299451, 1299457, 1299491, 1299499, 1299533, 1299541, 1299553, 1299583,
       1299601, 1299631, 1299637, 1299647, 1299653, 1299673, 1299689, 1299709";
-    var primesUnderTest = primes.Split(',').Select(i => i.Trim()).Where(i => !string.IsNullOrEmpty(i)).Select(i => ulong.Parse(i)).ToArray();
+    var primesUnderTest = primes.Split(',').Select(i => i.Trim()).Where(i => i.IsNotNullOrEmpty()).Select(ulong.Parse).ToArray();
 
     var i = 0;
     foreach (var prime in MathEx.EnumeratePrimes.Take(primesUnderTest.Length)) {
@@ -8389,4 +8390,23 @@ public class MathTest {
     }
     Assert.Pass($"Tested the first {i} primes successful");
   }
+  
+  private static IEnumerable<TestCaseData> _MinMaxGenerator() {
+    yield return new(new byte[] { 0 }, 0, 0);
+    yield return new(new byte[] { 0, 0 }, 0, 0);
+    yield return new(new byte[] { 1, 0 }, 0, 1);
+    yield return new(new byte[] { 0, 1 }, 0, 1);
+    for (var i = 1; i < 256; ++i)
+      yield return new(Enumerable.Range(0, i).Select(j => (byte)j).ToArray(), 0, i - 1);
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_MinMaxGenerator))]
+  public void MinMax(byte[] values, int minValue, int maxValue) {
+    var fastMin = MathEx.Min(values);
+    var fastMax = MathEx.Max(values);
+    Assert.AreEqual(minValue, fastMin);
+    Assert.AreEqual(maxValue, fastMax);
+  }
+
 }

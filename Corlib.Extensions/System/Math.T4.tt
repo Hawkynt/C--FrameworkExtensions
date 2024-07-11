@@ -28,6 +28,10 @@
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+#if SUPPORTS_VECTOR_512 || SUPPORTS_VECTOR_256 || SUPPORTS_VECTOR_128
+using System.Runtime.Intrinsics;
+#endif
+
 using Guard;
 
 // ReSharper disable UnusedMember.Global
@@ -339,17 +343,48 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="values">The values.</param>
   /// <returns>The min value.</returns>
-  public static <#=type#> Min(params <#=type#>[] values) {
-    var length = values.Length;
-    if (length == 0)
+  public static unsafe <#=type#> Min(params <#=type#>[] values) {
+    var count = values.Length;
+    if (count <= 0)
       return default;
 
-    var result = values[0];
-    for (var i = 1; i < length; ++i) 
-      if (values[i] < result)
-        result = values[i];
+    fixed(<#=type#>* startPointer = &values[0]) {
+      var result = values[0];
+      var offset = startPointer;
+      var endPointer = startPointer + count;
 
-    return result;
+      var chunkSize = 1;
+
+<#  foreach(var size in new []{ 512, 256, 128, 64 }) {#>
+#if SUPPORTS_VECTOR_<#=size#> && SUPPORTS_VECTOR_IS_HARDWARE_ACCELERATED
+
+      chunkSize = Vector<#=size#><<#=type#>>.Count;
+      if (Vector<#=size#>.IsHardwareAccelerated && count >= chunkSize * 2) {
+        var left = Vector<#=size#>.Load(offset);
+        offset += chunkSize;  
+        count -= chunkSize;
+
+        do {
+          var right = Vector<#=size#>.Load(offset);
+          left = Vector<#=size#>.Min(left, right);
+          offset += chunkSize;
+          count -= chunkSize;
+        } while (count >= chunkSize);
+
+        for (var i = 0; i < chunkSize; ++i)
+          result = Math.Min(result, left[i]);
+
+      }
+
+#endif
+<#  }#>
+
+      // Process any remaining elements
+      for (; offset < endPointer; ++offset) 
+        result = Math.Min(result, *offset);
+
+      return result;
+    }
   }
 
   /// <summary>
@@ -357,17 +392,48 @@ public static partial class MathEx {
   /// </summary>
   /// <param name="values">The values.</param>
   /// <returns>The max value.</returns>
-  public static <#=type#> Max(params <#=type#>[] values) {
-    var length = values.Length;
-    if (length == 0)
+  public static unsafe <#=type#> Max(params <#=type#>[] values) {
+    var count = values.Length;
+    if (count <= 0)
       return default;
 
-    var result = values[0];
-    for (var i = 1; i < length; ++i) 
-      if (values[i] > result)
-        result = values[i];
+    fixed(<#=type#>* startPointer = &values[0]) {
+      var result = values[0];
+      var offset = startPointer;
+      var endPointer = startPointer + count;
 
-    return result;
+      var chunkSize = 1;
+
+<#  foreach(var size in new []{ 512, 256, 128, 64 }) {#>
+#if SUPPORTS_VECTOR_<#=size#> && SUPPORTS_VECTOR_IS_HARDWARE_ACCELERATED
+
+      chunkSize = Vector<#=size#><<#=type#>>.Count;
+      if (Vector<#=size#>.IsHardwareAccelerated && count >= chunkSize * 2) {
+        var left = Vector<#=size#>.Load(offset);
+        offset += chunkSize;  
+        count -= chunkSize;
+
+        do {
+          var right = Vector<#=size#>.Load(offset);
+          left = Vector<#=size#>.Max(left, right);
+          offset += chunkSize;
+          count -= chunkSize;
+        } while (count >= chunkSize);
+
+        for (var i = 0; i < chunkSize; ++i)
+          result = Math.Max(result, left[i]);
+
+      }
+
+#endif
+<#  }#>
+
+      // Process any remaining elements
+      for (; offset < endPointer; ++offset) 
+        result = Math.Max(result, *offset);
+
+      return result;
+    }
   }
 
   /// <summary>
