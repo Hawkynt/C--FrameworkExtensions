@@ -21,26 +21,71 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
+#if SUPPORTS_TASK_RUN
+using System.Threading.Tasks;
+#endif
+
 namespace System.Diagnostics;
 
+/// <summary>
+/// Provides extension methods for <see cref="System.Diagnostics.ProcessStartInfo"/>.
+/// </summary>
 public static partial class ProcessStartInfoExtensions {
+
   #region nested types
 
   public delegate void ConsoleOutputHandler(ICurrentConsoleOutput output);
 
+  /// <summary>
+  /// Interface representing the current console output.
+  /// </summary>
   public interface ICurrentConsoleOutput {
+
+    /// <summary>
+    /// Gets the current line of console output.
+    /// </summary>
     string CurrentLine { get; }
+
+    /// <summary>
+    /// Gets the total text of console output so far.
+    /// </summary>
     string TotalText { get; }
   }
 
+  /// <summary>
+  /// Interface representing the result of a console execution.
+  /// </summary>
   public interface IConsoleResult {
+
+    /// <summary>
+    /// Gets the standard output text.
+    /// </summary>
     string StandardOutput { get; }
+
+    /// <summary>
+    /// Gets the standard error text.
+    /// </summary>
     string StandardError { get; }
+
+    /// <summary>
+    /// Gets the exit code of the process.
+    /// </summary>
     int ExitCode { get; }
   }
 
+  /// <summary>
+  /// Interface representing the result of an asynchronous redirected run.
+  /// </summary>
   public interface IRedirectedRunAsyncResult : IAsyncResult, IDisposable {
+
+    /// <summary>
+    /// Gets the console result of the process execution.
+    /// </summary>
     public IConsoleResult Result { get; }
+
+    /// <summary>
+    /// Gets the process that is being run.
+    /// </summary>
     public Process Process { get; }
   }
 
@@ -72,16 +117,10 @@ public static partial class ProcessStartInfoExtensions {
     private readonly ManualResetEvent _isExited = new(false);
     private readonly StringBuilder _stderr = new();
     private readonly StringBuilder _stdout = new();
-    private readonly ConsoleOutputHandler _stdoutCallback;
-    private readonly ConsoleOutputHandler _stderrCallback;
-    private readonly AsyncCallback _callback;
     public IConsoleResult Result { get; private set; }
     public Process Process { get; }
 
     public RedirectedRunAsyncResult(ProcessStartInfo info, ConsoleOutputHandler stdoutCallback, ConsoleOutputHandler stderrCallback, AsyncCallback callback, object state) {
-      this._stdoutCallback = stdoutCallback;
-      this._stderrCallback = stderrCallback;
-      this._callback = callback;
       this.AsyncState = state;
 
       info.UseShellExecute = false;
@@ -104,7 +143,7 @@ public static partial class ProcessStartInfoExtensions {
       void Exited(object _, EventArgs __) {
         this.Result = new ConsoleResult(this.Process.ExitCode, this._stdout, this._stderr);
         this._isExited.Set();
-        this._callback?.Invoke(this);
+        callback?.Invoke(this);
       }
 
       void ErrorDataReceived(object _, DataReceivedEventArgs e) {
@@ -113,7 +152,7 @@ public static partial class ProcessStartInfoExtensions {
         if (line == null)
           return;
 
-        this._stderrCallback?.Invoke(new CurrentConsoleOutput(line, this._stderr));
+        stderrCallback?.Invoke(new CurrentConsoleOutput(line, this._stderr));
         this._stderr.AppendLine(line);
       }
 
@@ -123,7 +162,7 @@ public static partial class ProcessStartInfoExtensions {
         if (line == null)
           return;
 
-        this._stdoutCallback?.Invoke(new CurrentConsoleOutput(line, this._stdout));
+        stdoutCallback?.Invoke(new CurrentConsoleOutput(line, this._stdout));
         this._stdout.AppendLine(line);
       }
     }
@@ -146,9 +185,68 @@ public static partial class ProcessStartInfoExtensions {
 
   #endregion
 
+  /// <summary>
+  /// Begins an asynchronous process execution with redirected standard output and standard error streams.
+  /// </summary>
+  /// <param name="this">The <see cref="ProcessStartInfo"/> object containing the information necessary to start the process.</param>
+  /// <param name="stdoutCallback">An optional delegate that handles standard output data received from the process. Can be <see langword="null"/>.</param>
+  /// <param name="stderrCallback">An optional delegate that handles standard error data received from the process. Can be <see langword="null"/>.</param>
+  /// <param name="callback">An optional delegate to be called when the asynchronous operation is completed. Can be <see langword="null"/>.</param>
+  /// <param name="state">An optional user-defined object that contains information about the asynchronous operation. Can be <see langword="null"/>.</param>
+  /// <returns>An <see cref="IRedirectedRunAsyncResult"/> representing the result of the asynchronous operation.</returns>
+  /// <remarks>
+  /// The method automatically adjust properties of the given <see cref="ProcessStartInfo"/>:
+  ///   UseShellExecute = false,
+  ///   RedirectStandardOutput = true,
+  ///   RedirectStandardError = true,
+  ///   CreateNoWindow = true,
+  ///   WindowStyle = ProcessWindowStyle.Hidden
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg",
+  /// };
+  ///
+  /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
+  /// ConsoleOutputHandler stderrHandler = (sender, args) => Console.WriteLine($"Error: {args.Data}");
+  ///
+  /// IRedirectedRunAsyncResult result = psi.BeginRedirectedRun(stdoutHandler, stderrHandler, null, null);
+  /// </code>
+  /// This example demonstrates how to start a process asynchronously with both standard output and standard error streams redirected, and handlers to process the output.
+  /// </example>
   public static IRedirectedRunAsyncResult BeginRedirectedRun(this ProcessStartInfo @this, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null, AsyncCallback callback = null, object state = null)
-    => new RedirectedRunAsyncResult(@this, stdoutCallback, stderrCallback, callback, state);
+    => new RedirectedRunAsyncResult(@this, stdoutCallback, stderrCallback, callback, state)
+  ;
 
+  /// <summary>
+  /// Ends an asynchronous process execution that was started with <see cref="BeginRedirectedRun"/> and retrieves the result.
+  /// </summary>
+  /// <param name="this">The <see cref="ProcessStartInfo"/> object that started the asynchronous process.</param>
+  /// <param name="asyncResult">The <see cref="IAsyncResult"/> object representing the status of the asynchronous operation.</param>
+  /// <returns>An <see cref="IConsoleResult"/> containing the result of the process execution, including any output and error data.</returns>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg",
+  /// };
+  ///
+  /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
+  /// ConsoleOutputHandler stderrHandler = (sender, args) => Console.WriteLine($"Error: {args.Data}");
+  ///
+  /// IAsyncResult asyncResult = psi.BeginRedirectedRun(stdoutHandler, stderrHandler, null, null);
+  /// IConsoleResult result = psi.EndRedirectedRun(asyncResult);
+  /// 
+  /// Console.WriteLine("Process completed with exit code: " + result.ExitCode);
+  /// Console.WriteLine("Standard Output: " + result.StandardOutput);
+  /// Console.WriteLine("Standard Error: " + result.StandardError);
+  /// </code>
+  /// This example demonstrates how to end an asynchronous process execution and retrieve its result.
+  /// </example>
   public static IConsoleResult EndRedirectedRun(this ProcessStartInfo @this, IAsyncResult asyncResult) {
     if (asyncResult is not RedirectedRunAsyncResult redirectedRunAsyncResult)
       throw new InvalidCastException();
@@ -159,6 +257,131 @@ public static partial class ProcessStartInfoExtensions {
     return result;
   }
 
+#if SUPPORTS_TASK_RUN
+
+  /// <summary>
+  /// Executes a process asynchronously with redirected standard output and standard error streams.
+  /// </summary>
+  /// <param name="this">The <see cref="ProcessStartInfo"/> object containing the information necessary to start the process.</param>
+  /// <param name="stdoutCallback">An optional delegate that handles standard output data received from the process. Can be <see langword="null"/>.</param>
+  /// <param name="stderrCallback">An optional delegate that handles standard error data received from the process. Can be <see langword="null"/>.</param>
+  /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, with an <see cref="IConsoleResult"/> containing the result of the process execution.</returns>
+  /// <remarks>
+  /// The method automatically adjust properties of the given <see cref="ProcessStartInfo"/>:
+  ///   UseShellExecute = false,
+  ///   RedirectStandardOutput = true,
+  ///   RedirectStandardError = true,
+  ///   CreateNoWindow = true,
+  ///   WindowStyle = ProcessWindowStyle.Hidden
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg",
+  /// };
+  ///
+  /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
+  /// ConsoleOutputHandler stderrHandler = (sender, args) => Console.WriteLine($"Error: {args.Data}");
+  ///
+  /// IConsoleResult result = await psi.RedirectedRunAsync(stdoutHandler, stderrHandler);
+  ///
+  /// Console.WriteLine("Process completed with exit code: " + result.ExitCode);
+  /// Console.WriteLine("Standard Output: " + result.StandardOutput);
+  /// Console.WriteLine("Standard Error: " + result.StandardError);
+  /// </code>
+  /// This example demonstrates how to execute a process asynchronously and handle its output using callbacks.
+  /// </example>
+  public static Task<IConsoleResult> RedirectedRunAsync(this ProcessStartInfo @this, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null)
+    => RedirectedRunAsync(@this, CancellationToken.None, stdoutCallback, stderrCallback)
+    ;
+
+  /// <summary>
+  /// Executes a process asynchronously with redirected standard output and standard error streams, with support for cancellation.
+  /// </summary>
+  /// <param name="this">The <see cref="ProcessStartInfo"/> object containing the information necessary to start the process.</param>
+  /// <param name="cancellation">A <see cref="CancellationToken"/> that can be used to cancel the asynchronous operation.</param>
+  /// <param name="stdoutCallback">An optional delegate that handles standard output data received from the process. Can be <see langword="null"/>.</param>
+  /// <param name="stderrCallback">An optional delegate that handles standard error data received from the process. Can be <see langword="null"/>.</param>
+  /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, with an <see cref="IConsoleResult"/> containing the result of the process execution.</returns>
+  /// <remarks>
+  /// The method automatically adjust properties of the given <see cref="ProcessStartInfo"/>:
+  ///   UseShellExecute = false,
+  ///   RedirectStandardOutput = true,
+  ///   RedirectStandardError = true,
+  ///   CreateNoWindow = true,
+  ///   WindowStyle = ProcessWindowStyle.Hidden
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg",
+  ///     RedirectStandardOutput = true,
+  ///     RedirectStandardError = true,
+  ///     UseShellExecute = false
+  /// };
+  ///
+  /// using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+  /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
+  /// ConsoleOutputHandler stderrHandler = (sender, args) => Console.WriteLine($"Error: {args.Data}");
+  ///
+  /// try
+  /// {
+  ///    IConsoleResult result = await psi.RedirectedRunAsync(cts.Token, stdoutHandler, stderrHandler);
+  ///    Console.WriteLine("Process completed with exit code: " + result.ExitCode);
+  ///    Console.WriteLine("Standard Output: " + result.StandardOutput);
+  ///    Console.WriteLine("Standard Error: " + result.StandardError);
+  /// }
+  /// catch (OperationCanceledException)
+  /// {
+  ///    Console.WriteLine("Process execution was cancelled.");
+  /// }
+  /// </code>
+  /// This example demonstrates how to execute a process asynchronously with cancellation support and handle its output using callbacks.
+  /// </example>
+  public static Task<IConsoleResult> RedirectedRunAsync(this ProcessStartInfo @this, CancellationToken cancellation, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null) {
+    var asyncResult = BeginRedirectedRun(@this, stdoutCallback, stderrCallback);
+    cancellation.Register(OnCancellationRequested);
+    return Task.Run(WaitTillFinished, cancellation);
+
+    void OnCancellationRequested() {
+      if (asyncResult.Process.HasExited)
+        return;
+
+      try {
+        asyncResult.Process.Kill();
+      } catch {
+        ;
+      }
+    }
+
+    IConsoleResult WaitTillFinished() => @this.EndRedirectedRun(asyncResult);
+
+  }
+
+#endif
+
+  /// <summary>
+  /// Gets the <see cref="FileInfo"/> object representing the file that the process will execute.
+  /// </summary>
+  /// <param name="this">The <see cref="System.Diagnostics.ProcessStartInfo"/> object containing the information necessary to start the process.</param>
+  /// <returns>A <see cref="FileInfo"/> object representing the file specified in the <see cref="System.Diagnostics.ProcessStartInfo.FileName"/> property.</returns>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg"
+  /// };
+  ///
+  /// FileInfo fileInfo = psi.File();
+  /// Console.WriteLine("Process will execute file: " + fileInfo.FullName);
+  /// </code>
+  /// This example demonstrates how to get the <see cref="FileInfo"/> object for the file that the process will execute.
+  /// </example>
   public static FileInfo File(this ProcessStartInfo @this)
     => @this.FileName.IsNullOrWhiteSpace() ? null : new FileInfo(@this.FileName);
 }
