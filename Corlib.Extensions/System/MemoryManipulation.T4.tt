@@ -50,7 +50,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool AreEqual(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) =>
 #if PLATFORM_X86
-      _AreEqualx32(@this, other)
+      _AreEqualx86(@this, other)
 #else
       _AreEqualx64(@this, other)
 #endif
@@ -81,7 +81,7 @@ internal static partial class MemoryManipulation {
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe bool _AreEqualx32(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) {
+    private static unsafe bool _AreEqualx86(Block<#=blockSize#>* @this, Block<#=blockSize#>* other) {
 <#
     {
       if(blockSize == 1 || blockSize == 2 || blockSize == 4) {
@@ -107,7 +107,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Fill(Block<#=blockSize#>* @this, byte value) =>
 #if PLATFORM_X86
-      _Fillx32(@this, value)
+      _Fillx86(@this, value)
 #else
       _Fillx64(@this, value)
 #endif
@@ -150,7 +150,7 @@ internal static partial class MemoryManipulation {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void _Fillx32(Block<#=blockSize#>* @this, byte value) {
+    private static unsafe void _Fillx86(Block<#=blockSize#>* @this, byte value) {
 <#
     {
       var bytesLeft = blockSize;
@@ -181,7 +181,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Fill(Block<#=blockSize#>* @this, ushort value) =>
 #if PLATFORM_X86
-      _Fillx32(@this, value)
+      _Fillx86(@this, value)
 #else
       _Fillx64(@this, value)
 #endif
@@ -217,7 +217,7 @@ internal static partial class MemoryManipulation {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void _Fillx32(Block<#=blockSize#>* @this, ushort value) {
+    private static unsafe void _Fillx86(Block<#=blockSize#>* @this, ushort value) {
 <#
     {
       var bytesLeft = blockSize;
@@ -243,7 +243,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Fill(Block<#=blockSize#>* @this, uint value) =>
 #if PLATFORM_X86
-      _Fillx32(@this, value)
+      _Fillx86(@this, value)
 #else
       _Fillx64(@this, value)
 #endif
@@ -272,7 +272,7 @@ internal static partial class MemoryManipulation {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void _Fillx32(Block<#=blockSize#>* @this, uint value) {
+    private static unsafe void _Fillx86(Block<#=blockSize#>* @this, uint value) {
 <#
     {
       var bytesLeft = blockSize;
@@ -303,7 +303,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Clear(Block<#=blockSize#>* @this) =>
 #if PLATFORM_X86
-      _Clearx32(@this)
+      _Clearx86(@this)
 #else
       _Clearx64(@this)
 #endif
@@ -334,7 +334,7 @@ internal static partial class MemoryManipulation {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void _Clearx32(Block<#=blockSize#>* @this) {
+    private static unsafe void _Clearx86(Block<#=blockSize#>* @this) {
 <#
     {
       var bytesLeft = blockSize;
@@ -366,7 +366,7 @@ internal static partial class MemoryManipulation {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Not(Block<#=blockSize#>* @this, Block<#=blockSize#>* target) =>
 #if PLATFORM_X86
-      _Notx32(@this, target)
+      _Notx86(@this, target)
 #else
       _Notx64(@this, target)
 #endif
@@ -547,7 +547,7 @@ void GenerateThreeOperandBitwiseOperation(string name, string @operator, bool ne
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void <#=name#>(Block<#=blockSize#>* @this, Block<#=blockSize#>* operand, Block<#=blockSize#>* target) =>
 #if PLATFORM_X86
-      _<#=name#>x32(@this, operand, target)
+      _<#=name#>x86(@this, operand, target)
 #else
       _<#=name#>x64(@this, operand, target)
 #endif
