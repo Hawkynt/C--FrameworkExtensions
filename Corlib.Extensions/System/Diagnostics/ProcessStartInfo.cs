@@ -380,22 +380,28 @@ public static partial class ProcessStartInfoExtensions {
   /// </example>
   public static Task<IConsoleResult> RedirectedRunAsync(this ProcessStartInfo @this, CancellationToken cancellation, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null) {
     var asyncResult = BeginRedirectedRun(@this, stdoutCallback, stderrCallback);
+    const int RUNNING = 0;
+    const int ENDED = 1;
+    var isEnded = RUNNING;
     cancellation.Register(OnCancellationRequested);
     return Task.Run(WaitTillFinished, cancellation);
 
     void OnCancellationRequested() {
-      if (asyncResult.Process.HasExited)
-        return;
-
       try {
-        asyncResult.Process.Kill();
+        if (Volatile.Read(ref isEnded) == RUNNING && !asyncResult.Process.HasExited)
+          asyncResult.Process.Kill();
       } catch {
         ;
       }
     }
 
-    IConsoleResult WaitTillFinished() => @this.EndRedirectedRun(asyncResult);
-
+    IConsoleResult WaitTillFinished() {
+      try {
+        return @this.EndRedirectedRun(asyncResult);
+      } finally {
+        Volatile.Write(ref isEnded, ENDED);
+      }
+    }
   }
 
 #endif
