@@ -186,6 +186,45 @@ public static partial class ProcessStartInfoExtensions {
   #endregion
 
   /// <summary>
+  /// Executes a process synchronously with redirected standard output and standard error streams.
+  /// </summary>
+  /// <param name="this">The <see cref="System.Diagnostics.ProcessStartInfo"/> object containing the information necessary to start the process.</param>
+  /// <param name="stdoutCallback">An optional delegate that handles standard output data received from the process. Can be <see langword="null"/>.</param>
+  /// <param name="stderrCallback">An optional delegate that handles standard error data received from the process. Can be <see langword="null"/>.</param>
+  /// <returns>An <see cref="IConsoleResult"/> containing the result of the process execution, including any output and error data.</returns>
+  /// <remarks>
+  /// The method automatically adjust properties of the given <see cref="ProcessStartInfo"/>:
+  ///   UseShellExecute = false,
+  ///   RedirectStandardOutput = true,
+  ///   RedirectStandardError = true,
+  ///   CreateNoWindow = true,
+  ///   WindowStyle = ProcessWindowStyle.Hidden
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// ProcessStartInfo psi = new ProcessStartInfo
+  /// {
+  ///     FileName = "example.exe",
+  ///     Arguments = "--example-arg"
+  /// };
+  ///
+  /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
+  /// ConsoleOutputHandler stderrHandler = (sender, args) => Console.WriteLine($"Error: {args.Data}");
+  ///
+  /// IConsoleResult result = psi.RedirectedRun(stdoutHandler, stderrHandler);
+  ///
+  /// Console.WriteLine("Process completed with exit code: " + result.ExitCode);
+  /// Console.WriteLine("Standard Output: " + result.StandardOutput);
+  /// Console.WriteLine("Standard Error: " + result.StandardError);
+  /// </code>
+  /// This example demonstrates how to execute a process synchronously and handle its output using callbacks.
+  /// </example>
+  public static IConsoleResult RedirectedRun(this ProcessStartInfo @this, ConsoleOutputHandler stdoutCallback = null, ConsoleOutputHandler stderrCallback = null) {
+    var token = BeginRedirectedRun(@this, stdoutCallback, stderrCallback);
+    return EndRedirectedRun(@this, token);
+  }
+
+  /// <summary>
   /// Begins an asynchronous process execution with redirected standard output and standard error streams.
   /// </summary>
   /// <param name="this">The <see cref="ProcessStartInfo"/> object containing the information necessary to start the process.</param>
@@ -207,7 +246,7 @@ public static partial class ProcessStartInfoExtensions {
   /// ProcessStartInfo psi = new ProcessStartInfo
   /// {
   ///     FileName = "example.exe",
-  ///     Arguments = "--example-arg",
+  ///     Arguments = "--example-arg"
   /// };
   ///
   /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
@@ -232,7 +271,7 @@ public static partial class ProcessStartInfoExtensions {
   /// ProcessStartInfo psi = new ProcessStartInfo
   /// {
   ///     FileName = "example.exe",
-  ///     Arguments = "--example-arg",
+  ///     Arguments = "--example-arg"
   /// };
   ///
   /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
@@ -279,7 +318,7 @@ public static partial class ProcessStartInfoExtensions {
   /// ProcessStartInfo psi = new ProcessStartInfo
   /// {
   ///     FileName = "example.exe",
-  ///     Arguments = "--example-arg",
+  ///     Arguments = "--example-arg"
   /// };
   ///
   /// ConsoleOutputHandler stdoutHandler = (sender, args) => Console.WriteLine($"Output: {args.Data}");
@@ -318,10 +357,7 @@ public static partial class ProcessStartInfoExtensions {
   /// ProcessStartInfo psi = new ProcessStartInfo
   /// {
   ///     FileName = "example.exe",
-  ///     Arguments = "--example-arg",
-  ///     RedirectStandardOutput = true,
-  ///     RedirectStandardError = true,
-  ///     UseShellExecute = false
+  ///     Arguments = "--example-arg"
   /// };
   ///
   /// using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
