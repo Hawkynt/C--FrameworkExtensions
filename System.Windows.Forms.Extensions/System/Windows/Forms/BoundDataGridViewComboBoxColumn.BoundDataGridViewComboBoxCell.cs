@@ -23,25 +23,16 @@ using System.ComponentModel;
 namespace System.Windows.Forms;
 
 public partial class BoundDataGridViewComboBoxColumn {
-  internal class BoundDataGridViewComboBoxCell : DataGridViewTextBoxCell {
-    public string DataSourcePropertyName { get; set; }
-    public string EnabledWhenPropertyName { get; set; }
-    public string ValueMember { get; set; }
-    public string DisplayMember { get; set; }
-
-    public BoundDataGridViewComboBoxCell() { }
-
-    public BoundDataGridViewComboBoxCell(
-      string dataSourcePropertyName,
-      string enabledWhenPropertyName,
-      string valueMember,
-      string displayMember
-    ) {
-      this.DataSourcePropertyName = dataSourcePropertyName;
-      this.EnabledWhenPropertyName = enabledWhenPropertyName;
-      this.ValueMember = valueMember;
-      this.DisplayMember = displayMember;
-    }
+  private sealed class BoundDataGridViewComboBoxCell(
+    string dataSourcePropertyName,
+    string enabledWhenPropertyName,
+    string valueMember,
+    string displayMember
+  ) : DataGridViewTextBoxCell {
+    private string _DataSourcePropertyName { get; set; } = dataSourcePropertyName;
+    private string _EnabledWhenPropertyName { get; set; } = enabledWhenPropertyName;
+    private string _ValueMember { get; set; } = valueMember;
+    private string _DisplayMember { get; set; } = displayMember;
 
     public override Type EditType => typeof(DataGridViewComboBoxEditingControl);
 
@@ -61,13 +52,13 @@ public partial class BoundDataGridViewComboBoxColumn {
       DataGridViewCellStyle dataGridViewCellStyle
     ) {
       base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
-      if (this.DataGridView.EditingControl is not ComboBox comboBox)
+      if (this.DataGridView?.EditingControl is not ComboBox comboBox)
         return;
 
       var owningRowDataBoundItem = this.OwningRow.DataBoundItem;
       var source = DataGridViewExtensions.GetPropertyValueOrDefault<IEnumerable>(
         owningRowDataBoundItem,
-        this.DataSourcePropertyName,
+        this._DataSourcePropertyName,
         null,
         null,
         null,
@@ -76,10 +67,10 @@ public partial class BoundDataGridViewComboBoxColumn {
       comboBox.DataSource = source;
 
 
-      if (this.EnabledWhenPropertyName != null)
+      if (this._EnabledWhenPropertyName != null)
         comboBox.Enabled = DataGridViewExtensions.GetPropertyValueOrDefault(
           owningRowDataBoundItem,
-          this.EnabledWhenPropertyName,
+          this._EnabledWhenPropertyName,
           true,
           true,
           true,
@@ -89,11 +80,11 @@ public partial class BoundDataGridViewComboBoxColumn {
       if (source == null)
         return;
 
-      if (this.DisplayMember != null)
-        comboBox.DisplayMember = this.DisplayMember;
+      if (this._DisplayMember != null)
+        comboBox.DisplayMember = this._DisplayMember;
 
-      if (this.ValueMember != null)
-        comboBox.ValueMember = this.ValueMember;
+      if (this._ValueMember != null)
+        comboBox.ValueMember = this._ValueMember;
 
 
       comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -103,12 +94,12 @@ public partial class BoundDataGridViewComboBoxColumn {
     }
 
     public override object Clone() {
-      var cell = (BoundDataGridViewComboBoxCell)base.Clone();
-      cell.DataSourcePropertyName = this.DataSourcePropertyName;
-      cell.EnabledWhenPropertyName = this.EnabledWhenPropertyName;
-      cell.ValueMember = this.ValueMember;
-      cell.DisplayMember = this.DisplayMember;
-      return cell;
+      var result = (BoundDataGridViewComboBoxCell)base.Clone();
+      result._DataSourcePropertyName = this._DataSourcePropertyName;
+      result._EnabledWhenPropertyName = this._EnabledWhenPropertyName;
+      result._ValueMember = this._ValueMember;
+      result._DisplayMember = this._DisplayMember;
+      return result;
     }
   }
 }
