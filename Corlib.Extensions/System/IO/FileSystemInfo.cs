@@ -18,6 +18,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Guard;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -39,7 +40,7 @@ public static partial class FileSystemInfoExtensions {
   /// <param name="this">This FileSystemInfo</param>
   /// <returns><c>true</c> if it is either <c>null</c> or can not be found; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNullOrDoesNotExist(this FileSystemInfo @this) => @this is not { Exists: true };
+  public static bool IsNullOrDoesNotExist([NotNullWhen(false)] this FileSystemInfo @this) => @this is not { Exists: true };
 
   /// <summary>
   ///   Checks whether the given FileSystemInfo is not <c>null</c> and if it exists.
@@ -47,7 +48,7 @@ public static partial class FileSystemInfoExtensions {
   /// <param name="this">This FileSystemInfo</param>
   /// <returns><c>true</c> if it is not <c>null</c> and can not be found; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNotNullAndExists(this FileSystemInfo @this) => @this is { Exists: true };
+  public static bool IsNotNullAndExists([NotNullWhen(true)] this FileSystemInfo @this) => @this is { Exists: true };
 
   /// <summary>
   ///   Returns a given path relative to another.
