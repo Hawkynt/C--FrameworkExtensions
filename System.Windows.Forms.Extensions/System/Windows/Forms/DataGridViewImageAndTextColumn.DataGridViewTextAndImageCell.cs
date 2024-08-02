@@ -22,7 +22,7 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 public partial class DataGridViewImageAndTextColumn {
-  public class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
+  internal sealed class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
     private Image _imageValue;
     private Size _imageSize;
     private bool _needsResize;

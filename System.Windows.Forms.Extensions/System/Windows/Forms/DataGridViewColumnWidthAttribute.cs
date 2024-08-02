@@ -24,50 +24,184 @@ namespace System.Windows.Forms;
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewColumnWidthAttribute : Attribute {
+
+  /// <summary>
+  /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
+  /// </summary>
+  /// <param name="characters">The width of the column in number of characters.</param>
+  /// <example>
+  /// <code>
+  /// // Define a custom class for the data grid view rows
+  /// public class DataRow
+  /// {
+  ///     public int Id { get; set; }
+  ///     public string Name { get; set; }
+  ///
+  ///     [DataGridViewColumnWidth((char)20)] // width in characters
+  ///     public string DisplayText { get; set; }
+  /// }
+  ///
+  /// // Create an array of DataRow instances
+  /// var dataRows = new[]
+  /// {
+  ///     new DataRow { Id = 1, Name = "Row 1", DisplayText = "Row 1 Display" },
+  ///     new DataRow { Id = 2, Name = "Row 2", DisplayText = "Row 2 Display" }
+  /// };
+  ///
+  /// // Create a DataGridView and set its data source
+  /// var dataGridView = new DataGridView
+  /// {
+  ///     DataSource = dataRows
+  /// };
+  ///
+  /// // Enable extended attributes to recognize the custom attributes
+  /// dataGridView.EnableExtendedAttributes();
+  /// </code>
+  /// </example>
   public DataGridViewColumnWidthAttribute(char characters) {
-    this.Characters = new('@', characters);
-    this.Width = -1;
-    this.Mode = DataGridViewAutoSizeColumnMode.None;
+    this._characters = new('@', characters);
+    this._width = -1;
+    this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
+  /// <summary>
+  /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
+  /// </summary>
+  /// <param name="characters">The width of the column based on the specified string length.</param>
+  /// <example>
+  /// <code>
+  /// // Define a custom class for the data grid view rows
+  /// public class DataRow
+  /// {
+  ///     public int Id { get; set; }
+  ///     public string Name { get; set; }
+  ///
+  ///     [DataGridViewColumnWidth("LongerString")] // width based on string length
+  ///     public string Description { get; set; }
+  /// }
+  ///
+  /// // Create an array of DataRow instances
+  /// var dataRows = new[]
+  /// {
+  ///     new DataRow { Id = 1, Name = "Row 1", Description = "Row 1 Description" },
+  ///     new DataRow { Id = 2, Name = "Row 2", Description = "Row 2 Description" }
+  /// };
+  ///
+  /// // Create a DataGridView and set its data source
+  /// var dataGridView = new DataGridView
+  /// {
+  ///     DataSource = dataRows
+  /// };
+  ///
+  /// // Enable extended attributes to recognize the custom attributes
+  /// dataGridView.EnableExtendedAttributes();
+  /// </code>
+  /// </example>
   public DataGridViewColumnWidthAttribute(string characters) {
-    this.Characters = characters;
-    this.Width = -1;
-    this.Mode = DataGridViewAutoSizeColumnMode.None;
+    this._characters = characters;
+    this._width = -1;
+    this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
+  /// <summary>
+  /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
+  /// </summary>
+  /// <param name="width">The width of the column in pixels.</param>
+  /// <example>
+  /// <code>
+  /// // Define a custom class for the data grid view rows
+  /// public class DataRow
+  /// {
+  ///     public int Id { get; set; }
+  ///     public string Name { get; set; }
+  ///
+  ///     [DataGridViewColumnWidth(100)] // width in pixels
+  ///     public string Details { get; set; }
+  /// }
+  ///
+  /// // Create an array of DataRow instances
+  /// var dataRows = new[]
+  /// {
+  ///     new DataRow { Id = 1, Name = "Row 1", Details = "Row 1 Details" },
+  ///     new DataRow { Id = 2, Name = "Row 2", Details = "Row 2 Details" }
+  /// };
+  ///
+  /// // Create a DataGridView and set its data source
+  /// var dataGridView = new DataGridView
+  /// {
+  ///     DataSource = dataRows
+  /// };
+  ///
+  /// // Enable extended attributes to recognize the custom attributes
+  /// dataGridView.EnableExtendedAttributes();
+  /// </code>
+  /// </example>
   public DataGridViewColumnWidthAttribute(int width) {
-    this.Characters = null;
-    this.Width = width;
-    this.Mode = DataGridViewAutoSizeColumnMode.None;
+    this._characters = null;
+    this._width = width;
+    this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
+  /// <summary>
+  /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
+  /// </summary>
+  /// <param name="mode">The auto-sizing mode for the column.</param>
+  /// <example>
+  /// <code>
+  /// // Define a custom class for the data grid view rows
+  /// public class DataRow
+  /// {
+  ///     public int Id { get; set; }
+  ///     public string Name { get; set; }
+  ///
+  ///     [DataGridViewColumnWidth(DataGridViewAutoSizeColumnMode.Fill)] // auto-sizing mode
+  ///     public string Remarks { get; set; }
+  /// }
+  ///
+  /// // Create an array of DataRow instances
+  /// var dataRows = new[]
+  /// {
+  ///     new DataRow { Id = 1, Name = "Row 1", Remarks = "Row 1 Remarks" },
+  ///     new DataRow { Id = 2, Name = "Row 2", Remarks = "Row 2 Remarks" }
+  /// };
+  ///
+  /// // Create a DataGridView and set its data source
+  /// var dataGridView = new DataGridView
+  /// {
+  ///     DataSource = dataRows
+  /// };
+  ///
+  /// // Enable extended attributes to recognize the custom attributes
+  /// dataGridView.EnableExtendedAttributes();
+  /// </code>
+  /// </example>
   public DataGridViewColumnWidthAttribute(DataGridViewAutoSizeColumnMode mode) {
-    this.Characters = null;
-    this.Mode = mode;
-    this.Width = -1;
+    this._characters = null;
+    this._mode = mode;
+    this._width = -1;
   }
 
-  public DataGridViewAutoSizeColumnMode Mode { get; }
-  public int Width { get; }
-  public string Characters { get; }
+  private readonly DataGridViewAutoSizeColumnMode _mode;
+  private readonly int _width;
+  private readonly string _characters;
 
-  public void ApplyTo(DataGridViewColumn column) {
-    if (this.Mode != DataGridViewAutoSizeColumnMode.None) {
-      column.AutoSizeMode = this.Mode;
+  internal void ApplyTo(DataGridViewColumn column) {
+    if (this._mode != DataGridViewAutoSizeColumnMode.None) {
+      column.AutoSizeMode = this._mode;
       return;
     }
 
     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
 
-    if (this.Characters != null) {
-      var font = column.DataGridView.Font;
-      var width = TextRenderer.MeasureText(this.Characters, font);
+    if (this._characters != null) {
+      var font = column.DataGridView!.Font;
+      var width = TextRenderer.MeasureText(this._characters, font);
       column.MinimumWidth = width.Width;
       column.Width = width.Width;
-    } else if (this.Width >= 0) {
-      column.MinimumWidth = this.Width;
-      column.Width = this.Width;
+    } else if (this._width >= 0) {
+      column.MinimumWidth = this._width;
+      column.Width = this._width;
     }
   }
+
 }

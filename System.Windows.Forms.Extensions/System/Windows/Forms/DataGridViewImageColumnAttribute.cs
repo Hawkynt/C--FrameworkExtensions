@@ -21,6 +21,64 @@ using System.Drawing;
 
 namespace System.Windows.Forms;
 
+/// <summary>
+/// Specifies that a column in a <see cref="System.Windows.Forms.DataGridView"/> should display images, and allows defining click, double-click events, and tooltip text.
+/// </summary>
+/// <param name="imageListPropertyName">(Optional: defaults to <see langword="null"/>) The name of the property that provides the image list for the column.</param>
+/// <param name="onClickMethodName">(Optional: defaults to <see langword="null"/>) The name of the method to call when the image is clicked.</param>
+/// <param name="onDoubleClickMethodName">(Optional: defaults to <see langword="null"/>) The name of the method to call when the image is double-clicked.</param>
+/// <param name="toolTipTextPropertyName">(Optional: defaults to <see langword="null"/>) The name of the property that provides the tooltip text for the image.</param>
+/// <remarks>
+/// The column can either be of type <see cref="int"/> indexing in the <see cref="ImageList"/> or anything else converted via ToString() and used as a key to find the <see cref="Image"/> in the <see cref="ImageList"/>.
+/// </remarks>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public ImageList ImageList { get; set; }
+///     public string TooltipText { get; set; }
+///
+///     [DataGridViewImageColumn(nameof(ImageList), nameof(OnImageClick), nameof(OnImageDoubleClick), nameof(TooltipText))]
+///     public int ImageIndex { get; set; }
+///
+///     public void OnImageClick()
+///     {
+///         // Handle image click event
+///         Console.WriteLine("Image clicked");
+///     }
+///
+///     public void OnImageDoubleClick()
+///     {
+///         // Handle image double-click event
+///         Console.WriteLine("Image double-clicked");
+///     }
+/// }
+///
+/// // Create an ImageList with at least two images
+/// var imageList = new ImageList();
+/// imageList.Images.Add(Image.FromFile("path/to/image1.png"));
+/// imageList.Images.Add(Image.FromFile("path/to/image2.png"));
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", ImageList = imageList, TooltipText = "Tooltip 1", ImageIndex = 0 },
+///     new DataRow { Id = 2, Name = "Row 2", ImageList = imageList, TooltipText = "Tooltip 2", ImageIndex = 1 }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewImageColumnAttribute(
   string imageListPropertyName = null,
@@ -32,13 +90,11 @@ public sealed class DataGridViewImageColumnAttribute(
     onClickMethodName,
     onDoubleClickMethodName
   ) {
-  public string ToolTipTextPropertyName { get; } = toolTipTextPropertyName;
-  public string ImageListPropertyName { get; } = imageListPropertyName;
 
   private Image _GetImage(object row, object value) {
     var imageList = DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(
       row,
-      this.ImageListPropertyName,
+      imageListPropertyName,
       null,
       null,
       null,
@@ -55,9 +111,9 @@ public sealed class DataGridViewImageColumnAttribute(
   }
 
   private string _ToolTipText(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault<string>(row, this.ToolTipTextPropertyName, null, null, null, null);
+    => DataGridViewExtensions.GetPropertyValueOrDefault<string>(row, toolTipTextPropertyName, null, null, null, null);
 
-  public static void OnCellFormatting(DataGridViewImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  internal static void OnCellFormatting(DataGridViewImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     //should not be necessary but dgv throws format exception
     if (e.DesiredType != typeof(Image))
       return;
@@ -66,4 +122,5 @@ public sealed class DataGridViewImageColumnAttribute(
     e.FormattingApplied = true;
     row.Cells[column.Index].ToolTipText = @this._ToolTipText(data);
   }
+
 }

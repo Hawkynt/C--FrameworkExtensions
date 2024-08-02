@@ -20,12 +20,42 @@
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows specifying certain properties as read-only depending on the underlying object instance.
+/// Specifies a condition under which a column in a <see cref="System.Windows.Forms.DataGridView"/> should be read-only.
 /// </summary>
+/// <param name="isReadOnlyWhen">The name of the property that determines when the column should be read-only.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public bool IsReadOnly { get; set; }
+///
+///     [DataGridViewConditionalReadOnly(nameof(IsReadOnly))]
+///     public string ReadOnlyText { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", IsReadOnly = true, ReadOnlyText = "Cannot Edit" },
+///     new DataRow { Id = 2, Name = "Row 2", IsReadOnly = false, ReadOnlyText = "Editable" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewConditionalReadOnlyAttribute(string isReadOnlyWhen) : Attribute {
-  public string IsReadOnlyWhen { get; } = isReadOnlyWhen;
-
-  public bool IsReadOnly(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsReadOnlyWhen, false, false, false, false);
+  
+  internal bool IsReadOnly(object row)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, isReadOnlyWhen, false, false, false, false);
 }

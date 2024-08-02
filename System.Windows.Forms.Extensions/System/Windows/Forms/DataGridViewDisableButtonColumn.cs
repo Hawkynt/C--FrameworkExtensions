@@ -23,10 +23,12 @@ using System.Windows.Forms.VisualStyles;
 namespace System.Windows.Forms;
 
 public class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
+  
   /// <summary>
   ///   The cell template to use for drawing the cells' content.
   /// </summary>
-  public class DataGridViewDisableButtonCell : DataGridViewButtonCell {
+  internal sealed class DataGridViewDisableButtonCell : DataGridViewButtonCell {
+
     /// <summary>
     ///   Gets or sets a value indicating whether this <see cref="DataGridViewDisableButtonCell" /> is enabled.
     /// </summary>
@@ -41,8 +43,7 @@ public class DataGridViewDisableButtonColumn : DataGridViewButtonColumn {
       cell.Enabled = this.Enabled;
       return cell;
     }
-
-
+    
     protected override void Paint(
       Graphics graphics,
       Rectangle clipBounds,

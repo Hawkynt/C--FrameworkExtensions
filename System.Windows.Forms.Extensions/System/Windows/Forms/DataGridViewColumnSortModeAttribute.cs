@@ -20,11 +20,41 @@
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows setting the sort mode for automatically generated columns.
+/// Specifies the sort mode for a column in a <see cref="System.Windows.Forms.DataGridView"/>.
 /// </summary>
+/// <param name="sortMode">The sort mode to apply to the column.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///
+///     [DataGridViewColumnSortMode(DataGridViewColumnSortMode.Automatic)]
+///     public string DisplayText { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", DisplayText = "Row 1 Display" },
+///     new DataRow { Id = 2, Name = "Row 2", DisplayText = "Row 2 Display" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewColumnSortModeAttribute(DataGridViewColumnSortMode sortMode) : Attribute {
-  public DataGridViewColumnSortMode SortMode { get; } = sortMode;
+  
+  internal void ApplyTo(DataGridViewColumn column) => column.SortMode = sortMode;
 
-  public void ApplyTo(DataGridViewColumn column) => column.SortMode = this.SortMode;
 }

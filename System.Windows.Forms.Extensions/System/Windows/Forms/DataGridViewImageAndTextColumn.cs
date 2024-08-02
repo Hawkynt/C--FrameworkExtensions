@@ -21,25 +21,60 @@ using System.Drawing;
 
 namespace System.Windows.Forms;
 
+/// <summary>
+/// Represents a <see cref="System.Windows.Forms.DataGridViewTextBoxColumn"/> that can display both an image and text.
+/// </summary>
+/// <example>
+/// <code>
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = new[]
+///     {
+///         new { Id = 1, Name = "Row 1" },
+///         new { Id = 2, Name = "Row 2" }
+///     }
+/// };
+///
+/// // Create a DataGridViewImageAndTextColumn and add it to the DataGridView
+/// var imageAndTextColumn = new DataGridViewImageAndTextColumn
+/// {
+///     Name = "ImageAndTextColumn",
+///     HeaderText = "Image and Text",
+///     DataPropertyName = "Name",
+///     IsDataBound = true,
+///     Image = Image.FromFile("path/to/defaultImage.png")
+/// };
+/// dataGridView.Columns.Add(imageAndTextColumn);
+/// </code>
+/// </example>
 public partial class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn {
-  private Image imageValue;
+  
+  private Image _imageValue;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewImageAndTextColumn"/> class.
+  /// </summary>
   public DataGridViewImageAndTextColumn() => this.CellTemplate = new DataGridViewTextAndImageCell();
 
+  /// <inheritdoc />
   public override object Clone() {
     var c = base.Clone() as DataGridViewImageAndTextColumn;
-    c.imageValue = this.imageValue;
+    c._imageValue = this._imageValue;
     c.ImageSize = this.ImageSize;
     return c;
   }
 
+  /// <summary>
+  /// Gets or sets the image displayed in the column cells.
+  /// </summary>
   public Image Image {
-    get => this.imageValue;
+    get => this._imageValue;
     set {
       if (this.Image == value)
         return;
 
-      this.imageValue = value;
+      this._imageValue = value;
       this.ImageSize = value.Size;
 
       if (this.InheritedStyle == null)
@@ -55,5 +90,8 @@ public partial class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn 
     }
   }
 
+  /// <summary>
+  /// Gets the size of the image displayed in the column cells.
+  /// </summary>
   internal Size ImageSize { get; private set; }
 }
