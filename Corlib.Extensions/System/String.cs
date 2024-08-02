@@ -540,11 +540,18 @@ public static partial class StringExtensions {
   #region Formatting
 
   /// <summary>
-  ///   Uses the string as a format string.
+  /// Uses the string as a format string and formats it using the specified parameters.
   /// </summary>
-  /// <param name="this">This String.</param>
+  /// <param name="this">The format string.</param>
   /// <param name="parameters">The parameters to use for formatting.</param>
   /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {0}! Today is {1:dddd}.";
+  /// string result = format.FormatWith("Alice", DateTime.Now);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWith(this string @this, params object[] parameters) {
     Against.ThisIsNull(@this);
@@ -553,12 +560,24 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="fields">The fields.</param>
-  /// <param name="comparer">The comparer.</param>
-  /// <returns></returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="fields">The fields to use for formatting, represented as a collection of key-value pairs.</param>
+  /// <param name="comparer">(Optional: defaults to <see langword="null"/>) The comparer to use for field name comparisons. If <see langword="null"/>, the default equality comparer is used.</param>
+  /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// var fields = new List&lt;KeyValuePair&lt;string, object&gt;&gt;
+  /// {
+  ///     new KeyValuePair&lt;string, object&gt;("Name", "Alice"),
+  ///     new KeyValuePair&lt;string, object&gt;("Day", DateTime.Now)
+  /// };
+  /// string result = format.FormatWithEx(fields);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   public static string FormatWithEx(this string @this, IEnumerable<KeyValuePair<string, object>> fields, IEqualityComparer<string> comparer = null) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(fields);
@@ -568,12 +587,24 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="comparer">The comparer.</param>
-  /// <param name="fields">The fields.</param>
-  /// <returns></returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="comparer">The comparer to use for field name comparisons.</param>
+  /// <param name="fields">The fields to use for formatting, represented as an array of key-value pairs.</param>
+  /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// var fields = new KeyValuePair&lt;string, object&gt;[]
+  /// {
+  ///     new KeyValuePair&lt;string, object&gt;("Name", "Alice"),
+  ///     new KeyValuePair&lt;string, object&gt;("Day", DateTime.Now)
+  /// };
+  /// string result = format.FormatWithEx(StringComparer.OrdinalIgnoreCase, fields);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWithEx(this string @this, IEqualityComparer<string> comparer, params KeyValuePair<string, object>[] fields) {
     Against.ThisIsNull(@this);
@@ -583,11 +614,23 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="fields">The fields.</param>
-  /// <returns></returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="fields">The fields to use for formatting, represented as an array of key-value pairs.</param>
+  /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// var fields = new KeyValuePair&lt;string, object&gt;[]
+  /// {
+  ///     new KeyValuePair&lt;string, object&gt;("Name", "Alice"),
+  ///     new KeyValuePair&lt;string, object&gt;("Day", DateTime.Now)
+  /// };
+  /// string result = format.FormatWithEx(fields);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWithEx(this string @this, params KeyValuePair<string, object>[] fields) {
     Against.ThisIsNull(@this);
@@ -597,11 +640,23 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="fields">The fields.</param>
-  /// <returns></returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="fields">The fields to use for formatting, represented as a dictionary of key-value pairs where the key is the field name and the value is the field value.</param>
+  /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// var fields = new Dictionary&lt;string, string&gt;
+  /// {
+  ///     { "Name", "Alice" },
+  ///     { "Day", DateTime.Now.ToString("dddd") }
+  /// };
+  /// string result = format.FormatWithEx(fields);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWithEx(this string @this, IDictionary<string, string> fields) {
     Against.ThisIsNull(@this);
@@ -611,11 +666,23 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="fields">The fields.</param>
-  /// <returns></returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="fields">The fields to use for formatting, represented as a <see cref="System.Collections.Hashtable"/> where the key is the field name and the value is the field value.</param>
+  /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// var fields = new Hashtable
+  /// {
+  ///     { "Name", "Alice" },
+  ///     { "Day", DateTime.Now.ToString("dddd") }
+  /// };
+  /// string result = format.FormatWithEx(fields);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWithEx(this string @this, Hashtable fields) {
     Against.ThisIsNull(@this);
@@ -625,11 +692,24 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}, using the properties of the specified object.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="object">The source to get the data from using properties of the same name.</param>
-  /// <returns>The string with values</returns>
+  /// <param name="this">The format string.</param>
+  /// <param name="object">The source object to get the data from using properties of the same name as the format fields.</param>
+  /// <typeparam name="T">The type of the source object.</typeparam>
+  /// <returns>A formatted string with values replaced by the corresponding properties of the source object.</returns>
+  /// <example>
+  /// <code>
+  /// var person = new
+  /// {
+  ///     Name = "Alice",
+  ///     Day = DateTime.Now.ToString("dddd")
+  /// };
+  /// string format = "Hello, {Name}! Today is {Day}.";
+  /// string result = format.FormatWithObject(person);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string FormatWithObject<T>(this string @this, T @object) {
     if (@object is null)
@@ -686,12 +766,28 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uses the string as a format string allowing an extended syntax to get the fields eg. {FieldName:FieldFormat}
+  /// Uses the string as a format string, allowing an extended syntax to get the fields, e.g., {FieldName:FieldFormat}, using a custom field getter function.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="fieldGetter">The field getter.</param>
-  /// <param name="passFieldFormatToGetter">if set to <c>true</c> passes the field format to getter.</param>
+  /// <param name="this">The format string.</param>
+  /// <param name="fieldGetter">The function used to get the field values. The function takes a field name as input and returns the corresponding field value.</param>
+  /// <param name="passFieldFormatToGetter">(Optional: defaults to <c>false</c>) If set to <c>true</c>, passes the field format to the getter function.</param>
   /// <returns>A formatted string.</returns>
+  /// <example>
+  /// <code>
+  /// string format = "Hello, {Name}! Today is {Day:dddd}.";
+  /// Func&lt;string, object&gt; fieldGetter = fieldName =>
+  /// {
+  ///     return fieldName switch
+  ///     {
+  ///         "Name" => "Alice",
+  ///         "Day" => DateTime.Now,
+  ///         _ => null
+  ///     };
+  /// };
+  /// string result = format.FormatWithEx(fieldGetter);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is [Day of the week].
+  /// </code>
+  /// </example>
   public static string FormatWithEx(this string @this, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
     if (@this == null)
       throw new NullReferenceException();
@@ -772,63 +868,163 @@ public static partial class StringExtensions {
   #endregion
 
   /// <summary>
-  ///   Uses the string as a regular expression.
+  /// Uses the string as a regular expression.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <returns>An new instance of RegularExpression.</returns>
+  /// <param name="this">The input string to be treated as a regular expression pattern.</param>
+  /// <returns>A new instance of <see cref="Regex"/> if the input string is not <see langword="null"/>; otherwise, <see langword="null"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string pattern = @"\d+";
+  /// Regex regex = pattern.AsRegularExpression();
+  /// bool isMatch = regex.IsMatch("12345");
+  /// Console.WriteLine(isMatch); // Output: True
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Regex AsRegularExpression(this string @this) => @this == null ? null : new Regex(@this);
 
   /// <summary>
-  ///   Uses the string as a regular expression.
+  /// Uses the string as a regular expression with the specified options.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="options">The regex options.</param>
-  /// <returns>
-  ///   An new instance of RegularExpression.
-  /// </returns>
+  /// <param name="this">The input string to be treated as a regular expression pattern.</param>
+  /// <param name="options">The options to use when creating the <see cref="Regex"/> instance.</param>
+  /// <returns>A new instance of <see cref="Regex"/> if the input string is not <see langword="null"/>; otherwise, <see langword="null"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string pattern = @"\d+";
+  /// Regex regex = pattern.AsRegularExpression(RegexOptions.IgnoreCase);
+  /// bool isMatch = regex.IsMatch("12345");
+  /// Console.WriteLine(isMatch); // Output: True
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Regex AsRegularExpression(this string @this, RegexOptions options) => @this == null ? null : new Regex(@this, options);
 
   /// <summary>
-  ///   Replaces multiple contents.
+  /// Replaces multiple substrings in the current string instance with the specified replacement values.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="replacements">The replacements.</param>
-  /// <returns>A new string containing all parts replaced.</returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacements">An array of <see cref="KeyValuePair{TKey, TValue}"/> where the key is the substring to be replaced and the value is the replacement object.</param>
+  /// <returns>A new string with all specified replacements made.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, {name}! Today is {day}.";
+  /// var replacements = new KeyValuePair&lt;string, object&gt;[]
+  /// {
+  ///     new KeyValuePair&lt;string, object&gt;("{name}", "Alice"),
+  ///     new KeyValuePair&lt;string, object&gt;("{day}", "Monday")
+  /// };
+  /// string result = original.MultipleReplace(replacements);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is Monday.
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string MultipleReplace(this string @this, params KeyValuePair<string, object>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, object>>)replacements);
 
+  /// <summary>
+  /// Replaces multiple substrings in the current string instance with a single specified replacement value.
+  /// </summary>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacement">The string to replace all specified substrings with.</param>
+  /// <param name="toReplace">An array of strings that will be replaced by the <paramref name="replacement"/> value.</param>
+  /// <returns>A new string with all specified substrings replaced by the replacement value.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, world! Goodbye, world!";
+  /// string[] toReplace = { "world", "Goodbye" };
+  /// string result = original.MultipleReplace("everyone", toReplace);
+  /// Console.WriteLine(result); // Output: Hello, everyone! everyone, everyone!
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string MultipleReplace(this string @this, string replacement, params string[] toReplace) => MultipleReplace(@this, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
+  public static string MultipleReplace(this string @this, string replacement, string[] toReplace) {
+    Against.ArgumentIsNull(toReplace);
+
+    return MultipleReplace(@this, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)));
+  }
 
   /// <summary>
-  ///   Replaces multiple contents.
+  /// Replaces multiple substrings in the current string instance with a single specified replacement value, including two initial specified substrings.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="replacements">The replacements.</param>
-  /// <returns>A new string containing all parts replaced.</returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacement">The string to replace all specified substrings with.</param>
+  /// <param name="needle1">The first substring to be replaced by the <paramref name="replacement"/> value.</param>
+  /// <param name="needle2">The second substring to be replaced by the <paramref name="replacement"/> value.</param>
+  /// <param name="toReplace">An array of additional strings that will be replaced by the <paramref name="replacement"/> value.</param>
+  /// <returns>A new string with all specified substrings replaced by the replacement value.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, world! Goodbye, world!";
+  /// string result = original.MultipleReplace("everyone", "world", "Goodbye");
+  /// Console.WriteLine(result); // Output: Hello, everyone! everyone, everyone!
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string MultipleReplace(this string @this, string replacement, string needle1, string needle2, params string[] toReplace) => MultipleReplace(@this, toReplace.Select(s => new KeyValuePair<string, string>(s, replacement)).Prepend(new KeyValuePair<string, string>(needle1, replacement)).Prepend(new KeyValuePair<string, string>(needle2, replacement)));
+
+  /// <summary>
+  /// Replaces multiple substrings in the current string instance with their corresponding replacement values.
+  /// </summary>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacements">An array of <see cref="System.Collections.Generic.KeyValuePair{string, string}"/> where the key is the substring to be replaced and the value is the replacement string.</param>
+  /// <returns>A new string with all specified replacements made.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, {name}! Today is {day}.";
+  /// var replacements = new KeyValuePair&lt;string, string&gt;[]
+  /// {
+  ///     new KeyValuePair&lt;string, string&gt;("{name}", "Alice"),
+  ///     new KeyValuePair&lt;string, string&gt;("{day}", "Monday")
+  /// };
+  /// string result = original.MultipleReplace(replacements);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is Monday.
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string MultipleReplace(this string @this, params KeyValuePair<string, string>[] replacements) => MultipleReplace(@this, (IEnumerable<KeyValuePair<string, string>>)replacements);
 
   /// <summary>
-  ///   Replaces multiple contents.
+  /// Replaces multiple substrings in the current string instance with their corresponding replacement values.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="replacements">The replacements.</param>
-  /// <returns>A new string containing all parts replaced.</returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacements">An enumerable collection of <see cref="KeyValuePair{string, string}"/> where the key is the substring to be replaced and the value is the replacement string.</param>
+  /// <returns>A new string with all specified replacements made.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, {name}! Today is {day}.";
+  /// var replacements = new List&lt;KeyValuePair&lt;string, string&gt;&gt;
+  /// {
+  ///     new KeyValuePair&lt;string, string&gt;("{name}", "Alice"),
+  ///     new KeyValuePair&lt;string, string&gt;("{day}", "Monday")
+  /// };
+  /// string result = original.MultipleReplace(replacements);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is Monday.
+  /// </code>
+  /// </example>
   public static string MultipleReplace(this string @this, IEnumerable<KeyValuePair<string, string>> replacements) => MultipleReplace(@this, replacements?.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value)));
 
   /// <summary>
-  ///   Replaces multiple contents.
+  /// Replaces multiple substrings in the current string instance with their corresponding replacement values.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="replacements">The replacements.</param>
-  /// <returns>A new string containing all parts replaced.</returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="replacements">An enumerable collection of <see cref="System.Collections.Generic.KeyValuePair{string, object}"/> where the key is the substring to be replaced and the value is the replacement object.</param>
+  /// <returns>A new string with all specified replacements made.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, {name}! Today is {day}.";
+  /// var replacements = new List&lt;KeyValuePair&lt;string, object&gt;&gt;
+  /// {
+  ///     new KeyValuePair&lt;string, object&gt;("{name}", "Alice"),
+  ///     new KeyValuePair&lt;string, object&gt;("{day}", "Monday")
+  /// };
+  /// string result = original.MultipleReplace(replacements);
+  /// Console.WriteLine(result); // Output: Hello, Alice! Today is Monday.
+  /// </code>
+  /// </example>
   public static string MultipleReplace(this string @this, IEnumerable<KeyValuePair<string, object>> replacements) {
-    if (string.IsNullOrEmpty(@this) || replacements == null)
+    if (@this.IsNullOrEmpty() || replacements == null)
       return @this;
-
+    
     var list = replacements.OrderByDescending(kvp => kvp.Key.Length).ToArray();
     var length = @this.Length;
     StringBuilder result = new(length);
@@ -859,13 +1055,20 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Replaces using a regular expression.
+  /// Replaces all occurrences of the specified regular expression pattern in the current string instance with the specified replacement string.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="regex">The regex.</param>
-  /// <param name="newValue">The replacement.</param>
-  /// <param name="regexOptions">The regex options.</param>
-  /// <returns>A string with the replacements.</returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="regex">The regular expression pattern to match in the input string.</param>
+  /// <param name="newValue">(Optional: defaults to <see langword="null"/>) The replacement string. If <see langword="null"/>, the matched substrings are replaced with an empty string.</param>
+  /// <param name="regexOptions">(Optional: defaults to <see cref="System.Text.RegularExpressions.RegexOptions.None"/>) A bitwise combination of the enumeration values that provide options for matching.</param>
+  /// <returns>A new string with all occurrences of the specified regular expression pattern replaced by the <paramref name="newValue"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, world! Welcome to the world of programming.";
+  /// string result = original.ReplaceRegex(@"\bworld\b", "universe");
+  /// Console.WriteLine(result); // Output: Hello, universe! Welcome to the universe of programming.
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ReplaceRegex(this string @this, string regex, string newValue = null, RegexOptions regexOptions = RegexOptions.None) {
     Against.ThisIsNull(@this);
@@ -875,14 +1078,20 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Replaces using a regular expression.
+  /// Replaces all occurrences of the specified regular expression pattern in the current string instance with the specified replacement string.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="regex">The regex.</param>
-  /// <param name="newValue">The replacement.</param>
-  /// <returns>
-  ///   A string with the replacements.
-  /// </returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="regex">The regular expression to match in the input string.</param>
+  /// <param name="newValue">The replacement string.</param>
+  /// <returns>A new string with all occurrences of the specified regular expression pattern replaced by the <paramref name="newValue"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, world! Welcome to the world of programming.";
+  /// Regex regex = new Regex(@"\bworld\b");
+  /// string result = original.Replace(regex, "universe");
+  /// Console.WriteLine(result); // Output: Hello, universe! Welcome to the universe of programming.
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Replace(this string @this, Regex regex, string newValue) {
     Against.ThisIsNull(@this);
@@ -892,14 +1101,21 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Replaces in a string but only n number of times.
+  /// Replaces a specified number of occurrences of a specified string in the current string instance with another specified string, using the specified comparison rules.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="oldValue">What to replace.</param>
-  /// <param name="newValue">The replacement.</param>
-  /// <param name="count">The number of times this gets replaced.</param>
-  /// <param name="comparison">The comparison mode; defaults to CurrentCulture.</param>
-  /// <returns></returns>
+  /// <param name="this">The original string on which the replacements will be made.</param>
+  /// <param name="oldValue">The string to be replaced.</param>
+  /// <param name="newValue">The string to replace all occurrences of <paramref name="oldValue"/>.</param>
+  /// <param name="count">The maximum number of occurrences to replace.</param>
+  /// <param name="comparison">(Optional: defaults to <see cref="StringComparison.CurrentCulture"/>) The comparison rules to use when matching the <paramref name="oldValue"/>.</param>
+  /// <returns>A new string with the specified number of occurrences of the <paramref name="oldValue"/> replaced by the <paramref name="newValue"/>.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, world! Welcome to the world of programming.";
+  /// string result = original.Replace("world", "universe", 1, StringComparison.OrdinalIgnoreCase);
+  /// Console.WriteLine(result); // Output: Hello, universe! Welcome to the world of programming.
+  /// </code>
+  /// </example>
   public static string Replace(this string @this, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
     Against.UnknownEnumValues(comparison);
 
@@ -934,13 +1150,18 @@ public static partial class StringExtensions {
   #region Upper/Lower
 
   /// <summary>
-  ///   Uppers the first char in a string.
+  /// Converts the first character of the current string instance to uppercase, using the specified culture.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="culture"></param>
-  /// <returns>
-  ///   A string where the first char was capitalized.
-  /// </returns>
+  /// <param name="this">The original string whose first character will be converted to uppercase.</param>
+  /// <param name="culture">(Optional: defaults to <see langword="null"/>) The culture-specific formatting information to use. If <see langword="null"/>, the current culture is used.</param>
+  /// <returns>A new string with the first character converted to uppercase. If the string is empty, the original string is returned.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "hello, world!";
+  /// string result = original.UpperFirst();
+  /// Console.WriteLine(result); // Output: Hello, world!
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string UpperFirst(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
@@ -969,12 +1190,17 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Uppers the first char in a string.
+  /// Converts the first character of the current string instance to uppercase, using the invariant culture.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <returns>
-  ///   A string where the first char was capitalized.
-  /// </returns>
+  /// <param name="this">The original string whose first character will be converted to uppercase.</param>
+  /// <returns>A new string with the first character converted to uppercase. If the string is empty, the original string is returned.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "hello, world!";
+  /// string result = original.UpperFirstInvariant();
+  /// Console.WriteLine(result); // Output: Hello, world!
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string UpperFirstInvariant(this string @this) {
     Against.ThisIsNull(@this);
@@ -1003,13 +1229,18 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Lowers the first char in a string.
+  /// Converts the first character of the current string instance to lowercase, using the specified culture.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="culture">The culture.</param>
-  /// <returns>
-  ///   A string where the first char was capitalized.
-  /// </returns>
+  /// <param name="this">The original string whose first character will be converted to lowercase.</param>
+  /// <param name="culture">(Optional: defaults to <see langword="null"/>) The culture-specific formatting information to use. If <see langword="null"/>, the current culture is used.</param>
+  /// <returns>A new string with the first character converted to lowercase. If the string is empty, the original string is returned.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, World!";
+  /// string result = original.LowerFirst();
+  /// Console.WriteLine(result); // Output: hello, World!
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string LowerFirst(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
@@ -1038,12 +1269,17 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Lowers the first char in a string.
+  /// Converts the first character of the current string instance to lowercase, using the invariant culture.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <returns>
-  ///   A string where the first char was capitalized.
-  /// </returns>
+  /// <param name="this">The original string whose first character will be converted to lowercase.</param>
+  /// <returns>A new string with the first character converted to lowercase. If the string is empty, the original string is returned.</returns>
+  /// <example>
+  /// <code>
+  /// string original = "Hello, World!";
+  /// string result = original.LowerFirstInvariant();
+  /// Console.WriteLine(result); // Output: hello, World!
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string LowerFirstInvariant(this string @this) {
     Against.ThisIsNull(@this);
