@@ -21,12 +21,11 @@ namespace System.Windows.Forms;
 
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewCellDisplayTextAttribute(string propertyName) : Attribute {
-  private string PropertyName { get; } = propertyName;
 
   private string _GetDisplayText(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty, string.Empty);
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, propertyName, string.Empty, string.Empty, string.Empty, string.Empty);
 
-  public static void OnCellFormatting(
+  internal static void OnCellFormatting(
     DataGridViewCellDisplayTextAttribute @this,
     DataGridViewRow row,
     DataGridViewColumn column,
