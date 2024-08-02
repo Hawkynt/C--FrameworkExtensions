@@ -24,6 +24,24 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class ImageListExtensions {
+
+  /// <summary>
+  /// Saves all images in the <see cref="System.Windows.Forms.ImageList"/> to the specified directory.
+  /// </summary>
+  /// <param name="this">The <see cref="System.Windows.Forms.ImageList"/> instance.</param>
+  /// <param name="directoryName">The name of the directory where the images will be saved.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// ImageList imageList = new ImageList();
+  /// imageList.Images.Add(Image.FromFile("path/to/image1.png"));
+  /// imageList.Images.Add(Image.FromFile("path/to/image2.png"));
+  /// 
+  /// string directoryName = "C:\\Images";
+  /// imageList.SaveToDirectory(directoryName);
+  /// // All images in the imageList are now saved to the specified directory.
+  /// </code>
+  /// </example>
   public static void SaveToDirectory(this ImageList @this, string directoryName) {
     Against.ThisIsNull(@this);
 
@@ -32,5 +50,23 @@ public static partial class ImageListExtensions {
       image.Item2.Save(Path.Combine(directoryName, image.Item3 + ".png"));
   }
 
+  /// <summary>
+  /// Saves all images in the <see cref="System.Windows.Forms.ImageList"/> to the specified directory.
+  /// </summary>
+  /// <param name="this">The <see cref="System.Windows.Forms.ImageList"/> instance.</param>
+  /// <param name="directory">The directory where the images will be saved.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// ImageList imageList = new ImageList();
+  /// imageList.Images.Add(Image.FromFile("path/to/image1.png"));
+  /// imageList.Images.Add(Image.FromFile("path/to/image2.png"));
+  /// 
+  /// DirectoryInfo directory = new DirectoryInfo("C:\\Images");
+  /// imageList.SaveToDirectory(directory);
+  /// // All images in the imageList are now saved to the specified directory.
+  /// </code>
+  /// </example>
   public static void SaveToDirectory(this ImageList @this, DirectoryInfo directory) => SaveToDirectory(@this, directory.FullName);
+
 }

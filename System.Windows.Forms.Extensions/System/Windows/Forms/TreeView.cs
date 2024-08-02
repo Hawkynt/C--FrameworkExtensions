@@ -29,12 +29,28 @@ public static partial class TreeViewExtensions {
   private static readonly Dictionary<TreeView, DragDropInstance> _SUBSCRIBED_TREEVIEWS = new();
 
   /// <summary>
-  ///   Enables the drag and drop functionality of a treeview.
+  /// Enables the drag-and-drop functionality of a <see cref="System.Windows.Forms.TreeView"/>.
   /// </summary>
-  /// <param name="this">This TreeView.</param>
-  /// <param name="folderSelector">The function to determine if a given node will be threatened as a folder.</param>
-  /// <param name="allowRootNodeDragging">if set to <c>true</c> [allow root node dragging].</param>
-  /// <param name="onNodeMove">The action to invoke when a node is moved.</param>
+  /// <param name="this">The <see cref="System.Windows.Forms.TreeView"/> instance.</param>
+  /// <param name="folderSelector">(Optional: defaults to <see langword="null"/>) The function to determine if a given node will be treated as a folder.</param>
+  /// <param name="allowRootNodeDragging">(Optional: defaults to <c>true</c>) If set to <c>true</c>, allows root node dragging.</param>
+  /// <param name="onNodeMove">(Optional: defaults to <see langword="null"/>) The action to invoke when a node is moved.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TreeView treeView = new TreeView();
+  ///
+  /// treeView.EnabledDragAndDrop(
+  ///     folderSelector: node => node.Text.StartsWith("Folder"),
+  ///     allowRootNodeDragging: false,
+  ///     onNodeMove: (movedNode, newParent, index) =>
+  ///     {
+  ///         Console.WriteLine($"Node '{movedNode.Text}' moved to '{newParent?.Text ?? "root"}' at index {index}.");
+  ///     });
+  /// 
+  /// // Assuming you have a TreeView with nodes and want to enable drag-and-drop functionality
+  /// </code>
+  /// </example>
   public static void EnabledDragAndDrop(this TreeView @this, Predicate<TreeNode> folderSelector = null, bool allowRootNodeDragging = true, Action<TreeNode, TreeNode, int> onNodeMove = null) {
     Against.ThisIsNull(@this);
 
@@ -49,7 +65,7 @@ public static partial class TreeViewExtensions {
 
     return;
 
-    static void OnDisposing(object sender, EventArgs ea) {
+    static void OnDisposing(object sender, EventArgs _) {
       if (sender is not TreeView treeView)
         return;
 
