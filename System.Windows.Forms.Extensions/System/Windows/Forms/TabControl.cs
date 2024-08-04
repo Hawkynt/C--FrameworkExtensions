@@ -26,6 +26,24 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class TabControlExtensions {
+
+  /// <summary>
+  /// Adds an <see cref="Image"/> to the <see cref="TabControl"/>'s <see cref="ImageList"/> and handles animation if the image is animated.
+  /// </summary>
+  /// <param name="this">This <see cref="TabControl"/> instance.</param>
+  /// <param name="image">The <see cref="Image"/> to add.</param>
+  /// <param name="key">The key to associate with the <see cref="Image"/>.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="image"/> or <paramref name="key"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentException">Thrown if <paramref name="key"/> is an empty string.</exception>
+  /// <example>
+  /// <code>
+  /// TabControl tabControl = new TabControl();
+  /// Image image = Image.FromFile("path_to_image");
+  /// tabControl.AddImageToImageList(image, "myImageKey");
+  /// // The image is now added to the TabControl's ImageList with the specified key.
+  /// </code>
+  /// </example>
   public static void AddImageToImageList(this TabControl @this, Image image, string key) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(image);
@@ -94,11 +112,22 @@ public static partial class TabControlExtensions {
   private static readonly Dictionary<TabControl, Dictionary<TabPage, Color>> _MANAGED_TABCONTROLS = [];
 
   /// <summary>
-  ///   Sets the color of the tab header.
+  /// Sets the header color of the specified <see cref="TabPage"/> in the <see cref="TabControl"/>.
   /// </summary>
-  /// <param name="this">This TabControl.</param>
-  /// <param name="page">The page.</param>
-  /// <param name="color">The color.</param>
+  /// <param name="this">This <see cref="TabControl"/> instance.</param>
+  /// <param name="page">The <see cref="TabPage"/> whose header color is to be set.</param>
+  /// <param name="color">(Optional: defaults to <see langword="null"/>) The color to set for the tab header. If <see langword="null"/>, the default header color is used.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="page"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TabControl tabControl = new TabControl();
+  /// TabPage tabPage = new TabPage("Tab 1");
+  /// tabControl.TabPages.Add(tabPage);
+  /// tabControl.SetTabHeaderColor(tabPage, Color.Red);
+  /// // The tab header of "Tab 1" is now set to red.
+  /// </code>
+  /// </example>
   public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(page);
@@ -197,4 +226,5 @@ public static partial class TabControlExtensions {
   }
 
   #endregion
+
 }

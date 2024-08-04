@@ -22,51 +22,88 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class ProgressBarExtensions {
-  /// <summary>
-  ///   Sets the progress bar percentage.
-  /// </summary>
-  /// <param name="This">This ProgressBar.</param>
-  /// <param name="percentage">The percentage to set.</param>
-  public static void SetPercent(this ProgressBar This, double percentage) {
-    Against.ThisIsNull(This);
 
-    This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(percentage, 0), 100) * 0.01d);
+  /// <summary>
+  /// Sets the value of the <see cref="ProgressBar"/> to the specified percentage.
+  /// </summary>
+  /// <param name="this">This <see cref="ProgressBar"/> instance.</param>
+  /// <param name="percentage">The percentage to set the progress bar value to, where 0.0 represents 0% and 100.0 represents 100%.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="percentage"/> is less than 0.0 or greater than 100.0.</exception>
+  /// <example>
+  /// <code>
+  /// ProgressBar progressBar = new ProgressBar();
+  /// progressBar.SetPercent(75.0);
+  /// // The progress bar is now set to 75%.
+  /// </code>
+  /// </example>
+  public static void SetPercent(this ProgressBar @this, double percentage) {
+    Against.ThisIsNull(@this);
+
+    @this.Value = (int)(@this.Minimum + (@this.Maximum - @this.Minimum) * Math.Min(Math.Max(percentage, 0), 100) * 0.01d);
   }
 
   /// <summary>
-  ///   Sets the progress bar value.
+  /// Sets the value of the <see cref="ProgressBar"/> to the specified normalized value.
   /// </summary>
-  /// <param name="This">This ProgressBar.</param>
-  /// <param name="value">The normalized value to set (0&lt;x&lt;1).</param>
-  public static void SetNormalizedValue(this ProgressBar This, double value) {
-    Against.ThisIsNull(This);
+  /// <param name="this">This <see cref="ProgressBar"/> instance.</param>
+  /// <param name="value">The normalized value to set, where 0.0 represents the minimum value and 1.0 represents the maximum value.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is less than 0.0 or greater than 1.0.</exception>
+  /// <example>
+  /// <code>
+  /// ProgressBar progressBar = new ProgressBar();
+  /// progressBar.SetNormalizedValue(0.75);
+  /// // The progress bar is now set to 75% of its range.
+  /// </code>
+  /// </example>
+  public static void SetNormalizedValue(this ProgressBar @this, double value) {
+    Against.ThisIsNull(@this);
 
-    This.Value = (int)(This.Minimum + (This.Maximum - This.Minimum) * Math.Min(Math.Max(value, 0), 1));
+    @this.Value = (int)(@this.Minimum + (@this.Maximum - @this.Minimum) * Math.Min(Math.Max(value, 0), 1));
   }
 
   /// <summary>
-  ///   Sets the progress bar according to current and max, without changing it's minimum and maximum values.
+  /// Sets the value of the <see cref="ProgressBar"/> based on the specified current and maximum values.
   /// </summary>
-  /// <param name="This">This ProgressBar.</param>
-  /// <param name="current">The current value.</param>
-  /// <param name="max">The maximum value to assume.</param>
-  public static void SetValue(this ProgressBar This, double current, double max) {
-    Against.ThisIsNull(This);
+  /// <param name="this">This <see cref="ProgressBar"/> instance.</param>
+  /// <param name="current">The current value to set.</param>
+  /// <param name="max">The maximum value to set.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="current"/> is less than 0.0 or greater than <paramref name="max"/>.</exception>
+  /// <example>
+  /// <code>
+  /// ProgressBar progressBar = new ProgressBar();
+  /// progressBar.SetValue(30.0, 100.0);
+  /// // The progress bar is now set to 30% of its range.
+  /// </code>
+  /// </example>
+  public static void SetValue(this ProgressBar @this, double current, double max) {
+    Against.ThisIsNull(@this);
 
-    This.SetPercent(max == 0 ? 0 : current / max * 100);
+    @this.SetPercent(max == 0 ? 0 : current / max * 100);
   }
 
   /// <summary>
-  ///   Sets the progress bar according to current, min and max, without changing it's minimum and maximum values.
+  /// Sets the value of the <see cref="ProgressBar"/> based on the specified current, minimum, and maximum values.
   /// </summary>
-  /// <param name="This">This ProgressBar.</param>
-  /// <param name="current">The current value.</param>
-  /// <param name="min">The minimum value to assume.</param>
-  /// <param name="max">The maximum value to assume.</param>
-  public static void SetValue(this ProgressBar This, double current, double min, double max) {
-    Against.ThisIsNull(This);
+  /// <param name="this">This <see cref="ProgressBar"/> instance.</param>
+  /// <param name="current">The current value to set.</param>
+  /// <param name="min">The minimum value of the range.</param>
+  /// <param name="max">The maximum value of the range.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="current"/> is less than <paramref name="min"/> or greater than <paramref name="max"/>.</exception>
+  /// <example>
+  /// <code>
+  /// ProgressBar progressBar = new ProgressBar();
+  /// progressBar.SetValue(30.0, 0.0, 100.0);
+  /// // The progress bar is now set to 30% of its range.
+  /// </code>
+  /// </example>
+  public static void SetValue(this ProgressBar @this, double current, double min, double max) {
+    Against.ThisIsNull(@this);
 
     var newMax = max - min;
-    This.SetPercent(newMax == 0 ? 0 : (current - min) / newMax * 100);
+    @this.SetPercent(newMax == 0 ? 0 : (current - min) / newMax * 100);
   }
 }

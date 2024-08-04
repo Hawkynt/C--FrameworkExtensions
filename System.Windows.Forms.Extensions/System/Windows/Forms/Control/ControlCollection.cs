@@ -22,13 +22,30 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class ControlCollectionExtensions {
+
+  /// <summary>
+  /// Converts the <see cref="Control.ControlCollection"/> to an array of controls.
+  /// </summary>
+  /// <param name="this">This <see cref="Control.ControlCollection"/> instance.</param>
+  /// <returns>An array of <see cref="Control"/> elements.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Form form = new Form();
+  /// form.Controls.Add(new Button());
+  /// form.Controls.Add(new TextBox());
+  /// Control[] controls = form.Controls.ToArray();
+  /// Console.WriteLine($"Number of controls: {controls.Length}");
+  /// // Output: Number of controls: 2
+  /// </code>
+  /// </example>
   public static Control[] ToArray(this Control.ControlCollection @this) {
     Against.ThisIsNull(@this);
 
     var result = new Control[@this.Count];
-    for (var i = 0; i < result.Length; ++i)
-      result[i] = @this[i];
-
+    @this.CopyTo(result, 0);
+    
     return result;
   }
+
 }

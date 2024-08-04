@@ -24,6 +24,7 @@ namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
   public static partial class SyntaxHighlightPattern {
+
     private readonly struct Pattern(Regex regularExpression, ISyntaxStyle style, IReadOnlyDictionary<string, ISyntaxStyle> groupStyles = null)
       : ISyntaxHighlightPattern {
       #region Implementation of ISyntaxHighlightPattern
@@ -34,5 +35,6 @@ public static partial class RichTextBoxExtensions {
 
       #endregion
     }
+
   }
 }

@@ -26,6 +26,7 @@ using Guard;
 namespace System.Windows.Controls;
 
 public static partial class TextBoxExtensions {
+
   /// <summary>
   ///   Saves the caret position and restores it upon object disposal.
   /// </summary>
@@ -45,9 +46,18 @@ public static partial class TextBoxExtensions {
   public static Point GetCaretPosition() => NativeMethods.GetCaretPos();
 
   /// <summary>
-  ///   Moves the cursor to end of the text.
+  /// Moves the cursor to the end of the text in the <see cref="TextBox"/>.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.Text = "Hello, World!";
+  /// textBox.MoveCursorToEnd();
+  /// // The cursor is now at the end of the text.
+  /// </code>
+  /// </example>
   public static void MoveCursorToEnd(this TextBox @this) {
     Against.ThisIsNull(@this);
 
@@ -56,11 +66,22 @@ public static partial class TextBoxExtensions {
   }
 
   /// <summary>
-  ///   Tries to parse the content into an int.
+  /// Tries to parse the text of the <see cref="TextBox"/> as an integer.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="value">The value.</param>
-  /// <returns><c>true</c> on success; otherwise, <c>false</c>.</returns>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <param name="value">The parsed integer value if the parsing is successful; otherwise, the original value.</param>
+  /// <returns><see langword="true"/> if the parsing is successful; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.Text = "123";
+  /// int result = 0;
+  /// bool success = textBox.TryParseInt(ref result);
+  /// Console.WriteLine($"Success: {success}, Result: {result}");
+  /// // Output: Success: True, Result: 123
+  /// </code>
+  /// </example>
   public static bool TryParseInt(this TextBox @this, ref int value) {
     Against.ThisIsNull(@this);
 
@@ -76,15 +97,24 @@ public static partial class TextBoxExtensions {
   }
 
   /// <summary>
-  ///   Tries to parse the content into an int.
+  /// Tries to parse the text of the <see cref="TextBox"/> as an integer using the specified style and format provider.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="style">The style.</param>
-  /// <param name="provider">The format provider.</param>
-  /// <param name="value">The value.</param>
-  /// <returns>
-  ///   <c>true</c> on success; otherwise, <c>false</c>.
-  /// </returns>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <param name="style">A bitwise combination of enumeration values that indicates the permitted format of the input string.</param>
+  /// <param name="provider">An object that supplies culture-specific formatting information.</param>
+  /// <param name="value">The parsed integer value if the parsing is successful; otherwise, the original value.</param>
+  /// <returns><see langword="true"/> if the parsing is successful; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.Text = "123";
+  /// int result = 0;
+  /// bool success = textBox.TryParseInt(NumberStyles.Integer, CultureInfo.InvariantCulture, ref result);
+  /// Console.WriteLine($"Success: {success}, Result: {result}");
+  /// // Output: Success: True, Result: 123
+  /// </code>
+  /// </example>
   public static bool TryParseInt(this TextBox @this, NumberStyles style, IFormatProvider provider, ref int value) {
     Against.ThisIsNull(@this);
 
@@ -98,4 +128,5 @@ public static partial class TextBoxExtensions {
     value = temp;
     return true;
   }
+
 }
