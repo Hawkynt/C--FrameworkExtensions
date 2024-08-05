@@ -58,7 +58,7 @@ namespace System.Windows.Forms;
 ///     Increment = 1,
 ///     Minimum = 0,
 ///     Maximum = 100,
-///     ThousandsSeparator = true
+///     UseThousandsSeparator = true
 /// };
 /// dataGridView.Columns.Add(numericUpDownColumn);
 /// </code>
@@ -137,10 +137,10 @@ public partial class DataGridViewNumericUpDownColumn()
   [Category("Data")]
   [DefaultValue(DataGridViewNumericUpDownCell.DEFAULT_THOUSANDS_SEPARATOR)]
   [Description("Indicates whether the thousands separator will be inserted between every three decimal digits.")]
-  public bool ThousandsSeparator {
-    get => this.GetCellTemplateOrThrow<DataGridViewNumericUpDownCell>().ThousandsSeparator;
+  public bool UseThousandsSeparator {
+    get => this.GetCellTemplateOrThrow<DataGridViewNumericUpDownCell>().UseThousandsSeparator;
     set {
-      this.GetCellTemplateOrThrow<DataGridViewNumericUpDownCell>().ThousandsSeparator = value;
+      this.GetCellTemplateOrThrow<DataGridViewNumericUpDownCell>().UseThousandsSeparator = value;
       this.DataGridView.UpdateCells<DataGridViewNumericUpDownCell>(this.Index, (cell, row) => cell.SetThousandsSeparator(row, value));
     }
   }
@@ -170,10 +170,10 @@ public partial class DataGridViewNumericUpDownColumn()
     => !this.Minimum.Equals(DataGridViewNumericUpDownCell.DEFAULT_MINIMUM);
 
   /// <summary>
-  /// Indicates whether the Thousands property should be persisted.
+  /// Indicates whether the UseThousands property should be persisted.
   /// </summary>
   private bool ShouldSerializeThousandsSeparator()
-    => !this.ThousandsSeparator.Equals(DataGridViewNumericUpDownCell.DEFAULT_THOUSANDS_SEPARATOR);
+    => !this.UseThousandsSeparator.Equals(DataGridViewNumericUpDownCell.DEFAULT_THOUSANDS_SEPARATOR);
   
   /// <summary>
   ///   Returns a standard compact string representation of the column.

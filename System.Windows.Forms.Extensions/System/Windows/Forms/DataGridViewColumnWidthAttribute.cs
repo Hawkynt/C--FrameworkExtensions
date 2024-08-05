@@ -28,7 +28,7 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
   /// <summary>
   /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
   /// </summary>
-  /// <param name="characters">The width of the column in number of characters.</param>
+  /// <param name="characterCount">The width of the column in number of characters.</param>
   /// <example>
   /// <code>
   /// // Define a custom class for the data grid view rows
@@ -58,9 +58,9 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
   /// dataGridView.EnableExtendedAttributes();
   /// </code>
   /// </example>
-  public DataGridViewColumnWidthAttribute(char characters) {
-    this._characters = new('@', characters);
-    this._width = -1;
+  public DataGridViewColumnWidthAttribute(char characterCount) {
+    this._characters = new('@', characterCount);
+    this._widthInPixels = -1;
     this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
@@ -99,14 +99,14 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
   /// </example>
   public DataGridViewColumnWidthAttribute(string characters) {
     this._characters = characters;
-    this._width = -1;
+    this._widthInPixels = -1;
     this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
   /// <summary>
   /// Specifies the width of a column in a <see cref="System.Windows.Forms.DataGridView"/>.
   /// </summary>
-  /// <param name="width">The width of the column in pixels.</param>
+  /// <param name="widthInPixelsInPixels">The width of the column in pixels.</param>
   /// <example>
   /// <code>
   /// // Define a custom class for the data grid view rows
@@ -136,9 +136,9 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
   /// dataGridView.EnableExtendedAttributes();
   /// </code>
   /// </example>
-  public DataGridViewColumnWidthAttribute(int width) {
+  public DataGridViewColumnWidthAttribute(int widthInPixelsInPixels) {
     this._characters = null;
-    this._width = width;
+    this._widthInPixels = widthInPixelsInPixels;
     this._mode = DataGridViewAutoSizeColumnMode.None;
   }
 
@@ -178,11 +178,11 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
   public DataGridViewColumnWidthAttribute(DataGridViewAutoSizeColumnMode mode) {
     this._characters = null;
     this._mode = mode;
-    this._width = -1;
+    this._widthInPixels = -1;
   }
 
   private readonly DataGridViewAutoSizeColumnMode _mode;
-  private readonly int _width;
+  private readonly int _widthInPixels;
   private readonly string _characters;
 
   internal void ApplyTo(DataGridViewColumn column) {
@@ -198,9 +198,9 @@ public sealed class DataGridViewColumnWidthAttribute : Attribute {
       var width = TextRenderer.MeasureText(this._characters, font);
       column.MinimumWidth = width.Width;
       column.Width = width.Width;
-    } else if (this._width >= 0) {
-      column.MinimumWidth = this._width;
-      column.Width = this._width;
+    } else if (this._widthInPixels >= 0) {
+      column.MinimumWidth = this._widthInPixels;
+      column.Width = this._widthInPixels;
     }
   }
 

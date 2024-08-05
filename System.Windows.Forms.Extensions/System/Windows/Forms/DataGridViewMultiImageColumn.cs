@@ -19,7 +19,6 @@
 
 using System.Reflection;
 using System.Reflection.Emit;
-using static System.Windows.Forms.DataGridViewNumericUpDownColumn;
 
 namespace System.Windows.Forms;
 
@@ -36,7 +35,7 @@ public partial class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
   /// <summary>
   /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumn"/> class.
   /// </summary>
-  /// <param name="imageSize">The size of the images displayed in the column cells.</param>
+  /// <param name="imageSizeInPixels">The size of the images displayed in the column cells.</param>
   /// <param name="padding">The padding around the images within the cells.</param>
   /// <param name="margin">The margin around the cells.</param>
   /// <param name="onClickMethodName">The name of the method to call when an image is clicked.</param>
@@ -92,7 +91,7 @@ public partial class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
   /// </code>
   /// </example>
   public DataGridViewMultiImageColumn(
-  int imageSize,
+    int imageSizeInPixels,
     Padding padding,
     Padding margin,
     string onClickMethodName,
@@ -101,7 +100,7 @@ public partial class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
     this._onClickMethodName = onClickMethodName;
     this._toolTipTextProviderMethodName = toolTipTextProviderMethodName;
 
-    var cell = new DataGridViewMultiImageCell { ImageSize = imageSize, Padding = padding, Margin = margin, };
+    var cell = new DataGridViewMultiImageCell { ImageSize = imageSizeInPixels, Padding = padding, Margin = margin, };
 
     // ReSharper disable once VirtualMemberCallInConstructor
     this.CellTemplate = cell;

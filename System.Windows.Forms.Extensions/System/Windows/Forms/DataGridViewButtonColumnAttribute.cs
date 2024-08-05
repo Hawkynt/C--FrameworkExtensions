@@ -23,7 +23,7 @@ namespace System.Windows.Forms;
 ///   Allows specifying a <see cref="string"/> or <see cref="Drawing.Image"/> property to be used as a button column.
 /// </summary>
 /// <param name="onClickMethodName">The target method name to call upon click.</param>
-/// <param name="isEnabledWhen">The boolean property which enables or disables the button.</param>
+/// <param name="isEnabledWhenPropertyName">The boolean property which enables or disables the button.</param>
 /// <example>
 /// <code>
 /// // Define a custom type for the data grid view rows
@@ -62,7 +62,7 @@ namespace System.Windows.Forms;
 /// using a custom `DataRow` class. The button column's click event is handled by a method specified in the attribute, and the button's enabled state is controlled by a boolean property.
 /// </example>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class DataGridViewButtonColumnAttribute(string onClickMethodName, string isEnabledWhen = null) : Attribute {
+public sealed class DataGridViewButtonColumnAttribute(string onClickMethodName, string isEnabledWhenPropertyName = null) : Attribute {
 
   /// <summary>
   ///   Executes the callback with the given object instance.
@@ -74,7 +74,7 @@ public sealed class DataGridViewButtonColumnAttribute(string onClickMethodName, 
   }
 
   internal bool IsEnabled(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(row, isEnabledWhen, false, true, false, false)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, isEnabledWhenPropertyName, false, true, false, false)
     ;
 
 }

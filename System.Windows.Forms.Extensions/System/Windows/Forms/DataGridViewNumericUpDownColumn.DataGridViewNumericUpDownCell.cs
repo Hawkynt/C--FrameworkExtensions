@@ -67,7 +67,7 @@ public partial class DataGridViewNumericUpDownColumn {
     private decimal _increment; // Caches the value of the Increment property
     private decimal _minimum; // Caches the value of the Minimum property
     private decimal _maximum; // Caches the value of the Maximum property
-    private bool _thousandsSeparator; // Caches the value of the ThousandsSeparator property
+    private bool _useThousandsSeparator; // Caches the value of the ThousandsSeparator property
 
     /// <summary>
     ///   Constructor for the DataGridViewNumericUpDownCell cell type
@@ -92,7 +92,7 @@ public partial class DataGridViewNumericUpDownColumn {
       this._increment = DEFAULT_INCREMENT;
       this._minimum = DEFAULT_MINIMUM;
       this._maximum = DEFAULT_MAXIMUM;
-      this._thousandsSeparator = DEFAULT_THOUSANDS_SEPARATOR;
+      this._useThousandsSeparator = DEFAULT_THOUSANDS_SEPARATOR;
     }
 
     /// <summary>
@@ -177,10 +177,10 @@ public partial class DataGridViewNumericUpDownColumn {
     ///   The ThousandsSeparator property replicates the one from the NumericUpDown control
     /// </summary>
     [DefaultValue(DEFAULT_THOUSANDS_SEPARATOR)]
-    public bool ThousandsSeparator {
-      get => this._thousandsSeparator;
+    public bool UseThousandsSeparator {
+      get => this._useThousandsSeparator;
       set {
-        if (this._thousandsSeparator == value)
+        if (this._useThousandsSeparator == value)
           return;
 
         this.SetThousandsSeparator(this.RowIndex, value);
@@ -203,7 +203,7 @@ public partial class DataGridViewNumericUpDownColumn {
       result.Increment = this.Increment;
       result.Maximum = this.Maximum;
       result.Minimum = this.Minimum;
-      result.ThousandsSeparator = this.ThousandsSeparator;
+      result.UseThousandsSeparator = this.UseThousandsSeparator;
       return result;
     }
 
@@ -314,7 +314,7 @@ public partial class DataGridViewNumericUpDownColumn {
         return formattedValue;
 
       var unformattedDecimal = Convert.ToDecimal(value);
-      return unformattedDecimal.ToString((this.ThousandsSeparator ? "N" : "F") + this.DecimalPlaces);
+      return unformattedDecimal.ToString((this.UseThousandsSeparator ? "N" : "F") + this.DecimalPlaces);
     }
 
     /// <summary>
@@ -359,7 +359,7 @@ public partial class DataGridViewNumericUpDownColumn {
       numericUpDown.Increment = this.Increment;
       numericUpDown.Maximum = this.Maximum;
       numericUpDown.Minimum = this.Minimum;
-      numericUpDown.ThousandsSeparator = this.ThousandsSeparator;
+      numericUpDown.ThousandsSeparator = this.UseThousandsSeparator;
       numericUpDown.Text = initialFormattedValue as string ?? string.Empty;
     }
 
@@ -507,7 +507,7 @@ public partial class DataGridViewNumericUpDownColumn {
         // Set all the relevant properties
         numericUpDown.TextAlign = TranslateAlignment(cellStyle.Alignment);
         numericUpDown.DecimalPlaces = this.DecimalPlaces;
-        numericUpDown.ThousandsSeparator = this.ThousandsSeparator;
+        numericUpDown.ThousandsSeparator = this.UseThousandsSeparator;
         numericUpDown.Font = cellStyle.Font;
         numericUpDown.Width = valBounds.Width;
         numericUpDown.Height = valBounds.Height;
@@ -662,7 +662,7 @@ public partial class DataGridViewNumericUpDownColumn {
     /// invalidating each cell of the column individually. A row index needs to be provided as a parameter because
     /// this cell may be shared among multiple rows.
     public void SetThousandsSeparator(int rowIndex, bool value) {
-      this._thousandsSeparator = value;
+      this._useThousandsSeparator = value;
       if (this.OwnsEditingNumericUpDown(rowIndex))
         this.EditingNumericUpDown.ThousandsSeparator = value;
     }

@@ -11,55 +11,174 @@ This repository contains various C# extension methods and utilities for enhancin
 
 ## Control Extensions
 
-- **IsDesignMode**: Detects if a control is in design mode, useful for conditionally executing code only at runtime.
-- **ISuspendedLayoutToken**: Facilitates the suspension and resumption of layout logic on controls, improving performance during batch updates.
-- **ISuspendedRedrawToken**: Similar to `ISuspendedLayoutToken`, but suspends and resumes redraw operations to avoid flickering during updates.
+- **IsDesignMode**: Detects if a control is in design mode, useful for conditionally executing code only at runtime. (`Control.IsDesignMode`)
+- **ISuspendedLayoutToken**: Facilitates the suspension and resumption of layout logic on controls, improving performance during batch updates. (`Control.PauseLayout`)
+- **ISuspendedRedrawToken**: Similar to `ISuspendedLayoutToken`, but suspends and resumes redraw operations to avoid flickering during updates. (`Control.PauseRedraw`)
+- **Bindings**: Allow using Lambdas to add Bindings for easier Model-View-Controller architecture. (`Control.AddBinding`)
+- **UI-Threading**: Determine whether to use a controls' UI thread to execute code or not. (`Control.SafelyInvoke`/`Control.Async`)
 
 ## DataGridView Extensions
 
+### Info on used datatypes
+
+- **methodname**: The name of an instance or static method, utilize nameof()-operator
+- **propertyname**: The name of an instance or static property, utilize nameof()-operator
+- **colorstring**:
+  - hex between 0-F:
+    - #AARRGGBB
+    - #RRGGBB
+    - #ARGB
+    - #RGB
+  - decimal between 0-255:
+    - a, r, g, b
+    - r, g, b
+  - float between 0.0-1.0:
+    - a, r, g, b
+    - r, g, b
+  - known color name
+
 ### Column Types
 
-These extensions provide additional DataGridView column types, enhancing the functionality and interactivity of your grids:
+These extensions provide additional DataGridView column types, enhancing the functionality and interactivity of your grids.
 
 - **BoundComboBox**: A ComboBox column that supports data binding within cells.
-- **Button**: Adds a button to each cell in the column.
-- **Checkbox**: A column of checkboxes.
+  - DataSourcePropertyName: object propertyname
+  - EnabledWhenPropertyName: bool propertyname
+  - ValueMember: string propertyname
+  - DisplayMember: string propertyname
 - **DateTimePicker**: A DateTimePicker column for date selection.
 - **DisableButton**: A button column with disable functionality.
 - **ImageAndText**: A column that can display both images and text.
+  - Image: Image
+  - ImageSize: Size
 - **MultiImage**: Supports multiple images in a single cell.
+  - ImageSizeInPixels: int
+  - Padding: Padding
+  - Margin: Padding
+  - OnClickMethodName: void methodname(object, int)
+  - ToolTipTextProviderMethodName: string methodname(object, int)
 - **NumericUpDown**: A column with NumericUpDown control for numeric input.
+  - DecimalPlaces: int
+  - Increment: decimal
+  - Minimum: decimal
+  - Maximum: decimal
+  - UseThousandsSeparator: bool
 - **ProgressBar**: A column with a progress bar to visualize progress.
+  - Minimum: double
+  - Maximum: double
 
 ### Attributes
 
 #### Record-Based (Applies to Full Row)
 
 - **ConditionalRowHidden**: Conditionally hides rows based on specified criteria.
+  - IsHiddenWhen: bool propertyname
 - **FullMergedRow**: Merges multiple cells into a single cell spanning multiple columns.
+  - HeadingTextPropertyName: string propertyname
+  - ForeColor: colorstring
+  - TextSize: float
 - **RowHeight**: Sets the height of the rows.
+  - HeightInPixel: int
+  - RowHeightEnabledProperty: bool propertyname
+  - RowHeightProperty: int propertyname
 - **RowSelectable**: Specifies if the row can be selected.
+  - ConditionProperty: bool propertyname
 - **RowStyle**: Applies a specific style to the entire row.
+  - ForeColor: colorstring
+  - BackColor: colorstring
+  - Format: string
+  - ConditionalPropertyName: bool propertyname
+  - ForeColorPropertyName: Color? propertyname
+  - BackColorPropertyName: Color? propertyname
+  - IsBold: bool
+  - IsItalic: bool
+  - IsStrikeout: bool
+  - IsUnderline: bool
 
 #### Property-Based (Applies to Cell)
 
 - **ConditionalReadOnly**: Makes cells read-only based on specified conditions.
+  - IsReadOnlyWhen: bool propertyname
+- **SupportsConditionalImageAttribute**: Shows an image next to a cells' text based on specified conditions.
+  - ImagePropertyName: Image Image
+  - ConditionalPropertyName: bool propertyname
 - **CellDisplayText**: Sets the display text of a cell.
+  - PropertyName: string propertyname
 - **CellStyle**: Applies a specific style to a cell.
+  - ForeColor: colorstring
+  - BackColor: colorstring
+  - Format: string
+  - Alignment: DataGridViewContentAlignment
+  - WrapMode: DataGridViewTriState
+  - ConditionalPropertyName: bool propertyname
+  - ForeColorPropertyName: Color? propertyname
+  - BackColorPropertyName: Color? propertyname
+  - WrapModePropertyName: DataGridViewTriState propertyname
 - **CellToolTip**: Sets a tooltip for the cell.
+  - ToolTipText: string
+  - ToolTipTextPropertyName: string propertyname
+  - ConditionalPropertyName: bool propertyname
+  - Format: string
 - **Clickable**: Makes the cell clickable and defines click behavior.
+  - OnClickMethodName: void methodname()
+  - OnDoubleClickMethodName: void methodname()
 - **ColumnSortMode**: Sets the sort mode for the column.
+  - SortMode: DataGridViewColumnSortMode
 - **ColumnWidth**: Sets the width of the column.
+  - CharacterCount: char
+  - Characters: string
+  - WidthInPixelsInPixels: int
+  - Mode: DataGridViewAutoSizeColumnMode
 
 #### Property-based (applies to column type)
 
+- **ButtonColumn**: Generates a button column for the property.
+  - OnClickMethodName: void methodname()
+  - IsEnabledWhenPropertyName: bool propertyname
+- **CheckboxColumn**: Generates a checkbox column for the property.
 - **ComboboxColumn**: Generates a combobox column for the property.
+  - EnabledWhenPropertyName: bool propertyname
+  - DataSourcePropertyName: object propertyname
+  - ValueMember: string propertyname
+  - DisplayMember: string propertyname
 - **ImageColumn**: Generates an image column for the property.
+  - ImageListPropertyName: ImageList propertyname
+  - ToolTipTextPropertyName: string propertyname
+  - OnClickMethodName: void methodname()
+  - OnDoubleClickMethodName: void methodname()
 - **MultiImageColumn**: Generates a multi-image column for the property.
+  - OnClickMethodName: void methodname(object, int)
+  - ToolTipProviderMethodName: string methodname(object, int)
+  - MaximumImageSize: int
+  - PaddingLeft: int
+  - PaddingTop: int
+  - PaddingRight: int
+  - PaddingBottom: int
+  - MarginLeft: int
+  - MarginTop: int
+  - MarginRight: int
+  - MarginBottom: int
 - **NumericUpDownColumn**: Generates a numericupdown column for the property.
+  - Minimum: double
+  - Maximum: double
+  - Increment: double
+  - DecimalPlaces: int
 - **ProgressBarColumn**: Generates a progressbar column for the property.
+  - Minimum: double
+  - Maximum: double
 - **ImageAndTextColumn**: Generates a imageandtext column for the property.
+  - ImageListPropertyName: ImageList propertyname
+  - ImageKeyPropertyName: int/object propertyname
+  - ImagePropertyName: Image propertyname
+  - TextImageRelation: TextImageRelation
+  - FixedImageWidth: uint
+  - FixedImageHeight: uint
+  - KeepAspectRatio: bool
 
 ## RichTextBox Extensions
 
 - **Syntax Highlighting**: Adds syntax highlighting capabilities to RichTextBox controls, making it easier to implement features for code editors or similar applications.
+
+## TabControl Extensions
+
+- **Tab Headers**: Adds coloring and images to tab page headers.
