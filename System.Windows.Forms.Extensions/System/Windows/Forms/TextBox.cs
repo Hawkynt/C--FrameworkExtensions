@@ -24,11 +24,20 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class TextBoxExtensions {
+
   /// <summary>
-  ///   Appends the text and scrolls.
+  /// Appends text to the <see cref="TextBox"/> and scrolls to the end.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="text">The text.</param>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <param name="text">The text to append.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.AppendTextAndScroll("Hello, World!");
+  /// // The TextBox now contains the text "Hello, World!" and is scrolled to the end.
+  /// </code>
+  /// </example>
   public static void AppendTextAndScroll(this TextBox @this, string text) {
     Against.ThisIsNull(@this);
 
@@ -36,10 +45,19 @@ public static partial class TextBoxExtensions {
   }
 
   /// <summary>
-  ///   Keeps the last n lines in the textbox removing whatever is before.
+  /// Keeps only the last specified number of lines in the <see cref="TextBox"/>.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="count">The number of lines to keep.</param>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <param name="count">The maximum number of lines to keep. If fewer lines are present, all lines are kept.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.AppendText("Line 1\r\nLine 2\r\nLine 3\r\nLine 4\r\nLine 5");
+  /// textBox.KeepLastLines(3);
+  /// // The TextBox now contains only the last 3 lines: "Line 3", "Line 4", "Line 5"
+  /// </code>
+  /// </example>
   public static void KeepLastLines(this TextBox @this, uint count) {
     Against.ThisIsNull(@this);
 
@@ -50,10 +68,19 @@ public static partial class TextBoxExtensions {
   }
 
   /// <summary>
-  ///   Keeps the first n lines removing whatever is after them.
+  /// Keeps only the first specified number of lines in the <see cref="TextBox"/>.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="count">The number of lines to keep.</param>
+  /// <param name="this">This <see cref="TextBox"/> instance.</param>
+  /// <param name="count">The maximum number of lines to keep. If fewer lines are present, all lines are kept.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.AppendText("Line 1\r\nLine 2\r\nLine 3\r\nLine 4\r\nLine 5");
+  /// textBox.KeepFirstLines(3);
+  /// // The TextBox now contains only the first 3 lines: "Line 1", "Line 2", "Line 3"
+  /// </code>
+  /// </example>
   public static void KeepFirstLines(this TextBox @this, uint count) {
     Against.ThisIsNull(@this);
 
@@ -119,4 +146,5 @@ public static partial class TextBoxExtensions {
 
     return newTextBox;
   }
+
 }

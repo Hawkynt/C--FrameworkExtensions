@@ -23,9 +23,27 @@ using System.Text.RegularExpressions;
 namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
+
+  /// <summary>
+  /// Defines a pattern for syntax highlighting.
+  /// </summary>
   public interface ISyntaxHighlightPattern {
+
+    /// <summary>
+    /// Gets the regular expression used to match text for syntax highlighting.
+    /// </summary>
     Regex RegularExpression { get; }
+
+    /// <summary>
+    /// Gets the style to apply to the matched text.
+    /// </summary>
     ISyntaxStyle Style { get; }
+
+    /// <summary>
+    /// Gets a dictionary of styles to apply to specific groups within the matched text.
+    /// </summary>
     IReadOnlyDictionary<string, ISyntaxStyle> GroupStyles { get; }
+
   }
+
 }

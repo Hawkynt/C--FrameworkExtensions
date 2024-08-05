@@ -24,15 +24,34 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
+
+  /// <summary>
+  /// Represents the configuration for syntax highlighting.
+  /// </summary>
   public readonly struct SyntaxHighlightingConfiguration {
+
+    /// <summary>
+    /// Gets the array of syntax highlight patterns.
+    /// </summary>
     public ISyntaxHighlightPattern[] Patterns { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SyntaxHighlightingConfiguration"/> struct with the specified patterns.
+    /// </summary>
+    /// <param name="patterns">The collection of syntax highlight patterns.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="patterns"/> is <see langword="null"/>.</exception>
     public SyntaxHighlightingConfiguration(IEnumerable<ISyntaxHighlightPattern> patterns) {
       Against.ArgumentIsNull(patterns);
 
       this.Patterns = patterns.ToArray();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SyntaxHighlightingConfiguration"/> struct with the specified patterns.
+    /// </summary>
+    /// <param name="patterns">An array of syntax highlight patterns.</param>
     public SyntaxHighlightingConfiguration(params ISyntaxHighlightPattern[] patterns) => this.Patterns = patterns;
+
   }
+
 }

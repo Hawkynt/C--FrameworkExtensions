@@ -24,11 +24,25 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class TableLayoutPanelExtensions {
+
   /// <summary>
-  ///   Removes the given row from a TableLayoutPanel.
+  /// Removes the specified row from the <see cref="TableLayoutPanel"/>.
   /// </summary>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="row">The row.</param>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="row">The index of the row to remove.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="row"/> is outside the valid range of rows.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// tableLayoutPanel.RowCount = 3;
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0" }, 0, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1" }, 0, 1);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 2" }, 0, 2);
+  /// tableLayoutPanel.RemoveRow(1);
+  /// // The TableLayoutPanel now has two rows, with "Row 1" removed.
+  /// </code>
+  /// </example>
   public static void RemoveRow(this TableLayoutPanel @this, int row) {
     Against.ThisIsNull(@this);
 
@@ -64,14 +78,24 @@ public static partial class TableLayoutPanelExtensions {
   }
 
   /// <summary>
-  ///   Copies the last row of a This and all controls in it.
+  /// Copies the last row of the <see cref="TableLayoutPanel"/> and adds it as a new row at the end, duplicating all existing controls in it.
   /// </summary>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="controlCallback">The control callback if any, passing targetRow,targetColumn,sourceControl,targetControl.</param>
-  /// <param name="allowSuspendingLayout">
-  ///   if set to <c>true</c> allows suspending the This layout during this process to
-  ///   prevent flickering.
-  /// </param>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="controlCallback">(Optional: defaults to <see langword="null"/>) A callback that is invoked for each control in the copied row, with parameters for the column index, row index, the original control, and the new control.</param>
+  /// <param name="allowSuspendingLayout">(Optional: defaults to <see langword="true"/>) If set to <see langword="true"/>, suspends layout during the operation to avoid flickering.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// tableLayoutPanel.RowCount = 2;
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 0" }, 0, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 1" }, 1, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 0" }, 0, 1);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 1" }, 1, 1);
+  /// tableLayoutPanel.CopyLastRow((col, row, original, copy) => copy.Text = $"Copied from ({row}, {col})");
+  /// // The TableLayoutPanel now has three rows, with the last row copied.
+  /// </code>
+  /// </example>
   public static void CopyLastRow(this TableLayoutPanel @this, Action<int, int, Control, Control> controlCallback = null, bool allowSuspendingLayout = true) {
     Against.ThisIsNull(@this);
 
@@ -110,47 +134,81 @@ public static partial class TableLayoutPanelExtensions {
   }
 
   /// <summary>
-  ///   Copies the last row of a This and all controls in it.
+  /// Copies the last row of the <see cref="TableLayoutPanel"/> and adds it as a new row at the end, duplicating all existing controls in it.
   /// </summary>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="controlCallback">The control callback, passing the newly created control.</param>
-  /// <param name="allowSuspendingLayout">
-  ///   if set to <c>true</c> allows suspending the This layout during this process to
-  ///   prevent flickering.
-  /// </param>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="controlCallback">(Optional: defaults to <see langword="null"/>) A callback that is invoked for each control in the copied row, with the new control as the parameter.</param>
+  /// <param name="allowSuspendingLayout">(Optional: defaults to <see langword="true"/>) If set to <see langword="true"/>, suspends layout during the operation to avoid flickering.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// tableLayoutPanel.RowCount = 2;
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 0" }, 0, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 1" }, 1, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 0" }, 0, 1);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 1" }, 1, 1);
+  /// tableLayoutPanel.CopyLastRow(copy => copy.Text = "Copied");
+  /// // The TableLayoutPanel now has three rows, with the last row copied and text set to "Copied".
+  /// </code>
+  /// </example>
   public static void CopyLastRow(this TableLayoutPanel @this, Action<Control> controlCallback, bool allowSuspendingLayout = true) {
     Against.ThisIsNull(@this);
 
-    @this.CopyLastRow((row, col, src, tgt) => controlCallback(tgt));
+    @this.CopyLastRow((_, _, _, tgt) => controlCallback(tgt));
   }
 
   /// <summary>
-  ///   Copies the last row of a This and all controls in it.
+  /// Copies the last row of the <see cref="TableLayoutPanel"/> and adds it as a new row at the end, duplicating all existing controls in it.
   /// </summary>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="controlCallback">The control callback, passing column and the newly created control.</param>
-  /// <param name="allowSuspendingLayout">
-  ///   if set to <c>true</c> allows suspending the This layout during this process to
-  ///   prevent flickering.
-  /// </param>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="controlCallback">(Optional: defaults to <see langword="null"/>) A callback that is invoked for each control in the copied row, with the column index and the new control as parameters.</param>
+  /// <param name="allowSuspendingLayout">(Optional: defaults to <see langword="true"/>) If set to <see langword="true"/>, suspends layout during the operation to avoid flickering.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// tableLayoutPanel.RowCount = 2;
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 0" }, 0, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 0, Col 1" }, 1, 0);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 0" }, 0, 1);
+  /// tableLayoutPanel.Controls.Add(new Label { Text = "Row 1, Col 1" }, 1, 1);
+  /// tableLayoutPanel.CopyLastRow((col, copy) => copy.Text = $"Copied Col {col}");
+  /// // The TableLayoutPanel now has three rows, with the last row copied and text set to "Copied Col X".
+  /// </code>
+  /// </example>
   public static void CopyLastRow(this TableLayoutPanel @this, Action<int, Control> controlCallback, bool allowSuspendingLayout = true) {
     Against.ThisIsNull(@this);
 
-    @this.CopyLastRow((row, col, src, tgt) => controlCallback(col, tgt));
+    @this.CopyLastRow((_, col, _, tgt) => controlCallback(col, tgt));
   }
 
   /// <summary>
-  ///   Gets a value from a control in the given column and row.
+  /// Gets the value from a specified column in a specified row of the <see cref="TableLayoutPanel"/> using the provided reader function.
   /// </summary>
-  /// <typeparam name="TControl">The type of the control which should be there.</typeparam>
-  /// <typeparam name="TType">The type of the value we want to read from it.</typeparam>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="row">The row in which the control should be.</param>
-  /// <param name="columnIndex">The column in which the control should be.</param>
-  /// <param name="reader">The reader delegate which reads the actual value from the given control and returns it.</param>
-  /// <returns>The value that was found.</returns>
+  /// <typeparam name="TControl">The type of the control.</typeparam>
+  /// <typeparam name="TType">The type of the value to retrieve.</typeparam>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="row">The index of the row.</param>
+  /// <param name="columnIndex">The index of the column.</param>
+  /// <param name="reader">The function to read the value from the control.</param>
+  /// <returns>The value of type <typeparamref name="TType"/> retrieved using the reader function.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="row"/> or <paramref name="columnIndex"/> is outside the valid range.</exception>
+  /// <exception cref="System.InvalidCastException">Thrown if the control at the specified position is not of type <typeparamref name="TControl"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// var textBox = new TextBox { Text = "Sample Text" };
+  /// tableLayoutPanel.Controls.Add(textBox, 0, 0);
+  /// string value = tableLayoutPanel.GetColumnValue&lt;TextBox, string&gt;(0, 0, ctrl => ctrl.Text);
+  /// Console.WriteLine(value); // Output: Sample Text
+  /// </code>
+  /// </example>
   public static TType GetColumnValue<TControl, TType>(this TableLayoutPanel @this, uint row, int columnIndex, Func<TControl, TType> reader) where TControl : Control {
     Against.ThisIsNull(@this);
+    Against.ValuesAboveOrEqual(row, @this.RowCount);
+    Against.ValuesAboveOrEqual(columnIndex, @this.ColumnCount);
 
     if (row >= @this.RowCount)
       throw new ArgumentOutOfRangeException(nameof(row), row, "Not Allowed");
@@ -159,18 +217,30 @@ public static partial class TableLayoutPanelExtensions {
     return reader(control);
   }
 
-
   /// <summary>
-  ///   Sets a controls' value.
+  /// Sets the value of a specified column in a specified row of the <see cref="TableLayoutPanel"/> using the provided writer action.
   /// </summary>
-  /// <typeparam name="TControl">The type of the control which should be there.</typeparam>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="row">The row in which the control should be.</param>
-  /// <param name="columnIndex">The column in which the control should be.</param>
-  /// <param name="writer">The writer delegate which sets a value of the control.</param>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="row">The index of the row.</param>
+  /// <param name="columnIndex">The index of the column.</param>
+  /// <param name="writer">The action to write the value to the <see cref="Control"/>.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="row"/> or <paramref name="columnIndex"/> is outside the valid range.</exception>
+  /// <exception cref="System.InvalidCastException">Thrown if the <see cref="Control"/> at the specified position is not of type <typeparamref name="TControl"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// var textBox = new TextBox();
+  /// tableLayoutPanel.Controls.Add(textBox, 0, 0);
+  /// tableLayoutPanel.SetColumnValue&lt;TextBox&gt;(0, 0, ctrl => ctrl.Text = "New Text");
+  /// Console.WriteLine(textBox.Text); // Output: New Text
+  /// </code>
+  /// </example>
   public static void SetColumnValue<TControl>(this TableLayoutPanel @this, uint row, int columnIndex, Action<TControl> writer) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ValuesAboveOrEqual(row, @this.RowCount);
+    Against.ValuesAboveOrEqual(columnIndex, @this.ColumnCount);
 
     var control = @this.GetControlFromPositionFixed<TControl>(columnIndex, (int)row) ?? throw new NotSupportedException();
     writer(control);
@@ -178,34 +248,55 @@ public static partial class TableLayoutPanelExtensions {
 
 
   /// <summary>
-  ///   Gets a control from a position in a TableLayoutPanel.
-  ///   Note: when no control was found, each control is checked on it's own because of bugs in the layout engine from
-  ///   Microsoft.
+  /// Gets the control from the specified position in the <see cref="TableLayoutPanel"/> and casts it to the specified control type.
   /// </summary>
   /// <typeparam name="TControl">The type of the control.</typeparam>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="column">The column.</param>
-  /// <param name="row">The row.</param>
-  /// <returns>
-  ///   The control or <c>null</c>.
-  /// </returns>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="column">The index of the column.</param>
+  /// <param name="row">The index of the row.</param>
+  /// <returns>The control at the specified position cast to <typeparamref name="TControl"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="row"/> or <paramref name="column"/> is outside the valid range.</exception>
+  /// <exception cref="System.InvalidCastException">Thrown if the control at the specified position is not of type <typeparamref name="TControl"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// var textBox = new TextBox();
+  /// tableLayoutPanel.Controls.Add(textBox, 0, 0);
+  /// TextBox retrievedTextBox = tableLayoutPanel.GetControlFromPositionFixed&lt;TextBox&gt;(0, 0);
+  /// Console.WriteLine(retrievedTextBox == textBox); // Output: True
+  /// </code>
+  /// </example>
   public static TControl GetControlFromPositionFixed<TControl>(this TableLayoutPanel @this, int column, int row) where TControl : Control {
     Against.ThisIsNull(@this);
+    Against.ValuesAboveOrEqual(row, @this.RowCount);
+    Against.ValuesAboveOrEqual(column, @this.ColumnCount);
 
-    return @this.GetControlFromPositionFixed(column, row) as TControl;
+    return GetControlFromPositionFixed(@this, column, row) as TControl;
   }
 
   /// <summary>
-  ///   Gets a control from a position in a TableLayoutPanel.
-  ///   Note: when no control was found, each control is checked on it's own because of bugs in the layout engine from
-  ///   Microsoft.
+  /// Gets the control from the specified position in the <see cref="TableLayoutPanel"/>.
   /// </summary>
-  /// <param name="this">This TableLayoutPanel.</param>
-  /// <param name="column">The column.</param>
-  /// <param name="row">The row.</param>
-  /// <returns>The control or <c>null</c>.</returns>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="column">The index of the column.</param>
+  /// <param name="row">The index of the row.</param>
+  /// <returns>The <see cref="Control"/> at the specified position.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="row"/> or <paramref name="column"/> is outside the valid range.</exception>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// var textBox = new TextBox();
+  /// tableLayoutPanel.Controls.Add(textBox, 0, 0);
+  /// Control retrievedControl = tableLayoutPanel.GetControlFromPositionFixed(0, 0);
+  /// Console.WriteLine(retrievedControl == textBox); // Output: True
+  /// </code>
+  /// </example>
   public static Control GetControlFromPositionFixed(this TableLayoutPanel @this, int column, int row) {
     Against.ThisIsNull(@this);
+    Against.ValuesAboveOrEqual(row, @this.RowCount);
+    Against.ValuesAboveOrEqual(column, @this.ColumnCount);
 
     var result = @this.GetControlFromPosition(column, row);
     if (result != null)
@@ -225,16 +316,30 @@ public static partial class TableLayoutPanelExtensions {
   }
 
   /// <summary>
-  ///   <br>A simple way to use the <see cref="TableLayoutPanel" /> as a table and fill it up with controls.</br>
-  ///   <br>Info: The columns and their widths need to be already set, the rows will all be auto-sized.</br>
+  /// Populates the <see cref="TableLayoutPanel"/> with the specified controls, arranging them as a table.
   /// </summary>
-  /// <param name="this">This.</param>
-  /// <param name="cellControls">The controls to fill up with, first dimension is the rows, 2nd the columns.</param>
+  /// <param name="this">This <see cref="TableLayoutPanel"/> instance.</param>
+  /// <param name="cellControls">A two-dimensional array of controls where the first dimension represents rows and the second dimension represents columns.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <remarks>The columns and their widths need to be already set, the rows will all be auto-sized.</remarks>
+  /// <example>
+  /// <code>
+  /// TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+  /// tableLayoutPanel.ColumnCount = 2;
+  /// tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+  /// tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+  /// tableLayoutPanel.UseAsTable(
+  ///     new Control[] { new Label { Text = "R1C1" }, new Label { Text = "R1C2" } },
+  ///     new Control[] { new Label { Text = "R2C1" }, new Label { Text = "R2C2" } }
+  /// );
+  /// // The TableLayoutPanel now contains 2 rows and 2 columns with the specified controls.
+  /// </code>
+  /// </example>
   public static void UseAsTable(this TableLayoutPanel @this, params Control[][] cellControls) {
     Against.ThisIsNull(@this);
-
+    
     //init
-    @this.SuspendLayout();
+    using var _ = @this.PauseLayout();
     @this.RowStyles.Clear();
     @this.Controls.Clear();
 
@@ -250,6 +355,6 @@ public static partial class TableLayoutPanelExtensions {
     //add last row for sizing
     @this.RowStyles.Add(new(SizeType.AutoSize));
     @this.Controls.Add(new Label { Width = 0, Height = 0 }, 0, cellControls.Length); //hack for correct display
-    @this.ResumeLayout();
   }
+
 }

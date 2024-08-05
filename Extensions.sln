@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{8E643B
 		.gitignore = .gitignore
 		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
 		CONTRIBUTING.md = CONTRIBUTING.md
+		.github\FUNDING.yml = .github\FUNDING.yml
 		LICENSE = LICENSE
 		Readme.md = Readme.md
 		SECURITY.md = SECURITY.md

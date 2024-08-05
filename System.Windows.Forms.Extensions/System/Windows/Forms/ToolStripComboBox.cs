@@ -23,12 +23,23 @@ namespace System.Windows.Forms;
 ///   Extension class for <see cref="ToolStripComboBox" /> objects.
 /// </summary>
 public static partial class ToolStripComboBoxExtensions {
+
   /// <summary>
-  ///   Sets the selected item and suppress given event.
+  /// Sets the selected item of the <see cref="ToolStripComboBox"/> and suppresses the specified event during the operation.
   /// </summary>
-  /// <param name="toolStripComboBox">The tool strip ComboBox.</param>
-  /// <param name="selectedItem">The selected item.</param>
-  /// <param name="handler">The handler.</param>
+  /// <param name="toolStripComboBox">This <see cref="ToolStripComboBox"/> instance.</param>
+  /// <param name="selectedItem">The item to select.</param>
+  /// <param name="handler">The event handler to suppress during the operation.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="toolStripComboBox"/> or <paramref name="handler"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// ToolStripComboBox comboBox = new ToolStripComboBox();
+  /// comboBox.Items.AddRange(new object[] { "Item 1", "Item 2", "Item 3" });
+  /// comboBox.SelectedIndexChanged += (sender, e) => { Console.WriteLine("Event Triggered"); };
+  /// comboBox.SetSelectedItemAndSuppressEvent("Item 2", comboBox.SelectedIndexChanged);
+  /// // The ToolStripComboBox now has "Item 2" selected without triggering the SelectedIndexChanged event.
+  /// </code>
+  /// </example>
   public static void SetSelectedItemAndSuppressEvent(
     this ToolStripComboBox toolStripComboBox,
     object selectedItem,

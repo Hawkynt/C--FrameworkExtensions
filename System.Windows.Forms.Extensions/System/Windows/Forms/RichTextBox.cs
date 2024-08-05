@@ -32,6 +32,7 @@ using DrawingSize = System.Drawing.Size;
 namespace System.Windows.Forms;
 
 public static partial class RichTextBoxExtensions {
+
   #region Native Methods
 
   private static partial class NativeMethods {
@@ -107,11 +108,19 @@ public static partial class RichTextBoxExtensions {
   }
 
   /// <summary>
-  ///   Appends the text and scrolls.
+  /// Appends text to the <see cref="RichTextBox"/> and scrolls to the end. Optionally sets the text color.
   /// </summary>
-  /// <param name="this">This TextBox.</param>
-  /// <param name="text">The text.</param>
-  /// <param name="color">The text color</param>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="text">The text to append.</param>
+  /// <param name="color">(Optional: defaults to <see langword="null"/>) The color to set for the appended text. If <see langword="null"/>, the default text color is used.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendTextAndScroll("Hello, world!", Color.Blue);
+  /// // The RichTextBox now contains the text "Hello, world!" in blue color and is scrolled to the end.
+  /// </code>
+  /// </example>
   public static void AppendTextAndScroll(this RichTextBox @this, string text, Color? color = null) {
     Against.ThisIsNull(@this);
 
@@ -124,6 +133,20 @@ public static partial class RichTextBoxExtensions {
     @this.ScrollToEnd();
   }
 
+  /// <summary>
+  /// Appends text to the <see cref="RichTextBox"/>. Optionally sets the text color.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="text">The text to append.</param>
+  /// <param name="color">(Optional: defaults to <see langword="null"/>) The color to set for the appended text. If <see langword="null"/>, the default text color is used.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("Hello, world!", Color.Blue);
+  /// // The RichTextBox now contains the text "Hello, world!" in blue color.
+  /// </code>
+  /// </example>
   public static void AppendText(this RichTextBox @this, string text, Color? color = null) {
     Against.ThisIsNull(@this);
 
@@ -137,9 +160,18 @@ public static partial class RichTextBoxExtensions {
   }
 
   /// <summary>
-  ///   Scrolls to the end of the RTB.
+  /// Scrolls the <see cref="RichTextBox"/> to the end.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("Hello, world!");
+  /// richTextBox.ScrollToEnd();
+  /// // The RichTextBox is now scrolled to the end.
+  /// </code>
+  /// </example>
   public static void ScrollToEnd(this RichTextBox @this) {
     Against.ThisIsNull(@this);
 
@@ -151,41 +183,78 @@ public static partial class RichTextBoxExtensions {
   }
 
   /// <summary>
-  ///   Changes the graphic props of a certain RTB section.
+  /// Changes the style of a specified section of text in the <see cref="RichTextBox"/>.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="length">The length.</param>
-  /// <param name="foreground">The foreground.</param>
-  /// <param name="background">The background.</param>
-  /// <param name="font">The font.</param>
-  public static void ChangeSectionStyle(this RichTextBox @this, int start, int length, Color foreground, Color background, Font font = null) {
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="index">The starting position of the section.</param>
+  /// <param name="count">The length of the section.</param>
+  /// <param name="foreground">The foreground color to apply to the section.</param>
+  /// <param name="background">The background color to apply to the section.</param>
+  /// <param name="font">(Optional: defaults to <see langword="null"/>) The font to apply to the section. If <see langword="null"/>, the current font is used.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="index"/> or <paramref name="count"/> is out of range.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionStyle(0, 4, Color.Red, Color.Yellow, new Font("Arial", 12, FontStyle.Bold));
+  /// // The first 4 characters of the text are now red with a yellow background and bold Arial font.
+  /// </code>
+  /// </example>
+  public static void ChangeSectionStyle(this RichTextBox @this, int index, int count, Color foreground, Color background, Font font = null) {
     Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(index, @this.TextLength - 1);
+    Against.CountOutOfRange(count, @this.TextLength);
 
-    @this.Select(start, length);
+    @this.Select(index, count);
     @this.SelectionColor = foreground;
     @this.SelectionBackColor = background;
 
     if (font != null)
       @this.SelectionFont = font;
+
+    @this.SelectionLength = 0;
   }
 
   /// <summary>
-  ///   Resets the graphic props of a certain RTB section.
+  /// Resets the style of a specified section of text in the <see cref="RichTextBox"/> to the default style.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="length">The length.</param>
-  public static void ResetSectionStyle(this RichTextBox @this, int start, int length) {
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="index">The starting position of the section.</param>
+  /// <param name="count">The length of the section.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="index"/> or <paramref name="count"/> is out of range.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionStyle(0, 4, Color.Red, Color.Yellow, new Font("Arial", 12, FontStyle.Bold));
+  /// richTextBox.ResetSectionStyle(0, 4);
+  /// // The first 4 characters of the text are now reset to the default style.
+  /// </code>
+  /// </example>
+  public static void ResetSectionStyle(this RichTextBox @this, int index, int count) {
     Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(index, @this.TextLength - 1);
+    Against.CountOutOfRange(count, @this.TextLength);
 
-    @this.ChangeSectionStyle(start, length, @this.ForeColor, @this.BackColor, @this.Font);
+    @this.ChangeSectionStyle(index, count, @this.ForeColor, @this.BackColor, @this.Font);
   }
 
   /// <summary>
-  ///   Resets the graphic props of the whole RTB.
+  /// Resets the style of the entire text in the <see cref="RichTextBox"/> to the default style.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionStyle(0, 4, Color.Red, Color.Yellow, new Font("Arial", 12, FontStyle.Bold));
+  /// richTextBox.ResetStyle();
+  /// // The entire text is now reset to the default style.
+  /// </code>
+  /// </example>
   public static void ResetStyle(this RichTextBox @this) {
     Against.ThisIsNull(@this);
 
@@ -193,44 +262,80 @@ public static partial class RichTextBoxExtensions {
   }
 
   /// <summary>
-  ///   Changes the graphic props of a certain RTB section.
+  /// Changes the font of a specified section of text in the <see cref="RichTextBox"/>.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="length">The length.</param>
-  /// <param name="font">The font.</param>
-  public static void ChangeSectionFont(this RichTextBox @this, int start, int length, Font font) {
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="index">The starting index of the section.</param>
+  /// <param name="count">The number of characters to apply the font to.</param>
+  /// <param name="font">The font to apply to the section.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="index"/> or <paramref name="count"/> is out of range.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionFont(0, 4, new Font("Arial", 12, FontStyle.Bold));
+  /// // The first 4 characters of the text are now in bold Arial font.
+  /// </code>
+  /// </example>
+  public static void ChangeSectionFont(this RichTextBox @this, int index, int count, Font font) {
     Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(index, @this.TextLength - 1);
+    Against.CountOutOfRange(count, @this.TextLength);
 
-    @this.Select(start, length);
+    @this.Select(index, count);
     @this.SelectionFont = font;
   }
 
   /// <summary>
-  ///   Changes the graphic props of a certain RTB section.
+  /// Changes the foreground color of a specified section of text in the <see cref="RichTextBox"/>.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="length">The length.</param>
-  /// <param name="color">The foreground.</param>
-  public static void ChangeSectionForeground(this RichTextBox @this, int start, int length, Color color) {
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="index">The starting index of the section.</param>
+  /// <param name="count">The number of characters to apply the color to.</param>
+  /// <param name="color">The foreground color to apply to the section.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="index"/> or <paramref name="count"/> is out of range.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionForeground(0, 4, Color.Red);
+  /// // The first 4 characters of the text are now red.
+  /// </code>
+  /// </example>
+  public static void ChangeSectionForeground(this RichTextBox @this, int index, int count, Color color) {
     Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(index, @this.TextLength - 1);
+    Against.CountOutOfRange(count, @this.TextLength);
 
-    @this.Select(start, length);
+    @this.Select(index, count);
     @this.SelectionColor = color;
   }
 
   /// <summary>
-  ///   Changes the graphic props of a certain RTB section.
+  /// Changes the background color of a specified section of text in the <see cref="RichTextBox"/>.
   /// </summary>
-  /// <param name="this">This RichTextBox.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="length">The length.</param>
-  /// <param name="color">The background.</param>
-  public static void ChangeSectionBackground(this RichTextBox @this, int start, int length, Color color) {
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="index">The starting index of the section.</param>
+  /// <param name="count">The number of characters to apply the color to.</param>
+  /// <param name="color">The background color to apply to the section.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="index"/> or <paramref name="count"/> is out of range.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// richTextBox.ChangeSectionBackground(0, 4, Color.Yellow);
+  /// // The first 4 characters of the text now have a yellow background.
+  /// </code>
+  /// </example>
+  public static void ChangeSectionBackground(this RichTextBox @this, int index, int count, Color color) {
     Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(index, @this.TextLength - 1);
+    Against.CountOutOfRange(count, @this.TextLength);
 
-    @this.Select(start, length);
+    @this.Select(index, count);
     @this.SelectionBackColor = color;
   }
 
@@ -240,6 +345,22 @@ public static partial class RichTextBoxExtensions {
 
   #endregion
 
+  /// <summary>
+  /// Draws the content of the <see cref="RichTextBox"/> to a <see cref="Bitmap"/> with the specified dimensions.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="width">The width of the <see cref="Bitmap"/>.</param>
+  /// <param name="height">The height of the <see cref="Bitmap"/>.</param>
+  /// <returns>A <see cref="Bitmap"/> containing the content of the <see cref="RichTextBox"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// Bitmap bitmap = richTextBox.DrawToBitmap(200, 100);
+  /// // The content of the RichTextBox is now drawn onto a 200x100 bitmap.
+  /// </code>
+  /// </example>
   public static Bitmap DrawToBitmap(this RichTextBox @this, int width, int height) {
     Against.ThisIsNull(@this);
 
@@ -248,12 +369,43 @@ public static partial class RichTextBoxExtensions {
     return result;
   }
 
+  /// <summary>
+  /// Draws the content of the <see cref="RichTextBox"/> to a <see cref="Bitmap"/> with the specified size.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="size">The size of the <see cref="Bitmap"/>.</param>
+  /// <returns>A <see cref="Bitmap"/> containing the content of the <see cref="RichTextBox"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// Size size = new Size(200, 100);
+  /// Bitmap bitmap = richTextBox.DrawToBitmap(size);
+  /// // The content of the RichTextBox is now drawn onto a 200x100 bitmap.
+  /// </code>
+  /// </example>
   public static Bitmap DrawToBitmap(this RichTextBox @this, DrawingSize size) {
     Against.ThisIsNull(@this);
 
     return DrawToBitmap(@this, size.Width, size.Height);
   }
 
+  /// <summary>
+  /// Draws the content of the <see cref="RichTextBox"/> onto the specified <see cref="Bitmap"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="target">The target <see cref="Bitmap"/> to draw onto.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> or <paramref name="target"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// Bitmap bitmap = new Bitmap(200, 100);
+  /// richTextBox.DrawToBitmap(bitmap);
+  /// // The content of the RichTextBox is now drawn onto the specified bitmap.
+  /// </code>
+  /// </example>
   public static void DrawToBitmap(this RichTextBox @this, Bitmap target) {
     Against.ThisIsNull(@this);
 
@@ -311,6 +463,20 @@ public static partial class RichTextBoxExtensions {
     }
   }
 
+  /// <summary>
+  /// Keeps only the last specified number of lines in the <see cref="RichTextBox"/>.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="count">The maximum number of lines to keep. If fewer lines are present, all lines are kept.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("Line 1\nLine 2\nLine 3\nLine 4\nLine 5");
+  /// richTextBox.KeepLastLines(3);
+  /// // The RichTextBox now contains only the last 3 lines: "Line 3\nLine 4\nLine 5"
+  /// </code>
+  /// </example>
   public static void KeepLastLines(this RichTextBox @this, int count) {
     Against.ThisIsNull(@this);
 
@@ -335,6 +501,26 @@ public static partial class RichTextBoxExtensions {
   private static readonly ConditionalWeakTable<RichTextBox, SyntaxHighlighter> _syntaxHighlighterCache = new();
 #endif
 
+  /// <summary>
+  /// Applies syntax highlighting to the <see cref="RichTextBox"/> based on the specified configuration.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <param name="configuration">The <see cref="SyntaxHighlightingConfiguration"/> containing the rules for syntax highlighting.</param>
+  /// <param name="reapply">(Optional: defaults to <see langword="false"/>) If set to <see langword="true"/>, reapplies the syntax highlighting.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="configuration"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// var config = new SyntaxHighlightingConfiguration(
+  ///     SyntaxHighlightPattern.FromKeyword("public", new SyntaxStyle(Color.Blue)),
+  ///     SyntaxHighlightPattern.FromKeyword("void", new SyntaxStyle(Color.Green))
+  /// );
+  /// richTextBox.Text = "public void Method() { }";
+  /// richTextBox.ApplySyntaxHighlighting(config);
+  /// // The keywords "public" and "void" are now highlighted in blue and green, respectively.
+  /// </code>
+  /// </example>
   public static void ApplySyntaxHighlighting(this RichTextBox @this, SyntaxHighlightingConfiguration configuration, bool reapply = false) {
     Against.ThisIsNull(@this);
 
@@ -357,6 +543,23 @@ public static partial class RichTextBoxExtensions {
     highlighter.ApplySyntaxHighlighting(@this);
   }
 
+  /// <summary>
+  /// Removes all syntax highlighting from the <see cref="RichTextBox"/>, resetting the text to the default style.
+  /// </summary>
+  /// <param name="this">This <see cref="RichTextBox"/> instance.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// RichTextBox richTextBox = new RichTextBox();
+  /// richTextBox.AppendText("This is a sample text.");
+  /// var config = new SyntaxHighlightingConfiguration(
+  ///     SyntaxHighlightPatternFactory.FromKeyword("sample", new SyntaxStyle(Color.Blue))
+  /// );
+  /// richTextBox.ApplySyntaxHighlighting(config);
+  /// richTextBox.RemoveSyntaxHighlighting();
+  /// // The text "This is a sample text." is now reset to the default style.
+  /// </code>
+  /// </example>
   public static void RemoveSyntaxHighlighting(this RichTextBox @this) {
     Against.ThisIsNull(@this);
 
@@ -384,4 +587,5 @@ public static partial class RichTextBoxExtensions {
   }
 
   #endregion
+
 }

@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
@@ -29,17 +30,49 @@ using Guard;
 namespace System.Windows.Forms;
 
 public static partial class ControlExtensions {
+
   /// <summary>
-  ///   Stops the layout and returns a token which will continue layoutint on disposal.
+  /// Suspends the layout logic for the <see cref="Control"/> and returns a token that resumes layout when disposed.
   /// </summary>
-  /// <param name="this">The this.</param>
-  /// <returns></returns>
+  /// <param name="this">The <see cref="System.Windows.Forms.Control"/> instance.</param>
+  /// <returns>An <see cref="ISuspendedLayoutToken"/> that resumes layout when disposed.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Control control = new Control();
+  /// using (control.PauseLayout())
+  /// {
+  ///     // Perform multiple layout changes here
+  ///     control.Size = new Size(100, 100);
+  ///     control.Location = new Point(10, 10);
+  /// }
+  /// // Layout is resumed after the using block
+  /// </code>
+  /// </example>
   public static ISuspendedLayoutToken PauseLayout(this Control @this) {
     Against.ThisIsNull(@this);
 
     return new SuspendedLayoutToken(@this);
   }
 
+  /// <summary>
+  /// Suspends the redraw logic for the <see cref="Control"/> and returns a token that resumes redraw when disposed.
+  /// </summary>
+  /// <param name="this">The <see cref="System.Windows.Forms.Control"/> instance.</param>
+  /// <returns>An <see cref="ISuspendedRedrawToken"/> that resumes redraw when disposed.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Control control = new Control();
+  /// using (control.PauseRedraw())
+  /// {
+  ///     // Perform multiple changes here without triggering redraws
+  ///     control.Size = new Size(100, 100);
+  ///     control.Location = new Point(10, 10);
+  /// }
+  /// // Redraw is resumed after the using block
+  /// </code>
+  /// </example>
   public static ISuspendedRedrawToken PauseRedraw(this Control @this) {
     Against.ThisIsNull(@this);
 
@@ -47,11 +80,21 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Executes the given action with the current control after a period of time.
+  /// Sets a timeout to perform an <see cref="Action"/> on the <see cref="Control"/> after the specified time interval.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="dueTime">The time to wait until execution.</param>
-  /// <param name="action">The action.</param>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="dueTime">The time interval after which the <see cref="Action"/> will be performed.</param>
+  /// <param name="action">The action to perform on the <see cref="Control"/>.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="action"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.SetTimeout(TimeSpan.FromSeconds(5), btn => btn.Text = "Timeout reached!");
+  /// // After 5 seconds, the button's text will change to "Timeout reached!".
+  /// </code>
+  /// </example>
   public static void SetTimeout<TControl>(this TControl @this, TimeSpan dueTime, Action<TControl> action) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(action);
@@ -66,53 +109,96 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Gets the position of a given control relative to its form.
+  /// Gets the location of the <see cref="Control"/> relative to the top-left corner of the form.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <returns>The position of it relative to it's form.</returns>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <returns>The location of the <see cref="Control"/> relative to the top-left corner of the form.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// Form form = new Form();
+  /// form.Controls.Add(button);
+  /// Point location = button.GetLocationOnForm();
+  /// Console.WriteLine($"Button location on form: {location}");
+  /// // Output: Button location on form: {X,Y} (actual coordinates)
+  /// </code>
+  /// </example>
   public static Point GetLocationOnForm(this Control @this) {
     Against.ThisIsNull(@this);
 
     var result = @this.Location;
-    var c = @this;
-    for (; c is not Form; c = c.Parent)
-      result.Offset(c.Location);
+    for (var control = @this; control is not Form; control = control.Parent)
+      result.Offset(control.Location);
 
     return result;
   }
 
   /// <summary>
-  ///   Gets the position of a given control relative to the screen.
+  /// Gets the location of the <see cref="Control"/> relative to the top-left corner of the screen.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <returns>The position of it relative to it's screen.</returns>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <returns>The location of the <see cref="Control"/> relative to the top-left corner of the screen.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// Form form = new Form();
+  /// form.Controls.Add(button);
+  /// Point screenLocation = button.GetLocationOnScreen();
+  /// Console.WriteLine($"Button location on screen: {screenLocation}");
+  /// // Output: Button location on screen: {X,Y} (actual coordinates)
+  /// </code>
+  /// </example>
   public static Point GetLocationOnScreen(this Control @this) {
     Against.ThisIsNull(@this);
 
     return @this.PointToScreen(Point.Empty);
   }
 
+  /// <summary>
+  /// Gets the location of the <see cref="Control"/> relative to the top-left corner of its parent control's client area.
+  /// </summary>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <returns>The location of the <see cref="Control"/> relative to the top-left corner of its parent control's client area.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// Panel panel = new Panel();
+  /// panel.Controls.Add(button);
+  /// Point clientLocation = button.GetLocationOnClient();
+  /// Console.WriteLine($"Button location on client area: {clientLocation}");
+  /// // Output: Button location on client area: {X,Y} (actual coordinates)
+  /// </code>
+  /// </example>
   public static Point GetLocationOnClient(this Control @this) {
     Against.ThisIsNull(@this);
 
     var result = Point.Empty;
-    var c = @this;
-    for (; c.Parent != null; c = c.Parent)
-      result.Offset(c.Location);
+    for (var control = @this; control.Parent != null; control = control.Parent)
+      result.Offset(control.Location);
 
     return result;
   }
 
   /// <summary>
-  ///   Safely invokes the given code on the control's thread.
+  /// Safely invokes the specified <see cref="Action"/> on the control's thread.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="task">The task to perform in its thread.</param>
-  /// <param name="async">if set to <c>true</c> calls asynchronous.</param>
-  /// <returns>
-  ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
-  /// </returns>
-  /// <exception cref="System.ObjectDisposedException">Control already disposed.</exception>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="task">The action to be invoked.</param>
+  /// <param name="async">(Optional: defaults to <see langword="true"/>) If set to <see langword="true"/>, the action is invoked asynchronously; otherwise, it is invoked synchronously.</param>
+  /// <returns><see langword="true"/> when no thread switch was needed; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ObjectDisposedException">Thrown if <paramref name="this"/> is already disposed.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.SafelyInvoke(() => button.Text = "Clicked", async: false);
+  /// // The button's text is now set to "Clicked".
+  /// </code>
+  /// </example>
   public static bool SafelyInvoke(this Control @this, Action task, bool async = true) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
@@ -122,12 +208,23 @@ public static partial class ControlExtensions {
 
 
   /// <summary>
-  ///   Safelies executes an action and returns the result..
+  /// Safely invokes the specified <see cref="Func{TResult}"/> on the <see cref="Control"/>'s thread and returns the result.
   /// </summary>
-  /// <typeparam name="TResult">The type of the result.</typeparam>
-  /// <param name="this">The this.</param>
-  /// <param name="function">The function.</param>
-  /// <returns>Whatever the method returned.</returns>
+  /// <typeparam name="TResult">The type of the result returned by the <see cref="Func{TResult}"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="function">The <see cref="Func{TResult}"/> to be invoked.</param>
+  /// <returns>The result of the <see cref="Func{TResult}"/> invocation.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="function"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ObjectDisposedException">Thrown if <paramref name="this"/> is already disposed.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// string result = button.SafelyInvoke(() => button.Text);
+  /// Console.WriteLine($"Button text: {result}");
+  /// // Output: Button text: [button text]
+  /// </code>
+  /// </example>
   public static TResult SafelyInvoke<TResult>(this Control @this, Func<TResult> function) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(function);
@@ -136,15 +233,24 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Safelies executes an action and returns the result..
+  /// Safely invokes the specified <see cref="Func{TControl, TResult}"/> on the control's thread and returns the result.
   /// </summary>
-  /// <typeparam name="TControl">The type of the control.</typeparam>
-  /// <typeparam name="TResult">The type of the result.</typeparam>
-  /// <param name="this">The this.</param>
-  /// <param name="function">The function.</param>
-  /// <returns>
-  ///   Whatever the method returned.
-  /// </returns>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <typeparam name="TResult">The type of the result returned by the <see cref="Func{TControl, TResult}"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="function">The <see cref="Func{TControl, TResult}"/> to be invoked, which takes the <see cref="Control"/> as a parameter.</param>
+  /// <returns>The result of the <see cref="Func{TControl, TResult}"/> invocation.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="function"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ObjectDisposedException">Thrown if <paramref name="this"/> is already disposed.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// string result = button.SafelyInvoke(btn => btn.Text);
+  /// Console.WriteLine($"Button text: {result}");
+  /// // Output: Button text: [button text]
+  /// </code>
+  /// </example>
   public static TResult SafelyInvoke<TControl, TResult>(this TControl @this, Func<TControl, TResult> function) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(function);
@@ -169,15 +275,23 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Safely invokes the given code on the control's thread.
+  /// Safely invokes the specified <see cref="Action{TControl}"/> on the <see cref="Control"/>'s thread.
   /// </summary>
-  /// <typeparam name="TControl">The type of the control.</typeparam>
-  /// <param name="this">This Control.</param>
-  /// <param name="task">The task to perform in its thread.</param>
-  /// <param name="async">if set to <c>true</c>, do not wait when passed to the gui thread.</param>
-  /// <returns>
-  ///   <c>true</c> when no thread switch was needed; otherwise, <c>false</c>.
-  /// </returns>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="task">The action to be invoked, which takes the <see cref="Control"/> as a parameter.</param>
+  /// <param name="async">(Optional: defaults to <see langword="true"/>) If set to <see langword="true"/>, the action is invoked asynchronously; otherwise, it is invoked synchronously.</param>
+  /// <returns><see langword="true"/> when no thread switch was needed; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ObjectDisposedException">Thrown if <paramref name="this"/> is already disposed.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.SafelyInvoke(btn => btn.Text = "Clicked", async: false);
+  /// // The button's text is now set to "Clicked".
+  /// </code>
+  /// </example>
   public static bool SafelyInvoke<TControl>(this TControl @this, Action<TControl> task, bool async = true) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
@@ -226,11 +340,20 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Executes a task in a thread that is definitely not the GUI thread.
+  /// Invokes the specified <see cref="Action"/> not on the <see cref="Control"/>'s thread.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="task">The task.</param>
-  /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="task">The <see cref="Action"/> to be invoked.</param>
+  /// <returns><see langword="false"/> when no thread switch was needed; otherwise, <see langword="true"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.Async(() => button.Text = "Clicked");
+  /// // The button's text will be set to "Clicked" asynchronously.
+  /// </code>
+  /// </example>
   public static bool Async(this Control @this, Action task) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
@@ -245,11 +368,21 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Executes a task in a thread that is definitely not the GUI thread.
+  /// Invokes the specified <see cref="Action{TControl}"/> not on the <see cref="Control"/>'s thread.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="task">The task.</param>
-  /// <returns><c>true</c> when a thread switch was needed; otherwise, <c>false</c>.</returns>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="task">The <see cref="Action{TControl}"/> to be invoked.</param>
+  /// <returns><see langword="false"/> when no thread switch was needed; otherwise, <see langword="true"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.Async(btn => btn.Text = "Clicked");
+  /// // The button's text will be set to "Clicked" asynchronously.
+  /// </code>
+  /// </example>
   public static bool Async<TControl>(this TControl @this, Action<TControl> task) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(task);
@@ -264,13 +397,26 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Runs something in the gui thread before executing a task in a different thread.
+  /// Invokes the specified <see cref="Action"/> not on the <see cref="Control"/>'s thread with the pre- and post-actions executed on the <see cref="Control"/>'s thread.
   /// </summary>
-  /// <typeparam name="TControl">The type of the type.</typeparam>
-  /// <param name="this">The this.</param>
-  /// <param name="syncPreAction">The sync pre action.</param>
-  /// <param name="task">The task.</param>
-  /// <param name="syncPostAction">The sync post action.</param>
+  /// <typeparam name="TControl">The type of the <see cref="Control"/>.</typeparam>
+  /// <param name="this">The <see cref="Control"/> instance.</param>
+  /// <param name="syncPreAction">The synchronous pre-action to be invoked on the <see cref="Control"/>'s thread before the asynchronous action.</param>
+  /// <param name="task">The action to be invoked asynchronously on a different thread.</param>
+  /// <param name="syncPostAction">(Optional: defaults to <see langword="null"/>) The synchronous post-action to be invoked on the <see cref="Control"/>'s thread after the asynchronous action.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="syncPreAction"/> or <paramref name="task"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// button.Async(
+  ///     syncPreAction: btn => btn.Text = "Starting...",
+  ///     task: () => Thread.Sleep(1000), // Simulate async work
+  ///     syncPostAction: btn => btn.Text = "Completed"
+  /// );
+  /// // The button's text will be set to "Starting...", then after 1 second, it will change to "Completed".
+  /// </code>
+  /// </example>
   public static void Async<TControl>(this TControl @this, Action<TControl> syncPreAction, Action task, Action<TControl> syncPostAction = null) where TControl : Control {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(syncPreAction);
@@ -291,10 +437,23 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Gets the trimmed text property, and converts empty values automatically to <c>null</c>.
+  /// Gets the trimmed text property of the <see cref="Control"/>, and converts empty values automatically to <see langword="null"/>.
   /// </summary>
-  /// <param name="this">This control.</param>
-  /// <returns>A string with text or <c>null</c>.</returns>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <returns>A <see cref="string"/> with text or <see langword="null"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// textBox.Text = "  Sample Text  ";
+  /// string result = textBox.GetTextProperty();
+  /// Console.WriteLine(result); // Output: "Sample Text"
+  /// 
+  /// textBox.Text = "  ";
+  /// result = textBox.GetTextProperty();
+  /// Console.WriteLine(result == null); // Output: True
+  /// </code>
+  /// </example>
   public static string GetTextProperty(this Control @this) {
     Against.ThisIsNull(@this);
 
@@ -307,38 +466,62 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Clears the children of a controls and disposes them.
+  /// Clears child controls of the <see cref="Control"/> based on an optional predicate, disposing the cleared child controls.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="predicate">The predicate, default to <c>null</c>.</param>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <param name="predicate">(Optional: defaults to <see langword="null"/>) The predicate to determine which child controls should be cleared. If <see langword="null"/>, all child controls are cleared.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Panel panel = new Panel();
+  /// panel.Controls.Add(new Button { Text = "Button1" });
+  /// panel.Controls.Add(new TextBox { Text = "TextBox1" });
+  /// panel.ClearChildren(ctrl => ctrl is Button);
+  /// // The panel now only contains the TextBox.
+  /// </code>
+  /// </example>
   public static void ClearChildren(this Control @this, Predicate<Control> predicate = null) {
     Against.ThisIsNull(@this);
 
     var children = @this.Controls;
-    if (predicate == null)
+    if (predicate is {} p)
       for (var i = children.Count - 1; i >= 0; --i) {
         var child = children[i];
+        if (!p(child))
+          continue;
+
         children.RemoveAt(i);
         child.Dispose();
       }
     else
       for (var i = children.Count - 1; i >= 0; --i) {
         var child = children[i];
-        // Check for null before calling a delegate
-        if (!predicate(child))
-          continue;
-
-        // Check for null before calling a delegate
         children.RemoveAt(i);
         child.Dispose();
       }
   }
 
   /// <summary>
-  ///   Returns all child controls, including their child controls.
+  /// Recursively enumerates all child controls of the <see cref="Control"/>.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <returns>An enumeration of child controls.</returns>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <returns>An <see cref="IEnumerable{Control}"/> containing all child controls.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Form form = new Form();
+  /// Panel panel = new Panel();
+  /// Button button = new Button();
+  /// panel.Controls.Add(button);
+  /// form.Controls.Add(panel);
+  /// IEnumerable&lt;Control&gt; allControls = form.AllControls();
+  /// foreach (var control in allControls)
+  /// {
+  ///     Console.WriteLine(control.GetType().Name);
+  /// }
+  /// // Output will include Panel and Button
+  /// </code>
+  /// </example>
   public static IEnumerable<Control> AllControls(this Control @this) {
     Against.ThisIsNull(@this);
 
@@ -350,36 +533,63 @@ public static partial class ControlExtensions {
   }
 
   /// <summary>
-  ///   Checks whether the given control reference is <c>null</c> or Disposed.
+  /// Determines whether the control is <see langword="null"/> or disposed.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <returns><c>true</c> if the control reference is <c>null</c> or the control is disposed; otherwise, <c>false</c>.</returns>
-  public static bool IsNullOrDisposed(this Control @this) => @this == null || @this.IsDisposed;
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <returns><see langword="true"/> if the control is <see langword="null"/> or disposed; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// bool isNullOrDisposed = button.IsNullOrDisposed();
+  /// Console.WriteLine(isNullOrDisposed); // Output: False
+  ///
+  /// button.Dispose();
+  /// isNullOrDisposed = button.IsNullOrDisposed();
+  /// Console.WriteLine(isNullOrDisposed); // Output: True
+  /// </code>
+  /// </example>
+  public static bool IsNullOrDisposed([NotNullWhen(false)] this Control @this) => @this == null || @this.IsDisposed;
 
   /// <summary>
-  ///   enables double buffering on the given control.
+  /// Enables double buffering on the specified control to reduce flicker.
   /// </summary>
-  /// <param name="this">The control</param>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Panel panel = new Panel();
+  /// panel.EnableDoubleBuffering();
+  /// // The panel now has double buffering enabled to reduce flicker.
+  /// </code>
+  /// </example>
   public static void EnableDoubleBuffering(this Control @this) {
     Against.ThisIsNull(@this);
 
     if (SystemInformation.TerminalServerSession)
       return;
 
-    var controlType = @this.GetType();
-    var pi = controlType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
-    if (pi == null)
-      return;
+    @this
+      .GetType()
+      .GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)?
+      .SetValue(@this, true, null)
+      ;
 
-    pi.SetValue(@this, true, null);
   }
 
   /// <summary>
-  ///   Tries to duplicate the given control.
+  /// Creates a duplicate of the specified control, assigning a new name.
   /// </summary>
-  /// <param name="this">This Control.</param>
-  /// <param name="newName">The name for the new control; defaults to auto-name.</param>
-  /// <returns>A new control with the same properties as the given one.</returns>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <param name="newName">(Optional: defaults to <see langword="null"/>) The new name to assign to the duplicated control. If <see langword="null"/>, a new GUID is used.</param>
+  /// <returns>A new <see cref="Control"/> that is a duplicate of the original control.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// Button button = new Button { Text = "Click Me", Name = "button1" };
+  /// Button duplicateButton = button.Duplicate("button2") as Button;
+  /// // The duplicateButton now has the same properties as the original button, but with the name "button2".
+  /// </code>
+  /// </example>
   public static Control Duplicate(this Control @this, string newName = null) {
     Against.ThisIsNull(@this);
 
@@ -585,7 +795,7 @@ public static partial class ControlExtensions {
           AutoScrollPosition = down.AutoScrollPosition
         };
       case ComboBox box: {
-        var comboBox = new ComboBox {
+        var result = new ComboBox {
           AllowDrop = box.AllowDrop,
           Anchor = box.Anchor,
           AutoSize = box.AutoSize,
@@ -632,19 +842,30 @@ public static partial class ControlExtensions {
         if (box.DataSource == null) {
           var items = box.Items;
           if (items.Count <= 0)
-            return comboBox;
+            return result;
 
-          comboBox.Items.AddRange(items.Cast<object>().ToArray());
-          comboBox.SelectedItem = box.SelectedItem;
-          comboBox.SelectedIndex = box.SelectedIndex;
+          result.Items.AddRange(items.Cast<object>().ToArray());
+          result.SelectedItem = box.SelectedItem;
+          result.SelectedIndex = box.SelectedIndex;
         } else {
-          comboBox.DataSource = box.DataSource;
-          comboBox.SelectedValue = box.SelectedValue;
+          result.DataSource = box.DataSource;
+          result.SelectedValue = box.SelectedValue;
         }
 
-        return comboBox;
+        return result;
       }
-      default: throw new NotSupportedException();
+      default: {
+        var controlType = @this.GetType();
+        var result = (Control)Activator.CreateInstance(controlType);
+
+        foreach (var property in controlType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+          if (property.CanWrite && property.Name != nameof(Control.WindowTarget))
+            property.SetValue(result, property.GetValue(@this, null), null);
+
+        result.Name = newName;
+        return result;
+      }
+
     }
   }
 
@@ -725,9 +946,73 @@ public static partial class ControlExtensions {
     }
   }
 
+  /// <summary>
+  /// Adds a data binding to the control based on the specified expression, data source, and optional custom handlers.
+  /// </summary>
+  /// <typeparam name="TControl">The type of the control.</typeparam>
+  /// <typeparam name="TSource">The type of the data source.</typeparam>
+  /// <param name="this">The control instance.</param>
+  /// <param name="source">The data source object.</param>
+  /// <param name="expression">
+  /// The binding expression, which must be of the form:
+  /// <code>
+  /// (control, source) => control.propertyName == source.dataMember
+  /// (control, source) => control.propertyName == (type)source.dataMember
+  /// (control, source) => control.propertyName == source.dataMember.ToString()
+  /// (control, source) => control.propertyName == source.subMember.dataMember
+  /// (control, source) => control.propertyName == (type)source.subMember.dataMember
+  /// (control, source) => control.propertyName == source.subMember.dataMember.ToString()
+  /// (control, source) => control.propertyName == source.....dataMember
+  /// (control, source) => control.propertyName == (type)source.....dataMember
+  /// (control, source) => control.propertyName == source.....dataMember.ToString()
+  /// </code>
+  /// </param>
+  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode.</param>
+  /// <param name="customConversionHandler">(Optional) A custom conversion handler for the binding.</param>
+  /// <param name="bindingCompleteCallback">(Optional) A callback to handle the binding complete event.</param>
+  /// <exception cref="System.ArgumentException">Thrown if the expression does not match the expected format.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// MyDataSource dataSource = new MyDataSource();
+  /// textBox.AddBinding(dataSource, (ctrl, src) => ctrl.Text == src.MyProperty);
+  /// </code>
+  /// </example>
   public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
     => _AddBinding(@this, source, expression, @this.GetType(), source.GetType(), mode, customConversionHandler, bindingCompleteCallback);
 
+  /// <summary>
+  /// Adds a data binding to the control based on the specified expression, data source, and optional custom handlers.
+  /// </summary>
+  /// <typeparam name="TControl">The type of the control.</typeparam>
+  /// <typeparam name="TSource">The type of the data source.</typeparam>
+  /// <param name="this">The control instance.</param>
+  /// <param name="source">The data source object.</param>
+  /// <param name="expression">
+  /// The binding expression, which must be of the form:
+  /// <code>
+  /// (control, source) => control.propertyName == source.dataMember
+  /// (control, source) => control.propertyName == (type)source.dataMember
+  /// (control, source) => control.propertyName == source.dataMember.ToString()
+  /// (control, source) => control.propertyName == source.subMember.dataMember
+  /// (control, source) => control.propertyName == (type)source.subMember.dataMember
+  /// (control, source) => control.propertyName == source.subMember.dataMember.ToString()
+  /// (control, source) => control.propertyName == source.....dataMember
+  /// (control, source) => control.propertyName == (type)source.....dataMember
+  /// (control, source) => control.propertyName == source.....dataMember.ToString()
+  /// </code>
+  /// </param>
+  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode.</param>
+  /// <param name="customConversionHandler">(Optional) A custom conversion handler for the binding.</param>
+  /// <param name="bindingCompleteCallback">(Optional) A callback to handle the binding complete event.</param>
+  /// <exception cref="System.ArgumentException">Thrown if the expression does not match the expected format.</exception>
+  /// <example>
+  /// <code>
+  /// TextBox textBox = new TextBox();
+  /// object dataSource = new MyDataSource();
+  /// textBox.AddBinding&lt;TextBox, MyDataSource&gt;(dataSource, (ctrl, src) => ctrl.Text == src.MyProperty);
+  /// </code>
+  /// </example>
   public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
     => _AddBinding(@this, source, expression, typeof(TControl), typeof(TSource), mode, customConversionHandler, bindingCompleteCallback);
 
@@ -840,13 +1125,21 @@ public static partial class ControlExtensions {
   #endregion
 
   /// <summary>
-  ///   Checks if this or parents are in DesignMode.
-  ///   Use this instead because <see cref="System.ComponentModel.Component.DesignMode">Component.DesignMode</see> is only
-  ///   set after
-  ///   <see cref="Form.Load" /> was invoked.
+  /// Determines whether the control is in design mode.
   /// </summary>
-  /// <param name="this">The control on which to check if it's in DesignMode.</param>
-  /// <returns>True if DesignMode.</returns>
+  /// <param name="this">This <see cref="Control"/> instance.</param>
+  /// <returns><see langword="true"/> if the control is in design mode; otherwise, <see langword="false"/>.</returns>
+  /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <remarks>
+  /// Use this because <see cref="System.ComponentModel.Component.DesignMode">Component.DesignMode</see> is only set after <see cref="Form.Load"/> was invoked.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Button button = new Button();
+  /// bool isInDesignMode = button.IsDesignMode();
+  /// Console.WriteLine(isInDesignMode); // Output: True or False depending on the context
+  /// </code>
+  /// </example>
   public static bool IsDesignMode(this Control @this)
     => LicenseManager.UsageMode == LicenseUsageMode.Designtime
        || IsDesignModeDetector.Instance.GetDesignModePropertyValue(@this);
