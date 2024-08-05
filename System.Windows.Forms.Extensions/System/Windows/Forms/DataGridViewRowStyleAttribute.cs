@@ -23,88 +23,113 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows adjusting the cell style in a DataGridView for automatically generated columns.
+/// Specifies the style of a row in a <see cref="System.Windows.Forms.DataGridView"/> with various conditions.
 /// </summary>
+/// <param name="foreColor">(Optional: defaults to <see langword="null"/>) The foreground color for the row cells.</param>
+/// <param name="backColor">(Optional: defaults to <see langword="null"/>) The background color for the row cells.</param>
+/// <param name="format">(Optional: defaults to <see langword="null"/>) The format string for the row cells.</param>
+/// <param name="conditionalPropertyName">(Optional: defaults to <see langword="null"/>) The name of a boolean property that enables or disables the style setting. When this property is <see langword="true"/>, the style is applied.</param>
+/// <param name="foreColorPropertyName">(Optional: defaults to <see langword="null"/>) The name of a property that provides the foreground color for the row cells.</param>
+/// <param name="backColorPropertyName">(Optional: defaults to <see langword="null"/>) The name of a property that provides the background color for the row cells.</param>
+/// <param name="isBold">(Optional: defaults to <see langword="false"/>) Indicates if the font should be bold.</param>
+/// <param name="isItalic">(Optional: defaults to <see langword="false"/>) Indicates if the font should be italic.</param>
+/// <param name="isStrikeout">(Optional: defaults to <see langword="false"/>) Indicates if the font should be strikeout.</param>
+/// <param name="isUnderline">(Optional: defaults to <see langword="false"/>) Indicates if the font should be underline.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// [DataGridViewRowStyle(foreColorPropertyName: nameof(SpecialName), backColor: "Yellow", isBold: true, conditionalPropertyName: nameof(IsSpecial))]
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public bool IsSpecial { get; set; }
+///     public Color SpecialName { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", IsSpecial = true, SpecialName = Color.Red },
+///     new DataRow { Id = 2, Name = "Row 2", IsSpecial = false }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-public sealed class DataGridViewRowStyleAttribute : Attribute {
-  public DataGridViewRowStyleAttribute(
-    string foreColor = null,
-    string backColor = null,
-    string format = null,
-    string conditionalPropertyName = null,
-    string foreColorPropertyName = null,
-    string backColorPropertyName = null,
-    bool isBold = false,
-    bool isItalic = false,
-    bool isStrikeout = false,
-    bool isUnderline = false
-  ) {
-    this.ForeColor = foreColor?.ParseColor();
-    this.BackColor = backColor?.ParseColor();
-    this.ConditionalPropertyName = conditionalPropertyName;
-    this.Format = format;
-    this.ForeColorPropertyName = foreColorPropertyName;
-    this.BackColorPropertyName = backColorPropertyName;
-    var fontStyle = FontStyle.Regular;
-    if (isBold)
-      fontStyle |= FontStyle.Bold;
-    if (isItalic)
-      fontStyle |= FontStyle.Italic;
-    if (isStrikeout)
-      fontStyle |= FontStyle.Strikeout;
-    if (isUnderline)
-      fontStyle |= FontStyle.Underline;
-    this.FontStyle = fontStyle;
-  }
+public sealed class DataGridViewRowStyleAttribute(
+  string foreColor = null,
+  string backColor = null,
+  string format = null,
+  string conditionalPropertyName = null,
+  string foreColorPropertyName = null,
+  string backColorPropertyName = null,
+  bool isBold = false,
+  bool isItalic = false,
+  bool isStrikeout = false,
+  bool isUnderline = false
+) : Attribute {
 
-  public string ConditionalPropertyName { get; }
-  public Color? ForeColor { get; }
-  public Color? BackColor { get; }
-  public string Format { get; }
-  public FontStyle FontStyle { get; }
-  public string ForeColorPropertyName { get; }
-  public string BackColorPropertyName { get; }
+  private readonly Color? _foreColor  = foreColor?.ParseColor();
+  private readonly Color? _backColor = backColor?.ParseColor();
+  private readonly FontStyle _fontStyle = FontStyle.Regular
+                                         | (isBold ? FontStyle.Bold : FontStyle.Regular)
+                                         | (isItalic ? FontStyle.Italic : FontStyle.Regular)
+                                         | (isStrikeout ? FontStyle.Strikeout : FontStyle.Regular)
+                                         | (isUnderline ? FontStyle.Underline : FontStyle.Regular);
+
 
   private void _ApplyTo(DataGridViewRow row, object rowData) {
     var style = row.DefaultCellStyle;
 
     var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
                   rowData,
-                  this.ForeColorPropertyName,
+                  foreColorPropertyName,
                   null,
                   null,
                   null,
                   null
                 )
-                ?? this.ForeColor;
+                ?? this._foreColor;
+
     if (color != null)
       style.ForeColor = color.Value;
 
     color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
               rowData,
-              this.BackColorPropertyName,
+              backColorPropertyName,
               null,
               null,
               null,
               null
             )
-            ?? this.BackColor;
+            ?? this._backColor;
+
     if (color != null)
       style.BackColor = color.Value;
 
-    if (this.Format != null)
-      style.Format = this.Format;
+    if (format != null)
+      style.Format = format;
 
-    if (this.FontStyle != FontStyle.Regular)
-      style.Font = new(style.Font ?? row.InheritedStyle.Font, this.FontStyle);
+    if (this._fontStyle != FontStyle.Regular)
+      style.Font = new(style.Font ?? row.InheritedStyle.Font, this._fontStyle);
   }
 
   private bool _IsEnabled(object value)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(value, this.ConditionalPropertyName, true, true, false, false);
+    => DataGridViewExtensions.GetPropertyValueOrDefault(value, conditionalPropertyName, true, true, false, false);
 
-  public static void OnRowPrepaint(IEnumerable<DataGridViewRowStyleAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
+  internal static void OnRowPrepaint(IEnumerable<DataGridViewRowStyleAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
     foreach (var attribute in @this)
       if (attribute._IsEnabled(data))
         attribute._ApplyTo(row, data);
   }
+
 }

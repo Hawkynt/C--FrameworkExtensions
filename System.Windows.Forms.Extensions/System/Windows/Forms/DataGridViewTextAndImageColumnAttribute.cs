@@ -22,48 +22,88 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 /// <summary>
-///   allows to show an image alongside to the displayed text.
+/// Specifies that a column in a <see cref="System.Windows.Forms.DataGridView"/> should display both text and images with specified settings.
 /// </summary>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public string ImageKey { get; set; }
+///     public ImageList ImageList { get; set; }
+///
+///     [DataGridViewTextAndImageColumn(imageListPropertyName: nameof(ImageList), imageKeyPropertyName: nameof(ImageKey))]
+///     public string DisplayName => Name;
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", ImageKey = "key1", ImageList = imageList },
+///     new DataRow { Id = 2, Name = "Row 2", ImageKey = "key2", ImageList = imageList }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class DataGridViewTextAndImageColumnAttribute(
-  string imageListPropertyName,
-  string imageKeyPropertyName,
-  TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
-  uint fixedImageWidth = 0,
-  uint fixedImageHeight = 0,
-  bool keepAspectRatio = true
-)
-  : Attribute {
-  public string ImageListPropertyName { get; } = imageListPropertyName;
-  public string ImageKeyPropertyName { get; } = imageKeyPropertyName;
-  public string ImagePropertyName { get; }
-  public TextImageRelation TextImageRelation { get; } = textImageRelation;
-  public uint FixedImageWidth { get; } = fixedImageWidth;
-  public uint FixedImageHeight { get; } = fixedImageHeight;
-  public bool KeepAspectRatio { get; } = keepAspectRatio;
+public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
 
+  private readonly uint _fixedImageHeight;
+  private readonly uint _fixedImageWidth;
+  private readonly bool _keepAspectRatio;
+  private readonly TextImageRelation _textImageRelation;
+  private readonly Func<object, object, Image> _imageGetter;
+
+  private DataGridViewTextAndImageColumnAttribute(
+    TextImageRelation textImageRelation,
+    uint fixedImageWidth,
+    uint fixedImageHeight,
+    bool keepAspectRatio
+  ) {
+    this._textImageRelation = textImageRelation;
+    this._fixedImageWidth = fixedImageWidth;
+    this._fixedImageHeight = fixedImageHeight;
+    this._keepAspectRatio = keepAspectRatio;
+  }
+
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewTextAndImageColumnAttribute"/> class with image list and key properties.
+  /// </summary>
+  /// <param name="imageListPropertyName">The name of the property that provides the <see cref="System.Windows.Forms.ImageList"/>.</param>
+  /// <param name="imageKeyPropertyName">The name of the property that provides the key for the image in the <see cref="System.Windows.Forms.ImageList"/>.</param>
+  /// <param name="textImageRelation">(Optional: defaults to <see cref="System.Windows.Forms.TextImageRelation.ImageBeforeText"/>) Specifies the position of the image relative to the text.</param>
+  /// <param name="fixedImageWidth">(Optional: defaults to 0) The fixed width of the image in pixels.</param>
+  /// <param name="fixedImageHeight">(Optional: defaults to 0) The fixed height of the image in pixels.</param>
+  /// <param name="keepAspectRatio">(Optional: defaults to <see langword="true"/>) Indicates whether to maintain the aspect ratio of the image.</param>
   public DataGridViewTextAndImageColumnAttribute(
-    string imagePropertyName,
+    string imageListPropertyName,
+    string imageKeyPropertyName,
     TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
     uint fixedImageWidth = 0,
     uint fixedImageHeight = 0,
     bool keepAspectRatio = true
-  ) : this(null, null, textImageRelation, fixedImageWidth, fixedImageHeight, keepAspectRatio)
-    => this.ImagePropertyName = imagePropertyName;
+  ) : this(textImageRelation, fixedImageWidth, fixedImageHeight, keepAspectRatio) {
+    this._imageGetter = GetImageFromList;
+    return;
 
-  private Image _GetImage(object row, object value) {
-    if (value is null)
-      return null;
+    Image GetImageFromList(object row, object value) {
+      if (value is null)
+        return null;
 
-    Image image = null;
-    var imagePropertyName = this.ImagePropertyName;
-    if (imagePropertyName != null)
-      image = DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, imagePropertyName, null, null, null, null);
-    else {
       var imageList =
         DataGridViewExtensions.GetPropertyValueOrDefault<ImageList>(
           row,
-          this.ImageListPropertyName,
+          imageListPropertyName,
           null,
           null,
           null,
@@ -75,31 +115,62 @@ public sealed class DataGridViewTextAndImageColumnAttribute(
       var imageKey =
         DataGridViewExtensions.GetPropertyValueOrDefault<object>(
           row,
-          this.ImageKeyPropertyName,
+          imageKeyPropertyName,
           null,
           null,
           null,
           null
         );
-      if (imageKey != null)
-        image = imageKey is int index && !index.GetType().IsEnum
+
+      return imageKey != null
+          ? imageKey is int index && !index.GetType().IsEnum
             ? imageList.Images[index]
             : imageList.Images[imageKey.ToString()]
-          ;
+          : null
+        ;
     }
-
-    return image;
   }
 
-  public static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewTextAndImageColumnAttribute"/> class with an image property.
+  /// </summary>
+  /// <param name="imagePropertyName">The name of the property that provides the <see cref="System.Drawing.Image"/> directly.</param>
+  /// <param name="textImageRelation">(Optional: defaults to <see cref="System.Windows.Forms.TextImageRelation.ImageBeforeText"/>) Specifies the position of the image relative to the text.</param>
+  /// <param name="fixedImageWidth">(Optional: defaults to 0) The fixed width of the image in pixels.</param>
+  /// <param name="fixedImageHeight">(Optional: defaults to 0) The fixed height of the image in pixels.</param>
+  /// <param name="keepAspectRatio">(Optional: defaults to <see langword="true"/>) Indicates whether to maintain the aspect ratio of the image.</param>
+  public DataGridViewTextAndImageColumnAttribute(
+    string imagePropertyName,
+    TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
+    uint fixedImageWidth = 0,
+    uint fixedImageHeight = 0,
+    bool keepAspectRatio = true
+  ) : this(textImageRelation, fixedImageWidth, fixedImageHeight, keepAspectRatio) {
+    this._imageGetter = GetImageFromProperty;
+    return;
+
+    Image GetImageFromProperty(object row, object value) {
+      if (value is null)
+        return null;
+
+      return imagePropertyName != null
+          ? DataGridViewExtensions.GetPropertyValueOrDefault<Image>(row, imagePropertyName, null, null, null, null)
+          : null
+        ;
+
+    }
+  }
+
+  internal static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     if (row.Cells[e.ColumnIndex] is not DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell textAndImageCell)
       return;
 
-    textAndImageCell.TextImageRelation = @this.TextImageRelation;
-    textAndImageCell.KeepAspectRatio = @this.KeepAspectRatio;
-    textAndImageCell.FixedImageWidth = @this.FixedImageWidth;
-    textAndImageCell.FixedImageHeight = @this.FixedImageHeight;
-    textAndImageCell.Image = @this._GetImage(data, e.Value);
+    textAndImageCell.TextImageRelation = @this._textImageRelation;
+    textAndImageCell.KeepAspectRatio = @this._keepAspectRatio;
+    textAndImageCell.FixedImageWidth = @this._fixedImageWidth;
+    textAndImageCell.FixedImageHeight = @this._fixedImageHeight;
+    textAndImageCell.Image = @this._imageGetter(data, e.Value);
     e.FormattingApplied = true;
   }
+
 }
