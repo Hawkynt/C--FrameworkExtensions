@@ -269,8 +269,8 @@ public static partial class DataGridViewExtensions {
       }
 
       // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
-      var imageAndTextColumnAttribute = (DataGridViewTextAndImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewTextAndImageColumnAttribute), true)
+      var imageAndTextColumnAttribute = (DataGridViewImageAndTextColumnAttribute)property
+        .GetCustomAttributes(typeof(DataGridViewImageAndTextColumnAttribute), true)
         .FirstOrDefault();
       if (imageAndTextColumnAttribute != null) {
         var newColumn = _ConstructImageAndTextColumn(column);
@@ -667,7 +667,7 @@ public static partial class DataGridViewExtensions {
     var columnPropertyName = column.DataPropertyName;
 
     TryHandle<DataGridViewImageColumnAttribute>(DataGridViewImageColumnAttribute.OnCellFormatting);
-    TryHandle<DataGridViewTextAndImageColumnAttribute>(DataGridViewTextAndImageColumnAttribute.OnCellFormatting);
+    TryHandle<DataGridViewImageAndTextColumnAttribute>(DataGridViewImageAndTextColumnAttribute.OnCellFormatting);
     TryHandle2<SupportsConditionalImageAttribute>(SupportsConditionalImageAttribute.OnCellFormatting);
     TryHandle<DataGridViewCellDisplayTextAttribute>(DataGridViewCellDisplayTextAttribute.OnCellFormatting);
     _FixDisplayTextForEnums(column, rowData, columnPropertyName, e);

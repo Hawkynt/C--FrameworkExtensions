@@ -34,7 +34,7 @@ namespace System.Windows.Forms;
 ///     public string ImageKey { get; set; }
 ///     public ImageList ImageList { get; set; }
 ///
-///     [DataGridViewTextAndImageColumn(imageListPropertyName: nameof(ImageList), imageKeyPropertyName: nameof(ImageKey))]
+///     [DataGridViewImageAndTextColumn(imageListPropertyName: nameof(ImageList), imageKeyPropertyName: nameof(ImageKey))]
 ///     public string DisplayName => Name;
 /// }
 ///
@@ -56,7 +56,7 @@ namespace System.Windows.Forms;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
+public sealed class DataGridViewImageAndTextColumnAttribute : Attribute {
 
   private readonly uint _fixedImageHeight;
   private readonly uint _fixedImageWidth;
@@ -64,7 +64,7 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
   private readonly TextImageRelation _textImageRelation;
   private readonly Func<object, object, Image> _imageGetter;
 
-  private DataGridViewTextAndImageColumnAttribute(
+  private DataGridViewImageAndTextColumnAttribute(
     TextImageRelation textImageRelation,
     uint fixedImageWidth,
     uint fixedImageHeight,
@@ -77,7 +77,7 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
   }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="DataGridViewTextAndImageColumnAttribute"/> class with image list and key properties.
+  /// Initializes a new instance of the <see cref="DataGridViewImageAndTextColumnAttribute"/> class with image list and key properties.
   /// </summary>
   /// <param name="imageListPropertyName">The name of the property that provides the <see cref="System.Windows.Forms.ImageList"/>.</param>
   /// <param name="imageKeyPropertyName">The name of the property that provides the key for the image in the <see cref="System.Windows.Forms.ImageList"/>.</param>
@@ -85,7 +85,7 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
   /// <param name="fixedImageWidth">(Optional: defaults to 0) The fixed width of the image in pixels.</param>
   /// <param name="fixedImageHeight">(Optional: defaults to 0) The fixed height of the image in pixels.</param>
   /// <param name="keepAspectRatio">(Optional: defaults to <see langword="true"/>) Indicates whether to maintain the aspect ratio of the image.</param>
-  public DataGridViewTextAndImageColumnAttribute(
+  public DataGridViewImageAndTextColumnAttribute(
     string imageListPropertyName,
     string imageKeyPropertyName,
     TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
@@ -132,14 +132,14 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
   }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="DataGridViewTextAndImageColumnAttribute"/> class with an image property.
+  /// Initializes a new instance of the <see cref="DataGridViewImageAndTextColumnAttribute"/> class with an image property.
   /// </summary>
   /// <param name="imagePropertyName">The name of the property that provides the <see cref="System.Drawing.Image"/> directly.</param>
   /// <param name="textImageRelation">(Optional: defaults to <see cref="System.Windows.Forms.TextImageRelation.ImageBeforeText"/>) Specifies the position of the image relative to the text.</param>
   /// <param name="fixedImageWidth">(Optional: defaults to 0) The fixed width of the image in pixels.</param>
   /// <param name="fixedImageHeight">(Optional: defaults to 0) The fixed height of the image in pixels.</param>
   /// <param name="keepAspectRatio">(Optional: defaults to <see langword="true"/>) Indicates whether to maintain the aspect ratio of the image.</param>
-  public DataGridViewTextAndImageColumnAttribute(
+  public DataGridViewImageAndTextColumnAttribute(
     string imagePropertyName,
     TextImageRelation textImageRelation = TextImageRelation.ImageBeforeText,
     uint fixedImageWidth = 0,
@@ -161,7 +161,7 @@ public sealed class DataGridViewTextAndImageColumnAttribute : Attribute {
     }
   }
 
-  internal static void OnCellFormatting(DataGridViewTextAndImageColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  internal static void OnCellFormatting(DataGridViewImageAndTextColumnAttribute @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     if (row.Cells[e.ColumnIndex] is not DataGridViewImageAndTextColumn.DataGridViewTextAndImageCell textAndImageCell)
       return;
 
