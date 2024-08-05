@@ -20,102 +20,129 @@
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows setting an exact height in pixels for automatically generated columns.
+/// Specifies the height of a row in a <see cref="System.Windows.Forms.DataGridView"/> with various conditions.
 /// </summary>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// [DataGridViewRowHeight(rowHeightProperty: nameof(RowHeight), rowHeightEnabledProperty: nameof(IsCustomHeightEnabled))]
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public int RowHeight { get; set; }
+///     public bool IsCustomHeightEnabled { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", RowHeight = 50, IsCustomHeightEnabled = true },
+///     new DataRow { Id = 2, Name = "Row 2", RowHeight = 60, IsCustomHeightEnabled = false }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
 public sealed class DataGridViewRowHeightAttribute : Attribute {
-  public string RowHeightProperty { get; }
-  public string CustomRowHeightEnabledProperty { get; }
-  public string CustomRowHeightProperty { get; }
-  public int HeightInPixel { get; }
 
-  private readonly Action<DataGridViewRow, object> _applyRowHeightAction;
+  private readonly Action<DataGridViewRow, object> _applier;
 
-  public DataGridViewRowHeightAttribute(int heightInPixel) {
-    this.HeightInPixel = heightInPixel;
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewRowHeightAttribute"/> class with a fixed height.
+  /// </summary>
+  /// <param name="heightInPixel">The fixed height in pixels for the row.</param>
+  public DataGridViewRowHeightAttribute(int heightInPixel) 
+    => this._applier = (row, _) => {
+      row.MinimumHeight = heightInPixel;
+      row.Height = heightInPixel;
+    };
 
-    this._applyRowHeightAction = this._ApplyPixelRowHeightUnconditional;
-  }
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewRowHeightAttribute"/> class with a conditional height.
+  /// </summary>
+  /// <param name="heightInPixel">The fixed height in pixels for the row.</param>
+  /// <param name="rowHeightEnabledProperty">The name of a boolean property that enables or disables the height setting. When this property is <see langword="true"/>, the height is applied.</param>
+  public DataGridViewRowHeightAttribute(int heightInPixel, string rowHeightEnabledProperty) 
+    => this._applier = (row, rowData) => {
+      if (!DataGridViewExtensions.GetPropertyValueOrDefault(
+          rowData,
+          rowHeightEnabledProperty,
+          false,
+          false,
+          false,
+          false
+        ))
+        return;
 
-  public DataGridViewRowHeightAttribute(int heightInPixel, string customRowHeightEnabledProperty) {
-    this.HeightInPixel = heightInPixel;
-    this.CustomRowHeightEnabledProperty = customRowHeightEnabledProperty;
+      row.MinimumHeight = heightInPixel;
+      row.Height = heightInPixel;
+    };
 
-    this._applyRowHeightAction = this._ApplyPixelRowHeightConditional;
-  }
-
-  public DataGridViewRowHeightAttribute(string customRowHeightProperty) {
-    this.CustomRowHeightProperty = customRowHeightProperty;
-
-    this._applyRowHeightAction = this._ApplyPropertyConrolledRowHeightUnconditional;
-  }
-
-  public DataGridViewRowHeightAttribute(string customRowHeightProperty, string customRowHeightEnabledProperty) {
-    this.CustomRowHeightProperty = customRowHeightProperty;
-    this.CustomRowHeightEnabledProperty = customRowHeightEnabledProperty;
-
-    this._applyRowHeightAction = this._ApplyPropertyConrolledRowHeightConditional;
-  }
-
-  private void _ApplyPixelRowHeightUnconditional(DataGridViewRow row, object rowData) {
-    row.MinimumHeight = this.HeightInPixel;
-    row.Height = this.HeightInPixel;
-  }
-
-  private void _ApplyPixelRowHeightConditional(DataGridViewRow row, object rowData) {
-    if (!DataGridViewExtensions.GetPropertyValueOrDefault(
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewRowHeightAttribute"/> class with a property-based height.
+  /// </summary>
+  /// <param name="rowHeightProperty">The name of a property that provides the height for the row.</param>
+  public DataGridViewRowHeightAttribute(string rowHeightProperty) 
+    => this._applier = (row, rowData) => {
+      var originalHeight = row.Height;
+      var rowHeight = DataGridViewExtensions.GetPropertyValueOrDefault(
         rowData,
-        this.CustomRowHeightEnabledProperty,
-        false,
-        false,
-        false,
-        false
-      ))
-      return;
+        rowHeightProperty,
+        originalHeight,
+        originalHeight,
+        originalHeight,
+        originalHeight
+      );
 
-    row.MinimumHeight = this.HeightInPixel;
-    row.Height = this.HeightInPixel;
-  }
+      row.MinimumHeight = rowHeight;
+      row.Height = rowHeight;
+    };
 
-  private void _ApplyPropertyConrolledRowHeightUnconditional(DataGridViewRow row, object rowData) {
-    var originalHeight = row.Height;
-    var rowHeight = DataGridViewExtensions.GetPropertyValueOrDefault(
-      rowData,
-      this.CustomRowHeightProperty,
-      originalHeight,
-      originalHeight,
-      originalHeight,
-      originalHeight
-    );
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewRowHeightAttribute"/> class with a conditional property-based height.
+  /// </summary>
+  /// <param name="rowHeightProperty">The name of a property that provides the height for the row.</param>
+  /// <param name="rowHeightEnabledProperty">The name of a boolean property that enables or disables the height setting. When this property is <see langword="true"/>, the height is applied.</param>
+  public DataGridViewRowHeightAttribute(string rowHeightProperty, string rowHeightEnabledProperty) 
+    => this._applier = (row, rowData) => {
+      if (!DataGridViewExtensions.GetPropertyValueOrDefault(
+          rowData,
+          rowHeightEnabledProperty,
+          false,
+          false,
+          false,
+          false
+        ))
+        return;
 
-    row.MinimumHeight = rowHeight;
-    row.Height = rowHeight;
-  }
-
-  private void _ApplyPropertyConrolledRowHeightConditional(DataGridViewRow row, object rowData) {
-    if (!DataGridViewExtensions.GetPropertyValueOrDefault(
+      var originalHeight = row.Height;
+      var rowHeight = DataGridViewExtensions.GetPropertyValueOrDefault(
         rowData,
-        this.CustomRowHeightEnabledProperty,
-        false,
-        false,
-        false,
-        false
-      ))
-      return;
+        rowHeightProperty,
+        originalHeight,
+        originalHeight,
+        originalHeight,
+        originalHeight
+      );
 
-    var originalHeight = row.Height;
-    var rowHeight = DataGridViewExtensions.GetPropertyValueOrDefault(
-      rowData,
-      this.CustomRowHeightProperty,
-      originalHeight,
-      originalHeight,
-      originalHeight,
-      originalHeight
-    );
+      row.MinimumHeight = rowHeight;
+      row.Height = rowHeight;
+    };
 
-    row.MinimumHeight = rowHeight;
-    row.Height = rowHeight;
-  }
+  /// <summary>
+  /// Applies the row height settings to the specified <see cref="DataGridViewRow"/>.
+  /// </summary>
+  /// <param name="rowData">The data for the row.</param>
+  /// <param name="row">The <see cref="DataGridViewRow"/> to apply the height settings to.</param>
+  internal void ApplyTo(object rowData, DataGridViewRow row) => this._applier?.Invoke(row, rowData);
 
-  public void ApplyTo(object rowData, DataGridViewRow row) => this._applyRowHeightAction?.Invoke(row, rowData);
 }

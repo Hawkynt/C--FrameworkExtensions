@@ -19,7 +19,7 @@
 
 namespace System.Windows.Forms;
 
-public partial class BoundDataGridViewComboBoxColumn {
+public partial class DataGridViewBoundComboBoxColumn {
   private sealed class DataGridViewComboBoxEditingControl : ComboBox, IDataGridViewEditingControl {
     public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle) { }
     public bool EditingControlWantsInputKey(Keys keyData, bool dataGridViewWantsInputKey) => false;

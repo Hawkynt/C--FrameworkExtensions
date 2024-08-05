@@ -59,15 +59,24 @@ public partial class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn 
 
   /// <inheritdoc />
   public override object Clone() {
-    var c = base.Clone() as DataGridViewImageAndTextColumn;
-    c._imageValue = this._imageValue;
-    c.ImageSize = this.ImageSize;
-    return c;
+    var result = base.Clone() as DataGridViewImageAndTextColumn;
+    result._imageValue = this._imageValue;
+    result.ImageSize = this.ImageSize;
+    return result;
   }
 
   /// <summary>
   /// Gets or sets the image displayed in the column cells.
   /// </summary>
+  /// <example>
+  /// <code>
+  /// var imageAndTextColumn = new DataGridViewImageAndTextColumn
+  /// {
+  ///     Image = Image.FromFile("path/to/defaultImage.png")
+  /// };
+  /// </code>
+  /// This example sets an image for the <see cref="DataGridViewImageAndTextColumn"/>.
+  /// </example>
   public Image Image {
     get => this._imageValue;
     set {
@@ -91,7 +100,17 @@ public partial class DataGridViewImageAndTextColumn : DataGridViewTextBoxColumn 
   }
 
   /// <summary>
-  /// Gets the size of the image displayed in the column cells.
+  /// Gets or sets the size of the image displayed in the column cells.
   /// </summary>
-  internal Size ImageSize { get; private set; }
+  /// <example>
+  /// <code>
+  /// var imageAndTextColumn = new DataGridViewImageAndTextColumn
+  /// {
+  ///     ImageSize = new Size(50, 50)
+  /// };
+  /// </code>
+  /// This example sets the size of the image for the <see cref="DataGridViewImageAndTextColumn"/>.
+  /// </example>
+  public Size ImageSize { get; set; }
+
 }

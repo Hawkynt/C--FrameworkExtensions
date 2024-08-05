@@ -17,173 +17,92 @@
 
 #endregion
 
-using System.Drawing;
+using System.ComponentModel;
 
 namespace System.Windows.Forms;
 
-public class DataGridViewProgressBarColumn : DataGridViewTextBoxColumn {
-  public class DataGridViewProgressBarCell : DataGridViewTextBoxCell {
-    public double Maximum { get; set; } = 100;
-    public double Minimum { get; set; }
-    public override object DefaultNewRowValue => 0;
+/// <summary>
+/// Represents a <see cref="System.Windows.Forms.DataGridViewTextBoxColumn"/> that hosts <see cref="DataGridViewProgressBarCell"/> cells.
+/// </summary>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public double Progress { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", Progress = 0.5 },
+///     new DataRow { Id = 2, Name = "Row 2", Progress = 0.8 }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Create a DataGridViewProgressBarColumn and add it to the DataGridView
+/// var progressBarColumn = new DataGridViewProgressBarColumn
+/// {
+///     Name = "ProgressBarColumn",
+///     HeaderText = "Progress",
+///     DataPropertyName = nameof(DataRow.Progress),
+///     Minimum = 0,
+///     Maximum = 1
+/// };
+/// dataGridView.Columns.Add(progressBarColumn);
+/// </code>
+/// </example>
+public partial class DataGridViewProgressBarColumn() 
+  : DataGridViewColumn(new DataGridViewProgressBarCell()) {
 
-    public override object Clone() {
-      var cell = (DataGridViewProgressBarCell)base.Clone();
-      cell.Maximum = this.Maximum;
-      cell.Minimum = this.Minimum;
-      return cell;
-    }
-
-    protected override void Paint(
-      Graphics graphics,
-      Rectangle clipBounds,
-      Rectangle cellBounds,
-      int rowIndex,
-      DataGridViewElementStates cellState,
-      object value,
-      object formattedValue,
-      string errorText,
-      DataGridViewCellStyle cellStyle,
-      DataGridViewAdvancedBorderStyle advancedBorderStyle,
-      DataGridViewPaintParts paintParts
-    ) {
-      var intValue = value switch {
-        int i => i,
-        float f => f,
-        double d => d,
-        decimal dec => (double)dec,
-        _ => 0d
-      };
-
-      if (intValue < this.Minimum)
-        intValue = this.Minimum;
-
-      if (intValue > this.Maximum)
-        intValue = this.Maximum;
-
-      var rate = (intValue - this.Minimum) / (this.Maximum - this.Minimum);
-
-      if ((paintParts & DataGridViewPaintParts.Border) == DataGridViewPaintParts.Border)
-        this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
-
-      var borderRect = this.BorderWidths(advancedBorderStyle);
-      var paintRect = new Rectangle(
-        cellBounds.Left + borderRect.Left,
-        cellBounds.Top + borderRect.Top,
-        cellBounds.Width - borderRect.Right,
-        cellBounds.Height - borderRect.Bottom
-      );
-
-      var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
-      var bkColor =
-          isSelected && paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground)
-            ? cellStyle.SelectionBackColor
-            : cellStyle.BackColor
-        ;
-
-      if (paintParts.HasFlag(DataGridViewPaintParts.Background))
-        using (var backBrush = new SolidBrush(bkColor))
-          graphics.FillRectangle(backBrush, paintRect);
-
-      paintRect.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
-      paintRect.Width -= cellStyle.Padding.Horizontal;
-      paintRect.Height -= cellStyle.Padding.Vertical;
-
-      if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
-        if (ProgressBarRenderer.IsSupported) {
-          ProgressBarRenderer.DrawHorizontalBar(graphics, paintRect);
-          var barBounds = new Rectangle(
-            paintRect.Left + 3,
-            paintRect.Top + 3,
-            paintRect.Width - 4,
-            paintRect.Height - 6
-          );
-          barBounds.Width = Convert.ToInt32(Math.Round(barBounds.Width * rate));
-          ProgressBarRenderer.DrawHorizontalChunks(graphics, barBounds);
-        } else {
-          graphics.FillRectangle(Brushes.White, paintRect);
-          graphics.DrawRectangle(Pens.Black, paintRect);
-          var barBounds = new Rectangle(
-            paintRect.Left + 1,
-            paintRect.Top + 1,
-            paintRect.Width - 1,
-            paintRect.Height - 1
-          );
-          barBounds.Width = Convert.ToInt32(Math.Round(barBounds.Width * rate));
-          graphics.FillRectangle(Brushes.Blue, barBounds);
-        }
-      }
-
-      if (this.DataGridView.CurrentCellAddress.X == this.ColumnIndex && this.DataGridView.CurrentCellAddress.Y == this.RowIndex && paintParts.HasFlag(DataGridViewPaintParts.Focus) && this.DataGridView.Focused) {
-        var focusRect = paintRect;
-        focusRect.Inflate(-3, -3);
-        ControlPaint.DrawFocusRectangle(graphics, focusRect);
-      }
-
-      if (paintParts.HasFlag(DataGridViewPaintParts.ContentForeground)) {
-        var txt = $"{Math.Round(rate * 100)}%";
-        const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
-        var fColor = cellStyle.ForeColor;
-        paintRect.Inflate(-2, -2);
-        TextRenderer.DrawText(graphics, txt, cellStyle.Font, paintRect, fColor, flags);
-      }
-
-      if (!paintParts.HasFlag(DataGridViewPaintParts.ErrorIcon) || !this.DataGridView.ShowCellErrors || string.IsNullOrEmpty(errorText))
-        return;
-
-      var iconBounds = this.GetErrorIconBounds(graphics, cellStyle, rowIndex);
-      iconBounds.Offset(cellBounds.X, cellBounds.Y);
-      this.PaintErrorIcon(graphics, iconBounds, cellBounds, errorText);
-    }
-  }
-
-  public DataGridViewProgressBarColumn() => this.CellTemplate = new DataGridViewProgressBarCell();
-
+  /// <summary>
+  /// Represents the implicit cell that gets cloned when adding rows to the grid.
+  /// </summary>
+  [Browsable(false)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public override DataGridViewCell CellTemplate {
     get => base.CellTemplate;
-    set {
-      if (value is DataGridViewProgressBarCell)
-        base.CellTemplate = value;
-      else
-        throw new InvalidCastException(nameof(DataGridViewProgressBarCell));
-    }
+    set => this.SetCellTemplateOrThrow<DataGridViewProgressBarCell>(value, value => base.CellTemplate = value);
   }
 
+  /// <summary>
+  /// Replicates the Maximum property of the <see cref="DataGridViewProgressBarCell"/> cell type.
+  /// </summary>
+  [Category("Appearance")]
+  [DefaultValue(DataGridViewProgressBarCell.DEFAULT_MAXIMUM)]
+  [Description("Indicates the maximum to display.")]
   public double Maximum {
-    get => ((DataGridViewProgressBarCell)this.CellTemplate).Maximum;
+    get => this.GetCellTemplateOrThrow<DataGridViewProgressBarCell>().Maximum;
     set {
       if (this.Maximum == value)
         return;
 
-      ((DataGridViewProgressBarCell)this.CellTemplate).Maximum = value;
-
-      if (this.DataGridView == null)
-        return;
-
-      var rowCount = this.DataGridView.RowCount;
-      for (var i = 0; i <= rowCount - 1; ++i) {
-        var r = this.DataGridView.Rows.SharedRow(i);
-        ((DataGridViewProgressBarCell)r.Cells[this.Index]).Maximum = value;
-      }
+      this.GetCellTemplateOrThrow<DataGridViewProgressBarCell>().Maximum = value;
+      this.DataGridView.UpdateCells<DataGridViewProgressBarCell>(this.Index, (cell, row) => cell.Maximum = value);
     }
   }
 
+  /// <summary>
+  /// Replicates the Minimum property of the <see cref="DataGridViewProgressBarCell"/> cell type.
+  /// </summary>
+  [Category("Appearance")]
+  [DefaultValue(DataGridViewProgressBarCell.DEFAULT_MAXIMUM)]
+  [Description("Indicates the minimum to display.")]
   public double Minimum {
     get => ((DataGridViewProgressBarCell)this.CellTemplate).Minimum;
     set {
       if (this.Minimum == value)
         return;
 
-      ((DataGridViewProgressBarCell)this.CellTemplate).Minimum = value;
-
-      if (this.DataGridView == null)
-        return;
-
-      var rowCount = this.DataGridView.RowCount;
-      for (var i = 0; i <= rowCount - 1; ++i) {
-        var r = this.DataGridView.Rows.SharedRow(i);
-        ((DataGridViewProgressBarCell)r.Cells[this.Index]).Minimum = value;
-      }
+      this.GetCellTemplateOrThrow<DataGridViewProgressBarCell>().Minimum = value;
+      this.DataGridView.UpdateCells<DataGridViewProgressBarCell>(this.Index, (cell, row) => cell.Minimum = value);
     }
   }
 }

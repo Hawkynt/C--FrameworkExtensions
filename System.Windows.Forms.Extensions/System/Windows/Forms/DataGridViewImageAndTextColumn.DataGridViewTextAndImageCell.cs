@@ -33,10 +33,10 @@ public partial class DataGridViewImageAndTextColumn {
     public uint FixedImageHeight { get; set; }
 
     public override object Clone() {
-      var c = base.Clone() as DataGridViewTextAndImageCell;
-      c._imageValue = this._imageValue;
-      c._imageSize = this._imageSize;
-      return c;
+      var result = base.Clone() as DataGridViewTextAndImageCell;
+      result._imageValue = this._imageValue;
+      result._imageSize = this._imageSize;
+      return result;
     }
 
     public Image Image {
