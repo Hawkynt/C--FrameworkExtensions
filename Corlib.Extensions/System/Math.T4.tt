@@ -50,10 +50,10 @@ public static partial class MathEx {
   public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)-1#> ? 0 : @this >> count);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> LogicalShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)((<#=(type=="sbyte"?"byte":"u"+type)#>)@this << count);
+  public static <#=type#> LogicalShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftLeft((<#=(type=="sbyte"?"byte":"u"+type)#>)@this, count);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> LogicalShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(@this >>> count);
+  public static <#=type#> LogicalShiftRight(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftRight(@this, count);
 
 <#}#>
 <#foreach (var type in new[]{"byte","ushort","uint","ulong"}){#>

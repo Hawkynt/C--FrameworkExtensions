@@ -8553,7 +8553,42 @@ public class MathTest {
   [TestCase(unchecked((long)0x4000000000000000), 128, 0b00000000000000000000000000000000)]
   public void ArithmeticShiftRightLong(long inp, byte count, long expected) => Assert.AreEqual(expected, inp.ArithmeticShiftRight(count));
 
-  // TODO: logic left shift
+  [Test]
+  [TestCase(unchecked((sbyte)0b00000001),0, unchecked((sbyte)0b00000001))]
+  [TestCase(unchecked((sbyte)0b00000001), 1, unchecked((sbyte)0b00000010))]
+  [TestCase(unchecked((sbyte)0b01000000), 1, unchecked((sbyte)0b10000000))]
+  [TestCase(unchecked((sbyte)0b01000000), 2, unchecked((sbyte)0b00000000))]
+  [TestCase(unchecked((sbyte)0b00000001), 8, unchecked((sbyte)0b00000000))]
+  [TestCase(unchecked((sbyte)0b00000001), 16, unchecked((sbyte)0b00000000))]
+  public void LogicalShiftLeftSByte(sbyte inp, byte count, sbyte expected) => Assert.AreEqual(expected, inp.LogicalShiftLeft(count));
+
+  [Test]
+  [TestCase(unchecked((short)0b0000000000000001), 0, unchecked((short)0b0000000000000001))]
+  [TestCase(unchecked((short)0b0000000000000001), 1, unchecked((short)0b0000000000000010))]
+  [TestCase(unchecked((short)0b0100000000000000), 1, unchecked((short)0b1000000000000000))]
+  [TestCase(unchecked((short)0b0100000000000000), 2, unchecked((short)0b0000000000000000))]
+  [TestCase(unchecked((short)0b0000000000000001), 16, unchecked((short)0b0000000000000000))]
+  [TestCase(unchecked((short)0b0000000000000001), 32, unchecked((short)0b0000000000000000))]
+  public void LogicalShiftLeftShort(short inp, byte count, short expected) => Assert.AreEqual(expected, inp.LogicalShiftLeft(count));
+
+  [Test]
+  [TestCase(unchecked((int)0b00000000000000000000000000000001), 0, unchecked((int)0b00000000000000000000000000000001))]
+  [TestCase(unchecked((int)0b00000000000000000000000000000001), 1, unchecked((int)0b00000000000000000000000000000010))]
+  [TestCase(unchecked((int)0b01000000000000000000000000000000), 1, unchecked((int)0b10000000000000000000000000000000))]
+  [TestCase(unchecked((int)0b01000000000000000000000000000000), 2, unchecked((int)0b00000000000000000000000000000000))]
+  [TestCase(unchecked((int)0b00000000000000000000000000000001), 32, unchecked((int)0b00000000000000000000000000000000))]
+  [TestCase(unchecked((int)0b00000000000000000000000000000001), 64, unchecked((int)0b00000000000000000000000000000000))]
+  public void LogicalShiftLeftInt(int inp, byte count, int expected) => Assert.AreEqual(expected, inp.LogicalShiftLeft(count));
+
+  [Test]
+  [TestCase(unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000001), 0, unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000001))]
+  [TestCase(unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000001), 1, unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000010))]
+  [TestCase(unchecked((long)0b0100000000000000000000000000000000000000000000000000000000000000), 1, unchecked((long)0b1000000000000000000000000000000000000000000000000000000000000000))]
+  [TestCase(unchecked((long)0b0100000000000000000000000000000000000000000000000000000000000000), 2, unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000000))]
+  [TestCase(unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000001), 64, unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000000))]
+  [TestCase(unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000001), 128, unchecked((long)0b0000000000000000000000000000000000000000000000000000000000000000))]
+  public void LogicalShiftLeftLong(long inp, byte count, long expected) => Assert.AreEqual(expected, inp.LogicalShiftLeft(count));
+
   // TODO: logic right shift
 
   [Test]
