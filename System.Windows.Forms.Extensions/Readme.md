@@ -11,31 +11,177 @@ This repository contains various C# extension methods and utilities for enhancin
 
 ## Control Extensions
 
-- **IsDesignMode**: Detects if a control is in design mode, useful for conditionally executing code only at runtime. (`Control.IsDesignMode`)
+- **IsDesignMode**: Detects if a control is in design mode (even within the constructor), useful for conditionally executing code only at runtime. (`Control.IsDesignMode`)
+
+  ```cs
+  if (this.IsDesignMode()) {
+    // Execute design-time logic
+  }
+  ```
+
 - **ISuspendedLayoutToken**: Facilitates the suspension and resumption of layout logic on controls, improving performance during batch updates. (`Control.PauseLayout`)
+
+  ```cs
+  using (this.PauseLayout()) {
+      // Perform layout updates
+  }
+  ```
+
 - **ISuspendedRedrawToken**: Similar to `ISuspendedLayoutToken`, but suspends and resumes redraw operations to avoid flickering during updates. (`Control.PauseRedraw`)
-- **Bindings**: Allow using Lambdas to add Bindings for easier Model-View-Controller architecture. (`Control.AddBinding`)
+
+  ```cs
+  using (this.PauseRedraw()) {
+      // Perform redraw updates
+  }
+  ```
+
+- **Bindings**: Allows using Lambdas to add bindings for easier Model-View-ViewModel architecture (MVVM). This feature facilitates the binding of control properties to model properties using lambda expressions, ensuring a cleaner and more maintainable codebase. Ensure to use the equality (`==`) operator as assignments (`=`) are not supported in expression trees. (`Control.AddBinding`)
+
+  ```csharp
+  // Bind the model's LabelText property to the label's Text property.
+  label.AddBinding(model, (c, m) => c.Text == m.LabelText);
+  ```
+
+  **Supported Binding Expressions**:
+
+  The `AddBinding` method supports a variety of expressions for binding control properties to model data members. Here are some examples:
+  
+  - **Direct Property Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    label.AddBinding(model, (c, m) => c.Text == m.LabelText);
+    ```
+
+  - **Type Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == (type)source.dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    numericUpDown.AddBinding(model, (c, m) => c.Value == (decimal)m.NumericValue);
+    ```
+
+  - **String Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.dataMember.ToString()
+    ```
+
+    Example:
+
+    ```csharp
+    textBox.AddBinding(model, (c, m) => c.Text == m.IntegerValue.ToString());
+    ```
+
+  - **Nested Property Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.subMember.dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    label.AddBinding(model, (c, m) => c.Text == m.SubModel.SubLabelText);
+    ```
+
+  - **Nested Type Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == (type)source.subMember.dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    progressBar.AddBinding(model, (c, m) => c.Value == (int)m.SubModel.ProgressValue);
+    ```
+
+  - **Nested String Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.subMember.dataMember.ToString()
+    ```
+
+    Example:
+
+    ```csharp
+    comboBox.AddBinding(model, (c, m) => c.SelectedItem == m.SubModel.SelectedValue.ToString());
+    ```
+
+  - **Deeply Nested Property Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.....dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    label.AddBinding(model, (c, m) => c.Text == m.Level1.Level2.Level3.Text);
+    ```
+
+  - **Deeply Nested Type Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == (type)source.....dataMember
+    ```
+
+    Example:
+
+    ```csharp
+    slider.AddBinding(model, (c, m) => c.Value == (double)m.Level1.Level2.Level3.SliderValue);
+    ```
+
+  - **Deeply Nested String Conversion Binding**:
+
+    ```csharp
+    (control, source) => control.propertyName == source.....dataMember.ToString()
+    ```
+
+    Example:
+
+    ```csharp
+    listBox.AddBinding(model, (c, m) => c.SelectedItem == m.Level1.Level2.Level3.ItemValue.ToString());
+    ```
+
 - **UI-Threading**: Determine whether to use a controls' UI thread to execute code or not. (`Control.SafelyInvoke`/`Control.Async`)
+
+  ```cs
+  form.SafelyInvoke(() => {
+      // UI thread safe code
+  });
+  ```
 
 ## DataGridView Extensions
 
 ### Info on used datatypes
 
-- **methodname**: The name of an instance or static method, utilize nameof()-operator
-- **propertyname**: The name of an instance or static property, utilize nameof()-operator
+- **methodname**: The name of an instance or static method, utilize `nameof()`-operator
+- **propertyname**: The name of an instance or static property, utilize `nameof()`-operator
 - **colorstring**:
-  - hex between 0-F:
-    - #AARRGGBB
-    - #RRGGBB
-    - #ARGB
-    - #RGB
-  - decimal between 0-255:
-    - a, r, g, b
-    - r, g, b
-  - float between 0.0-1.0:
-    - a, r, g, b
-    - r, g, b
-  - known color name
+  - Hex-Digits between 0-F:
+    - `#AARRGGBB`, e.g. `#CCFF9900`
+    - `#RRGGBB`, e.g. `#FF9900`
+    - `#ARGB`, e.g. `#CF90`
+    - `#RGB`, e.g. `#F90`
+  - Decimal-Digits between 0-255:
+    - `Alpha, Red, Green, Blue`
+    - `Red, Green, Blue`
+  - Floating-Point between 0.0-1.0:
+    - `Alpha, Red, Green, Blue`
+    - `Red, Green, Blue`
+  - Known Color Name
+    - e.g `Red`, `Lime`, `DodgerBlue`, etc.
 
 ### Column Types
 
