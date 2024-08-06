@@ -17,22 +17,81 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Drawing;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace System.Windows.Forms;
 
-public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
+/// <summary>
+/// Represents a <see cref="System.Windows.Forms.DataGridViewTextBoxColumn"/> that can display multiple images and handle click events with tooltips.
+/// </summary>
+public partial class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
   private Action<object, int> _onClickMethod;
   private Func<object, int, string> _tooltipTextProvider;
 
   private readonly string _onClickMethodName;
   private readonly string _toolTipTextProviderMethodName;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumn"/> class.
+  /// </summary>
+  /// <param name="imageSizeInPixels">The size of the images displayed in the column cells.</param>
+  /// <param name="padding">The padding around the images within the cells.</param>
+  /// <param name="margin">The margin around the cells.</param>
+  /// <param name="onClickMethodName">The name of the method to call when an image is clicked.</param>
+  /// <param name="toolTipTextProviderMethodName">The name of the method that provides the tooltip text for the images.</param>
+  /// <example>
+  /// <code>
+  /// // Define a custom class for the data grid view rows
+  /// public class DataRow
+  /// {
+  ///     public int Id { get; set; }
+  ///     public string Name { get; set; }
+  ///
+  ///     public void OnImageClick(object sender, int imageIndex)
+  ///     {
+  ///         // Handle image click event
+  ///         Console.WriteLine($"Image {imageIndex} clicked in row {Id}");
+  ///     }
+  ///
+  ///     public string GetTooltipText(object sender, int imageIndex)
+  ///     {
+  ///         // Provide tooltip text for the images
+  ///         return $"Tooltip for image {imageIndex} in row {Id}";
+  ///     }
+  /// }
+  ///
+  /// // Create an array of DataRow instances
+  /// var dataRows = new[]
+  /// {
+  ///     new DataRow { Id = 1, Name = "Row 1" },
+  ///     new DataRow { Id = 2, Name = "Row 2" }
+  /// };
+  ///
+  /// // Create a DataGridView and set its data source
+  /// var dataGridView = new DataGridView
+  /// {
+  ///     DataSource = dataRows
+  /// };
+  ///
+  /// // Create a DataGridViewMultiImageColumn and add it to the DataGridView
+  /// var multiImageColumn = new DataGridViewMultiImageColumn(
+  ///     imageSize: 24,
+  ///     padding: new Padding(2),
+  ///     margin: new Padding(2),
+  ///     onClickMethodName: nameof(DataRow.OnImageClick),
+  ///     toolTipTextProviderMethodName: nameof(DataRow.GetTooltipText)
+  /// )
+  /// {
+  ///     Name = "MultiImageColumn",
+  ///     HeaderText = "Images",
+  ///     DataPropertyName = "Name"
+  /// };
+  /// dataGridView.Columns.Add(multiImageColumn);
+  /// </code>
+  /// </example>
   public DataGridViewMultiImageColumn(
-    int imageSize,
+    int imageSizeInPixels,
     Padding padding,
     Padding margin,
     string onClickMethodName,
@@ -41,7 +100,7 @@ public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
     this._onClickMethodName = onClickMethodName;
     this._toolTipTextProviderMethodName = toolTipTextProviderMethodName;
 
-    var cell = new DataGridViewMultiImageCell { ImageSize = imageSize, Padding = padding, Margin = margin, };
+    var cell = new DataGridViewMultiImageCell { ImageSize = imageSizeInPixels, Padding = padding, Margin = margin, };
 
     // ReSharper disable once VirtualMemberCallInConstructor
     this.CellTemplate = cell;
@@ -49,6 +108,7 @@ public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
 
   #region Overrides of DataGridViewColumn
 
+  /// <inheritdoc />
   public override object Clone() {
     var cell = (DataGridViewMultiImageCell)this.CellTemplate;
     var result = new DataGridViewMultiImageColumn(
@@ -65,6 +125,7 @@ public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
 
   #region Overrides of DataGridViewBand
 
+  /// <inheritdoc />
   protected override void OnDataGridViewChanged() {
     if (this.DataGridView == null)
       return;
@@ -125,201 +186,19 @@ public class DataGridViewMultiImageColumn : DataGridViewTextBoxColumn {
     return dynamicMethod;
   }
 
+  /// <inheritdoc />
   public override DataGridViewCell CellTemplate {
     get => base.CellTemplate;
-    set {
-      // Ensure that the cell used for the template is a MultiImageCell.
-      if (value != null && !value.GetType().IsAssignableFrom(typeof(DataGridViewMultiImageCell)))
-        throw new InvalidCastException(nameof(DataGridViewMultiImageCell));
-
-      base.CellTemplate = value;
-    }
+    set => this.SetCellTemplateOrThrow<DataGridViewMultiImageCell>(value, value => base.CellTemplate = value);
   }
 
   #endregion
 
-  internal class DataGridViewMultiImageCell : DataGridViewTextBoxCell {
-    private readonly List<CellImage> _images = new();
-    private Size? _oldCellBounds;
+  /// <summary>
+  /// Handles the event when an image item is selected.
+  /// </summary>
+  /// <param name="arg1">The sender of the event.</param>
+  /// <param name="arg2">The index of the selected image.</param>
+  protected virtual void OnImageItemSelected(object arg1, int arg2) => this._onClickMethod?.Invoke(arg1, arg2);
 
-    private static readonly ToolTip tooltip = new() { Active = true, ShowAlways = true };
-    private bool ShowCellToolTipCacheValue;
-
-    public int ImageSize { get; set; }
-    public Padding Margin { get; set; }
-    public Padding Padding { get; set; }
-
-    #region Overrides of DataGridViewCell
-
-    protected override void OnMouseMove(DataGridViewCellMouseEventArgs e) {
-      var text = string.Empty;
-
-      for (var i = 0; i < this._images.Count; ++i) {
-        var image = this._images[i];
-
-        image.IsHovered = image.Bounds.Contains(e.Location);
-        this._images[i] = image;
-
-        if (!image.Bounds.Contains(e.Location))
-          continue;
-
-        text = ((DataGridViewMultiImageColumn)this.OwningColumn)._tooltipTextProvider?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i) ?? string.Empty;
-      }
-
-      this.DataGridView.InvalidateCell(this);
-
-      this.ShowCellToolTipCacheValue = this.DataGridView.ShowCellToolTips;
-      this.DataGridView.ShowCellToolTips = false;
-
-      if (tooltip.Tag != null && (string)tooltip.Tag == text) {
-        this.DataGridView.ShowCellToolTips = this.ShowCellToolTipCacheValue;
-        return;
-      }
-
-      var cellBounds = this.DataGridView.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
-
-      tooltip.Tag = text;
-      tooltip.Show(text, this.DataGridView, e.Location.X + cellBounds.X + this.ImageSize, e.Location.Y + cellBounds.Y);
-
-      this.DataGridView.ShowCellToolTips = this.ShowCellToolTipCacheValue;
-    }
-
-    protected override void OnMouseLeave(int rowIndex) {
-      for (var i = 0; i < this._images.Count; ++i) {
-        var image = this._images[i];
-
-        image.IsHovered = false;
-        this._images[i] = image;
-      }
-
-      tooltip.Hide(this.DataGridView);
-      this.DataGridView.InvalidateCell(this);
-    }
-
-    protected override void OnMouseClick(DataGridViewCellMouseEventArgs e) {
-      tooltip.UseAnimation = false;
-      tooltip.Hide(this.DataGridView);
-      tooltip.UseAnimation = true;
-
-      for (var i = 0; i < this._images.Count; ++i) {
-        var image = this._images[i];
-
-        if (!image.Bounds.Contains(e.Location))
-          continue;
-
-        ((DataGridViewMultiImageColumn)this.OwningColumn)._onClickMethod?.Invoke(this.DataGridView.Rows[e.RowIndex].DataBoundItem, i);
-      }
-    }
-
-    public override object Clone() {
-      var cell = (DataGridViewMultiImageCell)base.Clone();
-      cell.ImageSize = this.ImageSize;
-      return cell;
-    }
-
-    protected override void Paint(
-      Graphics graphics,
-      Rectangle clipBounds,
-      Rectangle cellBounds,
-      int rowIndex,
-      DataGridViewElementStates cellState,
-      object value,
-      object formattedValue,
-      string errorText,
-      DataGridViewCellStyle cellStyle,
-      DataGridViewAdvancedBorderStyle advancedBorderStyle,
-      DataGridViewPaintParts paintParts
-    ) {
-      if (paintParts.HasFlag(DataGridViewPaintParts.Border))
-        this.PaintBorder(graphics, clipBounds, cellBounds, cellStyle, advancedBorderStyle);
-
-      var borderRect = this.BorderWidths(advancedBorderStyle);
-      var paintRect = new Rectangle(
-        cellBounds.Left + borderRect.Left,
-        cellBounds.Top + borderRect.Top,
-        cellBounds.Width - borderRect.Right,
-        cellBounds.Height - borderRect.Bottom
-      );
-
-      var isSelected = cellState.HasFlag(DataGridViewElementStates.Selected);
-      var bkColor = isSelected && paintParts.HasFlag(DataGridViewPaintParts.SelectionBackground)
-          ? cellStyle.SelectionBackColor
-          : cellStyle.BackColor
-        ;
-
-      if (paintParts.HasFlag(DataGridViewPaintParts.Background))
-        using (var backBrush = new SolidBrush(bkColor))
-          graphics.FillRectangle(backBrush, paintRect);
-
-      paintRect.Offset(cellStyle.Padding.Right, cellStyle.Padding.Top);
-      paintRect.Width -= cellStyle.Padding.Horizontal;
-      paintRect.Height -= cellStyle.Padding.Vertical;
-
-      var images = value == null ? [] : (Image[])value;
-      var count = images.Length;
-
-      if (!this._oldCellBounds.HasValue || !this._oldCellBounds.Equals(paintRect.Size) || this._images.Count != count) {
-        this._oldCellBounds = paintRect.Size;
-        this._RecreateDrawingPanel(paintRect, count);
-      }
-
-      for (var i = 0; i < this._images.Count; ++i) {
-        var imageRect = this._images[i];
-
-        if (imageRect.IsHovered)
-          using (var hoverBrush = new SolidBrush(isSelected ? cellStyle.BackColor : cellStyle.SelectionBackColor))
-            graphics.FillRectangle(
-              hoverBrush,
-              imageRect.Bounds.X + paintRect.X,
-              imageRect.Bounds.Y + paintRect.Y,
-              imageRect.Bounds.Size.Width,
-              imageRect.Bounds.Size.Height
-            );
-
-        graphics.DrawImage(
-          images[i],
-          imageRect.Bounds.X + paintRect.X + this.Padding.Left,
-          imageRect.Bounds.Y + paintRect.Y + this.Padding.Top,
-          imageRect.Bounds.Size.Width - (this.Padding.Left + this.Padding.Right),
-          imageRect.Bounds.Size.Height - (this.Padding.Top + this.Padding.Bottom)
-        );
-      }
-    }
-
-    #endregion
-
-    private void _RecreateDrawingPanel(Rectangle cellBounds, int imageCount) {
-      var size = this.ImageSize;
-      var maxImages = cellBounds.Width / (size + this.Margin.Left + this.Margin.Right) * (cellBounds.Height / (size + this.Margin.Top + this.Margin.Bottom));
-
-      //resizing
-      while (maxImages < imageCount) {
-        size -= 8;
-
-        maxImages = cellBounds.Width / (size + this.Margin.Left + this.Margin.Right) * (cellBounds.Height / (size + this.Margin.Top + this.Margin.Bottom));
-      }
-
-      this._images.Clear();
-
-      var x = this.Margin.Left;
-      var y = this.Margin.Top;
-
-      for (var i = 0; i < imageCount; ++i) {
-        if (x + size + this.Margin.Right > cellBounds.Width) {
-          x = this.Margin.Left;
-          y += size + this.Margin.Bottom;
-        }
-
-        this._images.Add(new(new(x, y, size, size)));
-        x += size + this.Margin.Right;
-      }
-    }
-
-    private struct CellImage(Rectangle bounds) {
-      public Rectangle Bounds { get; } = bounds;
-      public bool IsHovered { get; set; } = false;
-    }
-  }
-
-  protected virtual void OnOnImageItemSelected(object arg1, int arg2) => this._onClickMethod?.Invoke(arg1, arg2);
 }

@@ -19,14 +19,48 @@
 
 namespace System.Windows.Forms;
 
+/// <summary>
+/// Specifies a property to be used for the display text of a <see cref="System.Windows.Forms.DataGridViewCell"/>.
+/// </summary>
+/// <param name="propertyName">The name of the property to use as the display text.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///
+///     [DataGridViewCellDisplayText(nameof(DisplayName))]
+///     public string DisplayText { get; set; }
+///
+///     public string DisplayName => $"{Name} (ID: {Id})";
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", DisplayText = "Display 1" },
+///     new DataRow { Id = 2, Name = "Row 2", DisplayText = "Display 2" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewCellDisplayTextAttribute(string propertyName) : Attribute {
-  private string PropertyName { get; } = propertyName;
 
   private string _GetDisplayText(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.PropertyName, string.Empty, string.Empty, string.Empty, string.Empty);
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, propertyName, string.Empty, string.Empty, string.Empty, string.Empty);
 
-  public static void OnCellFormatting(
+  internal static void OnCellFormatting(
     DataGridViewCellDisplayTextAttribute @this,
     DataGridViewRow row,
     DataGridViewColumn column,

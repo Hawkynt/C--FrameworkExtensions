@@ -20,8 +20,71 @@
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows specifying a value to be used as column with multiple images
+/// Specifies that a column in a <see cref="System.Windows.Forms.DataGridView"/> should display multiple images with specified click events and tooltips.
 /// </summary>
+/// <param name="onClickMethodName">The name of the method to call when an image is clicked.</param>
+/// <param name="toolTipProviderMethodName">The name of the method that provides the tooltip text for the images.</param>
+/// <param name="maximumImageSize">The maximum size of the images displayed in the column cells.</param>
+/// <param name="paddingLeft">The left padding around the images within the cells.</param>
+/// <param name="paddingTop">The top padding around the images within the cells.</param>
+/// <param name="paddingRight">The right padding around the images within the cells.</param>
+/// <param name="paddingBottom">The bottom padding around the images within the cells.</param>
+/// <param name="marginLeft">The left margin around the cells.</param>
+/// <param name="marginTop">The top margin around the cells.</param>
+/// <param name="marginRight">The right margin around the cells.</param>
+/// <param name="marginBottom">The bottom margin around the cells.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///
+///     public void OnImageClick(object sender, int imageIndex)
+///     {
+///         // Handle image click event
+///         Console.WriteLine($"Image {imageIndex} clicked in row {Id}");
+///     }
+///
+///     public string GetTooltipText(object sender, int imageIndex)
+///     {
+///         // Provide tooltip text for the images
+///         return $"Tooltip for image {imageIndex} in row {Id}";
+///     }
+///
+///     [DataGridViewMultiImageColumn(
+///         onClickMethodName: nameof(OnImageClick),
+///         toolTipProviderMethodName: nameof(GetTooltipText),
+///         maximumImageSize: 24,
+///         paddingLeft: 2,
+///         paddingTop: 2,
+///         paddingRight: 2,
+///         paddingBottom: 2,
+///         marginLeft: 2,
+///         marginTop: 2,
+///         marginRight: 2,
+///         marginBottom: 2)]
+///     public string Images { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", Images = "image1" },
+///     new DataRow { Id = 2, Name = "Row 2", Images = "image2" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class DataGridViewMultiImageColumnAttribute(
   string onClickMethodName,
@@ -37,20 +100,15 @@ public sealed class DataGridViewMultiImageColumnAttribute(
   int marginBottom
 )
   : Attribute {
+
   /// <summary>
-  ///   Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute" /> class.
+  /// Initializes a new instance of the <see cref="DataGridViewMultiImageColumnAttribute"/> class with uniform padding and margin.
   /// </summary>
-  /// <param name="onClickMethodName">
-  ///   Name of a method within the data bound class, which should be called,
-  ///   whenever a click on an image occurs (this method has to take one parameter of type int (index of the clicked image))
-  /// </param>
-  /// <param name="toolTipProviderMethodName">
-  ///   Name of a method within the data bound class, which should be used,
-  ///   to get the tooltip text for a specific image (this method has to take one parameter of type int (index of the image))
-  /// </param>
-  /// <param name="maximumImageSize">the maximum size of every image displayed (width and height)</param>
-  /// <param name="padding">The padding within each image</param>
-  /// <param name="margin">The margin around each image</param>
+  /// <param name="onClickMethodName">(Optional: defaults to <see langword="null"/>) The name of the method to call when an image is clicked.</param>
+  /// <param name="toolTipProviderMethodName">(Optional: defaults to <see langword="null"/>) The name of the method that provides the tooltip text for the images.</param>
+  /// <param name="maximumImageSize">(Optional: defaults to 24) The maximum size of the images displayed in the column cells.</param>
+  /// <param name="padding">(Optional: defaults to 0) The uniform padding around the images within the cells.</param>
+  /// <param name="margin">(Optional: defaults to 0) The uniform margin around the cells.</param>
   public DataGridViewMultiImageColumnAttribute(
     string onClickMethodName = null,
     string toolTipProviderMethodName = null,
@@ -72,9 +130,29 @@ public sealed class DataGridViewMultiImageColumnAttribute(
       margin
     ) { }
 
-  public int MaximumImageSize { get; } = maximumImageSize;
-  public string OnClickMethodName { get; } = onClickMethodName;
-  public string ToolTipProviderMethodName { get; } = toolTipProviderMethodName;
-  public Padding Padding { get; } = new(paddingLeft, paddingTop, paddingRight, paddingBottom);
-  public Padding Margin { get; } = new(marginLeft, marginTop, marginRight, marginBottom);
+  /// <summary>
+  /// Gets the maximum size of the images displayed in the column cells.
+  /// </summary>
+  internal int MaximumImageSize { get; } = maximumImageSize;
+  
+  /// <summary>
+  /// Gets the name of the method to call when an image is clicked.
+  /// </summary>
+  internal string OnClickMethodName { get; } = onClickMethodName;
+
+  /// <summary>
+  /// Gets the name of the method that provides the tooltip text for the images.
+  /// </summary>
+  internal string ToolTipProviderMethodName { get; } = toolTipProviderMethodName;
+
+  /// <summary>
+  /// Gets the padding around the images within the cells.
+  /// </summary>
+  internal Padding Padding { get; } = new(paddingLeft, paddingTop, paddingRight, paddingBottom);
+
+  /// <summary>
+  /// Gets the margin around the cells.
+  /// </summary>
+  internal Padding Margin { get; } = new(marginLeft, marginTop, marginRight, marginBottom);
+
 }

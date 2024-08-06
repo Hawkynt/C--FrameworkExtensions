@@ -22,8 +22,8 @@ using System.ComponentModel;
 
 namespace System.Windows.Forms;
 
-public partial class BoundDataGridViewComboBoxColumn {
-  private sealed class BoundDataGridViewComboBoxCell(
+public partial class DataGridViewBoundComboBoxColumn {
+  private sealed class DataGridViewBoundComboBoxCell(
     string dataSourcePropertyName,
     string enabledWhenPropertyName,
     string valueMember,
@@ -94,7 +94,7 @@ public partial class BoundDataGridViewComboBoxColumn {
     }
 
     public override object Clone() {
-      var result = (BoundDataGridViewComboBoxCell)base.Clone();
+      var result = (DataGridViewBoundComboBoxCell)base.Clone();
       result._DataSourcePropertyName = this._DataSourcePropertyName;
       result._EnabledWhenPropertyName = this._EnabledWhenPropertyName;
       result._ValueMember = this._ValueMember;

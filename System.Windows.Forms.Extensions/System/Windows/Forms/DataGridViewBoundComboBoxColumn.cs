@@ -22,7 +22,7 @@ namespace System.Windows.Forms;
 /// <summary>
 /// Represents a data-bound <see cref="DataGridViewComboBoxColumn"/> with additional properties for specifying the data source, enabling condition, value member, and display member.
 /// </summary>
-public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
+public partial class DataGridViewBoundComboBoxColumn : DataGridViewColumn {
   
   /// <summary>
   /// Gets the name of the property to use as the data source for the combo box items.
@@ -45,7 +45,7 @@ public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
   public string DisplayMember { get; }
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="BoundDataGridViewComboBoxColumn"/> class with the specified properties.
+  /// Initializes a new instance of the <see cref="DataGridViewBoundComboBoxColumn"/> class with the specified properties.
   /// </summary>
   /// <param name="dataSourcePropertyName">The name of the property to use as the data source for the combo box items.</param>
   /// <param name="enabledWhenPropertyName">The name of the property that determines when the combo box is enabled.</param>
@@ -91,11 +91,11 @@ public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
   /// 
   /// dataGridView.Columns.Add(comboBoxColumn);
   /// </code>
-  /// This example demonstrates how to create a <see cref="BoundDataGridViewComboBoxColumn"/> and add it to a <see cref="DataGridView"/>.
+  /// This example demonstrates how to create a <see cref="DataGridViewBoundComboBoxColumn"/> and add it to a <see cref="DataGridView"/>.
   /// It uses a custom `ComboBoxItem` record for the combo box items and a custom `DataRow` record for the data grid view rows, 
   /// with properties referenced using the <see langword="nameof"/> operator. The `DataPropertyName` is set to the property that carries the selected value.
   /// </example>
-  public BoundDataGridViewComboBoxColumn(
+  public DataGridViewBoundComboBoxColumn(
     string dataSourcePropertyName,
     string enabledWhenPropertyName,
     string valueMember,
@@ -106,7 +106,7 @@ public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
     this.ValueMember = valueMember;
     this.DisplayMember = displayMember;
 
-    var cell = new BoundDataGridViewComboBoxCell(
+    var cell = new DataGridViewBoundComboBoxCell(
       dataSourcePropertyName,
       enabledWhenPropertyName,
       valueMember,
@@ -120,7 +120,7 @@ public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
   #region Overrides of DataGridViewColumn
 
   public override object Clone() {
-    var result = new BoundDataGridViewComboBoxColumn(
+    var result = new DataGridViewBoundComboBoxColumn(
       this.DataSourcePropertyName,
       this.EnabledWhenPropertyName,
       this.ValueMember,
@@ -144,8 +144,8 @@ public partial class BoundDataGridViewComboBoxColumn : DataGridViewColumn {
   public override DataGridViewCell CellTemplate {
     get => base.CellTemplate;
     set {
-      if (value is not BoundDataGridViewComboBoxCell)
-        throw new InvalidCastException(nameof(BoundDataGridViewComboBoxCell));
+      if (value is not DataGridViewBoundComboBoxCell)
+        throw new InvalidCastException(nameof(DataGridViewBoundComboBoxCell));
 
       base.CellTemplate = value;
     }

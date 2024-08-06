@@ -22,16 +22,46 @@ using System.Collections.Generic;
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows specifying the row visibility depending on the underlying object instance.
+/// Specifies a condition under which a row in a <see cref="System.Windows.Forms.DataGridView"/> should be hidden.
 /// </summary>
+/// <param name="isHiddenWhen">The name of the property that determines when the row should be hidden.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public bool IsHidden { get; set; }
+///
+///     [DataGridViewConditionalRowHidden(nameof(IsHidden))]
+///     public string DisplayText { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", IsHidden = true, DisplayText = "Hidden Row" },
+///     new DataRow { Id = 2, Name = "Row 2", IsHidden = false, DisplayText = "Visible Row" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
 public sealed class DataGridViewConditionalRowHiddenAttribute(string isHiddenWhen) : Attribute {
-  public string IsHiddenWhen { get; } = isHiddenWhen;
+  
+  internal bool IsHidden(object row)
+    => DataGridViewExtensions.GetPropertyValueOrDefault(row, isHiddenWhen, false, false, false, false);
 
-  public bool IsHidden(object row)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(row, this.IsHiddenWhen, false, false, false, false);
-
-  public static void OnRowPrepaint(IEnumerable<DataGridViewConditionalRowHiddenAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
+  internal static void OnRowPrepaint(IEnumerable<DataGridViewConditionalRowHiddenAttribute> @this, DataGridViewRow row, object data, DataGridViewRowPrePaintEventArgs e) {
     // ReSharper disable once LoopCanBeConvertedToQuery
     foreach (var attribute in @this)
       if (attribute.IsHidden(data)) {
@@ -41,4 +71,5 @@ public sealed class DataGridViewConditionalRowHiddenAttribute(string isHiddenWhe
 
     row.Visible = true;
   }
+
 }

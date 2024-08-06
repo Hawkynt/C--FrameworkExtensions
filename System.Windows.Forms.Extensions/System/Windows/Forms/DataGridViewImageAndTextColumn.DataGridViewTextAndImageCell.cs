@@ -22,7 +22,7 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 public partial class DataGridViewImageAndTextColumn {
-  public class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
+  internal sealed class DataGridViewTextAndImageCell : DataGridViewTextBoxCell {
     private Image _imageValue;
     private Size _imageSize;
     private bool _needsResize;
@@ -33,10 +33,10 @@ public partial class DataGridViewImageAndTextColumn {
     public uint FixedImageHeight { get; set; }
 
     public override object Clone() {
-      var c = base.Clone() as DataGridViewTextAndImageCell;
-      c._imageValue = this._imageValue;
-      c._imageSize = this._imageSize;
-      return c;
+      var result = base.Clone() as DataGridViewTextAndImageCell;
+      result._imageValue = this._imageValue;
+      result._imageSize = this._imageSize;
+      return result;
     }
 
     public Image Image {

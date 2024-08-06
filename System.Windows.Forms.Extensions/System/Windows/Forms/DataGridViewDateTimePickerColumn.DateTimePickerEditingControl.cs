@@ -20,6 +20,7 @@
 namespace System.Windows.Forms;
 
 public partial class DataGridViewDateTimePickerColumn {
+
   private sealed class DateTimePickerEditingControl : DateTimePicker, IDataGridViewEditingControl {
     public int EditingControlRowIndex { get; set; }
     public DataGridView EditingControlDataGridView { get; set; }
@@ -59,4 +60,5 @@ public partial class DataGridViewDateTimePickerColumn {
 
     public void PrepareEditingControlForEdit(bool selectAll) { }
   }
+
 }

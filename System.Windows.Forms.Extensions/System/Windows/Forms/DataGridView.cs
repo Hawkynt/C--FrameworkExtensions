@@ -30,6 +30,7 @@ using System.Reflection;
 using Guard;
 using DrawingSystemColors = System.Drawing.SystemColors;
 using DrawingFontStyle = System.Drawing.FontStyle;
+using static System.Windows.Forms.DataGridViewNumericUpDownColumn;
 
 // TODO: buttoncolumn with image support
 namespace System.Windows.Forms;
@@ -268,8 +269,8 @@ public static partial class DataGridViewExtensions {
       }
 
       // if needed replace DataGridViewColumns with DataGridViewConditionalImageColumn
-      var imageAndTextColumnAttribute = (DataGridViewTextAndImageColumnAttribute)property
-        .GetCustomAttributes(typeof(DataGridViewTextAndImageColumnAttribute), true)
+      var imageAndTextColumnAttribute = (DataGridViewImageAndTextColumnAttribute)property
+        .GetCustomAttributes(typeof(DataGridViewImageAndTextColumnAttribute), true)
         .FirstOrDefault();
       if (imageAndTextColumnAttribute != null) {
         var newColumn = _ConstructImageAndTextColumn(column);
@@ -368,7 +369,7 @@ public static partial class DataGridViewExtensions {
     }
   }
 
-  private static BoundDataGridViewComboBoxColumn _ConstructComboBoxColumn(
+  private static DataGridViewBoundComboBoxColumn _ConstructComboBoxColumn(
     DataGridViewColumn column,
     DataGridViewComboboxColumnAttribute attribute
   ) =>
@@ -666,7 +667,7 @@ public static partial class DataGridViewExtensions {
     var columnPropertyName = column.DataPropertyName;
 
     TryHandle<DataGridViewImageColumnAttribute>(DataGridViewImageColumnAttribute.OnCellFormatting);
-    TryHandle<DataGridViewTextAndImageColumnAttribute>(DataGridViewTextAndImageColumnAttribute.OnCellFormatting);
+    TryHandle<DataGridViewImageAndTextColumnAttribute>(DataGridViewImageAndTextColumnAttribute.OnCellFormatting);
     TryHandle2<SupportsConditionalImageAttribute>(SupportsConditionalImageAttribute.OnCellFormatting);
     TryHandle<DataGridViewCellDisplayTextAttribute>(DataGridViewCellDisplayTextAttribute.OnCellFormatting);
     _FixDisplayTextForEnums(column, rowData, columnPropertyName, e);
@@ -1776,4 +1777,35 @@ public static partial class DataGridViewExtensions {
   }
 
   #endregion
+
+  internal static void SetCellTemplateOrThrow<TCellType>(this DataGridViewColumn @this, DataGridViewCell value, Action<DataGridViewCell> setter) where TCellType : DataGridViewCell {
+    if (value != null && value is not TCellType)
+      throw new InvalidCastException($"Value provided for CellTemplate must be of type {typeof(TCellType).Name} or derive from it.");
+
+    setter(value);
+  }
+
+  internal static TCellType GetCellTemplateOrThrow<TCellType>(this DataGridViewColumn @this) where TCellType:DataGridViewCell 
+    => @this.CellTemplate as TCellType 
+       ?? throw new InvalidOperationException("Operation cannot be completed because this DataGridViewColumn does not have a CellTemplate.")
+    ;
+
+  internal static void UpdateCells<TCellType>(this DataGridView @this, int columnIndex, Action<TCellType, int> updateAction) where TCellType:DataGridViewCell{
+    if (@this == null)
+      return;
+
+    var dataGridViewRows = @this.Rows;
+    var rowCount = dataGridViewRows.Count;
+    for (var rowIndex = 0; rowIndex < rowCount; ++rowIndex) {
+      var dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
+      if (dataGridViewRow.Cells[columnIndex] is TCellType cell)
+        updateAction(cell, rowIndex);
+    }
+
+    @this.InvalidateColumn(columnIndex);
+    // TODO: This column and/or grid rows may need to be autosized depending on their
+    //       autosize settings. Call the autosizing methods to autosize the column, rows, 
+    //       column headers / row headers as needed.
+  }
+
 }

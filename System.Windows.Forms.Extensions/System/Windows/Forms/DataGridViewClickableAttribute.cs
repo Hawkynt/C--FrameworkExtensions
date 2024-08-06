@@ -21,22 +21,66 @@ using System.Collections.Concurrent;
 
 namespace System.Windows.Forms;
 
+/// <summary>
+/// Allows defining click and double-click events for a cell in a <see cref="System.Windows.Forms.DataGridView"/> for automatically generated columns.
+/// </summary>
+/// <param name="onClickMethodName">The name of the method to call when the cell is clicked.</param>
+/// <param name="onDoubleClickMethodName">The name of the method to call when the cell is double-clicked.</param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///
+///     [DataGridViewClickable(onClickMethodName: nameof(OnCellClick), onDoubleClickMethodName: nameof(OnCellDoubleClick))]
+///     public string DisplayText { get; set; }
+///
+///     public void OnCellClick()
+///     {
+///         // Handle cell click event
+///         Console.WriteLine("Cell clicked");
+///     }
+///
+///     public void OnCellDoubleClick()
+///     {
+///         // Handle cell double-click event
+///         Console.WriteLine("Cell double-clicked");
+///     }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", DisplayText = "Row 1 Display" },
+///     new DataRow { Id = 2, Name = "Row 2", DisplayText = "Row 2 Display" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public class DataGridViewClickableAttribute(string onClickMethodName = null, string onDoubleClickMethodName = null)
   : Attribute {
-  public string OnClickMethodName { get; } = onClickMethodName;
-  public string OnDoubleClickMethodName { get; } = onDoubleClickMethodName;
-
+  
   private static readonly ConcurrentDictionary<object, System.Threading.Timer> _clickTimers = [];
 
   private void _HandleClick(object row) {
     _clickTimers.TryRemove(row, out _);
-    DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
+    DataGridViewExtensions.CallLateBoundMethod(row, onClickMethodName);
   }
 
-  public void OnClick(object row) {
-    if (this.OnDoubleClickMethodName == null)
-      DataGridViewExtensions.CallLateBoundMethod(row, this.OnClickMethodName);
+  internal void OnClick(object row) {
+    if (onDoubleClickMethodName == null)
+      DataGridViewExtensions.CallLateBoundMethod(row, onClickMethodName);
 
     var newTimer = new System.Threading.Timer(this._HandleClick, row, SystemInformation.DoubleClickTime, int.MaxValue);
     do
@@ -45,10 +89,11 @@ public class DataGridViewClickableAttribute(string onClickMethodName = null, str
     while (!_clickTimers.TryAdd(row, newTimer));
   }
 
-  public void OnDoubleClick(object row) {
+  internal void OnDoubleClick(object row) {
     if (_clickTimers.TryRemove(row, out var timer))
       timer.Dispose();
 
-    DataGridViewExtensions.CallLateBoundMethod(row, this.OnDoubleClickMethodName);
+    DataGridViewExtensions.CallLateBoundMethod(row, onDoubleClickMethodName);
   }
+
 }

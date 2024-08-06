@@ -20,7 +20,8 @@
 namespace System.Windows.Forms;
 
 public partial class DataGridViewDateTimePickerColumn {
-  public class DataGridViewDateTimePickerCell : DataGridViewTextBoxCell {
+  private sealed class DataGridViewDateTimePickerCell : DataGridViewTextBoxCell {
+    
     public DataGridViewDateTimePickerCell() => this.Style.Format = "d";
 
     public override void InitializeEditingControl(int rowIndex, object initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle) {
@@ -37,5 +38,6 @@ public partial class DataGridViewDateTimePickerColumn {
     public override Type ValueType => typeof(DateTime);
 
     public override object DefaultNewRowValue => DateTime.Now;
+
   }
 }

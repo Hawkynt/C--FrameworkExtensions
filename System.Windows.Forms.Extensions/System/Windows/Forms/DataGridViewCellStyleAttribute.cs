@@ -23,76 +23,82 @@ using System.Drawing;
 namespace System.Windows.Forms;
 
 /// <summary>
-///   Allows adjusting the cell style in a DataGridView for automatically generated columns.
+/// Allows adjusting the cell style in a <see cref="System.Windows.Forms.DataGridView"/> for automatically generated columns.
 /// </summary>
+/// <param name="foreColor">
+/// The color name used for the property <see cref="DataGridViewCellStyle.ForeColor"/>.
+/// <remarks>Supports many types of color names, such as hex values, (a)rgb values, known colors, system colors, etc.</remarks>
+/// </param>
+/// <param name="backColor">
+/// The color name used for the property <see cref="DataGridViewCellStyle.BackColor"/>.
+/// <remarks>Supports many types of color names, such as hex values, (a)rgb values, known colors, system colors, etc.</remarks>
+/// </param>
+/// <param name="format">The value for the property <see cref="DataGridViewCellStyle.Format"/>.</param>
+/// <param name="alignment">The value for the property <see cref="DataGridViewCellStyle.Alignment"/>.</param>
+/// <param name="wrapMode">The value for the property <see cref="DataGridViewCellStyle.WrapMode"/>.</param>
+/// <param name="conditionalPropertyName">
+/// The name of the <see cref="bool"/> property that decides if this attribute should be enabled.
+/// </param>
+/// <param name="foreColorPropertyName">
+/// The name of the <see cref="System.Drawing.Color"/> property that retrieves the value for <see cref="DataGridViewCellStyle.ForeColor"/>.
+/// </param>
+/// <param name="backColorPropertyName">
+/// The name of the <see cref="System.Drawing.Color"/> property that retrieves the value for <see cref="DataGridViewCellStyle.BackColor"/>.
+/// </param>
+/// <param name="wrapModePropertyName">
+/// The name of the <see cref="DataGridViewTriState"/> property that retrieves the value for <see cref="DataGridViewCellStyle.WrapMode"/>.
+/// </param>
+/// <example>
+/// <code>
+/// // Define a custom class for the data grid view rows
+/// public class DataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public bool IsHighlighted { get; set; }
+///     public System.Drawing.Color HighlightColor { get; set; }
+///
+///     [DataGridViewCellStyle(foreColor: "Red", backColor: "Yellow", conditionalPropertyName: nameof(IsHighlighted), foreColorPropertyName: nameof(HighlightColor))]
+///     public string DisplayText { get; set; }
+/// }
+///
+/// // Create an array of DataRow instances
+/// var dataRows = new[]
+/// {
+///     new DataRow { Id = 1, Name = "Row 1", IsHighlighted = true, HighlightColor = System.Drawing.Color.Red, DisplayText = "Highlighted" },
+///     new DataRow { Id = 2, Name = "Row 2", IsHighlighted = false, HighlightColor = System.Drawing.Color.Empty, DisplayText = "Normal" }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dataRows
+/// };
+///
+/// // Enable extended attributes to recognize the custom attributes
+/// dataGridView.EnableExtendedAttributes();
+/// </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-public sealed class DataGridViewCellStyleAttribute : Attribute {
-  /// <summary>
-  ///   Creates a new <see cref="DataGridViewCellStyleAttribute" />.
-  /// </summary>
-  /// <param name="foreColor">
-  ///   The color-name used for the property <see cref="DataGridViewCellStyle.ForeColor" />.
-  ///   <remarks>Supports many types of color-names, such as hex values, (a)rgb values, known-colors, system-colors, etc.</remarks>
-  /// </param>
-  /// <param name="backColor">
-  ///   The color-name used for the property <see cref="DataGridViewCellStyle.BackColor" />.
-  ///   <remarks>Supports many types of color-names, such as hex values, (a)rgb values, known-colors, system-colors, etc.</remarks>
-  /// </param>
-  /// <param name="format">The value for the property <see cref="DataGridViewCellStyle.Format" />.</param>
-  /// <param name="alignment">The value for the property <see cref="DataGridViewCellStyle.Alignment" />.</param>
-  /// <param name="wrapMode">The value for the property <see cref="DataGridViewCellStyle.WrapMode" />.</param>
-  /// <param name="conditionalPropertyName">
-  ///   The name of the <see cref="bool" />-property, deciding if this attribute should
-  ///   be enabled.
-  /// </param>
-  /// <param name="foreColorPropertyName">
-  ///   The name of the <see cref="Color" />-property, retrieving the value for
-  ///   <see cref="DataGridViewCellStyle.ForeColor" />.
-  /// </param>
-  /// <param name="backColorPropertyName">
-  ///   The name of the <see cref="Color" />-property, retrieving the value for
-  ///   <see cref="DataGridViewCellStyle.BackColor" />.
-  /// </param>
-  /// <param name="wrapModePropertyName">
-  ///   The name of the <see cref="DataGridViewTriState" />-property, retrieving the value
-  ///   for <see cref="DataGridViewCellStyle.WrapMode" />.
-  /// </param>
-  public DataGridViewCellStyleAttribute(
-    string foreColor = null,
-    string backColor = null,
-    string format = null,
-    DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet,
-    DataGridViewTriState wrapMode = DataGridViewTriState.NotSet,
-    string conditionalPropertyName = null,
-    string foreColorPropertyName = null,
-    string backColorPropertyName = null,
-    string wrapModePropertyName = null
-  ) {
-    this.ForeColor = foreColor?.ParseColor();
-    this.BackColor = backColor?.ParseColor();
-    this.ConditionalPropertyName = conditionalPropertyName;
-    this.Format = format;
-    this.WrapMode = wrapMode;
-    this.ForeColorPropertyName = foreColorPropertyName;
-    this.BackColorPropertyName = backColorPropertyName;
-    this.WrapModePropertyName = wrapModePropertyName;
-    this.Alignment = alignment;
-  }
+public sealed class DataGridViewCellStyleAttribute(
+  string foreColor = null,
+  string backColor = null,
+  string format = null,
+  DataGridViewContentAlignment alignment = DataGridViewContentAlignment.NotSet,
+  DataGridViewTriState wrapMode = DataGridViewTriState.NotSet,
+  string conditionalPropertyName = null,
+  string foreColorPropertyName = null,
+  string backColorPropertyName = null,
+  string wrapModePropertyName = null
+) : Attribute {
 
-  public string ConditionalPropertyName { get; }
-  public Color? ForeColor { get; }
-  public Color? BackColor { get; }
-  public string Format { get; }
-  public DataGridViewContentAlignment Alignment { get; }
-  public DataGridViewTriState WrapMode { get; }
-  public string ForeColorPropertyName { get; }
-  public string BackColorPropertyName { get; }
-  public string WrapModePropertyName { get; }
-
+  private Color? ForeColor { get; } = foreColor?.ParseColor();
+  private Color? BackColor { get; } = backColor?.ParseColor();
+  
   private void _ApplyTo(DataGridViewCellStyle style, object data) {
     var color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
                   data,
-                  this.ForeColorPropertyName,
+                  foreColorPropertyName,
                   null,
                   null,
                   null,
@@ -104,7 +110,7 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
 
     color = DataGridViewExtensions.GetPropertyValueOrDefault<Color?>(
               data,
-              this.BackColorPropertyName,
+              backColorPropertyName,
               null,
               null,
               null,
@@ -114,26 +120,26 @@ public sealed class DataGridViewCellStyleAttribute : Attribute {
     if (color != null)
       style.BackColor = color.Value;
 
-    var wrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(
+    var localWrapMode = DataGridViewExtensions.GetPropertyValueOrDefault(
       data,
-      this.WrapModePropertyName,
+      wrapModePropertyName,
       DataGridViewTriState.NotSet,
       DataGridViewTriState.NotSet,
       DataGridViewTriState.NotSet,
       DataGridViewTriState.NotSet
     );
-    style.WrapMode = this.WrapMode != DataGridViewTriState.NotSet ? this.WrapMode : wrapMode;
+    style.WrapMode = localWrapMode != DataGridViewTriState.NotSet ? wrapMode : localWrapMode;
 
-    if (this.Format != null)
-      style.Format = this.Format;
+    if (format != null)
+      style.Format = format;
 
-    style.Alignment = this.Alignment;
+    style.Alignment = alignment;
   }
 
   private bool _IsEnabled(object data)
-    => DataGridViewExtensions.GetPropertyValueOrDefault(data, this.ConditionalPropertyName, true, true, false, false);
+    => DataGridViewExtensions.GetPropertyValueOrDefault(data, conditionalPropertyName, true, true, false, false);
 
-  public static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
+  internal static void OnCellFormatting(IEnumerable<DataGridViewCellStyleAttribute> @this, DataGridViewRow row, DataGridViewColumn column, object data, string columnName, DataGridViewCellFormattingEventArgs e) {
     foreach (var attribute in @this)
       if (attribute._IsEnabled(data))
         attribute._ApplyTo(e.CellStyle, data);
