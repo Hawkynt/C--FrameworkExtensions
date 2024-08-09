@@ -3,6 +3,7 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Runtime.InteropServices" #>
 <#@ output extension=".cs" #>
 #region (c)2010-2042 Hawkynt
 
@@ -40,6 +41,42 @@ using Guard;
 namespace System;
 
 public static partial class MathEx {
+
+<#foreach (var type in new[]{"sbyte","short","int","long"}){#>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> ArithmeticShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)-1#> ? 0 : ((<#=GetUnsignedType(type)#>)@this & 0x<#=(1UL << GetSizeInBits(type) - 1).ToString("X")#>) | (((<#=GetUnsignedType(type)#>)@this << count) & 0x<#=((1UL << GetSizeInBits(type) - 1) - 1).ToString("X")#>));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)-1#> ? 0 : @this >> count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> LogicalShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftLeft((<#=(type=="sbyte"?"byte":"u"+type)#>)@this, count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> LogicalShiftRight(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftRight((<#=(type=="sbyte"?"byte":"u"+type)#>)@this, count);
+
+<#}#>
+<#foreach (var type in new[]{"byte","ushort","uint","ulong"}){#>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> ArithmeticShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this << count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this >> count);
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> RotateLeft(this <#=type#> @this, byte count) {
+    count &= <#=GetSizeInBits(type) - 1#>;
+    return (<#=type#>)((@this << count) | (@this >> (<#=GetSizeInBits(type)#> - count)));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> RotateRight(this <#=type#> @this, byte count) {
+    count &= <#=GetSizeInBits(type) - 1#>;
+    return (<#=type#>)((@this >> count) | (@this << (<#=GetSizeInBits(type)#> - count)));
+  }
+
+<#}#>
+
 <#foreach (var type in new[]{"byte","sbyte","ushort","short","uint","int","ulong","long"}){#>
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -504,4 +541,24 @@ public static partial class MathEx {
 <#+ 
   private static Tuple<A,B> T<A,B>(A a,B b){ return(Tuple.Create(a,b)); }
   private static Tuple<A,B,C> T<A,B,C>(A a,B b,C c){ return(Tuple.Create(a,b,c)); } 
+
+  private static int GetSizeInBits(string type) => type switch {
+    "byte" => 8,
+    "sbyte" => 8,
+    "ushort" => 16,
+    "short" => 16,
+    "uint" => 32,
+    "int" => 32,
+    "ulong" => 64,
+    "long" => 64,
+    _=>throw new NotSupportedException($"Unknown type: {type}")
+  };
+
+  private static string GetUnsignedType(string type) => type switch {
+    "sbyte" => "byte",
+    "short" => "ushort",
+    "int" => "uint",
+    "long" => "ulong",
+    _=>throw new NotSupportedException($"Unknown type: {type}")
+  };
 #>
