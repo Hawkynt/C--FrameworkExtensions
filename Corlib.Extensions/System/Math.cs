@@ -25,6 +25,9 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
+#if SUPPORTS_BITOPERATIONS
+using System.Numerics;
+#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast
@@ -144,6 +147,50 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static uint UpperHalf(this ulong @this) => (uint)(@this >> 32);
+
+#if SUPPORTS_BITOPERATIONS
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte RotateLeft(this byte @this, byte count) {
+    var result = @this * 0x01010101U;
+    result = BitOperations.RotateLeft(result, count);
+    return (byte)result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte RotateRight(this byte @this, byte count) {
+    var result = @this * 0x01010101U;
+    result = BitOperations.RotateRight(result, count);
+    return (byte)result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort RotateLeft(this ushort @this, byte count) {
+    var result = @this * 0x00010001U;
+    result = BitOperations.RotateLeft(result, count);
+    return (ushort)result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort RotateRight(this ushort @this, byte count) {
+    var result = @this * 0x00010001U;
+    result = BitOperations.RotateRight(result, count);
+    return (ushort)result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint RotateLeft(this uint @this, byte count) => BitOperations.RotateLeft(@this, count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint RotateRight(this uint @this, byte count) => BitOperations.RotateRight(@this, count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong RotateLeft(this ulong @this, byte count) => BitOperations.RotateLeft(@this, count);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong RotateRight(this ulong @this, byte count) => BitOperations.RotateRight(@this, count);
+  
+#endif
 
   /// <summary>
   ///   Calculate a more accurate square root, see

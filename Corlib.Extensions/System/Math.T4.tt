@@ -63,6 +63,8 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this >> count);
   
+#if !SUPPORTS_BITOPERATIONS
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> RotateLeft(this <#=type#> @this, byte count) {
     count &= <#=GetSizeInBits(type) - 1#>;
@@ -74,6 +76,8 @@ public static partial class MathEx {
     count &= <#=GetSizeInBits(type) - 1#>;
     return (<#=type#>)((@this >> count) | (@this << (<#=GetSizeInBits(type)#> - count)));
   }
+
+#endif
 
 <#}#>
 

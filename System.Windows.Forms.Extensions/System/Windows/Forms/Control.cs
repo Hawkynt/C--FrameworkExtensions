@@ -570,8 +570,8 @@ public static partial class ControlExtensions {
 
     @this
       .GetType()
-      .GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)?
-      .SetValue(@this, true, null)
+      .GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)
+      ?.SetValue(@this, true, null)
       ;
 
   }
