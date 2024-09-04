@@ -530,13 +530,35 @@ void GenerateCopyToOperation(string name, int maxBlockSize) {
   }
 
   private static unsafe void _CopyTo<#=name#>Many(byte* source, byte* target, int count) {
-    do {
+    
+    count -= <#=maxBlockSize#>;
+    *(Block<#=maxBlockSize#>*)target = *(Block<#=maxBlockSize#>*)source;
+    source += <#=maxBlockSize#>;
+    target += <#=maxBlockSize#>;
+    
+    while (count >= <#=maxBlockSize * 8#>) {
+      count -= <#=maxBlockSize * 8#>;
+      *(Block<#=maxBlockSize#>*)target = *(Block<#=maxBlockSize#>*)source;
+      ((Block<#=maxBlockSize#>*)target)[1] = ((Block<#=maxBlockSize#>*)source)[1];
+      ((Block<#=maxBlockSize#>*)target)[2] = ((Block<#=maxBlockSize#>*)source)[2];
+      ((Block<#=maxBlockSize#>*)target)[3] = ((Block<#=maxBlockSize#>*)source)[3];
+      ((Block<#=maxBlockSize#>*)target)[4] = ((Block<#=maxBlockSize#>*)source)[4];
+      ((Block<#=maxBlockSize#>*)target)[5] = ((Block<#=maxBlockSize#>*)source)[5];
+      ((Block<#=maxBlockSize#>*)target)[6] = ((Block<#=maxBlockSize#>*)source)[6];
+      ((Block<#=maxBlockSize#>*)target)[7] = ((Block<#=maxBlockSize#>*)source)[7];
+      source += <#=maxBlockSize * 8#>;
+      target += <#=maxBlockSize * 8#>;
+    }
+
+    while (count > <#=maxBlockSize#>) {
       count -= <#=maxBlockSize#>;
       *(Block<#=maxBlockSize#>*)target = *(Block<#=maxBlockSize#>*)source;
       source += <#=maxBlockSize#>;
       target += <#=maxBlockSize#>;
-    } while (count > <#=maxBlockSize#>);
+    }
+    
     _CopyTo<#=name#>(source, target, count);
+
   }
 
 <#+
