@@ -1640,6 +1640,44 @@ public static partial class ArrayExtensions {
 
   #region byte-array specials
 
+  public static unsafe string ToBin(this byte[] @this) {
+    if (@this == null)
+      return null;
+
+    const ulong ZERO = '0';
+    const ulong ZEROZEROZEROZERO = ZERO | (ZERO << 16) | (ZERO << 32) | (ZERO << 48);
+    var result = new char[@this.Length << 3];
+    fixed (char* resultFixed = &result[0]) {
+      var resultPointer = resultFixed;
+      for (var i = 0; i < @this.Length; ++i, resultPointer += 8) {
+        var value = @this[i] & 0xff;
+        var hi = (ulong)(value & 0xf0) >> 4;
+        var lo = (ulong)value & 0x0f;
+
+        hi = SpreadBits(hi) + ZEROZEROZEROZERO;
+        lo = SpreadBits(lo) + ZEROZEROZEROZERO;
+
+        *(ulong*)resultPointer = hi;
+        ((ulong*)resultPointer)[1] = lo;
+      }
+    }
+
+    return result.ToStringInstance();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static ulong SpreadBits(ulong nibble) {
+  
+      // Assume nibble = 0b0000abcd
+      // We want to expand it to 0b0000000d0000000c0000000b0000000a
+
+      var intermediate = 0x0001000080004000 * nibble | (nibble >> 3);
+      //               = 0b000000000000abcd_0000000000000abc_d0000000000000ab_cd0000000000000a
+      const ulong mask = 0b0000000000000001_0000000000000001_0000000000000001_0000000000000001UL;
+      return intermediate & mask;
+    }
+
+  }
+
   /// <summary>
   ///   Converts the bytes to a hex representation.
   /// </summary>
@@ -1680,7 +1718,7 @@ public static partial class ArrayExtensions {
       result[j + 1] = (char)lo;
     }
 
-    return new(result);
+    return result.ToStringInstance();
   }
 
   /// <summary>

@@ -310,7 +310,24 @@ public class ArrayTests {
   [TestCaseSource(nameof(_ToHexGenerator))]
   public void ToHex(byte[] input,bool allUpperCase,string expected) {
     var got = input.ToHex(allUpperCase);
-    Assert.AreEqual(got,expected);
+    Assert.AreEqual(expected,got);
   }
   
+  private static IEnumerable<TestCaseData> _ToBinGenerator() {
+    foreach (var i in new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff })
+      yield return new(new[] { i }, ToBin(i));
+
+    yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xef }, "0000 0000   0000 0001   0010 0000   1010 0000   0000 1011   1100 1101   1110 1111".Replace(" ", string.Empty));
+
+    static string ToBin(int value) => Convert.ToString(value, 2).PadLeft(8, '0');
+
+  }
+
+  [Test]
+  [TestCaseSource(nameof(_ToBinGenerator))]
+  public void ToBin(byte[] input, string expected) {
+    var got = input.ToBin();
+    Assert.AreEqual(expected, got);
+  }
+
 }
