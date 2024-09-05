@@ -1640,6 +1640,20 @@ public static partial class ArrayExtensions {
 
   #region byte-array specials
 
+  /// <summary>
+  /// Converts the byte array to a binary string representation.
+  /// </summary>
+  /// <param name="this">The byte array to convert.</param>
+  /// <returns>A string representing the binary format of the byte array.</returns>
+  /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <example>
+  /// <code>
+  /// byte[] bytes = { 0xA3, 0x1F };
+  /// string binaryString = bytes.ToBin();
+  /// Console.WriteLine(binaryString); 
+  /// // Output: "1010001100011111"
+  /// </code>
+  /// </example>
   public static unsafe string ToBin(this byte[] @this) {
     if (@this == null)
       return null;
@@ -1650,32 +1664,56 @@ public static partial class ArrayExtensions {
     fixed (char* resultFixed = &result[0]) {
       var resultPointer = resultFixed;
       for (var i = 0; i < @this.Length; ++i, resultPointer += 8) {
-        var value = @this[i] & 0xff;
-        var hi = (ulong)(value & 0xf0) >> 4;
-        var lo = (ulong)value & 0x0f;
 
-        hi = SpreadBits(hi) + ZEROZEROZEROZERO;
-        lo = SpreadBits(lo) + ZEROZEROZEROZERO;
+        // This part converts a single byte into its binary representation as 8 characters ('0' or '1'), 
+        // with each character being stored as a 16-bit value (totaling 128 bits, split into two 64-bit ulongs).
+        // Extract the current byte and cast it to a 64-bit unsigned integer
+        var value = (ulong)(@this[i] & 0xff);
 
-        *(ulong*)resultPointer = hi;
-        ((ulong*)resultPointer)[1] = lo;
+        // The following steps will:
+        //   * Convert each bit of the byte into a character ('0' or '1') in ASCII form, padded with a leading zero byte.
+        //   * Reverse the order of bits due to little-endian (LE) system requirements.
+        //   * Use multiplication to spread the bits across 128 bits (two 64-bit ulongs). [fac1/fac2]
+        //   * Add necessary bits that aren't captured during multiplication using bitwise shifts. [r1/r2]
+        //   * Combine these intermediate results using OR operations.
+        //   * Mask out unwanted bits to isolate the correct binary representation.
+        //   * Add the ASCII '0' characters to convert the bits into '0'/'1' characters.
+        //   * Store the final 128-bit binary string representation in memory.
+        //
+        //            in : 0b_abcdefgh
+        //
+        //          out1 : 0b_00000000_0000000h_00000000_0000000g_00000000_0000000f_00000000_0000000e
+        //          int1 : 0b_00000000_abcdefgh_00000000_0abcdefg_h0000000_00abcdef_gh000000_00000000
+        //            r1 : 0b_00000000_00000000_00000000_00000000_00000000_00000000_00000000_000abcde
+        const ulong fac1 = 0b_00000000_00000001_00000000_00000000_10000000_00000000_01000000_00000000UL;
+        //
+        //          out2 : 0b_00000000_0000000d_00000000_0000000c_00000000_0000000b_00000000_0000000a
+        //          int2 : 0b_00000000_0000abcd_efgh0000_00000abc_defgh000_000000ab_cdefgh00_00000000
+        //            r2 : 0b_00000000_00000000_00000000_00000000_00000000_00000000_00000000_0000000a
+        const ulong fac2 = 0b_00000000_00000000_00010000_00000000_00001000_00000000_00000100_00000000UL;
+        const ulong mask = 0b_00000000_00000001_00000000_00000001_00000000_00000001_00000000_00000001UL;
+
+        var r1 = value >> 3;
+        var r2 = value >> 7;
+
+        var hi = value * fac1;
+        var lo = value * fac2;
+
+        hi |= r1;
+        lo |= r2;
+
+        hi &= mask;
+        lo &= mask;
+
+        hi += ZEROZEROZEROZERO;
+        lo += ZEROZEROZEROZERO;
+
+        *(ulong*)resultPointer = lo;
+        ((ulong*)resultPointer)[1] = hi;
       }
     }
 
     return result.ToStringInstance();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static ulong SpreadBits(ulong nibble) {
-  
-      // Assume nibble = 0b0000abcd
-      // We want to expand it to 0b0000000d0000000c0000000b0000000a
-
-      var intermediate = 0x0001000080004000 * nibble | (nibble >> 3);
-      //               = 0b000000000000abcd_0000000000000abc_d0000000000000ab_cd0000000000000a
-      const ulong mask = 0b0000000000000001_0000000000000001_0000000000000001_0000000000000001UL;
-      return intermediate & mask;
-    }
-
   }
 
   /// <summary>
