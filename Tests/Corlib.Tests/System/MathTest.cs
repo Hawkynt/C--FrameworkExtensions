@@ -8697,4 +8697,91 @@ public class MathTest {
   [TestCase((ulong)0b1000000000000000000000000000000000000000000000000000000000000000, 128, (ulong)0b1000000000000000000000000000000000000000000000000000000000000000)]
   public void RotateRightQWord(ulong inp, byte count, ulong expected) => Assert.AreEqual(expected, inp.RotateRight(count));
 
+  [Test]
+  [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
+  public void BitwiseByte(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
+    Assert.AreEqual(and, self.And(operand), "And broken");
+    Assert.AreEqual(or, self.Or(operand), "Or broken");
+    Assert.AreEqual(xor, self.Xor(operand), "Xor broken");
+    Assert.AreEqual(nand, self.Nand(operand), "Nand broken");
+    Assert.AreEqual(nor, self.Nor(operand), "Nor broken");
+    Assert.AreEqual(equ, self.Equ(operand), "Equ broken");
+
+    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
+    BitwiseSByte(valuePack.Select(i=>(sbyte)i).ToArray());
+    var wordPack = valuePack.Select(i=>(ushort)(i<<8|i)).ToArray();
+    BitwiseWord(wordPack);
+    BitwiseShort(wordPack.Select(i => (short)i).ToArray());
+    var dwordPack = wordPack.Select(i => (uint)(i << 16 | i)).ToArray();
+    BitwiseDWord(dwordPack);
+    BitwiseInt(dwordPack.Select(i => (int)i).ToArray());
+    var qwordPack = dwordPack.Select(i => ((ulong)i << 32 | i)).ToArray();
+    BitwiseQWord(qwordPack);
+    BitwiseLong(qwordPack.Select(i => (long)i).ToArray());
+
+    void BitwiseSByte(sbyte[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseWord(ushort[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseShort(short[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseDWord(uint[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseInt(int[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseQWord(ulong[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+    void BitwiseLong(long[] pack) {
+      Assert.AreEqual(pack[2], pack[0].And(pack[1]), "And broken");
+      Assert.AreEqual(pack[3], pack[0].Or(pack[1]), "Or broken");
+      Assert.AreEqual(pack[4], pack[0].Xor(pack[1]), "Xor broken");
+      Assert.AreEqual(pack[5], pack[0].Nand(pack[1]), "Nand broken");
+      Assert.AreEqual(pack[6], pack[0].Nor(pack[1]), "Nor broken");
+      Assert.AreEqual(pack[7], pack[0].Equ(pack[1]), "Equ broken");
+    }
+
+  }
+
 }

@@ -84,6 +84,27 @@ public static partial class MathEx {
 <#foreach (var type in new[]{"byte","sbyte","ushort","short","uint","int","ulong","long"}){#>
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> And(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this & other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Or(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this | other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Xor(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this ^ other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Nand(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this & other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Nor(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this | other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Equ(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this ^ other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Not(this <#=type#> @this) => (<#=type#>)~@this;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Bits(this <#=type#> @this, byte index, byte count) {
     var result = @this >> index;
     var andMask = ((<#=type#>)1 << count) - 1;

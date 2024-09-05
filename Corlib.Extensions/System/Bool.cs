@@ -24,6 +24,28 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class BoolExtensions {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool And(this bool @this, bool other) => @this & other;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Or(this bool @this, bool other) => @this | other;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Xor(this bool @this, bool other) => @this ^ other;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Nand(this bool @this, bool other) => !(@this & other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Nor(this bool @this, bool other) => !(@this | other);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Equ(this bool @this, bool other) => @this == other;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Not(this bool @this) => !@this;
+  
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToOneOrZeroString(this bool @this) => _ConvertToString(@this, "1", "0", false);
 
