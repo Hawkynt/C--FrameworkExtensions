@@ -1674,8 +1674,7 @@ public static partial class ArrayExtensions {
         //   * Convert each bit of the byte into a character ('0' or '1') in ASCII form, padded with a leading zero byte.
         //   * Reverse the order of bits due to little-endian (LE) system requirements.
         //   * Use multiplication to spread the bits across 128 bits (two 64-bit ulongs). [fac1/fac2]
-        //   * Add necessary bits that aren't captured during multiplication using bitwise shifts. [r1/r2]
-        //   * Combine these intermediate results using OR operations.
+        //   * Shift out unwanted bits at the end. [shr1/shr2]
         //   * Mask out unwanted bits to isolate the correct binary representation.
         //   * Add the ASCII '0' characters to convert the bits into '0'/'1' characters.
         //   * Store the final 128-bit binary string representation in memory.
@@ -1683,24 +1682,23 @@ public static partial class ArrayExtensions {
         //            in : 0b_abcdefgh
         //
         //          out1 : 0b_00000000_0000000h_00000000_0000000g_00000000_0000000f_00000000_0000000e
-        //          int1 : 0b_00000000_abcdefgh_00000000_0abcdefg_h0000000_00abcdef_gh000000_00000000
-        //            r1 : 0b_00000000_00000000_00000000_00000000_00000000_00000000_00000000_000abcde
-        const ulong fac1 = 0b_00000000_00000001_00000000_00000000_10000000_00000000_01000000_00000000UL;
+        //          int1 : 0b_00000abc_defgh000_000000ab_cdefgh00_0000000a_bcdefgh0_00000000_abcdefgh
+        const ulong fac1 = 0b_00000000_00001000_00000000_00000100_00000000_00000010_00000000_00000001UL;
+        //          shr1 : 0b_00000000_abcdefgh_00000000_0abcdefg_h0000000_00abcdef_gh000000_000abcde
+
         //
         //          out2 : 0b_00000000_0000000d_00000000_0000000c_00000000_0000000b_00000000_0000000a
-        //          int2 : 0b_00000000_0000abcd_efgh0000_00000abc_defgh000_000000ab_cdefgh00_00000000
-        //            r2 : 0b_00000000_00000000_00000000_00000000_00000000_00000000_00000000_0000000a
-        const ulong fac2 = 0b_00000000_00000000_00010000_00000000_00001000_00000000_00000100_00000000UL;
+        //          int2 : 0b_00000abc_defgh000_000000ab_cdefgh00_0000000a_bcdefgh0_00000000_abcdefgh
+        const ulong fac2 = 0b_00000000_00001000_00000000_00000100_00000000_00000010_00000000_00000001UL;
+        //          shr2 : 0b_00000000_0000abcd_efgh0000_00000abc_defgh000_000000ab_cdefgh00_0000000a
+        //
         const ulong mask = 0b_00000000_00000001_00000000_00000001_00000000_00000001_00000000_00000001UL;
-
-        var r1 = value >> 3;
-        var r2 = value >> 7;
 
         var hi = value * fac1;
         var lo = value * fac2;
 
-        hi |= r1;
-        lo |= r2;
+        hi >>= 3;
+        lo >>= 7;
 
         hi &= mask;
         lo &= mask;
