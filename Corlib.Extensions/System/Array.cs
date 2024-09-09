@@ -1671,43 +1671,42 @@ public static partial class ArrayExtensions {
         var value = (ulong)(@this[i] & 0xff);
 
         // The following steps will:
-        //   * Convert each bit of the byte into a character ('0' or '1') in ASCII form, padded with a leading zero byte.
         //   * Reverse the order of bits due to little-endian (LE) system requirements.
-        //   * Use multiplication to spread the bits across 128 bits (two 64-bit ulongs). [fac1/fac2]
+        //   * Convert each bit of the byte into a character ('0' or '1') in ASCII form, padded with a leading zero byte.
+        //
+        // To achieve this we will:
+        //   * Use multiplication to spread the bits across 128 bits (two 64-bit ulongs). [FACT]
         //   * Shift out unwanted bits at the end. [shr1/shr2]
-        //   * Mask out unwanted bits to isolate the correct binary representation.
-        //   * Add the ASCII '0' characters to convert the bits into '0'/'1' characters.
+        //   * Mask out unwanted bits to isolate the correct binary representation. [MASK]
+        //   * Add the ASCII '0' characters to convert the bits into '0'/'1' characters. [ZEROZEROZEROZERO]
         //   * Store the final 128-bit binary string representation in memory.
         //
         //            in : 0b_abcdefgh
         //
-        //          out1 : 0b_00000000_0000000h_00000000_0000000g_00000000_0000000f_00000000_0000000e
-        //          int1 : 0b_00000abc_defgh000_000000ab_cdefgh00_0000000a_bcdefgh0_00000000_abcdefgh
-        const ulong fac1 = 0b_00000000_00001000_00000000_00000100_00000000_00000010_00000000_00000001UL;
-        //          shr1 : 0b_00000000_abcdefgh_00000000_0abcdefg_h0000000_00abcdef_gh000000_000abcde
-
+        //           int : 0b_00000abc_defgh000_000000ab_cdefgh00_0000000a_bcdefgh0_00000000_abcdefgh
+        const ulong FACT = 0b_00000000_00001000_00000000_00000100_00000000_00000010_00000000_00000001UL;
         //
-        //          out2 : 0b_00000000_0000000d_00000000_0000000c_00000000_0000000b_00000000_0000000a
-        //          int2 : 0b_00000abc_defgh000_000000ab_cdefgh00_0000000a_bcdefgh0_00000000_abcdefgh
-        const ulong fac2 = 0b_00000000_00001000_00000000_00000100_00000000_00000010_00000000_00000001UL;
-        //          shr2 : 0b_00000000_0000abcd_efgh0000_00000abc_defgh000_000000ab_cdefgh00_0000000a
+        //          shr1 : 0b_00000000_0000abcd_efgh0000_00000abc_defgh000_000000ab_cdefgh00_0000000a
+        //          shr2 : 0b_00000000_abcdefgh_00000000_0abcdefg_h0000000_00abcdef_gh000000_000abcde
         //
-        const ulong mask = 0b_00000000_00000001_00000000_00000001_00000000_00000001_00000000_00000001UL;
+        const ulong MASK = 0b_00000000_00000001_00000000_00000001_00000000_00000001_00000000_00000001UL;
+        //
+        //          out1 : 0b_00000000_0000000d_00000000_0000000c_00000000_0000000b_00000000_0000000a
+        //          out2 : 0b_00000000_0000000h_00000000_0000000g_00000000_0000000f_00000000_0000000e
 
-        var hi = value * fac1;
-        var lo = value * fac2;
+        value *= FACT;
 
-        hi >>= 3;
-        lo >>= 7;
+        var shr1 = value >> 7;
+        var shr2 = value >> 3;
 
-        hi &= mask;
-        lo &= mask;
+        shr1 &= MASK;
+        shr2 &= MASK;
 
-        hi += ZEROZEROZEROZERO;
-        lo += ZEROZEROZEROZERO;
-
-        *(ulong*)resultPointer = lo;
-        ((ulong*)resultPointer)[1] = hi;
+        shr1 += ZEROZEROZEROZERO;
+        shr2 += ZEROZEROZEROZERO;
+        
+        *(ulong*)resultPointer = shr1;
+        ((ulong*)resultPointer)[1] = shr2;
       }
     }
 
