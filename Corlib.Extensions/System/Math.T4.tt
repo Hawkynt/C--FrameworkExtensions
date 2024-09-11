@@ -267,16 +267,22 @@ public static partial class MathEx {
 <#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
     
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Squared(this <#=type#> @this) => (<#=type#>)(@this * @this);
+  public static <#=type#> Squared(this <#=type#> @this) => (<#=type#>)unchecked(@this * @this);
     
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)(@this * @this * @this);
+  public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)unchecked(@this * @this * @this);
     
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Pow(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(<#=(type=="decimal"?"(double)":"")#>@this,<#=(type=="decimal"?"(double)":"")#>exponent);
+    
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> Add(this <#=type#> @this, <#=type#> operand) => (<#=type#>)unchecked(@this + operand);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> MultipliedWith(this <#=type#> @this,<#=type#> factor) => (<#=type#>)(@this * factor);
+  public static <#=type#> Subtract(this <#=type#> @this, <#=type#> minuend) => (<#=type#>)unchecked(@this - minuend);
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> MultipliedWith(this <#=type#> @this,<#=type#> factor) => (<#=type#>)unchecked(@this * factor);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> DividedBy(this <#=type#> @this,<#=type#> divisor) => (<#=type#>)(@this / divisor);
