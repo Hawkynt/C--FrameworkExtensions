@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using Guard;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using static System.IO.VolumeExtensions;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -189,8 +190,89 @@ public static partial class MathEx {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong RotateRight(this ulong @this, byte count) => BitOperations.RotateRight(@this, count);
-  
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this byte @this) => (byte)BitOperations.PopCount(@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this ushort @this) => (byte)BitOperations.PopCount(@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this uint @this) => (byte)BitOperations.PopCount(@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this ulong @this) => (byte)BitOperations.PopCount(@this);
+
+#else
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this byte @this) => CountSetBits((uint)@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this ushort @this) => CountSetBits((uint)@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this uint @this) {
+    @this -= @this >> 1 & 0x55555555;
+    @this = (uint)(((int)@this & 0x33333333) + ((int)(@this >> 2) & 0x33333333));
+    @this = (uint)(((int)@this + (int)(@this >> 4) & 0x0F0F0F0F) * 0x01010101 >>> 24);
+    return (byte)@this;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this ulong @this) {
+    @this -= @this >> 1 & 0x5555555555555555;
+    @this = (ulong)(((long)@this & 0x3333333333333333) + ((long)(@this >> 2) & 0x3333333333333333));
+    @this = (ulong)(((long)@this + (long)(@this >> 4) & 0x0F0F0F0F0F0F0F0F) * 0x0101010101010101 >>> 56);
+    return (byte)@this;
+  }
+
 #endif
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this byte @this) => (byte)(1 - CountSetBits(@this));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this ushort @this) => (byte)(1 - CountSetBits(@this));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this uint @this) => (byte)(1 - CountSetBits(@this));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this ulong @this) => (byte)(1 - CountSetBits(@this));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ReverseBits(this byte @this) => (byte)(((@this * 0x80200802UL) & 0x0884422110UL) * 0x0101010101UL >> 32);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort ReverseBits(this ushort @this) {
+    @this = (ushort)((@this >> 1) & 0x5555 | (@this & 0x5555) << 1);
+    @this = (ushort)((@this >> 2) & 0x3333 | (@this & 0x3333) << 2);
+    @this = (ushort)((@this >> 4) & 0x0F0F | (@this & 0x0F0F) << 4);
+    @this = (ushort)((@this >> 8) | (@this << 8));
+    return @this;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint ReverseBits(this uint @this) {
+    @this = (@this >> 1) & 0x55555555 | (@this & 0x55555555) << 1;
+    @this = (@this >> 2) & 0x33333333 | (@this & 0x33333333) << 2;
+    @this = (@this >> 4) & 0x0F0F0F0F | (@this & 0x0F0F0F0F) << 4;
+    @this = (@this >> 8) & 0x00FF00FF | (@this & 0x00FF00FF) << 8;
+    @this = (@this >> 16) | (@this << 16);
+    return @this;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong ReverseBits(this ulong @this) {
+    @this = (@this >> 1) & 0x5555555555555555UL | (@this & 0x5555555555555555UL) << 1;
+    @this = (@this >> 2) & 0x3333333333333333UL | (@this & 0x3333333333333333UL) << 2;
+    @this = (@this >> 4) & 0x0F0F0F0F0F0F0F0FUL | (@this & 0x0F0F0F0F0F0F0F0FUL) << 4;
+    @this = (@this >> 8) & 0x00FF00FF00FF00FFUL | (@this & 0x00FF00FF00FF00FFUL) << 8;
+    @this = (@this >> 16) & 0x0000FFFF0000FFFFUL | (@this & 0x0000FFFF0000FFFFUL) << 16;
+    @this = (@this >> 32) | (@this << 32);
+    return @this;
+  }
 
   /// <summary>
   ///   Calculate a more accurate square root, see
@@ -697,7 +779,7 @@ public static partial class MathEx {
         task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
       }
 #else
-      for (; ; ) {
+      for (;;) {
         var isPrime = IsPrimeWithBufferAndBeyond(candidate);
 
         if (isPrime)
