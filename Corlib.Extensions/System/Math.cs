@@ -230,16 +230,16 @@ public static partial class MathEx {
 #endif
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte CountUnsetBits(this byte @this) => (byte)(1 - CountSetBits(@this));
+  public static byte CountUnsetBits(this byte @this) => (byte)(8 - CountSetBits(@this));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte CountUnsetBits(this ushort @this) => (byte)(1 - CountSetBits(@this));
+  public static byte CountUnsetBits(this ushort @this) => (byte)(16 - CountSetBits(@this));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte CountUnsetBits(this uint @this) => (byte)(1 - CountSetBits(@this));
+  public static byte CountUnsetBits(this uint @this) => (byte)(32 - CountSetBits(@this));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte CountUnsetBits(this ulong @this) => (byte)(1 - CountSetBits(@this));
+  public static byte CountUnsetBits(this ulong @this) => (byte)(64 - CountSetBits(@this));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static byte ReverseBits(this byte @this) => (byte)(((@this * 0x80200802UL) & 0x0884422110UL) * 0x0101010101UL >> 32);
