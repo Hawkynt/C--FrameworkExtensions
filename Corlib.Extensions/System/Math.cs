@@ -22,7 +22,10 @@ using System.Collections.Generic;
 using Guard;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
-using static System.IO.VolumeExtensions;
+
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
@@ -273,6 +276,158 @@ public static partial class MathEx {
     @this = (@this >> 32) | (@this << 32);
     return @this;
   }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ParallelBitExtract(this byte @this, byte mask) {
+#if SUPPORTS_INTRINSICS
+    if (Bmi2.IsSupported)
+      return (byte)Bmi2.ParallelBitExtract(@this, mask);
+#endif
+
+    // Quick return check
+    if ((@this & mask) == 0)
+      return 0;
+
+    var result = 0U;
+    var bitPos = 0;
+
+    for (var i = 0; i < 8; ++i) {
+      var bitMask = 1U << i;  // Precompute the bit mask for position i
+      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
+        continue;
+
+      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
+      ++bitPos;
+    }
+
+    return (byte)result;
+  }
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort ParallelBitExtract(this ushort @this, ushort mask) {
+#if SUPPORTS_INTRINSICS
+    if (Bmi2.IsSupported)
+      return (ushort)Bmi2.ParallelBitExtract(@this, mask);
+#endif
+
+    // Quick return check
+    if ((@this & mask) == 0)
+      return 0;
+
+    var result = 0U;
+    var bitPos = 0;
+
+    for (var i = 0; i < 16; ++i) {
+      var bitMask = 1U << i;  // Precompute the bit mask for position i
+      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
+        continue;
+
+      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
+      ++bitPos;
+    }
+
+    return (ushort)result;
+  }
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint ParallelBitExtract(this uint @this, uint mask) {
+#if SUPPORTS_INTRINSICS
+    if (Bmi2.IsSupported)
+      return Bmi2.ParallelBitExtract(@this, mask);
+#endif
+
+    // Quick return check
+    if ((@this & mask) == 0)
+      return 0;
+
+    var result = 0U;
+    var bitPos = 0;
+
+    for (var i = 0; i < 32; ++i) {
+      var bitMask = 1U << i;  // Precompute the bit mask for position i
+      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
+        continue;
+
+      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
+      ++bitPos;
+    }
+
+    return result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong ParallelBitExtract(this ulong @this, ulong mask) {
+#if SUPPORTS_INTRINSICS
+    if (Bmi2.X64.IsSupported)
+      return Bmi2.X64.ParallelBitExtract(@this, mask);
+#endif
+
+    // Quick return check
+    if ((@this & mask) == 0)
+      return 0;
+
+    var result = 0UL;
+    var bitPos = 0;
+
+    for (var i = 0; i < 64; ++i) {
+      var bitMask = 1UL << i;  // Precompute the bit mask for position i
+      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
+        continue;
+      
+      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
+      ++bitPos;
+    }
+
+    return result;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (byte odd, byte even) DeinterleaveBits(this byte @this) => (
+    ParallelBitExtract(@this, 0b01010101),
+    ParallelBitExtract(@this, 0b10101010)
+  );
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (byte odd, byte even) DeinterleaveBits(this ushort @this) => (
+    (byte)ParallelBitExtract(@this, 0b0101010101010101),
+    (byte)ParallelBitExtract(@this, 0b1010101010101010)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ushort odd, ushort even) DeinterleaveBits(this uint @this) => (
+    (ushort)ParallelBitExtract(@this, 0b01010101010101010101010101010101U),
+    (ushort)ParallelBitExtract(@this, 0b10101010101010101010101010101010U)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (uint odd, uint even) DeinterleaveBits(this ulong @this) => (
+    (uint)ParallelBitExtract(@this, 0b0101010101010101010101010101010101010101010101010101010101010101UL),
+    (uint)ParallelBitExtract(@this, 0b1010101010101010101010101010101010101010101010101010101010101010UL)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (byte odd, byte even) PairwiseDeinterleaveBits(this byte @this) => (
+    ParallelBitExtract(@this, 0b00110011),
+    ParallelBitExtract(@this, 0b11001100)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (byte odd, byte even) PairwiseDeinterleaveBits(this ushort @this) => (
+    (byte)ParallelBitExtract(@this, 0b0011001100110011),
+    (byte)ParallelBitExtract(@this, 0b1100110011001100)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ushort odd, ushort even) PairwiseDeinterleaveBits(this uint @this) => (
+    (ushort)ParallelBitExtract(@this, 0b00110011001100110011001100110011U),
+    (ushort)ParallelBitExtract(@this, 0b11001100110011001100110011001100U)
+  );
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (uint odd, uint even) PairwiseDeinterleaveBits(this ulong @this) => (
+    (uint)ParallelBitExtract(@this, 0b0011001100110011001100110011001100110011001100110011001100110011UL),
+    (uint)ParallelBitExtract(@this, 0b1100110011001100110011001100110011001100110011001100110011001100UL)
+  );
 
   /// <summary>
   ///   Calculate a more accurate square root, see
