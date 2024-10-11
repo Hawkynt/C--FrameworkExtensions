@@ -1703,6 +1703,26 @@ public static partial class FileInfoExtensions {
 
   #endregion
 
+  #region async
+
+#if SUPPORTS_FILE_ASYNC
+
+  public static Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllBytesAsync(@this.FullName, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllLinesAsync(@this.FullName, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) => File.ReadAllLinesAsync(@this.FullName, encoding, token);
+  public static Task<string> ReadAllTextAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllTextAsync(@this.FullName, token);
+  public static Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) => File.ReadAllTextAsync(@this.FullName, encoding, token);
+  public static Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token = default) => File.WriteAllBytesAsync(@this.FullName, data, token);
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, CancellationToken token = default) => File.WriteAllLinesAsync(@this.FullName, data, token);
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding, CancellationToken token = default) => File.WriteAllLinesAsync(@this.FullName, data, encoding, token);
+  public static Task WriteAllTextAsync(this FileInfo @this, string data, CancellationToken token = default) => File.WriteAllTextAsync(@this.FullName, data, token);
+  public static Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding, CancellationToken token = default) => File.WriteAllTextAsync(@this.FullName, data, encoding, token);
+
+#endif
+
+  #endregion
+
+
   #region trimming text files
 
   /// <summary>
@@ -2772,7 +2792,7 @@ public static partial class FileInfoExtensions {
   /// </example>
   public static IFileInProgress StartWorkInProgress(this FileInfo @this, bool copyContents = false) {
     Against.ThisIsNull(@this);
-
+  
     var result = new FileInProgress(@this);
     if (copyContents)
       result.CopyFrom(@this);
