@@ -162,34 +162,34 @@ public static partial class AppDomainExtensions {
   ///   * makes sure that the temporary location is deleted by the child-process upon exit
   /// </summary>
   /// <param name="this">This AppDomain.</param>
-  /// <exception cref="System.Exception">Semaphore already present?</exception>
+  /// <exception cref="System.Exception">Mutex already present?</exception>
   public static void RerunInTemporaryDirectory(this AppDomain @this) {
     Against.ThisIsNull(@this);
 
     var executable = GetExecutable(@this);
-    var semaphoreName = executable.Name;
+    var mutexName = executable.Name;
 
     var parentProcess = ParentProcessUtilities.GetParentProcess();
-    var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
+    var parentMutexName = mutexName + "_" + parentProcess.Id;
 
     // try to connect to parent pipe
-    using (NamedPipeClientStream parentSemaphore = new(".", parentSemaphoreName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
+    using (NamedPipeClientStream parentMutex = new(".", parentMutexName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
       try {
-        parentSemaphore.Connect(0);
+        parentMutex.Connect(0);
       } catch {
         // ignored
       }
 
       // if we could connect, we're the newly spawned child process
-      if (parentSemaphore.IsConnected) {
-        _LoadEnvironmentFrom(parentSemaphore, @this);
+      if (parentMutex.IsConnected) {
+        _LoadEnvironmentFrom(parentMutex, @this);
         return;
       }
     }
 
     // we are the parent process, so acquire a new pipe for ourselves
-    var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-    using (NamedPipeServerStream mySemaphore = new(mySemaphoreName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
+    var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
+    using (NamedPipeServerStream myMutex = new(myMutexName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
       var directory = _CreateTempDirectory();
       var newTarget = _CopyExecutableAndAllAssemblies(executable, directory);
 
@@ -207,9 +207,9 @@ public static partial class AppDomainExtensions {
       ProcessStartInfo startInfo = new(newTarget.FullName, cmd) { UseShellExecute = false };
       Process.Start(startInfo);
 
-      // wait till the child release the semaphore
-      mySemaphore.WaitForConnection();
-      _SaveEnvironmentTo(mySemaphore, directory, @this);
+      // wait till the child release the mutex
+      myMutex.WaitForConnection();
+      _SaveEnvironmentTo(myMutex, directory, @this);
 
       Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
     }
@@ -221,88 +221,88 @@ public static partial class AppDomainExtensions {
   ///   Queries the environment for another process with the same entry assembly and throws an <see cref="Exception" /> when
   ///   present.
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void EnsureSingleInstanceOrThrow(this AppDomain @this)
-    => EnsureSingleInstanceOrThrow(@this, _CreateStandardSemaphoreName(@this));
+    => EnsureSingleInstanceOrThrow(@this, _CreateStandardMutexName(@this));
 
   /// <summary>
   ///   Queries the environment for another process with the same entry assembly and throws an <see cref="Exception" /> when
   ///   present.
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
-  /// <param name="semaphoreName">The name of the semaphore to query</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
+  /// <param name="mutexName">The name of the mutex to query</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void EnsureSingleInstanceOrThrow(this AppDomain @this, string semaphoreName) {
+  public static void EnsureSingleInstanceOrThrow(this AppDomain @this, string mutexName) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+    Against.ArgumentIsNullOrWhiteSpace(mutexName);
 
-    if (!IsSingleInstance(@this, semaphoreName))
+    if (!IsSingleInstance(@this, mutexName))
       throw new("AppDomain already loaded");
   }
 
   /// <summary>
   ///   Queries the environment for another process with the same entry assembly and exits when present.
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void EnsureSingleInstanceOrExit(this AppDomain @this)
-    => EnsureSingleInstanceOrExit(@this, _CreateStandardSemaphoreName(@this));
+    => EnsureSingleInstanceOrExit(@this, _CreateStandardMutexName(@this));
 
   /// <summary>
   ///   Queries the environment for another process with the same entry assembly and exits when present.
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
-  /// <param name="semaphoreName">The name of the semaphore to query</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
+  /// <param name="mutexName">The name of the mutex to query</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void EnsureSingleInstanceOrExit(this AppDomain @this, string semaphoreName) {
+  public static void EnsureSingleInstanceOrExit(this AppDomain @this, string mutexName) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+    Against.ArgumentIsNullOrWhiteSpace(mutexName);
 
-    if (!IsSingleInstance(@this, semaphoreName))
+    if (!IsSingleInstance(@this, mutexName))
       Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
   }
 
   /// <summary>
   ///   Queries the environment for another process with the same entry assembly.
-  ///   Note: Creates a semaphore which is held until process exit
+  ///   Note: Creates a mutex which is held until process exit
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
   /// <returns>
-  ///   <c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise,
+  ///   <c>true</c> if we successfully acquired the mutex, hence we are the only one using it; otherwise,
   ///   <c>false</c>.
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsSingleInstance(this AppDomain @this) => IsSingleInstance(@this, _CreateStandardSemaphoreName(@this));
+  public static bool IsSingleInstance(this AppDomain @this) => IsSingleInstance(@this, _CreateStandardMutexName(@this));
 
   /// <summary>
-  ///   Create a standard semaphore name for a given AppDomain. Defaults to entry assemblies' fullname or friendlyname of the
+  ///   Create a standard mutex name for a given AppDomain. Defaults to entry assemblies' fullname or friendlyname of the
   ///   domain.
   /// </summary>
   /// <param name="appDomain">The <see cref="AppDomain" /> to generaten the name for</param>
   /// <returns>A name to use</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static string _CreateStandardSemaphoreName(AppDomain appDomain) => Assembly.GetEntryAssembly()?.FullName ?? appDomain.FriendlyName;
+  private static string _CreateStandardMutexName(AppDomain appDomain) => Assembly.GetEntryAssembly()?.FullName ?? appDomain.FriendlyName;
 
   /// <summary>
-  ///   Queries the environment for a given semaphore and acquires it if not present.
-  ///   Note: Semaphore is held until process exit
+  ///   Queries the environment for a given mutex and acquires it if not present.
+  ///   Note: Mutex is held until process exit
   /// </summary>
-  /// <param name="this">The AppDomain to store the semaphore instance in</param>
-  /// <param name="semaphoreName">The name of the semaphore to query</param>
+  /// <param name="this">The AppDomain to store the mutex instance in</param>
+  /// <param name="uniqueName">The name of the mutex to query</param>
   /// <returns>
-  ///   <c>true</c> if we successfully acquired the semaphore, hence we are the only one using it; otherwise,
+  ///   <c>true</c> if we successfully acquired the mutex, hence we are the only one using it; otherwise,
   ///   <c>false</c>.
   /// </returns>
-  public static bool IsSingleInstance(this AppDomain @this, string semaphoreName) {
+  public static bool IsSingleInstance(this AppDomain @this, string uniqueName) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrWhiteSpace(semaphoreName);
+    Against.ArgumentIsNullOrWhiteSpace(uniqueName);
 
-    Semaphore semaphore = new(0, 1, semaphoreName, out var createNew);
+    Mutex mutex = new(true, uniqueName, out var createNew);
     if (createNew)
-      @this.DomainUnload += delegate { semaphore.Dispose(); };
+      @this.DomainUnload += delegate { mutex.ReleaseMutex(); mutex.Dispose(); };
     else
-      semaphore.Dispose();
+      mutex.Dispose();
 
     return createNew;
   }
@@ -311,29 +311,29 @@ public static partial class AppDomainExtensions {
   ///   Creates a new process from the given executable using the same command line.
   /// </summary>
   /// <param name="executable">The executable.</param>
-  /// <param name="semaphoreName">Name of the semaphore to share.</param>
+  /// <param name="mutexName">Name of the mutex to share.</param>
   /// <returns>
   ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.
   /// </returns>
-  /// <exception cref="Exception">Semaphore already present?</exception>
-  private static bool _Fork(FileInfo executable, string semaphoreName) {
+  /// <exception cref="Exception">Mutex already present?</exception>
+  private static bool _Fork(FileInfo executable, string mutexName) {
     var parentProcess = ParentProcessUtilities.GetParentProcess();
-    var parentSemaphoreName = semaphoreName + "_" + parentProcess.Id;
+    var parentMutexName = mutexName + "_" + parentProcess.Id;
     bool createNew;
 
-    // try to get parent semaphore first
-    using (Semaphore parentSemaphore = new(0, 1, parentSemaphoreName, out createNew))
+    // try to get parent mutex first
+    using (var mutex = new Mutex(true, parentMutexName, out createNew))
       if (!createNew) {
         // we couldn't create it, because we're a child process
-        parentSemaphore.Release();
+        mutex.ReleaseMutex();
         return true;
       }
 
-    // we are the parent process, so acquire a new semaphore for ourselves
-    var mySemaphoreName = semaphoreName + "_" + Process.GetCurrentProcess().Id;
-    using (Semaphore mySemaphore = new(0, 1, mySemaphoreName, out createNew)) {
+    // we are the parent process, so acquire a new mutex for ourselves
+    var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
+    using (Mutex myMutex = new(true, myMutexName, out createNew)) {
       if (!createNew)
-        throw new("Semaphore already present?");
+        throw new("Mutex already present?");
 
       // restart child with original command line if possible to pass all arguments
       var cmd = Environment.CommandLine;
@@ -347,10 +347,15 @@ public static partial class AppDomainExtensions {
 
       // start a child process
       ProcessStartInfo startInfo = new(executable.FullName, cmd);
-      Process.Start(startInfo);
+      var process = Process.Start(startInfo);
+      if (process == null)
+        throw new("Unable to spawn child-process");
 
-      // wait till the child release the semaphore
-      mySemaphore.WaitOne();
+      // wait till the child releases the mutex
+      var isChildReady = myMutex.WaitOne(TimeSpan.FromSeconds(30));
+      if (!isChildReady)
+        throw new("Timed out waiting for the child-process to spawn");
+
       return false;
     }
   }
