@@ -1002,17 +1002,168 @@ public static partial class StringExtensions {
 
   #endregion
 
+  #region Enum
+
+  #region Parse
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnum<TEnum>(this string @this) where TEnum: struct => (TEnum)Enum.Parse(typeof(TEnum), @this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnum<TEnum>(this string @this, bool ignoreCase) where TEnum: struct => (TEnum)Enum.Parse(typeof(TEnum), @this, ignoreCase);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnum<TEnum>(this ReadOnlySpan<char> @this) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.Parse<TEnum>(@this)
+#else
+    (TEnum)Enum.Parse(typeof(TEnum), @this.ToString())
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnum<TEnum>(this ReadOnlySpan<char> @this, bool ignoreCase) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.Parse<TEnum>(@this, ignoreCase)
+#else
+    (TEnum)Enum.Parse(typeof(TEnum), @this.ToString(), ignoreCase)
+#endif
+  ;
+
+  #endregion
+
+  #region TryParse
+    
+#if SUPPORTS_ENUM_TRYPARSE
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum>(this string @this, out TEnum result) where TEnum: struct => Enum.TryParse(@this, out result);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum>(this string @this, bool ignoreCase, out TEnum result) where TEnum: struct => Enum.TryParse(@this, ignoreCase, out result);
+
+#else
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum>(this string @this, out TEnum result) where TEnum: struct => TryParseEnum(@this, false, out result);
+
+  public static bool TryParseEnum<TEnum>(this string @this, bool ignoreCase, out TEnum result) where TEnum: struct {
+    try {  
+      result = (TEnum)Enum.Parse(typeof(TEnum), @this, ignoreCase);
+      return true;
+    } catch (Exception) {
+      result = default;
+      return false;
+    }
+  }
+
+#endif
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum>(this ReadOnlySpan<char> @this, out TEnum result) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, out result)
+#else
+    TryParseEnum(@this.ToString(), out result)
+#endif
+  ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum>(this ReadOnlySpan<char> @this, bool ignoreCase, out TEnum result) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, ignoreCase, out result)
+#else
+    TryParseEnum(@this.ToString(), ignoreCase, out result)
+#endif
+  ;
+
+  #endregion
+
+  #region ParseOrDefault
+
+  <#=GenerateDefaultValueStubs("TEnum",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnumOrDefault<TEnum>(this string @this{0} {1}) where TEnum: struct => TryParseEnum(@this, out TEnum result) ? result : {2};
+")#>
+
+  <#=GenerateDefaultValueStubs("TEnum",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnumOrDefault<TEnum>(this string @this, bool ignoreCase{0} {1}) where TEnum: struct => TryParseEnum(@this, ignoreCase, out TEnum result) ? result : {2};
+")#>
+
+  <#=GenerateDefaultValueStubs("TEnum",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnumOrDefault<TEnum>(this ReadOnlySpan<char> @this{0} {1}) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, out TEnum result)
+#else
+    TryParseEnum(@this.ToString(), out TEnum result)
+#endif
+    ? result 
+    : {2}
+    ;
+", true)#>
+
+  <#=GenerateDefaultValueStubs("TEnum",@"
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnumOrDefault<TEnum>(this ReadOnlySpan<char> @this, bool ignoreCase{0} {1}) where TEnum: struct => 
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, ignoreCase, out TEnum result)
+#else
+    TryParseEnum(@this.ToString(), ignoreCase, out TEnum result)
+#endif
+    ? result 
+    : {2}
+    ;
+", true)#>
+
+  #endregion
+
+  #region ParseOrNull
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum? ParseEnumOrNull<TEnum>(this string @this) where TEnum: struct => TryParseEnum(@this, out TEnum result) ? result : null;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum? ParseEnumOrNull<TEnum>(this string @this, bool ignoreCase) where TEnum: struct => TryParseEnum(@this, ignoreCase, out TEnum result) ? result : null;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum? ParseEnumOrNull<TEnum>(this ReadOnlySpan<char> @this) where TEnum: struct =>
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, out TEnum result)
+#else
+    TryParseEnum(@this.ToString(), out TEnum result)
+#endif
+    ? result 
+    : null
+    ;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum? ParseEnumOrNull<TEnum>(this ReadOnlySpan<char> @this, bool ignoreCase) where TEnum: struct => 
+#if SUPPORTS_ENUM_PARSE_SPAN
+    Enum.TryParse(@this, ignoreCase, out TEnum result)
+#else
+    TryParseEnum(@this.ToString(), ignoreCase, out TEnum result)
+#endif
+    ? result 
+    : null
+    ;
+
+  #endregion
+
+  #endregion
+
 }
 <#+
   
-  string GenerateDefaultValueStubs(string typeName, string code, bool useCharArray = false) {
+  string GenerateDefaultValueStubs(string typeName, string code, bool useReadOnlySpanChar = false) {
     var result=new System.Text.StringBuilder();
     result.Append(string.Format(code, "","","default"));
     result.Append(string.Format(code, ", " + typeName, "defaultValue","defaultValue"));
     result.Append(string.Format(code, ", Func<" + typeName + ">", "defaultValueFactory", "defaultValueFactory()"));
-    if (!useCharArray)
+    if (!useReadOnlySpanChar)
       result.Append(string.Format(code, ", Func<string, " + typeName + ">", "defaultValueFactory", "defaultValueFactory(@this)"));
-
+    
     return result.ToString();
   }
 
