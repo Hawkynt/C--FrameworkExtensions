@@ -831,6 +831,66 @@ public static partial class FileInfoExtensions {
     scope.Complete();
   }
 
+  /// <summary>
+  /// Renames the file represented by this <see cref="FileInfo"/> instance to the specified new name.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the file to be renamed.</param>
+  /// <param name="newName">The new name for the file (without directory path).</param>
+  /// <exception cref="System.NullReferenceException">
+  /// Thrown if <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="System.ArgumentNullException">
+  /// Thrown if <paramref name="newName"/> is <see langword="null"/> or empty.
+  /// </exception>
+  /// <exception cref="System.InvalidOperationException">
+  /// Thrown if <paramref name="newName"/> contains directory separators.
+  /// </exception>
+  /// <exception cref="System.IO.IOException">Thrown if the file cannot be moved or renamed due to an I/O error.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo file = new FileInfo("example.txt");
+  /// file.RenameTo("newname.txt");
+  /// // The file "example.txt" is now renamed to "newname.txt".
+  /// </code>
+  /// </example>
+  public static void RenameTo(this FileInfo @this, string newName) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(newName);
+    Against.True(newName.Contains(Path.DirectorySeparatorChar) || newName.Contains(Path.AltDirectorySeparatorChar));
+
+    var destFileName = Path.Combine(@this.Directory.FullName,newName);
+    @this.MoveTo(destFileName);
+  }
+
+  /// <summary>
+  /// Changes the extension of the file represented by this <see cref="FileInfo"/> instance to the specified new extension.
+  /// </summary>
+  /// <param name="this">The <see cref="FileInfo"/> instance representing the file to change the extension for.</param>
+  /// <param name="newExtension">The new file extension. If it doesn't start with a dot ('.'), one will be added automatically.</param>
+  /// <exception cref="System.NullReferenceException">
+  /// Thrown if <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="System.ArgumentNullException">
+  /// Thrown if <paramref name="newExtension"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="System.InvalidOperationException">Thrown if <paramref name="newExtension"/> contains directory separator characters.</exception>
+  /// <exception cref="System.IO.IOException">Thrown if the file cannot be moved or renamed due to an I/O error.</exception>
+  /// <example>
+  /// <code>
+  /// FileInfo file = new FileInfo("example.txt");
+  /// file.ChangeExtension("md");
+  /// // The file "example.txt" is now renamed to "example.md".
+  /// </code>
+  /// </example>
+  public static void ChangeExtension(this FileInfo @this, string newExtension) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(newExtension);
+    Against.True(newExtension.Contains(Path.DirectorySeparatorChar) || newExtension.Contains(Path.AltDirectorySeparatorChar));
+
+    var destFileName = Path.GetFileNameWithoutExtension(@this.FullName) + (newExtension.StartsWith(".") ? newExtension : "." + newExtension);
+    @this.MoveTo(destFileName);
+  }
+  
   #endregion
 
   #region hash computation
