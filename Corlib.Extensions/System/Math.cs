@@ -277,85 +277,121 @@ public static partial class MathEx {
     return @this;
   }
 
+#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static byte ParallelBitExtract(this byte @this, byte mask) {
 #if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return (byte)Bmi2.ParallelBitExtract(@this, mask);
 #endif
 
-    // Quick return check
-    if ((@this & mask) == 0)
+    var maskedValue = @this & mask;
+    if (maskedValue == 0)
       return 0;
 
-    var result = 0U;
+    var result = 0;
     var bitPos = 0;
-
-    for (var i = 0; i < 8; ++i) {
-      var bitMask = 1U << i;  // Precompute the bit mask for position i
-      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
-        continue;
-
-      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
-      ++bitPos;
-    }
+    
+    _ProcessParallelBitExtract(maskedValue, mask, 0, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, mask, 4, ref bitPos, ref result);
 
     return (byte)result;
   }
-  
+
+#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ushort ParallelBitExtract(this ushort @this, ushort mask) {
 #if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return (ushort)Bmi2.ParallelBitExtract(@this, mask);
 #endif
 
-    // Quick return check
-    if ((@this & mask) == 0)
+    var maskedValue = @this & mask;
+    if (maskedValue == 0)
       return 0;
 
-    var result = 0U;
+    var result = 0;
     var bitPos = 0;
 
-    for (var i = 0; i < 16; ++i) {
-      var bitMask = 1U << i;  // Precompute the bit mask for position i
-      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
-        continue;
-
-      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
-      ++bitPos;
-    }
+    _ProcessParallelBitExtract(maskedValue, mask, 0, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, mask, 4, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, mask, 8, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, mask, 12, ref bitPos, ref result);
 
     return (ushort)result;
   }
-  
+
+#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static uint ParallelBitExtract(this uint @this, uint mask) {
 #if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return Bmi2.ParallelBitExtract(@this, mask);
 #endif
 
-    // Quick return check
-    if ((@this & mask) == 0)
+    var maskedValue = (int)(@this & mask);
+    if (maskedValue == 0)
       return 0;
 
-    var result = 0U;
+    var result = 0;
     var bitPos = 0;
 
-    for (var i = 0; i < 32; ++i) {
-      var bitMask = 1U << i;  // Precompute the bit mask for position i
-      if ((mask & bitMask) == 0) // Check if the mask bit is set at this position
-        continue;
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 0, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 4, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 8, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 12, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 16, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 20, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 24, ref bitPos, ref result);
+    _ProcessParallelBitExtract(maskedValue, (int)mask, 28, ref bitPos, ref result);
 
-      result |= (@this & bitMask) >> (i - bitPos);  // Directly OR the result
-      ++bitPos;
-    }
-
-    return result;
+    return (uint)result;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void _ProcessParallelBitExtract(int maskedValue, int mask, int startBitPos, ref int bitPos, ref int result) {
+    var bitA = maskedValue >>> startBitPos;
+    var maskA = mask >>> startBitPos;
+    var bitB = maskedValue >>> (startBitPos + 1);
+    var maskB = mask >>> (startBitPos + 1);
+    var bitC = maskedValue >>> (startBitPos + 2);
+    var maskC = mask >>> (startBitPos + 2);
+    var bitD = maskedValue >>> (startBitPos + 3);
+    var maskD = mask >>> (startBitPos + 3);
+
+    bitA &= 1;
+    maskA &= 1;
+    bitB &= 1;
+    maskB &= 1;
+    bitC &= 1;
+    maskC &= 1;
+    bitD &= 1;
+    maskD &= 1;
+
+    bitA <<= bitPos;
+    bitPos += maskA;
+
+    bitB <<= bitPos;
+    bitPos += maskB;
+
+    bitC <<= bitPos;
+    bitPos += maskC;
+
+    bitD <<= bitPos;
+    bitPos += maskD;
+
+    result |= bitA;
+    result |= bitB;
+    result |= bitC;
+    result |= bitD;
+  }
+
+#if SUPPORTS_INTRINSICS
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static ulong ParallelBitExtract(this ulong @this, ulong mask) {
 #if SUPPORTS_INTRINSICS
     if (Bmi2.X64.IsSupported)
