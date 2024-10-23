@@ -95,8 +95,7 @@ public static partial class EnumExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToString<TEnum, TAttribute>(this TEnum @this, Func<TAttribute, string> converter) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryToString(@this, converter, out var result) ? result : @this.ToString()
-  ;
+    => TryToString(@this, converter, out var result) ? result : @this.ToString();
 
   /// <summary>
   /// Converts an enum value to a string using a custom attribute and a converter function.
@@ -141,8 +140,7 @@ public static partial class EnumExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToStringOrDefault<TEnum, TAttribute>(this TEnum @this, Func<TAttribute, string> converter, string defaultValue) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryToString(@this, converter, out var result) ? result : defaultValue
-  ;
+    => TryToString(@this, converter, out var result) ? result : defaultValue;
 
   /// <summary>
   /// Converts an enum value to a string using a custom attribute and a converter function. 
@@ -291,8 +289,7 @@ public static partial class EnumExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToString<TEnum, TAttribute>(this TEnum @this, Func<TAttribute, TEnum, string> converter) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryToString(@this, converter, out var result) ? result : @this.ToString()
-    ;
+    => TryToString(@this, converter, out var result) ? result : @this.ToString();
 
   /// <summary>
   /// Converts an enum value to a string using a custom attribute and a converter function. 
@@ -339,8 +336,7 @@ public static partial class EnumExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToStringOrDefault<TEnum, TAttribute>(this TEnum @this, Func<TAttribute, TEnum, string> converter, string defaultValue) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryToString(@this, converter, out var result) ? result : defaultValue
-  ;
+    => TryToString(@this, converter, out var result) ? result : defaultValue;
 
   /// <summary>
   /// Converts an enum value to a string using a custom attribute and a converter function. 
@@ -567,13 +563,13 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
   /// </param>
   /// <returns>The enum value parsed from the string.</returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="converter"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="predicate"/> is <see langword="null"/>.
   /// </exception>
   /// <exception cref="System.ArgumentException">
   /// Thrown if the string cannot be parsed into the enum value.
@@ -590,21 +586,57 @@ public static partial class EnumExtensions {
   ///
   /// // Usage Example 1: Successful parsing
   /// string input = "Status is active";
-  /// var status = input.Parse&lt;Status, DescriptionAttribute&gt;((attr, val) => 
-  ///     attr.Description == val ? Status.Active : (Status?)null);
+  /// var status = input.Parse&lt;Status, DescriptionAttribute&gt;((attr, val) => attr.Description == val);
   /// Console.WriteLine(status); // Output: Active
   ///
   /// // Usage Example 2: Parsing fails, throws ArgumentException
   /// input = "Unknown status";
-  /// status = input.Parse&lt;Status, DescriptionAttribute&gt;((attr, val) => 
-  ///     attr.Description == val ? Status.Active : (Status?)null);
+  /// status = input.Parse&lt;Status, DescriptionAttribute&gt;((attr, val) => attr.Description == val);
   /// // Throws ArgumentException: "Unknown value for Status:Unknown status"
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TEnum Parse<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter) where TEnum : struct, Enum where TAttribute : Attribute 
-    => TryParse(@this, converter, out var result) ? result : throw new ArgumentException($"Unknown value for {typeof(TEnum).Name}:{@this}", nameof(@this))
-  ;
+  public static TEnum ParseEnum<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate) where TEnum : struct, Enum where TAttribute : Attribute
+    => TryParseEnum<TEnum, TAttribute>(@this, predicate, out var result) ? result : throw new ArgumentException($"Unknown value for {typeof(TEnum).Name}:{@this}", nameof(@this));
+
+  /// <summary>
+  /// Parses a string to an enum value using a custom attribute and a converter function.
+  /// </summary>
+  /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
+  /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
+  /// <param name="this">The string to parse.</param>
+  /// <param name="selector">A selector that returns the comparison-value from the attribute.</param>
+  /// <returns>The enum value parsed from the string.</returns>
+  /// <exception cref="System.ArgumentNullException">
+  /// Thrown if <paramref name="selector"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="System.ArgumentException">
+  /// Thrown if the string cannot be parsed into the enum value.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// public enum Status {
+  ///     [Description("Status is active")]
+  ///     Active,
+  ///     [Description("Status is inactive")]
+  ///     Inactive,
+  ///     Pending // No attribute here
+  /// }
+  ///
+  /// // Usage Example 1: Successful parsing
+  /// string input = "Status is active";
+  /// var status = input.Parse&lt;Status, DescriptionAttribute&gt;(attr => attr.Description);
+  /// Console.WriteLine(status); // Output: Active
+  ///
+  /// // Usage Example 2: Parsing fails, throws ArgumentException
+  /// input = "Unknown status";
+  /// status = input.Parse&lt;Status, DescriptionAttribute&gt;(attr => attr.Description);
+  /// // Throws ArgumentException: "Unknown value for Status:Unknown status"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum ParseEnum<TEnum, TAttribute>(this string @this, Func<TAttribute, string> selector) where TEnum : struct, Enum where TAttribute : Attribute
+    => TryParseEnum<TEnum, TAttribute>(@this, selector, out var result) ? result : throw new ArgumentException($"Unknown value for {typeof(TEnum).Name}:{@this}", nameof(@this));
 
   /// <summary>
   /// Parses a string to an enum value using a custom attribute and a converter function.
@@ -613,16 +645,16 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
   /// </param>
   /// <param name="defaultValue">The default enum value to return if the string cannot be parsed.</param>
   /// <returns>
   /// The parsed enum value if the string matches the attribute, or the provided <paramref name="defaultValue"/> if the parsing fails.
   /// </returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="converter"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="predicate"/> is <see langword="null"/>.
   /// </exception>
   /// <example>
   /// <code>
@@ -637,14 +669,14 @@ public static partial class EnumExtensions {
   /// // Example 1: Successful parsing
   /// string input = "Status is active";
   /// var status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     Status.Pending);
   /// Console.WriteLine(status); // Output: Active
   ///
   /// // Example 2: Parsing fails, returns default value
   /// input = "Unknown status";
   /// status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     Status.Pending);
   /// Console.WriteLine(status); // Output: Pending
   ///
@@ -654,9 +686,8 @@ public static partial class EnumExtensions {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TEnum ParseOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter, TEnum defaultValue) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryParse(@this, converter, out var result) ? result : defaultValue
-  ;
+  public static TEnum ParseEnumOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate, TEnum defaultValue) where TEnum : struct, Enum where TAttribute : Attribute
+    => TryParseEnum<TEnum, TAttribute>(@this, predicate, out var result) ? result : defaultValue;
 
   /// <summary>
   /// Parses a string to an enum value using a custom attribute and a converter function. 
@@ -665,9 +696,9 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
   /// </param>
   /// <param name="defaultValueGenerator">
   /// A function that generates a default value to return if the string cannot be parsed.
@@ -677,7 +708,7 @@ public static partial class EnumExtensions {
   /// <paramref name="defaultValueGenerator"/> if parsing fails.
   /// </returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="converter"/> or <paramref name="defaultValueGenerator"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="predicate"/> or <paramref name="defaultValueGenerator"/> is <see langword="null"/>.
   /// </exception>
   /// <example>
   /// <code>
@@ -692,14 +723,14 @@ public static partial class EnumExtensions {
   /// // Example 1: Successful parsing
   /// string input = "Status is active";
   /// var status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     () => Status.Pending);
   /// Console.WriteLine(status); // Output: Active
   ///
   /// // Example 2: Parsing fails, default value is generated
   /// input = "Unknown status";
   /// status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     () => Status.Pending);
   /// Console.WriteLine(status); // Output: Pending
   ///
@@ -709,10 +740,10 @@ public static partial class EnumExtensions {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TEnum ParseOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter, Func<TEnum> defaultValueGenerator) where TEnum : struct, Enum where TAttribute : Attribute {
+  public static TEnum ParseEnumOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate, Func<TEnum> defaultValueGenerator) where TEnum : struct, Enum where TAttribute : Attribute {
     Against.ArgumentIsNull(defaultValueGenerator);
 
-    return TryParse(@this, converter, out var result) ? result : defaultValueGenerator();
+    return TryParseEnum<TEnum, TAttribute>(@this, predicate, out var result) ? result : defaultValueGenerator();
   }
 
   /// <summary>
@@ -723,9 +754,9 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
   /// </param>
   /// <param name="defaultValueGenerator">
   /// A function that generates a default value to return if the string cannot be parsed, 
@@ -736,7 +767,7 @@ public static partial class EnumExtensions {
   /// <paramref name="defaultValueGenerator"/> if parsing fails.
   /// </returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="converter"/> or <paramref name="defaultValueGenerator"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="predicate"/> or <paramref name="defaultValueGenerator"/> is <see langword="null"/>.
   /// </exception>
   /// <example>
   /// <code>
@@ -751,14 +782,14 @@ public static partial class EnumExtensions {
   /// // Example 1: Successful parsing
   /// string input = "Status is active";
   /// var status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     s => Status.Pending);
   /// Console.WriteLine(status); // Output: Active
   ///
   /// // Example 2: Parsing fails, default value is generated based on the input string
   /// input = "Unknown status";
   /// status = input.ParseOrDefault&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  ///     (attr, val) => attr.Description == val, 
   ///     s => Status.Pending);
   /// Console.WriteLine(status); // Output: Pending
   ///
@@ -768,10 +799,10 @@ public static partial class EnumExtensions {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TEnum ParseOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter, Func<string, TEnum> defaultValueGenerator) where TEnum : struct, Enum where TAttribute : Attribute {
+  public static TEnum ParseEnumOrDefault<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate, Func<string, TEnum> defaultValueGenerator) where TEnum : struct, Enum where TAttribute : Attribute {
     Against.ArgumentIsNull(defaultValueGenerator);
 
-    return TryParse(@this, converter, out var result) ? result : defaultValueGenerator(@this);
+    return TryParseEnum<TEnum, TAttribute>(@this, predicate, out var result) ? result : defaultValueGenerator(@this);
   }
 
   /// <summary>
@@ -781,15 +812,12 @@ public static partial class EnumExtensions {
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
-  /// </param>
+  /// <param name="selector">A selector that returns the comparison-value from the attribute.</param>
   /// <returns>
   /// The parsed enum value if the string matches the attribute, or <see langword="null"/> if parsing fails.
   /// </returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="converter"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="selector"/> is <see langword="null"/>.
   /// </exception>
   /// <example>
   /// <code>
@@ -803,14 +831,12 @@ public static partial class EnumExtensions {
   ///
   /// // Example 1: Successful parsing
   /// string input = "Status is active";
-  /// var status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null);
+  /// var status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;(attr => attr.Description);
   /// Console.WriteLine(status); // Output: Active
   ///
   /// // Example 2: Parsing fails, returns null
   /// input = "Unknown status";
-  /// status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null);
+  /// status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;(attr => attr.Description);
   /// Console.WriteLine(status == null); // Output: True
   ///
   /// // Example 3: Converter is null, throws ArgumentNullException
@@ -819,29 +845,25 @@ public static partial class EnumExtensions {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TEnum? ParseOrNull<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter) where TEnum : struct, Enum where TAttribute : Attribute
-    => TryParse(@this, converter, out var result) ? result : null
-  ;
+  public static TEnum? ParseOrNull<TEnum, TAttribute>(this string @this, Func<TAttribute, string> selector) where TEnum : struct, Enum where TAttribute : Attribute
+    => TryParseEnum<TEnum, TAttribute>(@this, selector, out var result) ? result : null;
 
   /// <summary>
-  /// Tries to parse a string to an enum value using a custom attribute and a converter function.
+  /// Parses a string to an enum value using a custom attribute and a converter function. 
+  /// If the string cannot be parsed, returns <see langword="null"/>.
   /// </summary>
   /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
   /// <typeparam name="TAttribute">The attribute type used for conversion.</typeparam>
   /// <param name="this">The string to parse.</param>
-  /// <param name="converter">
-  /// The converter function that takes both the custom attribute and the input string, 
-  /// and returns a nullable enum value if the conversion is successful, or <see langword="null"/> if it fails.
-  /// </param>
-  /// <param name="result">
-  /// When this method returns, contains the enum value if the string was successfully parsed; 
-  /// otherwise, contains the default value of <typeparamref name="TEnum"/>.
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
   /// </param>
   /// <returns>
-  /// <see langword="true"/> if the string was successfully parsed to an enum value; otherwise, <see langword="false"/>.
+  /// The parsed enum value if the string matches the attribute, or <see langword="null"/> if parsing fails.
   /// </returns>
   /// <exception cref="System.ArgumentNullException">
-  /// Thrown if <paramref name="this"/> or <paramref name="converter"/> is <see langword="null"/>.
+  /// Thrown if <paramref name="predicate"/> is <see langword="null"/>.
   /// </exception>
   /// <example>
   /// <code>
@@ -855,38 +877,143 @@ public static partial class EnumExtensions {
   ///
   /// // Example 1: Successful parsing
   /// string input = "Status is active";
-  /// var success = input.TryParse&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  /// var status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;((attr, val) => attr.Description == val);
+  /// Console.WriteLine(status); // Output: Active
+  ///
+  /// // Example 2: Parsing fails, returns null
+  /// input = "Unknown status";
+  /// status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;((attr, val) => attr.Description == val);
+  /// Console.WriteLine(status == null); // Output: True
+  ///
+  /// // Example 3: Converter is null, throws ArgumentNullException
+  /// status = input.ParseOrNull&lt;Status, DescriptionAttribute&gt;(null);
+  /// // Throws ArgumentNullException
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static TEnum? ParseOrNull<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate) where TEnum : struct, Enum where TAttribute : Attribute
+    => TryParseEnum<TEnum, TAttribute>(@this, predicate, out var result) ? result : null;
+
+  /// <summary>
+  /// Tries to parse a string to an enum value using a custom attribute and a predicate function that matches the string.
+  /// </summary>
+  /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
+  /// <typeparam name="TAttribute">The attribute type used for matching the string.</typeparam>
+  /// <param name="this">The string to parse.</param>
+  /// <param name="predicate">
+  /// The predicate function that takes the custom attribute and returns a string that should match the input string.
+  /// </param>
+  /// <param name="result">
+  /// When this method returns, contains the enum value if the string was successfully matched; 
+  /// otherwise, contains the default value of <typeparamref name="TEnum"/>.
+  /// </param>
+  /// <returns>
+  /// <see langword="true"/> if the string was successfully matched to an enum value; otherwise, <see langword="false"/>.
+  /// </returns>
+  /// <exception cref="System.ArgumentNullException">
+  /// Thrown if <paramref name="this"/> or <paramref name="predicate"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// public enum Status {
+  ///     [Description("Status is active")]
+  ///     Active,
+  ///     [Description("Status is inactive")]
+  ///     Inactive,
+  ///     Pending // No attribute here
+  /// }
+  ///
+  /// // Example 1: Successful parsing using DescriptionAttribute
+  /// string input = "Status is active";
+  /// var success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(
+  ///     attr => attr.Description, 
   ///     out var status);
   /// Console.WriteLine(success); // Output: True
   /// Console.WriteLine(status);  // Output: Active
   ///
   /// // Example 2: Parsing fails, returns false
   /// input = "Unknown status";
-  /// success = input.TryParse&lt;Status, DescriptionAttribute&gt;(
-  ///     (attr, val) => attr.Description == val ? Status.Active : (Status?)null, 
+  /// success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(
+  ///     attr => attr.Description, 
   ///     out status);
   /// Console.WriteLine(success); // Output: False
   /// Console.WriteLine(status);  // Output: Pending (default value)
   ///
-  /// // Example 3: Converter is null, throws ArgumentNullException
-  /// success = input.TryParse&lt;Status, DescriptionAttribute&gt;(null, out status);
+  /// // Example 3: Predicate is null, throws ArgumentNullException
+  /// success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(null, out status);
   /// // Throws ArgumentNullException
   /// </code>
   /// </example>
-  public static bool TryParse<TEnum, TAttribute>(this string @this, Func<TAttribute, string, TEnum?> converter, out TEnum result) where TEnum : struct, Enum where TAttribute : Attribute {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool TryParseEnum<TEnum, TAttribute>(this string @this, Func<TAttribute, string> predicate, out TEnum result) where TEnum : struct, Enum where TAttribute : Attribute {
+    Against.ArgumentIsNull(predicate);
+
+    return TryParseEnum<TEnum, TAttribute>(@this, (a, v) => predicate(a) == v, out result);
+  }
+
+  /// <summary>
+  /// Tries to parse a string to an enum value using a custom attribute and a predicate function.
+  /// </summary>
+  /// <typeparam name="TEnum">The enum type to parse into.</typeparam>
+  /// <typeparam name="TAttribute">The attribute type used for matching the string.</typeparam>
+  /// <param name="this">The string to parse.</param>
+  /// <param name="predicate">
+  /// The predicate function that takes both the custom attribute and the input string, 
+  /// and returns <see langword="true"/> if they match; otherwise, <see langword="false"/>.
+  /// </param>
+  /// <param name="result">
+  /// When this method returns, contains the enum value if the string was successfully matched; 
+  /// otherwise, contains the default value of <typeparamref name="TEnum"/>.
+  /// </param>
+  /// <returns>
+  /// <see langword="true"/> if the string was successfully matched to an enum value; otherwise, <see langword="false"/>.
+  /// </returns>
+  /// <exception cref="System.ArgumentNullException">
+  /// Thrown if <paramref name="this"/> or <paramref name="predicate"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// public enum Status {
+  ///     [Description("Status is active")]
+  ///     Active,
+  ///     [Description("Status is inactive")]
+  ///     Inactive,
+  ///     Pending // No attribute here
+  /// }
+  ///
+  /// // Example 1: Successful parsing
+  /// string input = "Status is active";
+  /// var success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(
+  ///     (attr, val) => attr.Description == val, 
+  ///     out var status);
+  /// Console.WriteLine(success); // Output: True
+  /// Console.WriteLine(status);  // Output: Active
+  ///
+  /// // Example 2: Parsing fails, returns false
+  /// input = "Unknown status";
+  /// success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(
+  ///     (attr, val) => attr.Description == val, 
+  ///     out status);
+  /// Console.WriteLine(success); // Output: False
+  /// Console.WriteLine(status);  // Output: Pending (default value)
+  ///
+  /// // Example 3: Predicate is null, throws ArgumentNullException
+  /// success = input.TryParseEnum&lt;Status, DescriptionAttribute&gt;(null, out status);
+  /// // Throws ArgumentNullException
+  /// </code>
+  /// </example>
+  public static bool TryParseEnum<TEnum, TAttribute>(this string @this, Func<TAttribute, string, bool> predicate, out TEnum result) where TEnum : struct, Enum where TAttribute : Attribute {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(converter);
+    Against.ArgumentIsNull(predicate);
 
     var type = typeof(TEnum);
     var fields = type.GetFields();
     foreach (var field in fields)
     foreach (var attribute in field.GetCustomAttributes(true).OfType<TAttribute>()) {
-      var maybe = converter(attribute, @this);
-      if (!maybe.HasValue)
+      if (!predicate(attribute, @this))
         continue;
 
-      result = maybe.Value;
+      result = (TEnum)field.GetRawConstantValue();
       return true;
     }
 
