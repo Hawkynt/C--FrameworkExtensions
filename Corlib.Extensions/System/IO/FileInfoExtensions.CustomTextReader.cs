@@ -141,28 +141,6 @@ public static partial class FileInfoExtensions {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static Encoding DetectFromByteOrderMark(Stream stream) {
-          var buffer = new byte[4];
-          return stream.Read(buffer, 0, buffer.Length) switch {
-            // UTF-32, big-endian
-            >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF => new UTF32Encoding(bigEndian: true, byteOrderMark: true),
-            // UTF-32, little-endian
-            >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00 => new UTF32Encoding(bigEndian: false, byteOrderMark: true),
-            // UTF-8
-            >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
-            // UTF-7
-#pragma warning disable SYSLIB0001
-            >= 3 when buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76 => Encoding.UTF7,
-#pragma warning restore SYSLIB0001
-            // UTF-16, big-endian
-            >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
-            // UTF-16, little-endian
-            >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE => new UnicodeEncoding(bigEndian: false, byteOrderMark: true),
-            _ => null
-          };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static LineEndingNode BuildLineEndingStateMachine(Initialized reader, StringExtensions.LineBreakMode lineBreakMode) {
           for (;;)
             switch (lineBreakMode) {
@@ -327,5 +305,29 @@ public static partial class FileInfoExtensions {
 
       public string ReadLine() => this._fullLineReader();
     }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Encoding DetectFromByteOrderMark(Stream stream) {
+      var buffer = new byte[4];
+      return stream.Read(buffer, 0, buffer.Length) switch {
+        // UTF-32, big-endian
+        >= 4 when buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF => new UTF32Encoding(bigEndian: true, byteOrderMark: true),
+        // UTF-32, little-endian
+        >= 4 when buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00 => new UTF32Encoding(bigEndian: false, byteOrderMark: true),
+        // UTF-8
+        >= 3 when buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF => Encoding.UTF8,
+        // UTF-7
+#pragma warning disable SYSLIB0001
+        >= 3 when buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76 => Encoding.UTF7,
+#pragma warning restore SYSLIB0001
+        // UTF-16, big-endian
+        >= 2 when buffer[0] == 0xFE && buffer[1] == 0xFF => new UnicodeEncoding(bigEndian: true, byteOrderMark: true),
+        // UTF-16, little-endian
+        >= 2 when buffer[0] == 0xFF && buffer[1] == 0xFE => new UnicodeEncoding(bigEndian: false, byteOrderMark: true),
+        _ => null
+      };
+    }
+
   }
 }
