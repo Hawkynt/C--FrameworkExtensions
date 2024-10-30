@@ -94,6 +94,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * TItem [MinBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.minby#system-linq-queryable-minby-2%28system-linq-iqueryable%28%28-0%29%29-system-linq-expressions-expression%28%28system-func%28%28-0-1%29%29%29%29-system-collections-generic-icomparer%28%28-0%29%29%29)&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
+* System.Collections.Generic.KeyValuePair
+  * void [Deconstruct](https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair-2.deconstruct)&lt;TKey, TValue&gt;(this KeyValuePair&lt;TKey, TValue&gt; @this, out TKey key, out TValue value)
 * System.Collections.Generic.Stack
   * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
