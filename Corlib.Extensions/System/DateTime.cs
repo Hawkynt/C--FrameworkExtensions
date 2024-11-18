@@ -22,6 +22,8 @@ using System.Collections.Generic;
 namespace System;
 
 public static partial class DateTimeExtensions {
+  private const long _TICKS_PER_MILLISECOND = 10000;
+
   /// <summary>
   ///   Returns the end of the day of the given date.
   /// </summary>
@@ -163,4 +165,12 @@ public static partial class DateTimeExtensions {
   public static DateTime SubstractWeeks(this DateTime @this, int weeks) => @this.AddWeeks(-weeks);
   public static DateTime SubstractMonths(this DateTime @this, int months) => @this.AddMonths(-months);
   public static DateTime SubstractYears(this DateTime @this, int value) => @this.AddYears(-value);
+
+  public static long AsUnixTicksUtc(this DateTime @this) => ((DateTimeOffset)@this.ToUniversalTime()).ToUnixTimeMilliseconds() * DateTimeExtensions._TICKS_PER_MILLISECOND;
+  public static long AsUnixMillisecondsUtc(this DateTime @this) => ((DateTimeOffset)@this.ToUniversalTime()).ToUnixTimeMilliseconds();
+
+  public static DateTime FromUnixTicks(long ticks, DateTimeKind kind = DateTimeKind.Unspecified) => DateTimeExtensions._CreateUnixEpochWithKind(kind).AddTicks(ticks);
+  public static DateTime FromUnixSeconds(long seconds, DateTimeKind kind = DateTimeKind.Unspecified) => DateTimeExtensions._CreateUnixEpochWithKind(kind).AddSeconds(seconds);
+
+  private static DateTime _CreateUnixEpochWithKind(DateTimeKind kind) => new(1970, 1, 1, 0, 0, 0, kind);
 }
