@@ -34,10 +34,14 @@
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices" Version="*" />
-    <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.DirectoryServices.AccountManagement" Version="*" />
+  <ItemGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &gt;= 0">
+    <PackageReference Include="System.DirectoryServices" Version="$(NetCoreVersion).*" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="$(NetCoreVersion).*" />
+  </ItemGroup>
+  <!--wont work but the compiler likes it!-->
+  <ItemGroup Condition="$(IsNetStandard) OR $(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &lt; 0">
+    <PackageReference Include="System.DirectoryServices" Version="*" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="*" />
   </ItemGroup>
 
   <ItemGroup>
