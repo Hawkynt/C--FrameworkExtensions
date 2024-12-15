@@ -1172,7 +1172,7 @@ public static partial class StreamExtensions {
   public static void ReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     Against.False(@this.CanRead);
 
-    _SeekToPositionAndCheck(@this, position, buffer.Length, seekOrigin);
+    _SeekToPositionAndCheck(@this, position, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
     _ReadBytesToArraySeekable(@this, buffer, 0, buffer.Length);
   }
 
