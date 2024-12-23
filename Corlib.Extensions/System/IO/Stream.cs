@@ -1172,7 +1172,7 @@ public static partial class StreamExtensions {
   public static void ReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin) {
     Against.False(@this.CanRead);
 
-    _SeekToPositionAndCheck(@this, position, buffer.Length, seekOrigin);
+    _SeekToPositionAndCheck(@this, position, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
     _ReadBytesToArraySeekable(@this, buffer, 0, buffer.Length);
   }
 
@@ -1188,7 +1188,7 @@ public static partial class StreamExtensions {
   /// <returns>A awaitable Task representing the operation</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => ReadBytesAsync(@this, position, buffer, 0, buffer.Length, seekOrigin);
+    => ReadBytesAsync(@this, position, buffer, 0, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
 
   /// <summary>
   ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
