@@ -21,6 +21,10 @@ using System.Diagnostics;
 using System.Linq;
 using Guard;
 using System.Runtime.CompilerServices;
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+using System.Runtime.InteropServices;
+#endif
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
@@ -357,10 +361,7 @@ public static partial class DictionaryExtensions {
   public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
     Against.ThisIsNull(@this);
 
-    if (@this.ContainsKey(key))
-      @this[key] = value;
-    else
-      @this.Add(key, value);
+    @this[key] = value;
   }
 
   /// <summary>
@@ -378,7 +379,7 @@ public static partial class DictionaryExtensions {
     Against.ArgumentIsNull(values);
 
     foreach (var kvp in values)
-      @this.AddOrUpdate(kvp.Item1, kvp.Item2);
+      @this[kvp.Item1] = kvp.Item2;
   }
 
   /// <summary>
@@ -394,7 +395,7 @@ public static partial class DictionaryExtensions {
     Against.ThisIsNull(@this);
 
     foreach (var kvp in values)
-      @this.AddOrUpdate(kvp.Item1, kvp.Item2);
+      @this[kvp.Item1] = kvp.Item2;
   }
 
   /// <summary>
@@ -412,7 +413,7 @@ public static partial class DictionaryExtensions {
     Against.ArgumentIsNull(values);
 
     foreach (var kvp in values)
-      @this.AddOrUpdate(kvp.Key, kvp.Value);
+      @this[kvp.Key] = kvp.Value;
   }
 
   /// <summary>
@@ -428,7 +429,7 @@ public static partial class DictionaryExtensions {
     Against.ThisIsNull(@this);
 
     foreach (var kvp in values)
-      @this.AddOrUpdate(kvp.Key, kvp.Value);
+      @this[kvp.Key] = kvp.Value;
   }
 
   /// <summary>
@@ -445,6 +446,15 @@ public static partial class DictionaryExtensions {
   [DebuggerStepThrough]
   public static TValue GetOrAddDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
     Against.ThisIsNull(@this);
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TValue> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
+      return ptrResult;
+    }
+
+#endif
 
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = default);
@@ -468,13 +478,24 @@ public static partial class DictionaryExtensions {
   public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
     Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TValue> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (!existed)
+        ptrResult = defaultValue;
+
+      return ptrResult;
+    }
+
+#endif
+
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = defaultValue);
 
     return result;
   }
-
-
+  
   /// <summary>
   ///   Gets the key's value from a dictionary or adds the key with the default value.
   /// </summary>
@@ -488,6 +509,18 @@ public static partial class DictionaryExtensions {
   [DebuggerStepThrough]
   public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
     Against.ThisIsNull(@this);
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TKey> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (!existed)
+        ptrResult = key;
+
+      return ptrResult;
+    }
+
+#endif
 
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = key);
@@ -513,6 +546,18 @@ public static partial class DictionaryExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TValue> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (!existed)
+        ptrResult = defaultValueFactory();
+
+      return ptrResult;
+    }
+
+#endif
+
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = defaultValueFactory());
 
@@ -536,6 +581,18 @@ public static partial class DictionaryExtensions {
   public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Func<TKey, TValue> defaultValueFactory) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(defaultValueFactory);
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TValue> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (!existed)
+        ptrResult = defaultValueFactory(key);
+
+      return ptrResult;
+    }
+
+#endif
 
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = defaultValueFactory(key));
@@ -618,6 +675,19 @@ public static partial class DictionaryExtensions {
   [DebuggerStepThrough]
   public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
     Against.ThisIsNull(@this);
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    if (@this is Dictionary<TKey, TValue> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (existed)
+        return false;
+
+      ptrResult = value;
+      return true;
+    }
+
+#endif
 
     if (@this.ContainsKey(key))
       return false;
