@@ -18,7 +18,10 @@
 #endregion
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Guard;
@@ -253,25 +256,25 @@ public static partial class PathExtensions {
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
   /// <returns>The full path of the created temporary directory.</returns>
   public static string GetTempFileName(string name = null, string baseDirectory = null) {
-    // use fully random name if none is given
-    if (name == null)
-      return Path.GetTempFileName();
-
-    var path = baseDirectory ?? Path.GetTempPath();
+    name ??= "tmp";
     name = Path.GetFileName(name);
 
+    var path = baseDirectory ?? GetUsableSystemTempDirectoryName();
     var fullName = Path.Combine(path, name);
 
     // if we could use the given name
-    if (TryCreateFile(fullName, FileAttributes.NotContentIndexed | FileAttributes.Temporary))
+    if (TryCreateFile(fullName)) {
+      _TryMarkAsTemporaryFile(fullName);
       return fullName;
+    }
 
     // otherwise, count
     var i = 1;
     var fileName = Path.GetFileNameWithoutExtension(name);
     var ext = Path.GetExtension(name);
-    while (!TryCreateFile(fullName = Path.Combine(path, $"{fileName}.{++i}{ext}"), FileAttributes.NotContentIndexed | FileAttributes.Temporary)) { }
+    while (!TryCreateFile(fullName = Path.Combine(path, $"{fileName}.{++i}{ext}"))) { }
 
+    _TryMarkAsTemporaryFile(fullName);
     return fullName;
   }
 
@@ -323,7 +326,7 @@ public static partial class PathExtensions {
   /// <param name="baseDirectory">The base directory to use, we'll be using the temp directory if this is <c>null</c>.</param>
   /// <returns>The full path of the created temporary directory.</returns>
   public static string GetTempDirectoryName(string name = null, string baseDirectory = null) {
-    var path = baseDirectory ?? Path.GetTempPath();
+    var path = baseDirectory ?? GetUsableSystemTempDirectoryName();
 
     // use a temp name if none given
     if (name == null) {
@@ -344,6 +347,7 @@ public static partial class PathExtensions {
         result = Path.Combine(path, tempName.ToString());
       } while (!TryCreateDirectory(result));
 
+      _TryMarkAsTemporaryDirectory(result);
       return result;
     }
 
@@ -352,16 +356,258 @@ public static partial class PathExtensions {
     var fullName = Path.Combine(path, name);
 
     // if we could use the given name, return it
-    if (TryCreateDirectory(fullName, FileAttributes.NotContentIndexed))
+    if (TryCreateDirectory(fullName)) {
+      _TryMarkAsTemporaryDirectory(fullName);
       return fullName;
+    }
 
     // otherwise count up
     var i = 1;
-    while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"), FileAttributes.NotContentIndexed)) { }
-
+    while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"))) { }
+    
+    _TryMarkAsTemporaryDirectory(fullName);
     return fullName;
   }
 
+
+  public static DirectoryInfo GetUsableSystemTempDirectory() => new(GetUsableSystemTempDirectoryName());
+
+  public static string GetUsableSystemTempDirectoryName() {
+    foreach (var (path, shouldCreate) in GetPossibleTempPaths()) {
+
+      // Skip empty or null paths.
+      if (path.IsNullOrWhiteSpace())
+        continue;
+
+      var trimmed=path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+      try {
+        if (!Directory.Exists(trimmed))
+          if (shouldCreate) {
+            Directory.CreateDirectory(trimmed);
+            _TryMarkAsTemporaryDirectory(trimmed);
+          } else
+            continue;
+
+        if (IsDirectoryWritable(trimmed))
+          return trimmed;
+
+      } catch {
+        // Ignore errors and continue to the next candidate.
+      }
+    }
+    
+    // we should never land here
+    throw new DirectoryNotFoundException("No valid temporary directory could be found.");
+
+    static IEnumerable<(string, bool)> GetPossibleTempPaths() {
+      yield return (Path.GetTempPath(), true);
+
+      if (Environment.OSVersion.Platform == PlatformID.Win32NT && IsWindows11OrHigher())
+        yield return (GetWindowsTempPath(), true);
+
+      string candidate;
+      if (Environment.OSVersion.Platform == PlatformID.Unix && (candidate = Environment.GetEnvironmentVariable("TMPDIR")).IsNotNullOrWhiteSpace())
+          yield return (candidate, true);
+
+      if ((candidate = Environment.GetEnvironmentVariable("TEMP")).IsNotNullOrWhiteSpace())
+        yield return (candidate, true);
+      if ((candidate = Environment.GetEnvironmentVariable("TMP")).IsNotNullOrWhiteSpace())
+        yield return (candidate, true);
+
+      switch (Environment.OSVersion.Platform) {
+        case PlatformID.Win32S:
+        case PlatformID.Win32Windows:
+        case PlatformID.Win32NT:
+        case PlatformID.WinCE:
+        case PlatformID.Xbox: {
+
+          // User-specific temp directories
+          if ((candidate = Environment.GetEnvironmentVariable("LOCALAPPDATA")).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetEnvironmentVariable("APPDATA")).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetEnvironmentVariable("USERPROFILE")).IsNotNullOrWhiteSpace()) {
+            yield return (Path.Combine(candidate, "Temp"), false);
+            yield return (Path.Combine(candidate, "AppData/Local/Temp"), false);
+            yield return (Path.Combine(candidate, "AppData/Roaming/Temp"), false);
+            yield return (Path.Combine(candidate, "AppData/Temp"), false);
+          }
+
+          // Windows legacy paths
+          if ((candidate = Environment.GetFolderPath(Environment.SpecialFolder.System)).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetEnvironmentVariable("SYSTEMROOT")).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+          if ((candidate = Environment.GetEnvironmentVariable("WINDIR")).IsNotNullOrWhiteSpace()) {
+            yield return (Path.Combine(candidate, "Temp"), false);
+            yield return (Path.Combine(Path.GetPathRoot(candidate), "Temp"), false);
+          }
+          if ((candidate = Environment.GetEnvironmentVariable("SYSTEMDRIVE")).IsNotNullOrWhiteSpace())
+            yield return (Path.Combine(candidate, "Temp"), false);
+
+          yield return (@"C:\TEMP", false);
+          break;
+        }
+        case PlatformID.Unix: {
+          
+          // Systemd-managed temporary directories (Linux)
+          foreach (var systemdTempPath in GetSystemDPaths())
+            yield return (systemdTempPath, true);
+
+          // Standard Linux temp directories
+          yield return ("/tmp", false);
+          yield return ("/var/tmp", false);
+          yield return ("/temp", false);
+          yield return ("/var/temp", false);
+          break;
+        }
+        case PlatformID.MacOSX: {
+          yield return (GetMacOSTempDirectory(), false);
+          break;
+        }
+        default: {
+
+          // OpenVMS
+          if ((candidate=Environment.GetEnvironmentVariable("SYS$SCRATCH")).IsNotNullOrWhiteSpace())
+            yield return (candidate, true);
+
+          // AmigaDOS
+          yield return ("T:", false);
+          break;
+        }
+      }
+
+      // if all up to here has failed, we'll gonna create one ourselves
+      const string DEFAULT_TEMP_NAME = "$$temp$$.$$$";
+      
+      // try working directory
+      yield return (Path.Combine(Directory.GetCurrentDirectory(), DEFAULT_TEMP_NAME), true);
+      yield return (Path.Combine(".",DEFAULT_TEMP_NAME), true);
+
+      // try execution source directory
+      if((candidate=AppDomain.CurrentDomain.BaseDirectory).IsNotNullOrWhiteSpace())
+        yield return (Path.Combine(candidate, DEFAULT_TEMP_NAME), true);
+
+      if (Assembly.GetEntryAssembly()?.Location is { } entryLocation && (candidate= Path.GetDirectoryName(entryLocation)).IsNotNullOrWhiteSpace())
+        yield return (Path.Combine(candidate, DEFAULT_TEMP_NAME), true);
+
+      if (Assembly.GetExecutingAssembly()?.Location is { } executingLocation && (candidate= Path.GetDirectoryName(executingLocation)).IsNotNullOrWhiteSpace())
+        yield return (Path.Combine(candidate, DEFAULT_TEMP_NAME), true);
+
+      yield break;
+
+      static bool IsWindows11OrHigher() {
+        var version = Environment.OSVersion.Version;
+        return version.Major > 10 || (version.Major == 10 && version.Build >= 22000);
+      }
+
+      static string GetWindowsTempPath() {
+        var result = new StringBuilder(260);
+        try {
+          return GetTempPath2(result.Capacity, result) > 0 ? result.ToString() : null;
+        } catch {
+          return null;
+        }
+
+        [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern uint GetTempPath2(int bufferLength, StringBuilder buffer);
+      }
+
+      static string GetMacOSTempDirectory() {
+        var buffer = new StringBuilder(1024);
+        try {
+          if (NSTemporaryDirectory(buffer, buffer.Capacity))
+            return buffer.ToString();
+        } catch {
+          // ignore error and continue
+        }
+
+        return null;
+
+        [DllImport("Foundation.framework/Foundation", EntryPoint = "NSTemporaryDirectory")]
+        static extern bool NSTemporaryDirectory(StringBuilder buffer, int bufferSize);
+      }
+
+      static IEnumerable<string> GetSystemDPaths() {
+        var results = new List<string>(2);
+
+        try {
+          using var process = Process.Start(new ProcessStartInfo {
+            FileName = "systemd-path",
+            Arguments = "temporary temporary-large",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+          });
+
+          while (!process?.StandardOutput.EndOfStream ?? false) {
+            var path = process.StandardOutput.ReadLine()?.Trim();
+            results.Add(path);
+          }
+        } catch {
+          // Ignore errors
+        }
+
+        return results;
+      }
+      
+    }
+
+    static bool IsDirectoryWritable(string path) {
+      string testFile = null;
+      try {
+        do
+          testFile = Path.Combine(path, Path.GetRandomFileName());
+        while (File.Exists(testFile));
+
+        using (File.Create(testFile, 1, FileOptions.None)) { }
+
+        return true;
+      } catch {
+        return false;
+      } finally {
+        File.Delete(testFile);
+      }
+    }
+
+  }
+
+  private static bool _TryMarkAsTemporaryFile(string path) {
+    try {
+      var file = new FileInfo(path);
+      file.Attributes |= FileAttributes.NotContentIndexed;
+      file.Attributes |= FileAttributes.Temporary;
+
+      return true;
+    } catch {
+      // ignore errors
+      return false;
+    }
+  }
+
+  private static bool _TryMarkAsTemporaryDirectory(string path) {
+    try {
+      var dir = new DirectoryInfo(path);
+
+      if (Environment.OSVersion.Platform is PlatformID.Unix or PlatformID.MacOSX)
+        Process.Start("chattr", $@"+t ""{path.Replace("\"","\\\"")}""")?.WaitForExit();
+      else {
+        dir.Attributes |= FileAttributes.NotContentIndexed;
+        dir.Attributes |= FileAttributes.Temporary;
+      }
+
+      return true;
+    } catch {
+      // ignore errors
+      return false;
+    }
+  }
+  
   /// <summary>
   ///   Tries to create a new folder.
   /// </summary>
@@ -378,7 +624,16 @@ public static partial class PathExtensions {
 
     try {
       Directory.CreateDirectory(pathName);
-      DirectoryInfo directory = new(pathName) { Attributes = attributes };
+      DirectoryInfo directory = new(pathName);
+      if (attributes == FileAttributes.Normal)
+        return true;
+
+      try {
+        directory.Attributes = attributes;
+      } catch {
+        // ignore attribute assigment errors
+      }
+
       return true;
     } catch (IOException) {
       return false;
