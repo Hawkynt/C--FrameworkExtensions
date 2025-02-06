@@ -2191,6 +2191,22 @@ public static partial class StringExtensions {
 
   #endregion
 
+  #region IndexOf
+
+  /// <summary>
+  /// Reports the zero-based index of the first occurrence of the specified character in this instance. The search starts at a specified character position and examines a specified number of character positions.
+  /// </summary>
+  /// <param name="this">This String.</param>
+  /// <param name="value">A Unicode character to seek.</param>
+  /// <param name="startIndex">The search starting position.</param>
+  /// <param name="comparison">One of the enumeration values that specifies the rules for the search.</param>
+  /// <returns>The index position of the value parameter if that string is found, or -1 if it is not. If <paramref name="value"/> is Empty, the return value is 0.</returns>
+  public static int IndexOf(this string @this, char value, int startIndex, StringComparison comparison) 
+    => @this.IndexOf(value.ToString(), startIndex, comparison)
+    ;
+
+  #endregion
+
   #region Contains/ContainsNot
 
   /// <summary>
