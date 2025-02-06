@@ -17,16 +17,12 @@
 
 #endregion
 
-#if !NETSTANDARD && !NETCOREAPP
-#define _SUPPORTS_APP_CONFIGURATION_PATH
-#endif
-
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if _SUPPORTS_APP_CONFIGURATION_PATH
+#if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -41,115 +37,7 @@ namespace System;
 public static partial class AppDomainExtensions {
   private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
 
-#if _SUPPORTS_APP_CONFIGURATION_PATH
-
-  /// <summary>
-  ///   Saves the parent process' environment to disk.
-  /// </summary>
-  /// <param name="stream">The stream.</param>
-  /// <param name="targetDirectory">The target directory.</param>
-  /// <param name="domain">The domain.</param>
-  private static void _SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
-    Dictionary<string, string> environment = new() {
-      { "baseDirectory", domain.BaseDirectory },
-      { "configurationFile", domain.SetupInformation.ConfigurationFile },
-      { "deleteOnExit", targetDirectory.FullName }
-    };
-
-    BinaryFormatter formatter = new();
-    formatter.Serialize(stream, environment);
-  }
-
-  /// <summary>
-  ///   Loads a saved environment from the parent process.
-  /// </summary>
-  /// <param name="stream">The stream.</param>
-  /// <param name="domain">The domain.</param>
-  private static void _LoadEnvironmentFrom(Stream stream, AppDomain domain) {
-    BinaryFormatter formatter = new();
-    var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
-
-    // var baseDirectory = environment["baseDirectory"];
-    var configurationFile = environment["configurationFile"];
-    DirectoryInfo directoryToDeleteOnExit = new(environment["deleteOnExit"]);
-
-    domain.SetupInformation.ConfigurationFile = configurationFile;
-
-    // make sure we're removed from disk after exit
-    if (domain.IsDefaultAppDomain())
-      domain.ProcessExit += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-    else
-      domain.DomainUnload += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-
-    domain.UnhandledException += (_, _) => _SelfDestruct(directoryToDeleteOnExit);
-
-    // catch unexpected shutdowns for console applications
-    if (Environment.UserInteractive)
-      Console.CancelKeyPress += (_, e) => {
-        switch (e.SpecialKey) {
-          case ConsoleSpecialKey.ControlBreak:
-            _SelfDestruct(directoryToDeleteOnExit);
-            return;
-          case ConsoleSpecialKey.ControlC:
-            _SelfDestruct(directoryToDeleteOnExit);
-            return;
-          default: return;
-        }
-      };
-  }
-
-#endif
-
-  /// <summary>
-  ///   Removes the given directory by spawning a child-process, thus allowing to remove ourselves.
-  /// </summary>
-  /// <param name="myDirectory">My directory.</param>
-  private static void _SelfDestruct(DirectoryInfo myDirectory) {
-    var batchFile = _WriteBatchToDeleteDirectory(myDirectory);
-    if (batchFile == null)
-      return;
-
-    Process process = new(){
-      StartInfo = {
-        FileName = batchFile.FullName,
-        WindowStyle = ProcessWindowStyle.Hidden,
-        CreateNoWindow = true,
-        UseShellExecute = true
-      },
-    };
-    process.Start();
-    process.PriorityClass = ProcessPriorityClass.BelowNormal;
-  }
-
-  /// <summary>
-  ///   Writes a batch file deleting a given directory and itself afterwards.
-  ///   Note: Batch file is written to the directories parent directory.
-  /// </summary>
-  /// <param name="directoryToDelete">The directory to delete.</param>
-  /// <returns>The generated batch file</returns>
-  private static FileInfo _WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
-    FileInfo result = new(Path.Combine(directoryToDelete.Parent?.FullName ?? ".", $"DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat"));
-    if (result.Exists)
-      return null;
-
-    File.WriteAllText(
-      result.FullName,
-      $"""
-       @echo off
-       :repeat
-       echo Trying to delete...
-       rd /q /s "{directoryToDelete.FullName}"
-       if exist "{directoryToDelete.FullName}" (
-         ping 127.0.0.1 -n 3 >NUL
-         goto repeat
-       )
-       del "%~0"
-       """
-    );
-    return result;
-  }
-
-#if _SUPPORTS_APP_CONFIGURATION_PATH
+#if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
 
   /// <summary>
   ///   Reruns the given app domain from a temporary directory.
@@ -182,7 +70,7 @@ public static partial class AppDomainExtensions {
 
       // if we could connect, we're the newly spawned child process
       if (parentMutex.IsConnected) {
-        _LoadEnvironmentFrom(parentMutex, @this);
+        LoadEnvironmentFrom(parentMutex, @this);
         return;
       }
     }
@@ -190,8 +78,8 @@ public static partial class AppDomainExtensions {
     // we are the parent process, so acquire a new pipe for ourselves
     var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
     using (NamedPipeServerStream myMutex = new(myMutexName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
-      var directory = _CreateTempDirectory();
-      var newTarget = _CopyExecutableAndAllAssemblies(executable, directory);
+      var directory = new DirectoryInfo(PathExtensions.GetTempDirectoryName(executable.Name));
+      var newTarget = CopyExecutableAndAllAssemblies(executable, directory);
 
       // restart child with original command line if possible to pass all arguments
       var cmd = Environment.CommandLine;
@@ -209,12 +97,127 @@ public static partial class AppDomainExtensions {
 
       // wait till the child release the mutex
       myMutex.WaitForConnection();
-      _SaveEnvironmentTo(myMutex, directory, @this);
+      SaveEnvironmentTo(myMutex, directory, @this);
 
       Environment.Exit(_PROCESS_ALREADY_PRESENT_RESULT_CODE);
     }
-  }
 
+    return;
+
+    static FileInfo CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target) {
+      var result = CopyAssemblyAndDebugInformation(source, target);
+      var sourceDirectory = source.Directory;
+      if (sourceDirectory == null)
+        return result;
+
+      foreach (var dll in sourceDirectory
+        .EnumerateFiles("*.dll", SearchOption.AllDirectories)
+        .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
+      )
+        CopyAssemblyAndDebugInformation(dll, target.File(dll.FullName[(sourceDirectory.FullName.Length + 1)..]).Directory, true);
+
+      return result;
+
+      static FileInfo CopyAssemblyAndDebugInformation(FileInfo source, DirectoryInfo target, bool overwrite = false) {
+        if (!target.Exists)
+          target.Create();
+
+        var result = target.File(source.Name);
+        if (source.Exists)
+          source.CopyTo(result.FullName, overwrite);
+
+        var pdbFile = GetDebuggingInformationFile(source);
+        if (pdbFile.Exists)
+          pdbFile.CopyTo(target.File(pdbFile.Name), true);
+
+        return result;
+
+        static FileInfo GetDebuggingInformationFile(FileInfo assemblyFile) {
+          var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
+          FileInfo result = new(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
+          return result;
+        }
+      }
+    }
+    
+    static void SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
+      Dictionary<string, string> environment = new() { { "baseDirectory", domain.BaseDirectory }, { "configurationFile", domain.SetupInformation.ConfigurationFile }, { "deleteOnExit", targetDirectory.FullName } };
+
+      BinaryFormatter formatter = new();
+      formatter.Serialize(stream, environment);
+    }
+
+    static void LoadEnvironmentFrom(Stream stream, AppDomain domain) {
+      BinaryFormatter formatter = new();
+      var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
+
+      // var baseDirectory = environment["baseDirectory"];
+      var configurationFile = environment["configurationFile"];
+      DirectoryInfo directoryToDeleteOnExit = new(environment["deleteOnExit"]);
+
+      domain.SetupInformation.ConfigurationFile = configurationFile;
+
+      // make sure we're removed from disk after exit
+      if (domain.IsDefaultAppDomain())
+        domain.ProcessExit += (_, _) => SelfDestruct(directoryToDeleteOnExit);
+      else
+        domain.DomainUnload += (_, _) => SelfDestruct(directoryToDeleteOnExit);
+
+      domain.UnhandledException += (_, _) => SelfDestruct(directoryToDeleteOnExit);
+
+      // catch unexpected shutdowns for console applications
+      if (Environment.UserInteractive)
+        Console.CancelKeyPress += (_, e) => {
+          switch (e.SpecialKey) {
+            case ConsoleSpecialKey.ControlBreak:
+              SelfDestruct(directoryToDeleteOnExit);
+              return;
+            case ConsoleSpecialKey.ControlC:
+              SelfDestruct(directoryToDeleteOnExit);
+              return;
+            default: return;
+          }
+        };
+
+      return;
+
+      static void SelfDestruct(DirectoryInfo myDirectory) {
+        var batchFile = WriteBatchToDeleteDirectory(myDirectory);
+        if (batchFile == null)
+          return;
+
+        Process process = new() { StartInfo = { FileName = batchFile.FullName, WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true, UseShellExecute = true }, };
+        process.Start();
+        process.PriorityClass = ProcessPriorityClass.BelowNormal;
+
+        return;
+
+        static FileInfo WriteBatchToDeleteDirectory(DirectoryInfo directoryToDelete) {
+          var result = directoryToDelete.File($"..\\DeletePid-{Process.GetCurrentProcess().Id}.$$$.bat");
+          if (result.Exists)
+            return null;
+
+          result.WriteAllText(
+            $"""
+              @echo off
+              :repeat
+              echo Trying to delete...
+              rd /q /s "{directoryToDelete.FullName}"
+              if exist "{directoryToDelete.FullName}" (
+                choice /c ° /n /t 3 /d ° >NUL
+                goto repeat
+              )
+              del "%~0"
+             """
+          );
+
+          return result;
+        }
+      }
+    }
+
+  }
+  
 #endif
 
   /// <summary>
@@ -308,59 +311,6 @@ public static partial class AppDomainExtensions {
   }
 
   /// <summary>
-  ///   Creates a new process from the given executable using the same command line.
-  /// </summary>
-  /// <param name="executable">The executable.</param>
-  /// <param name="mutexName">Name of the mutex to share.</param>
-  /// <returns>
-  ///   <c>true</c> if the current process is the created child-process; otherwise, <c>false</c> for the parent process.
-  /// </returns>
-  /// <exception cref="Exception">Mutex already present?</exception>
-  private static bool _Fork(FileInfo executable, string mutexName) {
-    var parentProcess = ParentProcessUtilities.GetParentProcess();
-    var parentMutexName = mutexName + "_" + parentProcess.Id;
-    bool createNew;
-
-    // try to get parent mutex first
-    using (var mutex = new Mutex(true, parentMutexName, out createNew))
-      if (!createNew) {
-        // we couldn't create it, because we're a child process
-        mutex.ReleaseMutex();
-        return true;
-      }
-
-    // we are the parent process, so acquire a new mutex for ourselves
-    var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
-    using (Mutex myMutex = new(true, myMutexName, out createNew)) {
-      if (!createNew)
-        throw new("Mutex already present?");
-
-      // restart child with original command line if possible to pass all arguments
-      var cmd = Environment.CommandLine;
-      if (cmd.StartsWith("\"")) {
-        var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
-        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-      } else {
-        var index = cmd.IndexOf(" ", StringComparison.Ordinal);
-        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-      }
-
-      // start a child process
-      ProcessStartInfo startInfo = new(executable.FullName, cmd);
-      var process = Process.Start(startInfo);
-      if (process == null)
-        throw new("Unable to spawn child-process");
-
-      // wait till the child releases the mutex
-      var isChildReady = myMutex.WaitOne(TimeSpan.FromSeconds(30));
-      if (!isChildReady)
-        throw new("Timed out waiting for the child-process to spawn");
-
-      return false;
-    }
-  }
-
-  /// <summary>
   ///   Creates a new process from the given appdomain using the same executable and command line.
   ///   Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
   /// </summary>
@@ -373,64 +323,52 @@ public static partial class AppDomainExtensions {
     Against.ThisIsNull(@this);
 
     var executable = GetExecutable(@this);
-    return _Fork(executable, executable.Name);
-  }
+    return Invoke(executable, executable.Name);
 
-  /// <summary>
-  ///   Creates a temporary directory.
-  /// </summary>
-  /// <returns>The temporary directory.</returns>
-  [DebuggerStepThrough]
-  private static DirectoryInfo _CreateTempDirectory() {
-    FileInfo file = new(Path.GetTempFileName());
-    var directory = file.Directory;
-    DirectoryInfo result = new(Path.Combine(directory?.FullName ?? ".", file.Name));
-    file.Delete();
-    result.Create();
-    return result;
-  }
+    static bool Invoke(FileInfo executable, string mutexName) {
+      var parentProcess = ParentProcessUtilities.GetParentProcess();
 
-  /// <summary>
-  ///   Copies an assembly file (.exe/.dll) to a target directory and keeps PDB debugging files.
-  /// </summary>
-  /// <param name="source">The source.</param>
-  /// <param name="target">The target.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites files already at the target location.</param>
-  /// <returns>The new assembly file</returns>
-  [DebuggerStepThrough]
-  private static FileInfo _CopyAssemblyAndDebugInformation(FileInfo source, DirectoryInfo target, bool overwrite = false) {
-    if (!target.Exists)
-      target.Create();
+      if (parentProcess != null) {
+        var parentMutexName = mutexName + "_" + parentProcess.Id;
 
-    FileInfo result = new(Path.Combine(target.FullName, source.Name));
-    if (source.Exists)
-      source.CopyTo(result.FullName, overwrite);
+        // try to get parent mutex first
+        using var mutex = new Mutex(true, parentMutexName, out var createNew);
+        if (!createNew) {
+          // we couldn't create it, because we're a child process
+          mutex.ReleaseMutex();
+          return true;
+        }
+      }
 
-    var pdbFile = _GetDebuggingInformationFile(source);
-    if (pdbFile.Exists)
-      pdbFile.CopyTo(Path.Combine(target.FullName, pdbFile.Name), true);
+      // we are the parent process, so acquire a new mutex for ourselves
+      var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
+      using (Mutex myMutex = new(true, myMutexName, out var createNew)) {
+        if (!createNew)
+          throw new("Mutex already present?");
 
-    return result;
-  }
+        // restart child with original command line if possible to pass all arguments
+        var cmd = Environment.CommandLine;
+        var index = cmd.StartsWith('\"')
+            ? cmd.IndexOf('\"', 1, StringComparison.Ordinal)
+            : cmd.IndexOf(' ', StringComparison.Ordinal)
+          ;
 
-  /// <summary>
-  ///   Copies the given executable file and all other executables in the same directory to the given location, retaining
-  ///   original directory structure.
-  /// </summary>
-  /// <param name="source">The source executable.</param>
-  /// <param name="target">The target directory.</param>
-  /// <returns>The new executable file.</returns>
-  [DebuggerStepThrough]
-  private static FileInfo _CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target) {
-    var result = _CopyAssemblyAndDebugInformation(source, target);
-    var sourceDirectory = source.Directory;
-    foreach (var dll in sourceDirectory
-      .EnumerateFiles("*.dll", SearchOption.AllDirectories)
-      .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
-    )
-      _CopyAssemblyAndDebugInformation(dll, new FileInfo(Path.Combine(target.FullName, dll.FullName[(sourceDirectory.FullName.Length + 1)..])).Directory, true);
+        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
 
-    return result;
+        // start a child process
+        ProcessStartInfo startInfo = new(executable.FullName, cmd);
+        var process = Process.Start(startInfo);
+        if (process == null)
+          throw new("Unable to spawn child-process");
+
+        // wait till the child releases the mutex
+        var isChildReady = myMutex.WaitOne(TimeSpan.FromSeconds(30));
+        if (!isChildReady)
+          throw new("Timed out waiting for the child-process to spawn");
+
+        return false;
+      }
+    }
   }
 
   /// <summary>
@@ -450,15 +388,4 @@ public static partial class AppDomainExtensions {
     return new(Path.Combine(@this.BaseDirectory, fileName));
   }
 
-  /// <summary>
-  ///   Gets the debugging information file for the given assembly file.
-  /// </summary>
-  /// <param name="assemblyFile">The assembly file.</param>
-  /// <returns></returns>
-  [DebuggerStepThrough]
-  private static FileInfo _GetDebuggingInformationFile(FileInfo assemblyFile) {
-    var pdb = Path.ChangeExtension(assemblyFile.Name, "pdb");
-    FileInfo result = new(Path.Combine(assemblyFile.Directory?.FullName ?? ".", pdb));
-    return result;
-  }
 }
