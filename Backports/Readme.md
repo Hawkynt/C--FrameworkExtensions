@@ -169,6 +169,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-char-system-int32-system-stringsplitoptions%29)(this string @this, char separator, int count, StringSplitOptions options = StringSplitOptions.None)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-string-system-stringsplitoptions%29)(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-string-system-int32-system-stringsplitoptions%29)(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None)
+  * int [IndexOf](https://learn.microsoft.com/dotnet/api/system.string.indexof#system-string-indexof%28system-char-system-stringcomparison%29)(this string @this, char value, StringComparison comparisonType)
 * System.Text.StringBuilder
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
 * System.Threading.Tasks
