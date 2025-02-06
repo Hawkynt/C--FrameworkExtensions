@@ -18,6 +18,7 @@
 #endregion
 
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -928,6 +929,126 @@ public static partial class StreamExtensions {
 
     return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
   }
+
+  #endregion
+
+  #region Strings
+
+  public static void WriteLengthPrefixedString(this Stream @this, string data, Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+    Against.ArgumentIsNull(data);
+
+    encoding ??= Encoding.UTF8;
+    var rawData = encoding.GetBytes(data);
+    _WriteLittleEndianU32(@this, (uint)rawData.Length);
+    @this.Write(rawData, 0, rawData.Length);
+  }
+
+  public static string ReadLengthPrefixedString(this Stream @this, Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    encoding ??= Encoding.UTF8;
+
+    var length = _ReadLittleEndianU32(@this);
+    var buffer = new byte[length];
+    var bytesRead = @this.Read(buffer, 0, (int)length);
+    if (bytesRead != length)
+      throw new EndOfStreamException("Unexpected end of stream while reading length-prefixed string.");
+
+    return encoding.GetString(buffer);
+  }
+  
+  public static void WriteZeroTerminatedString(this Stream @this, string data, Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+    Against.ArgumentIsNull(data);
+    Against.True(data.Contains('\0'));
+
+    encoding ??= Encoding.UTF8;
+    var rawData = encoding.GetBytes(data + '\0');
+    @this.Write(rawData, 0, rawData.Length);
+  }
+
+  public static string ReadZeroTerminatedString(this Stream @this, Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    encoding ??= Encoding.UTF8;
+    var @null = encoding.GetBytes("\0");
+    using var buffer = new MemoryStream(_BUFFER_SIZE);
+    
+    if (encoding.IsSingleByte) {
+      var nullPattern = @null[0];
+      for (;;) {
+        var data = @this.ReadByte();
+        if (data < 0)
+          throw new EndOfStreamException("Unexpected end of stream while reading zero-terminated string.");
+
+        if (data == nullPattern)
+          return buffer.Length == 0 
+            ? string.Empty 
+            : encoding.GetString(buffer.GetBuffer(),0,(int)buffer.Length)
+            ;
+
+        buffer.WriteByte((byte)data);
+      }
+    }
+
+    var nullPatternLength = @null.Length;
+    for (;;) {
+      var data = @this.ReadByte();
+      if (data < 0)
+        throw new EndOfStreamException("Unexpected end of stream while reading zero-terminated string.");
+
+      buffer.WriteByte((byte)data);
+      var nullPatternOffsetInBuffer = (int)(buffer.Length - nullPatternLength);
+
+      // not enough bytes yet?
+      if (nullPatternOffsetInBuffer < 0)
+        continue;
+      
+      // does the buffer end with the null sequence?
+      if (!@null.SequenceEqual(0, buffer.GetBuffer(), nullPatternOffsetInBuffer, nullPatternLength))
+        continue;
+
+      return nullPatternOffsetInBuffer == 0 
+        ? string.Empty 
+        : encoding.GetString(buffer.GetBuffer(),0, nullPatternOffsetInBuffer)
+        ;
+    }
+  }
+
+  public static void WriteFixedLengthString(this Stream @this, string data, int length, char padding='\0', Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanWrite);
+    Against.ArgumentIsNull(data);
+    Against.CountOutOfRange(data.Length,length);
+    
+    encoding??=Encoding.ASCII;
+    
+    var rawData = encoding.GetBytes(data.PadRight(length,padding));
+    if (rawData.Length != encoding.GetMaxByteCount(length))
+      throw new ArgumentException($"Encoding '{encoding.EncodingName}' is variable-length and cannot be used for fixed-length strings.");
+
+    @this.Write(rawData, 0, rawData.Length);
+  }
+
+  public static string ReadFixedLengthString(this Stream @this, int length, char padding = '\0', Encoding encoding = null) {
+    Against.ThisIsNull(@this);
+    Against.False(@this.CanRead);
+
+    encoding ??= Encoding.ASCII;
+    var buffer = new byte[encoding.GetMaxByteCount(length)];
+
+    var bytesRead = @this.Read(buffer, 0, length);
+    if (bytesRead != length)
+      throw new EndOfStreamException("Unexpected end of stream while reading fixed-length string.");
+
+    return encoding.GetString(buffer).TrimEnd(padding);
+  }
+
 
   #endregion
 
