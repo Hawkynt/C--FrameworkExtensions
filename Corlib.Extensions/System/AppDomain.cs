@@ -19,13 +19,11 @@
 
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 #if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
-using System.Collections.Generic;
+using System.Linq;
 using System.IO.Pipes;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Principal;
 #endif
 using System.Threading;
@@ -36,6 +34,8 @@ namespace System;
 
 public static partial class AppDomainExtensions {
   private const int _PROCESS_ALREADY_PRESENT_RESULT_CODE = 0;
+
+  public static DirectoryInfo BasePath { get; private set; } = new(AppDomain.CurrentDomain.BaseDirectory);
 
 #if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
 
@@ -78,18 +78,17 @@ public static partial class AppDomainExtensions {
     // we are the parent process, so acquire a new pipe for ourselves
     var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
     using (NamedPipeServerStream myMutex = new(myMutexName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
-      var directory = new DirectoryInfo(PathExtensions.GetTempDirectoryName(executable.Name));
+      var directory = new DirectoryInfo(PathExtensions.GetTempDirectoryName(executable.GetFilenameWithoutExtension()));
       var newTarget = CopyExecutableAndAllAssemblies(executable, directory);
 
       // restart child with original command line if possible to pass all arguments
       var cmd = Environment.CommandLine;
-      if (cmd.StartsWith("\"")) {
-        var index = cmd.IndexOf("\"", 1, StringComparison.Ordinal);
-        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-      } else {
-        var index = cmd.IndexOf(" ", StringComparison.Ordinal);
-        cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
-      }
+      var index = cmd.StartsWith('\"') 
+        ? cmd.IndexOf('\"', 1, StringComparison.Ordinal) 
+        : cmd.IndexOf(' ', StringComparison.Ordinal)
+        ;
+
+      cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
 
       // start a child process
       ProcessStartInfo startInfo = new(newTarget.FullName, cmd) { UseShellExecute = false };
@@ -140,23 +139,17 @@ public static partial class AppDomainExtensions {
       }
     }
     
-    static void SaveEnvironmentTo(Stream stream, DirectoryInfo targetDirectory, AppDomain domain) {
-      Dictionary<string, string> environment = new() { { "baseDirectory", domain.BaseDirectory }, { "configurationFile", domain.SetupInformation.ConfigurationFile }, { "deleteOnExit", targetDirectory.FullName } };
-
-      BinaryFormatter formatter = new();
-      formatter.Serialize(stream, environment);
+    static void SaveEnvironmentTo(Stream stream, DirectoryInfo temporaryDirectory, AppDomain domain) {
+      stream.WriteLengthPrefixedString(domain.BaseDirectory);
+      stream.WriteLengthPrefixedString(domain.SetupInformation.ConfigurationFile);
+      stream.WriteLengthPrefixedString(temporaryDirectory.FullName);
     }
 
     static void LoadEnvironmentFrom(Stream stream, AppDomain domain) {
-      BinaryFormatter formatter = new();
-      var environment = formatter.Deserialize(stream) as Dictionary<string, string> ?? new Dictionary<string, string>();
-
-      // var baseDirectory = environment["baseDirectory"];
-      var configurationFile = environment["configurationFile"];
-      DirectoryInfo directoryToDeleteOnExit = new(environment["deleteOnExit"]);
-
-      domain.SetupInformation.ConfigurationFile = configurationFile;
-
+      BasePath = new(stream.ReadLengthPrefixedString());
+      domain.SetupInformation.ConfigurationFile = stream.ReadLengthPrefixedString();
+      DirectoryInfo directoryToDeleteOnExit = new(stream.ReadLengthPrefixedString());
+      
       // make sure we're removed from disk after exit
       if (domain.IsDefaultAppDomain())
         domain.ProcessExit += (_, _) => SelfDestruct(directoryToDeleteOnExit);
@@ -170,8 +163,6 @@ public static partial class AppDomainExtensions {
         Console.CancelKeyPress += (_, e) => {
           switch (e.SpecialKey) {
             case ConsoleSpecialKey.ControlBreak:
-              SelfDestruct(directoryToDeleteOnExit);
-              return;
             case ConsoleSpecialKey.ControlC:
               SelfDestruct(directoryToDeleteOnExit);
               return;
@@ -186,7 +177,14 @@ public static partial class AppDomainExtensions {
         if (batchFile == null)
           return;
 
-        Process process = new() { StartInfo = { FileName = batchFile.FullName, WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true, UseShellExecute = true }, };
+        Process process = new() {
+          StartInfo = {
+            FileName = batchFile.FullName, 
+            WindowStyle = ProcessWindowStyle.Hidden, 
+            CreateNoWindow = true, 
+            UseShellExecute = true
+          },
+        };
         process.Start();
         process.PriorityClass = ProcessPriorityClass.BelowNormal;
 
