@@ -2245,7 +2245,7 @@ public static partial class StringExtensions {
   public static int IndexOf(this string @this, char value, int startIndex, StringComparison comparison) 
     => @this.IndexOf(value.ToString(), startIndex, comparison)
     ;
-
+  
   #endregion
 
   #region Contains/ContainsNot
@@ -3573,38 +3573,86 @@ public static partial class StringExtensions {
   /// <summary>
   ///   Converts a given filename pattern into a regular expression.
   /// </summary>
-  /// <param name="pattern">The pattern.</param>
+  /// <param name="this">The pattern.</param>
   /// <returns>The regex.</returns>
-  private static Regex _ConvertFilePatternToRegex(string pattern) => (__convertFilePatternToRegex ??= new()).Invoke(pattern);
+  public static Regex ConvertFilePatternToRegex(this string @this) {
+    Against.ThisIsNull(@this);
 
-  private static __ConvertFilePatternToRegex __convertFilePatternToRegex;
+    var regexPattern = BuildPatternFrom(@this);
+    var isCaseSensitive = IsFileSystemCaseSensitive();
 
-  private sealed class __ConvertFilePatternToRegex {
-    private readonly Regex _catchFilenameExtension = new(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+    return new(regexPattern, RegexOptions.Compiled | (isCaseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase) | RegexOptions.Singleline);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Regex Invoke(string pattern) {
-      const string nonDotCharacters = "[^.]*";
+    static string BuildPatternFrom(string text) {
+      var endsWithAnyExtension = false;
+      var endsWithoutExtension = true;
 
-      var match = this._catchFilenameExtension.Match(pattern);
-      var hasExtension = match.Success;
-      var matchExact = false;
+      switch (text.Length) {
+        case 0:
+        case 1 when text[^1] == '.':
+          return "^$";
+        case > 1 when text[^1] == '.':
+          text = text[..^1];
+          break;
+        case > 2 when text[^2..] == ".*":
+          endsWithAnyExtension = true;
+          text = text[..^2];
+          break;
+        case > 1 when text.LastIndexOf('.') is var pIndex && text.LastIndexOfAny(['/','\\']) is var sIndex && pIndex > sIndex:
+          endsWithoutExtension = false;
+          break;
+      }
+      
+      // Normalize directory separators
+      var dirSeps = Regex.Escape(Path.DirectorySeparatorChar + string.Empty + Path.AltDirectorySeparatorChar);
+      var directorySeparators = $"[{dirSeps}]";
+      var notDirectorySeparators = $"[^{dirSeps}]";
+      
+      var result = new StringBuilder(text.Length + 16);
+      
+      // filenames start either at the beginning, after a drive specification or after a directory separator
+      result.Append("(?:^|[A-Z]\\:|").Append(directorySeparators).Append(')');
 
-      if (pattern.Contains('?'))
-        matchExact = true;
-      else if (hasExtension)
-        matchExact = match.Groups[1].Length != 3;
+      const string MARKER_ANY_DIRS = "::\0\0";
+      const string MARKER_ANY_FILE = "::\0\x01";
+      const string MARKER_ANY_NAME = "::\0\x02";
+      const string MARKER_ANY_SEPA = "::\0\x03";
+      const string MARKER_ANY_NONE = "::\0\x04";
 
-      var regexString = Regex.Escape(pattern);
-      regexString = "^" + Regex.Replace(regexString, @"\\\*", ".*");
-      regexString = Regex.Replace(regexString, @"\\\?", ".");
+      text = text
+        .Replace("**/", MARKER_ANY_DIRS)
+        .Replace("**\\", MARKER_ANY_DIRS)
+        .Replace("*", MARKER_ANY_FILE)
+        .Replace("?", MARKER_ANY_NAME)
+        .Replace("\\", MARKER_ANY_SEPA)
+        .Replace("/", MARKER_ANY_SEPA)
+      ;
 
-      if (!matchExact && hasExtension)
-        regexString += nonDotCharacters;
+      if (endsWithoutExtension)
+        text = text.ReplaceLast(MARKER_ANY_FILE, MARKER_ANY_NONE);
 
-      regexString += "$";
-      return new(regexString, RegexOptions.IgnoreCase);
+      var regexPattern = Regex.Escape(text);
+      regexPattern = regexPattern
+        .Replace(MARKER_ANY_DIRS, $"(?:.*{directorySeparators})?")
+        .Replace(MARKER_ANY_FILE, $"{notDirectorySeparators}*?")
+        .Replace(MARKER_ANY_NAME, notDirectorySeparators)
+        .Replace(MARKER_ANY_SEPA, directorySeparators)
+        .Replace(MARKER_ANY_NONE, $"[^.{dirSeps}]*?")
+      ;
+
+      result.Append(regexPattern);
+
+      // filenames end at the end or with an extension
+      result.Append(endsWithAnyExtension ? "(?:$|\\.[^.]*?)" : endsWithoutExtension ? "(?!\\.[^.]*?)$" : "$");
+
+      return result.ToString();
     }
+
+    static bool IsFileSystemCaseSensitive() {
+      using var tempFile = PathExtensions.GetTempFileToken("test");
+      return File.Exists(tempFile.File.FullName.ToUpperInvariant());
+    }
+
   }
 
   /// <summary>
@@ -3629,7 +3677,7 @@ public static partial class StringExtensions {
       if (this._illegalFilenameCharacters.IsMatch(pattern))
         AlwaysThrow.ArgumentException(nameof(pattern), "Patterns contains ilegal characters.", caller);
 
-      return _ConvertFilePatternToRegex(pattern).IsMatch(@this);
+      return ConvertFilePatternToRegex(pattern).IsMatch(@this);
     }
   }
 
