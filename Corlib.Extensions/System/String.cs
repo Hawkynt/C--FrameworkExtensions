@@ -34,6 +34,9 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class StringExtensions {
+
+  private const int _INDEX_NOT_FOUND = -1;
+
 #if SUPPORTS_SPAN
   private const int _MAX_STACKALLOC_STRING_LENGTH = 256;
 #endif
@@ -353,6 +356,44 @@ public static partial class StringExtensions {
     var mask = @this.Length - count;
     count += mask & (mask >> 31);
     return @this[^count..];
+  }
+
+  /// <summary>
+  /// Replaces the last occurrence of a specified substring within the current string with another substring.
+  /// </summary>
+  /// <param name="this">The string on which the replacement is performed. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to be replaced. Must not be <see langword="null"/> and must have a length greater than zero.</param>
+  /// <param name="replacement">The substring to replace the last occurrence of <paramref name="what"/>.</param>
+  /// <returns>
+  /// A new string where the last occurrence of <paramref name="what"/> in <paramref name="this"/> 
+  /// is replaced by <paramref name="replacement"/>. If <paramref name="what"/> is not found, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "hello world, hello universe";
+  /// string result = input.ReplaceLast("hello", "hi");
+  /// Console.WriteLine(result); // Output: "hello world, hi universe"
+  /// </code>
+  /// </example>
+  public static string ReplaceLast(this string @this, string what, string replacement) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+
+    if (what.Length <= 0)
+      return @this + replacement;
+
+    var index = @this.LastIndexOf(what, StringComparison.Ordinal);
+    return index switch {
+      < 0 => @this,
+      0 => replacement + @this[what.Length..],
+      _ => @this[..index] + replacement + @this[(index + what.Length)..]
+    };
   }
 
   #region First/Last
@@ -1119,7 +1160,7 @@ public static partial class StringExtensions {
   public static string Replace(this string @this, string oldValue, string newValue, int count, StringComparison comparison = StringComparison.CurrentCulture) {
     Against.UnknownEnumValues(comparison);
 
-    if (@this == null || oldValue == null || count < 1)
+    if (@this == null || oldValue == null || count <= 0)
       return @this;
 
     newValue ??= string.Empty;
@@ -3187,7 +3228,7 @@ public static partial class StringExtensions {
     if (@this == null)
       yield break;
 
-    if (delimiters == null || delimiters.Length < 1) {
+    if (delimiters is not { Length: > 0 }) {
       yield return @this;
       yield break;
     }
@@ -3769,7 +3810,7 @@ public static partial class StringExtensions {
 
     var firstChar = char.MinValue;
 
-    var nextUnseenIndex = -1;
+    var nextUnseenIndex = _INDEX_NOT_FOUND;
     for (var i = 0; i < @this.Length; ++i) {
       var currentChar = @this[i];
       if (!char.IsLetter(currentChar))

@@ -1115,4 +1115,20 @@ public class StringTests {
     => ExecuteTest(() => input.ReplaceAnyOf(chars, replacement), expected, exception)
     ;
 
+  [Test]
+  [TestCase(null,null,null,null,typeof(NullReferenceException))]
+  [TestCase("", null, null, null, typeof(ArgumentNullException))]
+  [TestCase("", "abc", null, "")]
+  [TestCase("abc", "abc", null, "")]
+  [TestCase("abcabc", "abc", null, "abc")]
+  [TestCase("abcabcdef", "abc", null, "abcdef")]
+  [TestCase("abcdef", "abc", null, "def")]
+  [TestCase("abc", "abc", "xyz", "xyz")]
+  [TestCase("abcabc", "abc", "xyz", "abcxyz")]
+  [TestCase("abcabcdef", "abc", "xyz", "abcxyzdef")]
+  [TestCase("abcdef", "abc", "xyz", "xyzdef")]
+  public void ReplaceLast(string? input,string? what,string? replacement,string expected,Type? exception=null)
+    => ExecuteTest(() => input.ReplaceLast(what,replacement), expected, exception)
+  ;
+
 }
