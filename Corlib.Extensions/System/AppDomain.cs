@@ -44,10 +44,10 @@ public static partial class AppDomainExtensions {
   ///   Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
   ///   * this first creates a temporary directory
   ///   * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
-  ///   * saves the current environment to a file
   ///   * spawns the new process at the temporary location
-  ///   * restores the saved environment
-  ///   * makes sure that the temporary location is deleted by the child-process upon exit
+  ///   * hands-over the current environment via process pipe
+  ///   * tries to make sure that the temporary location is deleted by the child-process upon exit
+  ///   * hard-kills the original parent process via <see cref="Environment.Exit"/>, so this method may not return for the parent process!
   /// </summary>
   /// <param name="this">This AppDomain.</param>
   /// <exception cref="System.Exception">Mutex already present?</exception>
@@ -58,7 +58,7 @@ public static partial class AppDomainExtensions {
     var mutexName = executable.Name;
 
     var parentProcess = ParentProcessUtilities.GetParentProcess();
-    var parentMutexName = mutexName + "_" + parentProcess.Id;
+    var parentMutexName = $"{mutexName}_{parentProcess.Id}";
 
     // try to connect to parent pipe
     using (NamedPipeClientStream parentMutex = new(".", parentMutexName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
@@ -70,13 +70,14 @@ public static partial class AppDomainExtensions {
 
       // if we could connect, we're the newly spawned child process
       if (parentMutex.IsConnected) {
-        LoadEnvironmentFrom(parentMutex, @this);
+        LoadEnvironmentFrom(parentMutex, @this,out var directoryToDeleteOnExit);
+        RegisterSelfDestruct(@this, directoryToDeleteOnExit);
         return;
       }
     }
 
     // we are the parent process, so acquire a new pipe for ourselves
-    var myMutexName = mutexName + "_" + Process.GetCurrentProcess().Id;
+    var myMutexName = $"{mutexName}_{Process.GetCurrentProcess().Id}";
     using (NamedPipeServerStream myMutex = new(myMutexName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
       var directory = new DirectoryInfo(PathExtensions.GetTempDirectoryName(executable.GetFilenameWithoutExtension()));
       var newTarget = CopyExecutableAndAllAssemblies(executable, directory);
@@ -90,11 +91,10 @@ public static partial class AppDomainExtensions {
 
       cmd = index < 0 ? string.Empty : cmd[(index + 1)..];
 
-      // start a child process
       ProcessStartInfo startInfo = new(newTarget.FullName, cmd) { UseShellExecute = false };
       Process.Start(startInfo);
 
-      // wait till the child release the mutex
+      // wait till the child connects
       myMutex.WaitForConnection();
       SaveEnvironmentTo(myMutex, directory, @this);
 
@@ -138,19 +138,8 @@ public static partial class AppDomainExtensions {
         }
       }
     }
-    
-    static void SaveEnvironmentTo(Stream stream, DirectoryInfo temporaryDirectory, AppDomain domain) {
-      stream.WriteLengthPrefixedString(domain.BaseDirectory);
-      stream.WriteLengthPrefixedString(domain.SetupInformation.ConfigurationFile);
-      stream.WriteLengthPrefixedString(temporaryDirectory.FullName);
-    }
 
-    static void LoadEnvironmentFrom(Stream stream, AppDomain domain) {
-      BasePath = new(stream.ReadLengthPrefixedString());
-      domain.SetupInformation.ConfigurationFile = stream.ReadLengthPrefixedString();
-      DirectoryInfo directoryToDeleteOnExit = new(stream.ReadLengthPrefixedString());
-      
-      // make sure we're removed from disk after exit
+    static void RegisterSelfDestruct(AppDomain domain,DirectoryInfo directoryToDeleteOnExit) {
       if (domain.IsDefaultAppDomain())
         domain.ProcessExit += (_, _) => SelfDestruct(directoryToDeleteOnExit);
       else
@@ -166,7 +155,8 @@ public static partial class AppDomainExtensions {
             case ConsoleSpecialKey.ControlC:
               SelfDestruct(directoryToDeleteOnExit);
               return;
-            default: return;
+            default:
+              return;
           }
         };
 
@@ -177,14 +167,7 @@ public static partial class AppDomainExtensions {
         if (batchFile == null)
           return;
 
-        Process process = new() {
-          StartInfo = {
-            FileName = batchFile.FullName, 
-            WindowStyle = ProcessWindowStyle.Hidden, 
-            CreateNoWindow = true, 
-            UseShellExecute = true
-          },
-        };
+        Process process = new() { StartInfo = { FileName = batchFile.FullName, WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true, UseShellExecute = true }, };
         process.Start();
         process.PriorityClass = ProcessPriorityClass.BelowNormal;
 
@@ -212,6 +195,18 @@ public static partial class AppDomainExtensions {
           return result;
         }
       }
+    }
+
+    static void SaveEnvironmentTo(Stream stream, DirectoryInfo temporaryDirectory, AppDomain domain) {
+      stream.WriteLengthPrefixedString(domain.BaseDirectory);
+      stream.WriteLengthPrefixedString(temporaryDirectory.FullName);
+      stream.WriteLengthPrefixedString(domain.SetupInformation.ConfigurationFile);
+    }
+
+    static void LoadEnvironmentFrom(Stream stream, AppDomain domain,out DirectoryInfo directoryToDeleteOnExit) {
+      BasePath = new(stream.ReadLengthPrefixedString());
+      directoryToDeleteOnExit = new(stream.ReadLengthPrefixedString());
+      domain.SetupInformation.ConfigurationFile = stream.ReadLengthPrefixedString();
     }
 
   }
