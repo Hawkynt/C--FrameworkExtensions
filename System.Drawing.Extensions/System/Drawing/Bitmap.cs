@@ -1221,9 +1221,9 @@ public static partial class BitmapExtensions {
         throw new ArgumentOutOfRangeException(nameof(xs));
       if (ys < 0 || ys >= other.Height)
         throw new ArgumentOutOfRangeException(nameof(ys));
-      if (width < 1 || xs + width > other.Width)
+      if (width <= 0 || xs + width > other.Width)
         throw new ArgumentOutOfRangeException(nameof(width));
-      if (height < 1 || ys + height > other.Height)
+      if (height <= 0 || ys + height > other.Height)
         throw new ArgumentOutOfRangeException(nameof(height));
       if (xt < 0 || xt + width > this.Width)
         throw new ArgumentOutOfRangeException(nameof(xt));
@@ -1275,10 +1275,10 @@ public static partial class BitmapExtensions {
       if (yt + height > this.Height)
         height = this.Height - yt;
 
-      if (width < 1)
+      if (width <= 0)
         return false;
 
-      if (height < 1)
+      if (height <= 0)
         return false;
 
       return true;

@@ -197,7 +197,7 @@ public class ArrayTests {
 
     Assert.IsTrue(shouldBeTrue, $"Equals for length {size}");
 
-    if (target.Length < 1)
+    if (target.Length <= 0)
       return;
 
     target[^1] = 1;

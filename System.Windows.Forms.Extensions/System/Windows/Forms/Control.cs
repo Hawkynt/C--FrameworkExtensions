@@ -462,7 +462,7 @@ public static partial class ControlExtensions {
       return null;
 
     text = text.Trim();
-    return text.Length < 1 ? null : text;
+    return text.Length <= 0 ? null : text;
   }
 
   /// <summary>

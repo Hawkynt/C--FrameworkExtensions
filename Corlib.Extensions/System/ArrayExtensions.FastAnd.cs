@@ -116,7 +116,7 @@ static partial class ArrayExtensions {
     }
 
     public static void ProcessInChunks(byte[] source, int offset, byte[] operand, int operandOffset, int count, int maxChunkSize = -1) {
-      if (maxChunkSize < 1)
+      if (maxChunkSize <= 0)
         maxChunkSize = RuntimeConfiguration.DEFAULT_MAX_CHUNK_SIZE;
 
       if (maxChunkSize < 2) {

@@ -397,7 +397,7 @@ public static partial class CommandExtensions {
         var version = @this.Connection.ServerVersion?.Split('.');
 
         // HACK: work-around for sql server <2005(<v9.0.0), limit string columns to 1024 chars
-        sql.Append(version == null || version.Length < 1 || int.Parse(version[0]) < 9 ? "(1024)" : "(MAX)");
+        sql.Append(version == null || version.Length <= 0 || int.Parse(version[0]) < 9 ? "(1024)" : "(MAX)");
       } else
         sql.Append("(" + charLength + ")");
     } else if ((decimalDigits != 0 || totalDigits != 0) && dbType == SqlDbType.Decimal)

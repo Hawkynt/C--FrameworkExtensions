@@ -51,7 +51,7 @@ public class ConcurrentWorkingBag<T> : IEnumerable<T> {
       try {
         callback((int)index);
       } finally {
-        if (Interlocked.Decrement(ref count) < 1)
+        if (Interlocked.Decrement(ref count) <= 0)
           processedAll.Set();
       }
     }

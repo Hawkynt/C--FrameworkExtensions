@@ -892,7 +892,7 @@ public static partial class ArrayExtensions {
   public static object[] ToArray(this Array @this) {
     Against.ThisIsNull(@this);
 
-    if (@this.Rank < 1)
+    if (@this.Rank <= 0)
       AlwaysThrow.ArgumentException(nameof(@this), "Rank must be > 0");
 
     var result = new object[@this.Length];
@@ -1160,7 +1160,7 @@ public static partial class ArrayExtensions {
   public static string ToStringInstance(this char[] @this, int startIndex) => @this == null || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, @this.Length - startIndex);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length < 1 || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, length);
+  public static string ToStringInstance(this char[] @this, int startIndex, int length) => @this == null || length <= 0 || @this.Length <= startIndex ? string.Empty : new(@this, startIndex, length);
 
   #region high performance linq for arrays
 
@@ -1906,7 +1906,7 @@ public static partial class ArrayExtensions {
     var searchStringLength = searchString.Length;
     var dataStringLength = @this.Length;
 
-    if (searchStringLength < 1)
+    if (searchStringLength <= 0)
       return 0;
 
     if (dataStringLength + offset < searchStringLength)

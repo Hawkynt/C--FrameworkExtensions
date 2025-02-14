@@ -43,7 +43,7 @@ public static partial class ConvertExtensions {
       _QP_ENCODING_TABLE[c] = c;
     }
 
-    for (var i = 0; i < 16; i++)
+    for (var i = 0; i < 16; ++i)
       _QP_DECODING_TABLE.Add(i.ToString("X1")[0], (byte)i);
 
     #endregion
