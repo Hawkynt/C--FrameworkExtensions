@@ -155,7 +155,7 @@ public static partial class InterlockedEx {
   public static <#=type#> Substract(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, -value);
 <#}else{#>
   public static <#=type#> Add(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current + value;
       if (CompareExchange(ref source, next, current) == current)
@@ -164,7 +164,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Substract(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current - value;
       if (CompareExchange(ref source, next, current) == current)
@@ -174,7 +174,7 @@ public static partial class InterlockedEx {
 <#}#>
 
   public static <#=type#> Multiply(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current * value;
       if (CompareExchange(ref source, next, current) == current)
@@ -183,7 +183,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Divide(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current / value;
       if (CompareExchange(ref source, next, current) == current)
@@ -192,7 +192,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Modulo(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current % value;
       if (CompareExchange(ref source, next, current) == current)
@@ -202,7 +202,7 @@ public static partial class InterlockedEx {
 <#if(isIntegerType){#>
 
   public static <#=type#> And(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current & value;
       if (CompareExchange(ref source, next, current) == current)
@@ -211,7 +211,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> NAnd(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = ~(current & value);
       if (CompareExchange(ref source, next, current) == current)
@@ -220,7 +220,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Or(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current | value;
       if (CompareExchange(ref source, next, current) == current)
@@ -229,7 +229,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> NOr(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = ~(current | value);
       if (CompareExchange(ref source, next, current) == current)
@@ -238,7 +238,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Xor(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current ^ value;
       if (CompareExchange(ref source, next, current) == current)
@@ -247,7 +247,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> NXor(ref <#=type#> source, <#=type#> value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = ~(current ^ value);
       if (CompareExchange(ref source, next, current) == current)
@@ -256,7 +256,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> Not(ref <#=type#> source) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = ~current;
       if (CompareExchange(ref source, next, current) == current)
@@ -266,7 +266,7 @@ public static partial class InterlockedEx {
 
 <#if(isUnsigned){#>
   public static <#=type#> ShiftLeft(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current << value;
       if (CompareExchange(ref source, next, current) == current)
@@ -275,7 +275,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> ShiftRight(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current >> value;
       if (CompareExchange(ref source, next, current) == current)
@@ -284,7 +284,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> RotateLeft(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current << value | current >> (<#=bitsUsed#> - value);
       if (CompareExchange(ref source, next, current) == current)
@@ -293,7 +293,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> RotateRight(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current >> value | current << (<#=bitsUsed#> - value);
       if (CompareExchange(ref source, next, current) == current)
@@ -302,7 +302,7 @@ public static partial class InterlockedEx {
   }
 <#}else{#>
   public static <#=type#> ArithmeticShiftLeft(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current << value;
       if(next < current)
@@ -314,7 +314,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> ArithmeticShiftRight(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = current >> value;
       if (CompareExchange(ref source, next, current) == current)
@@ -323,7 +323,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> LogicalShiftLeft(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       var next = (<#=type#>)((<#=unsignedType#>)current << value);
       if (CompareExchange(ref source, next, current) == current)
@@ -332,7 +332,7 @@ public static partial class InterlockedEx {
   }
 
   public static <#=type#> LogicalShiftRight(ref <#=type#> source, int value) {
-    while (true) {
+    for (;;) {
       var current = Read(ref source);
       //var next = (<#=type#>)((<#=unsignedType#>)current >> value);
       var next = current >>> value;
