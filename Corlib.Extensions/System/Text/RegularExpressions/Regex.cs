@@ -160,4 +160,114 @@ public static partial class RegexExtensions {
     var groupNumbers = @this.GetGroupNumbers();
     return Enumerable.Range(0, Math.Min(groupNames.Length, groupNumbers.Length)).Where(i => groupNames[i] != groupNumbers[i].ToString("0")).ToDictionary(i => groupNumbers[i], i => groupNames[i]);
   }
+
+  /// <summary>
+  /// Combines two <see cref="Regex"/> patterns into a single regex that matches either pattern, using the specified <see cref="RegexOptions"/>.
+  /// </summary>
+  /// <param name="this">The first regex pattern.</param>
+  /// <param name="other">The second regex pattern to fuse with <paramref name="this"/>.</param>
+  /// <param name="options">The <see cref="RegexOptions"/> to apply to the resulting regex.</param>
+  /// <returns>
+  /// A new <see cref="Regex"/> instance that matches either the pattern from <paramref name="this"/> or <paramref name="other"/>, 
+  /// with the specified <paramref name="options"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="other"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// Regex regex1 = new Regex(@"\d+");
+  /// Regex regex2 = new Regex(@"[A-Z]+");
+  /// Regex fused = regex1.Or(regex2, RegexOptions.IgnoreCase);
+  /// Console.WriteLine(fused.IsMatch("123"));   // Output: True
+  /// Console.WriteLine(fused.IsMatch("abc"));   // Output: True
+  /// Console.WriteLine(fused.IsMatch("!@#"));   // Output: False
+  /// </code>
+  /// </example>
+  public static Regex Or(this Regex @this, Regex other, RegexOptions options) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+    
+    var target = $"(?:{@this})|(?:{other})";
+    var result = new Regex(target, options);
+    return result;
+  }
+
+  /// <summary>
+  /// Combines two <see cref="Regex"/> patterns into a single regex that matches either pattern.
+  /// </summary>
+  /// <param name="this">The first regex pattern. Must have compatible options with <paramref name="other"/>.</param>
+  /// <param name="other">The second regex pattern to fuse with <paramref name="this"/>. Must have compatible options.</param>
+  /// <param name="compileRegex">(Optional: defaults to <see langword="false"/>)
+  /// If set to <see langword="true"/>, the resulting regex will be compiled for faster execution.</param>
+  /// <returns>
+  /// A new <see cref="Regex"/> instance that matches either the pattern from <paramref name="this"/> or <paramref name="other"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="other"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentException">
+  /// Thrown if <paramref name="this"/> and <paramref name="other"/> have incompatible <see cref="RegexOptions"/> settings.
+  /// </exception>
+  /// <remarks>
+  /// - The resulting regex retains shared compatible options from both input patterns.
+  /// - If the options differ, explicit inline modifiers are used to preserve behavior.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Regex regex1 = new Regex(@"\d+");
+  /// Regex regex2 = new Regex(@"[a-z]+", RegexOptions.IgnoreCase);
+  /// Regex fused = regex1.Or(regex2);
+  /// Console.WriteLine(fused.IsMatch("123"));   // Output: True
+  /// Console.WriteLine(fused.IsMatch("aBc"));   // Output: True
+  /// Console.WriteLine(fused.IsMatch("!@#"));   // Output: False
+  /// </code>
+  /// </example>
+  public static Regex Or(this Regex @this, Regex other, bool compileRegex = false) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(other);
+    Against.ValuesAreNotEqual(@this.Options & RegexOptions.RightToLeft, other.Options & RegexOptions.RightToLeft);
+    Against.ValuesAreNotEqual(@this.Options & RegexOptions.CultureInvariant, other.Options & RegexOptions.CultureInvariant);
+    Against.ValuesAreNotEqual(@this.Options & RegexOptions.ECMAScript, other.Options & RegexOptions.ECMAScript);
+
+    RegexOptions options;
+    string target;
+    if (@this.Options == other.Options) {
+      options = @this.Options;
+      target = $"(?:{@this})|(?:{other})";
+    } else {
+      options = @this.Options & (RegexOptions.RightToLeft | RegexOptions.CultureInvariant | RegexOptions.ECMAScript);
+      target = $"(?{OptionsToModifiers(@this.Options)}:{@this})|(?{OptionsToModifiers(other.Options)}:{other})";
+    }
+
+    if (compileRegex)
+      options |= RegexOptions.Compiled;
+
+    var result = new Regex(target, options);
+    return result;
+
+    static StringBuilder OptionsToModifiers(RegexOptions options) {
+      var results = new StringBuilder(5);
+      if (options.HasFlag(RegexOptions.IgnoreCase))
+        results.Append('i');
+      if (options.HasFlag(RegexOptions.Multiline))
+        results.Append('m');
+      if (options.HasFlag(RegexOptions.Singleline))
+        results.Append('s');
+      if (options.HasFlag(RegexOptions.ExplicitCapture))
+        results.Append('n');
+      if (options.HasFlag(RegexOptions.IgnorePatternWhitespace))
+        results.Append('x');
+      return results;
+    }
+
+  }
+
+
 }
