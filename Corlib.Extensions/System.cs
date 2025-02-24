@@ -23,7 +23,8 @@ namespace System;
 ///   Used to force the compiler to chose a method-overload with a class constraint on a generic type.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public abstract class __ClassForcingTag<T> where T : class {
+// ReSharper disable once ConvertToStaticClass
+public sealed class __ClassForcingTag<T> where T : class {
   private __ClassForcingTag() { }
 }
 
@@ -31,6 +32,7 @@ public abstract class __ClassForcingTag<T> where T : class {
 ///   Used to force the compiler to chose a method-overload with a struct constraint on a generic type.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public abstract class __StructForcingTag<T> where T : struct {
+// ReSharper disable once ConvertToStaticClass
+public sealed class __StructForcingTag<T> where T : struct {
   private __StructForcingTag() { }
 }
