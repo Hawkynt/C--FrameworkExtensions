@@ -22,7 +22,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 #if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
-using System.Linq;
+using System.Text.RegularExpressions;
 using System.IO.Pipes;
 using System.Security.Principal;
 #endif
@@ -40,18 +40,36 @@ public static partial class AppDomainExtensions {
 #if SUPPORTS_APPDOMAIN_SETUPINFORMATION_CONFIGURATIONFILE
 
   /// <summary>
-  ///   Reruns the given app domain from a temporary directory.
-  ///   Note: This should always be the first method to call upon entry point (ie. in Program.Main() method)
-  ///   * this first creates a temporary directory
-  ///   * copies all assemblies (.exe/.dll) and their debugging information files (.pdb) to the temp directory
-  ///   * spawns the new process at the temporary location
-  ///   * hands-over the current environment via process pipe
-  ///   * tries to make sure that the temporary location is deleted by the child-process upon exit
-  ///   * hard-kills the original parent process via <see cref="Environment.Exit"/>, so this method may not return for the parent process!
+  /// Reruns the given <see cref="AppDomain"/> from a temporary directory.
   /// </summary>
-  /// <param name="this">This AppDomain.</param>
-  /// <exception cref="System.Exception">Mutex already present?</exception>
-  public static void RerunInTemporaryDirectory(this AppDomain @this) {
+  /// <param name="this">The current <see cref="AppDomain"/> instance. Must not be <see langword="null"/>.</param>
+  /// <param name="additionalFilemask">(Optional) An array of file masks specifying additional files to copy to the temporary directory.</param>
+  /// <param name="blacklistedFilemask">(Optional) An array of file masks specifying files to exclude from being copied to the temporary directory.</param>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// This method performs the following steps:
+  /// - Creates a temporary directory.
+  /// - Copies all assemblies (.exe/.dll) and their debugging information files (.pdb), as well as additional files given by <paramref name="additionalFilemask"/> to the temporary location if they not match any <paramref name="blacklistedFilemask"/>.
+  /// - Spawns a new process executing from the temporary location.
+  /// - Transfers the current environment via a process pipe.
+  /// - Ensures that the temporary location is deleted by the child process upon exit via a separate batch file that also deletes itself.
+  /// - Terminates the original parent process using <see cref="Environment.Exit"/>, meaning this method may not return for the parent process.
+  /// 
+  /// **Important:**  
+  /// This method should be the first call in the entry point (e.g., inside `Program.Main()`).
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// class Program {
+  ///     static void Main() {
+  ///         AppDomain.CurrentDomain.RerunInTemporaryDirectory();
+  ///     }
+  /// }
+  /// </code>
+  /// </example>
+  public static void RerunInTemporaryDirectory(this AppDomain @this, string[] additionalFilemask = null, string[] blacklistedFilemask = null) {
     Against.ThisIsNull(@this);
 
     var executable = GetExecutable(@this);
@@ -59,28 +77,31 @@ public static partial class AppDomainExtensions {
 
     var parentProcess = ParentProcessUtilities.GetParentProcess();
     var parentMutexName = $"{mutexName}_{parentProcess.Id}";
-
+    
     // try to connect to parent pipe
     using (NamedPipeClientStream parentMutex = new(".", parentMutexName, PipeDirection.In, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
+      
+      var isChildThread = true;
       try {
         parentMutex.Connect(0);
-      } catch {
-        // ignored
+      } catch(TimeoutException) {
+        isChildThread = false;
       }
 
       // if we could connect, we're the newly spawned child process
-      if (parentMutex.IsConnected) {
+      if (isChildThread && parentMutex.IsConnected) {
         LoadEnvironmentFrom(parentMutex, @this,out var directoryToDeleteOnExit);
         RegisterSelfDestruct(@this, directoryToDeleteOnExit);
         return;
       }
+
     }
 
     // we are the parent process, so acquire a new pipe for ourselves
     var myMutexName = $"{mutexName}_{Process.GetCurrentProcess().Id}";
     using (NamedPipeServerStream myMutex = new(myMutexName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough)) {
       var directory = new DirectoryInfo(PathExtensions.GetTempDirectoryName(executable.GetFilenameWithoutExtension()));
-      var newTarget = CopyExecutableAndAllAssemblies(executable, directory);
+      var newTarget = CopyExecutableAndAllAssemblies(executable, directory, additionalFilemask,blacklistedFilemask);
 
       // restart child with original command line if possible to pass all arguments
       var cmd = Environment.CommandLine;
@@ -103,19 +124,53 @@ public static partial class AppDomainExtensions {
 
     return;
 
-    static FileInfo CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target) {
+    static FileInfo CopyExecutableAndAllAssemblies(FileInfo source, DirectoryInfo target, string[] additionalFilemask, string[] blacklistFilemask) {
       var result = CopyAssemblyAndDebugInformation(source, target);
       var sourceDirectory = source.Directory;
       if (sourceDirectory == null)
         return result;
 
-      foreach (var dll in sourceDirectory
-        .EnumerateFiles("*.dll", SearchOption.AllDirectories)
-        .Concat(sourceDirectory.EnumerateFiles("*.exe", SearchOption.AllDirectories))
-      )
-        CopyAssemblyAndDebugInformation(dll, target.File(dll.FullName[(sourceDirectory.FullName.Length + 1)..]).Directory, true);
+      var includelist = BuildIncludelist(additionalFilemask);
+      var blacklist = BuildBlacklist(blacklistFilemask);
+
+      foreach (var file in sourceDirectory.EnumerateFiles("*.*",SearchOption.AllDirectories))
+        if (includelist.IsMatch(file.FullName) && !blacklist.IsMatch(file.FullName))
+          CopyIfNotExists(file, target.File(file.FullName[(sourceDirectory.FullName.Length + 1)..]));
 
       return result;
+
+      static Regex BuildIncludelist(string[] strings) {
+        var result = "*.exe"
+          .ConvertFilePatternToRegex()
+          .Or("*.dll".ConvertFilePatternToRegex())
+          .Or("*.exe.config".ConvertFilePatternToRegex())
+          .Or("*.dll.config".ConvertFilePatternToRegex())
+          .Or("*.pdb".ConvertFilePatternToRegex());
+
+        return (
+          strings.IsNullOrEmpty()
+          ? result
+          : strings
+            .Aggregate(
+              result,
+              (current, mask) => current.Or(mask.ConvertFilePatternToRegex())
+            )
+        ).Compile();
+      }
+
+      static Regex BuildBlacklist(string[] strings) 
+        => strings.IsNullOrEmpty()
+          ? new("^$", RegexOptions.Compiled) 
+          : strings.Aggregate(new Regex("^$"), (current, mask) => current.Or(mask.ConvertFilePatternToRegex())).Compile()
+        ;
+
+      static void CopyIfNotExists(FileInfo source, FileInfo target) {
+        if (target.Exists)
+          return;
+
+        target.Directory.TryCreate();
+        source.CopyTo(target);
+      }
 
       static FileInfo CopyAssemblyAndDebugInformation(FileInfo source, DirectoryInfo target, bool overwrite = false) {
         if (!target.Exists)
