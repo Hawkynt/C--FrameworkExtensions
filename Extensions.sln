@@ -29,6 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "ExternalAnnotations", "{0A73474B-0AF6-47CF-B596-8E7CDC9AC001}"
 	ProjectSection(SolutionItems) = preProject
+		Backports.xml = Backports.xml
 		ExternalAnnotations\Corlib.Extensions.xml = ExternalAnnotations\Corlib.Extensions.xml
 		ExternalAnnotations\DirectoryServices.Extensions.xml = ExternalAnnotations\DirectoryServices.Extensions.xml
 		ExternalAnnotations\PresentationCore.Extensions.xml = ExternalAnnotations\PresentationCore.Extensions.xml

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly name="Backports">
+  <member name="M:System.Collections.Generic.EnumerablePolyfills.TryGetNonEnumeratedCount``1(System.Collections.Generic.IEnumerable{``0},System.Int32@)">
+    <parameter name="source">
+      <attribute ctor="M:JetBrains.Annotations.NoEnumerationAttribute.#ctor" />
+    </parameter>
+  </member>
+</assembly>
