@@ -266,8 +266,53 @@ public static partial class RegexExtensions {
         results.Append('x');
       return results;
     }
-
   }
 
+  /// <summary>
+  /// Creates a new <see cref="Regex"/> instance with the specified <see cref="RegexOptions"/>, preserving the pattern of the original regex.
+  /// </summary>
+  /// <param name="this">The original <see cref="Regex"/> instance. Must not be <see langword="null"/>.</param>
+  /// <param name="options">The <see cref="RegexOptions"/> to apply to the new regex instance.</param>
+  /// <returns>
+  /// A new <see cref="Regex"/> instance with the same pattern as <paramref name="this"/>, but using the specified <paramref name="options"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// Regex original = new Regex(@"\w+");
+  /// Regex modified = original.WithOptions(RegexOptions.IgnoreCase);
+  /// Console.WriteLine(modified.IsMatch("HELLO")); // Output: True
+  /// </code>
+  /// </example>
+  public static Regex WithOptions(this Regex @this, RegexOptions options) {
+    Against.ThisIsNull(@this);
 
+    return new(@this.ToString(), options);
+  }
+
+  /// <summary>
+  /// Creates a new <see cref="Regex"/> instance with the same pattern and options as the original, but with <see cref="RegexOptions.Compiled"/> enabled.
+  /// </summary>
+  /// <param name="this">The original <see cref="Regex"/> instance. Must not be <see langword="null"/>.</param>
+  /// <returns>
+  /// A new <see cref="Regex"/> instance with <see cref="RegexOptions.Compiled"/> added to its options.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// Compiling a regex improves execution speed for frequent matches but increases JIT compilation time.
+  /// Use <see cref="RegexOptions.Compiled"/> only for performance-critical, frequently executed expressions.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Regex original = new Regex(@"\d+");
+  /// Regex compiled = original.Compile();
+  /// Console.WriteLine(compiled.IsMatch("123")); // Output: True
+  /// </code>
+  /// </example>
+  public static Regex Compile(this Regex @this) => WithOptions(@this, @this.Options | RegexOptions.Compiled);
+  
 }
