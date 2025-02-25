@@ -538,18 +538,31 @@ public static partial class EnumerableExtensions {
   public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(true)] this IEnumerable<TItem> @this) => !IsNullOrEmpty(@this);
 
   /// <summary>
-  ///   Determines whether the enumeration is <c>null</c> or empty.
+  /// Determines whether the specified <see cref="IEnumerable{T}"/> is <see langword="null"/> or contains no elements.
   /// </summary>
-  /// <param name="this">This Enumeration.</param>
+  /// <typeparam name="TItem">The type of elements in the collection.</typeparam>
+  /// <param name="this">The collection to check.</param>
   /// <returns>
-  ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
+  /// <see langword="true"/> if the collection is <see langword="null"/> or contains no elements; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// IEnumerable&lt;int&gt; numbers = null;
+  /// bool result1 = numbers.IsNullOrEmpty(); // Output: true
+  ///
+  /// IEnumerable&lt;int&gt; emptyCollection = new List&lt;int&gt;();
+  /// bool result2 = emptyCollection.IsNullOrEmpty(); // Output: true
+  ///
+  /// IEnumerable&lt;int&gt; nonEmptyCollection = new List&lt;int&gt; { 1, 2, 3 };
+  /// bool result3 = nonEmptyCollection.IsNullOrEmpty(); // Output: false
+  /// </code>
+  /// </example>
   [DebuggerStepThrough]
   public static bool IsNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this) {
     switch (@this) {
       case null: return true;
-      case TItem[] array: return array.Length == 0;
-      case ICollection<TItem> collection: return collection.Count == 0;
+      case TItem[] array: return array.Length <= 0;
+      case ICollection<TItem> collection: return collection.Count <= 0;
       default:
         using (var enumerator = @this.GetEnumerator())
           return !enumerator.MoveNext();
