@@ -407,22 +407,46 @@ public static partial class ListExtensions {
     return result;
   }
 
-  // swap two elements
-  public static void Swap<T>(this IList<T> @this, int i, int j) {
+  /// <summary>
+  ///   Swaps the specified data in a list.
+  /// </summary>
+  /// <typeparam name="TItem">Type of data in the array.</typeparam>
+  /// <param name="this">This IList&lt;TItem&gt;.</param>
+  /// <param name="firstElementIndex">The first value.</param>
+  /// <param name="secondElementIndex">The the second value.</param>
+  public static void Swap<TItem>(this IList<TItem> @this, int firstElementIndex, int secondElementIndex) {
     Against.ThisIsNull(@this);
 
-    (@this[i], @this[j]) = (@this[j], @this[i]);
+    (@this[firstElementIndex], @this[secondElementIndex]) = (@this[secondElementIndex], @this[firstElementIndex]);
   }
 
-  // fisher-yates shuffle array
-  public static void Shuffle<T>(this IList<T> @this) {
+  /// <summary>
+  /// Randomly shuffles the elements of the specified <see cref="IList{T}"/>.
+  /// </summary>
+  /// <typeparam name="T">The type of elements in the list.</typeparam>
+  /// <param name="this">The list to shuffle. Must not be <see langword="null"/>.</param>
+  /// <param name="entropySource">(Optional) The <see cref="Random"/> instance used to generate randomness.
+  /// If <see langword="null"/>, a shared random instance is used.</param>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// This method modifies the original list in place using the Fisher-Yates shuffle algorithm.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// List&lt;int&gt; numbers = new List&lt;int&gt; { 1, 2, 3, 4, 5 };
+  /// numbers.Shuffle();
+  /// Console.WriteLine(string.Join(", ", numbers)); // Output: Random order of 1-5
+  /// </code>
+  /// </example>
+  public static void Shuffle<T>(this IList<T> @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
+    entropySource ??= Utilities.Random.Shared;
 
-    var i = @this.Count;
-
-    var random = Utilities.Random.Shared;
-    while (i-- > 1)
-      @this.Swap(random.Next(i + 1), i);
+    var index = @this.Count;
+    while (index > 1)
+      @this.Swap(entropySource.Next(index), --index);
   }
 
   public static TOutput[] ConvertAll<TInput, TOutput>(this IList<TInput> @this, Converter<TInput, TOutput> converter) {

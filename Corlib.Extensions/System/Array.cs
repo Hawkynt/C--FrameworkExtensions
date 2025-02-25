@@ -605,17 +605,32 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  ///   Shuffles the specified data.
+  /// Randomly shuffles the elements of the specified array.
   /// </summary>
-  /// <typeparam name="TItem">Type of elements in the array.</typeparam>
-  /// <param name="this">This array.</param>
-  public static void Shuffle<TItem>(this TItem[] @this) {
+  /// <typeparam name="TItem">The type of elements in the array.</typeparam>
+  /// <param name="this">The array to shuffle. Must not be <see langword="null"/>.</param>
+  /// <param name="entropySource">(Optional) The <see cref="Random"/> instance used to generate randomness.
+  /// If <see langword="null"/>, a shared random instance is used.</param>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// This method modifies the original array in place by swapping elements in a Fisher-Yates shuffle algorithm.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// int[] numbers = { 1, 2, 3, 4, 5 };
+  /// numbers.Shuffle();
+  /// Console.WriteLine(string.Join(", ", numbers)); // Output: Random order of 1-5
+  /// </code>
+  /// </example>
+  public static void Shuffle<TItem>(this TItem[] @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
+    entropySource ??= Utilities.Random.Shared;
 
     var index = @this.Length;
-    Random random = new();
     while (index > 1)
-      @this.Swap(random.Next(index), --index);
+      @this.Swap(entropySource.Next(index), --index);
   }
 
   /// <summary>
