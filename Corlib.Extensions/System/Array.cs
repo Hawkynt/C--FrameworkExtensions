@@ -1106,36 +1106,79 @@ public static partial class ArrayExtensions {
   }
 
   /// <summary>
-  ///   Determines whether the given array is empty.
+  /// Determines whether the specified array is <see langword="null"/> or empty.
   /// </summary>
-  /// <typeparam name="TItem">The type of the elements</typeparam>
-  /// <param name="this">This <see cref="Array" /></param>
+  /// <typeparam name="TItem">The type of elements in the array.</typeparam>
+  /// <param name="this">The array to check. May be <see langword="null"/>.</param>
   /// <returns>
-  ///   <c>true</c> if the array reference is <c>null</c> or the array has no elements; otherwise, <c>false</c>
+  /// <see langword="true"/> if the array is <see langword="null"/> or contains no elements; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// int[] numbers = null;
+  /// bool result1 = numbers.IsNullOrEmpty(); // Output: true
+  /// 
+  /// int[] emptyArray = Array.Empty&lt;int&gt;();
+  /// bool result2 = emptyArray.IsNullOrEmpty(); // Output: true
+  /// 
+  /// int[] nonEmptyArray = { 1, 2, 3 };
+  /// bool result3 = nonEmptyArray.IsNullOrEmpty(); // Output: false
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNullEmpty<TItem>([NotNullWhen(false)] this TItem[] @this) => @this is not { Length: > 0 };
+  public static bool IsNullOrEmpty<TItem>([NotNullWhen(false)] this TItem[] @this) => @this is not { Length: > 0 };
 
   /// <summary>
-  ///   Determines whether the given array is not empty.
+  /// Determines whether the specified array is not <see langword="null"/> and contains at least one element.
   /// </summary>
-  /// <typeparam name="TItem">The type of the elements</typeparam>
-  /// <param name="this">This <see cref="Array" /></param>
+  /// <typeparam name="TItem">The type of elements in the array.</typeparam>
+  /// <param name="this">The array to check.</param>
   /// <returns>
-  ///   <c>true</c> if the array reference is not <c>null</c> and the array has elements; otherwise, <c>false</c>
+  /// <see langword="true"/> if the array is not <see langword="null"/> and contains at least one element; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// int[] numbers = null;
+  /// bool result1 = numbers.IsNotNullOrEmpty(); // Output: false
+  ///
+  /// int[] emptyArray = Array.Empty&lt;int&gt;();
+  /// bool result2 = emptyArray.IsNotNullOrEmpty(); // Output: false
+  ///
+  /// int[] nonEmptyArray = { 1, 2, 3 };
+  /// bool result3 = nonEmptyArray.IsNotNullOrEmpty(); // Output: true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNotNullEmpty<TItem>([NotNullWhen(true)] this TItem[] @this) => @this is { Length: > 0 };
+  public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(true)] this TItem[] @this) => @this is { Length: > 0 };
 
   /// <summary>
-  ///   Initializes a jagged array with default values.
+  /// Creates a jagged array of the specified type and dimensions.
   /// </summary>
-  /// <typeparam name="TArray">The type of the array</typeparam>
-  /// <param name="lengths">The lengths in all dimensions</param>
-  /// <returns>The resulting array</returns>
+  /// <typeparam name="TArray">The type of the jagged array to create.</typeparam>
+  /// <param name="lengths">The lengths of each dimension in the jagged array.</param>
+  /// <returns>
+  /// A new jagged array of type <typeparamref name="TArray"/> with the specified dimensions.
+  /// </returns>
+  /// <exception cref="ArgumentException">
+  /// Thrown when <paramref name="lengths"/> contains zero or negative values, or if <typeparamref name="TArray"/> is not a valid jagged array type.
+  /// </exception>
+  /// <remarks>
+  /// - This method recursively initializes jagged arrays based on the provided dimensions.
+  /// - Each sub-array is instantiated according to the corresponding depth level.
+  /// - The type <typeparamref name="TArray"/> must represent a valid jagged array type (e.g., <c>int[][]</c>, <c>string[][][]</c>).
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// int[][] jaggedArray = CreatedJaggedArray&lt;int[][]&gt;(3, 2);
+  /// Console.WriteLine(jaggedArray.Length); // Output: 3
+  /// Console.WriteLine(jaggedArray[0].Length); // Output: 2
+  /// </code>
+  /// </example>
   public static TArray CreatedJaggedArray<TArray>(params int[] lengths) {
+    return (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths);
+
     // ReSharper disable once VariableHidesOuterVariable
-    object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
+    static object _InitializeJaggedArray(Type arrayType, int index, int[] lengths) {
       // create array in current dimension
       var result = Array.CreateInstance(arrayType, lengths[index]);
       var elementType = arrayType.GetElementType();
@@ -1149,8 +1192,6 @@ public static partial class ArrayExtensions {
 
       return result;
     }
-
-    return (TArray)_InitializeJaggedArray(typeof(TArray).GetElementType(), 0, lengths);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
