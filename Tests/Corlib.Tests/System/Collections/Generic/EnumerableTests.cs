@@ -366,5 +366,59 @@ public class EnumerableTests {
     )
   ;
 
+  [Test]
+  [TestCase(-1,1337)]
+  [TestCase(0, 1337)]
+  [TestCase(1, 1337)]
+  [TestCase(16, 1337)]
+  public void ShuffleShouldShuffle(int elementCount, int seed) {
+    var input = elementCount < 0 ? null : elementCount == 0 ? [] : Enumerable.Range(0, elementCount).ToArray();
+
+    // null should throw
+    if (input == null) {
+      Assert.That(() => input.Shuffled(), Throws.TypeOf<NullReferenceException>());
+      return;
+    }
+
+    // shuffling using the stream should match length and not modify the source
+    var outputEnumeration = Enumerable.ToArray(input.Shuffled(new(seed)));
+    Assert.That(outputEnumeration.Length, Is.EqualTo(elementCount));
+    Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)),"Should not modify source array");
+
+    // shuffling using ToArray should match length and not modify the source
+    var outputArray = input.Shuffled(new(seed)).ToArray();
+    Assert.That(outputArray.Length, Is.EqualTo(elementCount));
+    Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)), "Should not modify source array");
+
+    // shuffling using ToList should match length and not modify the source
+    var outputList = input.Shuffled(new(seed)).ToList();
+    Assert.That(outputList.Count, Is.EqualTo(elementCount));
+    Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)), "Should not modify source array");
+
+    switch (input.Length) {
+      case <= 0:
+        return;
+      case 1:
+        Assert.That(outputEnumeration[0], Is.EqualTo(input[0]), "One element alone can't be shuffled");
+        Assert.That(outputArray[0], Is.EqualTo(input[0]), "One element alone can't be shuffled");
+        Assert.That(outputList[0], Is.EqualTo(input[0]), "One element alone can't be shuffled");
+        return;
+      default:
+        Assert.That(outputEnumeration, Is.Not.EqualTo(input),"Shuffling should yield a different element order");
+        Assert.That(outputEnumeration, Is.EquivalentTo(input),"Shuffling should return all source elements");
+
+        Assert.That(outputArray, Is.Not.EqualTo(input), "Shuffling should yield a different element order");
+        Assert.That(outputArray, Is.EquivalentTo(input), "Shuffling should return all source elements");
+
+        Assert.That(outputList, Is.Not.EqualTo(input), "Shuffling should yield a different element order");
+        Assert.That(outputList, Is.EquivalentTo(input), "Shuffling should return all source elements");
+        break;
+    }
+
+    var shuffled = input.Shuffled(new(seed));
+    Assert.That(Enumerable.ToArray(shuffled), Is.Not.EqualTo(shuffled),"Multiple enumerations should yield different ordering");
+    Assert.That(shuffled.ToArray(),Is.Not.EqualTo(shuffled.ToArray()), "Multiple materialization should yield different ordering");
+    Assert.That(shuffled.ToList(), Is.Not.EqualTo(shuffled.ToList()), "Multiple materialization should yield different ordering");
+  }
 
 }

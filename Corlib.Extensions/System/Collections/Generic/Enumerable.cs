@@ -519,19 +519,146 @@ public static partial class EnumerableExtensions {
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This IEnumerable.</param>
-  /// <param name="random">The random number generator.</param>
+  /// <param name="entropySource">The random number generator.</param>
   /// <returns>A shuffled enumeration.</returns>
   [DebuggerStepThrough]
-  public static IEnumerable<TItem> Shuffle<TItem>(this IEnumerable<TItem> @this, Random random = null) {
+  public static IShuffledEnumerable<TItem> Shuffled<TItem>(this IEnumerable<TItem> @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
 
-    random ??= Utilities.Random.Shared;
-    return
-      @this
-        .Select(i => new { r = random.Next(), i })
-        .OrderBy(a => a.r)
-        .Select(a => a.i)
-      ;
+    entropySource ??= Utilities.Random.Shared;
+    return new ShuffledEnumerable<TItem>(@this, entropySource);
+  }
+
+  private sealed class ShuffledEnumerable<TItem>(IEnumerable<TItem> source, Random entropySource) : IShuffledEnumerable<TItem> {
+    
+    private IEnumerable<TItem> _Enumerate() {
+      return source switch {
+        TItem[] { Length: <= 0 } => [],
+        TItem[] array => ShuffleArray(array),
+        _ => ShuffleStreamed()
+      };
+
+      IEnumerable<TItem> ShuffleArray(TItem[] array) {
+        
+        // we avoid copying the array because that might be very large (up to 2GB in size)
+        var length = array.Length;
+        var returned = new uint[(length+31)>>5];
+        for (var i = 0; i < length; ++i) {
+          var index = entropySource.Next(length);
+          index = ProbeCorrectAndMark(index);
+          yield return array[index];
+        }
+
+        yield break;
+
+        int GetGroup(int index) => index >> 5;
+        int GetOffset(int index) => index & 31;
+        bool IsSet(int index) => (returned[GetGroup(index)] & (1U << GetOffset(index)))!=0;
+        void Set(int index) => returned[GetGroup(index)] |= 1U << GetOffset(index);
+
+        int ProbeCorrectAndMark(int index) {
+          
+          // we use linear probing here
+          // TODO: would be better to check the whole uint group for free (=0) bits and use those and if there is all bits set already we could move on to the next group and then to the last group
+          while (IsSet(index))
+            if (++index >= length)
+              index = 0;
+
+          Set(index);
+          return index;
+        }
+
+      }
+
+      IEnumerable<TItem> ShuffleStreamed() {
+        
+        // stay below 85KB size (because of SOH-limit), assume TItem = longs (sizeof 8-bytes) are stored at most
+        // if TItem is larger, we allocate the buffer on LOH meaning more pressure to the GC
+        // if TItem is smaller, our random distribution has less probability to return later items on startup
+        const int bufferSize = 84 * 1024 / 8; 
+
+        var buffer = new List<TItem>(bufferSize);
+        foreach (var item in source) {
+          
+          // fill the buffer first
+          if (buffer.Count < bufferSize) {
+            buffer.Add(item);
+            continue;
+          }
+
+          // pick a random element and return it
+          var index = entropySource.Next(bufferSize);
+          yield return buffer[index];
+
+          // swap with a new element from the stream
+          buffer[index] = item;
+        }
+
+        // process remaining elements in the buffer
+        while (buffer.Count > 0) {
+          var index = buffer.Count <=1 ? 0 : entropySource.Next(buffer.Count);
+          yield return buffer[index];
+          buffer.RemoveAt(index);
+        }
+      }
+    }
+
+    public TItem[] ToArray() {
+
+      // we need an array anyways, so copy all elements from the source first
+      var result = source.ToArray();
+      result.Shuffle(entropySource);
+      return result;
+    }
+
+    public List<TItem> ToList() {
+
+      // we need a list anyways, so copy all elements from the source first
+      var result = source.ToList();
+      result.Shuffle(entropySource);
+      return result;
+    }
+
+    #region Implementation of IEnumerable
+
+    /// <inheritdoc />
+    public IEnumerator<TItem> GetEnumerator() => this._Enumerate().GetEnumerator();
+
+    /// <inheritdoc />
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+    #endregion
+  }
+
+  /// <summary>
+  /// Represents an enumerable collection that is shuffled and provides utility methods for materializing the collection.
+  /// </summary>
+  /// <typeparam name="TItem">The type of elements in the collection.</typeparam>
+  /// <remarks>
+  /// This interface extends <see cref="IEnumerable{TItem}"/> and provides methods to convert the shuffled collection
+  /// into an array or a list.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// IShuffledEnumerable&lt;int&gt; shuffledNumbers = new[]{1,2,3,4,5}.Shuffled();
+  /// int[] array = shuffledNumbers.ToArray();
+  /// List&lt;int&gt; list = shuffledNumbers.ToList();
+  /// </code>
+  /// </example>
+  public interface IShuffledEnumerable<TItem> : IEnumerable<TItem> {
+
+    /// <summary>
+    /// Returns the shuffled collection as an array.
+    /// </summary>
+    /// <returns>An array containing all elements of the shuffled collection.</returns>
+    TItem[] ToArray();
+
+    /// <summary>
+    /// Returns the shuffled collection as a list.
+    /// </summary>
+    /// <returns>A <see cref="List{TItem}"/> containing all elements of the shuffled collection.</returns>
+    List<TItem> ToList();
+
   }
 
   [DebuggerStepThrough]
@@ -1707,29 +1834,6 @@ public static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
 
     return @this.OrderByDescending(i => i);
-  }
-
-  /// <summary>
-  ///   Returns the items in a randomized order.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <param name="this">This Enumeration.</param>
-  /// <param name="random">The random instance, if any.</param>
-  /// <returns>The items in a randomized order.</returns>
-  public static IEnumerable<TItem> Randomize<TItem>(this IEnumerable<TItem> @this, Random random = null) {
-    Against.ThisIsNull(@this);
-
-    return Invoke(@this, random ?? Utilities.Random.Shared);
-
-    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, Random random) {
-      var list = @this.Select(o => o).ToList();
-      int count;
-      while ((count = list.Count) > 0) {
-        var index = count == 1 ? 0 : random.Next(0, count);
-        yield return list[index];
-        list.RemoveAt(index);
-      }
-    }
   }
 
   /// <summary>
