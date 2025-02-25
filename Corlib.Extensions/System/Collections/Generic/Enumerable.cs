@@ -564,6 +564,9 @@ public static partial class EnumerableExtensions {
       case TItem[] array: return array.Length <= 0;
       case ICollection<TItem> collection: return collection.Count <= 0;
       default:
+        if(@this.TryGetNonEnumeratedCount(out var result))
+          return result <= 0;
+
         using (var enumerator = @this.GetEnumerator())
           return !enumerator.MoveNext();
     }
