@@ -20,10 +20,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Guard;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 #if SUPPORTS_ASYNC
@@ -515,12 +517,39 @@ public static partial class EnumerableExtensions {
   }
 
   /// <summary>
-  ///   Shuffles the specified enumeration.
+  /// Randomly shuffles the elements of the specified enumeration and returns a shuffled enumerable.
   /// </summary>
-  /// <typeparam name="TItem">The type of the item.</typeparam>
-  /// <param name="this">This IEnumerable.</param>
-  /// <param name="entropySource">The random number generator.</param>
-  /// <returns>A shuffled enumeration.</returns>
+  /// <typeparam name="TItem">The type of elements in the enumeration.</typeparam>
+  /// <param name="this">The source enumeration. Must not be <see langword="null"/>.</param>
+  /// <param name="entropySource">(Optional) The <see cref="Random"/> instance used for shuffling.
+  /// If <see langword="null"/>, a shared random instance is used.</param>
+  /// <returns>
+  /// A shuffled enumeration implementing <see cref="IShuffledEnumerable{TItem}"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// - The result is <b>not thread-safe</b>.<br/>
+  /// - The result keeps the source enumeration alive until it is fully enumerated and goes out of scope.<br/>
+  /// - If the source contains only one or two elements, this may return the original enumeration reference.<br/>
+  /// - The underlying enumeration <b>should not be modified</b> during its lifetime, as changes may lead to missing, duplicated, or unexpected elements.<br/>
+  /// - Multiple enumerations will generally yield different orders.<br/>
+  /// - Optimized <see cref="IShuffledEnumerable{TItem}.ToArray"/> and <see cref="IShuffledEnumerable{TItem}.ToList"/> methods ensure consistent ordering, but direct enumeration may produce varying orders.<br/>
+  /// - The implementation is optimized for small object heap allocation but may allocate on the <b>Large Object Heap (LOH)</b> if <typeparamref name="TItem"/> is larger than <b>21 bytes</b>.<br/>
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// IEnumerable&lt;int&gt; numbers = Enumerable.Range(1, 10);
+  /// IShuffledEnumerable&lt;int&gt; shuffledNumbers = numbers.Shuffled();
+  /// 
+  /// foreach (var number in shuffledNumbers)
+  ///     Console.WriteLine(number); // Output: Randomized order of numbers 1-10
+  /// 
+  /// int[] array = shuffledNumbers.ToArray();
+  /// List&lt;int&gt; list = shuffledNumbers.ToList();
+  /// </code>
+  /// </example>
   [DebuggerStepThrough]
   public static IShuffledEnumerable<TItem> Shuffled<TItem>(this IEnumerable<TItem> @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
@@ -530,52 +559,129 @@ public static partial class EnumerableExtensions {
   }
 
   private sealed class ShuffledEnumerable<TItem>(IEnumerable<TItem> source, Random entropySource) : IShuffledEnumerable<TItem> {
-    
+
+    private const int SMALL_OBJECT_HEAP_LIMIT = 84 * 1024;
+    private const int MINIMUM_ITEMS_FOR_SHUFFLING = 4096;
+    private static readonly int _elementSize = typeof(TItem).IsClass || typeof(TItem).IsInterface ? IntPtr.Size : Marshal.SizeOf(typeof(TItem));
+
     private IEnumerable<TItem> _Enumerate() {
       return source switch {
         TItem[] { Length: <= 0 } => [],
-        TItem[] array => ShuffleArray(array),
+        TItem[] { Length: 1 } array => array,
+        TItem[] { Length: 2 } array => entropySource.GetBoolean() ? array : [array[1], array[0]],
+        ICollection<TItem> { Count: <= 0 } => [],
+        ICollection<TItem> { Count: 1 } collection => collection,
+        ICollection<TItem> { Count: 2 } collection => entropySource.GetBoolean() ? collection : [collection.Last(), collection.First()],
+        IList<TItem> list => ShuffleList(list),
         _ => ShuffleStreamed()
       };
 
-      IEnumerable<TItem> ShuffleArray(TItem[] array) {
-        
-        // we avoid copying the array because that might be very large (up to 2GB in size)
-        var length = array.Length;
-        var returned = new uint[(length+31)>>5];
-        for (var i = 0; i < length; ++i) {
-          var index = entropySource.Next(length);
-          index = ProbeCorrectAndMark(index);
-          yield return array[index];
-        }
+      IEnumerable<TItem> ShuffleList(IList<TItem> list) {
 
+        var length = list.Count;
+
+        // when the whole list fits into the small object heap, copy it and work with the copy
+        var maxItemsFittingInSmallObjectHeap = SMALL_OBJECT_HEAP_LIMIT / _elementSize;
+        if (length <= maxItemsFittingInSmallObjectHeap) {
+          var buffer = list.ToArray();
+          buffer.Shuffle();
+          foreach (var item in buffer)
+            yield return item;
+
+          yield break;
+        }
+        
+        // when there is less than this number of items left, we use a buffer to avoid probing a sparse returned indices array
+        var directShuffleThreshold = Math.Max(MINIMUM_ITEMS_FOR_SHUFFLING, maxItemsFittingInSmallObjectHeap);
+
+        List<TItem> remainingItems = null;
+        foreach (var item in ShuffleMostItemsAndBufferTheRest())
+          yield return item;
+
+        remainingItems.Shuffle(entropySource);
+        foreach (var item in remainingItems)
+          yield return item;
+        
         yield break;
 
-        int GetGroup(int index) => index >> 5;
-        int GetOffset(int index) => index & 31;
-        bool IsSet(int index) => (returned[GetGroup(index)] & (1U << GetOffset(index)))!=0;
-        void Set(int index) => returned[GetGroup(index)] |= 1U << GetOffset(index);
+        IEnumerable<TItem> ShuffleMostItemsAndBufferTheRest() {
 
-        int ProbeCorrectAndMark(int index) {
+          // avoid copying the array because that might be very large (up to 2GB in size), so use bits to indicate what was returned
+          var alreadyReturnedIndices = new uint[(length + 31) >> 5];
+
+          var shuffleCount = Math.Max(0, length - directShuffleThreshold);
+          for (var i = 0; i < shuffleCount; ++i) {
+            var index = entropySource.Next(length);
+            index = ProbeCorrectAndMark(index);
+            yield return list[index];
+          }
+
+          // now the already returned indices array is very sparse which makes the linear probing slow
+          // also this could lead to the remaining items being returned in order which is not random enough
+          // so copy the remaining items into a buffer, shuffle that and return from there
+          remainingItems = new(directShuffleThreshold);
+
+          var currentGroupIndex = 0;
+          for (; ; ) {
+            if (IsGroupFull(currentGroupIndex)) {
+              ++currentGroupIndex;
+              continue;
+            }
+
+            var index = GetIndexForGroup(currentGroupIndex);
+            var currentGroupBits = alreadyReturnedIndices[currentGroupIndex];
+            for (var i = 0; i < 32; ++i)
+              if ((currentGroupBits & (1U << i)) == 0) {
+                remainingItems.Add(list[index + i]);
+                if (--directShuffleThreshold <= 0)
+                  yield break;
+              }
+
+            if (directShuffleThreshold <= 0)
+              yield break;
+
+            ++currentGroupIndex;
+          }
           
-          // we use linear probing here
-          // TODO: would be better to check the whole uint group for free (=0) bits and use those and if there is all bits set already we could move on to the next group and then to the last group
-          while (IsSet(index))
-            if (++index >= length)
-              index = 0;
+          int GetIndexForGroup(int groupIndex) => groupIndex << 5;
+          int GetGroupIndex(int index) => index >> 5;
+          int GetOffset(int index) => index & 31;
+          bool IsSet(int index) => (alreadyReturnedIndices[GetGroupIndex(index)] & (1U << GetOffset(index))) != 0;
+          void Set(int index) => alreadyReturnedIndices[GetGroupIndex(index)] |= 1U << GetOffset(index);
+          bool IsGroupFull(int groupIndex) => alreadyReturnedIndices[groupIndex] == uint.MaxValue;
 
-          Set(index);
-          return index;
+          // we use linear probing here, but we'll probe group clusters first and then dive deeper into bits
+          int ProbeCorrectAndMark(int index) {
+
+            // skip clusters of returned values
+            var groupIndex = GetGroupIndex(index);
+            while (IsGroupFull(groupIndex)) {
+              if (++groupIndex >= alreadyReturnedIndices.Length)
+                groupIndex = 0;
+
+              index = GetIndexForGroup(groupIndex);
+            }
+
+            // mostly we will stay inside the current group
+            // if the last group is not fully mapped to elements, we will wrap into the start again and maybe (=worst case)
+            // do a long slow linear search over all bits till we find one that's not set
+            while (IsSet(index))
+              if (++index >= length)
+                index = 0;
+
+            Set(index);
+            return index;
+          }
+
         }
 
       }
 
       IEnumerable<TItem> ShuffleStreamed() {
         
-        // stay below 85KB size (because of SOH-limit), assume TItem = longs (sizeof 8-bytes) are stored at most
-        // if TItem is larger, we allocate the buffer on LOH meaning more pressure to the GC
+        // if TItem is larger, we allocate the buffer of at 4096 items on LOH meaning more pressure to the GC
         // if TItem is smaller, our random distribution has less probability to return later items on startup
-        const int bufferSize = 84 * 1024 / 8; 
+        var bufferSize = Math.Max(MINIMUM_ITEMS_FOR_SHUFFLING, SMALL_OBJECT_HEAP_LIMIT / _elementSize); 
 
         var buffer = new List<TItem>(bufferSize);
         foreach (var item in source) {
@@ -595,11 +701,9 @@ public static partial class EnumerableExtensions {
         }
 
         // process remaining elements in the buffer
-        while (buffer.Count > 0) {
-          var index = buffer.Count <=1 ? 0 : entropySource.Next(buffer.Count);
-          yield return buffer[index];
-          buffer.RemoveAt(index);
-        }
+        buffer.Shuffle(entropySource);
+        foreach (var item in buffer)
+          yield return item;
       }
     }
 
