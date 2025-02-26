@@ -43,21 +43,21 @@ public static partial class AppDomainExtensions {
   /// Reruns the given <see cref="AppDomain"/> from a temporary directory.
   /// </summary>
   /// <param name="this">The current <see cref="AppDomain"/> instance. Must not be <see langword="null"/>.</param>
-  /// <param name="additionalFilemask">(Optional) An array of file masks specifying additional files to copy to the temporary directory.</param>
-  /// <param name="blacklistedFilemask">(Optional) An array of file masks specifying files to exclude from being copied to the temporary directory.</param>
+  /// <param name="additionalFilemask"><i>(Optional)</i> An array of file masks specifying additional files to copy to the temporary directory.</param>
+  /// <param name="blacklistedFilemask"><i>(Optional)</i> An array of file masks specifying files to exclude from being copied to the temporary directory.</param>
   /// <exception cref="NullReferenceException">
   /// Thrown when <paramref name="this"/> is <see langword="null"/>.
   /// </exception>
   /// <remarks>
-  /// This method performs the following steps:
-  /// - Creates a temporary directory.
-  /// - Copies all assemblies (.exe/.dll) and their debugging information files (.pdb), as well as additional files given by <paramref name="additionalFilemask"/> to the temporary location if they not match any <paramref name="blacklistedFilemask"/>.
-  /// - Spawns a new process executing from the temporary location.
-  /// - Transfers the current environment via a process pipe.
-  /// - Ensures that the temporary location is deleted by the child process upon exit via a separate batch file that also deletes itself.
-  /// - Terminates the original parent process using <see cref="Environment.Exit"/>, meaning this method may not return for the parent process.
-  /// 
-  /// **Important:**  
+  /// This method performs the following steps:<br/>
+  /// &#8226; Creates a temporary directory.<br/>
+  /// &#8226; Copies all assemblies (.exe/.dll) and their debugging information files (.pdb), as well as additional files given by <paramref name="additionalFilemask"/> to the temporary location if they not match any <paramref name="blacklistedFilemask"/>.<br/>
+  /// &#8226; Spawns a new process executing from the temporary location.<br/>
+  /// &#8226; Transfers the current environment via a process pipe.<br/>
+  /// &#8226; Ensures that the temporary location is deleted by the child process upon exit via a separate batch file that also deletes itself.<br/>
+  /// &#8226; Terminates the original parent process using <see cref="Environment.Exit"/>, meaning this method may not return for the parent process.<br/>
+  /// <br/>
+  /// <b>Important:</b><br/>  
   /// This method should be the first call in the entry point (e.g., inside `Program.Main()`).
   /// </remarks>
   /// <example>

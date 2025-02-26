@@ -521,7 +521,7 @@ public static partial class EnumerableExtensions {
   /// </summary>
   /// <typeparam name="TItem">The type of elements in the enumeration.</typeparam>
   /// <param name="this">The source enumeration. Must not be <see langword="null"/>.</param>
-  /// <param name="entropySource">(Optional) The <see cref="Random"/> instance used for shuffling.
+  /// <param name="entropySource"><i>(Optional)</i> The <see cref="Random"/> instance used for shuffling.
   /// If <see langword="null"/>, a shared random instance is used.</param>
   /// <returns>
   /// A shuffled enumeration implementing <see cref="IShuffledEnumerable{TItem}"/>.
@@ -530,13 +530,13 @@ public static partial class EnumerableExtensions {
   /// Thrown when <paramref name="this"/> is <see langword="null"/>.
   /// </exception>
   /// <remarks>
-  /// - The result is <b>not thread-safe</b>.<br/>
-  /// - The result keeps the source enumeration alive until it is fully enumerated and goes out of scope.<br/>
-  /// - If the source contains only one or two elements, this may return the original enumeration reference.<br/>
-  /// - The underlying enumeration <b>should not be modified</b> during its lifetime, as changes may lead to missing, duplicated, or unexpected elements.<br/>
-  /// - Multiple enumerations will generally yield different orders.<br/>
-  /// - Optimized <see cref="IShuffledEnumerable{TItem}.ToArray"/> and <see cref="IShuffledEnumerable{TItem}.ToList"/> methods ensure consistent ordering, but direct enumeration may produce varying orders.<br/>
-  /// - The implementation is optimized for small object heap allocation but may allocate on the <b>Large Object Heap (LOH)</b> if <typeparamref name="TItem"/> is larger than <b>21 bytes</b>.<br/>
+  /// &#8226; The result is <b>not thread-safe</b>.<br/>
+  /// &#8226; The result keeps the source enumeration alive until it is fully enumerated and goes out of scope.<br/>
+  /// &#8226; If the source contains only one or two elements, this may return the original enumeration reference.<br/>
+  /// &#8226; The underlying enumeration <b>should not be modified</b> during its lifetime, as changes may lead to missing, duplicated, or unexpected elements.<br/>
+  /// &#8226; Multiple enumerations will generally yield different orders.<br/>
+  /// &#8226; Optimized <see cref="IShuffledEnumerable{TItem}.ToArray"/> and <see cref="IShuffledEnumerable{TItem}.ToList"/> methods ensure consistent ordering, but direct enumeration may produce varying orders.<br/>
+  /// &#8226; The implementation is optimized for small object heap allocation but may allocate on the <b>Large Object Heap (LOH)</b> if <typeparamref name="TItem"/> is larger than <b>21 bytes</b>.<br/>
   /// </remarks>
   /// <example>
   /// <code>
