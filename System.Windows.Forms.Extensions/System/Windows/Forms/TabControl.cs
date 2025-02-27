@@ -109,7 +109,7 @@ public static partial class TabControlExtensions {
 
   #region messing with tab color
 
-  private static readonly Dictionary<TabControl, Dictionary<TabPage, Color>> _MANAGED_TABCONTROLS = [];
+  private static readonly Dictionary<TabControl, Dictionary<TabPage, TabColorConfiguration>> _MANAGED_TABCONTROLS = [];
 
   /// <summary>
   /// Sets the header color of the specified <see cref="TabPage"/> in the <see cref="TabControl"/>.
@@ -117,6 +117,7 @@ public static partial class TabControlExtensions {
   /// <param name="this">This <see cref="TabControl"/> instance.</param>
   /// <param name="page">The <see cref="TabPage"/> whose header color is to be set.</param>
   /// <param name="color">(Optional: defaults to <see langword="null"/>) The color to set for the tab header. If <see langword="null"/>, the default header color is used.</param>
+  /// <param name="useColorForSelectedTab">(Optional: defaults to false) Defines wether the selected tab is colored</param>
   /// <exception cref="System.NullReferenceException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
   /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="page"/> is <see langword="null"/>.</exception>
   /// <example>
@@ -128,7 +129,7 @@ public static partial class TabControlExtensions {
   /// // The tab header of "Tab 1" is now set to red.
   /// </code>
   /// </example>
-  public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null) {
+  public static void SetTabHeaderColor(this TabControl @this, TabPage page, Color? color = null, bool useColorForSelectedTab = false) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(page);
 
@@ -159,7 +160,7 @@ public static partial class TabControlExtensions {
 
     // add it if necessary
     if (color != null)
-      managedTabs.Add(page, color.Value);
+      managedTabs.Add(page, new(color.Value, useColorForSelectedTab));
   }
 
   /// <summary>
@@ -181,8 +182,10 @@ public static partial class TabControlExtensions {
       using (var brush = new SolidBrush(tabControl.BackColor))
         e.Graphics.FillRectangle(brush, new(e.Bounds.Location, new(e.Bounds.Width, e.Bounds.Height + 2)));
 
-      // check if we know this tab's color and it's not selected
-      if (!isSelected && colors.TryGetValue(page, out var color)) {
+      // check if we know this tab's color and it's not selected or selected tap is allowed
+      if (colors.TryGetValue(page, out var settings) && (settings.UseColorForSelection || !isSelected)) {
+        var color = settings.Color;
+
         // tint the tab header
         using (var brush = new SolidBrush(color))
           e.Graphics.FillRectangle(brush, new(e.Bounds.Location, new(e.Bounds.Width, e.Bounds.Height + 2)));
