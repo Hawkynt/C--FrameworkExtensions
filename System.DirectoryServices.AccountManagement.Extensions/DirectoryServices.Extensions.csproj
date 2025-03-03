@@ -39,7 +39,7 @@
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="$(NetCoreVersion).*" />
   </ItemGroup>
   <!--wont work but the compiler likes it!-->
-  <ItemGroup Condition="$(IsNetStandard) OR $(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &lt; 0">
+  <ItemGroup Condition="$(IsNetStandard) OR ($(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('5.0')))) &lt; 0)">
     <PackageReference Include="System.DirectoryServices" Version="*" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="*" />
   </ItemGroup>

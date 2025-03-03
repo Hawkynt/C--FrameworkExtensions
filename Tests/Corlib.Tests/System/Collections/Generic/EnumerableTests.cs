@@ -339,7 +339,7 @@ public class EnumerableTests {
   [TestCase("a|b", "A", true, "a")]
   public void FilterIfNeeded(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-        () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(d => d.Data, filter, ignoreCase).Select(d => d.Data),
+        () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(d => d!.Data, filter, ignoreCase).Select(d => d!.Data),
         ConvertFromStringToTestArray(expected),
         exception
       )
@@ -361,7 +361,7 @@ public class EnumerableTests {
   [TestCase("ab|bc", "BA", true, "ab")]
   public void FilterIfNeeded2(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-      () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(filter, ignoreCase, d => d.Data, d => d.DataReversed).Select(d => d.Data),
+      () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(filter, ignoreCase, d => d!.Data, d => d!.DataReversed).Select(d => d!.Data),
       ConvertFromStringToTestArray(expected),
       exception
     )

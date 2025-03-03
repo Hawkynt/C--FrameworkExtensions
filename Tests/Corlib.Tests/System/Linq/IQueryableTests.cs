@@ -8,10 +8,8 @@ namespace Corlib.Tests.System.Linq;
 [TestFixture]
 public class IQueryableTests {
 
-  private class Dummy {
-    public Dummy(string data) => this.Data = data;
-    
-    public string Data { get; }
+  private sealed class Dummy(string data) {
+    public string Data { get; } = data;
     public string DataReversed => new(this.Data.Reverse().ToArray());
   }
 
@@ -28,7 +26,7 @@ public class IQueryableTests {
   [TestCase("a|b", "A", true, "a")]
   public void FilterIfNeeded(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-        () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(d => d.Data, filter, ignoreCase).Select(d => d.Data),
+        () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(d => d!.Data, filter, ignoreCase).Select(d => d!.Data),
         ConvertFromStringToTestArray(expected),
         exception
       )
