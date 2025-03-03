@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.x
+          dotnet-version: 9.x
         
       - name: Show Info
         run: dotnet --info
@@ -39,7 +39,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.x
+        dotnet-version: 9.x
         
     - run: dotnet restore "${{ matrix.csproj-file }}"
     - run: dotnet build "${{ matrix.csproj-file }}" --no-restore --configuration Release
@@ -65,7 +65,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.x
+          dotnet-version: 9.x
       
       - run: |
           projectDir=$(dirname ${{ matrix.csproj-file }})
