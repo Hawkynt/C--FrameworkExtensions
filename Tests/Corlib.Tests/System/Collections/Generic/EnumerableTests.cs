@@ -432,6 +432,18 @@ public class EnumerableTests {
   }
 
   [Test]
+  public void ShuffleInfiniteEnumerable() {
+    var input = Invoke();
+    Assert.That(input.Shuffled().Take(10), Is.Not.EquivalentTo(Enumerable.Range(1, 10)));
+    return;
+
+    static IEnumerable<int> Invoke() {
+      for (var i = 1;; ++i)
+        yield return i;
+    }
+  }
+
+  [Test]
   [TestCase(-1, 1337)]
   [TestCase(0, 1337)]
   [TestCase(1, 1337)]
