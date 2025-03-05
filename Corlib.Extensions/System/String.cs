@@ -256,8 +256,59 @@ public static partial class StringExtensions {
   public static string RemoveLast(this string @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountOutOfRange(count, @this.Length);
+
     return count != @this.Length ? @this[..^count] : string.Empty;
   }
+
+  /// <summary>
+  /// Removes the specified substring from the start of the given string, if present.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to remove from the beginning of <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string with <paramref name="what"/> removed from the beginning, or the original string if it does not start with <paramref name="what"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.RemoveAtStart("Hello");
+  /// Console.WriteLine(result); // Output: "World"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string RemoveAtStart(this string @this, string what, StringComparison comparison = StringComparison.CurrentCulture) => ReplaceAtStart(@this, what, null, comparison);
+
+  /// <summary>
+  /// Removes the specified substring from the end of the given string, if present.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to remove from the end of <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string with <paramref name="what"/> removed from the end, or the original string if it does not end with <paramref name="what"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.RemoveAtEnd("World");
+  /// Console.WriteLine(result); // Output: "Hello"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string RemoveAtEnd(this string @this, string what, StringComparison comparison = StringComparison.CurrentCulture) => ReplaceAtEnd(@this, what, null, comparison);
 
   /// <summary>
   ///   Removes the first n chars from a string.
@@ -2041,7 +2092,7 @@ public static partial class StringExtensions {
     if (@this.Length < what.Length)
       return @this;
 
-    return @this.StartsWith(what, stringComparison) ? replacement + @this[what.Length..] : @this;
+    return @this.StartsWith(what, stringComparison) ? IsNullOrEmpty(replacement) ? @this[what.Length..] : replacement + @this[what.Length..] : @this;
   }
 
   /// <summary>
@@ -2076,7 +2127,7 @@ public static partial class StringExtensions {
     if (@this.Length < what.Length)
       return @this;
 
-    return @this.EndsWith(what, stringComparison) ? @this[..^what.Length] + replacement : @this;
+    return @this.EndsWith(what, stringComparison) ? IsNullOrEmpty(replacement) ? @this[..^what.Length] : @this[..^what.Length] + replacement : @this;
   }
 
   /// <summary>
@@ -2105,8 +2156,9 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
+    var thisLength = @this.Length;
     var needleLength = what.Length;
-    if (needleLength == 0 || @this.Length < needleLength)
+    if (needleLength == 0 || thisLength < needleLength)
       return @this;
 
     if (stringComparison == StringComparison.Ordinal) {
@@ -2114,11 +2166,11 @@ public static partial class StringExtensions {
       for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[..needleLength]); search = search[needleLength..])
         ;
 
-      return search.Length == @this.Length ? @this : search.ToString();
+      return search.Length == thisLength ? @this : search.ToString();
     }
 
     var index = 0;
-    while (index + needleLength <= @this.Length && string.Equals(what, @this.Substring(index, needleLength), stringComparison))
+    while (index + needleLength <= thisLength && string.Equals(what, @this.Substring(index, needleLength), stringComparison))
       index += needleLength;
 
     return index == 0 ? @this : @this[index..];
@@ -2143,8 +2195,9 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
+    var thisLength = @this.Length;
     var needleLength = what.Length;
-    if (needleLength == 0 || @this.Length < needleLength)
+    if (needleLength == 0 || thisLength < needleLength)
       return @this;
 
     if (stringComparison == StringComparison.Ordinal) {
@@ -2152,14 +2205,14 @@ public static partial class StringExtensions {
       for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[^needleLength..]); search = search[..^needleLength])
         ;
 
-      return search.Length == @this.Length ? @this : search.ToString();
+      return search.Length == thisLength ? @this : search.ToString();
     }
 
-    var index = @this.Length;
+    var index = thisLength;
     while (index >= needleLength && string.Equals(what, @this.Substring(index-needleLength, needleLength), stringComparison))
       index -= needleLength;
 
-    return index == @this.Length ? @this : @this[..index];
+    return index == thisLength ? @this : @this[..index];
   }
 
   #region Null and WhiteSpace checks

@@ -1219,4 +1219,26 @@ public class StringTests {
     => ExecuteTest(() => input.ReplaceLast(what,replacement), expected, exception)
   ;
 
+  [Test]
+  [TestCase(null,null,StringComparison.Ordinal,null,typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, null, typeof(ArgumentNullException))]
+  [TestCase("abc", "ab", StringComparison.Ordinal, "c")]
+  [TestCase("xyc", "ab", StringComparison.Ordinal, "xyc")]
+  [TestCase("abc", "AB", StringComparison.OrdinalIgnoreCase, "c")]
+  [TestCase("abc", "AB", StringComparison.Ordinal, "abc")]
+  public void RemoveAtStart(string? input, string? what, StringComparison comparison, string expected, Type? exception = null)
+    => ExecuteTest(() => input.RemoveAtStart(what, comparison), expected, exception)
+    ;
+
+  [Test]
+  [TestCase(null, null, StringComparison.Ordinal, null, typeof(NullReferenceException))]
+  [TestCase("", null, StringComparison.Ordinal, null, typeof(ArgumentNullException))]
+  [TestCase("abc", "bc", StringComparison.Ordinal, "a")]
+  [TestCase("xyc", "ab", StringComparison.Ordinal, "xyc")]
+  [TestCase("abc", "BC", StringComparison.OrdinalIgnoreCase, "a")]
+  [TestCase("abc", "BC", StringComparison.Ordinal, "abc")]
+  public void RemoveAtEnd(string? input, string? what, StringComparison comparison, string expected, Type? exception = null)
+    => ExecuteTest(() => input.RemoveAtEnd(what, comparison), expected, exception)
+  ;
+
 }
