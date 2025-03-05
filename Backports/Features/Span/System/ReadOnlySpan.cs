@@ -93,7 +93,7 @@ public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
   public static implicit operator ReadOnlySpan<T>(T[] array) => new(array);
 
   /// <inheritdoc />
-  public override string ToString() => this._pointerMemoryHandler is SpanHelper.StringHandler sh ? sh.ToString() : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
+  public override string ToString() => this._pointerMemoryHandler is SpanHelper.StringHandler sh ? sh.ToString(this.Length) : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
 
 }
 

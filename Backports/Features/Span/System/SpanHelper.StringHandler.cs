@@ -44,6 +44,9 @@ internal static partial class SpanHelper {
     public override string ToString() => start == 0 ? source : source[start..];
 
     #endregion
+
+    public string ToString(int length) => start == 0 && length == source.Length ? source : source.Substring(start, length);
+
   }
 }
 

@@ -18,7 +18,7 @@
 namespace System;
 
 public static partial class MemoryExtensions {
-  
+
   public static Span<T> AsSpan<T>(this T[] @this) => new(@this);
   public static Span<T> AsSpan<T>(this T[] @this, int start) => new(@this, start, @this.Length - start);
   public static Span<T> AsSpan<T>(this T[] @this, int start, int length) => new(@this, start, length);
