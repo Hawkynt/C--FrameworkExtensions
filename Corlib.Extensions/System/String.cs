@@ -410,14 +410,57 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  /// Replaces the last occurrence of a specified substring within the current string with another substring.
+  /// Replaces the first occurrence of a specified substring within the given string with another substring.
   /// </summary>
-  /// <param name="this">The string on which the replacement is performed. Must not be <see langword="null"/>.</param>
-  /// <param name="what">The substring to be replaced. Must not be <see langword="null"/> and must have a length greater than zero.</param>
-  /// <param name="replacement">The substring to replace the last occurrence of <paramref name="what"/>.</param>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to be replaced. Must not be <see langword="null"/>.</param>
+  /// <param name="replacement">The substring to replace the first occurrence of <paramref name="what"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
   /// <returns>
-  /// A new string where the last occurrence of <paramref name="what"/> in <paramref name="this"/> 
-  /// is replaced by <paramref name="replacement"/>. If <paramref name="what"/> is not found, the original string is returned.
+  /// A new string where the first occurrence of <paramref name="what"/> in <paramref name="this"/> is replaced with <paramref name="replacement"/>.
+  /// If <paramref name="what"/> is not found, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "hello world, hello universe";
+  /// string result = input.ReplaceFirst("hello", "hi");
+  /// Console.WriteLine(result); // Output: "hi world, hello universe"
+  /// </code>
+  /// </example>
+  public static string ReplaceFirst(this string @this, string what, string replacement, StringComparison comparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+
+    return what.Length switch {
+      <= 0 when IsNullOrEmpty(replacement) => @this,
+      <= 0 => replacement + @this,
+      var needleLength when needleLength > @this.Length => @this,
+      var needleLength => @this.IndexOf(what, comparison) switch {
+        < 0 => @this,
+        0 when IsNullOrEmpty(replacement) => @this[needleLength..],
+        0 => replacement + @this[needleLength..],
+        var index when IsNullOrEmpty(replacement) => @this[..index] + @this[(index + needleLength)..],
+        var index => @this[..index] + replacement + @this[(index + needleLength)..]
+      }
+    };
+  }
+
+  /// <summary>
+  /// Replaces the last occurrence of a specified substring within the given string with another substring.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to be replaced. Must not be <see langword="null"/>.</param>
+  /// <param name="replacement">The substring to replace the last occurrence of <paramref name="what"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string where the last occurrence of <paramref name="what"/> in <paramref name="this"/> is replaced with <paramref name="replacement"/>.
+  /// If <paramref name="what"/> is not found, the original string is returned.
   /// </returns>
   /// <exception cref="NullReferenceException">
   /// Thrown when <paramref name="this"/> is <see langword="null"/>.
@@ -432,18 +475,21 @@ public static partial class StringExtensions {
   /// Console.WriteLine(result); // Output: "hello world, hi universe"
   /// </code>
   /// </example>
-  public static string ReplaceLast(this string @this, string what, string replacement) {
+  public static string ReplaceLast(this string @this, string what, string replacement, StringComparison comparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    if (what.Length <= 0)
-      return @this + replacement;
-
-    var index = @this.LastIndexOf(what, StringComparison.Ordinal);
-    return index switch {
-      < 0 => @this,
-      0 => replacement + @this[what.Length..],
-      _ => @this[..index] + replacement + @this[(index + what.Length)..]
+    return what.Length switch {
+      <= 0 when IsNullOrEmpty(replacement) => @this,
+      <= 0 => @this + replacement,
+      var needleLength when needleLength > @this.Length => @this,
+      var needleLength => @this.LastIndexOf(what, comparison) switch {
+        < 0 => @this,
+        0 when IsNullOrEmpty(replacement) => @this[needleLength..],
+        0 => replacement + @this[needleLength..],
+        var index when IsNullOrEmpty(replacement) => @this[..index] + @this[(index + needleLength)..],
+        var index => @this[..index] + replacement + @this[(index + needleLength)..]
+      }
     };
   }
 

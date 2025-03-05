@@ -1204,18 +1204,38 @@ public class StringTests {
     ;
 
   [Test]
-  [TestCase(null,null,null,null,typeof(NullReferenceException))]
-  [TestCase("", null, null, null, typeof(ArgumentNullException))]
-  [TestCase("", "abc", null, "")]
-  [TestCase("abc", "abc", null, "")]
-  [TestCase("abcabc", "abc", null, "abc")]
-  [TestCase("abcabcdef", "abc", null, "abcdef")]
-  [TestCase("abcdef", "abc", null, "def")]
-  [TestCase("abc", "abc", "xyz", "xyz")]
-  [TestCase("abcabc", "abc", "xyz", "abcxyz")]
-  [TestCase("abcabcdef", "abc", "xyz", "abcxyzdef")]
-  [TestCase("abcdef", "abc", "xyz", "xyzdef")]
-  public void ReplaceLast(string? input,string? what,string? replacement,string expected,Type? exception=null)
+  [TestCase(null, null, null, StringComparison.Ordinal, null, typeof(NullReferenceException))]
+  [TestCase("", null, null, StringComparison.Ordinal, null, typeof(ArgumentNullException))]
+  [TestCase("", "abc", null, StringComparison.Ordinal, "")]
+  [TestCase("abc", "abc", null, StringComparison.Ordinal, "")]
+  [TestCase("abcabc", "abc", null, StringComparison.Ordinal, "abc")]
+  [TestCase("abcabcdef", "abc", null, StringComparison.Ordinal, "abcdef")]
+  [TestCase("abcdef", "abc", null, StringComparison.Ordinal, "def")]
+  [TestCase("abc", "abc", "xyz", StringComparison.Ordinal, "xyz")]
+  [TestCase("abc", "xyz", "xyz", StringComparison.Ordinal, "abc")]
+  [TestCase("abc", "wxyz", "xyz", StringComparison.Ordinal, "abc")]
+  [TestCase("abcabc", "abc", "xyz", StringComparison.Ordinal, "xyzabc")]
+  [TestCase("abcabcdef", "abc", "xyz", StringComparison.Ordinal, "xyzabcdef")]
+  [TestCase("abcdef", "abc", "xyz", StringComparison.Ordinal, "xyzdef")]
+  public void ReplaceFirst(string? input, string? what, string? replacement, StringComparison comparison, string expected, Type? exception = null)
+    => ExecuteTest(() => input.ReplaceFirst(what, replacement), expected, exception)
+  ;
+
+  [Test]
+  [TestCase(null,null,null, StringComparison.Ordinal, null,typeof(NullReferenceException))]
+  [TestCase("", null, null, StringComparison.Ordinal, null, typeof(ArgumentNullException))]
+  [TestCase("", "abc", null, StringComparison.Ordinal, "")]
+  [TestCase("abc", "abc", null, StringComparison.Ordinal, "")]
+  [TestCase("abcabc", "abc", null, StringComparison.Ordinal, "abc")]
+  [TestCase("abcabcdef", "abc", null, StringComparison.Ordinal, "abcdef")]
+  [TestCase("abcdef", "abc", null, StringComparison.Ordinal, "def")]
+  [TestCase("abc", "abc", "xyz", StringComparison.Ordinal, "xyz")]
+  [TestCase("abc", "xyz", "xyz", StringComparison.Ordinal, "abc")]
+  [TestCase("abc", "wxyz", "xyz", StringComparison.Ordinal, "abc")]
+  [TestCase("abcabc", "abc", "xyz", StringComparison.Ordinal, "abcxyz")]
+  [TestCase("abcabcdef", "abc", "xyz", StringComparison.Ordinal, "abcxyzdef")]
+  [TestCase("abcdef", "abc", "xyz", StringComparison.Ordinal, "xyzdef")]
+  public void ReplaceLast(string? input,string? what,string? replacement, StringComparison comparison, string expected,Type? exception=null)
     => ExecuteTest(() => input.ReplaceLast(what,replacement), expected, exception)
   ;
 
