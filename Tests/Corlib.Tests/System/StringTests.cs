@@ -647,7 +647,17 @@ public class StringTests {
   [Test]
   [TestCase(null, null, null, typeof(NullReferenceException))]
   [TestCase("", null, null, typeof(ArgumentNullException))]
+  [TestCase("abc", "ab", "c")]
+  [TestCase("ababc", "ab", "c")]
+  [TestCase("abc", "bc", "abc")]
+  public void TrimStart(string? input, string? what, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.TrimStart(what), expected, exception);
+  
+  [Test]
+  [TestCase(null, null, null, typeof(NullReferenceException))]
+  [TestCase("", null, null, typeof(ArgumentNullException))]
   [TestCase("abc", "bc", "a")]
+  [TestCase("abcbc", "bc", "a")]
   [TestCase("abc", "ab", "abc")]
   public void TrimEnd(string? input, string? what, string? expected, Type? exception = null)
     => ExecuteTest(() => input.TrimEnd(what), expected, exception);

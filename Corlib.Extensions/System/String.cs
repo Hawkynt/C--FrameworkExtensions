@@ -2010,13 +2010,29 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Replaces a specified string at the start of another if possible.
+  /// Replaces the specified substring at the start of the given string with another substring, if present.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="what">What to replace.</param>
-  /// <param name="replacement">The replacement.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns></returns>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to be replaced at the beginning of <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="replacement">The substring to replace <paramref name="what"/> with.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string where the first occurrence of <paramref name="what"/> at the beginning is replaced with <paramref name="replacement"/>.
+  /// If <paramref name="this"/> does not start with <paramref name="what"/>, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.ReplaceAtStart("Hello", "Hi");
+  /// Console.WriteLine(result); // Output: "HiWorld"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ReplaceAtStart(this string @this, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
@@ -2029,13 +2045,29 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Replaces a specified string at the end of another if possible.
+  /// Replaces the specified substring at the end of the given string with another substring, if present.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="what">What to replace.</param>
-  /// <param name="replacement">The replacement.</param>
-  /// <param name="stringComparison">The string comparison.</param>
-  /// <returns></returns>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to be replaced at the end of <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="replacement">The substring to replace <paramref name="what"/> with.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string where the last occurrence of <paramref name="what"/> at the end is replaced with <paramref name="replacement"/>.
+  /// If <paramref name="this"/> does not end with <paramref name="what"/>, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.ReplaceAtEnd("World", "Universe");
+  /// Console.WriteLine(result); // Output: "HelloUniverse"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ReplaceAtEnd(this string @this, string what, string replacement, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
@@ -2048,130 +2080,60 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Trims the specified string from the end of the current string.
+  /// Repeatedly removes the specified substring from the start of the given string, if present.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="what">The substring to remove from the start of <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new string with <paramref name="what"/> removed from the beginning, or the original string if it does not start with <paramref name="what"/>.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="what"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloHelloWorld";
+  /// string result = input.TrimStart("Hello");
+  /// Console.WriteLine(result); // Output: "World"
+  /// </code>
+  /// </example>
+  public static string TrimStart(this string @this, string what, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(what);
+
+    while (@this.StartsWith(what,stringComparison))
+      @this = @this[what.Length..];
+
+    return @this;
+  }
+
+  /// <summary>
+  /// Repeatedly removes the specified substring from the end of the given string, if present.
   /// </summary>
   /// <param name="this">The current string instance.</param>
   /// <param name="what">The string to remove from the end of the current string.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
   /// <returns>The string after removing the specified string from the end.</returns>
   /// <exception cref="ArgumentNullException">Thrown if <paramref name="what" /> is null.</exception>
   /// <example>
   ///   <code>
-  /// string example = "Hello World!!!";
-  /// string trimmed = example.TrimEnd("!!!");
-  /// Console.WriteLine(trimmed); // Outputs: "Hello World"
+  /// string example = "Hello World!!!!!";
+  /// string trimmed = example.TrimEnd("!!");
+  /// Console.WriteLine(trimmed); // Outputs: "Hello World!"
   /// </code>
-  ///   This example demonstrates how to remove a specific substring ("!!!") from the end of a string.
   /// </example>
-  /// <remarks>
-  ///   If the string in <paramref name="what" /> does not appear at the end of the current string, or if it is an empty
-  ///   string,
-  ///   the original string is returned unchanged. This method is case-sensitive.
-  /// </remarks>
-  public static unsafe string TrimEnd(this string @this, string what) {
+  public static string TrimEnd(this string @this, string what, StringComparison stringComparison = StringComparison.CurrentCulture) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    var count = what.Length;
-    var index = @this.Length - count;
+    while (@this.EndsWith(what, stringComparison))
+      @this = @this[..^what.Length];
 
-    // source shorter than search string, exit  
-    if (index < 0 || count == 0)
-      return @this;
-
-    fixed (char* srcFix = @this)
-    fixed (char* cmpFix = what) {
-      var srcPtr = srcFix + index;
-      var cmpPtr = cmpFix;
-      while (true)
-        switch (count) {
-          case 0: return @this[..index];
-          case 1:
-            if (*srcPtr != *cmpPtr)
-              return @this;
-
-            goto case 0;
-          case 2:
-            if (*(int*)srcPtr != *(int*)cmpPtr)
-              return @this;
-
-            goto case 0;
-          case 3:
-            if (*(int*)srcPtr != *(int*)cmpPtr)
-              return @this;
-            if (srcPtr[2] != cmpPtr[2])
-              return @this;
-
-            goto case 0;
-          case 4:
-            if (*(long*)srcPtr != *(long*)cmpPtr)
-              return @this;
-
-            goto case 0;
-
-#if PLATFORM_X86
-          default:
-            const int stepSize = 4;
-            var cntSteps = count >> 2;
-            count &= 3;
-            do {
-              if (*(int*)srcPtr != *(int*)cmpPtr)
-                return @this;
-              if (((int*)srcPtr)[1] != ((int*)cmpPtr)[1])
-                return @this;
-
-              srcPtr += stepSize;
-              cmpPtr += stepSize;
-            } while (--cntSteps > 0);
-            break;
-#else
-          case 5:
-            if (*(long*)srcPtr != *(long*)cmpPtr)
-              return @this;
-            if (srcPtr[4] != cmpPtr[4])
-              return @this;
-
-            goto case 0;
-          case 6:
-            if (*(long*)srcPtr != *(long*)cmpPtr)
-              return @this;
-            if (((int*)srcPtr)[2] != ((int*)cmpPtr)[2])
-              return @this;
-
-            goto case 0;
-          case 7:
-            if (*(long*)srcPtr != *(long*)cmpPtr)
-              return @this;
-            if (((int*)srcPtr)[2] != ((int*)cmpPtr)[2])
-              return @this;
-            if (srcPtr[6] != cmpPtr[6])
-              return @this;
-
-            goto case 0;
-          case 8:
-            if (*(long*)srcPtr != *(long*)cmpPtr)
-              return @this;
-            if (((long*)srcPtr)[1] != ((long*)cmpPtr)[1])
-              return @this;
-
-            goto case 0;
-          default:
-            const int stepSize = 8;
-            var cntSteps = count >> 3;
-            count &= 7;
-            do {
-              if (*(long*)srcPtr != *(long*)cmpPtr)
-                return @this;
-              if (((long*)srcPtr)[1] != ((long*)cmpPtr)[1])
-                return @this;
-
-              srcPtr += stepSize;
-              cmpPtr += stepSize;
-            } while (--cntSteps > 0);
-
-            break;
-#endif
-        }
-    }
+    return @this;
   }
 
   #region Null and WhiteSpace checks
