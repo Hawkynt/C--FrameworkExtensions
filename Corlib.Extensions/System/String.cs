@@ -2105,10 +2105,23 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    while (@this.StartsWith(what,stringComparison))
-      @this = @this[what.Length..];
+    var needleLength = what.Length;
+    if (needleLength == 0 || @this.Length < needleLength)
+      return @this;
 
-    return @this;
+    if (stringComparison == StringComparison.Ordinal) {
+      var search = @this.AsSpan();
+      for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[..needleLength]); search = search[needleLength..])
+        ;
+
+      return search.Length == @this.Length ? @this : search.ToString();
+    }
+
+    var index = 0;
+    while (index + needleLength <= @this.Length && string.Equals(what, @this.Substring(index, needleLength), stringComparison))
+      index += needleLength;
+
+    return index == 0 ? @this : @this[index..];
   }
 
   /// <summary>
@@ -2130,10 +2143,23 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(what);
 
-    while (@this.EndsWith(what, stringComparison))
-      @this = @this[..^what.Length];
+    var needleLength = what.Length;
+    if (needleLength == 0 || @this.Length < needleLength)
+      return @this;
 
-    return @this;
+    if (stringComparison == StringComparison.Ordinal) {
+      var search = @this.AsSpan();
+      for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[^needleLength..]); search = search[..^needleLength])
+        ;
+
+      return search.Length == @this.Length ? @this : search.ToString();
+    }
+
+    var index = @this.Length;
+    while (index >= needleLength && string.Equals(what, @this.Substring(index-needleLength, needleLength), stringComparison))
+      index -= needleLength;
+
+    return index == @this.Length ? @this : @this[..index];
   }
 
   #region Null and WhiteSpace checks

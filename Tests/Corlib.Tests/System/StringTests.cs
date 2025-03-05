@@ -645,22 +645,28 @@ public class StringTests {
     => ExecuteTest(() => input.ReplaceAtEnd(what, replacement, comparison), expected, exception);
 
   [Test]
-  [TestCase(null, null, null, typeof(NullReferenceException))]
-  [TestCase("", null, null, typeof(ArgumentNullException))]
-  [TestCase("abc", "ab", "c")]
-  [TestCase("ababc", "ab", "c")]
-  [TestCase("abc", "bc", "abc")]
-  public void TrimStart(string? input, string? what, string? expected, Type? exception = null)
-    => ExecuteTest(() => input.TrimStart(what), expected, exception);
+  [TestCase(null, null, null, StringComparison.Ordinal, typeof(NullReferenceException))]
+  [TestCase("", null, null, StringComparison.Ordinal, typeof(ArgumentNullException))]
+  [TestCase("abc", "ab", "c",StringComparison.Ordinal)]
+  [TestCase("ababc", "ab", "c", StringComparison.Ordinal)]
+  [TestCase("abc", "bc", "abc", StringComparison.Ordinal)]
+  [TestCase("abc", "AB", "c", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("ababc", "AB", "c", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("abc", "BC", "abc", StringComparison.OrdinalIgnoreCase)]
+  public void TrimStart(string? input, string? what, string? expected, StringComparison comparison, Type? exception = null)
+    => ExecuteTest(() => input.TrimStart(what,comparison), expected, exception);
   
   [Test]
-  [TestCase(null, null, null, typeof(NullReferenceException))]
-  [TestCase("", null, null, typeof(ArgumentNullException))]
-  [TestCase("abc", "bc", "a")]
-  [TestCase("abcbc", "bc", "a")]
-  [TestCase("abc", "ab", "abc")]
-  public void TrimEnd(string? input, string? what, string? expected, Type? exception = null)
-    => ExecuteTest(() => input.TrimEnd(what), expected, exception);
+  [TestCase(null, null, null, StringComparison.Ordinal, typeof(NullReferenceException))]
+  [TestCase("", null, null, StringComparison.Ordinal, typeof(ArgumentNullException))]
+  [TestCase("abc", "bc", "a", StringComparison.Ordinal)]
+  [TestCase("abcbc", "bc", "a", StringComparison.Ordinal)]
+  [TestCase("abc", "ab", "abc", StringComparison.Ordinal)]
+  [TestCase("abc", "BC", "a", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("abcbc", "BC", "a", StringComparison.OrdinalIgnoreCase)]
+  [TestCase("abc", "AB", "abc", StringComparison.OrdinalIgnoreCase)]
+  public void TrimEnd(string? input, string? what, string? expected, StringComparison comparison, Type? exception = null)
+    => ExecuteTest(() => input.TrimEnd(what, comparison), expected, exception);
 
   [Test]
   [TestCase(null, true)]
