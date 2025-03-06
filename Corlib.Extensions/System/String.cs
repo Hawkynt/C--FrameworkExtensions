@@ -4879,7 +4879,7 @@ public static partial class StringExtensions {
   /// <param name="this">The string to convert</param>
   /// <returns>The quoted-printable string</returns>
   public static string ToQuotedPrintable(this string @this) {
-    if (string.IsNullOrEmpty(@this))
+    if (IsNullOrEmpty(@this))
       return @this;
 
     // see https://github.com/dotnet/runtime/blob/v5.0.3/src/libraries/Common/src/System/HexConverter.cs for the inner workings
@@ -4965,13 +4965,13 @@ public static partial class StringExtensions {
   /// <param name="this">The string to convert</param>
   /// <returns>The non-quoted-printable string</returns>
   public static string FromQuotedPrintable(this string @this) {
-    if (string.IsNullOrEmpty(@this))
+    if (IsNullOrEmpty(@this))
       return @this;
 
     List<byte> bytes = new(@this.Length);
     for (var index = 0; index < @this.Length; ++index)
       if (@this[index] == '=')
-        bytes.Add(StringExtensions.ConvertHexToByte(@this[++index], @this[++index]));
+        bytes.Add(ConvertHexToByte(@this[++index], @this[++index]));
       else
         bytes.Add((byte)@this[index]);
 
