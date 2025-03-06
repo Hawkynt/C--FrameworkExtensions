@@ -2922,6 +2922,7 @@ public static partial class StringExtensions {
   /// Console.WriteLine(index); // Output: 7
   /// </code>
   /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)] 
   public static int IndexOf(this string @this, char value, int startIndex, StringComparison comparison) 
     => @this.IndexOf(value.ToString(), startIndex, comparison)
     ;
@@ -2948,16 +2949,12 @@ public static partial class StringExtensions {
   /// Console.WriteLine(index); // Output: 7
   /// </code>
   /// </example>
-  public static int IndexOf(this ReadOnlySpan<char> @this, char value, int startIndex, StringComparison comparison) {
-    if (comparison != StringComparison.OrdinalIgnoreCase)
-      return IndexOf(@this[startIndex..].ToString(), value, 0, comparison);
-
-    for (var i = startIndex; i < @this.Length; ++i)
-      if (@this[i] == value)
-        return i;
-
-    return _INDEX_NOT_FOUND;
-  }
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int IndexOf(this ReadOnlySpan<char> @this, char value, int startIndex, StringComparison comparison) 
+    => comparison == StringComparison.OrdinalIgnoreCase 
+      ? @this[startIndex..].IndexOf(value) 
+      : IndexOf(@this[startIndex..].ToString(), value, 0, comparison)
+      ;
 
   #endregion
 
@@ -4307,7 +4304,7 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(pattern);
 
-    if (pattern.Length < 1)
+    if (pattern.Length <= 0)
       return string.Empty;
 
     var index = @this.IndexOf(pattern, comparison);
