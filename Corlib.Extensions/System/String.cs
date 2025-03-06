@@ -2953,7 +2953,7 @@ public static partial class StringExtensions {
   public static int IndexOf(this ReadOnlySpan<char> @this, char value, int startIndex, StringComparison comparison) 
     => comparison == StringComparison.OrdinalIgnoreCase 
       ? @this[startIndex..].IndexOf(value) 
-      : IndexOf(@this[startIndex..].ToString(), value, 0, comparison)
+      : @this[startIndex..].IndexOf([value], comparison)
       ;
 
   #endregion
@@ -4304,11 +4304,110 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(pattern);
 
-    if (pattern.Length <= 0)
+    if (@this.Length <= 0 || pattern.Length <= 0)
       return string.Empty;
 
     var index = @this.IndexOf(pattern, comparison);
     return index < 0 ? @this : @this[..index];
+  }
+
+  /// <summary>
+  /// Returns the leftmost portion of the given <see cref="ReadOnlySpan{char}"/> until the first occurrence of the specified pattern.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="pattern">The substring to search for in <paramref name="this"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used for the search. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> from the beginning of <paramref name="this"/> up to (but not including) the first occurrence of <paramref name="pattern"/>.
+  /// If <paramref name="pattern"/> is not found, the original span is returned.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "Hello, World!".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.LeftUntil(", ".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "Hello"
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result2 = span2.LeftUntil("XYZ".AsSpan());
+  /// Console.WriteLine(result2.ToString()); // Output: "HelloWorld" (pattern not found)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> LeftUntil(this ReadOnlySpan<char> @this, ReadOnlySpan<char> pattern, StringComparison comparison = StringComparison.CurrentCulture) {
+    if (@this.IsEmpty || pattern.IsEmpty)
+      return [];
+
+    var index = @this.IndexOf(pattern, comparison);
+    return index < 0 ? @this : @this[..index];
+  }
+
+  /// <summary>
+  /// Returns the rightmost portion of the given string, starting after the last occurrence of the specified pattern.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="pattern">The substring to search for in <paramref name="this"/>. Must not be <see langword="null"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used for the search. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A substring from the first occurrence of <paramref name="pattern"/> (excluding the pattern itself) to the end of <paramref name="this"/>.
+  /// If <paramref name="pattern"/> is not found, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="pattern"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "Hello, World!";
+  /// string result = input.RightUntil(", ");
+  /// Console.WriteLine(result); // Output: "World!"
+  ///
+  /// string input2 = "HelloWorld";
+  /// string result2 = input2.RightUntil("XYZ");
+  /// Console.WriteLine(result2); // Output: "HelloWorld" (pattern not found)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string RightUntil(this string @this, string pattern, StringComparison comparison = StringComparison.CurrentCulture) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(pattern);
+
+    if (@this.Length <=0 || pattern.Length <= 0)
+      return string.Empty;
+
+    var index = @this.LastIndexOf(pattern, comparison);
+    return index < 0 ? @this : @this[(index + pattern.Length)..];
+  }
+
+  /// <summary>
+  /// Returns the rightmost portion of the given <see cref="ReadOnlySpan{char}"/>, starting after the last occurrence of the specified pattern.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="pattern">The substring to search for in <paramref name="this"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used for the search. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> starting after the first occurrence of <paramref name="pattern"/> (excluding the pattern itself) and extending to the end of <paramref name="this"/>.
+  /// If <paramref name="pattern"/> is not found, the original span is returned.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "Hello, World!".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.RightUntil(", ".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "World!"
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result2 = span2.RightUntil("XYZ".AsSpan());
+  /// Console.WriteLine(result2.ToString()); // Output: "HelloWorld" (pattern not found)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> RightUntil(this ReadOnlySpan<char> @this, ReadOnlySpan<char> pattern, StringComparison comparison = StringComparison.CurrentCulture) {
+    if (@this.IsEmpty || pattern.IsEmpty)
+      return [];
+
+    var index = @this.LastIndexOf(pattern, comparison);
+    return index < 0 ? @this : @this[(index + pattern.Length)..];
   }
 
   #region Similarities
