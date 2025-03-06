@@ -4617,7 +4617,7 @@ public static partial class StringExtensions {
       ;
 
       if (endsWithoutExtension)
-        text = text.ReplaceLast(MARKER_ANY_FILE, MARKER_ANY_NONE);
+        text = text.ReplaceLast(MARKER_ANY_FILE, MARKER_ANY_NONE, StringComparison.OrdinalIgnoreCase);
 
       var regexPattern = Regex.Escape(text);
       regexPattern = regexPattern
