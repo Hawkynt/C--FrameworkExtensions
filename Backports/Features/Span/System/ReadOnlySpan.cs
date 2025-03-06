@@ -24,7 +24,7 @@ using System.Collections.Generic;
 
 namespace System;
 
-public readonly struct ReadOnlySpan<T> : IEnumerable<T> {
+public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   private readonly SpanHelper.IMemoryHandler<T> _pointerMemoryHandler;
 
   private ReadOnlySpan(SpanHelper.IMemoryHandler<T> handler, int length) {
