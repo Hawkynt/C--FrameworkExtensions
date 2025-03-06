@@ -277,6 +277,31 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
+  /// Removes the specified number of characters from the start of the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="count">The number of characters to remove. Must be greater than 0 and less than or equal to the length of <paramref name="this"/>.</param>
+  /// <returns>
+  /// A new <see cref="ReadOnlySpan{char}"/> with the first <paramref name="count"/> characters removed.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is less than or equal to 0, or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.RemoveFirst(5);
+  /// Console.WriteLine(result.ToString()); // Output: "World"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> RemoveFirst(this ReadOnlySpan<char> @this, int count) {
+    Against.CountOutOfRange(count, @this.Length);
+
+    return count < @this.Length ? @this[count..] : [];
+  }
+
+  /// <summary>
   /// Removes the specified number of characters from the end of the given string.
   /// </summary>
   /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
@@ -307,6 +332,31 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
+  /// Removes the specified number of characters from the end of the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="count">The number of characters to remove. Must be greater than 0 and less than or equal to the length of <paramref name="this"/>.</param>
+  /// <returns>
+  /// A new <see cref="ReadOnlySpan{char}"/> with the last <paramref name="count"/> characters removed.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is less than or equal to 0, or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.RemoveLast(5);
+  /// Console.WriteLine(result.ToString()); // Output: "Hello"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> RemoveLast(this ReadOnlySpan<char> @this, int count) {
+    Against.CountOutOfRange(count, @this.Length);
+
+    return count < @this.Length ? @this[..^count] : [];
+  }
+
+  /// <summary>
   /// Removes the specified substring from the start of the given string, if present.
   /// </summary>
   /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
@@ -330,6 +380,36 @@ public static partial class StringExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string RemoveAtStart(this string @this, string what, StringComparison comparison = StringComparison.CurrentCulture) => ReplaceAtStart(@this, what, null, comparison);
+
+  /// <summary>
+  /// Removes the specified substring from the start of the given <see cref="ReadOnlySpan{char}"/>, if present.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="what">The substring to remove from the beginning of <paramref name="this"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new <see cref="ReadOnlySpan{char}"/> with <paramref name="what"/> removed from the start, or the original span if it does not start with <paramref name="what"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.RemoveAtStart("Hello".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "World"
+  /// </code>
+  /// </example>
+  public static ReadOnlySpan<char> RemoveAtStart(this ReadOnlySpan<char> @this, ReadOnlySpan<char> what, StringComparison comparison = StringComparison.CurrentCulture) {
+    if (what.IsEmpty || @this.IsEmpty || @this.Length < what.Length)
+      return @this;
+
+    var prefix = @this[..what.Length];
+    if (comparison == StringComparison.Ordinal)
+      return prefix.SequenceEqual(what) ? @this[what.Length..] : @this;
+
+    if (prefix.ToString().Equals(what.ToString(), comparison))
+      return @this[what.Length..];
+
+    return @this;
+  }
 
   /// <summary>
   /// Removes the specified substring from the end of the given string, if present.
@@ -357,21 +437,124 @@ public static partial class StringExtensions {
   public static string RemoveAtEnd(this string @this, string what, StringComparison comparison = StringComparison.CurrentCulture) => ReplaceAtEnd(@this, what, null, comparison);
 
   /// <summary>
-  ///   Gets a substring.
+  /// Removes the specified substring from the end of the given <see cref="ReadOnlySpan{char}"/>, if present.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="start">
-  ///   The start index of the first char that should be contained in the result; can be negative to
-  ///   indicate a "from the end".
-  /// </param>
-  /// <param name="end">
-  ///   The end index of the first char not contained in the result; can be negative to indicate a
-  ///   "from-the-end".
-  /// </param>
-  /// <returns>the substring</returns>
+  /// <param name="this">The span to process.</param>
+  /// <param name="what">The substring to remove from the end of <paramref name="this"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A new <see cref="ReadOnlySpan{char}"/> with <paramref name="what"/> removed from the end, or the original span if it does not end with <paramref name="what"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.RemoveAtEnd("World".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "Hello"
+  /// </code>
+  /// </example>
+  public static ReadOnlySpan<char> RemoveAtEnd(this ReadOnlySpan<char> @this, ReadOnlySpan<char> what, StringComparison comparison = StringComparison.CurrentCulture) {
+    if (what.IsEmpty || @this.IsEmpty || @this.Length < what.Length)
+      return @this;
+
+    var suffix = @this[^what.Length..];
+    if (comparison == StringComparison.Ordinal)
+      return suffix.SequenceEqual(what) ? @this[..^what.Length] : @this;
+
+    if (suffix.ToString().Equals(what.ToString(), comparison))
+      return @this[..^what.Length];
+
+    return @this;
+  }
+
+  /// <summary>
+  /// Extracts a substring from the given <see cref="ReadOnlySpan{char}"/> starting at the specified position and with the specified length.
+  /// </summary>
+  /// <param name="this">The span to extract the substring from.</param>
+  /// <param name="position">The zero-based starting position of the substring. Must be within valid range.</param>
+  /// <param name="count">The number of characters to extract. Must be greater than 0 and within the available length from <paramref name="position"/>.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> that represents the extracted substring.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="position"/> is outside the valid range (0 to <c><paramref name="this"/>.Length - 1</c>) 
+  /// or when <paramref name="count"/> is less than or equal to 0, or exceeds the available length from <paramref name="position"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.Substring(5, 5);
+  /// Console.WriteLine(result.ToString()); // Output: "World"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> Substring(this ReadOnlySpan<char> @this, int position, int count) {
+    Against.IndexOutOfRange(position, @this.Length - 1);
+    Against.CountOutOfRange(count, @this.Length - position);
+
+    return @this[position..(position + count)];
+  }
+
+  /// <summary>
+  /// Extracts a substring from the given <see cref="ReadOnlySpan{char}"/> starting at the specified position and continuing to the end.
+  /// </summary>
+  /// <param name="this">The span to extract the substring from.</param>
+  /// <param name="position">The zero-based starting position of the substring. Must be within valid range.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> that represents the extracted substring starting from <paramref name="position"/> to the end.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="position"/> is outside the valid range (0 to <c><paramref name="this"/>.Length - 1</c>).
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.Substring(5);
+  /// Console.WriteLine(result.ToString()); // Output: "World"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> Substring(this ReadOnlySpan<char> @this, int position) {
+    Against.IndexOutOfRange(position, @this.Length - 1);
+
+    return @this[position..];
+  }
+
+  /// <summary>
+  /// Extracts a substring from the given string using a start and optional end index, with support for negative indices.
+  /// </summary>
+  /// <param name="this">The string to extract the substring from. Must not be <see langword="null"/>.</param>
+  /// <param name="start">The zero-based starting index. If negative, it is treated as an offset from the end of the string.</param>
+  /// <param name="end"><i>(Optional)</i> The zero-based ending index (exclusive). If negative or zero, it is treated as an offset from the end of the string. Defaults to 0.</param>
+  /// <returns>
+  /// A substring of <paramref name="this"/> determined by <paramref name="start"/> and <paramref name="end"/>. If <paramref name="start"/> and <paramref name="end"/> are equal, returns a single-character string.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <remarks>
+  /// Supports negative indices: <br/>
+  /// &#8226; If <paramref name="start"/> is negative, it is interpreted as an offset from the end of the string. <br/>
+  /// &#8226; If <paramref name="end"/> is negative or zero, it is interpreted as an offset from the end of the string. <br/>
+  /// &#8226; If <paramref name="start"/> is out of range, it is clamped to the valid range. <br/>
+  /// &#8226; If <paramref name="end"/> is out of range, it is adjusted accordingly. <br/>
+  /// &#8226; If <paramref name="start"/> and <paramref name="end"/> are the same, a single-character string is returned. <br/>
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result1 = input.SubString(2, 7);
+  /// Console.WriteLine(result1); // Output: "lloWo"
+  ///
+  /// string result2 = input.SubString(-5, -1);
+  /// Console.WriteLine(result2); // Output: "Worl"
+  ///
+  /// string result3 = input.SubString(-3);
+  /// Console.WriteLine(result3); // Output: "rld"
+  /// </code>
+  /// </example>
   public static string SubString(this string @this, int start, int end = 0) {
     Against.ThisIsNull(@this);
-
+    
     var result = string.Empty;
     var length = @this.Length;
 
@@ -409,11 +592,93 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Gets the first n chars from a string.
+  /// Extracts a substring from the given <see cref="ReadOnlySpan{char}"/> using a start and optional end index, with support for negative indices.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="count">The number of chars to get.</param>
-  /// <returns>A string with the first n chars.</returns>
+  /// <param name="this">The span to extract the substring from.</param>
+  /// <param name="start">The zero-based starting index. If negative, it is treated as an offset from the end of the span.</param>
+  /// <param name="end"><i>(Optional)</i> The zero-based ending index (exclusive). If negative or zero, it is treated as an offset from the end of the span. Defaults to 0.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> representing the extracted substring. If <paramref name="start"/> and <paramref name="end"/> are equal, returns a single-character span.
+  /// </returns>
+  /// <remarks>
+  /// Supports negative indices: <br/>
+  /// &#8226; If <paramref name="start"/> is negative, it is interpreted as an offset from the end of the span. <br/>
+  /// &#8226; If <paramref name="end"/> is negative or zero, it is interpreted as an offset from the end of the span. <br/>
+  /// &#8226; If <paramref name="start"/> is out of range, it is clamped to the valid range. <br/>
+  /// &#8226; If <paramref name="end"/> is out of range, it is adjusted accordingly. <br/>
+  /// &#8226; If <paramref name="start"/> and <paramref name="end"/> are the same, a single-character span is returned. <br/>
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result1 = span.SubString(2, 7);
+  /// Console.WriteLine(result1.ToString()); // Output: "lloWo"
+  ///
+  /// ReadOnlySpan&lt;char&gt; result2 = span.SubString(-5, -1);
+  /// Console.WriteLine(result2.ToString()); // Output: "Worl"
+  ///
+  /// ReadOnlySpan&lt;char&gt; result3 = span.SubString(-3);
+  /// Console.WriteLine(result3.ToString()); // Output: "rld"
+  /// </code>
+  /// </example>
+  public static ReadOnlySpan<char> SubString(this ReadOnlySpan<char> @this, int start, int end = 0) {
+    ReadOnlySpan<char> result = [];
+    var length = @this.Length;
+    // ReSharper disable once InvertIf (perf-opt)
+    if (length > 0) {
+      // if (start < 0) start += length
+      // if (end <= 0) end += length
+      var startMask = start;
+      var endMask = end - 1;
+      startMask >>= 31;
+      endMask >>= 31;
+      startMask &= length;
+      endMask &= length;
+      start += startMask;
+      end += endMask;
+      // if (start < 0) start = 0
+      startMask = ~start;
+      startMask >>= 31;
+      start &= startMask;
+      if (start != end) {
+        var len = end - start;
+        // if (len > length) len = length - start
+        len -= (len - (length - start)) & ((length - len) >> 31);
+        if (len > 0)
+          result = @this[start..(start + len)];
+      } else if (start < length) {
+        result = @this.Slice(start, 1);
+      }
+    }
+    return result;
+  }
+
+  /// <summary>
+  /// Retrieves the leftmost <paramref name="count"/> characters from the given string.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="count">The number of characters to extract. Must be greater than or equal to 0.</param>
+  /// <returns>
+  /// A substring containing the first <paramref name="count"/> characters of <paramref name="this"/>.
+  /// If <paramref name="count"/> is 0, an empty string is returned.
+  /// If <paramref name="count"/> exceeds the string's length, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result1 = input.Left(5);
+  /// Console.WriteLine(result1); // Output: "Hello"
+  ///
+  /// string result2 = input.Left(20);
+  /// Console.WriteLine(result2); // Output: "HelloWorld"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Left(this string @this, int count) {
     Against.ThisIsNull(@this);
@@ -426,16 +691,100 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Gets the last n chars from a string.
+  /// Retrieves the leftmost <paramref name="count"/> characters from the given <see cref="ReadOnlySpan{char}"/>.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="count">The number of chars to get.</param>
-  /// <returns>A string with the last n chars.</returns>
+  /// <param name="this">The span to process.</param>
+  /// <param name="count">The number of characters to extract. Must be greater than or equal to 0.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> containing the first <paramref name="count"/> characters of <paramref name="this"/>.
+  /// If <paramref name="count"/> is 0, an empty span is returned.
+  /// If <paramref name="count"/> exceeds the span's length, the original span is returned.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result1 = span.Left(5);
+  /// Console.WriteLine(result1.ToString()); // Output: "Hello"
+  ///
+  /// ReadOnlySpan&lt;char&gt; result2 = span.Left(20);
+  /// Console.WriteLine(result2.ToString()); // Output: "HelloWorld"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> @this, int count) {
+    Against.CountBelowZero(count);
+    // if (count > @this.Length) count = @this.Length
+    var mask = @this.Length - count;
+    count += mask & (mask >> 31);
+    return @this[..count];
+  }
+
+  /// <summary>
+  /// Retrieves the rightmost <paramref name="count"/> characters from the given string.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="count">The number of characters to extract. Must be greater than or equal to 0.</param>
+  /// <returns>
+  /// A substring containing the last <paramref name="count"/> characters of <paramref name="this"/>.
+  /// If <paramref name="count"/> is 0, an empty string is returned.
+  /// If <paramref name="count"/> exceeds the string's length, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result1 = input.Right(5);
+  /// Console.WriteLine(result1); // Output: "World"
+  ///
+  /// string result2 = input.Right(20);
+  /// Console.WriteLine(result2); // Output: "HelloWorld"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Right(this string @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(count);
 
+    // if (count > @this.Length) count = @this.Length
+    var mask = @this.Length - count;
+    count += mask & (mask >> 31);
+    return @this[^count..];
+  }
+
+  /// <summary>
+  /// Retrieves the rightmost <paramref name="count"/> characters from the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="count">The number of characters to extract. Must be greater than or equal to 0.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> containing the last <paramref name="count"/> characters of <paramref name="this"/>.
+  /// If <paramref name="count"/> is 0, an empty span is returned.
+  /// If <paramref name="count"/> exceeds the span's length, the original span is returned.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result1 = span.Right(5);
+  /// Console.WriteLine(result1.ToString()); // Output: "World"
+  ///
+  /// ReadOnlySpan&lt;char&gt; result2 = span.Right(20);
+  /// Console.WriteLine(result2.ToString()); // Output: "HelloWorld"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> Right(this ReadOnlySpan<char> @this, int count) {
+    Against.CountBelowZero(count);
     // if (count > @this.Length) count = @this.Length
     var mask = @this.Length - count;
     count += mask & (mask >> 31);
@@ -1523,8 +1872,7 @@ public static partial class StringExtensions {
     Against.ThisIsNull(@this);
     return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, true);
   }
-
-
+  
   /// <summary>
   ///   Converts a word to camel case.
   /// </summary>
@@ -2242,7 +2590,11 @@ public static partial class StringExtensions {
 
     if (stringComparison == StringComparison.Ordinal) {
       var search = @this.AsSpan();
-      for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[..needleLength]); search = search[needleLength..])
+      for (
+        var needle = what.AsSpan(); 
+        search.Length >= needleLength && needle.SequenceEqual(search[..needleLength]); 
+        search = search[needleLength..]
+        )
         ;
 
       return search.Length == thisLength ? @this : search.ToString();
@@ -2252,6 +2604,47 @@ public static partial class StringExtensions {
     while (index + needleLength <= thisLength && string.Equals(what, @this.Substring(index, needleLength), stringComparison))
       index += needleLength;
 
+    return index == 0 ? @this : @this[index..];
+  }
+
+  /// <summary>
+  /// Repeatedly removes all occurrences of the specified substring from the beginning of the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="what">The substring to remove from the start of <paramref name="this"/>.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> with all leading occurrences of <paramref name="what"/> removed. 
+  /// If <paramref name="this"/> does not start with <paramref name="what"/>, the original span is returned.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloHelloWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.TrimStart("Hello".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "World"
+  /// </code>
+  /// </example>
+  public static ReadOnlySpan<char> TrimStart(this ReadOnlySpan<char> @this, ReadOnlySpan<char> what, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    var thisLength = @this.Length;
+    var needleLength = what.Length;
+    if (needleLength == 0 || thisLength < needleLength)
+      return @this;
+
+    if (stringComparison == StringComparison.Ordinal) {
+      for (
+        ;
+        @this.Length >= needleLength && what.SequenceEqual(@this[..needleLength]); 
+        @this = @this[needleLength..]
+        )
+        ;
+      return @this;
+    }
+
+    var index = 0;
+    var needle = what.ToString();
+    while (index + needleLength <= thisLength && @this.Slice(index, needleLength).ToString().Equals(needle, stringComparison))
+      index += needleLength;
+      
     return index == 0 ? @this : @this[index..];
   }
 
@@ -2281,7 +2674,11 @@ public static partial class StringExtensions {
 
     if (stringComparison == StringComparison.Ordinal) {
       var search = @this.AsSpan();
-      for (var needle = what.AsSpan(); search.Length >= needleLength && needle.SequenceEqual(search[^needleLength..]); search = search[..^needleLength])
+      for (
+        var needle = what.AsSpan(); 
+        search.Length >= needleLength && needle.SequenceEqual(search[^needleLength..]); 
+        search = search[..^needleLength]
+        )
         ;
 
       return search.Length == thisLength ? @this : search.ToString();
@@ -2289,6 +2686,47 @@ public static partial class StringExtensions {
 
     var index = thisLength;
     while (index >= needleLength && string.Equals(what, @this.Substring(index-needleLength, needleLength), stringComparison))
+      index -= needleLength;
+
+    return index == thisLength ? @this : @this[..index];
+  }
+
+  /// <summary>
+  /// Repeatedly removes all occurrences of the specified substring from the end of the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to process.</param>
+  /// <param name="what">The substring to remove from the end of <paramref name="this"/>.</param>
+  /// <param name="stringComparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used to compare substrings. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A <see cref="ReadOnlySpan{char}"/> with all trailing occurrences of <paramref name="what"/> removed. 
+  /// If <paramref name="this"/> does not end with <paramref name="what"/>, the original span is returned.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "HelloWorldWorld".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result = span.TrimEnd("World".AsSpan());
+  /// Console.WriteLine(result.ToString()); // Output: "Hello"
+  /// </code>
+  /// </example>
+  public static ReadOnlySpan<char> TrimEnd(this ReadOnlySpan<char> @this, ReadOnlySpan<char> what, StringComparison stringComparison = StringComparison.CurrentCulture) {
+    var thisLength = @this.Length;
+    var needleLength = what.Length;
+    if (needleLength == 0 || thisLength < needleLength)
+      return @this;
+
+    if (stringComparison == StringComparison.Ordinal) {
+      for (
+        ; 
+        @this.Length >= needleLength && what.SequenceEqual(@this[^needleLength..]); 
+        @this = @this [ ..^needleLength]
+        )
+        ;
+      return @this;
+    }
+    
+    var needle = what.ToString();
+    var index = thisLength;
+    while (index >= needleLength && @this.Slice(index - needleLength, needleLength).ToString().Equals(needle, stringComparison))
       index -= needleLength;
 
     return index == thisLength ? @this : @this[..index];
