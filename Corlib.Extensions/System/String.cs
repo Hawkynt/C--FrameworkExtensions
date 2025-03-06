@@ -2735,32 +2735,71 @@ public static partial class StringExtensions {
   #region Null and WhiteSpace checks
 
   /// <summary>
-  ///   Determines whether the string is <c>null</c> or empty.
+  /// Determines whether the specified string is <see langword="null"/> or empty.
   /// </summary>
-  /// <param name="this">This String.</param>
+  /// <param name="this">The string to check.</param>
   /// <returns>
-  ///   <c>true</c> if the string is <c>null</c> or empty; otherwise, <c>false</c>.
+  /// <see langword="true"/> if <paramref name="this"/> is <see langword="null"/> or an empty string; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// bool result1 = input1.IsNullOrEmpty(); // Output: true
+  ///
+  /// string input2 = "";
+  /// bool result2 = input2.IsNullOrEmpty(); // Output: true
+  ///
+  /// string input3 = "Hello";
+  /// bool result3 = input3.IsNullOrEmpty(); // Output: false
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNullOrEmpty([NotNullWhen(false)] this string @this) => string.IsNullOrEmpty(@this);
-  
+
   /// <summary>
-  ///   Determines whether the string is not <c>null</c> or empty.
+  /// Determines whether the specified string is not <see langword="null"/> and not empty.
   /// </summary>
-  /// <param name="this">This String.</param>
+  /// <param name="this">The string to check.</param>
   /// <returns>
-  ///   <c>true</c> if the string is not <c>null</c> or empty; otherwise, <c>false</c>.
+  /// <see langword="true"/> if <paramref name="this"/> is not <see langword="null"/> and not an empty string; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// bool result1 = input1.IsNotNullOrEmpty(); // Output: false
+  ///
+  /// string input2 = "";
+  /// bool result2 = input2.IsNotNullOrEmpty(); // Output: false
+  ///
+  /// string input3 = "Hello";
+  /// bool result3 = input3.IsNotNullOrEmpty(); // Output: true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNotNullOrEmpty([NotNullWhen(true)] this string @this) => !string.IsNullOrEmpty(@this);
 
   /// <summary>
-  ///   Determines whether the string is <c>null</c> or whitespace.
+  /// Determines whether the specified string is <see langword="null"/>, empty, or consists only of white-space characters.
   /// </summary>
-  /// <param name="this">This String.</param>
+  /// <param name="this">The string to check.</param>
   /// <returns>
-  ///   <c>true</c> if the string is <c>null</c> or whitespace; otherwise, <c>false</c>.
+  /// <see langword="true"/> if <paramref name="this"/> is <see langword="null"/>, empty, or contains only white-space characters; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// bool result1 = input1.IsNullOrWhiteSpace(); // Output: true
+  ///
+  /// string input2 = "";
+  /// bool result2 = input2.IsNullOrWhiteSpace(); // Output: true
+  ///
+  /// string input3 = "   ";
+  /// bool result3 = input3.IsNullOrWhiteSpace(); // Output: true
+  ///
+  /// string input4 = "Hello";
+  /// bool result4 = input4.IsNullOrWhiteSpace(); // Output: false
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
   public static bool IsNullOrWhiteSpace([NotNullWhen(false)]this string @this) => string.IsNullOrWhiteSpace(@this);
@@ -2779,31 +2818,147 @@ public static partial class StringExtensions {
 #endif
 
   /// <summary>
-  ///   Determines whether the string is not <c>null</c> or whitespace.
+  /// Determines whether the specified <see cref="ReadOnlySpan{char}"/> is empty or consists only of white-space characters.
   /// </summary>
-  /// <param name="this">This String.</param>
+  /// <param name="this">The span to check.</param>
   /// <returns>
-  ///   <c>true</c> if the string is not <c>null</c> or whitespace; otherwise, <c>false</c>.
+  /// <see langword="true"/> if <paramref name="this"/> is empty or contains only white-space characters; otherwise, <see langword="false"/>.
   /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span1 = "   ".AsSpan();
+  /// bool result1 = span1.IsEmptyOrWhiteSpace(); // Output: true
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "".AsSpan();
+  /// bool result2 = span2.IsEmptyOrWhiteSpace(); // Output: true
+  ///
+  /// ReadOnlySpan&lt;char&gt; span3 = "Hello".AsSpan();
+  /// bool result3 = span3.IsEmptyOrWhiteSpace(); // Output: false
+  /// </code>
+  /// </example>
+  public static bool IsEmptyOrWhiteSpace(this ReadOnlySpan<char> @this) {
+    if (@this.IsEmpty)
+      return true;
+
+    // ReSharper disable once LoopCanBeConvertedToQuery
+    foreach (var chr in @this)
+      if (!chr.IsWhiteSpace())
+        return false;
+
+    return true;
+  }
+
+  /// <summary>
+  /// Determines whether the specified string is not <see langword="null"/>, not empty, and contains at least one non-white-space character.
+  /// </summary>
+  /// <param name="this">The string to check.</param>
+  /// <returns>
+  /// <see langword="true"/> if <paramref name="this"/> is not <see langword="null"/>, not empty, and contains at least one non-white-space character; otherwise, <see langword="false"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// bool result1 = input1.IsNotNullOrWhiteSpace(); // Output: false
+  ///
+  /// string input2 = "";
+  /// bool result2 = input2.IsNotNullOrWhiteSpace(); // Output: false
+  ///
+  /// string input3 = "   ";
+  /// bool result3 = input3.IsNotNullOrWhiteSpace(); // Output: false
+  ///
+  /// string input4 = "Hello";
+  /// bool result4 = input4.IsNotNullOrWhiteSpace(); // Output: true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNotNullOrWhiteSpace([NotNullWhen(true)] this string @this) => !IsNullOrWhiteSpace(@this);
+
+  /// <summary>
+  /// Determines whether the specified <see cref="ReadOnlySpan{char}"/> is not empty and contains at least one non-white-space character.
+  /// </summary>
+  /// <param name="this">The span to check.</param>
+  /// <returns>
+  /// <see langword="true"/> if <paramref name="this"/> is not empty and contains at least one non-white-space character; otherwise, <see langword="false"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span1 = "   ".AsSpan();
+  /// bool result1 = span1.IsNotEmptyOrWhiteSpace(); // Output: false
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "".AsSpan();
+  /// bool result2 = span2.IsNotEmptyOrWhiteSpace(); // Output: false
+  ///
+  /// ReadOnlySpan&lt;char&gt; span3 = "Hello".AsSpan();
+  /// bool result3 = span3.IsNotEmptyOrWhiteSpace(); // Output: true
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsNotEmptyOrWhiteSpace(this ReadOnlySpan<char> @this) => !IsEmptyOrWhiteSpace(@this);
 
   #endregion
 
   #region IndexOf
 
   /// <summary>
-  /// Reports the zero-based index of the first occurrence of the specified character in this instance. The search starts at a specified character position and examines a specified number of character positions.
+  /// Finds the zero-based index of the first occurrence of the specified character in the given string, starting from a specified index, using the specified comparison option.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="value">A Unicode character to seek.</param>
-  /// <param name="startIndex">The search starting position.</param>
-  /// <param name="comparison">One of the enumeration values that specifies the rules for the search.</param>
-  /// <returns>The index position of the value parameter if that string is found, or -1 if it is not. If <paramref name="value"/> is Empty, the return value is 0.</returns>
+  /// <param name="this">The string to search. Must not be <see langword="null"/>.</param>
+  /// <param name="value">The character to locate in <paramref name="this"/>.</param>
+  /// <param name="startIndex">The zero-based index at which to begin the search.</param>
+  /// <param name="comparison">The <see cref="StringComparison"/> mode to use for the search.</param>
+  /// <returns>
+  /// The zero-based index of the first occurrence of <paramref name="value"/> in <paramref name="this"/> after <paramref name="startIndex"/>, or -1 if the character is not found.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="startIndex"/> is less than 0 or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "Hello World";
+  /// int index = input.IndexOf('o', 5, StringComparison.CurrentCulture);
+  /// Console.WriteLine(index); // Output: 7
+  /// </code>
+  /// </example>
   public static int IndexOf(this string @this, char value, int startIndex, StringComparison comparison) 
     => @this.IndexOf(value.ToString(), startIndex, comparison)
     ;
-  
+
+  /// <summary>
+  /// Finds the zero-based index of the first occurrence of the specified character in the given <see cref="ReadOnlySpan{char}"/>, 
+  /// starting from a specified index, using the specified comparison option.
+  /// </summary>
+  /// <param name="this">The span to search.</param>
+  /// <param name="value">The character to locate in <paramref name="this"/>.</param>
+  /// <param name="startIndex">The zero-based index at which to begin the search.</param>
+  /// <param name="comparison">The <see cref="StringComparison"/> mode to use for the search.</param>
+  /// <returns>
+  /// The zero-based index of the first occurrence of <paramref name="value"/> in <paramref name="this"/> after <paramref name="startIndex"/>, 
+  /// or -1 if the character is not found.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="startIndex"/> is less than 0 or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span = "Hello World".AsSpan();
+  /// int index = span.IndexOf('o', 5, StringComparison.CurrentCulture);
+  /// Console.WriteLine(index); // Output: 7
+  /// </code>
+  /// </example>
+  public static int IndexOf(this ReadOnlySpan<char> @this, char value, int startIndex, StringComparison comparison) {
+    if (comparison != StringComparison.OrdinalIgnoreCase)
+      return IndexOf(@this[startIndex..].ToString(), value, 0, comparison);
+
+    for (var i = startIndex; i < @this.Length; ++i)
+      if (@this[i] == value)
+        return i;
+
+    return _INDEX_NOT_FOUND;
+  }
+
   #endregion
 
   #region Contains/ContainsNot
@@ -3118,20 +3273,79 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or empty.
+  /// Returns the specified default value if the given string is <see langword="null"/> or empty; otherwise, returns the original string.
   /// </summary>
-  /// <param name="this">This <see cref="string" /></param>
-  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null" />.</param>
-  /// <returns>The given <see cref="string" /> or the given default value.</returns>
+  /// <param name="this">The string to check.</param>
+  /// <param name="defaultValue"><i>(Optional)</i> The default value to return if <paramref name="this"/> is <see langword="null"/> or empty. Defaults to <see langword="null"/>.</param>
+  /// <returns>
+  /// <paramref name="defaultValue"/> if <paramref name="this"/> is <see langword="null"/> or empty; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// string result1 = input1.DefaultIfNullOrEmpty("Default");
+  /// Console.WriteLine(result1); // Output: "Default"
+  ///
+  /// string input2 = "";
+  /// string result2 = input2.DefaultIfNullOrEmpty("Default");
+  /// Console.WriteLine(result2); // Output: "Default"
+  ///
+  /// string input3 = "Hello";
+  /// string result3 = input3.DefaultIfNullOrEmpty("Default");
+  /// Console.WriteLine(result3); // Output: "Hello"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string DefaultIfNullOrEmpty(this string @this, string defaultValue = null) => @this.IsNullOrEmpty() ? defaultValue : @this;
 
   /// <summary>
-  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or empty.
+  /// Returns the specified default value if the given <see cref="ReadOnlySpan{char}"/> is empty; otherwise, returns the original span.
   /// </summary>
-  /// <param name="this">This <see cref="string" /></param>
-  /// <param name="factory">The factory to generate the default value</param>
-  /// <returns>The given <see cref="string" /> or the given default value.</returns>
+  /// <param name="this">The span to check.</param>
+  /// <param name="defaultValue"><i>(Optional)</i> The default value to return if <paramref name="this"/> is empty. Defaults to an empty <see cref="ReadOnlySpan{char}"/>.</param>
+  /// <returns>
+  /// <paramref name="defaultValue"/> if <paramref name="this"/> is empty; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span1 = "".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result1 = span1.DefaultIfEmpty("Default".AsSpan());
+  /// Console.WriteLine(result1.ToString()); // Output: "Default"
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "Hello".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result2 = span2.DefaultIfEmpty("Default".AsSpan());
+  /// Console.WriteLine(result2.ToString()); // Output: "Hello"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> DefaultIfEmpty(this ReadOnlySpan<char> @this, ReadOnlySpan<char> defaultValue = default) => @this.IsEmpty ? defaultValue : @this;
+
+  /// <summary>
+  /// Returns the result of the specified factory function if the given string is <see langword="null"/> or empty; otherwise, returns the original string.
+  /// </summary>
+  /// <param name="this">The string to check.</param>
+  /// <param name="factory">A function that produces a default value if <paramref name="this"/> is <see langword="null"/> or empty. Must not be <see langword="null"/>.</param>
+  /// <returns>
+  /// The result of <paramref name="factory"/> if <paramref name="this"/> is <see langword="null"/> or empty; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="factory"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// string result1 = input1.DefaultIfNullOrEmpty(() => "Generated Default");
+  /// Console.WriteLine(result1); // Output: "Generated Default"
+  ///
+  /// string input2 = "";
+  /// string result2 = input2.DefaultIfNullOrEmpty(() => "Generated Default");
+  /// Console.WriteLine(result2); // Output: "Generated Default"
+  ///
+  /// string input3 = "Hello";
+  /// string result3 = input3.DefaultIfNullOrEmpty(() => "Generated Default");
+  /// Console.WriteLine(result3); // Output: "Hello"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string DefaultIfNullOrEmpty(this string @this, Func<string> factory) {
     Against.ArgumentIsNull(factory);
@@ -3140,20 +3354,91 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or whitespace.
+  /// Returns the specified default value if the given string is <see langword="null"/>, empty, or consists only of white-space characters; otherwise, returns the original string.
   /// </summary>
-  /// <param name="this">This <see cref="string" />.</param>
-  /// <param name="defaultValue">The default value; optional, defaults to <see langword="null" />.</param>
-  /// <returns>The given <see cref="string" /> or the given default value.</returns>
+  /// <param name="this">The string to check.</param>
+  /// <param name="defaultValue"><i>(Optional)</i> The default value to return if <paramref name="this"/> is <see langword="null"/>, empty, or contains only white-space characters. Defaults to <see langword="null"/>.</param>
+  /// <returns>
+  /// <paramref name="defaultValue"/> if <paramref name="this"/> is <see langword="null"/>, empty, or contains only white-space characters; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// string result1 = input1.DefaultIfNullOrWhiteSpace("Default");
+  /// Console.WriteLine(result1); // Output: "Default"
+  ///
+  /// string input2 = "";
+  /// string result2 = input2.DefaultIfNullOrWhiteSpace("Default");
+  /// Console.WriteLine(result2); // Output: "Default"
+  ///
+  /// string input3 = "   ";
+  /// string result3 = input3.DefaultIfNullOrWhiteSpace("Default");
+  /// Console.WriteLine(result3); // Output: "Default"
+  ///
+  /// string input4 = "Hello";
+  /// string result4 = input4.DefaultIfNullOrWhiteSpace("Default");
+  /// Console.WriteLine(result4); // Output: "Hello"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => @this.IsNullOrWhiteSpace() ? defaultValue : @this;
+  public static string DefaultIfNullOrWhiteSpace(this string @this, string defaultValue = null) => IsNullOrWhiteSpace(@this) ? defaultValue : @this;
 
   /// <summary>
-  ///   Returns a default value if the given <see cref="string" /> is <see langword="null" /> or whitespace.
+  /// Returns the specified default value if the given <see cref="ReadOnlySpan{char}"/> is empty or consists only of white-space characters; otherwise, returns the original span.
   /// </summary>
-  /// <param name="this">This <see cref="string" /></param>
-  /// <param name="factory">The default value; optional, defaults to <see langword="null" />.</param>
-  /// <returns>The given <see cref="string" /> or the given default value.</returns>
+  /// <param name="this">The span to check.</param>
+  /// <param name="defaultValue"><i>(Optional)</i> The default value to return if <paramref name="this"/> is empty or contains only white-space characters. Defaults to an empty <see cref="ReadOnlySpan{char}"/>.</param>
+  /// <returns>
+  /// <paramref name="defaultValue"/> if <paramref name="this"/> is empty or contains only white-space characters; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; span1 = "".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result1 = span1.DefaultIfEmptyOrWhiteSpace("Default".AsSpan());
+  /// Console.WriteLine(result1.ToString()); // Output: "Default"
+  ///
+  /// ReadOnlySpan&lt;char&gt; span2 = "   ".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result2 = span2.DefaultIfEmptyOrWhiteSpace("Default".AsSpan());
+  /// Console.WriteLine(result2.ToString()); // Output: "Default"
+  ///
+  /// ReadOnlySpan&lt;char&gt; span3 = "Hello".AsSpan();
+  /// ReadOnlySpan&lt;char&gt; result3 = span3.DefaultIfEmptyOrWhiteSpace("Default".AsSpan());
+  /// Console.WriteLine(result3.ToString()); // Output: "Hello"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> DefaultIfEmptyOrWhiteSpace(this ReadOnlySpan<char> @this, ReadOnlySpan<char> defaultValue = default) => IsEmptyOrWhiteSpace(@this) ? defaultValue : @this;
+
+  /// <summary>
+  /// Returns the result of the specified factory function if the given string is <see langword="null"/>, empty, or consists only of white-space characters; otherwise, returns the original string.
+  /// </summary>
+  /// <param name="this">The string to check.</param>
+  /// <param name="factory">A function that produces a default value if <paramref name="this"/> is <see langword="null"/>, empty, or contains only white-space characters. Must not be <see langword="null"/>.</param>
+  /// <returns>
+  /// The result of <paramref name="factory"/> if <paramref name="this"/> is <see langword="null"/>, empty, or contains only white-space characters; otherwise, returns <paramref name="this"/>.
+  /// </returns>
+  /// <exception cref="ArgumentNullException">
+  /// Thrown when <paramref name="factory"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input1 = null;
+  /// string result1 = input1.DefaultIfNullOrWhiteSpace(() => "Generated Default");
+  /// Console.WriteLine(result1); // Output: "Generated Default"
+  ///
+  /// string input2 = "";
+  /// string result2 = input2.DefaultIfNullOrWhiteSpace(() => "Generated Default");
+  /// Console.WriteLine(result2); // Output: "Generated Default"
+  ///
+  /// string input3 = "   ";
+  /// string result3 = input3.DefaultIfNullOrWhiteSpace(() => "Generated Default");
+  /// Console.WriteLine(result3); // Output: "Generated Default"
+  ///
+  /// string input4 = "Hello";
+  /// string result4 = input4.DefaultIfNullOrWhiteSpace(() => "Generated Default");
+  /// Console.WriteLine(result4); // Output: "Hello"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string DefaultIfNullOrWhiteSpace(this string @this, Func<string> factory) {
     Against.ArgumentIsNull(factory);
@@ -3248,13 +3533,44 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Tries to detect the used line-break mode.
+  /// Detects the type of line break used in the given string.
   /// </summary>
-  /// <param name="this">This <see cref="string" /></param>
-  /// <returns>The first matching line-break found or <see cref="LineBreakMode.None" />.</returns>
+  /// <param name="this">The string to analyze. Must not be <see langword="null"/>.</param>
+  /// <returns>
+  /// A <see cref="LineBreakMode"/> value indicating the detected line break type.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string text = "Hello\r\nWorld";
+  /// LineBreakMode mode = text.DetectLineBreakMode();
+  /// Console.WriteLine(mode); // Output: LineBreakMode.CrLf
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LineBreakMode DetectLineBreakMode(this string @this) {
     Against.ThisIsNull(@this);
 
+    return DetectLineBreakMode(@this.AsSpan());
+  }
+
+  /// <summary>
+  /// Detects the type of line break used in the given <see cref="ReadOnlySpan{char}"/>.
+  /// </summary>
+  /// <param name="this">The span to analyze.</param>
+  /// <returns>
+  /// A <see cref="LineBreakMode"/> value indicating the detected line break type.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// ReadOnlySpan&lt;char&gt; text = "Hello\r\nWorld".AsSpan();
+  /// LineBreakMode mode = text.DetectLineBreakMode();
+  /// Console.WriteLine(mode); // Output: LineBreakMode.CrLf
+  /// </code>
+  /// </example>
+  public static LineBreakMode DetectLineBreakMode(this ReadOnlySpan<char> @this) {
     if (@this.Length == 0)
       return LineBreakMode.None;
 
@@ -3952,7 +4268,7 @@ public static partial class StringExtensions {
     if (@this.Length == 0)
       return @this;
 
-    HashSet<char> charSet = new(chars);
+    HashSet<char> charSet = [..chars];
     StringBuilder result = new(@this.Length);
 
     foreach (var c in @this)
@@ -3965,16 +4281,34 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Returns all characters left of a certain string.
+  /// Returns the leftmost portion of the given string until the first occurrence of the specified pattern.
   /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="pattern">The pattern to find.</param>
-  /// <param name="comparison">The comparison mode.</param>
-  /// <returns>All characters left to the given text or the original string if text was not found.</returns>
+  /// <param name="this">The string to process. Can be <see langword="null"/>.</param>
+  /// <param name="pattern">The substring to search for in <paramref name="this"/>.</param>
+  /// <param name="comparison"><i>(Optional)</i> The <see cref="StringComparison"/> mode used for the search. Defaults to <see cref="StringComparison.CurrentCulture"/>.</param>
+  /// <returns>
+  /// A substring from the beginning of <paramref name="this"/> up to (but not including) the first occurrence of <paramref name="pattern"/>.
+  /// If <paramref name="pattern"/> is not found, the original string is returned.
+  /// If <paramref name="this"/> is <see langword="null"/>, <see langword="null"/> is returned.
+  /// </returns>
+  /// <example>
+  /// <code>
+  /// string input = "Hello, World!";
+  /// string result = input.LeftUntil(", ");
+  /// Console.WriteLine(result); // Output: "Hello"
+  ///
+  /// string input2 = "HelloWorld";
+  /// string result2 = input2.LeftUntil("XYZ");
+  /// Console.WriteLine(result2); // Output: "HelloWorld" (pattern not found)
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string LeftUntil(this string @this, string pattern, StringComparison comparison = StringComparison.CurrentCulture) {
-    if (@this == null)
-      return null;
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(pattern);
+
+    if (pattern.Length < 1)
+      return string.Empty;
 
     var index = @this.IndexOf(pattern, comparison);
     return index < 0 ? @this : @this[..index];
