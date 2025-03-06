@@ -247,17 +247,63 @@ public static partial class StringExtensions {
   }
 
   /// <summary>
-  ///   Removes the last n chars from a string.
+  /// Removes the specified number of characters from the start of the given string.
   /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="count">The number of characters to remove.</param>
-  /// <returns>The new string</returns>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="count">The number of characters to remove. Must be between 0 and the length of <paramref name="this"/>.</param>
+  /// <returns>
+  /// A new string with the first <paramref name="count"/> characters removed.
+  /// If <paramref name="count"/> is 0, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.RemoveFirst(5);
+  /// Console.WriteLine(result); // Output: "World"
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string RemoveFirst(this string @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, @this.Length);
+
+    return count < @this.Length ? @this[count..] : string.Empty;
+  }
+
+  /// <summary>
+  /// Removes the specified number of characters from the end of the given string.
+  /// </summary>
+  /// <param name="this">The string to process. Must not be <see langword="null"/>.</param>
+  /// <param name="count">The number of characters to remove. Must be between 0 and the length of <paramref name="this"/>.</param>
+  /// <returns>
+  /// A new string with the last <paramref name="count"/> characters removed.
+  /// If <paramref name="count"/> is 0, the original string is returned.
+  /// </returns>
+  /// <exception cref="NullReferenceException">
+  /// Thrown when <paramref name="this"/> is <see langword="null"/>.
+  /// </exception>
+  /// <exception cref="ArgumentOutOfRangeException">
+  /// Thrown when <paramref name="count"/> is negative or greater than the length of <paramref name="this"/>.
+  /// </exception>
+  /// <example>
+  /// <code>
+  /// string input = "HelloWorld";
+  /// string result = input.RemoveLast(5);
+  /// Console.WriteLine(result); // Output: "Hello"
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string RemoveLast(this string @this, int count) {
     Against.ThisIsNull(@this);
     Against.CountOutOfRange(count, @this.Length);
 
-    return count != @this.Length ? @this[..^count] : string.Empty;
+    return count < @this.Length ? @this[..^count] : string.Empty;
   }
 
   /// <summary>
@@ -309,19 +355,6 @@ public static partial class StringExtensions {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string RemoveAtEnd(this string @this, string what, StringComparison comparison = StringComparison.CurrentCulture) => ReplaceAtEnd(@this, what, null, comparison);
-
-  /// <summary>
-  ///   Removes the first n chars from a string.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="count">The number of characters to remove.</param>
-  /// <returns>The new string</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string RemoveFirst(this string @this, int count) {
-    Against.ThisIsNull(@this);
-    Against.CountOutOfRange(count, @this.Length);
-    return count != @this.Length ? @this[count..] : string.Empty;
-  }
 
   /// <summary>
   ///   Gets a substring.
