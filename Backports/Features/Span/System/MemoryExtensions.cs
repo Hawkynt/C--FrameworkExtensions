@@ -57,7 +57,7 @@ public static partial class MemoryExtensions {
       return span.ToString() == other.ToString();
 
     for (var i = 0; i < spanLength; ++i)
-      if (!Equals(span[i], other[i]))
+      if (!EqualityComparer<T>.Default.Equals(span[i], other[i]))
         return false;
 
     return true;
@@ -90,6 +90,79 @@ public static partial class MemoryExtensions {
 
     return true;
   }
+
+  /// <summary>Searches for the specified value and returns the index of its first occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
+  /// <param name="span">The span to search.</param>
+  /// <param name="value">The value to search for.</param>
+  /// <typeparam name="T">The type of the span and value.</typeparam>
+  /// <returns>The index of the occurrence of the value in the span. If not found, returns -1.</returns>
+  public static int IndexOf<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T> {
+    for (var i = 0; i < span.Length; ++i)
+      if (EqualityComparer<T>.Default.Equals(span[i], value))
+        return i;
+
+    return -1;
+  }
+
+  /// <summary>Searches for the specified sequence and returns the index of its first occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
+  /// <param name="span">The span to search.</param>
+  /// <param name="value">The sequence to search for.</param>
+  /// <typeparam name="T">The type of the span and value.</typeparam>
+  /// <returns>The index of the occurrence of the value in the span. If not found, returns -1.</returns>
+  public static int IndexOf<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> {
+    var needleLength = value.Length;
+    if (needleLength <= 0)
+      return 0;
+
+    if (needleLength > span.Length)
+      return -1;
+
+    if (typeof(T) == typeof(char))
+      return span.ToString().IndexOf(value.ToString(), StringComparison.OrdinalIgnoreCase);
+
+    for (var i = 0; i <= span.Length - needleLength; ++i)
+      if (SequenceEqual(span.Slice(i, needleLength), value))
+        return i;
+
+    return -1;
+  }
+
+  /// <summary>Searches for the specified value and returns the index of its last occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
+  /// <param name="span">The span to search.</param>
+  /// <param name="value">The value to search for.</param>
+  /// <typeparam name="T">The type of the span and value.</typeparam>
+  /// <returns>The index of the last occurrence of the value in the span. If not found, returns -1.</returns>
+  public static int LastIndexOf<T>(this ReadOnlySpan<T> span, T value) where T : IEquatable<T> {
+    for (var i = span.Length - 1; i >=0 ; --i)
+      if (EqualityComparer<T>.Default.Equals(span[i], value))
+        return i;
+
+    return -1;
+  }
+
+  /// <summary>Searches for the specified sequence and returns the index of its last occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
+  /// <param name="span">The span to search.</param>
+  /// <param name="value">The sequence to search for.</param>
+  /// <typeparam name="T">The type of the span and value.</typeparam>
+  /// <returns>The index of the last occurrence of the value in the span. If not found, returns -1.</returns>
+  public static int LastIndexOf<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> {
+    var needleLength = value.Length;
+    if (needleLength <= 0)
+      return 0;
+
+    if (needleLength > span.Length)
+      return -1;
+
+    if (typeof(T) == typeof(char))
+      return span.ToString().LastIndexOf(value.ToString(), StringComparison.OrdinalIgnoreCase);
+
+    for (var i = span.Length - needleLength; i >= 0 ; --i)
+      if (SequenceEqual(span.Slice(i, needleLength), value))
+        return i;
+
+    return -1;
+  }
+
 
 }
 #endif
