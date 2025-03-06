@@ -118,7 +118,7 @@ public static partial class MemoryExtensions {
       return -1;
 
     if (typeof(T) == typeof(char))
-      return span.ToString().IndexOf(value.ToString(), StringComparison.OrdinalIgnoreCase);
+      return span.ToString().IndexOf(value.ToString(), StringComparison.Ordinal);
 
     for (var i = 0; i <= span.Length - needleLength; ++i)
       if (SequenceEqual(span.Slice(i, needleLength), value))
@@ -126,6 +126,14 @@ public static partial class MemoryExtensions {
 
     return -1;
   }
+
+  /// <summary>
+  /// Reports the zero-based index of the first occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.
+  /// </summary>
+  /// <param name="span">The source span.</param>
+  /// <param name="value">The value to seek within the source span.</param>
+  /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
+  public static int IndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().IndexOf(value.ToString(), comparisonType);
 
   /// <summary>Searches for the specified value and returns the index of its last occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
   /// <param name="span">The span to search.</param>
@@ -154,7 +162,7 @@ public static partial class MemoryExtensions {
       return -1;
 
     if (typeof(T) == typeof(char))
-      return span.ToString().LastIndexOf(value.ToString(), StringComparison.OrdinalIgnoreCase);
+      return span.ToString().LastIndexOf(value.ToString(), StringComparison.Ordinal);
 
     for (var i = span.Length - needleLength; i >= 0 ; --i)
       if (SequenceEqual(span.Slice(i, needleLength), value))
@@ -163,6 +171,13 @@ public static partial class MemoryExtensions {
     return -1;
   }
 
+  /// <summary>
+  /// Reports the zero-based index of the last occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.
+  /// </summary>
+  /// <param name="span">The source span.</param>
+  /// <param name="value">The value to seek within the source span.</param>
+  /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
+  public static int LastIndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().LastIndexOf(value.ToString(), comparisonType);
 
 }
 #endif
