@@ -12,9 +12,11 @@
 __FrameworkExtensions.Backports__ is a NuGet package that provides a collection of extensions (Polyfills) to ensure that newer compiler features work in older versions of the .NET Framework/Standard/Core. This package allows developers to use modern C# language features and .NET APIs even when working on projects targeting earlier versions.
 
 __Note__: Performance is not a primary concern here. This focuses mainly on functionality and ready-to-be-built without making adjustments to code.
+
 ## Features
 
 ### Interfaces
+
 * System
   * [IGrouping](https://learn.microsoft.com/dotnet/api/system.linq.igrouping-2)&lt;out TKey, TElement&gt;
 * System.Collections
@@ -29,6 +31,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [ITuple](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
 
 ### Types
+
 * System
   * [Index](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
   * [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
@@ -53,6 +56,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
 
 ### Attributes
+
 * System.Diagnostics
   * [StackTraceHidden](https://learn.microsoft.com/dotnet/api/system.diagnostics.stacktracehiddenattribute)
 * System.Diagnostics.CodeAnalysis
@@ -69,22 +73,22 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [TupleElementNames](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.tupleelementnamesattribute)
 
 ### Delegates
+
 * System
   * [Func](https://learn.microsoft.com/dotnet/api/system.func-1)&lt;T&gt; (up to 16 types)
   * [Action](https://learn.microsoft.com/dotnet/api/system.action)&lt;T&gt; (up to 16 types)
 
 ### Methods
+
 * System.Array
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29%29)&lt;T&gt;(this T[] @this)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-int32%29)&lt;T&gt;(this T[] @this, int start)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-int32-system-int32%29)&lt;T&gt;(this T[] @this, int start, int length)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-index%29)&lt;T&gt;(this T[] @this, Index startIndex)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-range%29)&lt;T&gt;(this T[] @this, Range range)
-  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string%29)(this string @this)
-  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32%29)(this string @this, int start)
-  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
-  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
-  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
+* System.ReadOnlySpan
+  * bool [SequenceEqual](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sequenceequal#system-memoryextensions-sequenceequal-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
+  * bool [SequenceEqual](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sequenceequal#system-memoryextensions-sequenceequal-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other, IEqualityComparer&lt;T&gt; comparer)
 * System.Collections.Generic.IEnumerable
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
@@ -171,6 +175,11 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-string-system-stringsplitoptions%29)(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-string-system-int32-system-stringsplitoptions%29)(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None)
   * int [IndexOf](https://learn.microsoft.com/dotnet/api/system.string.indexof#system-string-indexof%28system-char-system-stringcomparison%29)(this string @this, char value, StringComparison comparisonType)
+  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string%29)(this string @this)
+  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32%29)(this string @this, int start)
+  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
+  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
+  * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
 * System.Text.StringBuilder
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
 * System.Threading.Tasks
