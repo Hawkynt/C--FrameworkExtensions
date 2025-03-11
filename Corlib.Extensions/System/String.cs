@@ -1885,37 +1885,64 @@ public static partial class StringExtensions {
     return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, false);
   }
 
-  private static string _ChangeCasing(string input, CultureInfo culture, bool pascalCase) {
-    StringBuilder result = new(input.Length);
+  private static string _ChangeCasing(string input, CultureInfo culture, bool isPascalCase) {
+    if (IsNullOrEmpty(input))
+      return input;
 
-    var isFirstLetter = true;
-    var hump = pascalCase;
+    StringBuilder result = null;
+    var hump = false;
     var lastCharWasUppercase = false;
-    foreach (var chr in input)
-      if (chr.IsDigit()) {
-        result.Append(chr);
-        hump = true;
-      } else if (!chr.IsLetter())
-        hump = true;
-      else {
-        var newChar = isFirstLetter
-            ? pascalCase
-              ? chr.ToUpper(culture)
-              : chr.ToLower(culture)
-            : hump
-              ? chr.ToUpper(culture)
-              : lastCharWasUppercase
-                ? chr.ToLower(culture)
-                : chr
-          ;
+    var handleLetter = HandleFirstLetter;
+    for (var i = 0; i < input.Length; ++i) {
+      var chr = input[i];
+      switch (chr) {
+        case var _ when chr.IsDigit(): {
+          result?.Append(chr);
+          hump = true;
+          continue;
+        }
+        case var _ when !chr.IsLetter(): {
+          result ??= InitBuilder(input, i);
+          hump = true;
+          continue;
+        }
+        default: {
+          var newChar = handleLetter(chr);
+          if (newChar != chr)
+            result ??= InitBuilder(input, i);
 
-        result.Append(newChar);
-        lastCharWasUppercase = newChar.IsUpper();
-        hump = false;
-        isFirstLetter = false;
+          result?.Append(newChar);
+          lastCharWasUppercase = newChar.IsUpper();
+          hump = false;
+          continue;
+        }
       }
+    }
 
-    return result.ToString();
+    return result?.ToString() ?? input;
+    
+    char HandleFirstLetter(char current) {
+      var letter = isPascalCase ? char.ToUpper(current, culture) : char.ToLower(current, culture);
+      handleLetter = HandleNextLetter;
+      return letter;
+    }
+
+    // ReSharper disable once AccessToModifiedClosure
+    char HandleNextLetter(char current) => hump
+      ? current.ToUpper(culture)
+      // ReSharper disable once AccessToModifiedClosure
+      : lastCharWasUppercase
+        ? current.ToLower(culture)
+        : current
+      ;
+
+    static StringBuilder InitBuilder(string input, int len) {
+      var builder = new StringBuilder(input.Length);
+      if (len > 0)
+        builder.Append(input, 0, len);
+
+      return builder;
+    }
   }
 
   /// <summary>
