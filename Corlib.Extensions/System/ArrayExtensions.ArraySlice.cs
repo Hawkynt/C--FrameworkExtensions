@@ -19,7 +19,7 @@ using Diagnostics;
 using Guard;
 
 public static partial class ArrayExtensions {
-  [DebuggerDisplay("{" + nameof(ReadOnlyArraySlice<TItem>.ToString) + "()}")]
+  [DebuggerDisplay("{" + nameof(ToString) + "()}")]
   public class ArraySlice<TItem>(TItem[] source, int start, int length) : ReadOnlyArraySlice<TItem>(source, start, length) {
     /// <summary>
     ///   Gets or sets the <see cref="TItem" /> at the specified index.
@@ -31,14 +31,42 @@ public static partial class ArrayExtensions {
     /// <returns>The item at the given index</returns>
     public new TItem this[int index] {
       get {
-        Against.IndexOutOfRange(index, this.Length);
+        Against.IndexOutOfRange(index, this.Length - 1);
 
         return this._source[index + this._start];
       }
       set {
-        Against.IndexOutOfRange(index, this.Length);
+        Against.IndexOutOfRange(index, this.Length - 1);
 
         this._source[index + this._start] = value;
+      }
+    }
+
+    /// <summary>
+    ///   Gets or sets the <see cref="TItem" /> at the specified index.
+    /// </summary>
+    /// <param name="index">The index, which can be from start or end (^).</param>
+    /// <returns>The item at the given index</returns>
+    public TItem this[Index index] {
+      get {
+        var actualIndex = index.IsFromEnd ? this.Length - index.Value : index.Value;
+        return this[actualIndex];
+      }
+      set {
+        var actualIndex = index.IsFromEnd ? this.Length - index.Value : index.Value;
+        this[actualIndex] = value;
+      }
+    }
+
+    /// <summary>
+    ///   Gets a slice of the array using range syntax.
+    /// </summary>
+    /// <param name="range">The range to slice.</param>
+    /// <returns>An array slice representing the specified range.</returns>
+    public ArraySlice<TItem> this[Range range] {
+      get {
+        var (offset, rangeLength) = range.GetOffsetAndLength(this.Length);
+        return this.Slice(offset, rangeLength);
       }
     }
 
