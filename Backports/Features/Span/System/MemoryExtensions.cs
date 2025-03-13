@@ -16,6 +16,7 @@
 #if !SUPPORTS_SPAN
 
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace System;
 
@@ -52,6 +53,12 @@ public static partial class MemoryExtensions {
     var otherLength = other.Length;
     if (spanLength != otherLength)
       return false;
+
+    if (spanLength <= 0)
+      return true;
+
+    if (typeof(T).IsValueType && span.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
+      return spanHandler.CompareAsBytesTo(otherHandler, spanLength * Marshal.SizeOf(typeof(T)));
 
     if (typeof(T) == typeof(char))
       return span.ToString() == other.ToString();

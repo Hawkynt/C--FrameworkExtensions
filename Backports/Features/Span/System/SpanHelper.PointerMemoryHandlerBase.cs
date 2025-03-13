@@ -147,6 +147,99 @@ internal static unsafe partial class SpanHelper {
       for (var i = 0; i < length; ++i)
         other[i] = this[i];
     }
+
+    internal bool CompareAsBytesTo(PointerMemoryHandlerBase<T> otherHandler, int byteCount) {
+      var thisPointer = (byte*)this.Pointer;
+      var otherPointer = (byte*)otherHandler.Pointer;
+
+      // Compare in 64-byte chunks using ulong for maximum performance
+      for (; byteCount >= 64; thisPointer += 64, otherPointer += 64, byteCount -= 64) {
+
+        // Load all values from both memory areas first
+        // This improves memory-level parallelism as CPU can execute multiple loads concurrently
+        var t0 = LoadQWord(thisPointer, 0);
+        var t1 = LoadQWord(thisPointer, 8);
+        var t2 = LoadQWord(thisPointer, 16);
+        var t3 = LoadQWord(thisPointer, 24);
+        var t4 = LoadQWord(thisPointer, 32);
+        var t5 = LoadQWord(thisPointer, 40);
+        var t6 = LoadQWord(thisPointer, 48);
+        var t7 = LoadQWord(thisPointer, 56);
+
+        var o0 = LoadQWord(otherPointer, 0);
+        var o1 = LoadQWord(otherPointer, 8);
+        var o2 = LoadQWord(otherPointer, 16);
+        var o3 = LoadQWord(otherPointer, 24);
+        var o4 = LoadQWord(otherPointer, 32);
+        var o5 = LoadQWord(otherPointer, 40);
+        var o6 = LoadQWord(otherPointer, 48);
+        var o7 = LoadQWord(otherPointer, 56);
+
+        // Now perform XOR operations with loaded values
+        Xor(ref t0, o0);
+        Xor(ref t1, o1);
+        Xor(ref t2, o2);
+        Xor(ref t3, o3);
+        Xor(ref t4, o4);
+        Xor(ref t5, o5);
+        Xor(ref t6, o6);
+        Xor(ref t7, o7);
+
+        // This improves memory-level parallelism as CPU can execute multiple ORs concurrently
+        Or(ref t0, t1);
+        Or(ref t2, t3);
+        Or(ref t4, t5);
+        Or(ref t6, t7);
+
+        Or(ref t0, t2);
+        Or(ref t4, t6);
+
+        Or(ref t0, t4);
+
+       // Combine results - will be non-zero if any comparison failed
+        if (t0 != 0)
+          return false;
+      }
+
+      // Accumulate differences for remaining bytes
+      ulong result = 0;
+
+      // Compare in 8-byte chunks using ulong
+      for (; byteCount >= 8; thisPointer += 8, otherPointer += 8, byteCount -= 8)
+        Or(ref result, LoadQWord(thisPointer) ^ LoadQWord(otherPointer));
+
+      // Compare in 4-byte chunks using uint
+      if (byteCount >= 4) {
+        Or(ref result, LoadDWord(thisPointer) ^ LoadDWord(otherPointer));
+        thisPointer += 4;
+        otherPointer += 4;
+        byteCount -= 4;
+      }
+
+      // Compare in 2-byte chunks using ushort
+      if (byteCount >= 2) {
+        Or(ref result, (ulong)LoadWord(thisPointer) ^ LoadWord(otherPointer));
+        thisPointer += 2;
+        otherPointer += 2;
+        byteCount -= 2;
+      }
+
+      // Handle remaining byte, if any
+      // ReSharper disable once InvertIf
+      if (byteCount > 0)
+        Or(ref result, (ulong)LoadByte(thisPointer) ^ LoadByte(otherPointer));
+
+      return result == 0;
+
+      ulong LoadQWord(byte* adress, int offset = 0) => *(ulong*)(adress + offset);
+      uint LoadDWord(byte* adress, int offset = 0) => *(uint*)(adress + offset);
+      ushort LoadWord(byte* adress, int offset = 0) => *(ushort*)(adress + offset);
+      byte LoadByte(byte* adress, int offset = 0) => *(adress + offset);
+
+      void Xor(ref ulong source, ulong operand) => source ^= operand;
+      void Or(ref ulong source, ulong operand) => source |= operand;
+
+    }
   }
 }
 
