@@ -235,5 +235,38 @@ internal class SpanTests {
     Assert.AreSame(source, target);
 #endif
   }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  public void SequenceEqual_ShouldEqual(int length) {
+    ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i=>(byte)~(i & 0xff)).ToArray().AsSpan();
+    ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
+    Assert.That(source.SequenceEqual(target),Is.True);
+  }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  public void SequenceEqual_ShouldNotEqual(int length) {
+    ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
+    ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)(i & 0xff)).ToArray().AsSpan();
+    Assert.That(source.SequenceEqual(target), Is.False);
+
+    var temp = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
+    temp[0] = (byte)~source[0];
+    target = temp;
+    Assert.That(source.SequenceEqual(target), Is.False);
+
+    temp[0] = source[0];
+    temp[^1] = (byte)~source[^1];
+    target = temp;
+    Assert.That(source.SequenceEqual(target), Is.False);
+
+    temp[^1] = source[^1];
+    temp[temp.Length/2] = (byte)~source[source.Length / 2];
+    target = temp;
+    Assert.That(source.SequenceEqual(target), Is.False);
+  }
+
+
 }
 
