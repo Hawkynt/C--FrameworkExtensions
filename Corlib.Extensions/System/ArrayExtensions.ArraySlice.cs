@@ -47,7 +47,7 @@ public static partial class ArrayExtensions {
     /// </summary>
     /// <param name="index">The index, which can be from start or end (^).</param>
     /// <returns>The item at the given index</returns>
-    public TItem this[Index index] {
+    public new TItem this[Index index] {
       get {
         var actualIndex = index.IsFromEnd ? this.Length - index.Value : index.Value;
         return this[actualIndex];
@@ -63,7 +63,7 @@ public static partial class ArrayExtensions {
     /// </summary>
     /// <param name="range">The range to slice.</param>
     /// <returns>An array slice representing the specified range.</returns>
-    public ArraySlice<TItem> this[Range range] {
+    public new ArraySlice<TItem> this[Range range] {
       get {
         var (offset, rangeLength) = range.GetOffsetAndLength(this.Length);
         return this.Slice(offset, rangeLength);
