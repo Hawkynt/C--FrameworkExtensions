@@ -474,19 +474,72 @@ public static partial class MathEx {
   /// <returns>The square root of x</returns>
   public static decimal Sqrt(this decimal @this, decimal epsilon = 0) {
     Against.NegativeValues(@this);
+    Against.NegativeValues(epsilon);
 
-    decimal current = (decimal)Math.Sqrt((double)@this), previous;
+    if (@this.IsZero())
+      return decimal.Zero;
+
+    var current = (decimal)Math.Sqrt((double)@this);
+    decimal previous;
     const decimal factor = 2m;
-    const decimal zero = decimal.Zero;
-
+    
     do {
       previous = current;
-      if (previous == zero)
-        return zero;
       current = (previous + @this / previous) / factor;
     } while (Math.Abs(previous - current) > epsilon);
 
     return current;
+  }
+
+  public static decimal Tan(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValues(epsilon);
+
+    if (@this.IsZero())
+      return decimal.Zero;
+
+    var current = (decimal)Math.Tan((double)@this);
+    const int MAX_ITERATIONS = 100;
+
+    var x2 = @this * @this;
+    var term = @this;
+    var correction = @this;
+    var denominator = 1m;
+    for (var i = 0; i < MAX_ITERATIONS && Math.Abs(term) > epsilon; ++i) {
+      denominator += 2m;
+      term *= x2 / denominator;
+      correction += denominator % 4 == 1 ? term : -term;
+    }
+
+    current = (current + correction) / 2m;
+    return current;
+  }
+
+  public static decimal Atan(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValues(epsilon);
+
+    const decimal PI_OVER_2 = 1.570796326794896619231321691m;
+    return @this switch {
+      0m => 0m,
+      > 1m => PI_OVER_2 - Atan(1m / @this, epsilon),
+      < -1m => -PI_OVER_2 - Atan(1m / @this, epsilon),
+      _ => Calculate()
+    };
+
+    decimal Calculate() {
+      var current = (decimal)Math.Atan((double)@this);
+      decimal previous;
+      var iterations = 0;
+      const int MAX_ITERATIONS = 100;
+      do {
+        previous = current;
+        var tanY = Tan(current, epsilon);
+        var sec2Y = 1m + tanY * tanY; // sec^2(y) = 1 + tan^2(y)
+        current -= (tanY - @this) / sec2Y;
+      }
+      while (Math.Abs(current - previous) > epsilon && ++iterations < MAX_ITERATIONS);
+
+      return current;
+    }
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
