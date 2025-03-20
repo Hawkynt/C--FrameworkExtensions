@@ -40,6 +40,17 @@ namespace System;
 
 public static partial class MathEx {
 
+  public const decimal Pi     = 3.14159265358979323846264338327m; // taken from https://3.141592653589793238462643383279502884197169399375105820974944592.eu/
+  public const decimal E      = 2.71828182845904523536028747135m; // taken from https://www.mathsisfun.com/numbers/e-eulers-number.html
+  public const decimal Sqrt2  = 1.41421356237309504880168872421m; // taken from https://en.wikipedia.org/wiki/Square_root_of_2
+  public const decimal Sqrt3  = 1.73205080756887729352744634151m; // taken from https://en.wikipedia.org/wiki/Square_root_of_3
+  public const decimal Sqrt5  = 2.23606797749978969640917366873m; // taken from https://en.wikipedia.org/wiki/Square_root_of_5
+  public const decimal Sqrt6  = 2.44948974278317809819728407471m; // taken from https://en.wikipedia.org/wiki/Square_root_of_6
+  public const decimal Sqrt7  = 2.64575131106459059050161575364m; // taken from https://en.wikipedia.org/wiki/Square_root_of_7
+  public const decimal Sqrt8  = 2.82842712474619009760337744842m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
+  public const decimal Sqrt10 = 3.16227766016837933199889354443m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
+
+
   /// <summary>
   /// Extracts the lower nibble of the specified byte.
   /// </summary>
@@ -476,19 +487,33 @@ public static partial class MathEx {
     Against.NegativeValues(@this);
     Against.NegativeValues(epsilon);
 
-    if (@this.IsZero())
-      return decimal.Zero;
+    return @this switch {
+      0 => 0,
+      1 => 1,
+      2 => Sqrt2,
+      3 => Sqrt3,
+      4 => 2,
+      5 => Sqrt5,
+      6 => Sqrt6,
+      7 => Sqrt7,
+      8 => Sqrt8,
+      9 => 3,
+      10 => Sqrt10,
+      _ => Calculate()
+    };
 
-    var current = (decimal)Math.Sqrt((double)@this);
-    decimal previous;
-    const decimal factor = 2m;
-    
-    do {
-      previous = current;
-      current = (previous + @this / previous) / factor;
-    } while (Math.Abs(previous - current) > epsilon);
+    decimal Calculate() {
+      var current = (decimal)Math.Sqrt((double)@this);
+      decimal previous;
+      const decimal factor = 2m;
 
-    return current;
+      do {
+        previous = current;
+        current = (previous + @this / previous) / factor;
+      } while (Math.Abs(previous - current) > epsilon);
+
+      return current;
+    }
   }
 
   public static decimal Tan(this decimal @this, decimal epsilon = 0) {
@@ -517,7 +542,7 @@ public static partial class MathEx {
   public static decimal Atan(this decimal @this, decimal epsilon = 0) {
     Against.NegativeValues(epsilon);
 
-    const decimal PI_OVER_2 = 1.570796326794896619231321691m;
+    const decimal PI_OVER_2 = Pi/2;
     return @this switch {
       0m => 0m,
       > 1m => PI_OVER_2 - Atan(1m / @this, epsilon),
