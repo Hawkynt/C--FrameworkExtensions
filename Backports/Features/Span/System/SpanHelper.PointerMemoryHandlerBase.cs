@@ -19,12 +19,17 @@
 
 #if !SUPPORTS_SPAN
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System;
 
 internal static unsafe partial class SpanHelper {
+
+  [StructLayout(LayoutKind.Explicit,Size = 64)]
+  private struct Block64;
+
   /// <summary>
   ///   Provides a base class for handling memory using a pointer to a block of memory of type <typeparamref name="T" />.
   /// </summary>
@@ -36,43 +41,86 @@ internal static unsafe partial class SpanHelper {
   ///   adhering to the <see cref="IMemoryHandler{T}" /> interface.
   /// </remarks>
   public abstract class PointerMemoryHandlerBase<T>(T* pointer) : IMemoryHandler<T> {
-    protected T* Pointer { get; } = pointer;
 
-    private void CopyTo(PointerMemoryHandlerBase<T> other, int length) {
-      if (length < 0)
-        throw new ArgumentOutOfRangeException(nameof(length));
+    private const int BYTE_COPY_THRESHOLD_IN_ITEMS = 16;
 
-      var source = this.Pointer;
-      var target = other.Pointer;
+    protected T* Pointer => pointer;
+
+    private void CopyTo(PointerMemoryHandlerBase<T> other, int count) {
+      switch (count) {
+        case < 0:
+          throw new ArgumentOutOfRangeException(nameof(count));
+        case < BYTE_COPY_THRESHOLD_IN_ITEMS:
+          CopyElements(pointer, other.Pointer, count);
+          break;
+        default:
+          var elementSize = Marshal.SizeOf(typeof(T));
+          var totalBytes = elementSize * count;
 #if SUPPORTS_BUFFER_MEMORYCOPY
-      var totalBytes = Marshal.SizeOf<T>() * length;
-      Buffer.MemoryCopy(source, target, totalBytes, totalBytes);
+          Buffer.MemoryCopy(pointer, other.Pointer, totalBytes, totalBytes);
 #else
-      if (length < 128)
+          CopyBytes((byte*)pointer, (byte*)other.Pointer, totalBytes);
+#endif
+          break;
+      }
+      return;
+      
+      [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
+      void CopyBytes(byte* source, byte* target, int totalBytes) {
+
+        // Copy chunks of 64 * 8 = 512 bytes at a time
+        for (; totalBytes >= 512; source += 512, target += 512, totalBytes -= 512) {
+          *(Block64*)target     = *(Block64*)source;
+          ((Block64*)target)[1] = ((Block64*)source)[1];
+          ((Block64*)target)[2] = ((Block64*)source)[2];
+          ((Block64*)target)[3] = ((Block64*)source)[3];
+          ((Block64*)target)[4] = ((Block64*)source)[4];
+          ((Block64*)target)[5] = ((Block64*)source)[5];
+          ((Block64*)target)[6] = ((Block64*)source)[6];
+          ((Block64*)target)[7] = ((Block64*)source)[7];
+        }
+
+        // Copy chunks of 64 bytes at a time
+        for (; totalBytes >= 64; source += 64, target += 64, totalBytes -= 64)
+          *(Block64*)target = *(Block64*)source;
+
+        // Copy chunks of 8 bytes (ulong) at a time
+        for (; totalBytes >= 8; source += 8, target += 8, totalBytes -= 8)
+          *(long*)target = *(long*)source;
+
+        // Copy remaining 4 bytes (uint) if possible
+        if (totalBytes >= 4) {
+          *(int*)target = *(int*)source;
+          totalBytes -= 4;
+          source += 4;
+          target += 4;
+        }
+
+        // Copy remaining 2 bytes (ushort) if possible
+        if (totalBytes >= 2) {
+          *(short*)target = *(short*)source;
+          totalBytes -= 2;
+          source += 2;
+          target += 2;
+        }
+
+        // Copy remaining byte if necessary
+        if (totalBytes >= 1)
+          *target = *source;
+      }
+
+      [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
+      void CopyElements(T* source, T* target, int count) {
         for (;;)
-          switch (length) {
-            case 0: return;
-            case 1:
-              *target = *source;
-              goto case 0;
-            case 2:
-              target[1] = source[1];
-              goto case 1;
-            case 3:
-              target[2] = source[2];
-              goto case 2;
-            case 4:
-              target[3] = source[3];
-              goto case 3;
-            case 5:
-              target[4] = source[4];
-              goto case 4;
-            case 6:
-              target[5] = source[5];
-              goto case 5;
-            case 7:
-              target[6] = source[6];
-              goto case 6;
+          switch (count) {
+            case 0: goto ElementsLeft0;
+            case 1: goto ElementsLeft1;
+            case 2: goto ElementsLeft2;
+            case 3: goto ElementsLeft3;
+            case 4: goto ElementsLeft4;
+            case 5: goto ElementsLeft5;
+            case 6: goto ElementsLeft6;
+            case 7: goto ElementsLeft7;
             default:
               do {
                 *target = *source;
@@ -83,47 +131,23 @@ internal static unsafe partial class SpanHelper {
                 target[5] = source[5];
                 target[6] = source[6];
                 target[7] = source[7];
-                length -= 8;
                 source += 8;
                 target += 8;
-              } while (length >= 8);
+                count -= 8;
+              } while (count >= 8);
 
               continue;
           }
 
-      var totalBytes = Marshal.SizeOf(typeof(T)) * length;
-      var byteSource = (byte*)source;
-      var byteTarget = (byte*)target;
-
-      // Copy chunks of 8 bytes (ulong) at a time
-      while (totalBytes >= 8) {
-        *(long*)byteTarget = *(long*)byteSource;
-        totalBytes -= 8;
-        byteTarget += 8;
-        byteSource += 8;
+        ElementsLeft7: target[6] = source[6];
+        ElementsLeft6: target[5] = source[5];
+        ElementsLeft5: target[4] = source[4];
+        ElementsLeft4: target[3] = source[3];
+        ElementsLeft3: target[2] = source[2];
+        ElementsLeft2: target[1] = source[1];
+        ElementsLeft1: target[0] = source[0];
+        ElementsLeft0: ;
       }
-
-      // Copy remaining 4 bytes (uint) if possible
-      if (totalBytes >= 4) {
-        *(int*)byteTarget = *(int*)byteSource;
-        totalBytes -= 4;
-        byteTarget += 4;
-        byteSource += 4;
-      }
-
-      // Copy remaining 2 bytes (ushort) if possible
-      if (totalBytes >= 2) {
-        *(short*)byteTarget = *(short*)byteSource;
-        totalBytes -= 2;
-        byteTarget += 2;
-        byteSource += 2;
-      }
-
-      // Copy remaining byte if necessary
-      if (totalBytes >= 1)
-        *byteTarget = *byteSource;
-
-#endif
     }
 
     /// <inheritdoc />
@@ -131,7 +155,6 @@ internal static unsafe partial class SpanHelper {
 
     /// <inheritdoc />
     public void CopyTo(T[] target, int count) {
-      var pointer = this.Pointer;
       for (var i = 0; i < count; ++i)
         target[i] = pointer[i];
     }
@@ -149,7 +172,7 @@ internal static unsafe partial class SpanHelper {
     }
 
     internal bool CompareAsBytesTo(PointerMemoryHandlerBase<T> otherHandler, int byteCount) {
-      var thisPointer = (byte*)this.Pointer;
+      var thisPointer = (byte*)pointer;
       var otherPointer = (byte*)otherHandler.Pointer;
 
       // Compare in 64-byte chunks using ulong for maximum performance
