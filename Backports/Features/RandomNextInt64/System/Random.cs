@@ -37,7 +37,34 @@ public static partial class RandomPolyfills {
     if (@this == null)
       throw new ArgumentNullException(nameof(@this));
 
-    return (long)(@this.NextDouble() * ulong.MaxValue);
+    // Collect raw bits from Next() calls
+    var high = (ulong)@this.Next();
+    var mid = (ulong)@this.Next();
+    var low = (ulong)@this.Next();
+
+    // Combine the bits into a 93-bit value
+    var seed = (high << 31) | mid;           // 62 bits
+    var extra = low;                         // 31 more bits
+
+    // Apply SplitMix64-like mixing function
+    seed ^= seed >> 30;
+    seed *= 0xBF58476D1CE4E5B9UL;
+    seed ^= seed >> 27;
+    seed *= 0x94D049BB133111EBUL;
+    seed ^= seed >> 31;
+
+    // Mix in the extra bits
+    seed ^= extra;
+
+    // Final mixing step (FNV-1a variant)
+    seed ^= seed >> 33;
+    seed *= 0xFF51AFD7ED558CCDL;
+    seed ^= seed >> 33;
+    seed *= 0xC4CEB9FE1A85EC53L;
+    seed ^= seed >> 33;
+
+    // Clear the sign bit to ensure positive result
+    return (long)(seed & 0x7FFFFFFFFFFFFFFFUL);
   }
 
   /// <summary>Returns a non-negative random integer that is less than the specified maximum.</summary>
@@ -63,7 +90,33 @@ public static partial class RandomPolyfills {
     if (maxValue < 0)
       throw new ArgumentOutOfRangeException(nameof(maxValue));
 
-    return (long)(@this.NextDouble() * maxValue);
+    return maxValue switch {
+      0 => 0,
+      <= int.MaxValue when (maxValue & (maxValue - 1)) == 0 => @this.Next() & (maxValue - 1),
+      <= int.MaxValue => SmallModuloRejectionSampling(@this,maxValue),
+      _ when (maxValue & (maxValue - 1)) == 0 => NextInt64(@this) & (maxValue - 1),
+      _ => ModuloRejectionSampling(@this, maxValue)
+    };
+
+    static long SmallModuloRejectionSampling(Random random, long limit) {
+      long result;
+      var maxAcceptable = int.MaxValue - int.MaxValue % limit;
+      do
+        result = random.Next();
+      while (result >= maxAcceptable);
+
+      return result % limit;
+    }
+
+    static long ModuloRejectionSampling(Random random, long limit) {
+      long result;
+      var maxAcceptable = long.MaxValue - long.MaxValue % limit;
+      do
+        result = NextInt64(random);
+      while (result >= maxAcceptable);
+
+      return result % limit;
+    }
   }
 
   /// <summary>Returns a random integer that is within a specified range.</summary>
@@ -93,7 +146,7 @@ public static partial class RandomPolyfills {
     if (maxValue < minValue)
       throw new ArgumentOutOfRangeException(nameof(maxValue));
 
-    return minValue + (long)(@this.NextDouble() * (maxValue - minValue));
+    return minValue + NextInt64(@this, maxValue - minValue);
   }
 }
 
