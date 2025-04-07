@@ -86,15 +86,16 @@ public static partial class RandomPolyfills {
 #endif
   public static long NextInt64(this Random @this, long maxValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      throw new NullReferenceException();
     if (maxValue < 0)
       throw new ArgumentOutOfRangeException(nameof(maxValue));
 
+    var maxValueMinusOne = maxValue - 1;
     return maxValue switch {
       0 => 0,
-      <= int.MaxValue when (maxValue & (maxValue - 1)) == 0 => @this.Next() & (maxValue - 1),
+      <= int.MaxValue when (maxValue & maxValueMinusOne) == 0 => @this.Next() & maxValueMinusOne,
       <= int.MaxValue => SmallModuloRejectionSampling(@this,maxValue),
-      _ when (maxValue & (maxValue - 1)) == 0 => NextInt64(@this) & (maxValue - 1),
+      _ when (maxValue & maxValueMinusOne) == 0 => NextInt64(@this) & maxValueMinusOne,
       _ => ModuloRejectionSampling(@this, maxValue)
     };
 
