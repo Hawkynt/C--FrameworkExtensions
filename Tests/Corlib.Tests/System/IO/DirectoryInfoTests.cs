@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using NUnit.Framework;
-using System.Collections.Generic;
 
-namespace Corlib.Tests.System.IO;
+namespace System.IO;
 
 [TestFixture]
 internal class DirectoryInfoTests {

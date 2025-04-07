@@ -1,9 +1,6 @@
-﻿using System.Diagnostics;
-using System.IO;
-using Corlib.Tests.NUnit;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Corlib.Tests.System.IO;
+namespace System.IO;
 
 [TestFixture]
 internal class PathTest {

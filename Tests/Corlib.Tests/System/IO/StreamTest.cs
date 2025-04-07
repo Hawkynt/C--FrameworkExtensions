@@ -1,11 +1,9 @@
-﻿using System;
-using System.IO;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace Corlib.Tests.System.IO;
+namespace System.IO;
 
 internal class StreamTest {
 

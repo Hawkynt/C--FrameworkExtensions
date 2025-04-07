@@ -40,6 +40,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
   * [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
   * [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
+* System.Buffers
+  * [ArrayPool](https://learn.microsoft.com/dotnet/api/system.buffers.arraypool-1)&lt;T&gt;
 * System.Collections.Concurrent
   * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
   * [ConcurrentDictionary](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2)&lt;TKey, TValue&gt;

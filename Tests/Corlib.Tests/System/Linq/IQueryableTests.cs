@@ -1,9 +1,7 @@
-﻿using System;
-using NUnit.Framework;
-using System.Linq;
+﻿using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
-namespace Corlib.Tests.System.Linq;
+namespace System.Linq;
 
 [TestFixture]
 public class IQueryableTests {

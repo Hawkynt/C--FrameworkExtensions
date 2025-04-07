@@ -1,10 +1,8 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Threading;
 using NUnit.Framework;
 
-namespace FrameworkExtensions.Tests.IO;
+namespace System.IO;
 
 [TestFixture]
 public class FileInfoPolyfillsTests {

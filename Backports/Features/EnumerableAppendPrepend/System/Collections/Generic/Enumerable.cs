@@ -19,7 +19,8 @@
 
 #if !SUPPORTS_ENUMERABLE_APPENDPREPEND
 
-namespace System.Collections.Generic;
+using System.Collections.Generic;
+namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
   /// <summary>

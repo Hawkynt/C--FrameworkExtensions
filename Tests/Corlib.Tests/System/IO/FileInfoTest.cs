@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using Corlib.Tests.NUnit;
 using NUnit.Framework;
 
-namespace Corlib.Tests.System.IO;
+namespace System.IO;
 
 using static TestUtilities;
 using LineBreakMode=StringExtensions.LineBreakMode;
