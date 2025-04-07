@@ -95,17 +95,17 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
   /// <inheritdoc />
   public override void Return(T[] array, bool clearArray = false) {
     if (array == null)
-      return;
+      throw new ArgumentNullException(nameof(array));
 
     var arrayLength = array.Length;
     if (arrayLength == 0)
-      return;
+      throw new ArgumentException("The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
 
     if (arrayLength > this._maxArrayLength)
       return;
 
     if ((arrayLength & (arrayLength-1)) != 0)
-      return; // Not a power of 2 size - discard
+      throw new ArgumentException("The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
 
     var bucketIndex = this.GetBucketIndex(arrayLength);
     if (clearArray)

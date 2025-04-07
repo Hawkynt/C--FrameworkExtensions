@@ -106,12 +106,12 @@ public class ArrayPoolPolyfillTests {
   }
 
   [Test]
-  public void Return_WithNull_DoesNotThrow() {
+  public void Return_WithNull_DoesThrow() {
     // Arrange
     var pool = ArrayPool<int>.Create();
 
     // Act & Assert
-    Assert.DoesNotThrow(() => pool.Return(null));
+    Assert.That(() => pool.Return(null!), Throws.TypeOf<ArgumentNullException>());
   }
 
   [Test]
@@ -193,17 +193,12 @@ public class ArrayPoolPolyfillTests {
   }
 
   [Test]
-  public void Return_NonPowerOfTwoSizedArray_IsNotReused() {
+  public void Return_NonPowerOfTwoSizedArray_ThrowsException() {
     // Arrange
     var pool = ArrayPool<int>.Create();
     var array = new int[123]; // Not a power of 2
 
-    // Act
-    pool.Return(array);
-    var newArray = pool.Rent(123);
-
-    // Assert
-    Assert.AreNotSame(array, newArray);
+    Assert.That(()=> pool.Return(array),Throws.TypeOf<ArgumentException>());
   }
 
   [Test]
