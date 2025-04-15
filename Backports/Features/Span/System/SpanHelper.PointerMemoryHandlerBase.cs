@@ -227,30 +227,62 @@ internal static unsafe partial class SpanHelper {
       // Accumulate differences for remaining bytes
       ulong result = 0;
 
-      // Compare in 8-byte chunks using ulong
-      for (; byteCount >= 8; thisPointer += 8, otherPointer += 8, byteCount -= 8)
-        Or(ref result, LoadQWord(thisPointer) ^ LoadQWord(otherPointer));
-
-      // Compare in 4-byte chunks using uint
-      if (byteCount >= 4) {
-        Or(ref result, LoadDWord(thisPointer) ^ LoadDWord(otherPointer));
-        thisPointer += 4;
-        otherPointer += 4;
-        byteCount -= 4;
+      // Handle blocks of 8 bytes with efficient labels instead of cascading switch
+      switch (byteCount >> 3) {
+        case 0: goto ProcessRemainder;
+        case 1: goto Process8Plus;
+        case 2: goto Process16Plus;
+        case 3: goto Process24Plus;
+        case 4: goto Process32Plus;
+        case 5: goto Process40Plus;
+        case 6: goto Process48Plus;
+        default: goto Process56Plus;
       }
 
-      // Compare in 2-byte chunks using ushort
-      if (byteCount >= 2) {
-        Or(ref result, (ulong)LoadWord(thisPointer) ^ LoadWord(otherPointer));
-        thisPointer += 2;
-        otherPointer += 2;
-        byteCount -= 2;
+      // Process byte blocks with true fall-through logic (no goto in assembly)
+Process56Plus: result |= LoadQWord(thisPointer, 48) ^ LoadQWord(otherPointer, 48);
+Process48Plus: result |= LoadQWord(thisPointer, 40) ^ LoadQWord(otherPointer, 40);
+Process40Plus: result |= LoadQWord(thisPointer, 32) ^ LoadQWord(otherPointer, 32);
+Process32Plus: result |= LoadQWord(thisPointer, 24) ^ LoadQWord(otherPointer, 24);
+Process24Plus: result |= LoadQWord(thisPointer, 16) ^ LoadQWord(otherPointer, 16);
+Process16Plus: result |= LoadQWord(thisPointer, 8) ^ LoadQWord(otherPointer, 8);
+Process8Plus: result |= LoadQWord(thisPointer) ^ LoadQWord(otherPointer);
+
+      var processedBytes = byteCount & ~0x7;
+      thisPointer += processedBytes;
+      otherPointer += processedBytes;
+      byteCount &= 0x7;
+
+ProcessRemainder:
+      switch (byteCount) {
+        case 0: goto ProcessDone;
+        case 1: goto Process1Byte;
+        case 2: goto Process2Bytes;
+        case 3: goto Process3Bytes;
+        case 4: goto Process4Bytes;
+        case 5: goto Process5Bytes;
+        case 6: goto Process6Bytes;
+        case 7: goto Process7Bytes;
       }
 
-      // Handle remaining byte, if any
-      // ReSharper disable once InvertIf
-      if (byteCount > 0)
-        Or(ref result, (ulong)LoadByte(thisPointer) ^ LoadByte(otherPointer));
+Process7Bytes: 
+      result |= (uint)(LoadByte(thisPointer, 6) ^ LoadByte(otherPointer, 6));
+Process6Bytes: 
+      result |= (uint)(LoadWord(thisPointer, 4) ^ LoadWord(otherPointer, 4));
+      goto Process4Bytes;
+Process5Bytes: 
+      result |= (uint)(LoadByte(thisPointer, 4) ^ LoadByte(otherPointer, 4));
+Process4Bytes: 
+      result |= LoadDWord(thisPointer) ^ LoadDWord(otherPointer);
+      goto ProcessDone;
+Process3Bytes: 
+      result |= (uint)(LoadByte(thisPointer, 2) ^ LoadByte(otherPointer, 2));
+Process2Bytes: 
+      result |= (uint)(LoadWord(thisPointer) ^ LoadWord(otherPointer));
+      goto ProcessDone;
+Process1Byte: 
+      result |= (uint)(LoadByte(thisPointer) ^ LoadByte(otherPointer));
+ProcessDone:
 
       return result == 0;
 
