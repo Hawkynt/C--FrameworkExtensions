@@ -47,12 +47,11 @@ public static partial class PrincipalExtensions {
   ///   Console.WriteLine(user.EmailAddress);
   /// </code>
   /// </example>
-  public static IEnumerable<UserPrincipal> ResolveUsersForSamAccountName(string samAccountName, bool allowCached = false) {
-    if (GroupPrincipalExtensions.TryGetGroupFromSamAccountName(samAccountName, out var group))
-      return group.GetAllMembers(allowCached);
-
-    var user = UserPrincipalExtensions.FindDomainUserBySamAccountName(samAccountName, allowCached);
-    return user == null ? [] : new[] { user };
-  }
-
+  public static IEnumerable<UserPrincipal> ResolveUsersForSamAccountName(string samAccountName, bool allowCached = false) 
+    => GroupPrincipalExtensions.TryGetGroupFromSamAccountName(samAccountName, out var group) 
+      ? group.GetAllMembers(allowCached) 
+      : UserPrincipalExtensions.FindDomainUserBySamAccountName(samAccountName, allowCached) is { } up 
+        ? [up] 
+        : []
+  ;
 }

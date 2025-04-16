@@ -28,7 +28,7 @@ namespace System.DirectoryServices.AccountManagement;
 #endif
 public static partial class GroupPrincipalExtensions {
  
-  private static readonly ConcurrentDictionary<string, CachedEnumeration<UserPrincipal>> _GROUP_MEMBER_CACHE = [];
+  private static readonly ConcurrentDictionary<string, CachedEnumeration<UserPrincipal>> _GROUP_MEMBER_CACHE = new(StringComparer.OrdinalIgnoreCase);
 
   /// <summary>
   /// Retrieves all <see cref="UserPrincipal"/> members of the specified <see cref="GroupPrincipal"/>,  
@@ -55,39 +55,19 @@ public static partial class GroupPrincipalExtensions {
   /// </code>
   /// </example>
   public static IEnumerable<UserPrincipal> GetAllMembers(this GroupPrincipal @this, bool allowCached = false) {
-    var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    return GroupPrincipalExtensions._ResolveUserForSamAccountNameInternal(@this.SamAccountName, visited, allowCached);
-  }
-
-  private static IEnumerable<UserPrincipal> _ResolveUserForSamAccountNameInternal(string samAccountName, HashSet<string> visited, bool allowCached) {
-    if (samAccountName.IsNullOrEmpty())
-      return [];
-
-    if (allowCached && GroupPrincipalExtensions._GROUP_MEMBER_CACHE.TryGetValue(samAccountName, out var cachedResult))
+    if (allowCached && GroupPrincipalExtensions._GROUP_MEMBER_CACHE.TryGetValue(@this.SamAccountName, out var cachedResult))
       return cachedResult;
 
-    if (!visited.Add(samAccountName))
-      return [];
-
-    if (GroupPrincipalExtensions.TryGetGroupFromSamAccountName(samAccountName, out var group)) {
-      var allMembers = group
-        .Members.SelectMany(m => GroupPrincipalExtensions._ResolveUserForSamAccountNameInternal(m.SamAccountName, visited, allowCached))
-        .Distinct(new UserPrincipalEqualityComparer())
-        .ToCache();
-
-      GroupPrincipalExtensions._GROUP_MEMBER_CACHE[samAccountName] = allMembers;
-      return allMembers;
-    }
-
-    var userPrincipal = UserPrincipalExtensions.FindDomainUserBySamAccountName(samAccountName);
-    if (userPrincipal != null) {
-      var singleUserArray = new[] { userPrincipal };
-      GroupPrincipalExtensions._GROUP_MEMBER_CACHE[samAccountName] = singleUserArray.ToCache();
-      return singleUserArray;
-    }
-
-    GroupPrincipalExtensions._GROUP_MEMBER_CACHE[samAccountName] = new UserPrincipal[0].ToCache();
-    return [];
+    return GroupPrincipalExtensions._GROUP_MEMBER_CACHE[@this.SamAccountName] = @this
+      .Members
+      .SelectMany(m => m switch {
+        UserPrincipal up => [up],
+        GroupPrincipal gp => GetAllMembers(gp, allowCached),
+        _ => []
+      })
+      .Distinct(u => u.SamAccountName.ToLowerInvariant())
+      .ToCache()
+    ;
   }
 
   /// <summary>
@@ -109,30 +89,8 @@ public static partial class GroupPrincipalExtensions {
   /// </code>
   /// </example>
   public static bool TryGetGroupFromSamAccountName(string samAccountName, out GroupPrincipal group) {
-    var principal = Principal.FindByIdentity(new(ContextType.Domain), IdentityType.SamAccountName, samAccountName);
-
-    if (principal is GroupPrincipal groupPrincipal) {
-      group = groupPrincipal;
-      return true;
-    }
-
-    group = null!;
-    return false;
+    group = Principal.FindByIdentity(new(ContextType.Domain), IdentityType.SamAccountName, samAccountName) as GroupPrincipal;
+    return group != null;
   }
-
-  private sealed class UserPrincipalEqualityComparer : IEqualityComparer<UserPrincipal> {
-    public bool Equals(UserPrincipal x, UserPrincipal y) {
-      if (ReferenceEquals(x, y))
-        return true;
-
-      if (x is null || y is null)
-        return false;
-
-      return x.SamAccountName == y.SamAccountName;
-    }
-
-    public int GetHashCode(UserPrincipal obj)
-      => obj.SamAccountName?.GetHashCode() ?? 0;
-  }
-
+  
 }
