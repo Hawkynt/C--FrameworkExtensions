@@ -18,20 +18,51 @@
 #endregion
 
 #if !SUPPORTS_SPAN
+using System.Buffers;
 
 namespace System.IO;
 
 public static partial class StreamPolyfills {
   public static int Read(this Stream @this, Span<byte> buffer) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      throw new NullReferenceException();
 
     var size = buffer.Length;
-    var doubleBuffer = new byte[size];
-    var result = @this.Read(doubleBuffer, 0, size);
-    doubleBuffer.AsSpan()[..result].CopyTo(buffer[..result]);
-    return result;
+    byte[] token = null;
+    try {
+      token = ArrayPool<byte>.Shared.Rent(size);
+      var bytesRead = @this.Read(token, 0, size);
+      token.AsSpan()[..bytesRead].CopyTo(buffer[..bytesRead]);
+      return bytesRead;
+    } finally {
+      if(token!=null)
+        ArrayPool<byte>.Shared.Return(token);
+    }
+    
   }
+  
+  public static void Write(this Stream @this, ReadOnlySpan<byte> buffer) {
+    if (@this == null)
+      throw new NullReferenceException();
+
+    const int MaxChunkSize = 1024 * 1024; // 1MB
+    byte[] rented = null;
+    try {
+      rented = ArrayPool<byte>.Shared.Rent(MaxChunkSize);
+      var span = rented.AsSpan(0, MaxChunkSize);
+      while (!buffer.IsEmpty) {
+        var chunkSize = Math.Min(buffer.Length, MaxChunkSize);
+        buffer[..chunkSize].CopyTo(span[..chunkSize]);
+        @this.Write(rented, 0, chunkSize);
+        buffer = buffer[chunkSize..];
+      }
+    } finally {
+      if(rented!=null)
+        ArrayPool<byte>.Shared.Return(rented);
+    }
+
+  }
+
 }
 
 #endif

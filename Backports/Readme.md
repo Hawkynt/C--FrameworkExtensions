@@ -129,6 +129,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.writeasync#system-io-stream-writeasync%28system-byte%28%29-system-int32-system-int32-system-threading-cancellationtoken%29)(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
   * Task [CopyToAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.copytoasync#system-io-stream-copytoasync%28system-io-stream-system-int32-system-threading-cancellationtoken%29)(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
   * int [Read](https://learn.microsoft.com/dotnet/api/system.io.stream.read#system-io-stream-read%28system-span%28%28system-byte%29%29%29)(this Stream @this, Span&lt;byte&gt; buffer)
+  * void [Write](https://learn.microsoft.com/dotnet/api/system.io.stream.write#system-io-stream-write%28system-readonlyspan%28%28system-byte%29%29%29)(this Stream @this, ReadOnlySpan&lt;byte&gt; buffer)
 * System.Linq
   * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
   * IEnumerable&lt;TResult&gt; [Cast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.cast)&lt;TResult&gt;(this IEnumerable @this)
