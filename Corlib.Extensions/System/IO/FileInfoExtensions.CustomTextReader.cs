@@ -86,7 +86,7 @@ public static partial class FileInfoExtensions {
       private readonly Func<int> _singleCharacterReader;
       private readonly Func<string> _fullLineReader;
 
-      private Initialized(Stream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
+      private Initialized(FileStream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
         long startPosition;
 
         SaveStartPosition();
@@ -100,6 +100,7 @@ public static partial class FileInfoExtensions {
         usedEncoding ??= Encoding.GetEncoding("ISO-8859-1");
         var decoder = usedEncoding.GetDecoder();
         var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
+        var lineBuilder = new StringBuilder(1024);
         var oneCharacterOnly = new char[1];
         this._singleCharacterReader = ReadOneChar;
 
@@ -206,7 +207,8 @@ public static partial class FileInfoExtensions {
         }
 
         string ReadToEnd() {
-          StringBuilder result = new(1024);
+          lineBuilder.Clear();
+          var result = lineBuilder;
           for (;;) {
             var read = ReadOneChar();
             if (read < 0)
@@ -217,7 +219,8 @@ public static partial class FileInfoExtensions {
         }
 
         string ReadOneLineForOneCharacterTerminals() {
-          StringBuilder result = new(1024);
+          lineBuilder.Clear();
+          var result = lineBuilder;
           var hadContent = false;
           for (;;) {
             var read = ReadOneChar();
@@ -240,7 +243,8 @@ public static partial class FileInfoExtensions {
         }
 
         string ReadOneLine() {
-          StringBuilder result = new(1024);
+          lineBuilder.Clear();
+          var result = lineBuilder;
           var hadContent = false;
           long lastTerminalPosition = -1; // Position of the last terminal node encountered
           LineEndingNode lastTerminalNode = null; // Last terminal node encountered
@@ -293,9 +297,9 @@ public static partial class FileInfoExtensions {
         }
       }
 
-      public Initialized(Stream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
+      public Initialized(FileStream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
-      public Initialized(Stream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
+      public Initialized(FileStream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
         : this(stream, false, encoding, lineBreakMode)
         => Against.ArgumentIsNull(encoding);
 
