@@ -41,9 +41,42 @@ internal static partial class SpanHelper {
     public IMemoryHandler<T> SliceFrom(int offset) => new ManagedArrayHandler<T>(source, start + offset);
 
     /// <inheritdoc />
-    public void CopyTo(IMemoryHandler<T> other, int length) {
-      for (int i = 0, offset = start; i < length; ++offset, ++i)
-        other[i] = source[offset];
+    public unsafe void CopyTo(IMemoryHandler<T> other, int length) {
+      if (length == 0)
+        return;
+
+      fixed (T* token = &source[start]) {
+        var sourcePointer = token;
+        var numberOfFullBlocks = length >> 3;
+        var i = 0;
+
+        switch (length & 7) {
+          case 0: goto case_8or0;
+          case 1: goto case_1;
+          case 2: goto case_2;
+          case 3: goto case_3;
+          case 4: goto case_4;
+          case 5: goto case_5;
+          case 6: goto case_6;
+          case 7: goto case_7;
+          default: return; /* can not happen due to (length & 7) */
+        }
+
+        case_8or0:
+        if (numberOfFullBlocks-- <= 0)
+          return;
+
+        other[i++] = *sourcePointer++;
+        case_7: other[i++] = *sourcePointer++;
+        case_6: other[i++] = *sourcePointer++;
+        case_5: other[i++] = *sourcePointer++;
+        case_4: other[i++] = *sourcePointer++;
+        case_3: other[i++] = *sourcePointer++;
+        case_2: other[i++] = *sourcePointer++;
+        case_1: other[i++] = *sourcePointer++;
+
+        goto case_8or0;
+      }
     }
 
     /// <inheritdoc />
