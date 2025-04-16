@@ -66,6 +66,7 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
     var wantedPosition = this._position;
     var bufferStartInStream = this._bufferStartPositionInStream;
 
+    // check if the buffer is completely invalid
     if (bufferStartInStream >= 0) {
       if (wantedPosition >= bufferStartInStream && wantedPosition < bufferStartInStream + bufferSize)
         return;
@@ -125,8 +126,37 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
     if (count == 0)
       return 0;
 
-    var destSpan = new Span<byte>(dest, offset, count);
-    return this.Read(destSpan);
+    var totalBytesRead = 0;
+    var remaining = count;
+    var destOffset = offset;
+
+    while (remaining > 0) {
+      // Ensure we have data in the buffer
+      this._EnsureBufferLoaded();
+
+      // Calculate how much we can read from the current buffer
+      var streamOffset = (int)(this._position - this._bufferStartPositionInStream);
+      if (streamOffset >= this._bufferLength)
+        break; // End of stream reached
+
+      var bytesAvailable = this._bufferLength - streamOffset;
+      var bytesToRead = Math.Min(bytesAvailable, remaining);
+
+      // Copy data from our buffer to the destination array
+      Buffer.BlockCopy(this._buffer, streamOffset, dest, destOffset, bytesToRead);
+
+      // Update positions and counters
+      this._position += bytesToRead;
+      destOffset += bytesToRead;
+      remaining -= bytesToRead;
+      totalBytesRead += bytesToRead;
+
+      // If we've read less than available or nothing, we're at the end of the stream
+      if (bytesToRead < bytesAvailable || bytesToRead == 0)
+        break;
+    }
+
+    return totalBytesRead;
   }
 
   public override void Write(byte[] src, int offset, int count) {
@@ -140,8 +170,36 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
     if (count == 0)
       return;
 
-    var srcSpan = new ReadOnlySpan<byte>(src, offset, count);
-    this.Write(srcSpan);
+    var remaining = count;
+    var srcOffset = offset;
+
+    while (remaining > 0) {
+      // Ensure we have the correct buffer loaded
+      this._EnsureBufferLoaded();
+
+      // Calculate offset into our buffer
+      var streamOffset = (int)(this._position - this._bufferStartPositionInStream);
+
+      // Calculate how much we can write to the current buffer
+      var bytesAvailable = bufferSize - streamOffset;
+      var bytesToWrite = Math.Min(bytesAvailable, remaining);
+
+      // Copy data from source array to our buffer
+      Buffer.BlockCopy(src, srcOffset, this._buffer, streamOffset, bytesToWrite);
+
+      // Update positions and counters
+      this._position += bytesToWrite;
+      srcOffset += bytesToWrite;
+      remaining -= bytesToWrite;
+
+      // Update buffer state
+      this._bufferLength = Math.Max(this._bufferLength, streamOffset + bytesToWrite);
+      this._isDirty = true;
+
+      // If we've filled our buffer, flush it
+      if (bytesToWrite == bytesAvailable)
+        this._FlushBuffer();
+    }
   }
 
 #if SUPPORTS_SPAN
@@ -194,8 +252,6 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
   public void Write(ReadOnlySpan<byte> buffer) {
 #endif
     Against.False(this.CanWrite);
-
-    throw new NotImplementedException();
 
     if (buffer.IsEmpty)
       return;
@@ -260,21 +316,21 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
       this._position = value;
 
     // If our buffer contains data beyond new length, update it
-    if (this._bufferStartPositionInStream >= 0 &&
-        this._bufferStartPositionInStream + this._bufferLength > value) {
-      if (this._bufferStartPositionInStream < value) {
+    if (this._bufferStartPositionInStream < 0 || this._bufferStartPositionInStream + this._bufferLength <= value)
+      return;
+
+    if (this._bufferStartPositionInStream < value)
         // Partial invalidation - truncate buffer
         this._bufferLength = (int)(value - this._bufferStartPositionInStream);
-      } else {
+    else {
         // Complete invalidation
         this._bufferStartPositionInStream = -1;
         this._bufferLength = 0;
-      }
     }
   }
 
   protected override void Dispose(bool disposing) {
-    if (disposing) {
+    if (disposing)
       try {
         this.Flush();
         if (!dontDisposeUnderlyingStream)
@@ -282,7 +338,6 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
       } finally {
         ArrayPool<byte>.Shared.Return(this._buffer);
       }
-    }
 
     base.Dispose(disposing);
   }
