@@ -85,8 +85,14 @@ public static partial class FileInfoExtensions {
 
       private readonly Func<int> _singleCharacterReader;
       private readonly Func<string> _fullLineReader;
+      private readonly Func<long> _positionGetter;
 
-      private Initialized(FileStream stream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
+      public long Position => this._positionGetter();
+
+      private Initialized(FileStream ustream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
+        var stream = new BufferedStreamEx(ustream);
+
+        this._positionGetter = () => stream.Position;
         long startPosition;
 
         SaveStartPosition();
@@ -202,7 +208,7 @@ public static partial class FileInfoExtensions {
           var bytesReadPastCharacter = bytesRead - bytesUsed;
           if (bytesReadPastCharacter > 0)
             stream.Position -= bytesReadPastCharacter;
-
+          
           return oneCharacterOnly[0];
         }
 

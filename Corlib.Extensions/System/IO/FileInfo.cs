@@ -1968,7 +1968,7 @@ public static partial class FileInfoExtensions {
     if (lineCounter < count)
       return;
 
-    stream.SetLength(stream.Position);
+    stream.SetLength(reader.Position);
   }
 
   /// <summary>
@@ -2145,10 +2145,10 @@ public static partial class FileInfoExtensions {
 
     var writePosition = reader.PreambleSize;
     while (offsetInLines-- > 0 && reader.ReadLine() != null)
-      writePosition = stream.Position;
+      writePosition = reader.Position;
 
     for (;;) {
-      var startOfLine = stream.Position;
+      var startOfLine = reader.Position;
       if (reader.ReadLine() == null)
         break;
 
@@ -2274,7 +2274,7 @@ public static partial class FileInfoExtensions {
       if (line == null)
         break;
 
-      readPosition = stream.Position;
+      readPosition = reader.Position;
       ++lineCounter;
     }
 
@@ -2403,7 +2403,7 @@ public static partial class FileInfoExtensions {
       ;
 
     for (;;) {
-      var startOfLine = stream.Position;
+      var startOfLine = reader.Position;
       if (reader.ReadLine() == null)
         break;
 
