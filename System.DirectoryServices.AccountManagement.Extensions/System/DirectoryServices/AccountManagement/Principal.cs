@@ -26,6 +26,45 @@ namespace System.DirectoryServices.AccountManagement;
 #endif
 public static partial class PrincipalExtensions {
 
+  private static readonly object _contextLock = new();
+  private static PrincipalContext _sharedContext;
+
+  /// <summary>
+  /// Gets a shared domain context for Active Directory operations.
+  /// If the context has been disposed, a new one is automatically created.
+  /// </summary>
+  internal static PrincipalContext SharedDomainContext {
+    get {
+      // Fast path - if context exists and isn't disposed, return it
+      var result = _sharedContext;
+      if (result != null)
+        try {
+          // Try to access a property to check if it's been disposed
+          _ = result.ConnectedServer;
+          return result;
+        } catch (ObjectDisposedException) {
+          // Context was disposed, we'll recreate it below
+        }
+      
+
+      // Slow path - create a new context under lock
+      lock (_contextLock) {
+        // Check again in case another thread created it while we were waiting
+        result = _sharedContext;
+        if (result != null)
+          try {
+            _ = result.ConnectedServer;
+            return result;
+          } catch (ObjectDisposedException) {
+            // Context was disposed, recreate it
+          }
+        
+        _sharedContext = result = new(ContextType.Domain);
+        return result;
+      }
+    }
+  }
+
   /// <summary>
   /// Resolves one or more <see cref="UserPrincipal"/> instances for the specified <paramref name="samAccountName"/>,
   /// handling both individual users and security groups.

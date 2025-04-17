@@ -55,26 +55,24 @@ public static partial class GroupPrincipalExtensions {
   /// </code>
   /// </example>
   public static IEnumerable<UserPrincipal> GetAllMembers(this GroupPrincipal @this, bool allowCached = false) {
-    return allowCached && GroupPrincipalExtensions._GROUP_MEMBER_CACHE.TryGetValue(@this.SamAccountName, out var cachedResult)
-      ? cachedResult
-      : EnumerateGroup(@this, allowCached, new(StringComparer.OrdinalIgnoreCase))
-      ;
+    return EnumerateGroup(@this, allowCached);
 
-    static IEnumerable<UserPrincipal> EnumerateGroup(GroupPrincipal group, bool allowCached, HashSet<string> alreadySeen)
-      =>
-        allowCached && GroupPrincipalExtensions._GROUP_MEMBER_CACHE.TryGetValue(group.SamAccountName, out var cachedResult)
-          ? cachedResult
-          : GroupPrincipalExtensions._GROUP_MEMBER_CACHE[group.SamAccountName] = group
-            .Members
-            .SelectMany(
-              m => m switch {
-                UserPrincipal up when alreadySeen.Add(up.SamAccountName) => [up],
-                GroupPrincipal gp when alreadySeen.Add(gp.SamAccountName) => EnumerateGroup(gp, allowCached, alreadySeen),
-                _ => []
-              }
-            )
-            .ToCache()
-    ;
+    static IEnumerable<UserPrincipal> EnumerateGroup(GroupPrincipal group, bool allowCached, HashSet<string> alreadySeen = null) {
+      if (allowCached && GroupPrincipalExtensions._GROUP_MEMBER_CACHE.TryGetValue(group.SamAccountName, out var cachedResult))
+        return cachedResult;
+
+      alreadySeen ??= new(StringComparer.OrdinalIgnoreCase);
+      return GroupPrincipalExtensions._GROUP_MEMBER_CACHE[group.SamAccountName] = group
+        .Members
+        .SelectMany(
+          m => m switch {
+            UserPrincipal up when alreadySeen.Add(up.SamAccountName) => [up],
+            GroupPrincipal gp when alreadySeen.Add(gp.SamAccountName) => EnumerateGroup(gp, allowCached, alreadySeen),
+            _ => []
+          }
+        )
+        .ToCache();
+    }
   }
 
   /// <summary>
@@ -96,7 +94,7 @@ public static partial class GroupPrincipalExtensions {
   /// </code>
   /// </example>
   public static bool TryGetGroupFromSamAccountName(string samAccountName, out GroupPrincipal group) {
-    group = Principal.FindByIdentity(new(ContextType.Domain), IdentityType.SamAccountName, samAccountName) as GroupPrincipal;
+    group = Principal.FindByIdentity(PrincipalExtensions.SharedDomainContext, IdentityType.SamAccountName, samAccountName) as GroupPrincipal;
     return group != null;
   }
   

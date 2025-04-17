@@ -222,23 +222,20 @@ public static partial class UserPrincipalExtensions {
     static UserPrincipal FindDomainUserByName(string name) => _FindDomainUserBySamAccountName(name) ?? _FindDomainUserByDisplayName(name) ?? FindDomainUserBySurname(name);
 
     static UserPrincipal FindDomainUserBySurname(string surname) {
-      using var context = new PrincipalContext(ContextType.Domain);
       using var searcher = new PrincipalSearcher();
-      var user = new UserPrincipal(context) { Surname = surname };
+      var user = new UserPrincipal(PrincipalExtensions.SharedDomainContext) { Surname = surname };
       searcher.QueryFilter = user;
       return (UserPrincipal)searcher.FindOne();
     }
   }
 
-  private static UserPrincipal _FindDomainUserBySamAccountName(string samAccountName) {
-    using var context = new PrincipalContext(ContextType.Domain);
-    return UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccountName);
-  }
+  private static UserPrincipal _FindDomainUserBySamAccountName(string samAccountName) 
+    => UserPrincipal.FindByIdentity(PrincipalExtensions.SharedDomainContext, IdentityType.SamAccountName, samAccountName)
+    ;
 
   private static UserPrincipal _FindDomainUserByDisplayName(string fullName) {
-    using var context = new PrincipalContext(ContextType.Domain);
     using var searcher = new PrincipalSearcher();
-    var user = new UserPrincipal(context) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim()).ToArray()) };
+    var user = new UserPrincipal(PrincipalExtensions.SharedDomainContext) { DisplayName = string.Join(" ", fullName.Split(',').Select(s => s.Trim()).ToArray()) };
     searcher.QueryFilter = user;
     return (UserPrincipal)searcher.FindOne();
   }
@@ -459,15 +456,7 @@ public static partial class UserPrincipalExtensions {
     public string MailNickName => this._ReadProperty("mailNickName");
     public string ManagedBy => this._ReadProperty("managedBy");
     public string Member => this._ReadProperty("member");
-
-    public IEnumerable<ILDAPGroup> MemberOf {
-      get {
-        var entry = this._GetEntry();
-        foreach (string distinguishedName in entry.Properties["memberOf"])
-          yield return new LDAPGroup(distinguishedName);
-      }
-    }
-
+    public IEnumerable<ILDAPGroup> MemberOf => from string dn in this._GetEntry().Properties["memberOf"] select (ILDAPGroup)new LDAPGroup(dn);
     public string ModifyTimeStamp => this._ReadProperty("modifyTimeStamp");
     public string MsExchExpansionServerName => this._ReadProperty("msExchExpansionServerName");
     public string MsExchHideFromAddressLists => this._ReadProperty("msExchHideFromAddressLists");
@@ -521,11 +510,7 @@ public static partial class UserPrincipalExtensions {
   ///   Console.WriteLine(group.DisplayName);
   /// </code>
   /// </example>
-  public static IEnumerable<ILDAPGroup> GetLDAPGroups(this UserPrincipal @this) {
-    var userEntry = _LDAP_CACHE.GetOrAdd(@this.DistinguishedName);
-    foreach (string distinguishedName in userEntry.Properties["memberOf"])
-      yield return new LDAPGroup(distinguishedName);
-  }
+  public static IEnumerable<ILDAPGroup> GetLDAPGroups(this UserPrincipal @this) => from string distinguishedName in _LDAP_CACHE.GetOrAdd(@this.DistinguishedName).Properties["memberOf"] select (ILDAPGroup)new LDAPGroup(distinguishedName);
 
   /// <summary>
   /// Recursively retrieves all LDAP groups that the specified <see cref="UserPrincipal"/> is a member of,
