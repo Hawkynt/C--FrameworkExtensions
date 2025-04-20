@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System;
 
-internal static unsafe partial class SpanHelper {
+unsafe partial class SpanHelper {
   /// <summary>
   ///   Provides a mechanism to pin a managed array in memory, allowing for safe and direct access to its elements via an
   ///   unmanaged pointer.

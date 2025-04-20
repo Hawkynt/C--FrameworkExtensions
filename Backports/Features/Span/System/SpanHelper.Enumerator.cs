@@ -24,7 +24,7 @@ using System.Collections.Generic;
 
 namespace System;
 
-internal static partial class SpanHelper {
+partial class SpanHelper {
   /// <summary>
   ///   Initializes a new instance of the <see cref="Enumerator{T}" /> class, which can iterate over a portion of a memory
   ///   buffer managed by an <see cref="IMemoryHandler{T}" />.

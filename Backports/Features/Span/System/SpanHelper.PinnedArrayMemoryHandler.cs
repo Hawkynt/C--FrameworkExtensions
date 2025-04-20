@@ -22,7 +22,7 @@
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System;
 
-internal static unsafe partial class SpanHelper {
+unsafe partial class SpanHelper {
   /// <summary>
   ///   Provides a memory handler that pins a managed array in memory, allowing for safe and performant access
   ///   to its elements as if they were unmanaged, using a pointer.

@@ -19,17 +19,14 @@
 
 #if !SUPPORTS_SPAN
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 namespace System;
 
-internal static unsafe partial class SpanHelper {
-
-  [StructLayout(LayoutKind.Explicit,Size = 64)]
-  private struct Block64;
-
+unsafe partial class SpanHelper {
   /// <summary>
   ///   Provides a base class for handling memory using a pointer to a block of memory of type <typeparamref name="T" />.
   /// </summary>
@@ -47,22 +44,19 @@ internal static unsafe partial class SpanHelper {
     protected T* Pointer => pointer;
 
     private void CopyTo(PointerMemoryHandlerBase<T> other, int count) {
-      switch (count) {
-        case < 0:
-          throw new ArgumentOutOfRangeException(nameof(count));
-        case < BYTE_COPY_THRESHOLD_IN_ITEMS:
-          CopyElements(pointer, other.Pointer, count);
-          break;
-        default:
-          var elementSize = Marshal.SizeOf(typeof(T));
-          var totalBytes = elementSize * count;
+      if (count < 0)
+        throw new ArgumentOutOfRangeException(nameof(count));
+      if (count < BYTE_COPY_THRESHOLD_IN_ITEMS || !IsValueType<T>())
+        CopyElements(pointer, other.Pointer, count);
+      else {
+        var bytes = SizeOf<T>() * count;
 #if SUPPORTS_BUFFER_MEMORYCOPY
-          Buffer.MemoryCopy(pointer, other.Pointer, totalBytes, totalBytes);
+        Buffer.MemoryCopy(pointer, other.Pointer, bytes, bytes);
 #else
-          CopyBytes((byte*)pointer, (byte*)other.Pointer, totalBytes);
+        CopyBytes((byte*)pointer, (byte*)other.Pointer, bytes);
 #endif
-          break;
       }
+
       return;
       
       [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
@@ -80,73 +74,305 @@ internal static unsafe partial class SpanHelper {
           ((Block64*)target)[7] = ((Block64*)source)[7];
         }
 
-        // Copy chunks of 64 bytes at a time
-        for (; totalBytes >= 64; source += 64, target += 64, totalBytes -= 64)
-          *(Block64*)target = *(Block64*)source;
-
-        // Copy chunks of 8 bytes (ulong) at a time
-        for (; totalBytes >= 8; source += 8, target += 8, totalBytes -= 8)
-          *(long*)target = *(long*)source;
-
-        // Copy remaining 4 bytes (uint) if possible
-        if (totalBytes >= 4) {
-          *(int*)target = *(int*)source;
-          totalBytes -= 4;
-          source += 4;
-          target += 4;
+        // count is < 512 from here on
+        var iterations64 = totalBytes / 64;
+        switch (iterations64) {
+          case 0: goto CopyLessThan64;
+          case 1: goto Copy64;
+          case 2: goto Copy128;
+          case 3: goto Copy192;
+          case 4: goto Copy256;
+          case 5: goto Copy320;
+          case 6: goto Copy384;
+          case 7: goto Copy448;
+          default: goto CopyLessThan64; // Avoid compiler warning and trigger optimization - Never gonna get here
         }
 
-        // Copy remaining 2 bytes (ushort) if possible
-        if (totalBytes >= 2) {
-          *(short*)target = *(short*)source;
-          totalBytes -= 2;
-          source += 2;
-          target += 2;
+Copy448: ((Block64*)target)[6] = ((Block64*)source)[6];
+Copy384: ((Block64*)target)[5] = ((Block64*)source)[5];
+Copy320: ((Block64*)target)[4] = ((Block64*)source)[4];
+Copy256: ((Block64*)target)[3] = ((Block64*)source)[3];
+Copy192: ((Block64*)target)[2] = ((Block64*)source)[2];
+Copy128: ((Block64*)target)[1] = ((Block64*)source)[1];
+Copy64: *(Block64*)target = *(Block64*)source;
+
+        iterations64 *= 64;
+        source += iterations64;
+        target += iterations64;
+        totalBytes -= iterations64;
+
+CopyLessThan64:
+        // count is < 64 from here on
+        switch (totalBytes) {
+          case 0: goto CopyDone;
+          case 1: goto Copy1;
+          case 2: goto Copy2;
+          case 3: goto Copy3;
+          case 4: goto Copy4;
+          case 5: goto Copy5;
+          case 6: goto Copy6;
+          case 7: goto Copy7;
+          case 8: goto Copy8;
+          case 9: goto Copy9;
+          case 10: goto Copy10;
+          case 11: goto Copy11;
+          case 12: goto Copy12;
+          case 13: goto Copy13;
+          case 14: goto Copy14;
+          case 15: goto Copy15;
+          case 16: goto Copy16;
+          case 17: goto Copy17;
+          case 18: goto Copy18;
+          case 19: goto Copy19;
+          case 20: goto Copy20;
+          case 21: goto Copy21;
+          case 22: goto Copy22;
+          case 23: goto Copy23;
+          case 24: goto Copy24;
+          case 25: goto Copy25;
+          case 26: goto Copy26;
+          case 27: goto Copy27;
+          case 28: goto Copy28;
+          case 29: goto Copy29;
+          case 30: goto Copy30;
+          case 31: goto Copy31;
+          case 32: goto Copy32;
+          case 33: goto Copy33;
+          case 34: goto Copy34;
+          case 35: goto Copy35;
+          case 36: goto Copy36;
+          case 37: goto Copy37;
+          case 38: goto Copy38;
+          case 39: goto Copy39;
+          case 40: goto Copy40;
+          case 41: goto Copy41;
+          case 42: goto Copy42;
+          case 43: goto Copy43;
+          case 44: goto Copy44;
+          case 45: goto Copy45;
+          case 46: goto Copy46;
+          case 47: goto Copy47;
+          case 48: goto Copy48;
+          case 49: goto Copy49;
+          case 50: goto Copy50;
+          case 51: goto Copy51;
+          case 52: goto Copy52;
+          case 53: goto Copy53;
+          case 54: goto Copy54;
+          case 55: goto Copy55;
+          case 56: goto Copy56;
+          case 57: goto Copy57;
+          case 58: goto Copy58;
+          case 59: goto Copy59;
+          case 60: goto Copy60;
+          case 61: goto Copy61;
+          case 62: goto Copy62;
+          case 63: goto Copy63;
+          default: goto CopyDone;
         }
 
-        // Copy remaining byte if necessary
-        if (totalBytes >= 1)
-          *target = *source;
+Copy63:
+        target[62] = source[62];
+Copy62:
+        *(short*)(target + 60) = *(short*)(source + 60);
+        goto Copy60;
+Copy61:
+        target[60] = source[60];
+Copy60:
+        *(int*)(target + 56) = *(int*)(source + 56);
+        goto Copy56;
+Copy59:
+        target[58] = source[58];
+Copy58:
+        *(short*)(target + 56) = *(short*)(source + 56);
+        goto Copy56;
+Copy57:
+        target[56] = source[56];
+Copy56:
+        *(long*)(target + 48) = *(long*)(source + 48);
+        goto Copy48;
+Copy55:
+        target[54] = source[54];
+Copy54:
+        *(short*)(target + 52) = *(short*)(source + 52);
+        goto Copy52;
+Copy53:
+        target[52] = source[52];
+Copy52:
+        *(int*)(target + 48) = *(int*)(source + 48);
+        goto Copy48;
+Copy51:
+        target[50] = source[50];
+Copy50:
+        *(short*)(target + 48) = *(short*)(source + 48);
+        goto Copy48;
+Copy49:
+        target[48] = source[48];
+Copy48:
+        *(Block16*)(target + 32) = *(Block16*)(source + 32);
+        goto Copy32;
+Copy47:
+        target[46] = source[46];
+Copy46:
+        *(short*)(target + 44) = *(short*)(source + 44);
+        goto Copy44;
+Copy45:
+        target[44] = source[44];
+Copy44:
+        *(int*)(target + 40) = *(int*)(source + 40);
+        goto Copy40;
+Copy43:
+        target[42] = source[42];
+Copy42:
+        *(short*)(target + 40) = *(short*)(source + 40);
+        goto Copy40;
+Copy41:
+        target[40] = source[40];
+Copy40:
+        *(long*)(target + 32) = *(long*)(source + 32);
+        goto Copy32;
+Copy39:
+        target[38] = source[38];
+Copy38:
+        *(short*)(target + 36) = *(short*)(source + 36);
+        goto Copy36;
+Copy37:
+        target[36] = source[36];
+Copy36:
+        *(int*)(target + 32) = *(int*)(source + 32);
+        goto Copy32;
+Copy35:
+        target[34] = source[34];
+Copy34:
+        *(short*)(target + 32) = *(short*)(source + 32);
+        goto Copy32;
+Copy33:
+        target[32] = source[32];
+Copy32:
+        *(Block32*)target = *(Block32*)source;
+        goto CopyDone;
+Copy31:
+        target[30] = source[30];
+Copy30:
+        *(short*)(target + 28) = *(short*)(source + 28);
+        goto Copy28;
+Copy29:
+        target[28] = source[28];
+Copy28:
+        *(int*)(target + 24) = *(int*)(source + 24);
+        goto Copy24;
+Copy27:
+        target[26] = source[26];
+Copy26:
+        *(short*)(target + 24) = *(short*)(source + 24);
+        goto Copy24;
+Copy25:
+        target[24] = source[24];
+Copy24:
+        *(long*)(target + 16) = *(long*)(source + 16);
+        goto Copy16;
+Copy23:
+        target[22] = source[22];
+Copy22:
+        *(short*)(target + 20) = *(short*)(source + 20);
+        goto Copy20;
+Copy21:
+        target[20] = source[20];
+Copy20:
+        *(int*)(target + 16) = *(int*)(source + 16);
+        goto Copy16;
+Copy19:
+        target[18] = source[18];
+Copy18:
+        *(short*)(target + 16) = *(short*)(source + 16);
+        goto Copy16;
+Copy17:
+        target[16] = source[16];
+Copy16:
+        *(Block16*)target = *(Block16*)source;
+        goto CopyDone;
+Copy15:
+        target[14] = source[14];
+Copy14:
+        *(short*)(target + 12) = *(short*)(source + 12);
+        goto Copy12;
+Copy13:
+        target[12] = source[12];
+Copy12:
+        *(int*)(target + 8) = *(int*)(source + 8);
+        goto Copy8;
+Copy11:
+        target[10] = source[10];
+Copy10:
+        *(short*)(target + 8) = *(short*)(source + 8);
+        goto Copy8;
+Copy9:
+        target[8] = source[8];
+Copy8:
+        *(long*)target = *(long*)source;
+        goto CopyDone;
+Copy7:
+        target[6] = source[6];
+Copy6:
+        *(short*)(target + 4) = *(short*)(source + 4);
+        goto Copy4;
+Copy5:
+        target[4] = source[4];
+Copy4:
+        *(int*)target = *(int*)source;
+        goto CopyDone;
+Copy3:
+        target[2] = source[2];
+Copy2:
+        *(short*)target = *(short*)source;
+        goto CopyDone;
+Copy1:
+        *target = *source;
+CopyDone: 
+        ;
       }
 
       [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
       void CopyElements(T* source, T* target, int count) {
-        for (;;)
-          switch (count) {
-            case 0: goto ElementsLeft0;
-            case 1: goto ElementsLeft1;
-            case 2: goto ElementsLeft2;
-            case 3: goto ElementsLeft3;
-            case 4: goto ElementsLeft4;
-            case 5: goto ElementsLeft5;
-            case 6: goto ElementsLeft6;
-            case 7: goto ElementsLeft7;
-            default:
-              do {
-                *target = *source;
-                target[1] = source[1];
-                target[2] = source[2];
-                target[3] = source[3];
-                target[4] = source[4];
-                target[5] = source[5];
-                target[6] = source[6];
-                target[7] = source[7];
-                source += 8;
-                target += 8;
-                count -= 8;
-              } while (count >= 8);
+        if (count == 0)
+          goto CopyDone;
 
-              continue;
-          }
+        // Calculate iterations for chunks of 8 with bit trick (length / 8)
+        var iterations = count >> 3;
 
-        ElementsLeft7: target[6] = source[6];
-        ElementsLeft6: target[5] = source[5];
-        ElementsLeft5: target[4] = source[4];
-        ElementsLeft4: target[3] = source[3];
-        ElementsLeft3: target[2] = source[2];
-        ElementsLeft2: target[1] = source[1];
-        ElementsLeft1: target[0] = source[0];
-        ElementsLeft0: ;
+        // Check remainder using bit trick (length % 8)
+        switch (count & 7) {
+          case 0: goto Copy0or8;
+          case 7: goto Copy7;
+          case 6: goto Copy6;
+          case 5: goto Copy5;
+          case 4: goto Copy4;
+          case 3: goto Copy3;
+          case 2: goto Copy2;
+          case 1: goto Copy1;
+          default: goto CopyDone; // Avoid compiler warning and trigger optimization - Never gonna get here
+        }
+
+        Copy0or8:
+        if (iterations-- <= 0)
+          goto CopyDone;
+        target[7] = source[7];
+        Copy7:
+        target[6] = source[6];
+        Copy6:
+        target[5] = source[5];
+        Copy5:
+        target[4] = source[4];
+        Copy4:
+        target[3] = source[3];
+        Copy3:
+        target[2] = source[2];
+        Copy2:
+        target[1] = source[1];
+        Copy1:
+        *target = *source;
+        goto Copy0or8;
+        CopyDone: ;
       }
     }
 

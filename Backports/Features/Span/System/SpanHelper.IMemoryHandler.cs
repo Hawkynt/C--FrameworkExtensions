@@ -21,7 +21,7 @@
 
 namespace System;
 
-internal static partial class SpanHelper {
+partial class SpanHelper {
   /// <summary>
   ///   Defines a mechanism for handling memory buffers that contain elements of type <typeparamref name="T" />.
   /// </summary>

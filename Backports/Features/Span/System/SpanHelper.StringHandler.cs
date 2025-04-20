@@ -17,7 +17,7 @@
 
 namespace System;
 
-internal static partial class SpanHelper {
+partial class SpanHelper {
   public class StringHandler(string source, int start) : IMemoryHandler<char> {
     #region Implementation of IMemoryHandler<char>
 
