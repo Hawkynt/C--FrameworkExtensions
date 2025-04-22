@@ -98,6 +98,10 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * int [LastIndexOf](https://learn.microsoft.com/dotnet/api/system.memoryextensions.lastindexof#system-memoryextensions-lastindexof-1%28system-readonlyspan%28%28-0%29%29-0%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, T value)
   * int [LastIndexOf](https://learn.microsoft.com/dotnet/api/system.memoryextensions.lastindexof#system-memoryextensions-lastindexof-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
   * int [LastIndexOf](https://learn.microsoft.com/dotnet/api/system.memoryextensions.lastindexof#system-memoryextensions-lastindexof%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-stringcomparison%29)(this ReadOnlySpan&lt;char&gt; span, ReadOnlySpan&lt;char&gt; value, StringComparison comparisonType)
+* System.Collections.Concurrent.ConcurrentQueue
+  * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1.clear)&lt;T&gt;(this ConcurrentQueue&lt;T&gt;)
+* System.Collections.Concurrent.ConcurrentStack
+  * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentstack-1.clear)&lt;T&gt;(this ConcurrentStack&lt;T&gt;)
 * System.Collections.Generic.IEnumerable
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
