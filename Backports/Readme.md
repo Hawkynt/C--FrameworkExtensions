@@ -46,6 +46,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
   * [ConcurrentDictionary](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2)&lt;TKey, TValue&gt;
   * [ConcurrentQueue](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1)&lt;T&gt;
+  * [ConcurrentStack](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentstack-1)&lt;T&gt;
 * System.Collections.Generic
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
