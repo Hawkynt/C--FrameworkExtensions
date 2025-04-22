@@ -21,7 +21,7 @@
 
 namespace System;
 
-internal static unsafe partial class SpanHelper {
+unsafe partial class SpanHelper {
   /// <summary>
   ///   Represents a memory handler for unmanaged memory blocks, providing access to elements of type
   ///   <typeparamref name="T" /> using a pointer.

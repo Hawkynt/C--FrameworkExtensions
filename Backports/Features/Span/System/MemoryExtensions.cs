@@ -16,7 +16,6 @@
 #if !SUPPORTS_SPAN
 
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace System;
 
@@ -57,10 +56,10 @@ public static partial class MemoryExtensions {
     if (spanLength <= 0)
       return true;
 
-    if (typeof(T).IsValueType && span.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
-      return spanHandler.CompareAsBytesTo(otherHandler, spanLength * Marshal.SizeOf(typeof(T)));
+    if (SpanHelper.IsValueType<T>() && span.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
+      return spanHandler.CompareAsBytesTo(otherHandler, spanLength * SpanHelper.SizeOf<T>());
 
-    if (typeof(T) == typeof(char))
+    if (SpanHelper.IsChar<T>())
       return span.ToString() == other.ToString();
 
     for (var i = 0; i < spanLength; ++i)
@@ -81,7 +80,7 @@ public static partial class MemoryExtensions {
     if (span.Length != other.Length)
       return false;
 
-    if (typeof(T).IsValueType)
+    if (SpanHelper.IsValueType<T>())
       if (comparer is null || Equals(comparer, EqualityComparer<T>.Default)) {
         for (var i = 0; i < span.Length; ++i)
           if (!EqualityComparer<T>.Default.Equals(span[i], other[i]))
@@ -124,7 +123,7 @@ public static partial class MemoryExtensions {
     if (needleLength > span.Length)
       return -1;
 
-    if (typeof(T) == typeof(char))
+    if (SpanHelper.IsChar<T>())
       return span.ToString().IndexOf(value.ToString(), StringComparison.Ordinal);
 
     for (var i = 0; i <= span.Length - needleLength; ++i)
@@ -168,7 +167,7 @@ public static partial class MemoryExtensions {
     if (needleLength > span.Length)
       return -1;
 
-    if (typeof(T) == typeof(char))
+    if (SpanHelper.IsChar<T>())
       return span.ToString().LastIndexOf(value.ToString(), StringComparison.Ordinal);
 
     for (var i = span.Length - needleLength; i >= 0 ; --i)

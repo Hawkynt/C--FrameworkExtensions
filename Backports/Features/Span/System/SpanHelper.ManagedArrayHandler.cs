@@ -21,7 +21,7 @@
 
 namespace System;
 
-internal static partial class SpanHelper {
+partial class SpanHelper {
   /// <summary>
   ///   Provides a managed array implementation of <see cref="IMemoryHandler{T}" />, allowing for array operations and
   ///   manipulations based on the <see cref="IMemoryHandler{T}" /> interface.
