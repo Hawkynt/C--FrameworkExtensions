@@ -259,11 +259,9 @@ public static partial class ConcurrentQueueExtensions {
   }
 
   private static Span<T> _PullCore<T>(ConcurrentQueue<T> queue, Span<T> target) {
-    for (var i = 0; i < target.Length; ++i) {
-      ref var slot = ref target[i];
-      if (!queue.TryDequeue(out slot))
+    for (var i = 0; i < target.Length; ++i)
+      if (!queue.TryDequeue(out target[i]))
         return i == 0 ? Span<T>.Empty : target[..i];
-    }
 
     return target;
   }
