@@ -19,8 +19,6 @@
 
 using Guard;
 
-#if SUPPORTS_CONCURRENT_COLLECTIONS
-
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentQueueExtensions {
@@ -35,5 +33,3 @@ public static partial class ConcurrentQueueExtensions {
     while (@this.TryDequeue(out _)) { }
   }
 }
-
-#endif

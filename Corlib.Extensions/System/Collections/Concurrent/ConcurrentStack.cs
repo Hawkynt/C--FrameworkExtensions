@@ -17,8 +17,6 @@
 
 #endregion
 
-#if SUPPORTS_CONCURRENT_COLLECTIONS
-
 using System.Collections.Generic;
 using System.Threading;
 using Guard;
@@ -54,5 +52,3 @@ public static partial class ConcurrentStackExtensions {
       @this.Push(item);
   }
 }
-
-#endif
