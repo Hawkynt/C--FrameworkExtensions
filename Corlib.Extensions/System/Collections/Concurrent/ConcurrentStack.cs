@@ -290,10 +290,9 @@ public static partial class ConcurrentStackExtensions {
 
   private static Span<T> _PullCore<T>(ConcurrentStack<T> queue, Span<T> target) {
     for (var i = 0; i < target.Length; ++i) {
-      if (!queue.TryPop(out var slot))
+      ref var slot = ref target[i];
+      if (!queue.TryPop(out slot))
         return i == 0 ? Span<T>.Empty : target[..i];
-
-      target[i] = slot;
     }
 
     return target;
