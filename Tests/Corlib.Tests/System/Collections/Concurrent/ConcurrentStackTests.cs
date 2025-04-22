@@ -1,34 +1,13 @@
 ﻿using NUnit.Framework;
 
-namespace System.Collections.Generic;
+namespace System.Collections.Concurrent;
 
 [TestFixture]
-internal class StackTests {
-
-  [Test]
-  public static void ExchangeTest() {
-    var stack = new Stack<int>();
-    stack.Push(1);
-
-    Assert.That(stack.ToArray(), Is.EquivalentTo(new[]{ 1 }));
-
-    stack.Exchange(2);
-    Assert.That(stack.ToArray(), Is.EquivalentTo(new[] { 2 }));
-
-    Assert.That(()=>((Stack<int>)null!).Exchange(2), Throws.Exception.TypeOf<NullReferenceException>());
-
-    stack.Pop();
-    Assert.That(()=>stack.Exchange(2),Throws.InvalidOperationException);
-
-    stack.Push(1);
-    stack.Push(2);
-    stack.Exchange(3);
-    Assert.That(stack.ToArray(), Is.EquivalentTo(new[] { 3, 1 }));
-  }
+internal class ConcurrentStackTests {
 
   [Test]
   public void PullTo_Span_ReturnsTopToBottom() {
-    var stack = new Stack<int>();
+    var stack = new ConcurrentStack<int>();
     stack.Push(1);
     stack.Push(2);
     stack.Push(3);
@@ -43,7 +22,7 @@ internal class StackTests {
 
   [Test]
   public void PullTo_Array_CopiesFromTop() {
-    var stack = new Stack<string>();
+    var stack = new ConcurrentStack<string>();
     stack.Push("A");
     stack.Push("B");
 
@@ -57,7 +36,7 @@ internal class StackTests {
 
   [Test]
   public void PullTo_ArrayWithOffset_FillsCorrectRegion() {
-    var stack = new Stack<char>();
+    var stack = new ConcurrentStack<char>();
     stack.Push('Z');
     stack.Push('Y');
     stack.Push('X');
@@ -73,7 +52,7 @@ internal class StackTests {
 
   [Test]
   public void PullTo_ArrayWithOffsetAndMax_PullsLimited() {
-    var stack = new Stack<int>();
+    var stack = new ConcurrentStack<int>();
     stack.Push(1);
     stack.Push(2);
     stack.Push(3);
@@ -88,7 +67,7 @@ internal class StackTests {
 
   [Test]
   public void PullAll_ReturnsAllTopToBottom() {
-    var stack = new Stack<string>();
+    var stack = new ConcurrentStack<string>();
     stack.Push("C");
     stack.Push("B");
     stack.Push("A");
@@ -101,7 +80,7 @@ internal class StackTests {
 
   [Test]
   public void Pull_MaxCount_LimitedToAvailable() {
-    var stack = new Stack<int>();
+    var stack = new ConcurrentStack<int>();
     stack.Push(1);
     stack.Push(2);
 
@@ -114,14 +93,14 @@ internal class StackTests {
 
   [Test]
   public void Pull_EmptyStack_ReturnsEmpty() {
-    var stack = new Stack<string>();
+    var stack = new ConcurrentStack<string>();
     var result = stack.Pull(5);
     Assert.That(result, Is.Empty);
   }
 
   [Test]
   public void PullTo_ZeroBuffer_DoesNotCrash() {
-    var stack = new Stack<int>();
+    var stack = new ConcurrentStack<int>();
     Span<int> empty = [];
     var result = stack.PullTo(empty);
     Assert.That(result.Length, Is.EqualTo(0));
