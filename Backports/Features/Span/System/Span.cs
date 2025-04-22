@@ -44,6 +44,8 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   public bool IsEmpty => this.Length == 0;
 
+  public static Span<T> Empty => [];
+
   public ref T this[int index] {
     get {
       if ((uint)index >= (uint)this.Length)

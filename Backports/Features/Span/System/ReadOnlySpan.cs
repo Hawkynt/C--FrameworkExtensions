@@ -45,6 +45,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   public int Length { get; }
 
   public bool IsEmpty => this.Length == 0;
+  public static ReadOnlySpan<T> Empty => [];
 
   public ref readonly T this[int index] {
     get {
