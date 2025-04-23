@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 
 namespace System.Collections.Concurrent;
 
@@ -78,16 +79,40 @@ internal class ConcurrentQueueTests {
   }
 
   [Test]
-  public void Pull_MaxCount_ReturnsUpToThatMany() {
+  [TestCase(2)]
+  [TestCase(63)]
+  [TestCase(64)]
+  [TestCase(65)]
+  [TestCase(127)]
+  [TestCase(128)]
+  [TestCase(129)]
+  [TestCase(2052)]
+  [TestCase(65535)]
+  [TestCase(65536)]
+  [TestCase(65537)]
+  [TestCase(1<<24)]
+  public void Pull_MaxCount_ReturnsUpToThatMany(int maxCount) {
+    var items = Enumerable.Range(1, maxCount).ToArray();
+    items.Shuffle();
+
     var queue = new ConcurrentQueue<int>();
-    queue.Enqueue(5);
-    queue.Enqueue(6);
+    foreach(var item in items)
+      queue.Enqueue(item);
 
-    var result = queue.Pull(3);
+    // pull less items than available
+    var lessItemCount = maxCount / 2;
+    var lessItems = queue.Pull(lessItemCount);
 
-    Assert.That(result.Length, Is.EqualTo(2));
-    Assert.That(result[0], Is.EqualTo(5));
-    Assert.That(result[1], Is.EqualTo(6));
+    // pull more items than available
+    var moreItemCount = maxCount - lessItemCount;
+    var moreItems = queue.Pull(moreItemCount);
+
+
+    Assert.That(lessItems.Length,Is.EqualTo(lessItemCount));
+    Assert.That(lessItems,Is.EqualTo(items.Take(lessItemCount).ToArray()));
+
+    Assert.That(moreItems.Length, Is.LessThanOrEqualTo(moreItemCount));
+    Assert.That(moreItems, Is.EqualTo(items.Skip(lessItemCount).ToArray()));
   }
 
   [Test]

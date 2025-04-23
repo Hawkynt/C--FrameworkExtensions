@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -281,11 +282,70 @@ public static partial class ConcurrentStackExtensions {
     Against.ThisIsNull(@this);
     Against.CountBelowOrEqualZero(maxCount);
 
-    var result = new T[maxCount];
-    var span = result.AsSpan();
-    var actual = PullTo(@this, span).Length;
+    const int FIRST_BLOCK_SIZE = 64;
+    if (maxCount <= FIRST_BLOCK_SIZE) {
+      using var array = ArrayPool<T>.Shared.Use(maxCount);
+      return _PullCore(@this, array).ToArray();
+    }
 
-    return actual == result.Length ? result : result.Splice(0, actual);
+    const int MAX_PARTS = 26; // log2 int.maxValue except the 64 we already use at start, because array can't grow beyond that in C#
+    var chunks = ArrayPool<T[]>.Shared.Rent(MAX_PARTS);
+
+    var itemCount = 0;
+    var currentChunkIndex = -1;
+    var indexInCurrentChunk = 0;
+
+    while (maxCount-- > 0 && @this.TryPop(out var item)) {
+
+      // no parts yet, allocate the first part
+      if (currentChunkIndex < 0) {
+        currentChunkIndex = 0;
+
+        var array = ArrayPool<T>.Shared.Rent(FIRST_BLOCK_SIZE);
+        chunks[currentChunkIndex] = array;
+      }
+
+      // current part is full
+      if (indexInCurrentChunk >= chunks[currentChunkIndex].Length) {
+
+        // avoid overpooling by calculating how many items we still need to store at most, capping at double the size of the previous segment
+        var newSize = Math.Min(maxCount + 1, chunks[currentChunkIndex].Length * 2);
+        var array = ArrayPool<T>.Shared.Rent(newSize);
+        chunks[++currentChunkIndex] = array;
+        indexInCurrentChunk = 0;
+      }
+
+      chunks[currentChunkIndex][indexInCurrentChunk++] = item;
+      ++itemCount;
+    }
+
+    // no items pulled
+    if (currentChunkIndex < 0)
+      return [];
+
+    // copy to result
+    var result = new T[itemCount];
+    itemCount = 0;
+
+    // copy full parts
+    for (var i = 0; i < currentChunkIndex; ++i) {
+      var part = chunks[i].AsSpan();
+      part.CopyTo(result.AsSpan(itemCount));
+      itemCount += part.Length;
+    }
+
+    // copy current (partial) part
+    chunks[currentChunkIndex].AsSpan(0, indexInCurrentChunk).CopyTo(result.AsSpan(itemCount));
+
+    // release all pooled arrays
+    for (var i = 0; i <= currentChunkIndex; ++i) {
+      ArrayPool<T>.Shared.Return(chunks[i]);
+      chunks[i] = null;
+    }
+
+    ArrayPool<T[]>.Shared.Return(chunks);
+
+    return result;
   }
 
   private static Span<T> _PullCore<T>(ConcurrentStack<T> queue, Span<T> target) {
