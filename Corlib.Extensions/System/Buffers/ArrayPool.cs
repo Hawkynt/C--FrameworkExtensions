@@ -82,7 +82,7 @@ public static partial class ArrayPool {
     /// </exception>
     public Span<T> this[Range range] {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => this.Array.AsSpan()[range];
+      get => this.AsSpan()[range];
     }
 
     /// <summary>
@@ -96,14 +96,14 @@ public static partial class ArrayPool {
     /// </exception>
     public Span<T> this[Index start, int length] {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => this.Array.AsSpan(start.GetOffset(this.Length), length);
+      get => this.AsSpan().Slice(start.GetOffset(this.Length), length);
     }
 
     /// <summary>
     /// Returns a <see cref="Span{T}"/> over the entire array.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan() => this.Array.AsSpan();
+    public Span<T> AsSpan() => this.Array.AsSpan(0, this.Length);
 
     /// <summary>
     /// Returns a <see cref="Span{T}"/> that starts at a specified index.
@@ -114,7 +114,7 @@ public static partial class ArrayPool {
     /// Thrown if <paramref name="start"/> is outside the array bounds.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start) => this.Array.AsSpan(start);
+    public Span<T> AsSpan(int start) => this.Array.AsSpan(start, this.Length - start);
 
     /// <summary>
     /// Returns a <see cref="Span{T}"/> over a range of the array starting at a specified index and length.
@@ -126,13 +126,13 @@ public static partial class ArrayPool {
     /// Thrown if the range exceeds array bounds.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start, int length) => this.Array.AsSpan(start, length);
+    public Span<T> AsSpan(int start, int length) => this.AsSpan().Slice(start, length);
 
     /// <summary>
     /// Returns a <see cref="ReadOnlySpan{T}"/> over the entire array.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<T> AsReadOnlySpan() => this.Array.AsSpan();
+    public ReadOnlySpan<T> AsReadOnlySpan() => this.AsSpan();
     
     #region IDisposable
 
@@ -145,19 +145,19 @@ public static partial class ArrayPool {
     /// Implicitly converts a <see cref="RentArray{T}"/> to the underlying <see cref="Array"/>.
     /// </summary>
     /// <param name="this">The rented array.</param>
-    public static implicit operator T[](RentArray<T> @this) => @this.Array;
+    public static implicit operator T[](RentArray<T> @this) => @this.AsSpan().ToArray();
 
     /// <summary>
     /// Implicitly converts a <see cref="RentArray{T}"/> to a <see cref="Span{T}"/>.
     /// </summary>
     /// <param name="this">The rented array.</param>
-    public static implicit operator Span<T>(RentArray<T> @this) => @this.Array.AsSpan();
+    public static implicit operator Span<T>(RentArray<T> @this) => @this.AsSpan();
 
     /// <summary>
     /// Implicitly converts a <see cref="RentArray{T}"/> to a <see cref="ReadOnlySpan{T}"/>.
     /// </summary>
     /// <param name="this">The rented array.</param>
-    public static implicit operator ReadOnlySpan<T>(RentArray<T> @this) => @this.Array;
+    public static implicit operator ReadOnlySpan<T>(RentArray<T> @this) => @this.AsReadOnlySpan();
   }
 
   /// <summary>
