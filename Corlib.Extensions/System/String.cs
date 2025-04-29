@@ -2014,6 +2014,37 @@ public static partial class StringExtensions {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsWith(this string @this, string what, int index) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+
+    return @this.AsSpan(index).StartsWith(what.AsSpan());
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsWith(this string @this, string what, int index, StringComparer comparer) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+    Against.ArgumentIsNull(comparer);
+    if (index + what.Length > @this.Length)
+      return false;
+
+    var substring = @this.Substring(index, what.Length);
+    return comparer.Compare(substring, what) == 0;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsWith(this string @this, string what, int index, StringComparison comparison) {
+    Against.ThisIsNull(@this);
+    Against.IndexBelowZero(index);
+    Against.UnknownEnumValues(comparison);
+    if (index + what.Length > @this.Length)
+      return false;
+
+    return @this.AsSpan(index).StartsWith(what.AsSpan(), comparison);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsNotWith(this string @this, char what, StringComparer comparer) => !StartsWith(@this, what, comparer);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2021,6 +2052,15 @@ public static partial class StringExtensions {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsNotWith(this string @this, char value, StringComparison stringComparison = StringComparison.CurrentCulture) => !@this.StartsWith(value, stringComparison);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsNotWith(this string @this, string what, int index) => !StartsWith(@this, what, index);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsNotWith(this string @this, string what, int index, StringComparer comparer) => !StartsWith(@this, what, index, comparer);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool StartsNotWith(this string @this, string what, int index, StringComparison comparison) => !StartsWith(@this, what, index, comparison);
 
   /// <summary>
   ///   Checks whether the given string starts not with the specified text.
