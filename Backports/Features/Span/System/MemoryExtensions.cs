@@ -16,6 +16,8 @@
 #if !SUPPORTS_SPAN
 
 using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace System;
 
@@ -56,7 +58,7 @@ public static partial class MemoryExtensions {
     if (spanLength <= 0)
       return true;
 
-    if (SpanHelper.IsValueType<T>() && span.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.pointerMemoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
+    if (SpanHelper.IsValueType<T>() && span.memoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.memoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
       return spanHandler.CompareAsBytesTo(otherHandler, spanLength * SpanHelper.SizeOf<T>());
 
     if (SpanHelper.IsChar<T>())
@@ -184,6 +186,25 @@ public static partial class MemoryExtensions {
   /// <param name="value">The value to seek within the source span.</param>
   /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
   public static int LastIndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().LastIndexOf(value.ToString(), comparisonType);
+
+  public static bool StartsWith<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> => value.Length <= span.Length && span[..value.Length].SequenceEqual(value);
+  public static bool StartsWith<T>(this Span<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> => StartsWith((ReadOnlySpan<T>)span, value);
+  public static bool StartsWith(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) {
+    if (value.Length > span.Length)
+      return false;
+
+    var left = span[..value.Length];
+
+    return comparisonType switch {
+      StringComparison.CurrentCulture => string.Compare(left.ToString(), value.ToString(), CultureInfo.CurrentCulture, CompareOptions.None) == 0,
+      StringComparison.CurrentCultureIgnoreCase => string.Compare(left.ToString(), value.ToString(), CultureInfo.CurrentCulture, CompareOptions.IgnoreCase) == 0,
+      StringComparison.InvariantCulture => string.Compare(left.ToString(), value.ToString(), CultureInfo.InvariantCulture, CompareOptions.None) == 0,
+      StringComparison.InvariantCultureIgnoreCase => string.Compare(left.ToString(), value.ToString(), CultureInfo.InvariantCulture, CompareOptions.IgnoreCase) == 0,
+      StringComparison.Ordinal => left.SequenceEqual(value),
+      StringComparison.OrdinalIgnoreCase => left.ToString().Equals(value.ToString(), StringComparison.OrdinalIgnoreCase),
+      _ => throw new ArgumentOutOfRangeException(nameof(comparisonType), comparisonType, "Unknown StringComparison value.")
+    };
+  }
 
 }
 #endif

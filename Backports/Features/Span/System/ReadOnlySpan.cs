@@ -25,10 +25,10 @@ using System.Collections.Generic;
 namespace System;
 
 public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
-  internal readonly SpanHelper.IMemoryHandler<T> pointerMemoryHandler;
+  internal readonly SpanHelper.IMemoryHandler<T> memoryHandler;
 
-  private ReadOnlySpan(SpanHelper.IMemoryHandler<T> handler, int length) {
-    this.pointerMemoryHandler = handler;
+  internal ReadOnlySpan(SpanHelper.IMemoryHandler<T> handler, int length) {
+    this.memoryHandler = handler;
     this.Length = length;
   }
 
@@ -52,7 +52,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
       if ((uint)index >= (uint)this.Length)
         throw new ArgumentOutOfRangeException();
 
-      return ref this.pointerMemoryHandler[index];
+      return ref this.memoryHandler[index];
     }
   }
 
@@ -60,12 +60,12 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
     if (start < 0 || length < 0 || start + length > this.Length)
       throw new ArgumentOutOfRangeException();
 
-    return new(this.pointerMemoryHandler.SliceFrom(start), length);
+    return new(this.memoryHandler.SliceFrom(start), length);
   }
 
   public T[] ToArray() {
     var array = new T[this.Length];
-    this.pointerMemoryHandler.CopyTo(array, this.Length);
+    this.memoryHandler.CopyTo(array, this.Length);
 
     return array;
   }
@@ -75,7 +75,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
     if (other.Length < length)
       throw new ArgumentOutOfRangeException();
 
-    this.pointerMemoryHandler.CopyTo(other.pointerMemoryHandler, this.Length);
+    this.memoryHandler.CopyTo(other.memoryHandler, this.Length);
   }
 
   public bool TryCopyTo(Span<T> other) {
@@ -83,18 +83,17 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
     if (other.Length < length)
       return false;
 
-    this.pointerMemoryHandler.CopyTo(other.pointerMemoryHandler, this.Length);
+    this.memoryHandler.CopyTo(other.memoryHandler, this.Length);
     return true;
   }
 
-  public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this.pointerMemoryHandler, this.Length);
+  public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this.memoryHandler, this.Length);
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-  public static implicit operator ReadOnlySpan<T>(Span<T> @this) => new(@this.pointerMemoryHandler, @this.Length);
   public static implicit operator ReadOnlySpan<T>(T[] array) => new(array);
 
   /// <inheritdoc />
-  public override string ToString() => this.pointerMemoryHandler is SpanHelper.StringHandler sh ? sh.ToString(this.Length) : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
+  public override string ToString() => this.memoryHandler is SpanHelper.StringHandler sh ? sh.ToString(this.Length) : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
 
 }
 
