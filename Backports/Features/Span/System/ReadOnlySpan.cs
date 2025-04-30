@@ -21,22 +21,32 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace System;
 
+[DebuggerDisplay("{ToString(),raw}")]
 public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
-  internal readonly SpanHelper.IMemoryHandler<T> memoryHandler;
+  internal readonly SpanHelper.MemoryHandlerBase<T> memoryHandler;
 
-  internal ReadOnlySpan(SpanHelper.IMemoryHandler<T> handler, int length) {
+  internal ReadOnlySpan(SpanHelper.MemoryHandlerBase<T> handler, int length) {
     this.memoryHandler = handler;
     this.Length = length;
   }
 
-  public ReadOnlySpan(T[] array) : this(array, 0, array?.Length ?? 0) { }
-  internal ReadOnlySpan(string text) : this(text, 0, text?.Length ?? 0) { }
+  public ReadOnlySpan(T[] array) : this(new SpanHelper.ManagedArrayHandler<T>(array, 0), array.Length) { }
+  internal ReadOnlySpan(string text) : this((SpanHelper.MemoryHandlerBase<T>)(object)new SpanHelper.StringHandler(text,0),text.Length) { }
 
-  public ReadOnlySpan(T[] array, int start, int length) : this(SpanHelper.PinnedArrayMemoryHandler<T>.FromManagedArray(array, start), length) { }
-  internal ReadOnlySpan(string text, int start, int length) : this((SpanHelper.IMemoryHandler<T>)new SpanHelper.StringHandler(text, start), length) { }
+  public ReadOnlySpan(T[] array, int start, int length) : this(new SpanHelper.ManagedArrayHandler<T>(array, start), length) {
+    if ((uint)start > (uint)array.Length || (uint)length > (uint)(array.Length - start))
+      throw new ArgumentOutOfRangeException();
+  }
+
+  internal ReadOnlySpan(string text, int start, int length) : this((SpanHelper.MemoryHandlerBase<T>)(object)new SpanHelper.StringHandler(text, start), length) {
+    if ((uint)start > (uint)text.Length || (uint)length > (uint)(text.Length - start))
+      throw new ArgumentOutOfRangeException();
+  }
 
 #pragma warning disable CS8500
   public unsafe ReadOnlySpan(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
@@ -45,19 +55,25 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   public int Length { get; }
 
   public bool IsEmpty => this.Length == 0;
-  public static ReadOnlySpan<T> Empty => [];
+  public static ReadOnlySpan<T> Empty {
+    get {
+      unsafe {
+        return new (new SpanHelper.UnmanagedPointerMemoryHandler<T>(Unsafe.NullPtr<T>()), 0);
+      }
+    }
+  }
 
   public ref readonly T this[int index] {
     get {
       if ((uint)index >= (uint)this.Length)
         throw new ArgumentOutOfRangeException();
 
-      return ref this.memoryHandler[index];
+      return ref this.memoryHandler.GetRef(index);
     }
   }
 
   public ReadOnlySpan<T> Slice(int start, int length) {
-    if (start < 0 || length < 0 || start + length > this.Length)
+    if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
       throw new ArgumentOutOfRangeException();
 
     return new(this.memoryHandler.SliceFrom(start), length);

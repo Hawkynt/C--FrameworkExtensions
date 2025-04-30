@@ -148,6 +148,33 @@ internal class SpanTests {
     public float Y;
   }
 
+  // User-defined reference type
+  private sealed class MyClass(int x,float y) : IEquatable<MyClass> {
+    public readonly int X=x;
+    public readonly float Y=y;
+
+    #region Equality members
+
+    /// <inheritdoc />
+    public bool Equals(MyClass other) => this.X == other.X && this.Y.Equals(other.Y);
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj) => obj is MyClass other && this.Equals(other);
+
+    /// <inheritdoc />
+    public override int GetHashCode() {
+      unchecked {
+        return (this.X * 397) ^ this.Y.GetHashCode();
+      }
+    }
+
+    public static bool operator ==(MyClass left, MyClass right) => left.Equals(right);
+
+    public static bool operator !=(MyClass left, MyClass right) => !left.Equals(right);
+
+    #endregion
+  }
+
   [Test]
   [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_UserDefinedStruct(int length) {
@@ -167,7 +194,7 @@ internal class SpanTests {
 
   [Test]
   [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
-  public void CopyTo_CopiesCorrectly_ReferenceTypes(int length) {
+  public void CopyTo_CopiesCorrectly_Strings(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new string('a', i % 128)).ToArray();
     var destinationArray = new string[length];
 
@@ -176,9 +203,23 @@ internal class SpanTests {
 
     sourceSpan.CopyTo(destinationSpan);
 
-    for (var i = 0; i < length; ++i) {
+    for (var i = 0; i < length; ++i)
       Assert.AreEqual(sourceArray[i], destinationArray[i]);
-    }
+  }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  public void CopyTo_CopiesCorrectly_ReferenceTypes(int length) {
+    var sourceArray = Enumerable.Range(0, length).Select(i => new MyClass(i, i * 1.5f)).ToArray();
+    var destinationArray = new MyClass[length];
+
+    var sourceSpan = sourceArray.AsSpan();
+    var destinationSpan = destinationArray.AsSpan();
+
+    sourceSpan.CopyTo(destinationSpan);
+
+    for (var i = 0; i < length; ++i)
+      Assert.AreEqual(sourceArray[i], destinationArray[i]);
   }
 
   [Test]
@@ -202,8 +243,10 @@ internal class SpanTests {
   }
 
   [Test]
-  public void CopyTo_StringToCharArray() {
-    var source = "TEST";
+  [TestCase("")]
+  [TestCase("TEST")]
+  [TestCase("1234567890123456789012345678901234567890123456789012345678901234567890")]
+  public void CopyTo_StringToCharArray(string source) {
     var sourceSpan = source.AsSpan();
 
     var targetChars = sourceSpan.ToArray();
@@ -238,15 +281,55 @@ internal class SpanTests {
 
   [Test]
   [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
-  public void SequenceEqual_ShouldEqual(int length) {
+  public void SequenceEqual_ShouldEqual_ManagedByte(int length) {
     ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i=>(byte)~(i & 0xff)).ToArray().AsSpan();
     ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
     Assert.That(source.SequenceEqual(target),Is.True);
   }
 
   [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  public unsafe void SequenceEqual_ShouldEqual_UnmanagedInt(int length) {
+    var a = Enumerable.Range(0, length).ToArray();
+    var b = Enumerable.Range(0, length).ToArray();
+    fixed (int* pa = a)
+    fixed (int* pb = b)
+      Assert.That(new Span<int>(pa, length).SequenceEqual(new(pb, length)), Is.True);
+  }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  public void SequenceEqual_ShouldEqual_String(int length) {
+    var str1 = new string(Enumerable.Range(0, length).Select(i => (char)(65 + i % 26)).ToArray());
+    var str2 = new string(Enumerable.Range(0, length).Select(i => (char)(65 + i % 26)).ToArray());
+    var span1 = str1.AsSpan();
+    var span2 = str2.AsSpan();
+    Assert.That(span1.SequenceEqual(span2), Is.True);
+  }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  public void SequenceEqual_ShouldEqual_ReferenceTypes(int length) {
+    var a = Enumerable.Range(0,length).Select(i=>new MyClass(i,i*1.5f)).ToArray();
+    var b = a.ToList().ToArray();
+    var span1 = a.AsSpan();
+    var span2 = b.AsSpan();
+    Assert.That(span1.SequenceEqual(span2), Is.True);
+  }
+
+  [Test]
+  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  public void SequenceEqual_ShouldEqual_UserDefinedStruct(int length) {
+    var a = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
+    var b = a.ToList().ToArray();
+    var span1 = a.AsSpan();
+    var span2 = b.AsSpan();
+    Assert.That(span1.SequenceEqual(span2), Is.True);
+  }
+
+  [Test]
   [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
-  public void SequenceEqual_ShouldNotEqual(int length) {
+  public void SequenceEqual_ShouldNotEqual_ManagedByte(int length) {
     ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
     ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)(i & 0xff)).ToArray().AsSpan();
     Assert.That(source.SequenceEqual(target), Is.False);

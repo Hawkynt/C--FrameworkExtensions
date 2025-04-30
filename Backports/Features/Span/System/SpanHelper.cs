@@ -19,40 +19,9 @@
 
 #if !SUPPORTS_SPAN
 
-using System.Runtime.InteropServices;
-
 namespace System;
 
 internal static partial class SpanHelper {
-  public static bool IsPrimitive<T>()
-    => 
-      typeof(T) == typeof(byte) || 
-      typeof(T) == typeof(sbyte) || 
-      typeof(T) == typeof(short) || 
-      typeof(T) == typeof(ushort) || 
-      typeof(T) == typeof(int) || 
-      typeof(T) == typeof(uint) || 
-      typeof(T) == typeof(long) || 
-      typeof(T) == typeof(ulong) || 
-      typeof(T) == typeof(float) || 
-      typeof(T) == typeof(double) || 
-      typeof(T) == typeof(char)
-      ;
-
-  public static int SizeOf<T>() =>
-    typeof(T) == typeof(byte) ? sizeof(byte) :
-    typeof(T) == typeof(sbyte) ? sizeof(sbyte) :
-    typeof(T) == typeof(short) ? sizeof(short) :
-    typeof(T) == typeof(ushort) ? sizeof(ushort) :
-    typeof(T) == typeof(int) ? sizeof(int) :
-    typeof(T) == typeof(uint) ? sizeof(uint) :
-    typeof(T) == typeof(long) ? sizeof(long) :
-    typeof(T) == typeof(ulong) ? sizeof(ulong) :
-    typeof(T) == typeof(float) ? sizeof(float) :
-    typeof(T) == typeof(double) ? sizeof(double) :
-    typeof(T) == typeof(char) ? sizeof(char) :
-    Marshal.SizeOf(typeof(T))
-    ;
 
   public static bool IsChar<T>() => typeof(T) == typeof(char);
 

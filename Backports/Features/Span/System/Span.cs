@@ -21,20 +21,26 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace System;
 
+[DebuggerDisplay("{ToString(),raw}")]
 public readonly ref struct Span<T> : IEnumerable<T> {
-  internal readonly SpanHelper.IMemoryHandler<T> memoryHandler;
+  internal readonly SpanHelper.MemoryHandlerBase<T> memoryHandler;
 
-  private Span(SpanHelper.IMemoryHandler<T> handler, int length) {
+  private Span(SpanHelper.MemoryHandlerBase<T> handler, int length) {
     this.memoryHandler = handler;
     this.Length = length;
   }
 
-  public Span(T[] array) : this(array, 0, array?.Length ?? 0) { }
+  public Span(T[] array) : this(new SpanHelper.ManagedArrayHandler<T>(array,0),array.Length) { }
 
-  public Span(T[] array, int start, int length) : this(SpanHelper.PinnedArrayMemoryHandler<T>.FromManagedArray(array, start), length) { }
+  public Span(T[] array, int start, int length) : this(new SpanHelper.ManagedArrayHandler<T>(array, start), length) {
+    if ((uint)start > (uint)array.Length || (uint)length > (uint)(array.Length - start))
+      throw new ArgumentOutOfRangeException();
+  }
 
 #pragma warning disable CS8500
   public unsafe Span(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
@@ -44,19 +50,25 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   public bool IsEmpty => this.Length == 0;
 
-  public static Span<T> Empty => [];
+  public static Span<T> Empty {
+    get {
+      unsafe {
+        return new(new SpanHelper.UnmanagedPointerMemoryHandler<T>(Unsafe.NullPtr<T>()), 0);
+      }
+    }
+  }
 
   public ref T this[int index] {
     get {
       if ((uint)index >= (uint)this.Length)
         throw new ArgumentOutOfRangeException();
 
-      return ref this.memoryHandler[index];
+      return ref this.memoryHandler.GetRef(index);
     }
   }
 
   public Span<T> Slice(int start, int length) {
-    if (start < 0 || length < 0 || start + length > this.Length)
+    if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
       throw new ArgumentOutOfRangeException();
 
     return new(this.memoryHandler.SliceFrom(start), length);

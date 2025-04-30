@@ -23,64 +23,75 @@ namespace System;
 
 partial class SpanHelper {
   /// <summary>
-  ///   Provides a managed array implementation of <see cref="IMemoryHandler{T}" />, allowing for array operations and
-  ///   manipulations based on the <see cref="IMemoryHandler{T}" /> interface.
+  ///   Provides a managed array implementation of <see cref="MemoryHandlerBase{T}" />, allowing for array operations and
+  ///   manipulations based on the <see cref="MemoryHandlerBase{T}" /> interface.
   /// </summary>
   /// <typeparam name="T">The type of elements stored in the managed array.</typeparam>
   /// <remarks>
   ///   This class manages an array segment by providing direct access and manipulation capabilities over a portion of an
   ///   array, beginning at a specified index.
   /// </remarks>
-  public class ManagedArrayHandler<T>(T[] source, int start) : IMemoryHandler<T> {
+  public class ManagedArrayHandler<T> : MemoryHandlerBase<T> {
+    private readonly SharedPin<T> _pin;
+    public readonly T[] source;
+    public readonly int start;
+
+    /// <summary>
+    ///   Provides a managed array implementation of <see cref="MemoryHandlerBase{T}" />, allowing for array operations and
+    ///   manipulations based on the <see cref="MemoryHandlerBase{T}" /> interface.
+    /// </summary>
+    /// <typeparam name="T">The type of elements stored in the managed array.</typeparam>
+    /// <remarks>
+    ///   This class manages an array segment by providing direct access and manipulation capabilities over a portion of an
+    ///   array, beginning at a specified index.
+    /// </remarks>
+    public ManagedArrayHandler(T[] source, int start):this(source,start,new(source)){ }
+
+    private ManagedArrayHandler(T[] source, int start, SharedPin<T> pin) {
+      this.source = source;
+      this.start = start;
+      this._pin = pin;
+    }
+
     #region Implementation of IMemoryHandler<T>
 
     /// <inheritdoc />
-    public ref T this[int index] => ref source[start + index];
-
-    /// <inheritdoc />
-    public IMemoryHandler<T> SliceFrom(int offset) => new ManagedArrayHandler<T>(source, start + offset);
-
-    /// <inheritdoc />
-    public unsafe void CopyTo(IMemoryHandler<T> other, int length) {
-      if (length == 0)
-        return;
-
-      fixed (T* token = &source[start]) {
-        var sourcePointer = token;
-        var numberOfFullBlocks = length >> 3;
-        var i = 0;
-
-        switch (length & 7) {
-          case 0: goto case_8or0;
-          case 1: goto case_1;
-          case 2: goto case_2;
-          case 3: goto case_3;
-          case 4: goto case_4;
-          case 5: goto case_5;
-          case 6: goto case_6;
-          case 7: goto case_7;
-          default: return; /* can not happen due to (length & 7) */
-        }
-
-        case_8or0:
-        if (numberOfFullBlocks-- <= 0)
-          return;
-
-        other[i++] = *sourcePointer++;
-        case_7: other[i++] = *sourcePointer++;
-        case_6: other[i++] = *sourcePointer++;
-        case_5: other[i++] = *sourcePointer++;
-        case_4: other[i++] = *sourcePointer++;
-        case_3: other[i++] = *sourcePointer++;
-        case_2: other[i++] = *sourcePointer++;
-        case_1: other[i++] = *sourcePointer++;
-
-        goto case_8or0;
+    public override ref T GetRef(int index) {
+      this._pin.TrackAccess();
+      if (!this._pin.IsPinned)
+        return ref this.source[this.start+index];
+      unsafe {
+        return ref *(this._pin.Pointer + this.start + index);
       }
     }
 
     /// <inheritdoc />
-    public void CopyTo(T[] target, int count) => Array.Copy(source, start, target, 0, count);
+    public override T GetValue(int index) {
+      this._pin.TrackAccess();
+      if (!this._pin.IsPinned)
+        return this.source[this.start+index];
+      unsafe {
+        return *(this._pin.Pointer+ this.start+index);
+      }
+    }
+
+    /// <inheritdoc />
+    public override void SetValue(int index, T value) {
+      this._pin.TrackAccess();
+      if (!this._pin.IsPinned)
+        this.source[this.start + index] = value;
+      else unsafe {
+        *(this._pin.Pointer + this.start + index) = value;
+      }
+    }
+
+    /// <inheritdoc />
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+    public override unsafe T* Pointer => this._pin.Pointer + this.start;
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+    
+    /// <inheritdoc />
+    public override MemoryHandlerBase<T> SliceFrom(int offset) => new ManagedArrayHandler<T>(this.source, this.start + offset, this._pin);
 
     #endregion
   }
