@@ -49,6 +49,15 @@ public static partial class MemoryExtensions {
   /// <typeparam name="T">The type of elements in the sequence.</typeparam>
   /// <returns>
   /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
+  public static bool SequenceEqual<T>(this Span<T> span, ReadOnlySpan<T> other) where T : IEquatable<T>
+    => SequenceEqual((ReadOnlySpan<T>)span, other);
+
+  /// <summary>Determines whether two read-only sequences are equal by comparing the elements using IEquatable{T}.Equals(T).</summary>
+  /// <param name="span">The first sequence to compare.</param>
+  /// <param name="other">The second sequence to compare.</param>
+  /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+  /// <returns>
+  /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
   public static bool SequenceEqual<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> other) where T : IEquatable<T> {
     var spanLength = span.Length;
     var otherLength = other.Length;
@@ -58,8 +67,8 @@ public static partial class MemoryExtensions {
     if (spanLength <= 0)
       return true;
 
-    if (SpanHelper.IsValueType<T>() && span.memoryHandler is SpanHelper.PointerMemoryHandlerBase<T> spanHandler && other.memoryHandler is SpanHelper.PointerMemoryHandlerBase<T> otherHandler)
-      return spanHandler.CompareAsBytesTo(otherHandler, spanLength * SpanHelper.SizeOf<T>());
+    if (SpanHelper.IsValueType<T>() && span.memoryHandler is SpanHelper.UnmanagedPointerMemoryHandler<T> spanHandler && other.memoryHandler is SpanHelper.UnmanagedPointerMemoryHandler<T> otherHandler)
+      return spanHandler.CompareAsBytesTo(otherHandler, spanLength * Unsafe.SizeOf<T>());
 
     if (SpanHelper.IsChar<T>())
       return span.ToString() == other.ToString();
@@ -70,6 +79,19 @@ public static partial class MemoryExtensions {
 
     return true;
   }
+
+  /// <summary>Determines whether two sequences are equal by comparing the elements using an <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</summary>
+  /// <param name="span">The first sequence to compare.</param>
+  /// <param name="other">The second sequence to compare.</param>
+  /// <param name="comparer">The <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> implementation to use when comparing elements, or <see langword="null" /> to use the default <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> for the type of an element.</param>
+  /// <typeparam name="T">The type of elements in the sequence.</typeparam>
+  /// <returns>
+  /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
+  public static bool SequenceEqual<T>(
+    this Span<T> span,
+    ReadOnlySpan<T> other,
+    IEqualityComparer<T> comparer)
+    => ((ReadOnlySpan<T>)span).SequenceEqual(other, comparer);
 
   /// <summary>
   /// Determines whether two sequences are equal by comparing the elements using an <see cref="IEqualityComparer{T}"/>.
