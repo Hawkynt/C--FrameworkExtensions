@@ -20,6 +20,7 @@
 #if !SUPPORTS_STREAM_ASYNC && SUPPORTS_ASYNC
 using System.Threading.Tasks;
 using System.Threading;
+using Guard;
 
 namespace System.IO;
 
@@ -29,13 +30,13 @@ public static partial class StreamPolyfills {
 
   public static Task<int> ReadAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
     if (!@this.CanRead)
-      throw new InvalidOperationException("Can not read source");
+      AlwaysThrow.InvalidOperationException("Can not read source");
     if (offset < 0)
-      throw new ArgumentOutOfRangeException(nameof(offset));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
     if (count < 0 || count > buffer.Length - offset)
-      throw new ArgumentOutOfRangeException(nameof(count));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
 
     return Invoke(@this, buffer, offset, count, cancellationToken);
 
@@ -80,13 +81,13 @@ public static partial class StreamPolyfills {
 
   public static Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
     if (!@this.CanWrite)
-      throw new InvalidOperationException("Can not write destination");
+      AlwaysThrow.InvalidOperationException("Can not write destination");
     if (offset < 0)
-      throw new ArgumentOutOfRangeException(nameof(offset));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
     if (count < 0 || count > buffer.Length - offset)
-      throw new ArgumentOutOfRangeException(nameof(count));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
 
     return Invoke(@this, buffer, offset, count, cancellationToken);
 
@@ -128,16 +129,16 @@ public static partial class StreamPolyfills {
   }
 
   public static Task CopyToAsync(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken) {
-    if (@this == null) 
-      throw new NullReferenceException();
+    if (@this == null)
+      AlwaysThrow.NullReferenceException(nameof(@this));
     if (destination == null)
-      throw new ArgumentNullException(nameof(destination));
+      AlwaysThrow.ArgumentNullException(nameof(destination));
     if (bufferSize <= 0)
-      throw new ArgumentOutOfRangeException(nameof(bufferSize));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(bufferSize));
     if (!@this.CanRead)
-      throw new InvalidOperationException("Can not read source");
+      AlwaysThrow.InvalidOperationException("Can not read source");
     if (!destination.CanWrite)
-      throw new InvalidOperationException("Can not write destination");
+      AlwaysThrow.InvalidOperationException("Can not write destination");
 
     return Invoke(@this, destination, bufferSize, cancellationToken);
 

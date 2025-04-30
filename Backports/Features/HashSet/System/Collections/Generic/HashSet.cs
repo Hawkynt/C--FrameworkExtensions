@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_HASHSET
+using Guard;
 using System.Diagnostics;
 using System.Linq;
 
@@ -56,7 +57,7 @@ namespace System.Collections.Generic {
 
     public HashSet(IEnumerable<T> enumerable, IEqualityComparer<T> comparer) : this(comparer) {
       if (enumerable == null)
-        throw new ArgumentNullException(nameof(enumerable));
+        AlwaysThrow.ArgumentNullException(nameof(enumerable));
 
       this._hashtable = new(enumerable is ICollection collection ? collection.Count : 10);
       foreach (var item in enumerable) {
@@ -68,7 +69,7 @@ namespace System.Collections.Generic {
 
     public HashSet(int capacity, IEqualityComparer<T> comparer) : this(comparer) {
       if (capacity < 0)
-        throw new ArgumentOutOfRangeException(nameof(capacity));
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(capacity));
 
       this._hashtable = new(capacity);
     }
@@ -153,7 +154,7 @@ namespace System.Collections.Generic {
     /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void UnionWith(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       foreach (var item in other)
         this.Add(item);
@@ -166,7 +167,7 @@ namespace System.Collections.Generic {
     /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void IntersectWith(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0 || ReferenceEquals(other, this))
         return;
@@ -186,7 +187,7 @@ namespace System.Collections.Generic {
     /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void ExceptWith(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0)
         return;
@@ -207,7 +208,7 @@ namespace System.Collections.Generic {
     /// <param name="other">The collection to compare to the current <see cref="HashSet{T}" /> object.</param>
     public void SymmetricExceptWith(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0) {
         this.UnionWith(other);
@@ -235,7 +236,7 @@ namespace System.Collections.Generic {
     /// <returns>true if the <see cref="HashSet{T}" /> object is a subset of <paramref name="other" />; otherwise, false.</returns>
     public bool IsSubsetOf(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0 || ReferenceEquals(other, this))
         return true;
@@ -252,7 +253,7 @@ namespace System.Collections.Generic {
     /// </returns>
     public bool IsProperSubsetOf(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (ReferenceEquals(other, this))
         return false;
@@ -266,7 +267,7 @@ namespace System.Collections.Generic {
     /// <returns>true if the <see cref="HashSet{T}" /> object is a superset of <paramref name="other" />; otherwise, false.</returns>
     public bool IsSupersetOf(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (ReferenceEquals(other, this))
         return true;
@@ -286,7 +287,7 @@ namespace System.Collections.Generic {
     /// </returns>
     public bool IsProperSupersetOf(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0 || ReferenceEquals(other, this))
         return false;
@@ -306,7 +307,7 @@ namespace System.Collections.Generic {
     /// </returns>
     public bool Overlaps(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (this.Count == 0)
         return false;
@@ -326,7 +327,7 @@ namespace System.Collections.Generic {
     /// <returns>true if the <see cref="HashSet{T}" /> object is equal to <paramref name="other" />; otherwise, false.</returns>
     public bool SetEquals(IEnumerable<T> other) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       if (ReferenceEquals(other, this))
         return true;
@@ -340,7 +341,7 @@ namespace System.Collections.Generic {
 
     private (int UniqueCount, int UnfoundCount) CheckUniqueAndUnfoundElements(IEnumerable<T> other, bool returnIfUnfound) {
       if (other == null)
-        throw new ArgumentNullException(nameof(other));
+        AlwaysThrow.ArgumentNullException(nameof(other));
 
       var foundInOther = new HashSet<T>();
       var uniqueCount = 0;
@@ -374,14 +375,14 @@ namespace System.Collections.Generic {
 
     public void CopyTo(T[] array, int arrayIndex, int count) {
       if (array == null)
-        throw new ArgumentNullException(nameof(array));
+        AlwaysThrow.ArgumentNullException(nameof(array));
       if (arrayIndex < 0)
-        throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(arrayIndex));
       if (count < 0)
-        throw new ArgumentOutOfRangeException(nameof(count));
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
 
       if (arrayIndex > array.Length || count > array.Length - arrayIndex)
-        throw new ArgumentException("Target array too small");
+        AlwaysThrow.ArgumentException(nameof(array), "Target array too small");
 
       foreach (var kvp in this._hashtable) {
         array[arrayIndex++] = kvp.Value;
@@ -396,7 +397,7 @@ namespace System.Collections.Generic {
     /// </summary>
     public int RemoveWhere(Predicate<T> match) {
       if (match == null)
-        throw new ArgumentNullException(nameof(match));
+        AlwaysThrow.ArgumentNullException(nameof(match));
 
       var result = 0;
       foreach (var kvp in this._hashtable)

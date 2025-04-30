@@ -16,6 +16,8 @@
 
 #if !SUPPORTS_ENUMERABLE_TRYGETNONENUMERATEDCOUNT
 
+using Guard;
+
 namespace System.Collections.Generic;
 
 public static partial class EnumerablePolyfills {
@@ -42,7 +44,9 @@ public static partial class EnumerablePolyfills {
   /// </remarks>
   public static bool TryGetNonEnumeratedCount<TItem>(this IEnumerable<TItem> source, out int count) {
     switch (source) {
-      case null: throw new ArgumentNullException(nameof(source));
+      case null:
+        AlwaysThrow.ArgumentNullException(nameof(source));
+        goto default;
       case TItem[] array:
         count = array.Length;
         return true;

@@ -15,6 +15,8 @@
 
 #if !SUPPORTS_SPAN
 
+using Guard;
+
 namespace System;
 
 partial class SpanHelper {
@@ -56,7 +58,7 @@ partial class SpanHelper {
     }
 
     /// <inheritdoc />
-    public override void SetValue(int index, char value) => throw new InvalidOperationException("Strings are immutable");
+    public override void SetValue(int index, char value) => AlwaysThrow.InvalidOperationException("Strings are immutable");
 
     /// <inheritdoc />
     public override unsafe char* Pointer => this._pin.Pointer + this.start;

@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_FIRSTLASTSINGLE_DEFAULT
 
+using Guard;
 using System.Collections.Generic;
 
 namespace System.Linq;
@@ -26,7 +27,7 @@ namespace System.Linq;
 public static partial class EnumerablePolyfills {
   public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     foreach (var item in @this)
       return item;
@@ -36,9 +37,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     foreach (var item in @this)
       if (predicate(item))
@@ -49,13 +50,13 @@ public static partial class EnumerablePolyfills {
 
   public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     var result = defaultValue;
     var found = false;
     foreach (var item in @this) {
       if (found)
-        throw new InvalidOperationException("Sequence contains more than one element");
+        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
 
       result = item;
       found = true;
@@ -66,9 +67,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     var result = defaultValue;
     var found = false;
@@ -77,7 +78,7 @@ public static partial class EnumerablePolyfills {
         continue;
 
       if (found)
-        throw new InvalidOperationException("Sequence contains more than one element");
+        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
 
       result = item;
       found = true;
@@ -89,7 +90,7 @@ public static partial class EnumerablePolyfills {
 
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     var result = defaultValue;
     foreach (var item in @this)
@@ -100,9 +101,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     var result = defaultValue;
     foreach (var item in @this)

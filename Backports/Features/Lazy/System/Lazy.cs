@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_LAZY
 
+using Guard;
 using System.Threading;
 
 namespace System;
@@ -39,7 +40,12 @@ public class Lazy<TValue> {
   ///   Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="function">The function that should create the value.</param>
-  public Lazy(Func<TValue> function) => this._function = function ?? throw new ArgumentNullException(nameof(function));
+  public Lazy(Func<TValue> function) {
+    if (function == null)
+      AlwaysThrow.ArgumentNullException(nameof(function));
+    
+    this._function = function;
+  }
 
   #endregion
 
@@ -86,7 +92,7 @@ public class Lazy<TValue> {
   /// </returns>
   public static implicit operator TValue(Lazy<TValue> lazy) {
     if (lazy == null)
-      throw new ArgumentNullException(nameof(lazy));
+      AlwaysThrow.ArgumentNullException(nameof(lazy));
 
     return lazy.Value;
   }
@@ -108,7 +114,7 @@ public class Lazy {
 
   public Lazy(Action action) {
     if (action == null)
-      throw new ArgumentNullException(nameof(action));
+      AlwaysThrow.ArgumentNullException(nameof(action));
 
     this._lazy = new(
       () => {

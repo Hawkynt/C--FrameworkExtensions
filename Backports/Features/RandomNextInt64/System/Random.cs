@@ -23,6 +23,8 @@
 using System.Runtime.CompilerServices;
 #endif
 
+using Guard;
+
 namespace System;
 
 public static partial class RandomPolyfills {
@@ -35,7 +37,7 @@ public static partial class RandomPolyfills {
 #endif
   public static long NextInt64(this Random @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     // Collect raw bits from Next() calls
     var high = (ulong)@this.Next();
@@ -86,9 +88,9 @@ public static partial class RandomPolyfills {
 #endif
   public static long NextInt64(this Random @this, long maxValue) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
     if (maxValue < 0)
-      throw new ArgumentOutOfRangeException(nameof(maxValue));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(maxValue));
 
     var maxValueMinusOne = maxValue - 1;
     return maxValue switch {
@@ -143,9 +145,9 @@ public static partial class RandomPolyfills {
 #endif
   public static long NextInt64(this Random @this, long minValue, long maxValue) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (maxValue < minValue)
-      throw new ArgumentOutOfRangeException(nameof(maxValue));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(maxValue));
 
     return minValue + NextInt64(@this, maxValue - minValue);
   }

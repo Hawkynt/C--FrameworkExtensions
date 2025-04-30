@@ -33,6 +33,7 @@
 #pragma warning disable RECS0017 // Possible compare of value type with 'null'
 #pragma warning disable RECS0025 // Non-readonly field referenced in 'GetHashCode()'
 
+using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -662,7 +663,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
 
   private static void CheckType(TRest rest) {
     if (rest == null || !typeof(TRest).IsGenericType)
-      throw new ArgumentException("The last element of an eight element tuple must be a Tuple.", nameof(rest));
+      AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
 
     var type = typeof(TRest).GetGenericTypeDefinition();
     if
@@ -678,7 +679,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
     )
       return;
 
-    throw new ArgumentException("The last element of an eight element tuple must be a Tuple.", nameof(rest));
+    AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
   }
 
   private int CompareTo(object other, IComparer comparer) {

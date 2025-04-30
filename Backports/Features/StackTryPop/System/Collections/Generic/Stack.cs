@@ -19,6 +19,8 @@
 
 #if !SUPPORTS_STACK_TRYPOP
 
+using Guard;
+
 namespace System.Collections.Generic;
 
 public static partial class StackPolyfills {
@@ -38,7 +40,7 @@ public static partial class StackPolyfills {
   /// </returns>
   public static bool TryPop<TItem>(this Stack<TItem> @this, out TItem result) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     if (@this.Count < 1) {
       result = default;

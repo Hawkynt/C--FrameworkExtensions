@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_RANGE_AND_INDEX
 
+using Guard;
 using System.Runtime.CompilerServices;
 
 namespace System;
@@ -63,11 +64,7 @@ public readonly struct Range(Index start, Index end) : IEquatable<Range> {
     return (start, end - start);
   }
 
-  [MethodImpl(MethodImplOptions.NoInlining)]
-#if SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
-  [DoestNotReturn]
-#endif
-  private static void _ThrowLengthOutOfRange() => throw new ArgumentOutOfRangeException("length");
+  private static void _ThrowLengthOutOfRange() => AlwaysThrow.ArgumentOutOfRangeException("length");
 }
 
 #endif

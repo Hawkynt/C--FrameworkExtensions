@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_SPAN
+using Guard;
 using System.Buffers;
 
 namespace System.IO;
@@ -25,7 +26,7 @@ namespace System.IO;
 public static partial class StreamPolyfills {
   public static int Read(this Stream @this, Span<byte> buffer) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
 
     var size = buffer.Length;
     byte[] token = null;
@@ -35,15 +36,15 @@ public static partial class StreamPolyfills {
       token.AsSpan()[..bytesRead].CopyTo(buffer[..bytesRead]);
       return bytesRead;
     } finally {
-      if(token!=null)
+      if (token != null)
         ArrayPool<byte>.Shared.Return(token);
     }
-    
+
   }
-  
+
   public static void Write(this Stream @this, ReadOnlySpan<byte> buffer) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
 
     const int MaxChunkSize = 1024 * 1024; // 1MB
     byte[] rented = null;
@@ -57,7 +58,7 @@ public static partial class StreamPolyfills {
         buffer = buffer[chunkSize..];
       }
     } finally {
-      if(rented!=null)
+      if (rented != null)
         ArrayPool<byte>.Shared.Return(rented);
     }
 

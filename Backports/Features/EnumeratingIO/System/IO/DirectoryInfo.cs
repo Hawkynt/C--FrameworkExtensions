@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_ENUMERATING_IO
 
+using Guard;
 using System.Collections.Generic;
 
 namespace System.IO;
@@ -26,7 +27,7 @@ namespace System.IO;
 public static partial class DirectoryInfoPolyfills {
   public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this);
 
@@ -38,7 +39,7 @@ public static partial class DirectoryInfoPolyfills {
 
   public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this);
 
@@ -50,7 +51,7 @@ public static partial class DirectoryInfoPolyfills {
 
   public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this);
 
@@ -62,7 +63,7 @@ public static partial class DirectoryInfoPolyfills {
 
   public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this, searchPattern, searchOption);
 
@@ -74,7 +75,7 @@ public static partial class DirectoryInfoPolyfills {
 
   public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this, searchPattern, searchOption);
 

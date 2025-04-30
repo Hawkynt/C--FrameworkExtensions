@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_RANGE_AND_INDEX
 
+using Guard;
 using System.Runtime.CompilerServices;
 
 namespace System;
@@ -39,11 +40,7 @@ public readonly struct Index : IEquatable<Index> {
     this._index = fromEnd ? ~value : value;
   }
 
-  [MethodImpl(MethodImplOptions.NoInlining)]
-#if SUPPORTS_DOES_NOT_RETURN_ATTRIBUTE
-  [DoestNotReturn]
-#endif
-  private static void _ThrowValueNegative() => throw new ArgumentOutOfRangeException("value", "value must be non-negative");
+  private static void _ThrowValueNegative() => AlwaysThrow.ArgumentOutOfRangeException("value", "value must be non-negative");
 
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

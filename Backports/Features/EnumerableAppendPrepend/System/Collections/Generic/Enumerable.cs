@@ -20,6 +20,8 @@
 #if !SUPPORTS_ENUMERABLE_APPENDPREPEND
 
 using System.Collections.Generic;
+using Guard;
+
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
@@ -35,7 +37,7 @@ public static partial class EnumerablePolyfills {
   /// </exception>
   public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this, item);
 
@@ -59,7 +61,7 @@ public static partial class EnumerablePolyfills {
   /// </exception>
   public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this, item);
 

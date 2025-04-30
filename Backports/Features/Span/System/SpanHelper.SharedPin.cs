@@ -15,6 +15,7 @@
 
 #if !SUPPORTS_SPAN
 
+using Guard;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -37,13 +38,21 @@ partial class SpanHelper {
     private const int SizeThreshold = 81920;
     private const int ItemsThreshold = 1024;
 
-    public SharedPin(TElement[] array) => this._source = array ?? throw new ArgumentNullException(nameof(array));
+    public SharedPin(TElement[] array) {
+      if (array == null)
+        AlwaysThrow.ArgumentNullException(nameof(array));
+
+      this._source = array;
+    }
 
     public SharedPin(string str) {
       if (typeof(TElement) != typeof(char))
-        throw new InvalidOperationException("TElement must be char when wrapping a string");
+        AlwaysThrow.InvalidOperationException("TElement must be char when wrapping a string");
 
-      this._source = str ?? throw new ArgumentNullException(nameof(str));
+      if (str == null)
+        AlwaysThrow.ArgumentNullException(nameof(str));
+      
+      this._source = str;
     }
 
     public bool IsPinned => this._handle != null;
@@ -70,14 +79,14 @@ partial class SpanHelper {
     public TElement* Pointer {
       get {
         if (this._disposed != IS_ALIVE)
-          throw new ObjectDisposedException(nameof(SharedPin<TElement>));
+          AlwaysThrow.ObjectDisposedException(nameof(SharedPin<TElement>));
 
         if (this._handle is { } handle1)
           return (TElement*)handle1.AddrOfPinnedObject();
         
         lock (this) {
           if (this._disposed != IS_ALIVE)
-            throw new ObjectDisposedException(nameof(SharedPin<TElement>));
+            AlwaysThrow.ObjectDisposedException(nameof(SharedPin<TElement>));
 
           if (this._handle is { } handle2)
             return (TElement*)handle2.AddrOfPinnedObject();

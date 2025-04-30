@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_TO_HASHSET
 
+using Guard;
 using System.Diagnostics;
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
@@ -39,8 +40,9 @@ public static partial class EnumerablePolyfills {
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
+    // ReSharper disable once UseCollectionExpression
     return new(@this);
   }
 
@@ -59,7 +61,7 @@ public static partial class EnumerablePolyfills {
 #endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return new(@this, comparer);
   }

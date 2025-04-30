@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_SPAN
 
+using Guard;
 using System.Runtime.CompilerServices;
 
 namespace System;
@@ -84,7 +85,8 @@ partial class SpanHelper {
     public unsafe void CopyTo(MemoryHandlerBase<T> other, int count) {
       switch (count) {
         case < 0:
-          throw new ArgumentOutOfRangeException(nameof(count));
+          AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
+          return;
         case 0:
           return;
       }

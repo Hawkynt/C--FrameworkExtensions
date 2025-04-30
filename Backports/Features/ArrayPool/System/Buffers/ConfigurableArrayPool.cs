@@ -19,6 +19,7 @@
 #if !SUPPORTS_ARRAYPOOL
 
 using System.Threading;
+using Guard;
 
 namespace System.Buffers;
 
@@ -34,9 +35,9 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
 
   public ConfigurableArrayPool(int maxArrayLength, int maxArraysPerBucket) {
     if (maxArrayLength < 1)
-      throw new ArgumentOutOfRangeException(nameof(maxArrayLength));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(maxArrayLength));
     if (maxArraysPerBucket < 1)
-      throw new ArgumentOutOfRangeException(nameof(maxArraysPerBucket));
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(maxArraysPerBucket));
 
     this._maxArrayLength = maxArrayLength;
     
@@ -62,7 +63,8 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
   public override T[] Rent(int minimumLength) {
     switch (minimumLength) {
       case < 0:
-        throw new ArgumentOutOfRangeException(nameof(minimumLength));
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(minimumLength));
+        break;
       case 0:
         return [];
       default:
@@ -95,17 +97,17 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
   /// <inheritdoc />
   public override void Return(T[] array, bool clearArray = false) {
     if (array == null)
-      throw new ArgumentNullException(nameof(array));
+      AlwaysThrow.ArgumentNullException(nameof(array));
 
     var arrayLength = array.Length;
     if (arrayLength == 0)
-      throw new ArgumentException("The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
+      AlwaysThrow.ArgumentException(nameof(array), "The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
 
     if (arrayLength > this._maxArrayLength)
       return;
 
     if ((arrayLength & (arrayLength-1)) != 0)
-      throw new ArgumentException("The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
+      AlwaysThrow.ArgumentException(nameof(array), "The buffer is not associated with this pool and may not be returned to it. (Parameter 'array')");
 
     var bucketIndex = this.GetBucketIndex(arrayLength);
     if (clearArray)

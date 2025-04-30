@@ -22,6 +22,8 @@
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
+using Guard;
+
 namespace System;
 
 public static partial class StringPolyfills {
@@ -41,9 +43,9 @@ public static partial class StringPolyfills {
 #endif
   public static bool Contains(this string @this, string value, StringComparison comparisonType) {
     if (@this == null)
-      throw new NullReferenceException(nameof(@this));
+      AlwaysThrow.NullReferenceException(nameof(@this));
     if (value == null)
-      throw new ArgumentNullException(nameof(value));
+      AlwaysThrow.ArgumentNullException(nameof(value));
 
     if (value.Length <= 0)
       return true;

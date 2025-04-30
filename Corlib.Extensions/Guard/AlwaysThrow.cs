@@ -34,7 +34,7 @@ internal static class AlwaysThrow {
   [DoesNotReturn]
   public static void ArgumentOutOfRangeException(
     string parameterName,
-    string message,
+    string message = null,
     [CallerMemberName] string caller = null
   ) => throw new ArgumentOutOfRangeException(
     parameterName,

@@ -26,6 +26,10 @@
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
 
   <ItemGroup>
+    <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
   </ItemGroup>
 
@@ -63,6 +67,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>NumericsHelpers.T4.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Guard\" />
   </ItemGroup>
 
 </Project>

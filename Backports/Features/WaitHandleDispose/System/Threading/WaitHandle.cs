@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_WAITHANDLE_DISPOSE
 
+using Guard;
 using System.Reflection;
 
 namespace System.Threading;
@@ -26,7 +27,7 @@ namespace System.Threading;
 public static partial class WaitHandlePolyfills {
   public static void Dispose(this WaitHandle @this) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
 
     var method = @this.GetType().GetMethod("Dispose", BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
     method?.Invoke(@this, []);

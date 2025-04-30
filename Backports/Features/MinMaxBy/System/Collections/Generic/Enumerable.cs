@@ -23,6 +23,8 @@
 using System.Runtime.CompilerServices;
 #endif
 
+using Guard;
+
 namespace System.Collections.Generic;
 
 public static partial class EnumerablePolyfills {
@@ -61,9 +63,9 @@ public static partial class EnumerablePolyfills {
   /// <returns>The value with the maximum key in the sequence.</returns>
   public static TItem MaxBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (keySelector == null)
-      throw new ArgumentNullException(nameof(keySelector));
+      AlwaysThrow.ArgumentNullException(nameof(keySelector));
 
     comparer ??= Comparer<TKey>.Default;
     using var enumerator = @this.GetEnumerator();
@@ -71,7 +73,7 @@ public static partial class EnumerablePolyfills {
       if (default(TItem) == null)
         return default;
 
-      throw new InvalidOperationException("The sequence contains no elements.");
+      AlwaysThrow.InvalidOperationException("The sequence contains no elements.");
     }
 
     var source1 = enumerator.Current;
@@ -152,9 +154,9 @@ public static partial class EnumerablePolyfills {
   /// <returns>The value with the minimum key in the sequence.</returns>
   public static TItem MinBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (keySelector == null)
-      throw new ArgumentNullException(nameof(keySelector));
+      AlwaysThrow.ArgumentNullException(nameof(keySelector));
 
     comparer ??= Comparer<TKey>.Default;
     using var enumerator = @this.GetEnumerator();
@@ -162,7 +164,7 @@ public static partial class EnumerablePolyfills {
       if (default(TItem) == null)
         return default;
 
-      throw new InvalidOperationException("The sequence contains no elements.");
+      AlwaysThrow.InvalidOperationException("The sequence contains no elements.");
     }
 
     var source1 = enumerator.Current;

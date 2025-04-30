@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_TASK_AWAITER && SUPPORTS_ASYNC
+using Guard;
 using System.Threading.Tasks;
 
 namespace System.Runtime.CompilerServices;
@@ -29,7 +30,7 @@ public readonly struct TaskAwaiter(Task task) : ICriticalNotifyCompletion {
 
   public void OnCompleted(Action continuation) {
     if (continuation == null)
-      throw new ArgumentNullException(nameof(continuation));
+      AlwaysThrow.ArgumentNullException(nameof(continuation));
 
     this._task.ContinueWith(t => continuation(), TaskScheduler.Current);
   }
@@ -52,7 +53,7 @@ public readonly struct TaskAwaiter<TResult>(Task<TResult> task) : ICriticalNotif
 
   public void OnCompleted(Action continuation) {
     if (continuation == null)
-      throw new ArgumentNullException(nameof(continuation));
+      AlwaysThrow.ArgumentNullException(nameof(continuation));
 
     this._task.ContinueWith(t => continuation(), TaskScheduler.Current);
   }

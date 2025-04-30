@@ -22,6 +22,8 @@
 #if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
 #endif
+using Guard;
+
 namespace System;
 
 public static partial class StringPolyfills {
@@ -31,7 +33,7 @@ public static partial class StringPolyfills {
 #endif
   public static int IndexOf(this string @this, char value, StringComparison comparisonType) {
     if (@this == null)
-      throw new NullReferenceException(nameof(@this));
+      AlwaysThrow.NullReferenceException(nameof(@this));
     
     return @this.IndexOf(value.ToString(), comparisonType);
   }

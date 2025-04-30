@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_LINQ
+using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -29,7 +30,7 @@ namespace System.Linq;
 public static partial class EnumerablePolyfills {
   public static TResult[] ToArray<TResult>(this IEnumerable<TResult> @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     switch (@this) {
       case ICollection<TResult> collection: {
@@ -67,7 +68,7 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TResult> Cast<TResult>(this IEnumerable @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     return Invoke(@this);
 
@@ -79,9 +80,9 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     return Invoke(@this, predicate);
 
@@ -94,9 +95,9 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> predicate) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     return Invoke(@this, predicate);
 
@@ -110,9 +111,9 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (selector == null)
-      throw new ArgumentNullException(nameof(selector));
+      AlwaysThrow.ArgumentNullException(nameof(selector));
 
     return Invoke(@this, selector);
 
@@ -124,9 +125,9 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (selector == null)
-      throw new ArgumentNullException(nameof(selector));
+      AlwaysThrow.ArgumentNullException(nameof(selector));
 
     return Invoke(@this, selector);
 
@@ -142,11 +143,11 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (keySelector == null)
-      throw new ArgumentNullException(nameof(keySelector));
+      AlwaysThrow.ArgumentNullException(nameof(keySelector));
     if (comparer == null)
-      throw new ArgumentNullException(nameof(comparer));
+      AlwaysThrow.ArgumentNullException(nameof(comparer));
 
     return Invoke(@this, keySelector, Compare);
 
@@ -172,7 +173,7 @@ public static partial class EnumerablePolyfills {
 
   public static TSource First<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     foreach (var item in @this)
       return item;
@@ -183,9 +184,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource First<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     foreach (var item in @this)
       if (predicate(item))
@@ -199,13 +200,13 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Single<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     var result = default(TSource);
     var found = false;
     foreach (var item in @this) {
       if (found)
-        throw new InvalidOperationException("Sequence contains more than one element");
+        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
 
       result = item;
       found = true;
@@ -219,9 +220,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Single<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     var result = default(TSource);
     var found = false;
@@ -230,7 +231,7 @@ public static partial class EnumerablePolyfills {
         continue;
 
       if (found)
-        throw new InvalidOperationException("Sequence contains more than one element");
+        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
 
       result = item;
       found = true;
@@ -246,7 +247,7 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Last<TSource>(this IEnumerable<TSource> @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     var result = default(TSource);
     var found = false;
@@ -263,9 +264,9 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Last<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+      AlwaysThrow.ArgumentNullException(nameof(predicate));
 
     var result = default(TSource);
     var found = false;
@@ -287,7 +288,7 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Min<TSource>(this IEnumerable<TSource> source) {
     if (source == null)
-      throw new ArgumentNullException(nameof(source));
+      AlwaysThrow.ArgumentNullException(nameof(source));
 
     var comparer = Comparer<TSource>.Default;
     using var enumerator = source.GetEnumerator();
@@ -308,7 +309,7 @@ public static partial class EnumerablePolyfills {
 
   public static TSource Max<TSource>(this IEnumerable<TSource> source) {
     if (source == null)
-      throw new ArgumentNullException(nameof(source));
+      AlwaysThrow.ArgumentNullException(nameof(source));
 
     var comparer = Comparer<TSource>.Default;
 
@@ -340,11 +341,10 @@ public static partial class EnumerablePolyfills {
     #endregion
   }
 
-  private sealed class Grouping<TKey, TSource> : IGrouping<TKey, TSource> {
-    private readonly List<TSource> _items = new();
-    public Grouping(TKey key) => this.Key = key;
+  private sealed class Grouping<TKey, TSource>(TKey key) : IGrouping<TKey, TSource> {
+    private readonly List<TSource> _items = [];
 
-    public TKey Key { get; }
+    public TKey Key { get; } = key;
 
     internal void Add(TSource item) => this._items.Add(item);
 
@@ -359,9 +359,9 @@ public static partial class EnumerablePolyfills {
 
   public static IEnumerable<IGrouping<TKey, TSource>> GroupBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
     if (source == null)
-      throw new ArgumentNullException(nameof(source));
+      AlwaysThrow.ArgumentNullException(nameof(source));
     if (keySelector == null)
-      throw new ArgumentNullException(nameof(keySelector));
+      AlwaysThrow.ArgumentNullException(nameof(keySelector));
 
     var comparer = EqualityComparer<TKey>.Default;
     return Invoke(source, keySelector, comparer);
@@ -381,7 +381,7 @@ public static partial class EnumerablePolyfills {
   }
 
   [DoesNotReturn]
-  private static void _ThrowNoElements() => throw new InvalidOperationException("Sequence contains no elements");
+  private static void _ThrowNoElements() => AlwaysThrow.InvalidOperationException("Sequence contains no elements");
 }
 
 #endif

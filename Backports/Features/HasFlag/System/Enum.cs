@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_HAS_FLAG
 
+using Guard;
 using System.Reflection.Emit;
 
 namespace System;
@@ -60,8 +61,8 @@ public static partial class EnumPolyfills {
           il.Emit(OpCodes.Conv_I1);
         else if (underlyingType == typeof(byte))
           il.Emit(OpCodes.Conv_U1);
-        else 
-          throw new ArgumentException("Unsupported underlying enum type", nameof(underlyingType));
+        else
+          AlwaysThrow.ArgumentException("Unsupported underlying enum type", nameof(underlyingType));
       }
     }
   }

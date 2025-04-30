@@ -19,14 +19,16 @@
 
 #if !SUPPORTS_METHODINFO_CREATEDELEGATE
 
+using Guard;
+
 namespace System.Reflection;
 
 public static partial class MethodInfoPolyfills {
   public static Delegate CreateDelegate(this MethodInfo @this, Type result) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (result == null)
-      throw new ArgumentNullException(nameof(result));
+      AlwaysThrow.ArgumentNullException(nameof(result));
 
     return Delegate.CreateDelegate(result, @this);
   }

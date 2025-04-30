@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_SPAN
 
+using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,7 +40,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   public Span(T[] array, int start, int length) : this(new SpanHelper.ManagedArrayHandler<T>(array, start), length) {
     if ((uint)start > (uint)array.Length || (uint)length > (uint)(array.Length - start))
-      throw new ArgumentOutOfRangeException();
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(length));
   }
 
 #pragma warning disable CS8500
@@ -61,7 +62,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
   public ref T this[int index] {
     get {
       if ((uint)index >= (uint)this.Length)
-        throw new ArgumentOutOfRangeException();
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
       return ref this.memoryHandler.GetRef(index);
     }
@@ -69,7 +70,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   public Span<T> Slice(int start, int length) {
     if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
-      throw new ArgumentOutOfRangeException();
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(length));
 
     return new(this.memoryHandler.SliceFrom(start), length);
   }
@@ -84,7 +85,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
   public void CopyTo(Span<T> other) {
     var length = this.Length;
     if (other.Length < length)
-      throw new ArgumentOutOfRangeException();
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(other));
 
     this.memoryHandler.CopyTo(other.memoryHandler, this.Length);
   }

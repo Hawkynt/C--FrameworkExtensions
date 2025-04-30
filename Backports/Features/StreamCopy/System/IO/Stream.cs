@@ -23,6 +23,8 @@
 using System.Runtime.CompilerServices;
 #endif
 
+using Guard;
+
 namespace System.IO;
 
 public static partial class StreamPolyfills {
@@ -33,13 +35,13 @@ public static partial class StreamPolyfills {
   /// <param name="target">Target <see cref="Stream" />.</param>
   public static void CopyTo(this Stream @this, Stream target) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
     if (target == null)
-      throw new ArgumentNullException(nameof(target));
+      AlwaysThrow.ArgumentNullException(nameof(target));
     if (!@this.CanRead)
-      throw new ArgumentException("Can not read", nameof(@this));
+      AlwaysThrow.ArgumentException("Can not read", nameof(@this));
     if (!target.CanWrite)
-      throw new ArgumentException("Can not write", nameof(target));
+      AlwaysThrow.ArgumentException("Can not write", nameof(target));
 
     var buffer = new byte[65536];
     int count;

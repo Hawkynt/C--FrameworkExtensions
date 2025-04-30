@@ -19,6 +19,8 @@
 
 #if !SUPPORTS_STOPWATCH_RESTART
 
+using Guard;
+
 namespace System.Diagnostics;
 
 public static partial class StopwatchPolyfills {
@@ -28,7 +30,7 @@ public static partial class StopwatchPolyfills {
   /// <param name="this">This <see cref="Stopwatch" /></param>
   public static void Restart(this Stopwatch @this) {
     if (@this == null)
-      throw new NullReferenceException();
+      AlwaysThrow.NullReferenceException(nameof(@this));
 
     @this.Reset();
     @this.Start();

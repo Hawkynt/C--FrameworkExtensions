@@ -19,12 +19,14 @@
 
 #if !SUPPORTS_STRING_BUILDER_CLEAR
 
+using Guard;
+
 namespace System.Text;
 
 public static partial class StringBuilderPolyfills {
   public static void Clear(this StringBuilder @this) {
     if (@this == null)
-      throw new ArgumentNullException(nameof(@this));
+      AlwaysThrow.ArgumentNullException(nameof(@this));
 
     @this.Length = 0;
   }

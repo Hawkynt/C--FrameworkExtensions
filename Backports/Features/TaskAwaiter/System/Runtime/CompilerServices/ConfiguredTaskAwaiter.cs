@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_TASK_AWAITER && SUPPORTS_ASYNC
 using System.Threading.Tasks;
+using Guard;
 
 namespace System.Runtime.CompilerServices;
 
@@ -34,7 +35,7 @@ public readonly struct ConfiguredTaskAwaitable(Task task, bool continueOnCapture
 
     public void OnCompleted(Action continuation) {
       if (continuation == null)
-        throw new ArgumentNullException(nameof(continuation));
+        AlwaysThrow.ArgumentNullException(nameof(continuation));
 
       this._task.ContinueWith(t => continuation(), continueOnCapturedContext ? TaskScheduler.Current : TaskScheduler.Default);
     }
@@ -63,7 +64,7 @@ public readonly struct ConfiguredTaskAwaitable<TResult>(Task<TResult> task, bool
 
     public void OnCompleted(Action continuation) {
       if (continuation == null)
-        throw new ArgumentNullException(nameof(continuation));
+        AlwaysThrow.ArgumentNullException(nameof(continuation));
 
       this._task.ContinueWith(t => continuation(), continueOnCapturedContext ? TaskScheduler.Current : TaskScheduler.Default);
     }
