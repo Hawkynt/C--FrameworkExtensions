@@ -103,14 +103,14 @@ internal static class AlwaysThrow {
   public static void ArgumentNullException(string parameterName, [CallerMemberName] string caller = null) =>
     throw new ArgumentNullException(
       parameterName,
-      $@"{(caller == null ? string.Empty : caller + ":")}Parameter ""{parameterName}"" must not be <null>"
+      $"""{(caller == null ? string.Empty : caller + ":")}Parameter "{parameterName}" must not be <null>"""
     );
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void NullReferenceException(string parameterName, [CallerMemberName] string caller = null) =>
-    throw new NullReferenceException($@"{(caller == null ? string.Empty : caller + ":")}Instance in ""{parameterName}"" must not be <null>");
+    throw new NullReferenceException($"""{(caller == null ? string.Empty : caller + ":")}Instance in "{parameterName}" must not be <null>""");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
@@ -269,4 +269,11 @@ internal static class AlwaysThrow {
       $"{(caller == null ? string.Empty : caller + ":")}The value {value} provided is not part of the enum {typeof(TEnum).Name}",
       parameterName
     ) { Data = { { parameterName, value }, { "AllowedKeys", Enum.GetNames(typeof(TEnum)) }, { "AllowedValues", Enum.GetValues(typeof(TEnum)) } } };
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void ObjectDisposedException(string objectName, [CallerMemberName] string caller = null) => 
+    throw new ObjectDisposedException(objectName,$"{(caller == null ? string.Empty : caller + ":")} The object {objectName} is already disposed and must no longer be used.");
+
 }
