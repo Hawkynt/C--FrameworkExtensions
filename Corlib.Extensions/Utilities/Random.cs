@@ -20,7 +20,18 @@ internal static class Random {
 #if SUPPORTS_RANDOM_SHARED
   public static readonly System.Random Shared = System.Random.Shared;
 #else
-  public static readonly System.Random Shared = new ((int) System.Diagnostics.Stopwatch.GetTimestamp());
+  public static readonly System.Random Shared = new (_CreateSeed());
+
+  private static int _CreateSeed() {
+    var ticks = (ulong)System.Diagnostics.Stopwatch.GetTimestamp();
+    const ulong _GOLDEN_GAMMA = 0x9E3779B97F4A7C15;
+    ticks += _GOLDEN_GAMMA;
+    ticks = (ticks ^ (ticks >> 30)) * 0xBF58476D1CE4E5B9;
+    ticks = (ticks ^ (ticks >> 27)) * 0x94D049BB133111EB;
+    ticks ^= ticks >> 32;
+    return (int)ticks;
+  }
+
 #endif
   
 }
