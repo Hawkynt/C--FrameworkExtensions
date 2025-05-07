@@ -39,8 +39,8 @@ namespace System;
 ///   - they are mutable rather than readonly, and
 ///   - their members (such as Item1, Item2, etc) are fields rather than properties.
 /// </summary>
-public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple>, ITupleInternal {
-  int ITupleInternal.Size => 0;
+public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple>, IValueTupleInternal {
+  int IValueTupleInternal.Size => 0;
 
   /// <summary>Creates a new struct 0-tuple.</summary>
   /// <returns>A 0-tuple.</returns>
@@ -220,7 +220,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => 0;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  int ITupleInternal.GetHashCode(IEqualityComparer comparer) => 0;
+  int IValueTupleInternal.GetHashCode(IEqualityComparer comparer) => 0;
 
   /// <summary>
   ///   Returns a string that represents the value of this <see cref="ValueTuple" /> instance.
@@ -233,7 +233,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   public override string ToString() => "()";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  string ITupleInternal.ToStringEnd() => ")";
+  string IValueTupleInternal.ToStringEnd() => ")";
 
 }
 
@@ -249,7 +249,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
 /// <typeparam name="T7">The type of the tuple's seventh component.</typeparam>
 /// <typeparam name="TRest">The type of the tuple's eighth component.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, ITupleInternal
+public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>>, IValueTupleInternal
   where TRest : struct {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}" /> instance's first component.
@@ -302,8 +302,9 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   /// <param name="item6">The value of the tuple's sixth component.</param>
   /// <param name="item7">The value of the tuple's seventh component.</param>
   /// <param name="rest">The value of the tuple's eight component.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ValueTuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, TRest rest) {
-    if (rest is not ITupleInternal)
+    if (rest is not IValueTupleInternal)
       AlwaysThrow.ArgumentException(nameof(rest), "The TRest type argument of ValueTuple`8 must be a ValueTuple.");
 
     this.Item1 = item1;
@@ -316,7 +317,10 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
     this.Rest = rest;
   }
 
-  int ITupleInternal.Size => this.Rest is not ITupleInternal rest ? 8 : 7 + rest.Size;
+  int IValueTupleInternal.Size {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this.Rest is not IValueTupleInternal rest ? 8 : 7 + rest.Size;
+  }
 
   /// <inheritdoc />
   /// <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
@@ -327,6 +331,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   ///   instance is equal to <paramref name="other" />, and greater than zero if this instance is greater
   ///   than <paramref name="other" />.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int CompareTo(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> other) {
     var c = Comparer<T1>.Default.Compare(this.Item1, other.Item1);
     if (c != 0)
@@ -383,6 +388,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   ///     </item>
   ///   </list>
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => obj is ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple && this.Equals(tuple);
 
   /// <inheritdoc />
@@ -399,6 +405,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its fields
   ///   are equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> other) =>
     EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
     && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2)
@@ -415,7 +422,7 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   /// <returns>A 32-bit signed integer hash code.</returns>
   public override int GetHashCode() {
     // We want to have a limited hash in this case.  We'll use the last 8 elements of the tuple
-    if (this.Rest is not ITupleInternal rest)
+    if (this.Rest is not IValueTupleInternal rest)
       return NumericsHelpers.CombineHash(
         EqualityComparer<T1>.Default.GetHashCode(this.Item1),
         EqualityComparer<T2>.Default.GetHashCode(this.Item2),
@@ -511,78 +518,78 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
   ///   The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4, Item5, Item6, Item7, Rest)</c>.
   ///   If any field value is <see langword="null" />, it is represented as <see cref="string.Empty" />.
   /// </remarks>
-  public override string ToString() => this.Rest is not ITupleInternal rest ? $"({(this.Item1 == null ? string.Empty : this.Item1.ToString())}, {(this.Item2 == null ? string.Empty : this.Item2.ToString())}, {(this.Item3 == null ? string.Empty : this.Item3.ToString())}, {(this.Item4 == null ? string.Empty : this.Item4.ToString())}, {(this.Item5 == null ? string.Empty : this.Item5.ToString())}, {(this.Item6 == null ? string.Empty : this.Item6.ToString())}, {(this.Item7 == null ? string.Empty : this.Item7.ToString())}, {this.Rest})" : "(" + (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ", " + (this.Item3 == null ? string.Empty : this.Item3.ToString()) + ", " + (this.Item4 == null ? string.Empty : this.Item4.ToString()) + ", " + (this.Item5 == null ? string.Empty : this.Item5.ToString()) + ", " + (this.Item6 == null ? string.Empty : this.Item6.ToString()) + ", " + (this.Item7 == null ? string.Empty : this.Item7.ToString()) + ", " + rest.ToStringEnd();
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public override string ToString() => "(" + this.ToStringEnd();
 
-  int IComparable.CompareTo(object obj) {
-    if (obj == null)
-      return 1;
-
-    if (obj is not ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(obj));
-
-    return this.CompareTo((ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)obj);
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public int CompareTo(object obj) {
+    switch (obj) {
+      case null:
+        return 1;
+      case ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple:
+        return this.CompareTo(tuple);
+      default:
+        AlwaysThrow.ArgumentException(nameof(obj),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
-  int IStructuralComparable.CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public int CompareTo(object other, IComparer comparer) {
+    switch (other) {
+      case null:
+        return 1;
+      case ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple: {
+        var c = comparer.Compare(this.Item1, tuple.Item1);
+        if (c != 0)
+          return c;
 
-    if (other is not ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(other));
+        c = comparer.Compare(this.Item2, tuple.Item2);
+        if (c != 0)
+          return c;
 
-    var objTuple = (ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)other;
+        c = comparer.Compare(this.Item3, tuple.Item3);
+        if (c != 0)
+          return c;
 
-    var c = comparer.Compare(this.Item1, objTuple.Item1);
-    if (c != 0)
-      return c;
+        c = comparer.Compare(this.Item4, tuple.Item4);
+        if (c != 0)
+          return c;
 
-    c = comparer.Compare(this.Item2, objTuple.Item2);
-    if (c != 0)
-      return c;
+        c = comparer.Compare(this.Item5, tuple.Item5);
+        if (c != 0)
+          return c;
 
-    c = comparer.Compare(this.Item3, objTuple.Item3);
-    if (c != 0)
-      return c;
+        c = comparer.Compare(this.Item6, tuple.Item6);
+        if (c != 0)
+          return c;
 
-    c = comparer.Compare(this.Item4, objTuple.Item4);
-    if (c != 0)
-      return c;
-
-    c = comparer.Compare(this.Item5, objTuple.Item5);
-    if (c != 0)
-      return c;
-
-    c = comparer.Compare(this.Item6, objTuple.Item6);
-    if (c != 0)
-      return c;
-
-    c = comparer.Compare(this.Item7, objTuple.Item7);
-    return c != 0 ? c : comparer.Compare(this.Rest, objTuple.Rest);
+        c = comparer.Compare(this.Item7, tuple.Item7);
+        return c != 0 ? c : comparer.Compare(this.Rest, tuple.Rest);
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(object other, IEqualityComparer comparer) => other is ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple
+                                                                  && comparer.Equals(this.Item1, tuple.Item1)
+                                                                  && comparer.Equals(this.Item2, tuple.Item2)
+                                                                  && comparer.Equals(this.Item3, tuple.Item3)
+                                                                  && comparer.Equals(this.Item4, tuple.Item4)
+                                                                  && comparer.Equals(this.Item5, tuple.Item5)
+                                                                  && comparer.Equals(this.Item6, tuple.Item6)
+                                                                  && comparer.Equals(this.Item7, tuple.Item7)
+                                                                  && comparer.Equals(this.Rest, tuple.Rest);
 
-    var objTuple = (ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>)other;
-
-    return comparer.Equals(this.Item1, objTuple.Item1)
-           && comparer.Equals(this.Item2, objTuple.Item2)
-           && comparer.Equals(this.Item3, objTuple.Item3)
-           && comparer.Equals(this.Item4, objTuple.Item4)
-           && comparer.Equals(this.Item5, objTuple.Item5)
-           && comparer.Equals(this.Item6, objTuple.Item6)
-           && comparer.Equals(this.Item7, objTuple.Item7)
-           && comparer.Equals(this.Rest, objTuple.Rest);
-  }
-
-  int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
-
-  int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public int GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
   private int GetHashCodeCore(IEqualityComparer comparer) {
     // We want to have a limited hash in this case.  We'll use the last 8 elements of the tuple
-    if (this.Rest is not ITupleInternal rest)
+    if (this.Rest is not IValueTupleInternal rest)
       return NumericsHelpers.CombineHash(
         comparer.GetHashCode(this.Item1),
         comparer.GetHashCode(this.Item2),
@@ -660,7 +667,12 @@ public struct ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IEquatable<ValueTu
     }
   }
 
-  string ITupleInternal.ToStringEnd() => this.Rest is not ITupleInternal rest ? $"{(this.Item1 == null ? string.Empty : this.Item1.ToString())}, {(this.Item2 == null ? string.Empty : this.Item2.ToString())}, {(this.Item3 == null ? string.Empty : this.Item3.ToString())}, {(this.Item4 == null ? string.Empty : this.Item4.ToString())}, {(this.Item5 == null ? string.Empty : this.Item5.ToString())}, {(this.Item6 == null ? string.Empty : this.Item6.ToString())}, {(this.Item7 == null ? string.Empty : this.Item7.ToString())}, {this.Rest})" : (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ", " + (this.Item3 == null ? string.Empty : this.Item3.ToString()) + ", " + (this.Item4 == null ? string.Empty : this.Item4.ToString()) + ", " + (this.Item5 == null ? string.Empty : this.Item5.ToString()) + ", " + (this.Item6 == null ? string.Empty : this.Item6.ToString()) + ", " + (this.Item7 == null ? string.Empty : this.Item7.ToString()) + ", " + rest.ToStringEnd();
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public string ToStringEnd() => this.Rest is not IValueTupleInternal rest 
+    ? $"{this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6}, {this.Item7}, {this.Rest})" 
+    : $"{this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6}, {this.Item7}, {rest.ToStringEnd()}"
+  ;
+
 }
 
 /// <summary>

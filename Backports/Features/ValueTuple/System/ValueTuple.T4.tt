@@ -31,7 +31,6 @@ using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -79,7 +78,7 @@ public struct ValueTuple<<#= TypeParams(arity) #>>(<#= Args(arity) #>) :
   IStructuralComparable,
   IComparable,
   IComparable<ValueTuple<<#= TypeParams(arity) #>>>,
-  ITupleInternal {
+  IValueTupleInternal {
 
 <#
 for (int i = 1; i <= arity; i++) {
@@ -90,7 +89,7 @@ for (int i = 1; i <= arity; i++) {
 }
 #>
 
-  int ITupleInternal.Size {
+  int IValueTupleInternal.Size {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get => <#= arity #>;
   }

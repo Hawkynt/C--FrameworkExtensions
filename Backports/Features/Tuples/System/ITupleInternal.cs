@@ -1,5 +1,4 @@
-﻿#region (c)2010-2042 Hawkynt
-
+﻿#if !SUPPORTS_TUPLES
 // This file is part of Hawkynt's .NET Framework extensions.
 // 
 // Hawkynt's .NET Framework extensions are free software:
@@ -15,22 +14,9 @@
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-#endregion
-
-#if !SUPPORTS_VALUE_TUPLE
-
-using System.Collections;
-
 namespace System;
 
-/// <summary>
-///   Helper so we can call some tuple methods recursively without knowing the underlying types.
-/// </summary>
-internal interface ITupleInternal {
-  int Size { get; }
+// this is just to mark our Tuples so we can check the TRest parameter of an 8-tuple
+internal interface ITupleInternal;
 
-  int GetHashCode(IEqualityComparer comparer);
-
-  string ToStringEnd();
-}
 #endif

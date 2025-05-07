@@ -36,7 +36,6 @@
 using Guard;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -109,7 +108,7 @@ public static class Tuple {
 
 [Serializable]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public class Tuple<T1>(T1 item1) : IStructuralEquatable, IStructuralComparable, IComparable {
+public class Tuple<T1>(T1 item1) : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -131,7 +130,7 @@ public class Tuple<T1>(T1 item1) : IStructuralEquatable, IStructuralComparable, 
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0})", this.Item1);
+  public override string ToString() => $"({this.Item1})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -148,7 +147,7 @@ public class Tuple<T1>(T1 item1) : IStructuralEquatable, IStructuralComparable, 
 
 [Serializable]
 [method:MethodImpl(MethodImplOptions.AggressiveInlining)]
-public class Tuple<T1, T2>(T1 item1, T2 item2) : IStructuralEquatable, IStructuralComparable, IComparable {
+public class Tuple<T1, T2>(T1 item1, T2 item2) : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   
   public T1 Item1 { get; } = item1;
 
@@ -179,7 +178,7 @@ public class Tuple<T1, T2>(T1 item1, T2 item2) : IStructuralEquatable, IStructur
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0}, {1})", this.Item1, this.Item2);
+  public override string ToString() => $"({this.Item1}, {this.Item2})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -202,7 +201,7 @@ public class Tuple<T1, T2>(T1 item1, T2 item2) : IStructuralEquatable, IStructur
 
 [Serializable]
 [method:MethodImpl(MethodImplOptions.AggressiveInlining)]
-public class Tuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3) : IStructuralEquatable, IStructuralComparable, IComparable {
+public class Tuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3) : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
   public T2 Item2 { get; } = item2;
   public T3 Item3 { get; } = item3;
@@ -234,7 +233,7 @@ public class Tuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3) : IStructuralEquata
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2})", this.Item1, this.Item2, this.Item3);
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -261,7 +260,7 @@ public class Tuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3) : IStructuralEquata
 [Serializable]
 [method:MethodImpl(MethodImplOptions.AggressiveInlining)]
 public class Tuple<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4)
-  : IStructuralEquatable, IStructuralComparable, IComparable {
+  : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
   public T2 Item2 { get; } = item2;
   public T3 Item3 { get; } = item3;
@@ -296,14 +295,7 @@ public class Tuple<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4)
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(
-    CultureInfo.InvariantCulture,
-    "({0}, {1}, {2}, {3})",
-    this.Item1,
-    this.Item2,
-    this.Item3,
-    this.Item4
-  );
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -333,7 +325,7 @@ public class Tuple<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4)
 [Serializable]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 public class Tuple<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5)
-  : IStructuralEquatable, IStructuralComparable, IComparable {
+  : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
   public T2 Item2 { get; } = item2;
   public T3 Item3 { get; } = item3;
@@ -371,15 +363,7 @@ public class Tuple<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(
-    CultureInfo.InvariantCulture,
-    "({0}, {1}, {2}, {3}, {4})",
-    this.Item1,
-    this.Item2,
-    this.Item3,
-    this.Item4,
-    this.Item5
-  );
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -412,7 +396,7 @@ public class Tuple<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T
 [Serializable]
 [method:MethodImpl(MethodImplOptions.AggressiveInlining)]
 public class Tuple<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6)
-  : IStructuralEquatable, IStructuralComparable, IComparable {
+  : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
   public T2 Item2 { get; } = item2;
   public T3 Item3 { get; } = item3;
@@ -453,16 +437,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(
-    CultureInfo.InvariantCulture,
-    "({0}, {1}, {2}, {3}, {4}, {5})",
-    this.Item1,
-    this.Item2,
-    this.Item3,
-    this.Item4,
-    this.Item5,
-    this.Item6
-  );
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -498,7 +473,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item
 [Serializable]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 public class Tuple<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7)
-  : IStructuralEquatable, IStructuralComparable, IComparable {
+  : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   public T1 Item1 { get; } = item1;
   public T2 Item2 { get; } = item2;
   public T3 Item3 { get; } = item3;
@@ -542,17 +517,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3, T4 
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => string.Format(
-    CultureInfo.InvariantCulture,
-    "({0}, {1}, {2}, {3}, {4}, {5}, {6})",
-    this.Item1,
-    this.Item2,
-    this.Item3,
-    this.Item4,
-    this.Item5,
-    this.Item6,
-    this.Item7
-  );
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6}, {this.Item7})";
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
@@ -589,11 +554,13 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3, T4 
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IStructuralComparable, IComparable {
+public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IStructuralComparable, IComparable, ITupleInternal {
   
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, TRest rest) {
-    CheckType(rest);
+    if(rest is not ITupleInternal)
+      AlwaysThrow.ArgumentException(nameof(rest), "The last element of an eight element tuple must be a Tuple.");
+
     this.Item1 = item1;
     this.Item2 = item2;
     this.Item3 = item3;
@@ -652,42 +619,9 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() {
     var restString = this.Rest.ToString();
-    return string.Format(
-      CultureInfo.InvariantCulture,
-      "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
-      this.Item1,
-      this.Item2,
-      this.Item3,
-      this.Item4,
-      this.Item5,
-      this.Item6,
-      this.Item7,
-      restString.Substring(1, restString.Length - 2)
-    );
+    return $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6}, {this.Item7}, {restString[1..^1]})";
   }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static void CheckType(TRest rest) {
-    if (rest == null || !typeof(TRest).IsGenericType)
-      AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
-
-    var type = typeof(TRest).GetGenericTypeDefinition();
-    if
-    (
-      type == typeof(Tuple<>)
-      || type == typeof(Tuple<,>)
-      || type == typeof(Tuple<,,>)
-      || type == typeof(Tuple<,,,>)
-      || type == typeof(Tuple<,,,,>)
-      || type == typeof(Tuple<,,,,,>)
-      || type == typeof(Tuple<,,,,,,>)
-      || type == typeof(Tuple<,,,,,,,>)
-    )
-      return;
-
-    AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
-  }
-
+  
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
     switch (other) {
