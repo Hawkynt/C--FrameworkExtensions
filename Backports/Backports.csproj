@@ -46,6 +46,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FuncAction.T4.cs</LastGenOutput>
     </None>
+    <None Update="Features\ValueTuple\System\ValueTuple.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ValueTuple.T4.cs</LastGenOutput>
+    </None>
     <None Update="System\NumericsHelpers.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>NumericsHelpers.T4.cs</LastGenOutput>
@@ -62,6 +66,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>FuncAction.T4.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Features\ValueTuple\System\ValueTuple.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ValueTuple.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\NumericsHelpers.T4.cs">
       <DesignTime>True</DesignTime>
