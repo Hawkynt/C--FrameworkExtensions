@@ -29,9 +29,8 @@
 
 namespace System.Numerics;
 
-#if SUPPORTS_INLINING
 using Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 internal static class NumericsHelpers {
   <# 
@@ -52,10 +51,8 @@ internal static class NumericsHelpers {
     
     // Begin preprocessor directive for built-in CombineHash
     builder.AppendLine();
-    builder.AppendLine("#if SUPPORTS_SYSTEM_HASHCODE");
-    builder.AppendLine("#if SUPPORTS_INLINING");
     builder.AppendLine("  [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-    builder.AppendLine("#endif");
+    builder.AppendLine("#if SUPPORTS_SYSTEM_HASHCODE");
 
     // use built-in CombineHash if available
     builder.AppendLine($"  public static int CombineHash({string.Join(", ", arguments)}) => HashCode.Combine({string.Join(", ", Enumerable.Range(1, paramCount).Select(i => $"n{i}"))});");

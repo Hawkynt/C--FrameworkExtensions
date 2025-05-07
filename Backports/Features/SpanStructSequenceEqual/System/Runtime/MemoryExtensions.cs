@@ -15,8 +15,9 @@
 
 #if !SUPPORTS_SPAN_STRUCT_SEQUENCE_EQUAL
 
-using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -30,6 +31,7 @@ public static partial class MemoryExtensions {
   /// <typeparam name="T">The type of elements in the sequence.</typeparam>
   /// <returns>
   /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool SequenceEqual<T>(
     this Span<T> span,
     ReadOnlySpan<T> other,

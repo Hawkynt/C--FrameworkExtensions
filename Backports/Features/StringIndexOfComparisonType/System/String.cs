@@ -19,18 +19,15 @@
 
 #if !SUPPORTS_STRING_CONTAINS_COMPARISON_TYPE
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
 
 namespace System;
 
 public static partial class StringPolyfills {
   
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static int IndexOf(this string @this, char value, StringComparison comparisonType) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));

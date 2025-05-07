@@ -21,13 +21,17 @@
 using System.Threading.Tasks;
 using System.Threading;
 using Guard;
+using MethodImplOptions = Utilities.MethodImplOptions;
+using System.Runtime.CompilerServices;
 
 namespace System.IO;
 
 public static partial class StreamPolyfills {
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task<int> ReadAsync(this Stream @this, byte[] buffer, int offset, int count) => ReadAsync(@this, buffer, offset, count, CancellationToken.None);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task<int> ReadAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
@@ -77,8 +81,10 @@ public static partial class StreamPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count) => WriteAsync(@this, buffer, offset, count, CancellationToken.None);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
@@ -128,6 +134,7 @@ public static partial class StreamPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task CopyToAsync(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));

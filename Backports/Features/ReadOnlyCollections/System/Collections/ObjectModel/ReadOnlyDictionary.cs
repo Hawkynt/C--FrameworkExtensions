@@ -20,9 +20,12 @@
 #if !SUPPORTS_READ_ONLY_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.ObjectModel;
 
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
 public class ReadOnlyDictionary<K, V>(IDictionary<K, V> dictionary) : Dictionary<K, V>(dictionary), IReadOnlyDictionary<K, V>;
 
 #endif

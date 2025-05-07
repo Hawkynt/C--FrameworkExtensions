@@ -17,9 +17,8 @@
 #if !SUPPORTS_TO_UNIX_TIME_MILLISECONDS
 
 using System.Diagnostics;
-#if SUPPORTS_INLINING
+using MethodImplOptions = Utilities.MethodImplOptions;
 using System.Runtime.CompilerServices;
-#endif
 
 namespace System;
 
@@ -37,17 +36,13 @@ public static partial class DateTimeOffsetPolyfills {
   /// <summary>Returns the number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
   /// <returns>The number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long ToUnixTimeMilliseconds(this DateTimeOffset @this) => @this.UtcDateTime.Ticks / TimeSpan.TicksPerMillisecond - UnixEpochMilliseconds;
 
   /// <summary>Returns the number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
   /// <returns>The number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long ToUnixTimeSeconds(this DateTimeOffset @this) => @this.UtcDateTime.Ticks / TimeSpan.TicksPerSecond - UnixEpochSeconds;
 
 }

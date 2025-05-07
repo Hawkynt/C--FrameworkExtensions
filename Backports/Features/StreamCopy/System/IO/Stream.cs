@@ -19,11 +19,9 @@
 
 #if !SUPPORTS_STREAM_COPY
 
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
-
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
+using System.Runtime.CompilerServices;
 
 namespace System.IO;
 
@@ -54,9 +52,7 @@ public static partial class StreamPolyfills {
   /// </summary>
   /// <param name="this">This <see cref="Stream" />.</param>
   /// <param name="_">Dummy, ignored</param>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static void Flush(this Stream @this, bool _) => @this.Flush();
 }
 

@@ -21,10 +21,14 @@
 
 using Guard;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
 public static partial class EnumPolyfills {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool HasFlag<T>(this T @this, T flag) where T : unmanaged, Enum => HasFlagHelper<T>.HasFlag(@this, flag);
 
   private static class HasFlagHelper<T> where T : unmanaged, Enum {

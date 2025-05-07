@@ -25,7 +25,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -43,12 +45,14 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
 
   /// <summary>Creates a new struct 0-tuple.</summary>
   /// <returns>A 0-tuple.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple Create() => default;
 
   /// <summary>Creates a new struct 1-tuple, or singleton.</summary>
   /// <typeparam name="T1">The type of the first component of the tuple.</typeparam>
   /// <param name="item1">The value of the first component of the tuple.</param>
   /// <returns>A 1-tuple (singleton) whose value is (item1).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1> Create<T1>(T1 item1) => new(item1);
 
   /// <summary>Creates a new struct 2-tuple, or pair.</summary>
@@ -57,6 +61,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item1">The value of the first component of the tuple.</param>
   /// <param name="item2">The value of the second component of the tuple.</param>
   /// <returns>A 2-tuple (pair) whose value is (item1, item2).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2) => new(item1, item2);
 
   /// <summary>Creates a new struct 3-tuple, or triple.</summary>
@@ -67,6 +72,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item2">The value of the second component of the tuple.</param>
   /// <param name="item3">The value of the third component of the tuple.</param>
   /// <returns>A 3-tuple (triple) whose value is (item1, item2, item3).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3> Create<T1, T2, T3>(T1 item1, T2 item2, T3 item3) => new(item1, item2, item3);
 
   /// <summary>Creates a new struct 4-tuple, or quadruple.</summary>
@@ -79,6 +85,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item3">The value of the third component of the tuple.</param>
   /// <param name="item4">The value of the fourth component of the tuple.</param>
   /// <returns>A 4-tuple (quadruple) whose value is (item1, item2, item3, item4).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3, T4> Create<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4) => new(item1, item2, item3, item4);
 
   /// <summary>Creates a new struct 5-tuple, or quintuple.</summary>
@@ -93,6 +100,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item4">The value of the fourth component of the tuple.</param>
   /// <param name="item5">The value of the fifth component of the tuple.</param>
   /// <returns>A 5-tuple (quintuple) whose value is (item1, item2, item3, item4, item5).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) => new(item1, item2, item3, item4, item5);
 
   /// <summary>Creates a new struct 6-tuple, or sextuple.</summary>
@@ -109,6 +117,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item5">The value of the fifth component of the tuple.</param>
   /// <param name="item6">The value of the sixth component of the tuple.</param>
   /// <returns>A 6-tuple (sextuple) whose value is (item1, item2, item3, item4, item5, item6).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) => new(item1, item2, item3, item4, item5, item6);
 
   /// <summary>Creates a new struct 7-tuple, or septuple.</summary>
@@ -127,6 +136,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item6">The value of the sixth component of the tuple.</param>
   /// <param name="item7">The value of the seventh component of the tuple.</param>
   /// <returns>A 7-tuple (septuple) whose value is (item1, item2, item3, item4, item5, item6, item7).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) => new(item1, item2, item3, item4, item5, item6, item7);
 
   /// <summary>Creates a new struct 8-tuple, or octuple.</summary>
@@ -147,6 +157,7 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <param name="item7">The value of the seventh component of the tuple.</param>
   /// <param name="item8">The value of the eighth component of the tuple.</param>
   /// <returns>An 8-tuple (octuple) whose value is (item1, item2, item3, item4, item5, item6, item7, item8).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ValueTuple<T1, T2, T3, T4, T5, T6, T7, ValueTuple<T8>> Create<T1, T2, T3, T4, T5, T6, T7, T8>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8) => new(item1, item2, item3, item4, item5, item6, item7, Create(item8));
 
   /// <inheritdoc />
@@ -158,26 +169,29 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   ///   instance is equal to <paramref name="other" />, and greater than zero if this instance is greater
   ///   than <paramref name="other" />.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int CompareTo(ValueTuple other) => 0;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) {
-    if (obj == null)
-      return 1;
-
-    if (obj is not ValueTuple)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(obj));
-
-    return 0;
+    switch (obj) {
+      case null: return 1;
+      case ValueTuple: return 0;
+      default:
+        AlwaysThrow.ArgumentException(nameof(obj), "The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
-
-    if (other is not ValueTuple)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(other));
-
-    return 0;
+    switch (other) {
+      case null: return 1;
+      case ValueTuple: return 0;
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
   /// <summary>
@@ -185,22 +199,28 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// </summary>
   /// <param name="obj">The object to compare with this instance.</param>
   /// <returns><see langword="true" /> if <paramref name="obj" /> is a <see cref="ValueTuple" />.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => obj is ValueTuple;
 
   /// <inheritdoc />
   /// <summary>Returns a value indicating whether this instance is equal to a specified value.</summary>
   /// <param name="other">An instance to compare to this instance.</param>
   /// <returns>true if <paramref name="other" /> has the same value as this instance; otherwise, false.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(ValueTuple other) => true;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is ValueTuple;
 
   /// <summary>Returns the hash code for this instance.</summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => 0;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => 0;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => 0;
 
   /// <summary>
@@ -210,26 +230,31 @@ public struct ValueTuple : IEquatable<ValueTuple>, IStructuralEquatable, IStruct
   /// <remarks>
   ///   The string returned by this method takes the form <c>()</c>.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => "()";
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   string ITupleInternal.ToStringEnd() => ")";
+
 }
 
 /// <summary>Represents a 1-tuple, or singleton, as a value type.</summary>
 /// <typeparam name="T1">The type of the tuple's only component.</typeparam>
-public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1>>, ITupleInternal {
+/// <remarks>
+///   Initializes a new instance of the <see cref="ValueTuple{T1}" /> value type.
+/// </remarks>
+/// <param name="item1">The value of the tuple's first component.</param>
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public struct ValueTuple<T1>(T1 item1) : IEquatable<ValueTuple<T1>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1}" /> instance's first component.
   /// </summary>
-  public T1 Item1;
+  public T1 Item1 = item1;
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="ValueTuple{T1}" /> value type.
-  /// </summary>
-  /// <param name="item1">The value of the tuple's first component.</param>
-  public ValueTuple(T1 item1) => this.Item1 = item1;
-
-  int ITupleInternal.Size => 1;
+  int ITupleInternal.Size {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => 1;
+  }
 
   /// <inheritdoc />
   /// <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
@@ -240,30 +265,33 @@ public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable,
   ///   instance is equal to <paramref name="other" />, and greater than zero if this instance is greater
   ///   than <paramref name="other" />.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int CompareTo(ValueTuple<T1> other) => Comparer<T1>.Default.Compare(this.Item1, other.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) {
-    if (obj == null)
-      return 1;
-
-    if (obj is not ValueTuple<T1>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(obj));
-
-    var objTuple = (ValueTuple<T1>)obj;
-
-    return Comparer<T1>.Default.Compare(this.Item1, objTuple.Item1);
+    switch (obj) {
+      case null:
+        return 1;
+      case ValueTuple<T1> tuple: 
+        return Comparer<T1>.Default.Compare(this.Item1, tuple.Item1);
+      default:
+        AlwaysThrow.ArgumentException(nameof(obj),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
-
-    if (other is not ValueTuple<T1>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(other));
-
-    var objTuple = (ValueTuple<T1>)other;
-
-    return comparer.Compare(this.Item1, objTuple.Item1);
+    switch (other) {
+      case null:
+        return 1;
+      case ValueTuple<T1> tuple: 
+        return comparer.Compare(this.Item1, tuple.Item1);
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
   /// <summary>
@@ -293,6 +321,7 @@ public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable,
   ///     </item>
   ///   </list>
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => obj is ValueTuple<T1> valueTuple && this.Equals(valueTuple);
 
   /// <inheritdoc />
@@ -309,24 +338,23 @@ public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable,
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its field
   ///   is equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(ValueTuple<T1> other) => EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not ValueTuple<T1>)
-      return false;
-
-    var objTuple = (ValueTuple<T1>)other;
-    return comparer.Equals(this.Item1, objTuple.Item1);
-  }
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is ValueTuple<T1> objTuple && comparer.Equals(this.Item1, objTuple.Item1);
 
   /// <summary>
   ///   Returns the hash code for the current <see cref="ValueTuple{T1}" /> instance.
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => EqualityComparer<T1>.Default.GetHashCode(this.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => comparer.GetHashCode(this.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => comparer.GetHashCode(this.Item1);
 
   /// <summary>
@@ -338,9 +366,11 @@ public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable,
   ///   where <c>Item1</c> represents the value of <see cref="Item1" />. If the field is <see langword="null" />,
   ///   it is represented as <see cref="string.Empty" />.
   /// </remarks>
-  public override string ToString() => "(" + (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public override string ToString() => $"({this.Item1})";
 
-  string ITupleInternal.ToStringEnd() => (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  string ITupleInternal.ToStringEnd() => $"{this.Item1})";
 }
 
 /// <summary>
@@ -348,29 +378,28 @@ public struct ValueTuple<T1> : IEquatable<ValueTuple<T1>>, IStructuralEquatable,
 /// </summary>
 /// <typeparam name="T1">The type of the tuple's first component.</typeparam>
 /// <typeparam name="T2">The type of the tuple's second component.</typeparam>
+/// <remarks>
+///   Initializes a new instance of the <see cref="ValueTuple{T1, T2}" /> value type.
+/// </remarks>
+/// <param name="item1">The value of the tuple's first component.</param>
+/// <param name="item2">The value of the tuple's second component.</param>
 [StructLayout(LayoutKind.Auto)]
-public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2>>, ITupleInternal {
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public struct ValueTuple<T1, T2>(T1 item1, T2 item2) : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2}" /> instance's first component.
   /// </summary>
-  public T1 Item1;
+  public T1 Item1 = item1;
 
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2}" /> instance's first component.
   /// </summary>
-  public T2 Item2;
+  public T2 Item2 = item2;
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="ValueTuple{T1, T2}" /> value type.
-  /// </summary>
-  /// <param name="item1">The value of the tuple's first component.</param>
-  /// <param name="item2">The value of the tuple's second component.</param>
-  public ValueTuple(T1 item1, T2 item2) {
-    this.Item1 = item1;
-    this.Item2 = item2;
+  int ITupleInternal.Size {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => 2;
   }
-
-  int ITupleInternal.Size => 2;
 
   /// <inheritdoc />
   /// <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
@@ -381,6 +410,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///   instance is equal to <paramref name="other" />, and greater than zero if this instance is greater
   ///   than <paramref name="other" />.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int CompareTo(ValueTuple<T1, T2> other) {
     var c = Comparer<T1>.Default.Compare(this.Item1, other.Item1);
     return c != 0 ? c : Comparer<T2>.Default.Compare(this.Item2, other.Item2);
@@ -413,6 +443,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///     </item>
   ///   </list>
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => obj is ValueTuple<T1, T2> valueTuple && this.Equals(valueTuple);
 
   /// <inheritdoc />
@@ -429,6 +460,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its fields
   ///   are equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(ValueTuple<T1, T2> other) =>
     EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
     && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2);
@@ -437,6 +469,7 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///   Returns the hash code for the current <see cref="ValueTuple{T1, T2}" /> instance.
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() =>
     NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
@@ -453,29 +486,32 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///   and <see cref="Item2" /> fields. If either field value is <see langword="null" />,
   ///   it is represented as <see cref="string.Empty" />.
   /// </remarks>
-  public override string ToString() => "(" + (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public override string ToString() => $"({this.Item1}, {this.Item2})";
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) {
-    if (obj == null)
-      return 1;
-
-    if (obj is not ValueTuple<T1, T2>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(obj));
-
-    return this.CompareTo((ValueTuple<T1, T2>)obj);
+    switch (obj) {
+      case null: return 1;
+      case ValueTuple<T1, T2> tuple: return this.CompareTo(tuple);
+      default: 
+        AlwaysThrow.ArgumentException(nameof(obj),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
-
-    if (other is not ValueTuple<T1, T2>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(other));
-
-    var objTuple = (ValueTuple<T1, T2>)other;
-
-    var c = comparer.Compare(this.Item1, objTuple.Item1);
-    return c != 0 ? c : comparer.Compare(this.Item2, objTuple.Item2);
+    switch (other) {
+      case null: return 1;
+      case ValueTuple<T1, T2> objTuple: {
+        var c = comparer.Compare(this.Item1, objTuple.Item1);
+        return c != 0 ? c : comparer.Compare(this.Item2, objTuple.Item2);
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
   /// <summary>
@@ -505,27 +541,27 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
   ///     called again and passed the <see cref="Item2" /> values of the two <see cref="ValueTuple{T1, T2}" /> instances.
   ///   </para>
   /// </remarks>
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not ValueTuple<T1, T2>)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is ValueTuple<T1, T2> objTuple
+                                                                                && comparer.Equals(this.Item1, objTuple.Item1)
+                                                                                && comparer.Equals(this.Item2, objTuple.Item2);
 
-    var objTuple = (ValueTuple<T1, T2>)other;
-
-    return comparer.Equals(this.Item1, objTuple.Item1)
-           && comparer.Equals(this.Item2, objTuple.Item2);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int GetHashCodeCore(IEqualityComparer comparer) =>
     NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
       comparer.GetHashCode(this.Item2)
     );
 
-  string ITupleInternal.ToStringEnd() => (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  string ITupleInternal.ToStringEnd() => $"{this.Item1}, {this.Item2})";
+
 }
 
 /// <summary>
@@ -534,37 +570,35 @@ public struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEq
 /// <typeparam name="T1">The type of the tuple's first component.</typeparam>
 /// <typeparam name="T2">The type of the tuple's second component.</typeparam>
 /// <typeparam name="T3">The type of the tuple's third component.</typeparam>
+/// <remarks>
+///   Initializes a new instance of the <see cref="ValueTuple{T1, T2, T3}" /> value type.
+/// </remarks>
+/// <param name="item1">The value of the tuple's first component.</param>
+/// <param name="item2">The value of the tuple's second component.</param>
+/// <param name="item3">The value of the tuple's third component.</param>
 [StructLayout(LayoutKind.Auto)]
-public struct ValueTuple<T1, T2, T3>
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public struct ValueTuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3)
   : IEquatable<ValueTuple<T1, T2, T3>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2, T3>>, ITupleInternal {
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3}" /> instance's first component.
   /// </summary>
-  public T1 Item1;
+  public T1 Item1 = item1;
 
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3}" /> instance's second component.
   /// </summary>
-  public T2 Item2;
+  public T2 Item2 = item2;
 
   /// <summary>
   ///   The current <see cref="ValueTuple{T1, T2, T3}" /> instance's third component.
   /// </summary>
-  public T3 Item3;
+  public T3 Item3 = item3;
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="ValueTuple{T1, T2, T3}" /> value type.
-  /// </summary>
-  /// <param name="item1">The value of the tuple's first component.</param>
-  /// <param name="item2">The value of the tuple's second component.</param>
-  /// <param name="item3">The value of the tuple's third component.</param>
-  public ValueTuple(T1 item1, T2 item2, T3 item3) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
+  int ITupleInternal.Size {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => 3;
   }
-
-  int ITupleInternal.Size => 3;
 
   /// <inheritdoc />
   /// <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
@@ -575,6 +609,7 @@ public struct ValueTuple<T1, T2, T3>
   ///   instance is equal to <paramref name="other" />, and greater than zero if this instance is greater
   ///   than <paramref name="other" />.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int CompareTo(ValueTuple<T1, T2, T3> other) {
     var c = Comparer<T1>.Default.Compare(this.Item1, other.Item1);
     if (c != 0)
@@ -611,6 +646,7 @@ public struct ValueTuple<T1, T2, T3>
   ///     </item>
   ///   </list>
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => obj is ValueTuple<T1, T2, T3> valueTuple && this.Equals(valueTuple);
 
   /// <inheritdoc />
@@ -627,6 +663,7 @@ public struct ValueTuple<T1, T2, T3>
   ///   The <paramref name="other" /> parameter is considered to be equal to the current instance if each of its fields
   ///   are equal to that of the current instance, using the default comparer for that field's type.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(ValueTuple<T1, T2, T3> other) => EqualityComparer<T1>.Default.Equals(this.Item1, other.Item1)
                                                       && EqualityComparer<T2>.Default.Equals(this.Item2, other.Item2)
                                                       && EqualityComparer<T3>.Default.Equals(this.Item3, other.Item3);
@@ -635,6 +672,7 @@ public struct ValueTuple<T1, T2, T3>
   ///   Returns the hash code for the current <see cref="ValueTuple{T1, T2, T3}" /> instance.
   /// </summary>
   /// <returns>A 32-bit signed integer hash code.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() =>
     NumericsHelpers.CombineHash(
       EqualityComparer<T1>.Default.GetHashCode(this.Item1),
@@ -650,50 +688,51 @@ public struct ValueTuple<T1, T2, T3>
   ///   The string returned by this method takes the form <c>(Item1, Item2, Item3)</c>.
   ///   If any field value is <see langword="null" />, it is represented as <see cref="string.Empty" />.
   /// </remarks>
-  public override string ToString() => "(" + (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ", " + (this.Item3 == null ? string.Empty : this.Item3.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public override string ToString() => $"({this.Item1}, {this.Item2}, {this.Item3})";
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) {
-    if (obj == null)
-      return 1;
-
-    if (obj is not ValueTuple<T1, T2, T3>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(obj));
-
-    return this.CompareTo((ValueTuple<T1, T2, T3>)obj);
+    switch (obj) {
+      case null: return 1;
+      case ValueTuple<T1, T2, T3> tuple: return this.CompareTo(tuple);
+      default:
+        AlwaysThrow.ArgumentException(nameof(obj),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null: return 1;
+      case ValueTuple<T1, T2, T3> objTuple: {
+        var c = comparer.Compare(this.Item1, objTuple.Item1);
+        if (c != 0)
+          return c;
 
-    if (other is not ValueTuple<T1, T2, T3>)
-      throw new ArgumentException("The parameter should be a ValueTuple type of appropriate arity.", nameof(other));
-
-    var objTuple = (ValueTuple<T1, T2, T3>)other;
-
-    var c = comparer.Compare(this.Item1, objTuple.Item1);
-    if (c != 0)
-      return c;
-
-    c = comparer.Compare(this.Item2, objTuple.Item2);
-    return c != 0 ? c : comparer.Compare(this.Item3, objTuple.Item3);
+        c = comparer.Compare(this.Item2, objTuple.Item2);
+        return c != 0 ? c : comparer.Compare(this.Item3, objTuple.Item3);
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),"The parameter should be a ValueTuple type of appropriate arity.");
+        return 0;
+    }
   }
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not ValueTuple<T1, T2, T3>)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is ValueTuple<T1, T2, T3> objTuple
+                                                                                && comparer.Equals(this.Item1, objTuple.Item1)
+                                                                                && comparer.Equals(this.Item2, objTuple.Item2)
+                                                                                && comparer.Equals(this.Item3, objTuple.Item3);
 
-    var objTuple = (ValueTuple<T1, T2, T3>)other;
-
-    return comparer.Equals(this.Item1, objTuple.Item1)
-           && comparer.Equals(this.Item2, objTuple.Item2)
-           && comparer.Equals(this.Item3, objTuple.Item3);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int ITupleInternal.GetHashCode(IEqualityComparer comparer) => this.GetHashCodeCore(comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int GetHashCodeCore(IEqualityComparer comparer) =>
     NumericsHelpers.CombineHash(
       comparer.GetHashCode(this.Item1),
@@ -701,7 +740,8 @@ public struct ValueTuple<T1, T2, T3>
       comparer.GetHashCode(this.Item3)
     );
 
-  string ITupleInternal.ToStringEnd() => (this.Item1 == null ? string.Empty : this.Item1.ToString()) + ", " + (this.Item2 == null ? string.Empty : this.Item2.ToString()) + ", " + (this.Item3 == null ? string.Empty : this.Item3.ToString()) + ")";
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  string ITupleInternal.ToStringEnd() => $"{this.Item1}, {this.Item2}, {this.Item3})";
 }
 
 /// <summary>

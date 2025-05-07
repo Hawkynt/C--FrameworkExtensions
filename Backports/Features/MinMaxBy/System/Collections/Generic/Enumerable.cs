@@ -19,10 +19,8 @@
 
 #if !SUPPORTS_MINMAX_BY
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
-
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
 
 namespace System.Collections.Generic;
@@ -41,9 +39,7 @@ public static partial class EnumerablePolyfills {
   ///   <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.
   /// </exception>
   /// <returns>The value with the maximum key in the sequence.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem MaxBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector)
     => MaxBy(@this, keySelector, null);
 
@@ -132,9 +128,7 @@ public static partial class EnumerablePolyfills {
   ///   <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.
   /// </exception>
   /// <returns>The value with the minimum key in the sequence.</returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static TItem MinBy<TItem, TKey>(this IEnumerable<TItem> @this, Func<TItem, TKey> keySelector)
     => MinBy(@this, keySelector, null);
 

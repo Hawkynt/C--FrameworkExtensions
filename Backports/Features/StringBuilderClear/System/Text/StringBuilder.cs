@@ -20,10 +20,14 @@
 #if !SUPPORTS_STRING_BUILDER_CLEAR
 
 using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Text;
 
 public static partial class StringBuilderPolyfills {
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Clear(this StringBuilder @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));

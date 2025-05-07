@@ -20,6 +20,8 @@
 #if !SUPPORTS_STOPWATCH_RESTART
 
 using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Diagnostics;
 
@@ -28,6 +30,7 @@ public static partial class StopwatchPolyfills {
   ///   Stops time interval measurement, resets the elapsed time to zero, and starts measuring elapsed time.
   /// </summary>
   /// <param name="this">This <see cref="Stopwatch" /></param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Restart(this Stopwatch @this) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));

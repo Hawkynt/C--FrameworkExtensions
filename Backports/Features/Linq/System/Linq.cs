@@ -22,6 +22,8 @@ using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Linq;
 
@@ -66,6 +68,7 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TResult> Cast<TResult>(this IEnumerable @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -78,6 +81,7 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -93,6 +97,7 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> @this, Func<TSource, int, bool> predicate) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -109,6 +114,7 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, TResult> selector) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -123,6 +129,7 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> @this, Func<TSource, int, TResult> selector) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -138,9 +145,11 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
     => OrderBy(@this, keySelector, Comparer<TKey>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -163,10 +172,12 @@ public static partial class EnumerablePolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
     => OrderBy(@this, keySelector, Comparer<TKey>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<TSource> ThenBy<TSource, TKey>(this IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
     // Assuming source is already sorted by a previous OrderBy or ThenBy
     => OrderBy(@this, keySelector, comparer);
@@ -196,6 +207,7 @@ public static partial class EnumerablePolyfills {
     return default;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this) => FirstOrDefault(@this, default(TSource));
 
   public static TSource Single<TSource>(this IEnumerable<TSource> @this) {
@@ -243,6 +255,7 @@ public static partial class EnumerablePolyfills {
     return result;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this) => SingleOrDefault(@this, default(TSource));
 
   public static TSource Last<TSource>(this IEnumerable<TSource> @this) {
@@ -284,6 +297,7 @@ public static partial class EnumerablePolyfills {
     return result;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this) => LastOrDefault(@this, default(TSource));
 
   public static TSource Min<TSource>(this IEnumerable<TSource> source) {
@@ -332,10 +346,12 @@ public static partial class EnumerablePolyfills {
   private readonly struct Wrapper<T>(T value, IEqualityComparer<T> comparer) {
     private readonly T value = value;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode() => this.value == null ? 0 : comparer.GetHashCode(this.value);
 
     #region Overrides of ValueType
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Equals(object obj) => obj is Wrapper<T> w && comparer.Equals(this.value, w.value);
 
     #endregion
@@ -346,25 +362,28 @@ public static partial class EnumerablePolyfills {
 
     public TKey Key { get; } = key;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Add(TSource item) => this._items.Add(item);
 
     #region Implementation of IEnumerable
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerator<TSource> GetEnumerator() => this._items.GetEnumerator();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
     #endregion
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<IGrouping<TKey, TSource>> GroupBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
     if (source == null)
       AlwaysThrow.ArgumentNullException(nameof(source));
     if (keySelector == null)
       AlwaysThrow.ArgumentNullException(nameof(keySelector));
 
-    var comparer = EqualityComparer<TKey>.Default;
-    return Invoke(source, keySelector, comparer);
+    return Invoke(source, keySelector, EqualityComparer<TKey>.Default);
 
     static IEnumerable<IGrouping<TKey, TSource>> Invoke(IEnumerable<TSource> @this, Func<TSource, TKey> keySelector, EqualityComparer<TKey> comparer) {
       var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>();
@@ -381,7 +400,9 @@ public static partial class EnumerablePolyfills {
   }
 
   [DoesNotReturn]
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static void _ThrowNoElements() => AlwaysThrow.InvalidOperationException("Sequence contains no elements");
+
 }
 
 #endif

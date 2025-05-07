@@ -14,9 +14,12 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
+using System.Runtime.CompilerServices;
+
 #if !SUPPORTS_ARRAYPOOL
 
 namespace System.Buffers;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 /// <summary>
 /// Provides a resource pool that enables reusing instances of arrays.
@@ -52,6 +55,7 @@ public abstract class ArrayPool<T> {
   /// The shared pool instance is created lazily on first access.
   /// </remarks>
   public static ArrayPool<T> Shared {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       if (_shared != null)
         return _shared;
@@ -65,6 +69,7 @@ public abstract class ArrayPool<T> {
   /// Creates a new <see cref="ArrayPool{T}"/> instance using default configuration options.
   /// </summary>
   /// <returns>A new <see cref="ArrayPool{T}"/> instance.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]  
   public static ArrayPool<T> Create() => new ConfigurableArrayPool<T>();
 
   /// <summary>
@@ -80,6 +85,7 @@ public abstract class ArrayPool<T> {
   /// The created pool will group arrays into buckets, with no more than <paramref name="maxArraysPerBucket"/>
   /// in each bucket and with those arrays not exceeding <paramref name="maxArrayLength"/> in length.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ArrayPool<T> Create(int maxArrayLength, int maxArraysPerBucket) => new ConfigurableArrayPool<T>(maxArrayLength, maxArraysPerBucket);
 
   /// <summary>

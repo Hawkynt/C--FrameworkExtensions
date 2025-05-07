@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
+    <Compile Include="..\Corlib.Extensions\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +72,11 @@
 
   <ItemGroup>
     <Folder Include="Guard\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

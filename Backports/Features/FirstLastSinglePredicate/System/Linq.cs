@@ -19,18 +19,25 @@
 
 #if !SUPPORTS_FIRSTLASTSINGLE_PREDICATE
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
     => FirstOrDefault(@this, predicate, default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
     => SingleOrDefault(@this, predicate, default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
     => LastOrDefault(@this, predicate, default);
+
 }
 
 #endif

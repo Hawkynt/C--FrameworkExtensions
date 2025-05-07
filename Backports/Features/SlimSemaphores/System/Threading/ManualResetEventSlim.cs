@@ -19,19 +19,40 @@
 
 #if !SUPPORTS_SLIM_SEMAPHORES
 
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 namespace System.Threading;
 
 public class ManualResetEventSlim(bool initialState) : IDisposable {
   private readonly ManualResetEvent _manualResetEvent = new(initialState);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ManualResetEventSlim() : this(false) { }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Set() => this._manualResetEvent.Set();
-  public bool IsSet => this._manualResetEvent.WaitOne(0);
+
+  public bool IsSet {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._manualResetEvent.WaitOne(0);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Wait() => this._manualResetEvent.WaitOne();
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Wait(TimeSpan timeout) => this._manualResetEvent.WaitOne(timeout);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Reset() => this._manualResetEvent.Reset();
+  
   ~ManualResetEventSlim() => this.Dispose();
-  public void Dispose() => GC.SuppressFinalize(this);
+
+  public void Dispose() {
+    this._manualResetEvent.Dispose();
+    GC.SuppressFinalize(this);
+  }
 }
 
 #endif

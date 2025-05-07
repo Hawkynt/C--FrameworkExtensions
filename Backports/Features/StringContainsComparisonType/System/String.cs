@@ -19,10 +19,9 @@
 
 #if !SUPPORTS_STRING_CONTAINS_COMPARISON_TYPE
 
-#if SUPPORTS_INLINING
-using System.Runtime.CompilerServices;
-#endif
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
+using System.Runtime.CompilerServices;
 
 namespace System;
 
@@ -38,9 +37,7 @@ public static partial class StringPolyfills {
   ///   <see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if
   ///   <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.
   /// </returns>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Contains(this string @this, string value, StringComparison comparisonType) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
@@ -56,14 +53,10 @@ public static partial class StringPolyfills {
     return @this.IndexOf(value, comparisonType) >= 0;
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Contains(this string @this, char value) => @this.IndexOf(value) >= 0;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static bool Contains(this string @this, char value, StringComparison comparisonType) => @this.IndexOf(value.ToString(), comparisonType) >= 0;
   
 }

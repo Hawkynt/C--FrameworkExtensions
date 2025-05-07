@@ -19,10 +19,8 @@
 
 #if !SUPPORTS_RANDOM_NEXTINT64
 
-#if SUPPORTS_INLINING
 using System.Runtime.CompilerServices;
-#endif
-
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
 
 namespace System;
@@ -32,9 +30,7 @@ public static partial class RandomPolyfills {
   /// <param name="this">The <see cref="Random" /> instance used to generate the random value.</param>
   /// <returns>A 64-bit signed integer that is greater than or equal to 0 and less than <see cref="long.MaxValue" />.</returns>
   /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long NextInt64(this Random @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -83,9 +79,7 @@ public static partial class RandomPolyfills {
   /// </returns>
   /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxValue" /> is less than 0.</exception>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long NextInt64(this Random @this, long maxValue) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
@@ -140,9 +134,7 @@ public static partial class RandomPolyfills {
   ///   <paramref name="minValue" /> is greater than <paramref name="maxValue" />
   ///   .
   /// </exception>
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static long NextInt64(this Random @this, long minValue, long maxValue) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));

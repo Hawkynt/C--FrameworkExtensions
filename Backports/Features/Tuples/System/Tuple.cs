@@ -37,22 +37,31 @@ using Guard;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
 public static class Tuple {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1> Create<T1>(T1 item1) => new(item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2) => new(item1, item2);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3> Create<T1, T2, T3>(T1 item1, T2 item2, T3 item3) => new(item1, item2, item3);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3, T4> Create<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4) => new(item1, item2, item3, item4);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3, T4, T5>
     Create<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5)
     => new(item1, item2, item3, item4, item5);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(
     T1 item1,
     T2 item2,
@@ -63,6 +72,7 @@ public static class Tuple {
   )
     => new(item1, item2, item3, item4, item5, item6);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(
     T1 item1,
     T2 item2,
@@ -74,6 +84,7 @@ public static class Tuple {
   )
     => new(item1, item2, item3, item4, item5, item6, item7);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>> Create<T1, T2, T3, T4, T5, T6, T7, T8>(
     T1 item1,
     T2 item2,
@@ -97,117 +108,124 @@ public static class Tuple {
 }
 
 [Serializable]
-public class Tuple<T1> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1) => this.Item1 = item1;
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1>(T1 item1) : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
 
-  public T1 Item1 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1> tuple && comparer.Equals(this.Item1, tuple.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) => comparer.GetHashCode(this.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0})", this.Item1);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
     if (other == null)
       return 1;
 
-    if (other is not Tuple<T1> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
-
-    return comparer.Compare(this.Item1, tuple.Item1);
+    if (other is Tuple<T1> tuple)
+      return comparer.Compare(this.Item1, tuple.Item1);
+    
+    AlwaysThrow.ArgumentException(nameof(other), string.Empty);
+    return 0;
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-  }
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2>(T1 item1, T2 item2) : IStructuralEquatable, IStructuralComparable, IComparable {
+  
+  public T1 Item1 { get; } = item1;
 
-  public T1 Item1 { get; }
+  public T2 Item2 { get; } = item2;
 
-  public T2 Item2 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0}, {1})", this.Item1, this.Item2);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
-
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2, T3 item3) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
-  }
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2, T3>(T1 item1, T2 item2, T3 item3) : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
+  public T2 Item2 { get; } = item2;
+  public T3 Item3 { get; } = item3;
 
-  public T1 Item1 { get; }
-
-  public T2 Item2 { get; }
-
-  public T3 Item3 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -215,61 +233,60 @@ public class Tuple<T1, T2, T3> : IStructuralEquatable, IStructuralComparable, IC
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(CultureInfo.InvariantCulture, "({0}, {1}, {2})", this.Item1, this.Item2, this.Item3);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2, T3 item3, T4 item4) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
-    this.Item4 = item4;
-  }
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2, T3, T4>(T1 item1, T2 item2, T3 item3, T4 item4)
+  : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
+  public T2 Item2 { get; } = item2;
+  public T3 Item3 { get; } = item3;
+  public T4 Item4 { get; } = item4;
 
-  public T1 Item1 { get; }
-
-  public T2 Item2 { get; }
-
-  public T3 Item3 { get; }
-
-  public T4 Item4 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3, T4> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3, T4> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3)
+                                                                                && comparer.Equals(this.Item4, tuple.Item4);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3)
-           && comparer.Equals(this.Item4, tuple.Item4);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -278,6 +295,7 @@ public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(
     CultureInfo.InvariantCulture,
     "({0}, {1}, {2}, {3})",
@@ -287,66 +305,62 @@ public class Tuple<T1, T2, T3, T4> : IStructuralEquatable, IStructuralComparable
     this.Item4
   );
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3, T4> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3, T4> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
+        if (result == 0)
+          result = comparer.Compare(this.Item4, tuple.Item4);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item4, tuple.Item4);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException( nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
-    this.Item4 = item4;
-    this.Item5 = item5;
-  }
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2, T3, T4, T5>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5)
+  : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
+  public T2 Item2 { get; } = item2;
+  public T3 Item3 { get; } = item3;
+  public T4 Item4 { get; } = item4;
+  public T5 Item5 { get; } = item5;
 
-  public T1 Item1 { get; }
-
-  public T2 Item2 { get; }
-
-  public T3 Item3 { get; }
-
-  public T4 Item4 { get; }
-
-  public T5 Item5 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3, T4, T5> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3, T4, T5> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3)
+                                                                                && comparer.Equals(this.Item4, tuple.Item4)
+                                                                                && comparer.Equals(this.Item5, tuple.Item5);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3)
-           && comparer.Equals(this.Item4, tuple.Item4)
-           && comparer.Equals(this.Item5, tuple.Item5);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -356,6 +370,7 @@ public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralCompar
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(
     CultureInfo.InvariantCulture,
     "({0}, {1}, {2}, {3}, {4})",
@@ -366,73 +381,67 @@ public class Tuple<T1, T2, T3, T4, T5> : IStructuralEquatable, IStructuralCompar
     this.Item5
   );
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3, T4, T5> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3, T4, T5> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
+        if (result == 0)
+          result = comparer.Compare(this.Item4, tuple.Item4);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
+        if (result == 0)
+          result = comparer.Compare(this.Item5, tuple.Item5);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item4, tuple.Item4);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item5, tuple.Item5);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException(nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
-    this.Item4 = item4;
-    this.Item5 = item5;
-    this.Item6 = item6;
-  }
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2, T3, T4, T5, T6>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6)
+  : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
+  public T2 Item2 { get; } = item2;
+  public T3 Item3 { get; } = item3;
+  public T4 Item4 { get; } = item4;
+  public T5 Item5 { get; } = item5;
+  public T6 Item6 { get; } = item6;
 
-  public T1 Item1 { get; }
-
-  public T2 Item2 { get; }
-
-  public T3 Item3 { get; }
-
-  public T4 Item4 { get; }
-
-  public T5 Item5 { get; }
-
-  public T6 Item6 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3, T4, T5, T6> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3)
+                                                                                && comparer.Equals(this.Item4, tuple.Item4)
+                                                                                && comparer.Equals(this.Item5, tuple.Item5)
+                                                                                && comparer.Equals(this.Item6, tuple.Item6);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3)
-           && comparer.Equals(this.Item4, tuple.Item4)
-           && comparer.Equals(this.Item5, tuple.Item5)
-           && comparer.Equals(this.Item6, tuple.Item6);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -443,6 +452,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralCo
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(
     CultureInfo.InvariantCulture,
     "({0}, {1}, {2}, {3}, {4}, {5})",
@@ -454,80 +464,72 @@ public class Tuple<T1, T2, T3, T4, T5, T6> : IStructuralEquatable, IStructuralCo
     this.Item6
   );
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3, T4, T5, T6> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
+        if (result == 0)
+          result = comparer.Compare(this.Item4, tuple.Item4);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
+        if (result == 0)
+          result = comparer.Compare(this.Item5, tuple.Item5);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item4, tuple.Item4);
+        if (result == 0)
+          result = comparer.Compare(this.Item6, tuple.Item6);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item5, tuple.Item5);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item6, tuple.Item6);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException( nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
-public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructuralComparable, IComparable {
-  public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) {
-    this.Item1 = item1;
-    this.Item2 = item2;
-    this.Item3 = item3;
-    this.Item4 = item4;
-    this.Item5 = item5;
-    this.Item6 = item6;
-    this.Item7 = item7;
-  }
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+public class Tuple<T1, T2, T3, T4, T5, T6, T7>(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7)
+  : IStructuralEquatable, IStructuralComparable, IComparable {
+  public T1 Item1 { get; } = item1;
+  public T2 Item2 { get; } = item2;
+  public T3 Item3 { get; } = item3;
+  public T4 Item4 { get; } = item4;
+  public T5 Item5 { get; } = item5;
+  public T6 Item6 { get; } = item6;
+  public T7 Item7 { get; } = item7;
 
-  public T1 Item1 { get; }
-
-  public T2 Item2 { get; }
-
-  public T3 Item3 { get; }
-
-  public T4 Item4 { get; }
-
-  public T5 Item5 { get; }
-
-  public T6 Item6 { get; }
-
-  public T7 Item7 { get; }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6, T7> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3, T4, T5, T6, T7> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3)
+                                                                                && comparer.Equals(this.Item4, tuple.Item4)
+                                                                                && comparer.Equals(this.Item5, tuple.Item5)
+                                                                                && comparer.Equals(this.Item6, tuple.Item6)
+                                                                                && comparer.Equals(this.Item7, tuple.Item7);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3)
-           && comparer.Equals(this.Item4, tuple.Item4)
-           && comparer.Equals(this.Item5, tuple.Item5)
-           && comparer.Equals(this.Item6, tuple.Item6)
-           && comparer.Equals(this.Item7, tuple.Item7);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -539,6 +541,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructur
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => string.Format(
     CultureInfo.InvariantCulture,
     "({0}, {1}, {2}, {3}, {4}, {5}, {6})",
@@ -551,38 +554,44 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7> : IStructuralEquatable, IStructur
     this.Item7
   );
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3, T4, T5, T6, T7> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6, T7> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
+        if (result == 0)
+          result = comparer.Compare(this.Item4, tuple.Item4);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
+        if (result == 0)
+          result = comparer.Compare(this.Item5, tuple.Item5);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item4, tuple.Item4);
+        if (result == 0)
+          result = comparer.Compare(this.Item6, tuple.Item6);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item5, tuple.Item5);
+        if (result == 0)
+          result = comparer.Compare(this.Item7, tuple.Item7);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item6, tuple.Item6);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item7, tuple.Item7);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException( nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 
 [Serializable]
 public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IStructuralComparable, IComparable {
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, TRest rest) {
     CheckType(rest);
     this.Item1 = item1;
@@ -596,43 +605,38 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
   }
 
   public T1 Item1 { get; }
-
   public T2 Item2 { get; }
-
   public T3 Item3 { get; }
-
   public T4 Item4 { get; }
-
   public T5 Item5 { get; }
-
   public T6 Item6 { get; }
-
   public T7 Item7 { get; }
-
   public TRest Rest { get; }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralComparable.CompareTo(object other, IComparer comparer) => this.CompareTo(other, comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IComparable.CompareTo(object obj) => this.CompareTo(obj, Comparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object obj) => ((IStructuralEquatable)this).Equals(obj, EqualityComparer<object>.Default);
 
-  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) {
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple)
-      return false;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  bool IStructuralEquatable.Equals(object other, IEqualityComparer comparer) => other is Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple
+                                                                                && comparer.Equals(this.Item1, tuple.Item1)
+                                                                                && comparer.Equals(this.Item2, tuple.Item2)
+                                                                                && comparer.Equals(this.Item3, tuple.Item3)
+                                                                                && comparer.Equals(this.Item4, tuple.Item4)
+                                                                                && comparer.Equals(this.Item5, tuple.Item5)
+                                                                                && comparer.Equals(this.Item6, tuple.Item6)
+                                                                                && comparer.Equals(this.Item7, tuple.Item7)
+                                                                                && comparer.Equals(this.Rest, tuple.Rest);
 
-    return comparer.Equals(this.Item1, tuple.Item1)
-           && comparer.Equals(this.Item2, tuple.Item2)
-           && comparer.Equals(this.Item3, tuple.Item3)
-           && comparer.Equals(this.Item4, tuple.Item4)
-           && comparer.Equals(this.Item5, tuple.Item5)
-           && comparer.Equals(this.Item6, tuple.Item6)
-           && comparer.Equals(this.Item7, tuple.Item7)
-           && comparer.Equals(this.Rest, tuple.Rest);
-  }
-
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => ((IStructuralEquatable)this).GetHashCode(EqualityComparer<object>.Default);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   int IStructuralEquatable.GetHashCode(IEqualityComparer comparer) {
     var hash = comparer.GetHashCode(this.Item1);
     hash = (hash << 5) - hash + comparer.GetHashCode(this.Item2);
@@ -645,6 +649,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
     return hash;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() {
     var restString = this.Rest.ToString();
     return string.Format(
@@ -661,6 +666,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
     );
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static void CheckType(TRest rest) {
     if (rest == null || !typeof(TRest).IsGenericType)
       AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
@@ -682,36 +688,40 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
     AlwaysThrow.ArgumentException(nameof(rest),"The last element of an eight element tuple must be a Tuple.");
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int CompareTo(object other, IComparer comparer) {
-    if (other == null)
-      return 1;
+    switch (other) {
+      case null:
+        return 1;
+      case Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple: {
+        var result = comparer.Compare(this.Item1, tuple.Item1);
+        if (result == 0)
+          result = comparer.Compare(this.Item2, tuple.Item2);
 
-    if (other is not Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> tuple)
-      throw new ArgumentException(string.Empty, nameof(other));
+        if (result == 0)
+          result = comparer.Compare(this.Item3, tuple.Item3);
 
-    var result = comparer.Compare(this.Item1, tuple.Item1);
-    if (result == 0)
-      result = comparer.Compare(this.Item2, tuple.Item2);
+        if (result == 0)
+          result = comparer.Compare(this.Item4, tuple.Item4);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item3, tuple.Item3);
+        if (result == 0)
+          result = comparer.Compare(this.Item5, tuple.Item5);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item4, tuple.Item4);
+        if (result == 0)
+          result = comparer.Compare(this.Item6, tuple.Item6);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item5, tuple.Item5);
+        if (result == 0)
+          result = comparer.Compare(this.Item7, tuple.Item7);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item6, tuple.Item6);
+        if (result == 0)
+          result = comparer.Compare(this.Item7, tuple.Item7);
 
-    if (result == 0)
-      result = comparer.Compare(this.Item7, tuple.Item7);
-
-    if (result == 0)
-      result = comparer.Compare(this.Item7, tuple.Item7);
-
-    return result;
+        return result;
+      }
+      default:
+        AlwaysThrow.ArgumentException( nameof(other),string.Empty);
+        return 0;
+    }
   }
 }
 

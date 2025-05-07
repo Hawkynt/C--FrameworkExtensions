@@ -18,32 +18,43 @@
 #endregion
 
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Concurrent;
 
 public class ConcurrentStack<T> {
   private readonly Generic.Stack<T> _stack = new();
 
-  public bool IsEmpty => !this.Any();
+  public bool IsEmpty {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => !this.Any();
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Any() => this.Count > 0;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Clear() {
     lock (this._stack)
       this._stack.Clear();
   }
 
   public int Count {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       lock (this._stack)
         return this._stack.Count;
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public T[] ToArray() {
     lock (this._stack)
       return this._stack.ToArray();
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Push(T item) {
     lock (this._stack)
       this._stack.Push(item);

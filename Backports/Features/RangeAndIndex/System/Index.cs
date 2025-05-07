@@ -19,20 +19,27 @@
 
 #if !SUPPORTS_RANGE_AND_INDEX
 
+using System.Diagnostics.CodeAnalysis;
 using Guard;
 using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
 public readonly struct Index : IEquatable<Index> {
   private readonly int _index;
 
-  public static Index Start => new(0);
-  public static Index End => new(~0);
+  public static Index Start {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => new(0);
+  }
 
-#if SUPPORTS_INLINING
+  public static Index End {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => new(~0);
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public Index(int value, bool fromEnd) {
     if (value < 0)
       _ThrowValueNegative();
@@ -40,16 +47,14 @@ public readonly struct Index : IEquatable<Index> {
     this._index = fromEnd ? ~value : value;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  [DoesNotReturn]
   private static void _ThrowValueNegative() => AlwaysThrow.ArgumentOutOfRangeException("value", "value must be non-negative");
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   private Index(int value) => this._index = value;
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Index FromStart(int value) {
     if (value < 0)
       _ThrowValueNegative();
@@ -57,9 +62,7 @@ public readonly struct Index : IEquatable<Index> {
     return new(value);
   }
 
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static Index FromEnd(int value) {
     if (value < 0)
       _ThrowValueNegative();
@@ -67,12 +70,17 @@ public readonly struct Index : IEquatable<Index> {
     return new(~value);
   }
 
-  public int Value => this._index < 0 ? ~this._index : this._index;
-  public bool IsFromEnd => this._index < 0;
+  public int Value {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._index < 0 ? ~this._index : this._index;
+  }
 
-#if SUPPORTS_INLINING
+  public bool IsFromEnd {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._index < 0;
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public int GetOffset(int length) {
     var offset = this._index;
     if (offset < 0)
@@ -81,11 +89,21 @@ public readonly struct Index : IEquatable<Index> {
     return offset;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override bool Equals(object value) => value is Index index && this.Equals(index);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(Index other) => this._index == other._index;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() => this._index;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static implicit operator Index(int value) => FromStart(value);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => this._index < 0 ? "^" + ~this._index : this._index.ToString();
+
 }
 
 #endif

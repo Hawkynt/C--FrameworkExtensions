@@ -21,13 +21,18 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Concurrent;
 
 public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
   private readonly Dictionary<TKey, TValue> _items;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ConcurrentDictionary() => this._items = new();
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ConcurrentDictionary(IEqualityComparer<TKey> comparer) => this._items = new(comparer);
 
   public TValue GetOrAdd(TKey key, Func<TKey, TValue> creator) {
@@ -41,6 +46,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool TryGetValue(TKey key, out TValue value) {
     lock (this._items)
       return this._items.TryGetValue(key, out value);
@@ -57,6 +63,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
   public int Count {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       lock (this._items)
         return this._items.Count;
@@ -74,6 +81,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
   public IEnumerable<TKey> Keys {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       lock (this._items)
         return this._items.Keys.ToArray();
@@ -81,6 +89,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
   public TValue[] Values {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       lock (this._items)
         return this._items.Values.ToArray();
@@ -88,10 +97,12 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
   public TValue this[TKey key] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       lock (this._items)
         return this._items[key];
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     set {
       lock (this._items)
         this._items[key] = value;
@@ -99,11 +110,13 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
 #if SUPPORTS_LINQ
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public KeyValuePair<TKey, TValue>[] OrderBy<TSort>(Func<KeyValuePair<TKey, TValue>, TSort> keySelector) {
     lock (this._items)
       return this._items.OrderBy(keySelector).ToArray();
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public KeyValuePair<TKey, TValue>[] OrderByDescending<TSort>(Func<KeyValuePair<TKey, TValue>, TSort> keySelector) {
     lock (this._items)
       return this._items.OrderByDescending(keySelector).ToArray();
@@ -120,6 +133,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
   #endregion

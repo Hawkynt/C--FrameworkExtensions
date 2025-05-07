@@ -19,6 +19,7 @@ using MIO = System.Runtime.CompilerServices.MethodImplOptions;
 namespace Utilities;
 
 internal static class MethodImplOptions {
+  public const MIO Unmanaged = MIO.Unmanaged;
   public const MIO ForwardRef = MIO.ForwardRef;
   public const MIO PreserveSig = MIO.PreserveSig;
   public const MIO InternalCall = MIO.InternalCall;

@@ -16,9 +16,13 @@
 
 #if !SUPPORTS_TUPLE_DECONSTRUCT
 
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 namespace System.Collections.Generic;
 public static class KeyValuePairPolyfills {
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> @this, out TKey key, out TValue value) => (key, value) = (@this.Key, @this.Value);
   
 }

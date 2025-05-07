@@ -20,22 +20,27 @@
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Concurrent;
 
 public class ConcurrentBag<T> {
   private readonly List<T> _items = [];
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Any() {
     lock (this._items)
       return this._items.Count > 0;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Clear() {
     lock (this._items)
       this._items.Clear();
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Add(T item) {
     lock (this._items)
       this._items.Add(item);
@@ -54,6 +59,7 @@ public class ConcurrentBag<T> {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public T[] ToArray() {
     lock (this._items)
       return this._items.ToArray();

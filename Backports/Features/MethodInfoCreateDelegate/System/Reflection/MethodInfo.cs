@@ -20,10 +20,14 @@
 #if !SUPPORTS_METHODINFO_CREATEDELEGATE
 
 using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Reflection;
 
 public static partial class MethodInfoPolyfills {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Delegate CreateDelegate(this MethodInfo @this, Type result) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));

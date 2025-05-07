@@ -20,7 +20,9 @@
 #if !SUPPORTS_LAZY
 
 using Guard;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -40,6 +42,7 @@ public class Lazy<TValue> {
   ///   Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="function">The function that should create the value.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Lazy(Func<TValue> function) {
     if (function == null)
       AlwaysThrow.ArgumentNullException(nameof(function));
@@ -55,7 +58,10 @@ public class Lazy<TValue> {
   /// <value>
   ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
   /// </value>
-  public bool HasValue => this._valueIsReady.IsSet;
+  public bool HasValue {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._valueIsReady.IsSet;
+  }
 
   /// <summary>
   ///   Gets a value indicating whether this instance completed calculation.
@@ -63,7 +69,10 @@ public class Lazy<TValue> {
   /// <value>
   ///   <c>true</c> if this instance is completed; otherwise, <c>false</c>.
   /// </value>
-  public bool IsCompleted => this.HasValue;
+  public bool IsCompleted {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this.HasValue;
+  }
 
   /// <summary>
   ///   Gets the value.
@@ -90,6 +99,7 @@ public class Lazy<TValue> {
   /// <returns>
   ///   The result of the conversion.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static implicit operator TValue(Lazy<TValue> lazy) {
     if (lazy == null)
       AlwaysThrow.ArgumentNullException(nameof(lazy));
@@ -103,7 +113,9 @@ public class Lazy<TValue> {
   /// <returns>
   ///   A <see cref="System.String" /> that represents this instance.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => this.HasValue ? this.Value.ToString() : "Lazy of type:" + typeof(TValue).Name;
+
 }
 
 /// <summary>
@@ -130,12 +142,18 @@ public class Lazy {
   /// <value>
   ///   <c>true</c> if this instance is completed; otherwise, <c>false</c>.
   /// </value>
-  public bool IsCompleted => this._lazy.HasValue;
+  public bool IsCompleted {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._lazy.HasValue;
+  }
 
   /// <summary>
   ///   Triggers the action.
   /// </summary>
-  public byte Value => this._lazy.Value;
+  public byte Value {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._lazy.Value;
+  }
 }
 
 #endif

@@ -18,8 +18,10 @@
 
 #if !SUPPORTS_ARRAYPOOL
 
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Guard;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Buffers;
 
@@ -55,6 +57,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
       this._buckets[i] = new(1 << i, maxArraysPerBucket);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ConfigurableArrayPool() : this(DEFAULT_MAX_ARRAY_LENGTH, DEFAULT_MAX_ARRAYS_PER_BUCKET) { }
 
   #region Overrides of ArrayPool<T>
@@ -143,6 +146,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
   private sealed class ThreadLocalCache<TItem> {
     private readonly TItem[][] _buckets;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ThreadLocalCache(int size) => this._buckets = new TItem[size][];
 
     internal TItem[] Rent(int bucketIndex) {

@@ -17,6 +17,8 @@
 #if !SUPPORTS_ENUMERABLE_TRYGETNONENUMERATEDCOUNT
 
 using Guard;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
@@ -42,6 +44,7 @@ public static partial class EnumerablePolyfills {
   ///   The method is typically a constant-time operation, but ultimately this depends on the complexity
   ///   characteristics of the underlying collection implementation.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryGetNonEnumeratedCount<TItem>(this IEnumerable<TItem> source, out int count) {
     switch (source) {
       case null:
@@ -54,7 +57,7 @@ public static partial class EnumerablePolyfills {
         count = collection.Count;
         return true;
       default:
-        count = default;
+        count = 0;
         return false;
     }
   }

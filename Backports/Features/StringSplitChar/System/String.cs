@@ -16,24 +16,31 @@
 
 #if !SUPPORTS_STRING_SPLIT_CHAR
 
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
+
 namespace System;
 
 public static partial class StringPolyfills {
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, char separator, int count, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split(new[] { separator }, count, options)
+    => @this.Split([separator], count, options)
   ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, char separator, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split(new[] { separator }, options)
+    => @this.Split([separator], options)
   ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split(new[] { separator }, count, options)
+    => @this.Split([separator], count, options)
   ;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split(new[] { separator }, options)
+    => @this.Split([separator], options)
   ;
 
 }

@@ -21,10 +21,14 @@
 
 using Guard;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
 public static partial class DirectoryInfoPolyfills {
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -37,6 +41,7 @@ public static partial class DirectoryInfoPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -49,6 +54,7 @@ public static partial class DirectoryInfoPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -61,6 +67,7 @@ public static partial class DirectoryInfoPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -73,6 +80,7 @@ public static partial class DirectoryInfoPolyfills {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));

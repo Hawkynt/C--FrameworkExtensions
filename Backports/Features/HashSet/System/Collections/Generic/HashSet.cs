@@ -21,11 +21,17 @@
 using Guard;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic {
   [DebuggerDisplay("Count = {Count}")]
-  public class HashSet<T> : ICollection<T> {
+  [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public class HashSet<T>(IEqualityComparer<T> comparer) : ICollection<T> {
+
+    /// <summary>Gets the <see cref="IEqualityComparer" /> object that is used to determine equality for the values in the set.</summary>
+    public IEqualityComparer<T> Comparer { get; } = comparer ?? EqualityComparer<T>.Default;
+
     /// <summary>
     ///   Wraps values to allow <see langword="null" /> values to be used as keys.
     /// </summary>
@@ -34,10 +40,12 @@ namespace System.Collections.Generic {
 
       private IEqualityComparer<T> Comparer => parent.Comparer;
 
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       public override int GetHashCode() => this.value == null ? 0 : this.Comparer.GetHashCode(this.value);
 
       #region Overrides of ValueType
 
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       public override bool Equals(object obj) => obj is Wrapper w && this.Comparer.Equals(this.value, w.value);
 
       #endregion
@@ -47,12 +55,13 @@ namespace System.Collections.Generic {
 
     #region Constructors
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet() : this((IEqualityComparer<T>)null) { }
 
-    public HashSet(IEqualityComparer<T> comparer) => this.Comparer = comparer ?? EqualityComparer<T>.Default;
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet(int capacity) : this(capacity, null) { }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet(IEnumerable<T> enumerable) : this(enumerable, null) { }
 
     public HashSet(IEnumerable<T> enumerable, IEqualityComparer<T> comparer) : this(comparer) {
@@ -67,6 +76,7 @@ namespace System.Collections.Generic {
       }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet(int capacity, IEqualityComparer<T> comparer) : this(comparer) {
       if (capacity < 0)
         AlwaysThrow.ArgumentOutOfRangeException(nameof(capacity));
@@ -78,14 +88,17 @@ namespace System.Collections.Generic {
 
     #region ICollection<T> methods
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     void ICollection<T>.Add(T item) => this.Add(item);
 
     /// <summary>Removes all elements from the <see cref="HashSet{T}" /> object.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => this._hashtable.Clear();
 
     /// <summary>Determines whether the <see cref="HashSet{T}" /> contains the specified element.</summary>
     /// <param name="item">The element to locate in the <see cref="HashSet{T}" /> object.</param>
     /// <returns>true if the <see cref="HashSet{T}" /> object contains the specified element; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(T item) => this._hashtable.ContainsKey(new(item, this));
 
     public bool Remove(T item) {
@@ -98,16 +111,24 @@ namespace System.Collections.Generic {
     }
 
     /// <summary>Gets the number of elements that are contained in the set.</summary>
-    public int Count => this._hashtable.Count;
+    public int Count {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => this._hashtable.Count;
+    }
 
-    bool ICollection<T>.IsReadOnly => false;
+    bool ICollection<T>.IsReadOnly {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => false;
+    }
 
     #endregion
 
     #region IEnumerable methods
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this._Enumerate().GetEnumerator();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
     private IEnumerable<T> _Enumerate() {
@@ -144,6 +165,7 @@ namespace System.Collections.Generic {
     ///   a value that has more complete data than the value you currently have, although their
     ///   comparer functions indicate they are equal.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(T equalValue, out T actualValue)
       => this._hashtable.TryGetValue(new(equalValue, this), out actualValue);
 
@@ -366,11 +388,13 @@ namespace System.Collections.Generic {
       return (uniqueCount, unfoundCount);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(T[] array) => this.CopyTo(array, 0, this.Count);
 
     /// <summary>Copies the elements of a <see cref="HashSet{T}" /> object to an array, starting at the specified array index.</summary>
     /// <param name="array">The destination array.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(T[] array, int arrayIndex) => this.CopyTo(array, arrayIndex, this.Count);
 
     public void CopyTo(T[] array, int arrayIndex, int count) {
@@ -409,16 +433,15 @@ namespace System.Collections.Generic {
       return result;
     }
 
-    /// <summary>Gets the <see cref="IEqualityComparer" /> object that is used to determine equality for the values in the set.</summary>
-    public IEqualityComparer<T> Comparer { get; }
-
     /// <summary>Ensures that this hash set can hold the specified number of elements without growing.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int EnsureCapacity(int capacity) => capacity;
 
     /// <summary>
     ///   Sets the capacity of a <see cref="HashSet{T}" /> object to the actual number of elements it contains,
     ///   rounded up to a nearby, implementation-specific value.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TrimExcess() { }
 
     #endregion

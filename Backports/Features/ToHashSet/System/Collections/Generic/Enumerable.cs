@@ -21,9 +21,8 @@
 
 using Guard;
 using System.Diagnostics;
-#if SUPPORTS_INLINING
+using MethodImplOptions = Utilities.MethodImplOptions;
 using System.Runtime.CompilerServices;
-#endif
 
 namespace System.Collections.Generic;
 
@@ -35,9 +34,7 @@ public static partial class EnumerablePolyfills {
   /// <param name="this">This enumeration.</param>
   /// <returns>A hashset</returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
@@ -56,9 +53,7 @@ public static partial class EnumerablePolyfills {
   ///   A hashset
   /// </returns>
   [DebuggerStepThrough]
-#if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));

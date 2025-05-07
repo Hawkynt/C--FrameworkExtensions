@@ -21,10 +21,14 @@
 
 using Guard;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Threading;
 
 public static partial class WaitHandlePolyfills {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Dispose(this WaitHandle @this) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
