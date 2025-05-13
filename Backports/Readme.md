@@ -57,6 +57,27 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
 * System.Threading
   * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
+* System.Runtime.Intrinsics
+  * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64)
+  * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64-1)&lt;T&gt;
+  * [Vector128](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector128)
+  * [Vector128](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector128-1)&lt;T&gt;
+  * [Vector256](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector256)
+  * [Vector256](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector256-1)&lt;T&gt;
+  * [Vector512](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector512)
+  * [Vector512](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector512-1)&lt;T&gt;
+* System.Runtime.Intrinsics.Arm
+  * [AdvSimd](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.advsimd)
+* System.Runtime.Intrinsics.X86
+  * [Avx](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx)
+  * [Avx2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx2)
+  * [Avx512F](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx512f)
+  * [Sse](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse)
+  * [Sse2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse2)
+  * [Sse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse3)
+  * [Sse41](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse41)
+  * [Sse42](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse42)
+  * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)]
 
 ### Attributes
 

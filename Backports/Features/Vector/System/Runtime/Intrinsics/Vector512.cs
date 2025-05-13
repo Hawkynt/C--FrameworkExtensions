@@ -17,9 +17,24 @@
 
 namespace System.Runtime.Intrinsics;
 
+public class Vector512 {
+  public static bool IsHardwareAccelerated => false;
+}
+
 public struct Vector512<T> where T : unmanaged {
   public static Vector512<T> Zero => default;
-  public static bool IsSupported => false;
+  public static bool IsSupported => typeof(T) == typeof(byte)
+                                    || typeof(T) == typeof(double)
+                                    || typeof(T) == typeof(short)
+                                    || typeof(T) == typeof(int)
+                                    || typeof(T) == typeof(long)
+                                    || typeof(T) == typeof(nint)
+                                    || typeof(T) == typeof(sbyte)
+                                    || typeof(T) == typeof(float)
+                                    || typeof(T) == typeof(ushort)
+                                    || typeof(T) == typeof(uint)
+                                    || typeof(T) == typeof(ulong)
+                                    || typeof(T) == typeof(nuint);
 }
 
 #endif
