@@ -18,26 +18,43 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
 public static partial class MemoryExtensions {
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this) => new(@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this, int start) => new(@this, start, @this.Length - start);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this, int start, int length) => new(@this, start, length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this, Index startIndex) => AsSpan(@this, startIndex.GetOffset(@this.Length));
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this, Range range) {
     var offsetAndLength = range.GetOffsetAndLength(@this.Length);
     return new(@this, offsetAndLength.Offset, offsetAndLength.Length);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ReadOnlySpan<char> AsSpan(this string @this) => new(@this);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ReadOnlySpan<char> AsSpan(this string @this, int start) => new(@this, start, @this.Length - start);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ReadOnlySpan<char> AsSpan(this string @this, int start, int length) => new(@this, start, length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ReadOnlySpan<char> AsSpan(this string @this, Index startIndex) => AsSpan(@this, startIndex.GetOffset(@this.Length));
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ReadOnlySpan<char> AsSpan(this string @this, Range range) {
     var offsetAndLength = range.GetOffsetAndLength(@this.Length);
     return new(@this.ToCharArray(), offsetAndLength.Offset, offsetAndLength.Length);
@@ -49,6 +66,7 @@ public static partial class MemoryExtensions {
   /// <typeparam name="T">The type of elements in the sequence.</typeparam>
   /// <returns>
   /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool SequenceEqual<T>(this Span<T> span, ReadOnlySpan<T> other) where T : IEquatable<T>
     => SequenceEqual((ReadOnlySpan<T>)span, other);
 
@@ -87,6 +105,7 @@ public static partial class MemoryExtensions {
   /// <typeparam name="T">The type of elements in the sequence.</typeparam>
   /// <returns>
   /// <see langword="true" /> if the two sequences are equal; otherwise, <see langword="false" />.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool SequenceEqual<T>(
     this Span<T> span,
     ReadOnlySpan<T> other,
@@ -163,6 +182,7 @@ public static partial class MemoryExtensions {
   /// <param name="span">The source span.</param>
   /// <param name="value">The value to seek within the source span.</param>
   /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int IndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().IndexOf(value.ToString(), comparisonType);
 
   /// <summary>Searches for the specified value and returns the index of its last occurrence. Values are compared using IEquatable{T}.Equals(T).</summary>
@@ -207,10 +227,16 @@ public static partial class MemoryExtensions {
   /// <param name="span">The source span.</param>
   /// <param name="value">The value to seek within the source span.</param>
   /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int LastIndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().LastIndexOf(value.ToString(), comparisonType);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsWith<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> => value.Length <= span.Length && span[..value.Length].SequenceEqual(value);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsWith<T>(this Span<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> => StartsWith((ReadOnlySpan<T>)span, value);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsWith(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) {
     if (value.Length > span.Length)
       return false;

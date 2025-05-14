@@ -46,7 +46,7 @@ public class IQueryableTests {
   [TestCase("ab|bc", "BA", true, "ab")]
   public void FilterIfNeeded2(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-      () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(filter, ignoreCase, d => d.Data, d=>d.DataReversed).Select(d => d.Data),
+      () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(filter, ignoreCase, d => d!.Data, d=>d!.DataReversed).Select(d => d!.Data),
       ConvertFromStringToTestArray(expected),
       exception
     )

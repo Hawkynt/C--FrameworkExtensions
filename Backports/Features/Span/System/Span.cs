@@ -24,6 +24,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
@@ -31,19 +32,23 @@ namespace System;
 public readonly ref struct Span<T> : IEnumerable<T> {
   internal readonly SpanHelper.MemoryHandlerBase<T> memoryHandler;
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private Span(SpanHelper.MemoryHandlerBase<T> handler, int length) {
     this.memoryHandler = handler;
     this.Length = length;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Span(T[] array) : this(new SpanHelper.ManagedArrayHandler<T>(array,0),array.Length) { }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Span(T[] array, int start, int length) : this(new SpanHelper.ManagedArrayHandler<T>(array, start), length) {
     if ((uint)start > (uint)array.Length || (uint)length > (uint)(array.Length - start))
       AlwaysThrow.ArgumentOutOfRangeException(nameof(length));
   }
 
 #pragma warning disable CS8500
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe Span(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
 #pragma warning restore CS8500
 
@@ -52,6 +57,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
   public bool IsEmpty => this.Length == 0;
 
   public static Span<T> Empty {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       unsafe {
         return new(new SpanHelper.UnmanagedPointerMemoryHandler<T>(Unsafe.NullPtr<T>()), 0);
@@ -59,9 +65,11 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ref T GetPinnableReference() => ref this.memoryHandler.GetRef(0);
 
   public ref T this[int index] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       if ((uint)index >= (uint)this.Length)
         AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
@@ -70,6 +78,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     }
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Span<T> Slice(int start, int length) {
     if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
       AlwaysThrow.ArgumentOutOfRangeException(nameof(length));
@@ -77,6 +86,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     return new(this.memoryHandler.SliceFrom(start), length);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public T[] ToArray() {
     var array = new T[this.Length];
     this.memoryHandler.CopyTo(array, this.Length);
@@ -84,6 +94,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     return array;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void CopyTo(Span<T> other) {
     var length = this.Length;
     if (other.Length < length)
@@ -92,6 +103,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     this.memoryHandler.CopyTo(other.memoryHandler, this.Length);
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool TryCopyTo(Span<T> other) {
     var length = this.Length;
     if (other.Length < length)
@@ -101,12 +113,17 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     return true;
   }
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public IEnumerator<T> GetEnumerator() => new SpanHelper.Enumerator<T>(this.memoryHandler, this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
   /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() => typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.Span<{typeof(T).Name}>[{this.Length}]";
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static implicit operator ReadOnlySpan<T>(Span<T> @this) => new(@this.memoryHandler, @this.Length);
   
 }

@@ -54,6 +54,7 @@ public static partial class StreamPolyfills {
   /// <param name="_">Dummy, ignored</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Flush(this Stream @this, bool _) => @this.Flush();
+
 }
 
 #endif

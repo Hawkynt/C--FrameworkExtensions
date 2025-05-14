@@ -6,9 +6,13 @@ namespace System.IO;
 
 [TestFixture]
 public class FileInfoPolyfillsTests {
-  private string _testDirectory;
-  private string _sourceDirectory;
-  private string _targetDirectory;
+  private string? _testDirectory;
+  private string? _sourceDirectory;
+  private string? _targetDirectory;
+  private string _TestDirectory=>this._testDirectory!;
+  private string _SourceDirectory => this._sourceDirectory!;
+  private string _TargetDirectory => this._targetDirectory!;
+
   private const string TestContent = "This is test content";
   private const string TestContent2 = "This is different test content";
 
@@ -16,19 +20,19 @@ public class FileInfoPolyfillsTests {
   public void SetUp() {
     // Erstelle ein Testverzeichnis
     this._testDirectory = Path.Combine(Path.GetTempPath(), "MoveToOverwriteTests_" + Guid.NewGuid().ToString("N"));
-    this._sourceDirectory = Path.Combine(this._testDirectory, "Source");
-    this._targetDirectory = Path.Combine(this._testDirectory, "Target");
+    this._sourceDirectory = Path.Combine(this._TestDirectory, "Source");
+    this._targetDirectory = Path.Combine(this._TestDirectory, "Target");
 
-    Directory.CreateDirectory(this._sourceDirectory);
-    Directory.CreateDirectory(this._targetDirectory);
+    Directory.CreateDirectory(this._SourceDirectory);
+    Directory.CreateDirectory(this._TargetDirectory);
   }
 
   [TearDown]
   public void TearDown() {
     // Bereinige Testverzeichnisse
     try {
-      if (Directory.Exists(this._testDirectory))
-        Directory.Delete(this._testDirectory, true);
+      if (Directory.Exists(this._TestDirectory))
+        Directory.Delete(this._TestDirectory, true);
     } catch {
       // Ignoriere Fehler beim Aufräumen
     }
@@ -37,9 +41,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationDoesNotExist_MovesFile() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Act
     sourceFile.MoveTo(destPath, false);
@@ -54,10 +58,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationExists_OverwriteTrue_OverwritesFile() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
-    this.CreateTestFile(this._targetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
 
     // Act
     sourceFile.MoveTo(destPath, true);
@@ -72,10 +76,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationExists_OverwriteFalse_ThrowsIOException() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
-    this.CreateTestFile(this._targetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
 
     // Act & Assert
     var ex = Assert.Throws<IOException>(() => sourceFile.MoveTo(destPath, false));
@@ -88,10 +92,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SameDirectoryOverwrite_CorrectlyRenames() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._sourceDirectory, "dest.txt");
-    this.CreateTestFile(this._sourceDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    var destPath = Path.Combine(this._SourceDirectory, "dest.txt");
+    this.CreateTestFile(this._SourceDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
 
     // Act
     sourceFile.MoveTo(destPath, true);
@@ -106,9 +110,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_TargetDirectoryDoesNotExist_ThrowsDirectoryNotFoundException() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var nonExistentDir = Path.Combine(this._testDirectory, "NonExistent");
+    var nonExistentDir = Path.Combine(this._TestDirectory, "NonExistent");
     var destPath = Path.Combine(nonExistentDir, "dest.txt");
 
     // Act & Assert
@@ -121,9 +125,9 @@ public class FileInfoPolyfillsTests {
   public void MoveTo_LargeFile_CorrectlyMoves() {
     // Arrange
     var largeContent = new string('A', 10 * 1024 * 1024); // 10 MB Datei
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "large.txt", largeContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "large.txt", largeContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "large_dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "large_dest.txt");
 
     // Act
     sourceFile.MoveTo(destPath, false);
@@ -138,10 +142,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationIsHidden_OverwriteTrue_SuccessfullyOverwrites() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "hidden_dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "hidden_dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "hidden_dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "hidden_dest.txt", TestContent2);
 
     // Zieldatei als versteckt markieren
     File.SetAttributes(destPath, FileAttributes.Hidden);
@@ -164,10 +168,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationIsSystem_OverwriteTrue_SuccessfullyOverwrites() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "system_dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "system_dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "system_dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "system_dest.txt", TestContent2);
 
     // Zieldatei als Systemdatei markieren
     File.SetAttributes(destPath, FileAttributes.System);
@@ -189,10 +193,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationWithHiddenAndSystem_OverwriteTrue_SuccessfullyOverwrites() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "multi_attr_dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "multi_attr_dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "multi_attr_dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "multi_attr_dest.txt", TestContent2);
 
     // Zieldatei mit Hidden und System Attributen markieren (aber nicht ReadOnly)
     File.SetAttributes(destPath, FileAttributes.Hidden | FileAttributes.System);
@@ -210,10 +214,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationIsReadOnly_OverwriteTrue_DoesNotOverwrite() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "readonly_dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "readonly_dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "readonly_dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "readonly_dest.txt", TestContent2);
 
     // Zieldatei als schreibgeschützt markieren
     File.SetAttributes(destPath, FileAttributes.ReadOnly);
@@ -234,10 +238,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationWithMultipleAttributes_OverwriteTrue_DoesNotOverwrite() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "multi_attr_dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "multi_attr_dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "multi_attr_dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "multi_attr_dest.txt", TestContent2);
 
     // Zieldatei mit mehreren Attributen markieren
     File.SetAttributes(destPath, FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
@@ -264,10 +268,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_FileInUse_HandlesAppropriately() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
-    var destFile = this.CreateTestFile(this._targetDirectory, "dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
+    var destFile = this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2);
 
     // Öffne die Zieldatei mit FileShare.None, um sie zu sperren
     using var fileStream = new FileStream(destPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
@@ -284,9 +288,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_FileInfoBehavior_UpdatesSourceFileInfo() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalFullName = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Act
     sourceFile.MoveTo(destPath, false);
@@ -294,7 +298,7 @@ public class FileInfoPolyfillsTests {
     // Assert
     Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert werden");
     Assert.AreEqual("dest.txt", sourceFile.Name, "FileInfo.Name sollte aktualisiert werden");
-    Assert.AreEqual(this._targetDirectory, sourceFile.DirectoryName, "FileInfo.DirectoryName sollte aktualisiert werden");
+    Assert.AreEqual(this._TargetDirectory, sourceFile.DirectoryName, "FileInfo.DirectoryName sollte aktualisiert werden");
     Assert.IsTrue(sourceFile.Exists, "FileInfo.Exists sollte true sein");
     Assert.IsFalse(File.Exists(originalFullName), "Originaldatei sollte nicht mehr existieren");
   }
@@ -308,10 +312,10 @@ public class FileInfoPolyfillsTests {
     var destPaths = new string[fileCount];
 
     for (int i = 0; i < fileCount; i++) {
-      sourceFiles[i] = this.CreateTestFile(this._sourceDirectory, $"source{i}.txt", TestContent + i);
+      sourceFiles[i] = this.CreateTestFile(this._SourceDirectory, $"source{i}.txt", TestContent + i);
       originalPaths[i] = sourceFiles[i].FullName;
-      destPaths[i] = Path.Combine(this._targetDirectory, $"dest{i}.txt");
-      this.CreateTestFile(this._targetDirectory, $"dest{i}.txt", TestContent2 + i);
+      destPaths[i] = Path.Combine(this._TargetDirectory, $"dest{i}.txt");
+      this.CreateTestFile(this._TargetDirectory, $"dest{i}.txt", TestContent2 + i);
     }
 
     // Act
@@ -350,9 +354,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_NonExistentSourceFile_ThrowsFileNotFoundException() {
     // Arrange
-    var nonExistentFile = new FileInfo(Path.Combine(this._sourceDirectory, "nonexistent.txt"));
+    var nonExistentFile = new FileInfo(Path.Combine(this._SourceDirectory, "nonexistent.txt"));
     var originalPath = nonExistentFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Act & Assert
     var ex = Assert.Throws<FileNotFoundException>(() => nonExistentFile.MoveTo(destPath, true));
@@ -362,9 +366,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_DestinationIsDirectory_ThrowsUnauthorizedAccessException() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destDirectory = this._targetDirectory; // Zielpfad ist ein Verzeichnis
+    var destDirectory = this._TargetDirectory; // Zielpfad ist ein Verzeichnis
 
     // Act & Assert
     var ex = Assert.Throws<UnauthorizedAccessException>(() => sourceFile.MoveTo(destDirectory, true));
@@ -375,7 +379,7 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SameFileOverwrite_NoOperation() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var sourceContent = File.ReadAllText(sourceFile.FullName);
     var sourceFilePath = sourceFile.FullName;
 
@@ -397,9 +401,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SourceHasAttributes_AttributesArePreserved() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Setze verschiedene Attribute auf die Quelldatei
     File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.Hidden);
@@ -421,10 +425,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SourceHasAttributes_DestinationExists_OverwriteTrue_AttributesArePreserved() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
-    this.CreateTestFile(this._targetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
 
     // Setze verschiedene Attribute auf die Quelldatei
     File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.System);
@@ -446,10 +450,10 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SourceAndDestinationHaveAttributes_OverwriteTrue_SourceAttributesArePreserved() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
-    this.CreateTestFile(this._targetDirectory, "dest.txt", TestContent2);
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2);
 
     // Setze unterschiedliche Attribute auf Quell- und Zieldatei
     File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.Hidden);
@@ -480,9 +484,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SourceIsReadOnly_AttributeIsPreserved() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Setze ReadOnly-Attribut auf die Quelldatei
     File.SetAttributes(originalPath, FileAttributes.ReadOnly);
@@ -502,9 +506,9 @@ public class FileInfoPolyfillsTests {
   [Test]
   public void MoveTo_SourceHasAllAttributes_AllAttributesArePreserved() {
     // Arrange
-    var sourceFile = this.CreateTestFile(this._sourceDirectory, "source.txt", TestContent);
+    var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destPath = Path.Combine(this._targetDirectory, "dest.txt");
+    var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Setze mehrere Attribute auf die Quelldatei
     var sourceAttributes = FileAttributes.Archive | FileAttributes.Hidden |

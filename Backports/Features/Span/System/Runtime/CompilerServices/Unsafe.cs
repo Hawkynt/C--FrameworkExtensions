@@ -16,16 +16,28 @@
 
 #if !SUPPORTS_SPAN
 
+using MethodImplOptionsEx = Utilities.MethodImplOptions;
+
 namespace System.Runtime.CompilerServices;
 
 public static unsafe class Unsafe {
 
+  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
   public static int SizeOf<T>() => sizeof(T);
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
+  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
   internal static T* NullPtr<T>() => (T*)IntPtr.Zero;
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
+  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
   public static ref T AsRef<T>(void* source) => ref *(T*)source;
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
+  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static ref T NullRef<T>() => ref AsRef<T>(null);
   
 }

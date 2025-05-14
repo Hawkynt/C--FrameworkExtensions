@@ -156,7 +156,7 @@ internal class SpanTests {
     #region Equality members
 
     /// <inheritdoc />
-    public bool Equals(MyClass other) => this.X == other.X && this.Y.Equals(other.Y);
+    public bool Equals(MyClass? other) => !ReferenceEquals(other, null) && this.X == other.X && this.Y.Equals(other.Y);
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is MyClass other && this.Equals(other);

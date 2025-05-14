@@ -19,7 +19,9 @@
 
 #if !SUPPORTS_STACK_TRYPOP
 
+using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
+using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic;
 
@@ -38,6 +40,7 @@ public static partial class StackPolyfills {
   ///   <see langword="true" /> if there is an object at the top of the <see cref="Stack{T}" />;
   ///   <see langword="false" /> if the <see cref="Stack{T}" /> is empty.
   /// </returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool TryPop<TItem>(this Stack<TItem> @this, out TItem result) {
     if (@this == null)
       AlwaysThrow.ArgumentNullException(nameof(@this));
