@@ -64,6 +64,8 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
     }
   }
 
+  public ref T GetPinnableReference() => ref this.memoryHandler.GetRef(0);
+
   public ref readonly T this[int index] {
     get {
       if ((uint)index >= (uint)this.Length)
