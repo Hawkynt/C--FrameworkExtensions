@@ -77,7 +77,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Sse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse3)
   * [Sse41](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse41)
   * [Sse42](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse42)
-  * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)]
+  * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)
 
 ### Attributes
 

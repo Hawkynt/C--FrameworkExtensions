@@ -18,6 +18,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -250,7 +251,7 @@ public static partial class MemoryExtensions {
       StringComparison.InvariantCultureIgnoreCase => string.Compare(left.ToString(), value.ToString(), CultureInfo.InvariantCulture, CompareOptions.IgnoreCase) == 0,
       StringComparison.Ordinal => left.SequenceEqual(value),
       StringComparison.OrdinalIgnoreCase => left.ToString().Equals(value.ToString(), StringComparison.OrdinalIgnoreCase),
-      _ => throw new ArgumentOutOfRangeException(nameof(comparisonType), comparisonType, "Unknown StringComparison value.")
+      _ => AlwaysThrow.UnknownEnumValue<StringComparison, bool>(nameof(comparisonType), comparisonType)
     };
   }
 

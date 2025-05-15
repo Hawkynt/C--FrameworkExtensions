@@ -24,12 +24,12 @@ using Guard;
 namespace System.Runtime.CompilerServices;
 
 public readonly struct ConfiguredTaskAwaitable(Task task, bool continueOnCapturedContext) {
-  private readonly Task _task = task ?? throw new ArgumentNullException(nameof(task));
+  private readonly Task _task = task ?? AlwaysThrow.ArgumentNullException<Task>(nameof(task));
 
   public ConfiguredTaskAwaiter GetAwaiter() => new(this._task, continueOnCapturedContext);
 
   public readonly struct ConfiguredTaskAwaiter(Task task, bool continueOnCapturedContext) : ICriticalNotifyCompletion {
-    private readonly Task _task = task ?? throw new ArgumentNullException(nameof(task));
+    private readonly Task _task = task ?? AlwaysThrow.ArgumentNullException<Task>(nameof(task));
 
     public bool IsCompleted => this._task.IsCompleted;
 
@@ -53,12 +53,12 @@ public readonly struct ConfiguredTaskAwaitable(Task task, bool continueOnCapture
 }
 
 public readonly struct ConfiguredTaskAwaitable<TResult>(Task<TResult> task, bool continueOnCapturedContext) {
-  private readonly Task<TResult> _task = task ?? throw new ArgumentNullException(nameof(task));
+  private readonly Task<TResult> _task = task ?? AlwaysThrow.ArgumentNullException<Task<TResult>>(nameof(task));
 
   public ConfiguredTaskAwaiter GetAwaiter() => new(this._task, continueOnCapturedContext);
 
   public readonly struct ConfiguredTaskAwaiter(Task<TResult> task, bool continueOnCapturedContext) : ICriticalNotifyCompletion {
-    private readonly Task<TResult> _task = task ?? throw new ArgumentNullException(nameof(task));
+    private readonly Task<TResult> _task = task ?? AlwaysThrow.ArgumentNullException<Task<TResult>>(nameof(task));
 
     public bool IsCompleted => this._task.IsCompleted;
 

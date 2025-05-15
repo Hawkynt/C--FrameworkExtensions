@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace System.Runtime.CompilerServices;
 
 public readonly struct TaskAwaiter(Task task) : ICriticalNotifyCompletion {
-  private readonly Task _task = task ?? throw new ArgumentNullException(nameof(task));
+  private readonly Task _task = task ?? AlwaysThrow.ArgumentNullException<Task>(nameof(task));
 
   public bool IsCompleted => this._task.IsCompleted;
 
@@ -47,7 +47,7 @@ public readonly struct TaskAwaiter(Task task) : ICriticalNotifyCompletion {
 }
 
 public readonly struct TaskAwaiter<TResult>(Task<TResult> task) : ICriticalNotifyCompletion {
-  private readonly Task<TResult> _task = task ?? throw new ArgumentNullException(nameof(task));
+  private readonly Task<TResult> _task = task ?? AlwaysThrow.ArgumentNullException<Task<TResult>>(nameof(task));
 
   public bool IsCompleted => this._task.IsCompleted;
 
