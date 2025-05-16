@@ -80,8 +80,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Features\Unsafe\System\Runtime\CompilerServices\" />
     <Folder Include="Guard\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
 
   <ItemGroup>
