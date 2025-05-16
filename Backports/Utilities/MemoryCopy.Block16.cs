@@ -13,14 +13,11 @@
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-#if !SUPPORTS_SPAN
 using System.Runtime.InteropServices;
 
-namespace System;
+namespace Utilities;
 
-partial class SpanHelper {
-  [StructLayout(LayoutKind.Explicit,Size = 32)]
-  private readonly struct Block32;
+partial class MemoryCopy {
+  [StructLayout(LayoutKind.Explicit,Size = 16)]
+  private readonly struct Block16;
 }
-
-#endif
