@@ -62,17 +62,13 @@ public static unsafe class Unsafe {
   public static void WriteUnaligned<T>(void* destination, T value) => *(T*)destination = value;
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-  public static void InitBlock(void* startAddress, byte value, uint byteCount) {
-    var ptr = (byte*)startAddress;
-    while (byteCount-- > 0)
-      *ptr++ = value;
-  }
+  public static void InitBlock(void* startAddress, byte value, uint byteCount) => Utilities.RawMemory.Fill(value,(byte*)startAddress,byteCount);
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static void InitBlockUnaligned(void* startAddress, byte value, uint byteCount) => InitBlock(startAddress, value, byteCount);
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-  public static void CopyBlock(void* destination, void* source, uint byteCount) => Utilities.MemoryCopy.CopyWithoutChecks((byte*)source, (byte*)destination, byteCount);
+  public static void CopyBlock(void* destination, void* source, uint byteCount) => Utilities.RawMemory.CopyWithoutChecks((byte*)source, (byte*)destination, byteCount);
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static void CopyBlockUnaligned(void* destination, void* source, uint byteCount) => CopyBlock(destination, source, byteCount);

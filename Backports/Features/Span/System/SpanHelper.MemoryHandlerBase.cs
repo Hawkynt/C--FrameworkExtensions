@@ -87,8 +87,7 @@ partial class SpanHelper {
         case < 0:
           AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
           return;
-        case 0:
-          return;
+        case 0: return;
       }
 
       const int BYTE_COPY_THRESHOLD_IN_ITEMS = 16;
@@ -103,41 +102,31 @@ partial class SpanHelper {
               var targetPtr = target + mahT.start;
               CopyPointerElements(sourcePtr, targetPtr, count);
             }
+
             break;
           }
-          default:
-            CopyElements(other, count);
-            break;
+          default: CopyElements(other, count); break;
         }
       else
-        Utilities.MemoryCopy.CopyWithoutChecks((byte*)this.Pointer, (byte*)other.Pointer, (uint)(Unsafe.SizeOf<T>() * count));
+        Utilities.RawMemory.CopyWithoutChecks((byte*)this.Pointer, (byte*)other.Pointer, (uint)(Unsafe.SizeOf<T>() * count));
 
       return;
 
       static void CopyPointerElements(T* source, T* target, int elements) {
         // Calculate iterations for chunks of 8 with bit trick (length / 8)
         var iterations = elements >> 3;
-        
+
         // Check remainder using bit trick (length % 8)
         switch (elements & 7) {
-          case 0:
-            goto Copy0or8;
-          case 7:
-            goto Copy7;
-          case 6:
-            goto Copy6;
-          case 5:
-            goto Copy5;
-          case 4:
-            goto Copy4;
-          case 3:
-            goto Copy3;
-          case 2:
-            goto Copy2;
-          case 1:
-            goto Copy1;
-          default:
-            goto CopyDone; // Avoid compiler warning and trigger optimization - Never gonna get here
+          case 0: goto Copy0or8;
+          case 7: goto Copy7;
+          case 6: goto Copy6;
+          case 5: goto Copy5;
+          case 4: goto Copy4;
+          case 3: goto Copy3;
+          case 2: goto Copy2;
+          case 1: goto Copy1;
+          default: goto CopyDone; // Avoid compiler warning and trigger optimization - Never gonna get here
         }
 
         Copy0or8:
@@ -145,16 +134,22 @@ partial class SpanHelper {
           goto CopyDone;
 
         *target++ = *source++;
-        Copy7: *target++ = *source++;
-        Copy6: *target++ = *source++;
-        Copy5: *target++ = *source++;
-        Copy4: *target++ = *source++;
-        Copy3: *target++ = *source++;
-        Copy2: *target++ = *source++;
-        Copy1: *target++ = *source++;
+        Copy7:
+        *target++ = *source++;
+        Copy6:
+        *target++ = *source++;
+        Copy5:
+        *target++ = *source++;
+        Copy4:
+        *target++ = *source++;
+        Copy3:
+        *target++ = *source++;
+        Copy2:
+        *target++ = *source++;
+        Copy1:
+        *target++ = *source++;
         goto Copy0or8;
-        CopyDone:
-        ;
+        CopyDone: ;
       }
 
       void CopyElements(MemoryHandlerBase<T> target, int elements) {
@@ -166,19 +161,19 @@ partial class SpanHelper {
 
     }
 
-  /// <summary>
-  ///   Copies a specified number of elements from the memory buffer to a target array starting at the array's beginning.
-  /// </summary>
-  /// <param name="target">The target array to which elements are copied.</param>
-  /// <param name="count">The number of elements to copy to the target array.</param>
-  /// <exception cref="ArgumentNullException">Thrown if <paramref name="target" /> is null.</exception>
-  /// <exception cref="ArgumentOutOfRangeException">
-  ///   Thrown if the count is greater than the size of the memory buffer or the
-  ///   target array.
-  /// </exception>
-  public void CopyTo(T[] target, int count) => this.CopyTo(new ManagedArrayHandler<T>(target,0),count);
+    /// <summary>
+    ///   Copies a specified number of elements from the memory buffer to a target array starting at the array's beginning.
+    /// </summary>
+    /// <param name="target">The target array to which elements are copied.</param>
+    /// <param name="count">The number of elements to copy to the target array.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="target" /> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown if the count is greater than the size of the memory buffer or the
+    ///   target array.
+    /// </exception>
+    public void CopyTo(T[] target, int count) => this.CopyTo(new ManagedArrayHandler<T>(target, 0), count);
 
-   }
+  }
 
 }
 

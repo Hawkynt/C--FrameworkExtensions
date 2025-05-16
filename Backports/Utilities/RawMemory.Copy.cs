@@ -16,7 +16,7 @@
 
 namespace Utilities;
 
-internal static unsafe partial class MemoryCopy {
+unsafe partial class RawMemory {
   public static void CopyWithoutChecks(byte* source, byte* target, uint bytes) {
 #if SUPPORTS_BUFFER_MEMORYCOPY
     System.Buffer.MemoryCopy(source, target, bytes, bytes);
@@ -223,37 +223,37 @@ CopyLessThan64:
 Copy63:
       target[62] = source[62];
 Copy62:
-      *(short*)(target + 60) = *(short*)(source + 60);
+      *(Block2*)(target + 60) = *(Block2*)(source + 60);
       goto Copy60;
 Copy61:
       target[60] = source[60];
 Copy60:
-      *(int*)(target + 56) = *(int*)(source + 56);
+      *(Block4*)(target + 56) = *(Block4*)(source + 56);
       goto Copy56;
 Copy59:
       target[58] = source[58];
 Copy58:
-      *(short*)(target + 56) = *(short*)(source + 56);
+      *(Block2*)(target + 56) = *(Block2*)(source + 56);
       goto Copy56;
 Copy57:
       target[56] = source[56];
 Copy56:
-      *(long*)(target + 48) = *(long*)(source + 48);
+      *(Block8*)(target + 48) = *(Block8*)(source + 48);
       goto Copy48;
 Copy55:
       target[54] = source[54];
 Copy54:
-      *(short*)(target + 52) = *(short*)(source + 52);
+      *(Block2*)(target + 52) = *(Block2*)(source + 52);
       goto Copy52;
 Copy53:
       target[52] = source[52];
 Copy52:
-      *(int*)(target + 48) = *(int*)(source + 48);
+      *(Block4*)(target + 48) = *(Block4*)(source + 48);
       goto Copy48;
 Copy51:
       target[50] = source[50];
 Copy50:
-      *(short*)(target + 48) = *(short*)(source + 48);
+      *(Block2*)(target + 48) = *(Block2*)(source + 48);
       goto Copy48;
 Copy49:
       target[48] = source[48];
@@ -263,37 +263,37 @@ Copy48:
 Copy47:
       target[46] = source[46];
 Copy46:
-      *(short*)(target + 44) = *(short*)(source + 44);
+      *(Block2*)(target + 44) = *(Block2*)(source + 44);
       goto Copy44;
 Copy45:
       target[44] = source[44];
 Copy44:
-      *(int*)(target + 40) = *(int*)(source + 40);
+      *(Block4*)(target + 40) = *(Block4*)(source + 40);
       goto Copy40;
 Copy43:
       target[42] = source[42];
 Copy42:
-      *(short*)(target + 40) = *(short*)(source + 40);
+      *(Block2*)(target + 40) = *(Block2*)(source + 40);
       goto Copy40;
 Copy41:
       target[40] = source[40];
 Copy40:
-      *(long*)(target + 32) = *(long*)(source + 32);
+      *(Block8*)(target + 32) = *(Block8*)(source + 32);
       goto Copy32;
 Copy39:
       target[38] = source[38];
 Copy38:
-      *(short*)(target + 36) = *(short*)(source + 36);
+      *(Block2*)(target + 36) = *(Block2*)(source + 36);
       goto Copy36;
 Copy37:
       target[36] = source[36];
 Copy36:
-      *(int*)(target + 32) = *(int*)(source + 32);
+      *(Block4*)(target + 32) = *(Block4*)(source + 32);
       goto Copy32;
 Copy35:
       target[34] = source[34];
 Copy34:
-      *(short*)(target + 32) = *(short*)(source + 32);
+      *(Block2*)(target + 32) = *(Block2*)(source + 32);
       goto Copy32;
 Copy33:
       target[32] = source[32];
@@ -303,37 +303,37 @@ Copy32:
 Copy31:
       target[30] = source[30];
 Copy30:
-      *(short*)(target + 28) = *(short*)(source + 28);
+      *(Block2*)(target + 28) = *(Block2*)(source + 28);
       goto Copy28;
 Copy29:
       target[28] = source[28];
 Copy28:
-      *(int*)(target + 24) = *(int*)(source + 24);
+      *(Block4*)(target + 24) = *(Block4*)(source + 24);
       goto Copy24;
 Copy27:
       target[26] = source[26];
 Copy26:
-      *(short*)(target + 24) = *(short*)(source + 24);
+      *(Block2*)(target + 24) = *(Block2*)(source + 24);
       goto Copy24;
 Copy25:
       target[24] = source[24];
 Copy24:
-      *(long*)(target + 16) = *(long*)(source + 16);
+      *(Block8*)(target + 16) = *(Block8*)(source + 16);
       goto Copy16;
 Copy23:
       target[22] = source[22];
 Copy22:
-      *(short*)(target + 20) = *(short*)(source + 20);
+      *(Block2*)(target + 20) = *(Block2*)(source + 20);
       goto Copy20;
 Copy21:
       target[20] = source[20];
 Copy20:
-      *(int*)(target + 16) = *(int*)(source + 16);
+      *(Block4*)(target + 16) = *(Block4*)(source + 16);
       goto Copy16;
 Copy19:
       target[18] = source[18];
 Copy18:
-      *(short*)(target + 16) = *(short*)(source + 16);
+      *(Block2*)(target + 16) = *(Block2*)(source + 16);
       goto Copy16;
 Copy17:
       target[16] = source[16];
@@ -343,37 +343,37 @@ Copy16:
 Copy15:
       target[14] = source[14];
 Copy14:
-      *(short*)(target + 12) = *(short*)(source + 12);
+      *(Block2*)(target + 12) = *(Block2*)(source + 12);
       goto Copy12;
 Copy13:
       target[12] = source[12];
 Copy12:
-      *(int*)(target + 8) = *(int*)(source + 8);
+      *(Block4*)(target + 8) = *(Block4*)(source + 8);
       goto Copy8;
 Copy11:
       target[10] = source[10];
 Copy10:
-      *(short*)(target + 8) = *(short*)(source + 8);
+      *(Block2*)(target + 8) = *(Block2*)(source + 8);
       goto Copy8;
 Copy9:
       target[8] = source[8];
 Copy8:
-      *(long*)target = *(long*)source;
+      *(Block8*)target = *(Block8*)source;
       goto CopyDone;
 Copy7:
       target[6] = source[6];
 Copy6:
-      *(short*)(target + 4) = *(short*)(source + 4);
+      *(Block2*)(target + 4) = *(Block2*)(source + 4);
       goto Copy4;
 Copy5:
       target[4] = source[4];
 Copy4:
-      *(int*)target = *(int*)source;
+      *(Block4*)target = *(Block4*)source;
       goto CopyDone;
 Copy3:
       target[2] = source[2];
 Copy2:
-      *(short*)target = *(short*)source;
+      *(Block2*)target = *(Block2*)source;
       goto CopyDone;
 Copy1:
       *target = *source;

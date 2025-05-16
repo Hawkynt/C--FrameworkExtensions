@@ -17,7 +17,18 @@ using System.Runtime.InteropServices;
 
 namespace Utilities;
 
-partial class MemoryCopy {
-  [StructLayout(LayoutKind.Explicit, Size = 32)]
-  private readonly struct Block32;
+partial class RawMemory {
+  
+  [StructLayout(LayoutKind.Explicit, Size = 8)]
+  
+  private readonly struct Block8(ulong value) {
+    // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
+
+    [FieldOffset(0)] public readonly ulong value = value;
+
+    public Block8(byte value) : this(0x0101010101010101UL * value) { }
+    public Block8(ushort value) : this(0x0001000100010001UL * value) { }
+    public Block8(uint value) : this(0x0000000100000001UL * value) { }
+
+  }
 }
