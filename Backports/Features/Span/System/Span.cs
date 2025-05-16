@@ -104,6 +104,22 @@ public readonly ref struct Span<T> : IEnumerable<T> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void Clear() {
+    fixed (T* pointer = this)
+      Unsafe.InitBlockUnaligned(pointer, 0, (uint)(Unsafe.SizeOf<T>() * this.Length));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void Fill(T value) {
+    if (sizeof(T) == 1)
+      fixed (T* pointer = this)
+        Unsafe.InitBlockUnaligned(pointer, *(byte*)&value, (uint)this.Length);
+    else
+      for (var i = 0; i < this.Length; ++i)
+        this.memoryHandler.GetRef(i) = value;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool TryCopyTo(Span<T> other) {
     var length = this.Length;
     if (other.Length < length)
