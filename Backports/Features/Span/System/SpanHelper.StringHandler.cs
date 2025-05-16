@@ -15,13 +15,14 @@
 
 #if !SUPPORTS_SPAN
 
+using System.Runtime.CompilerServices;
 using Guard;
 
 namespace System;
 
 partial class SpanHelper {
   
-  public class StringHandler : MemoryHandlerBase<char> {
+  public class StringHandler<T> : MemoryHandlerBase<T> {
 
     private readonly SharedPin<char> _pin;
     public readonly string source;
@@ -41,30 +42,34 @@ partial class SpanHelper {
     #region Implementation of IMemoryHandler<char>
 
     /// <inheritdoc />
-    public override ref char GetRef(int index) {
+    public override ref T GetRef(int index) {
       unsafe {
-        return ref *(this._pin.Pointer + this.start + index);
+        return ref Unsafe.AsRef<T>(this._pin.Pointer + this.start + index);
       }
     }
 
     /// <inheritdoc />
-    public override char GetValue(int index) {
+    public override T GetValue(int index) {
       this._pin.TrackAccess();
       if (!this._pin.IsPinned)
-        return this.source[this.start + index];
+        return (T)(object)this.source[this.start + index];
       unsafe {
-        return *(this._pin.Pointer + this.start + index);
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+        return *(T*)(this._pin.Pointer + this.start + index);
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
       }
     }
 
     /// <inheritdoc />
-    public override void SetValue(int index, char value) => AlwaysThrow.InvalidOperationException("Strings are immutable");
+    public override void SetValue(int index, T value) => AlwaysThrow.InvalidOperationException("Strings are immutable");
 
     /// <inheritdoc />
-    public override unsafe char* Pointer => this._pin.Pointer + this.start;
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
+    public override unsafe T* Pointer => (T*)(this._pin.Pointer + this.start);
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
     /// <inheritdoc />
-    public override MemoryHandlerBase<char> SliceFrom(int offset) => new StringHandler(this.source, this.start + offset, this._pin);
+    public override MemoryHandlerBase<T> SliceFrom(int offset) => new StringHandler<T>(this.source, this.start + offset, this._pin);
 
     #endregion
 

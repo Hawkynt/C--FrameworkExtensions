@@ -42,7 +42,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   public ReadOnlySpan(T[] array) : this(new SpanHelper.ManagedArrayHandler<T>(array, 0), array.Length) { }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal ReadOnlySpan(string text) : this((SpanHelper.MemoryHandlerBase<T>)(object)new SpanHelper.StringHandler(text,0),text.Length) { }
+  internal ReadOnlySpan(string text) : this(new SpanHelper.StringHandler<T>(text,0),text.Length) { }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ReadOnlySpan(T[] array, int start, int length) : this(new SpanHelper.ManagedArrayHandler<T>(array, start), length) {
@@ -51,7 +51,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal ReadOnlySpan(string text, int start, int length) : this((SpanHelper.MemoryHandlerBase<T>)(object)new SpanHelper.StringHandler(text, start), length) {
+  internal ReadOnlySpan(string text, int start, int length) : this(new SpanHelper.StringHandler<T>(text, start), length) {
     if ((uint)start > (uint)text.Length || (uint)length > (uint)(text.Length - start))
       AlwaysThrow.ArgumentOutOfRangeException(nameof(length));
   }
@@ -133,7 +133,7 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => this.memoryHandler is SpanHelper.StringHandler sh ? sh.ToString(this.Length) : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
+  public override string ToString() => this.memoryHandler is SpanHelper.StringHandler<T> sh ? sh.ToString(this.Length) : typeof(T) == typeof(char) ? new((char[])(object)this.ToArray()) : $"System.ReadOnlySpan<{typeof(T).Name}>[{this.Length}]";
 
 }
 
