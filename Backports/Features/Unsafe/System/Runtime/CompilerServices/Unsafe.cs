@@ -22,6 +22,10 @@ namespace System.Runtime.CompilerServices;
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
 public static unsafe class Unsafe {
+
+  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+  public static void SkipInit<T>(out T result) => result = default;
+
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static int SizeOf<T>() => sizeof(T);
 
