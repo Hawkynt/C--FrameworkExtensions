@@ -240,7 +240,7 @@ internal static class Scalar<T> {
     // For integer types, convert to double, take sqrt, and convert back
     TypeCode.Byte or TypeCode.SByte or TypeCode.UInt16 or TypeCode.Int16 or
     TypeCode.UInt32 or TypeCode.Int32 or TypeCode.UInt64 or TypeCode.Int64 =>
-      From(Math.Sqrt(ToDouble(value))),
+      From(Math.Sqrt(To<double>(value))),
     _ => ThrowNotSupported<T>()
   };
 
@@ -439,51 +439,172 @@ internal static class Scalar<T> {
   #region Helper methods
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static T From(int value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Byte => Promote((byte)value),
-    TypeCode.SByte => Promote((sbyte)value),
-    TypeCode.UInt16 => Promote((ushort)value),
-    TypeCode.Int16 => Promote((short)value),
-    TypeCode.UInt32 => Promote((uint)value),
-    TypeCode.Int32 => Promote(value),
-    TypeCode.UInt64 => Promote((ulong)value),
-    TypeCode.Int64 => Promote((long)value),
-    TypeCode.Single => Promote((float)value),
-    TypeCode.Double => Promote((double)value),
-    TypeCode.Decimal => Promote((decimal)value),
-    _ => ThrowNotSupported<T>()
-  };
+  public static T From<TFrom>(TFrom value) {
+    if (TypeCodeCache<T>.Code == TypeCodeCache<TFrom>.Code)
+      return As<T, TFrom>(value);
+
+    return TypeCodeCache<T>.Code switch {
+      TypeCode.Byte => Promote(TypeCodeCache<TFrom>.Code switch {
+          TypeCode.SByte => (byte)Scalar<TFrom>.As<sbyte>(value),
+          TypeCode.UInt16 => (byte)Scalar<TFrom>.As<ushort>(value),
+          TypeCode.Int16 => (byte)Scalar<TFrom>.As<short>(value),
+          TypeCode.UInt32 => (byte)Scalar<TFrom>.As<uint>(value),
+          TypeCode.Int32 => (byte)Scalar<TFrom>.As<int>(value),
+          TypeCode.UInt64 => (byte)Scalar<TFrom>.As<ulong>(value),
+          TypeCode.Int64 => (byte)Scalar<TFrom>.As<long>(value),
+          TypeCode.Single => (byte)Scalar<TFrom>.As<float>(value),
+          TypeCode.Double => (byte)Scalar<TFrom>.As<double>(value),
+          TypeCode.Decimal => (byte)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<byte>()
+      }),
+      TypeCode.SByte => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => (sbyte)Scalar<TFrom>.As<byte>(value),
+        TypeCode.UInt16 => (sbyte)Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => (sbyte)Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => (sbyte)Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => (sbyte)Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => (sbyte)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => (sbyte)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (sbyte)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (sbyte)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (sbyte)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<sbyte>()
+      }),
+      TypeCode.UInt16 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => (ushort)Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.Int16 => (ushort)Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => (ushort)Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => (ushort)Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => (ushort)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => (ushort)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (ushort)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (ushort)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (ushort)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<ushort>()
+      }),
+      TypeCode.Int16 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => (short)Scalar<TFrom>.As<ushort>(value),
+        TypeCode.UInt32 => (short)Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => (short)Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => (short)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => (short)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (short)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (short)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (short)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<short>()
+      }),
+      TypeCode.UInt32 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => (uint)Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => (uint)Scalar<TFrom>.As<short>(value),
+        TypeCode.Int32 => (uint)Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => (uint)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => (uint)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (uint)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (uint)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (uint)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<uint>()
+      }),
+      TypeCode.Int32 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => (int)Scalar<TFrom>.As<uint>(value),
+        TypeCode.UInt64 => (int)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => (int)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (int)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (int)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (int)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<int>()
+      }),
+      TypeCode.UInt64 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => (ulong)Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => (ulong)Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => (ulong)Scalar<TFrom>.As<int>(value),
+        TypeCode.Int64 => (ulong)Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (ulong)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (ulong)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (ulong)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<ulong>()
+      }),
+      TypeCode.Int64 => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => (long)Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Single => (long)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (long)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (long)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<long>()
+      }),
+      TypeCode.Single => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => Scalar<TFrom>.As<long>(value),
+        TypeCode.Double => (float)Scalar<TFrom>.As<double>(value),
+        TypeCode.Decimal => (float)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<float>()
+      }),
+      TypeCode.Double => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => Scalar<TFrom>.As<float>(value),
+        TypeCode.Decimal => (double)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<double>()
+      }),
+      TypeCode.Decimal => Promote(TypeCodeCache<TFrom>.Code switch {
+        TypeCode.Byte => Scalar<TFrom>.As<byte>(value),
+        TypeCode.SByte => Scalar<TFrom>.As<sbyte>(value),
+        TypeCode.UInt16 => Scalar<TFrom>.As<ushort>(value),
+        TypeCode.Int16 => Scalar<TFrom>.As<short>(value),
+        TypeCode.UInt32 => Scalar<TFrom>.As<uint>(value),
+        TypeCode.Int32 => Scalar<TFrom>.As<int>(value),
+        TypeCode.UInt64 => Scalar<TFrom>.As<ulong>(value),
+        TypeCode.Int64 => Scalar<TFrom>.As<long>(value),
+        TypeCode.Single => (decimal)Scalar<TFrom>.As<float>(value),
+        TypeCode.Double => (decimal)Scalar<TFrom>.As<double>(value),
+        _ => ThrowNotSupported<decimal>()
+      }),
+      _ => ThrowNotSupported<T>()
+    };
+  }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static T From(double value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Byte => Promote((byte)value),
-    TypeCode.SByte => Promote((sbyte)value),
-    TypeCode.UInt16 => Promote((ushort)value),
-    TypeCode.Int16 => Promote((short)value),
-    TypeCode.UInt32 => Promote((uint)value),
-    TypeCode.Int32 => Promote((int)value),
-    TypeCode.UInt64 => Promote((ulong)value),
-    TypeCode.Int64 => Promote((long)value),
-    TypeCode.Single => Promote((float)value),
-    TypeCode.Double => Promote(value),
-    TypeCode.Decimal => Promote((decimal)value),
-    _ => ThrowNotSupported<T>()
-  };
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static double ToDouble(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Byte => As<byte>(value),
-    TypeCode.SByte => As<sbyte>(value),
-    TypeCode.UInt16 => As<ushort>(value),
-    TypeCode.Int16 => As<short>(value),
-    TypeCode.UInt32 => As<uint>(value),
-    TypeCode.Int32 => As<int>(value),
-    TypeCode.UInt64 => As<ulong>(value),
-    TypeCode.Int64 => As<long>(value),
-    TypeCode.Single => As<float>(value),
-    TypeCode.Double => As<double>(value),
-    TypeCode.Decimal => (double)As<decimal>(value),
-    _ => ThrowNotSupported<double>()
+  public static TTo To<TTo>(T value) => TypeCodeCache<T>.Code switch {
+    TypeCode.Byte => Scalar<TTo>.From(As<byte>(value)),
+    TypeCode.SByte => Scalar<TTo>.From(As<sbyte>(value)),
+    TypeCode.UInt16 => Scalar<TTo>.From(As<ushort>(value)),
+    TypeCode.Int16 => Scalar<TTo>.From(As<short>(value)),
+    TypeCode.UInt32 => Scalar<TTo>.From(As<uint>(value)),
+    TypeCode.Int32 => Scalar<TTo>.From(As<int>(value)),
+    TypeCode.UInt64 => Scalar<TTo>.From(As<ulong>(value)),
+    TypeCode.Int64 => Scalar<TTo>.From(As<long>(value)),
+    TypeCode.Single => Scalar<TTo>.From(As<float>(value)),
+    TypeCode.Double => Scalar<TTo>.From(As<double>(value)),
+    TypeCode.Decimal => Scalar<TTo>.From(As<decimal>(value)),
+    _ => ThrowNotSupported<TTo>()
   };
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -493,12 +614,12 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-  private static unsafe G As<G>(T value) where G : unmanaged => *(G*)&value;
+  public static unsafe TTo As<TTo>(T value) where TTo : unmanaged => *(TTo*)&value;
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-  private static unsafe G As<G,H>(H value) where G : unmanaged where H:unmanaged => *(G*)&value;
+  private static unsafe TTo As<TTo,TFrom>(TFrom value) => *(TTo*)&value;
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
 
