@@ -81,6 +81,7 @@
 
   <ItemGroup>
     <Folder Include="Features\Unsafe\System\Runtime\CompilerServices\" />
+    <Folder Include="Features\Vector\System\Numerics\" />
     <Folder Include="Guard\" />
   </ItemGroup>
 
