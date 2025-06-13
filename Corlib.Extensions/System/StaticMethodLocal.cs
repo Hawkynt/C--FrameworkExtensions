@@ -18,7 +18,9 @@
 #endregion
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Guard;
 
 namespace System;
 
@@ -29,11 +31,11 @@ file static class StaticLocalStorage {
   // The string part of the key is the interned file path provided by the compiler.
   private static readonly ConcurrentDictionary<(string, int), object> _locals = new();
 
-  public static StaticMethodLocal.Holder<T> GetOrAdd<T>(Func<StaticMethodLocal.Holder<T>> valueFactory, string path, int line) {
+  public static StaticMethodLocal.Storage<T> GetOrAdd<T>(Func<StaticMethodLocal.Storage<T>> valueFactory, string path, int line) {
     // Using a ValueTuple as the key is allocation-free and highly performant.
     var cacheKey = (path, line);
     var value = _locals.GetOrAdd(cacheKey, _ => valueFactory());
-    return (StaticMethodLocal.Holder<T>)value;
+    return (StaticMethodLocal.Storage<T>)value;
   }
 
 }
@@ -48,13 +50,13 @@ public static class StaticMethodLocal {
   /// This class is sealed and its constructor is private to ensure it can only be created
   /// and used by the parent StaticLocal class.
   /// </summary>
-  public sealed class Holder<T>: IFormattable {
+  public sealed class Storage<T>: IFormattable, IEquatable<Storage<T>>, IEquatable<T>, IComparable<Storage<T>>, IComparable<T> {
     private T _reference;
 
     /// <summary>
     /// The constructor is private, forcing creation through StaticLocal.GetOrAdd.
     /// </summary>
-    private Holder(T value) => this._reference = value;
+    private Storage(T value) => this._reference = value;
 
     /// <summary>
     /// Provides direct, modifiable reference access to the underlying value.
@@ -66,27 +68,90 @@ public static class StaticMethodLocal {
     /// Allows the holder to be used for read-only access as if it were the value itself.
     /// Example: int myInt = myHolder;
     /// </summary>
-    public static implicit operator T(Holder<T> holder) => holder._reference;
+    public static implicit operator T(Storage<T> storage) => storage._reference;
 
     /// <summary>
-    /// Creates a Holder<T> from a value of type T. This operator can access the private
+    /// Creates a Holder{T} from a value of type T. This operator can access the private
     /// constructor and is the key to allowing the factory lambda to create instances.
     /// </summary>
-    public static implicit operator Holder<T>(T value) => new(value);
+    public static implicit operator Storage<T>(T value) => new(value);
 
-    /// <inheritdoc />
+    #region Overrides and Interface Implementations
+    
+    /// <inheritdoc/>
     public override string ToString() => this._reference?.ToString() ?? "<null>";
 
     /// <summary>
     /// Formats the value of the current instance using the specified format.
     /// </summary>
     public string ToString(string format, IFormatProvider formatProvider) =>
-      this._reference is IFormattable formattable
-        // If the underlying type supports IFormattable, pass the format down.
-        ? formattable.ToString(format, formatProvider)
-        // Otherwise, fall back to the default ToString().
-        : this.ToString()
-      ;
+        this._reference is IFormattable formattable
+            ? formattable.ToString(format, formatProvider)
+            : this.ToString();
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => this._reference?.GetHashCode() ?? 0;
+
+    /// <inheritdoc/>
+    public override bool Equals(object obj) =>
+        obj is Storage<T> holder && this.Equals(holder) ||
+        obj is T value && this.Equals(value);
+
+    /// <inheritdoc/>
+    public bool Equals(Storage<T> other) => other is not null && (ReferenceEquals(this, other) || EqualityComparer<T>.Default.Equals(this._reference, other._reference));
+
+    /// <inheritdoc/>
+    public bool Equals(T other) => EqualityComparer<T>.Default.Equals(this._reference, other);
+
+    /// <inheritdoc/>
+    public int CompareTo(Storage<T> other) => other is null ? 1 : this.CompareTo(other._reference);
+
+    /// <inheritdoc/>
+    public int CompareTo(T other) => this._reference switch {
+      IComparable<T> comparable => comparable.CompareTo(other),
+      IComparable legacyComparable => legacyComparable.CompareTo(other),
+      _ => AlwaysThrow.InvalidOperationException<int>($"The underlying type {typeof(T)} does not implement IComparable.")
+    };
+
+    #endregion
+
+    #region Operator Overloads
+
+    // Holder vs Holder
+    public static bool operator ==(Storage<T> left, Storage<T> right) =>
+        left?.Equals(right) ?? right is null;
+
+    public static bool operator !=(Storage<T> left, Storage<T> right) => !(left == right);
+
+    public static bool operator <(Storage<T> left, Storage<T> right) =>
+        left is null ? right is not null : left.CompareTo(right) < 0;
+
+    public static bool operator <=(Storage<T> left, Storage<T> right) =>
+        left is null || left.CompareTo(right) <= 0;
+
+    public static bool operator >(Storage<T> left, Storage<T> right) =>
+        left is not null && left.CompareTo(right) > 0;
+
+    public static bool operator >=(Storage<T> left, Storage<T> right) =>
+        left is null ? right is null : left.CompareTo(right) >= 0;
+
+    // Holder vs T
+    public static bool operator ==(Storage<T> left, T right) => left is not null && left.Equals(right);
+    public static bool operator !=(Storage<T> left, T right) => !(left == right);
+    public static bool operator <(Storage<T> left, T right) => left is not null && left.CompareTo(right) < 0;
+    public static bool operator <=(Storage<T> left, T right) => left is not null && left.CompareTo(right) <= 0;
+    public static bool operator >(Storage<T> left, T right) => left is not null && left.CompareTo(right) > 0;
+    public static bool operator >=(Storage<T> left, T right) => left is not null && left.CompareTo(right) >= 0;
+
+    // T vs Holder
+    public static bool operator ==(T left, Storage<T> right) => right is not null && right.Equals(left);
+    public static bool operator !=(T left, Storage<T> right) => !(left == right);
+    public static bool operator <(T left, Storage<T> right) => right is not null && right.CompareTo(left) > 0;
+    public static bool operator <=(T left, Storage<T> right) => right is not null && right.CompareTo(left) >= 0;
+    public static bool operator >(T left, Storage<T> right) => right is not null && right.CompareTo(left) < 0;
+    public static bool operator >=(T left, Storage<T> right) => right is not null && right.CompareTo(left) <= 0;
+
+    #endregion
 
   }
 }
@@ -106,16 +171,16 @@ public static class StaticMethodLocal<TValue> {
   /// Gets a persistent holder for a method-scoped static value type using a factory for initialization.
   /// This overload automatically wraps the result of the value factory in a Holder.
   /// </summary>
-  public static StaticMethodLocal.Holder<TValue> GetOrAdd(Func<TValue> valueFactory, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => valueFactory(), path, line);
+  public static StaticMethodLocal.Storage<TValue> GetOrAdd(Func<TValue> valueFactory, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => valueFactory(), path, line);
 
   /// <summary>
   /// Gets a persistent holder for a method-scoped static value type, initializing it with a default value.
   /// </summary>
-  public static StaticMethodLocal.Holder<TValue> GetOrAdd(TValue defaultValue, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => defaultValue, path, line);
+  public static StaticMethodLocal.Storage<TValue> GetOrAdd(TValue defaultValue, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => defaultValue, path, line);
 
   /// <summary>
   /// Gets a persistent holder for a method-scoped static value type, initializing it with default(T).
   /// </summary>
-  public static StaticMethodLocal.Holder<TValue> GetOrAdd([CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => default(TValue), path, line);
+  public static StaticMethodLocal.Storage<TValue> GetOrAdd([CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => default(TValue), path, line);
 
 }
