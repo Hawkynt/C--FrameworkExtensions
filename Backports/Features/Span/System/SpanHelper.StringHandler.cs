@@ -22,7 +22,7 @@ namespace System;
 
 partial class SpanHelper {
   
-  public class StringHandler<T> : MemoryHandlerBase<T> {
+  public sealed class StringHandler<T> : MemoryHandlerBase<T> {
 
     private readonly SharedPin<char> _pin;
     public readonly string source;
