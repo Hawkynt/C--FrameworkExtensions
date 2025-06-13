@@ -17,11 +17,79 @@
 
 #endregion
 
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using Guard;
 
 namespace System;
+
+file static class StaticLocalStorage {
+  
+  // A thread-safe, global cache for static local variables.
+  // The key is a ValueTuple, which avoids heap allocation on every call, making it highly performant.
+  // The string part of the key is the interned file path provided by the compiler.
+  private static readonly ConcurrentDictionary<(string, int), object> _locals = new();
+
+  public static StaticMethodLocal.Holder<T> GetOrAdd<T>(Func<StaticMethodLocal.Holder<T>> valueFactory, string path, int line) {
+    // Using a ValueTuple as the key is allocation-free and highly performant.
+    var cacheKey = (path, line);
+    var value = _locals.GetOrAdd(cacheKey, _ => valueFactory());
+    return (StaticMethodLocal.Holder<T>)value;
+  }
+
+}
+
+/// <summary>
+/// The internal value holder for static method-local values.
+/// </summary>
+public static class StaticMethodLocal {
+
+  /// <summary>
+  /// A generic, reusable container to hold a value.
+  /// This class is sealed and its constructor is private to ensure it can only be created
+  /// and used by the parent StaticLocal class.
+  /// </summary>
+  public sealed class Holder<T>: IFormattable {
+    private T _reference;
+
+    /// <summary>
+    /// The constructor is private, forcing creation through StaticLocal.GetOrAdd.
+    /// </summary>
+    private Holder(T value) => this._reference = value;
+
+    /// <summary>
+    /// Provides direct, modifiable reference access to the underlying value.
+    /// C# 7.0+ feature. This is the intended way to modify the stored value.
+    /// </summary>
+    public ref T Ref => ref this._reference;
+
+    /// <summary>
+    /// Allows the holder to be used for read-only access as if it were the value itself.
+    /// Example: int myInt = myHolder;
+    /// </summary>
+    public static implicit operator T(Holder<T> holder) => holder._reference;
+
+    /// <summary>
+    /// Creates a Holder<T> from a value of type T. This operator can access the private
+    /// constructor and is the key to allowing the factory lambda to create instances.
+    /// </summary>
+    public static implicit operator Holder<T>(T value) => new(value);
+
+    /// <inheritdoc />
+    public override string ToString() => this._reference?.ToString() ?? "<null>";
+
+    /// <summary>
+    /// Formats the value of the current instance using the specified format.
+    /// </summary>
+    public string ToString(string format, IFormatProvider formatProvider) =>
+      this._reference is IFormattable formattable
+        // If the underlying type supports IFormattable, pass the format down.
+        ? formattable.ToString(format, formatProvider)
+        // Otherwise, fall back to the default ToString().
+        : this.ToString()
+      ;
+
+  }
+}
 
 /// <summary>
 ///   Allows methods to have a private local value that is kept during method invocations
@@ -33,162 +101,21 @@ namespace System;
 /// </remarks>
 /// <typeparam name="TValue">The type of value to keep</typeparam>
 public static class StaticMethodLocal<TValue> {
+  
   /// <summary>
-  ///   The internal key to distinguish values.
+  /// Gets a persistent holder for a method-scoped static value type using a factory for initialization.
+  /// This overload automatically wraps the result of the value factory in a Holder.
   /// </summary>
-  private readonly struct MethodKey(Type owner, string filePath, string methodName) : IEquatable<MethodKey> {
-    private readonly Type _owner = owner;
-    private readonly string _filePath = filePath;
-    private readonly string _methodName = methodName;
-
-    public bool Equals(MethodKey other)
-      => this._owner == other._owner
-         && this._filePath == other._filePath
-         && this._methodName == other._methodName;
-
-    public override bool Equals(object obj)
-      => obj is MethodKey key && this.Equals(key);
-
-    public static bool operator ==(MethodKey left, MethodKey right) => left.Equals(right);
-
-    public static bool operator !=(MethodKey left, MethodKey right) => !left.Equals(right);
-
-    /// <inheritdoc />
-    public override int GetHashCode() {
-      unchecked {
-        var hashCode = this._owner != null ? this._owner.GetHashCode() : 0;
-        hashCode = (hashCode * 127) ^ (this._filePath != null ? this._filePath.GetHashCode() : 0);
-        hashCode = (hashCode * 257) ^ (this._methodName != null ? this._methodName.GetHashCode() : 0);
-        return hashCode;
-      }
-    }
-  }
-
-  private static readonly Dictionary<MethodKey, TValue> _VALUES = new();
-
-  private static TValue _Get(Type owner, string methodName, TValue startValue) {
-    MethodKey key = new(owner, null, methodName);
-    lock (_VALUES)
-      if (_VALUES.TryGetValue(key, out var result))
-        return result;
-
-    return startValue;
-  }
-
-  private static TValue _Get(Type owner, string methodName, Func<TValue> startValueFactory) {
-    MethodKey key = new(owner, null, methodName);
-    lock (_VALUES) {
-      if (_VALUES.TryGetValue(key, out var result))
-        return result;
-
-      _VALUES.Add(key, result = startValueFactory());
-      return result;
-    }
-  }
+  public static StaticMethodLocal.Holder<TValue> GetOrAdd(Func<TValue> valueFactory, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => valueFactory(), path, line);
 
   /// <summary>
-  ///   Gets the method local static value
+  /// Gets a persistent holder for a method-scoped static value type, initializing it with a default value.
   /// </summary>
-  /// <typeparam name="TOwner">The method owner</typeparam>
-  /// <param name="startValue">The initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get<TOwner>(TValue startValue = default, [CallerMemberName] string memberName = null)
-    => _Get(typeof(TOwner), memberName, startValue);
+  public static StaticMethodLocal.Holder<TValue> GetOrAdd(TValue defaultValue, [CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => defaultValue, path, line);
 
   /// <summary>
-  ///   Gets the method local static value
+  /// Gets a persistent holder for a method-scoped static value type, initializing it with default(T).
   /// </summary>
-  /// <param name="owner">The method owner</param>
-  /// <param name="startValue">The initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get(Type owner, TValue startValue = default, [CallerMemberName] string memberName = null)
-    => _Get(owner, memberName, startValue);
+  public static StaticMethodLocal.Holder<TValue> GetOrAdd([CallerFilePath] string path = null, [CallerLineNumber] int line = 0) => StaticLocalStorage.GetOrAdd<TValue>(() => default(TValue), path, line);
 
-  /// <summary>
-  ///   Gets the method local static value
-  /// </summary>
-  /// <param name="startValue">The initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get(TValue startValue = default, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
-    => _Get(null, filePath + memberName, startValue);
-
-  /// <summary>
-  ///   Gets the method local static value
-  /// </summary>
-  /// <typeparam name="TOwner">The method owner</typeparam>
-  /// <param name="startValueFactory">The factory that generates the initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get<TOwner>(Func<TValue> startValueFactory, [CallerMemberName] string memberName = null) {
-    Against.ArgumentIsNull(startValueFactory);
-
-    return _Get(typeof(TOwner), memberName, startValueFactory);
-  }
-
-  /// <summary>
-  ///   Gets the method local static value
-  /// </summary>
-  /// <param name="owner">The method owner</param>
-  /// <param name="startValueFactory">The factory that generates the initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get(Type owner, Func<TValue> startValueFactory, [CallerMemberName] string memberName = null) {
-    Against.ArgumentIsNull(startValueFactory);
-
-    return _Get(owner, memberName, startValueFactory);
-  }
-
-  /// <summary>
-  ///   Gets the method local static value
-  /// </summary>
-  /// <param name="startValueFactory">The factory that generates the initial value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
-  /// <returns>The current/initial value</returns>
-  public static TValue Get(
-    Func<TValue> startValueFactory,
-    [CallerMemberName] string memberName = null,
-    [CallerFilePath] string filePath = null
-  ) {
-    Against.ArgumentIsNull(startValueFactory);
-
-    return _Get(null, filePath + memberName, startValueFactory);
-  }
-
-  private static void _Set(Type owner, string methodName, TValue value) {
-    MethodKey key = new(owner, null, methodName);
-    lock (_VALUES)
-      _VALUES[key] = value;
-  }
-
-  /// <summary>
-  ///   Sets the method local static to a new value.
-  /// </summary>
-  /// <typeparam name="TOwner">The method owner</typeparam>
-  /// <param name="value">The new value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  public static void Set<TOwner>(TValue value, [CallerMemberName] string memberName = null)
-    => _Set(typeof(TOwner), memberName, value);
-
-  /// <summary>
-  ///   Sets the method local static to a new value.
-  /// </summary>
-  /// <param name="owner">The method owner</param>
-  /// <param name="value">The new value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  public static void Set(Type owner, TValue value, [CallerMemberName] string memberName = null)
-    => _Set(owner, memberName, value);
-
-  /// <summary>
-  ///   Sets the method local static to a new value.
-  /// </summary>
-  /// <param name="value">The new value</param>
-  /// <param name="memberName">The name of the method; let the compiler fill this</param>
-  /// <param name="filePath">The source filename of the method; let the compiler fill this</param>
-  public static void Set(TValue value, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)
-    => _Set(null, filePath + memberName, value);
 }
