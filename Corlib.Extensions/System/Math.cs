@@ -536,9 +536,16 @@ public static partial class MathEx {
       decimal previous;
       const decimal factor = 2m;
 
+      // calculate the inverse factor to avoid division in the loop
+      const decimal inverseFactor = 1 / factor;
+
+      // doing two iterations unrolled to ensure convergence
+      current = (current + @this / current) * inverseFactor;
+      current = (current + @this / current) * inverseFactor;
+     
       do {
         previous = current;
-        current = (previous + @this / previous) / factor;
+        current = (current + @this / current) * inverseFactor;
       } while (Math.Abs(previous - current) > epsilon);
 
       return current;
