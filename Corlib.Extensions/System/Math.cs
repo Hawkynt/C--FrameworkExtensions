@@ -38,19 +38,48 @@ using System.Numerics;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System;
 
+/// <summary>
+/// Represents a collection of mathematical methods, extensions and constants.
+/// </summary>
 public static partial class MathEx {
 
+  /// <summary>
+  /// Represents the mathematical constant Pi.
+  /// </summary>
   public const decimal Pi     = 3.14159265358979323846264338327m; // taken from https://3.141592653589793238462643383279502884197169399375105820974944592.eu/
+  /// <summary>
+  /// Represents the mathematical constant E (Euler's Number).
+  /// </summary>
   public const decimal E      = 2.71828182845904523536028747135m; // taken from https://www.mathsisfun.com/numbers/e-eulers-number.html
+  /// <summary>
+  /// Represents the mathematical constant Sqrt2 (Square root of 2).
+  /// </summary>
   public const decimal Sqrt2  = 1.41421356237309504880168872421m; // taken from https://en.wikipedia.org/wiki/Square_root_of_2
+  /// <summary>
+  /// Represents the mathematical constant Sqrt3 (Square root of 3).
+  /// </summary>
   public const decimal Sqrt3  = 1.73205080756887729352744634151m; // taken from https://en.wikipedia.org/wiki/Square_root_of_3
+  /// <summary>
+  /// Represents the mathematical constant Sqrt5 (Square root of 5).
+  /// </summary>
   public const decimal Sqrt5  = 2.23606797749978969640917366873m; // taken from https://en.wikipedia.org/wiki/Square_root_of_5
+  /// <summary>
+  /// Represents the mathematical constant Sqrt6 (Square root of 6).
+  /// </summary>
   public const decimal Sqrt6  = 2.44948974278317809819728407471m; // taken from https://en.wikipedia.org/wiki/Square_root_of_6
+  /// <summary>
+  /// Represents the mathematical constant Sqrt7 (Square root of 7).
+  /// </summary>
   public const decimal Sqrt7  = 2.64575131106459059050161575364m; // taken from https://en.wikipedia.org/wiki/Square_root_of_7
+  /// <summary>
+  /// Represents the mathematical constant Sqrt8 (Square root of 8).
+  /// </summary>
   public const decimal Sqrt8  = 2.82842712474619009760337744842m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
+  /// <summary>
+  /// Represents the mathematical constant Sqrt10 (Square root of 10).
+  /// </summary>
   public const decimal Sqrt10 = 3.16227766016837933199889354443m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
-
-
+  
   /// <summary>
   /// Extracts the lower nibble of the specified byte.
   /// </summary>
