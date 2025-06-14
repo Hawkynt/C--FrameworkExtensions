@@ -91,6 +91,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Math.T4.cs</LastGenOutput>
     </None>
+    <None Update="System\Memoize.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Memoize.T4.cs</LastGenOutput>
+    </None>
     <None Update="System\MemoryManipulation.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MemoryManipulation.T4.cs</LastGenOutput>
@@ -227,6 +231,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Math.T4.tt</DependentUpon>
+    </Compile>
+    <Compile Update="System\Memoize.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Memoize.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\MemoryManipulation.T4.cs">
       <DesignTime>True</DesignTime>
