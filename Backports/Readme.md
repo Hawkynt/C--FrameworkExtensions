@@ -50,14 +50,14 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
 * System.Collections.Generic
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
+* System.Numerics
+  * [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
 * System.Runtime.CompilerServices
   * [AsyncTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynctaskmethodbuilder)&lt;T&gt;
   * [ConfiguredTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredtaskawaitable)&lt;T&gt;
   * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
   * [Unsafe](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafe)
-* System.Threading
-  * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
 * System.Runtime.Intrinsics
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64)
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64-1)&lt;T&gt;
@@ -79,6 +79,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Sse41](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse41)
   * [Sse42](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse42)
   * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)
+* System.Threading
+  * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
 
 ### Attributes
 
