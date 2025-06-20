@@ -22,6 +22,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
   </PropertyGroup>
   
@@ -89,6 +90,10 @@
     <None Update="System\Math.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Math.T4.cs</LastGenOutput>
+    </None>
+    <None Update="System\Memoize.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Memoize.T4.cs</LastGenOutput>
     </None>
     <None Update="System\MemoryManipulation.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -226,6 +231,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Math.T4.tt</DependentUpon>
+    </Compile>
+    <Compile Update="System\Memoize.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Memoize.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\MemoryManipulation.T4.cs">
       <DesignTime>True</DesignTime>

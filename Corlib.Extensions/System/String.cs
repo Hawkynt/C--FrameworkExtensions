@@ -4246,76 +4246,67 @@ public static partial class StringExtensions {
   /// </summary>
   /// <param name="this">This String, e.g. 172.17.4.3:http .</param>
   /// <returns>Port and host, <c>null</c> on error during parsing.</returns>
-  public static HostEndPoint ParseHostAndPort(this string @this) => (__parseHostAndPort ??= new()).Invoke(@this);
+  public static HostEndPoint ParseHostAndPort(this string @this) {
+    if (@this.IsNullOrWhiteSpace())
+      return null;
 
-  private static __ParseHostAndPort __parseHostAndPort;
-
-  private sealed class __ParseHostAndPort {
-    /// <summary>
-    ///   This is a list of services which are registered to certain ports according to IANA.
-    ///   It allows us to use names for these ports if we want to.
-    /// </summary>
-    private readonly Dictionary<string, ushort> _officialPortNames = new() {
-      { "tcpmux", 1 },
-      { "echo", 7 },
-      { "discard", 9 },
-      { "daytime", 13 },
-      { "quote", 17 },
-      { "chargen", 19 },
-      { "ftp", 21 },
-      { "ssh", 22 },
-      { "telnet", 23 },
-      { "smtp", 25 },
-      { "time", 37 },
-      { "whois", 43 },
-      { "dns", 53 },
-      { "mtp", 57 },
-      { "tftp", 69 },
-      { "gopher", 70 },
-      { "finger", 79 },
-      { "http", 80 },
-      { "kerberos", 88 },
-      { "pop2", 109 },
-      { "pop3", 110 },
-      { "ident", 113 },
-      { "auth", 113 },
-      { "sftp", 115 },
-      { "sql", 118 },
-      { "nntp", 119 },
-      { "ntp", 123 },
-      { "imap", 143 },
-      { "bftp", 152 },
-      { "sgmp", 153 },
-      { "snmp", 161 },
-      { "snmptrap", 162 },
-      { "irc", 194 },
-      { "ipx", 213 },
-      { "mpp", 218 },
-      { "imap3", 220 },
-      { "https", 443 },
-      { "rip", 520 },
-      { "rpc", 530 },
-      { "nntps", 563 },
-    };
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HostEndPoint Invoke(string @this) {
-      if (@this.IsNullOrWhiteSpace())
-        return null;
-
-      var host = @this;
-      ushort port = 0;
-      var index = host.IndexOf(':');
-      if (index < 0)
-        return new(host, port);
-
-      var portText = host[(index + 1)..];
-      host = host.Left(index);
-      if (!ushort.TryParse(portText, out port) && !this._officialPortNames.TryGetValue(portText.Trim().ToLower(), out port))
-        return null;
-
+    Dictionary<string, ushort> officialPortNames = StaticMethodLocal<Dictionary<string, ushort>>.GetOrAdd(
+      () => new() {
+        { "tcpmux", 1 },
+        { "echo", 7 },
+        { "discard", 9 },
+        { "daytime", 13 },
+        { "quote", 17 },
+        { "chargen", 19 },
+        { "ftp", 21 },
+        { "ssh", 22 },
+        { "telnet", 23 },
+        { "smtp", 25 },
+        { "time", 37 },
+        { "whois", 43 },
+        { "dns", 53 },
+        { "mtp", 57 },
+        { "tftp", 69 },
+        { "gopher", 70 },
+        { "finger", 79 },
+        { "http", 80 },
+        { "kerberos", 88 },
+        { "pop2", 109 },
+        { "pop3", 110 },
+        { "ident", 113 },
+        { "auth", 113 },
+        { "sftp", 115 },
+        { "sql", 118 },
+        { "nntp", 119 },
+        { "ntp", 123 },
+        { "imap", 143 },
+        { "bftp", 152 },
+        { "sgmp", 153 },
+        { "snmp", 161 },
+        { "snmptrap", 162 },
+        { "irc", 194 },
+        { "ipx", 213 },
+        { "mpp", 218 },
+        { "imap3", 220 },
+        { "https", 443 },
+        { "rip", 520 },
+        { "rpc", 530 },
+        { "nntps", 563 },
+      }
+    );
+    
+    var host = @this;
+    ushort port = 0;
+    var index = host.IndexOf(':');
+    if (index < 0)
       return new(host, port);
-    }
+
+    var portText = host[(index + 1)..];
+    host = host.Left(index);
+    if (!ushort.TryParse(portText, out port) && !officialPortNames.TryGetValue(portText.Trim().ToLower(), out port))
+      return null;
+
+    return new(host, port);
   }
 
   /// <summary>
@@ -4717,23 +4708,15 @@ public static partial class StringExtensions {
   /// <param name="pattern">The pattern to apply.</param>
   /// <returns><c>true</c> if the string matches the file pattern; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool MatchesFilePattern(this string @this, string pattern) => (__matchesFilePattern ??= new()).Invoke(@this, pattern);
+  public static bool MatchesFilePattern(this string @this, string pattern) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNullOrEmpty(pattern);
 
-  private static __MatchesFilePattern __matchesFilePattern;
+    Regex illegalFilenameCharacters = StaticMethodLocal<Regex>.GetOrAdd(() => new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture));
+    if (illegalFilenameCharacters.IsMatch(pattern))
+      AlwaysThrow.ArgumentException(nameof(pattern), "Patterns contains ilegal characters.");
 
-  private sealed class __MatchesFilePattern {
-    private readonly Regex _illegalFilenameCharacters = new("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Invoke(string @this, string pattern, [CallerMemberName] string caller = null) {
-      Against.ThisIsNull(@this, caller);
-      Against.ArgumentIsNullOrEmpty(pattern, caller);
-
-      if (this._illegalFilenameCharacters.IsMatch(pattern))
-        AlwaysThrow.ArgumentException(nameof(pattern), "Patterns contains ilegal characters.", caller);
-
-      return ConvertFilePatternToRegex(pattern).IsMatch(@this);
-    }
+    return ConvertFilePatternToRegex(pattern).IsMatch(@this);
   }
 
   /// <summary>
@@ -4743,27 +4726,17 @@ public static partial class StringExtensions {
   /// <param name="toFind">The text to find.</param>
   /// <returns>True if the LIKE matched.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Like(this string @this, string toFind) => (__like ??= new()).Invoke(@this, toFind);
-
-  private static __Like __like;
-
-  private sealed class __Like {
-    private readonly Regex _sqlLikeEscaping = new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Invoke(string @this, string toFind)
-      => new Regex(
-          @"\A"
-          + this
-            ._sqlLikeEscaping
-            .Replace(toFind, ch => @"\" + ch)
-            .Replace('_', '.')
-            .Replace("%", ".*")
-          + @"\z",
-          RegexOptions.Singleline
-        )
-        .IsMatch(@this);
-  }
+  public static bool Like(this string @this, string toFind) => new Regex(
+      @"\A"
+      + ((Regex)StaticMethodLocal<Regex>.GetOrAdd(() => new(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.Compiled)))
+      .Replace(toFind, ch => @"\" + ch)
+      .Replace('_', '.')
+      .Replace("%", ".*")
+      + @"\z",
+      RegexOptions.Singleline
+    )
+    .IsMatch(@this)
+  ;
 
   /// <summary>
   ///   Gets the soundex representation of a given string (doesn't split words, assumes everthing is one word)
@@ -4972,27 +4945,27 @@ public static partial class StringExtensions {
     return result.ToString();
   }
 
-  internal static byte ConvertHexToByte(char upperChar, char lowerChar) => (__convertHexToByte ??= new()).Invoke(upperChar, lowerChar);
+  internal static byte ConvertHexToByte(char highNibble, char lowNibble) {
+    byte[] lookupTable= StaticMethodLocal<byte[]>.GetOrAdd(CreateTable);
+    var high = lookupTable[highNibble];
+    var low = lookupTable[lowNibble];
+    if ((high | low) <= 0x0f)
+      return (byte)((high << 4) | low);
 
-  private static __ConvertHexToByte __convertHexToByte;
+    if (high > 0xf)
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(highNibble), $"'{highNibble}' is not a hexadecimal digit");
+    else
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(lowNibble), $"'{lowNibble}' is not a hexadecimal digit");
 
-  private sealed class __ConvertHexToByte {
+    return (byte)((high << 4) | low);
 
-    private readonly byte[] _charToHexLookup;
-
-    public unsafe __ConvertHexToByte() {
-
+    static unsafe byte[] CreateTable() {
       var table = new byte[256];
+      table.AsSpan().Fill(0xff); // 0xff means "invalid character"
+
+      // filling in the valid chars
       fixed (byte* ptr = &table[0]) {
-
-        var i = 0;
-        do {
-          ((ulong*)ptr)[i] = 0xffffffffffffffffUL;
-          ++i;
-        } while (i < 32);
-
-        *(uint*)&ptr['0'] = 0x03020100U;
-        *(uint*)&ptr['4'] = 0x07060504U;
+        *(ulong*)&ptr['0'] = 0x0706050403020100U;
         *(ushort*)&ptr['8'] = 0x0908;
 
         *(uint*)&ptr['A'] = 0x0D0C0B0AU;
@@ -5002,29 +4975,11 @@ public static partial class StringExtensions {
         *(ushort*)&ptr['e'] = 0x0F0E;
       }
 
-      this._charToHexLookup = table;
+      return table;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte Invoke(char highNibble, char lowNibble) {
-      var high = this._charToHexLookup[highNibble];
-      var low = this._charToHexLookup[lowNibble];
-      if ((high | low) <= 0x0f)
-        return (byte)((high << 4) | low);
-
-      if (high > 0xf)
-        AlwaysThrow.ArgumentOutOfRangeException(nameof(highNibble), $"'{highNibble}' is not a hexadecimal digit");
-      else
-        AlwaysThrow.ArgumentOutOfRangeException(nameof(lowNibble), $"'{lowNibble}' is not a hexadecimal digit");
-
-      return (byte)((high << 4) | low);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void Throw(char highNibble, char lowNibble) => throw new ArgumentOutOfRangeException($"'{highNibble}{lowNibble}' is not a hexadecimal digit");
 
   }
-  
+
   /// <summary>
   ///   Converts a <a href="https://en.wikipedia.org/wiki/Quoted-printable">quoted-printable</a> string to a normal version
   ///   of it.

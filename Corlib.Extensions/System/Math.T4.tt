@@ -43,34 +43,82 @@ namespace System;
 public static partial class MathEx {
 
 <#foreach (var type in new[]{"sbyte","short","int","long"}){#>
+  /// <summary>
+  /// Performs an arithmetic left shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)-1#> ? 0 : ((<#=GetUnsignedType(type)#>)@this & 0x<#=(1UL << GetSizeInBits(type) - 1).ToString("X")#>) | (((<#=GetUnsignedType(type)#>)@this << count) & 0x<#=((1UL << GetSizeInBits(type) - 1) - 1).ToString("X")#>));
 
+  /// <summary>
+  /// Performs an arithmetic right shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)-1#> ? 0 : @this >> count);
 
+  /// <summary>
+  /// Performs a logical left shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> LogicalShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftLeft((<#=(type=="sbyte"?"byte":"u"+type)#>)@this, count);
 
+  /// <summary>
+  /// Performs a logical right shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> LogicalShiftRight(this <#=type#> @this, byte count) => (<#=type#>)ArithmeticShiftRight((<#=(type=="sbyte"?"byte":"u"+type)#>)@this, count);
 
 <#}#>
 <#foreach (var type in new[]{"byte","ushort","uint","ulong"}){#>
+  /// <summary>
+  /// Performs an arithmetic left shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftLeft(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this << count);
 
+  /// <summary>
+  /// Performs an arithmetic right shift on the specified value.
+  /// </summary>
+  /// <param name="this">The value to shift</param>
+  /// <param name="count">The number of bits to shift</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this >> count);
   
 #if !SUPPORTS_BITOPERATIONS
 
+  /// <summary>
+  /// Performs a logical rotation to the left on the specified value.
+  /// </summary>
+  /// <param name="this">The value to rotate</param>
+  /// <param name="count">The number of bits to rotate</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> RotateLeft(this <#=type#> @this, byte count) {
     count &= <#=GetSizeInBits(type) - 1#>;
     return (<#=type#>)((@this << count) | (@this >> (<#=GetSizeInBits(type)#> - count)));
   }
 
+  /// <summary>
+  /// Performs a logical rotation to the right on the specified value.
+  /// </summary>
+  /// <param name="this">The value to rotate</param>
+  /// <param name="count">The number of bits to rotate</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> RotateRight(this <#=type#> @this, byte count) {
     count &= <#=GetSizeInBits(type) - 1#>;
@@ -83,27 +131,75 @@ public static partial class MathEx {
 
 <#foreach (var type in new[]{"byte","sbyte","ushort","short","uint","int","ulong","long"}){#>
 
+  /// <summary>
+  /// Performs a bitwise AND operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> And(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this & other);
 
+  /// <summary>
+  /// Performs a bitwise OR operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Or(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this | other);
 
+  /// <summary>
+  /// Performs a bitwise XOR (exclusive OR) operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Xor(this <#=type#> @this, <#=type#> other) => (<#=type#>)(@this ^ other);
 
+  /// <summary>
+  /// Performs a bitwise NAND (negated AND) operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Nand(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this & other);
 
+  /// <summary>
+  /// Performs a bitwise NOR (negated OR) operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Nor(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this | other);
 
+  /// <summary>
+  /// Performs a bitwise EQU (negated XOR, NXOR) operation on the specified operands.
+  /// </summary>
+  /// <param name="this">The left operand</param>
+  /// <param name="other">The right operand</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Equ(this <#=type#> @this, <#=type#> other) => (<#=type#>)~(@this ^ other);
 
+  /// <summary>
+  /// Performs a bitwise NOT operation on the specified value.
+  /// </summary>
+  /// <param name="this">The value</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Not(this <#=type#> @this) => (<#=type#>)~@this;
 
+    /// <summary>
+  /// Extracts a specified number of consecutive bits from a value.
+  /// </summary>
+  /// <param name="this">The value to extract bits from</param>
+  /// <param name="index">The starting index (0-based) to extract bits from</param>
+  /// <param name="count">The number of bits to extract</param>
+  /// <returns>The extracted bits.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Bits(this <#=type#> @this, byte index, byte count) {
     var result = @this >> index;
@@ -222,21 +318,51 @@ public static partial class MathEx {
 
 <#foreach (var type in new[]{"sbyte","short","int","long","float","double","decimal"}){#>
     
+  /// <summary>
+  /// Returns the absolute value of the specified value.
+  /// </summary>
+  /// <param name="this">The number.</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Abs(this <#=type#> @this) => <#=(type=="float"?"(float)":"")#>Math.Abs(@this);
 
+  /// <summary>
+  /// Returns the sign (-1, 0, +1) of the specified value.
+  /// </summary>
+  /// <param name="this">The number.</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Sign(this <#=type#> @this) => <#=(type=="sbyte"||type=="short"?"("+type+")":"")#>(@this < 0 ? -1 : 1);
 
+  /// <summary>
+  /// Determines whether the specified value is positive (greater than zero).
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <returns><c>true</c> if the value is positive; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPositive(this <#=type#> @this) => @this > 0;
 
+  /// <summary>
+  /// Determines whether the specified value is positive or zero (greater than or equal to zero).
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <returns><c>true</c> if the value is positive or zero; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPositiveOrZero(this <#=type#> @this) => @this >= 0;
 
+  /// <summary>
+  /// Determines whether the specified value is negative (below zero).
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <returns><c>true</c> if the value is negative; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNegative(this <#=type#> @this) => @this < 0;
 
+  /// <summary>
+  /// Determines whether the specified value is negative or zero (below than or equal to zero).
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <returns><c>true</c> if the value is negative or zero; otherwise, <c>false</c>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNegativeOrZero(this <#=type#> @this) => @this <= 0;
 
@@ -244,46 +370,191 @@ public static partial class MathEx {
   
 <#foreach (var type in new[]{"float","double"}){#>
 
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> is a valid numeric value (i.e., not NaN or infinity).
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is finite and numeric; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = 3;
+  /// bool isNumeric = value.IsNumeric(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNumeric(this <#=type#> @this) => !(<#=type#>.IsNaN(@this) || <#=type#>.IsInfinity(@this));
 
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> is not a valid numeric value (i.e., NaN or infinity).
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is NaN or infinite; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// var value = <#=type#>.NaN;
+  /// bool isNonNumeric = value.IsNonNumeric(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNonNumeric(this <#=type#> @this) => <#=type#>.IsNaN(@this) || <#=type#>.IsInfinity(@this);
     
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> value is NaN (Not a Number).
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is NaN; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// var value = <#=type#>.NaN;
+  /// bool isNaN = value.IsNaN(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNaN(this <#=type#> @this) => <#=type#>.IsNaN(@this);
 
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> value is infinite (positive or negative infinity).
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is infinite; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// var value = <#=type#>.PositiveInfinity;
+  /// bool isInfinity = value.IsInfinity(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsInfinity(this <#=type#> @this) => <#=type#>.IsInfinity(@this);
 
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> value is positive infinity.
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is positive infinity; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// var value = <#=type#>.PositiveInfinity;
+  /// bool isNegInf = value.IsPositiveInfinity(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPositiveInfinity(this <#=type#> @this) => <#=type#>.IsPositiveInfinity(@this);
 
+  /// <summary>
+  /// Determines whether the specified <see cref="<#=type#>"/> value is negative infinity.
+  /// </summary>
+  /// <param name="this">The <see cref="<#=type#>"/> value to check.</param>
+  /// <returns><see langword="true"/> if the value is negative infinity; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// var value = <#=type#>.NegativeInfinity;
+  /// bool isNegInf = value.IsNegativeInfinity(); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNegativeInfinity(this <#=type#> @this) => <#=type#>.IsNegativeInfinity(@this);
     
 <#}#>
   
 <#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
-    
+<#  var needsChecked = !(type is "float" or "double" or "decimal");#>
+
+  /// <summary>
+  /// Returns the square of the specified <see cref="<#=type#>"/> value.
+  /// </summary>
+  /// <param name="this">The value to square.</param>
+  /// <returns>The result of <paramref name="this"/> multiplied by itself, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = 4;
+  /// <#=type#> result = value.Squared(); // result == 16
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Squared(this <#=type#> @this) => (<#=type#>)unchecked(@this * @this);
+  public static <#=type#> Squared(this <#=type#> @this) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this * @this);
     
+  /// <summary>
+  /// Returns the cube of the specified <see cref="<#=type#>"/> value.
+  /// </summary>
+  /// <param name="this">The value to cube.</param>
+  /// <returns>The result of <paramref name="this"/> multiplied by itself twice, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = 3;
+  /// <#=type#> result = value.Cubed(); // result == 27
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)unchecked(@this * @this * @this);
-    
+  public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this * @this * @this);
+   
+  /// <summary>
+  /// Raises the specified <see cref="<#=type#>"/> value to the given exponent.
+  /// </summary>
+  /// <param name="this">The base value.</param>
+  /// <param name="exponent">The exponent to raise the base value to.</param>
+  /// <returns>The result of raising <paramref name="this"/> to <paramref name="exponent"/>, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = 2;
+  /// <#=type#> result = value.Pow(3); // result == 8
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Pow(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(<#=(type=="decimal"?"(double)":"")#>@this,<#=(type=="decimal"?"(double)":"")#>exponent);
     
+  /// <summary>
+  /// Adds the specified operand to the <see cref="<#=type#>"/> value.
+  /// </summary>
+  /// <param name="this">The base value.</param>
+  /// <param name="operand">The value to add.</param>
+  /// <returns>The sum of <paramref name="this"/> and <paramref name="operand"/>, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).Add(5); // result == 15
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Add(this <#=type#> @this, <#=type#> operand) => (<#=type#>)unchecked(@this + operand);
+  public static <#=type#> Add(this <#=type#> @this, <#=type#> operand) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this + operand);
 
+  /// <summary>
+  /// Substracts the specified operand from the <see cref="<#=type#>"/> value.
+  /// </summary>
+  /// <param name="this">The base value.</param>
+  /// <param name="minuend">The value to subtract.</param>
+  /// <returns>The difference of <paramref name="this"/> and <paramref name="minuend"/>, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).Subtract(5); // result == 5
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Subtract(this <#=type#> @this, <#=type#> minuend) => (<#=type#>)unchecked(@this - minuend);
+  public static <#=type#> Subtract(this <#=type#> @this, <#=type#> minuend) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this - minuend);
   
+  /// <summary>
+  /// Multiplies the <see cref="<#=type#>"/> value by the specified factor.
+  /// </summary>
+  /// <param name="this">The base value.</param>
+  /// <param name="factor">The factor to multiply by.</param>
+  /// <returns>The product of <paramref name="this"/> and <paramref name="factor"/>, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)5).MultipliedWith(2); // result == 10
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> MultipliedWith(this <#=type#> @this,<#=type#> factor) => (<#=type#>)unchecked(@this * factor);
+  public static <#=type#> MultipliedWith(this <#=type#> @this,<#=type#> factor) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this * factor);
 
+  /// <summary>
+  /// Divides the <see cref="<#=type#>"/> value by the specified divisor.
+  /// </summary>
+  /// <param name="this">The dividend.</param>
+  /// <param name="divisor">The divisor.</param>
+  /// <returns>The quotient of <paramref name="this"/> divided by <paramref name="divisor"/>, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).DividedBy(2); // result == 5
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> DividedBy(this <#=type#> @this,<#=type#> divisor) => (<#=type#>)(@this / divisor);
 
@@ -303,21 +574,95 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsNotZero(this <#=type#> @this) => @this != 0;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value is strictly below the specified exclusive upper limit.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="exclusiveLimit">The exclusive upper bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> is less than <paramref name="exclusiveLimit"/>; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 5;
+  /// bool isBelow = result.IsBelow(10); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsBelow(this <#=type#> @this, <#=type#> exclusiveLimit) => @this < exclusiveLimit;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value is less than or equal to the specified inclusive upper limit.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="inclusiveLimit">The inclusive upper bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> is less than or equal to <paramref name="inclusiveLimit"/>; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 10;
+  /// bool isBelowOrEqual = result.IsBelowOrEqual(10); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsBelowOrEqual(this <#=type#> @this, <#=type#> inclusiveLimit) => @this <= inclusiveLimit;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value is strictly above the specified exclusive lower limit.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="exclusiveLimit">The exclusive lower bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> is greater than <paramref name="exclusiveLimit"/>; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 10;
+  /// bool isAbove = result.IsAbove(5); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsAbove(this <#=type#> @this, <#=type#> exclusiveLimit) => @this > exclusiveLimit;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value is greater than or equal to the specified inclusive lower limit.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="inclusiveLimit">The inclusive lower bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> is greater than or equal to <paramref name="inclusiveLimit"/>; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 10;
+  /// bool isAboveOrEqual = result.IsAboveOrEqual(10); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsAboveOrEqual(this <#=type#> @this, <#=type#> inclusiveLimit) => @this >= inclusiveLimit;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value lies strictly between two exclusive bounds.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="exclusiveLowerLimit">The exclusive lower bound.</param>
+  /// <param name="exclusiveUpperLimit">The exclusive upper bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> is strictly between the two bounds; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 5;
+  /// bool isBetween = result.IsBetween(1, 10); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsBetween(this <#=type#> @this, <#=type#> exclusiveLowerLimit, <#=type#> exclusiveUpperLimit) => @this > exclusiveLowerLimit && @this < exclusiveUpperLimit;
 
+  /// <summary>
+  /// Determines whether the <see cref="<#=type#>"/> value lies within the specified inclusive range.
+  /// </summary>
+  /// <param name="this">The value to check.</param>
+  /// <param name="inclusiveLowerLimit">The inclusive lower bound.</param>
+  /// <param name="inclusiveUpperLimit">The inclusive upper bound.</param>
+  /// <returns><see langword="true"/> if <paramref name="this"/> lies within the inclusive range; otherwise, <see langword="false"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = 5;
+  /// bool isInRange = result.IsInRange(1, 5); // true
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsInRange(this <#=type#> @this, <#=type#> inclusiveLowerLimit, <#=type#> inclusiveUpperLimit) => @this >= inclusiveLowerLimit && @this <= inclusiveUpperLimit;
 
@@ -326,6 +671,11 @@ public static partial class MathEx {
 <#foreach (var type in new[]{"float","double"}){#>
 <#  foreach (var method in new[]{"Sqrt","Log10","Log","Sin","Cos","Tan","Sinh","Cosh","Tanh"}){#>
 
+  /// <summary>
+  /// Calculates the <#=method#> of the specified <see cref="<#=type#>"/> value.
+  /// </summary>
+  /// <param name="this">The value for which to calculate.</param>
+  /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 <#    if(type == "float") {#>
 #if SUPPORTS_MATHF
@@ -341,15 +691,63 @@ public static partial class MathEx {
  
 <#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","decimal"}){#>
 
+  /// <summary>
+  /// Computes a fused multiply-add operation: (<paramref name="this"/> × <paramref name="factor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="addend">The value to add after multiplication.</param>
+  /// <returns>The result of the fused multiply-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplyAdd(3, 4); // result == 10
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * factor + addend);
 
+  /// <summary>
+  /// Computes a fused multiply-subtract operation: (<paramref name="this"/> × <paramref name="factor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="subtrahend">The value to subtract after multiplication.</param>
+  /// <returns>The result of the fused multiply-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplySubtract(3, 1); // result == 5
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this * factor - subtrahend);
 
+  /// <summary>
+  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="addend">The value to add after division.</param>
+  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this / divisor + addend);
 
+  /// <summary>
+  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="subtrahend">The value to subtract after division.</param>
+  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => <#=(type=="sbyte"||type=="byte"||type=="short"||type=="ushort"?$"({type})":string.Empty)#>(@this / divisor - subtrahend);
 
@@ -358,25 +756,97 @@ public static partial class MathEx {
 #if SUPPORTS_FMADD
 <#foreach (var type in new[]{"float","double"}){#>
 
+  /// <summary>
+  /// Computes a fused multiply-add operation: (<paramref name="this"/> × <paramref name="factor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="addend">The value to add after multiplication.</param>
+  /// <returns>The result of the fused multiply-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplyAdd(3, 4); // result == 10
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, factor, addend);
 
+  /// <summary>
+  /// Computes a fused multiply-subtract operation: (<paramref name="this"/> × <paramref name="factor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="subtrahend">The value to subtract after multiplication.</param>
+  /// <returns>The result of the fused multiply-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplySubtract(3, 1); // result == 5
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, factor, -subtrahend);
 
 #if SUPPORTS_MATH_RECIPROCAL_ESTIMATE
 
+  /// <summary>
+  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="addend">The value to add after division.</param>
+  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), addend);
-
+  
+  /// <summary>
+  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="subtrahend">The value to subtract after division.</param>
+  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), -subtrahend);
 
 #else
 
+  /// <summary>
+  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="addend">The value to add after division.</param>
+  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
 
+  /// <summary>
+  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="subtrahend">The value to subtract after division.</param>
+  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
 
@@ -386,15 +856,63 @@ public static partial class MathEx {
 #else
 <#foreach (var type in new[]{"float","double"}){#>
 
+  /// <summary>
+  /// Computes a fused multiply-add operation: (<paramref name="this"/> × <paramref name="factor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="addend">The value to add after multiplication.</param>
+  /// <returns>The result of the fused multiply-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplyAdd(3, 4); // result == 10
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => @this * factor + addend;
 
+  /// <summary>
+  /// Computes a fused multiply-subtract operation: (<paramref name="this"/> × <paramref name="factor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The base value to multiply.</param>
+  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
+  /// <param name="subtrahend">The value to subtract after multiplication.</param>
+  /// <returns>The result of the fused multiply-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)2).FusedMultiplySubtract(3, 1); // result == 5
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => @this * factor - subtrahend;
 
+  /// <summary>
+  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="addend">The value to add after division.</param>
+  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
 
+  /// <summary>
+  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
+  /// </summary>
+  /// <param name="this">The dividend value.</param>
+  /// <param name="divisor">The divisor value.</param>
+  /// <param name="subtrahend">The value to subtract after division.</param>
+  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
+  /// <example>
+  /// <code>
+  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
+  /// </code>
+  /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
 

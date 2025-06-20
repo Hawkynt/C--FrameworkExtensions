@@ -38,4 +38,4 @@ jobs:
 #            7.x
 
       - name: Test
-        run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal
+        run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620
