@@ -92,8 +92,8 @@ public partial class FastFileOperations {
       xStream.Position = offset;
       yStream.Position = offset;
       var len = xStream.Read(bufferX, 0, compareBufferLength);
-      yStream.Read(bufferY, 0, compareBufferLength);
-      return NativeMethods.memcmp(bufferX, bufferY, len) != 0;
+      var len2 = yStream.Read(bufferY, 0, compareBufferLength);
+      return len != len2 || NativeMethods.memcmp(bufferX, bufferY, len) != 0;
     }
 
     public int GetHashCode(FileInfo obj) => throw new NotImplementedException();

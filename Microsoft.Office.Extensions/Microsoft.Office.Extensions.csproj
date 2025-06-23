@@ -20,6 +20,8 @@
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
+    <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
+    <NoWarn>$(NoWarn);MSB3305</NoWarn><!-- Suppresses the COM Dummy warning -->
   </PropertyGroup>
 
   <ItemGroup>

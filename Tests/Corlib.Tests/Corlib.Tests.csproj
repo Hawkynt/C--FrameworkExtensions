@@ -13,19 +13,26 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <SuppressTfmSupportBuildErrors>True</SuppressTfmSupportBuildErrors>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
+    <NoWarn>MSB3270</NoWarn>
+    <!-- Suppresses the processor architecture mismatch warning -->
+  </PropertyGroup>
+  
   <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="$(TargetFramework) == 'net9.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="$(TargetFramework) == 'net8.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="$(TargetFramework) == 'net6.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="$(TargetFramework) == 'net48'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" Condition="$(TargetFramework) == 'net45'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" Condition="$(TargetFramework) == 'net40'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" Condition="$(TargetFramework) == 'net35'" />
-    
-    <PackageReference Include="nunit" Version="3.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net462'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net40'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net35'" />
+
+    <PackageReference Include="NUnit" Version="3.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.3.*" />
   </ItemGroup>
 

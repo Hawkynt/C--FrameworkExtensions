@@ -105,15 +105,19 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Clear() {
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
     fixed (T* pointer = this)
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
       Unsafe.InitBlockUnaligned(pointer, 0, (uint)(Unsafe.SizeOf<T>() * this.Length));
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Fill(T value) {
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
     if (sizeof(T) == 1)
       fixed (T* pointer = this)
         Unsafe.InitBlockUnaligned(pointer, *(byte*)&value, (uint)this.Length);
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
     else
       for (var i = 0; i < this.Length; ++i)
         this.memoryHandler.GetRef(i) = value;

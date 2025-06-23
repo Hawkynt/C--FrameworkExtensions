@@ -996,8 +996,7 @@ public static partial class EnumerableExtensions {
         if (ReferenceEquals(box1, box2))
           return true;
 
-        if (box1 == null)
-          ;
+        if (box1 == null) { }
         else if (box2 != null)
           if (equalityComparer.Equals(item, current))
             return true;
@@ -1452,6 +1451,7 @@ public static partial class EnumerableExtensions {
   /// <returns>The position of the item in the enumeration or -1</returns>
   [DebuggerStepThrough]
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  // ReSharper disable once RedundantArgumentDefaultValue
   public static int IndexOf<TItem>(this IEnumerable<TItem> @this, TItem item) => IndexOrDefault(@this, a => Equals(a, item), -1);
 
   /// <summary>

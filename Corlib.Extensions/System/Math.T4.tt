@@ -932,14 +932,16 @@ public static partial class MathEx {
   public static unsafe <#=type#> Min(params <#=type#>[] values) {
     var count = values.Length;
     if (count <= 0)
-      return default;
+      return 0;
 
     fixed(<#=type#>* startPointer = &values[0]) {
       var result = values[0];
       var offset = startPointer;
       var endPointer = startPointer + count;
 
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
       var chunkSize = 1;
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
 <#  foreach(var size in new []{ 512, 256, 128, 64 }) {#>
 #if SUPPORTS_VECTOR_<#=size#> && SUPPORTS_VECTOR_IS_HARDWARE_ACCELERATED
@@ -981,14 +983,16 @@ public static partial class MathEx {
   public static unsafe <#=type#> Max(params <#=type#>[] values) {
     var count = values.Length;
     if (count <= 0)
-      return default;
+      return 0;
 
     fixed(<#=type#>* startPointer = &values[0]) {
       var result = values[0];
       var offset = startPointer;
       var endPointer = startPointer + count;
 
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
       var chunkSize = 1;
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
 <#  foreach(var size in new []{ 512, 256, 128, 64 }) {#>
 #if SUPPORTS_VECTOR_<#=size#> && SUPPORTS_VECTOR_IS_HARDWARE_ACCELERATED
@@ -1030,7 +1034,7 @@ public static partial class MathEx {
   public static <#=type#> Average(params <#=type#>[] values) {
     var length = values.Length;
     if (length == 0)
-      return default;
+      return 0;
 
 <#
     var tempType = 

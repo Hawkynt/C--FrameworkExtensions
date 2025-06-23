@@ -126,7 +126,11 @@ public class ExecutiveQueue<TItem> {
     queue.Enqueue(item);
 
     // if already running just return
+#if NET9_0_OR_GREATER
+    if (Volatile.Read(ref this._processing) != _IDLE)
+#else
     if (Thread.VolatileRead(ref this._processing) != _IDLE)
+#endif
       return;
 
     try {
@@ -200,5 +204,5 @@ public class ExecutiveQueue<TItem> {
   /// <returns>An array containig the queues elements.</returns>
   public TItem[] ToArray() => this._Items.ToArray();
 
-  #endregion
+#endregion
 }

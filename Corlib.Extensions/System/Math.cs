@@ -30,9 +30,6 @@ using System.Runtime.Intrinsics.X86;
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 #endif
-#if SUPPORTS_BITOPERATIONS
-using System.Numerics;
-#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast

@@ -26,6 +26,10 @@
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
+    <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
   </PropertyGroup>
 
   <ItemGroup>

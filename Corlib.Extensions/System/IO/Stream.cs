@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 #endif
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using System.Drawing;
 
 namespace System.IO;
 
@@ -69,6 +70,12 @@ public static partial class StreamExtensions {
 
   #endregion
 
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  private static unsafe void ThrowEndOfStreamIfNeeded<TType>(int size) where TType:unmanaged {
+    if(size < sizeof(TType))
+      throw new EndOfStreamException("Read past end of stream");
+  }
+  
   /// <summary>
   ///   Writes a whole array of bytes to a stream.
   /// </summary>
@@ -315,12 +322,11 @@ public static partial class StreamExtensions {
 #if SUPPORTS_SPAN
     ushort result = 0;
     var bytes = new Span<byte>(&result, sizeof(ushort));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<ushort>(stream.Read(bytes));
     return result;
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    ThrowEndOfStreamIfNeeded<ushort>(stream.Read(handle.Buffer, 0, sizeof(ushort)));
     fixed (byte* bytes = handle.Buffer)
       return *(ushort*)bytes;
 #endif
@@ -333,12 +339,11 @@ public static partial class StreamExtensions {
 
 #if SUPPORTS_SPAN
     var bytes = new Span<byte>(ptr, sizeof(ushort));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<ushort>(stream.Read(bytes));
     (*ptr, ptr[1]) = (ptr[1], *ptr);
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ushort));
+    ThrowEndOfStreamIfNeeded<ushort>(stream.Read(handle.Buffer, 0, sizeof(ushort)));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1]) = (bytes[1], *bytes);
 #endif
@@ -499,12 +504,11 @@ public static partial class StreamExtensions {
 #if SUPPORTS_SPAN
     var result = 0U;
     var bytes = new Span<byte>(&result, sizeof(uint));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<uint>(stream.Read(bytes));
     return result;
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(uint));
+    ThrowEndOfStreamIfNeeded<uint>(stream.Read(handle.Buffer, 0, sizeof(uint)));
     fixed (byte* bytes = handle.Buffer)
       return *(uint*)bytes;
 #endif
@@ -517,12 +521,11 @@ public static partial class StreamExtensions {
 
 #if SUPPORTS_SPAN
     var bytes = new Span<byte>(ptr, sizeof(uint));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<uint>(stream.Read(bytes));
     (*ptr, ptr[1], ptr[2], ptr[3]) = (ptr[3], ptr[2], ptr[1], *ptr);
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(uint));
+    ThrowEndOfStreamIfNeeded<uint>(stream.Read(handle.Buffer, 0, sizeof(uint)));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1], ptr[2], ptr[3]) = (bytes[3], bytes[2], bytes[1], *bytes);
 #endif
@@ -644,12 +647,11 @@ public static partial class StreamExtensions {
 #if SUPPORTS_SPAN
     var result = 0UL;
     var bytes = new Span<byte>(&result, sizeof(ulong));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<ulong>(stream.Read(bytes));
     return result;
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ulong));
+    ThrowEndOfStreamIfNeeded<ulong>(stream.Read(handle.Buffer, 0, sizeof(ulong)));
     fixed (byte* bytes = handle.Buffer)
       return *(ulong*)bytes;
 #endif
@@ -662,12 +664,11 @@ public static partial class StreamExtensions {
 
 #if SUPPORTS_SPAN
     var bytes = new Span<byte>(ptr, sizeof(ulong));
-    stream.Read(bytes);
+    ThrowEndOfStreamIfNeeded<ulong>(stream.Read(bytes));
     (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (ptr[7], ptr[6], ptr[5], ptr[4], ptr[3], ptr[2], ptr[1], *ptr);
 #else
     using var handle = PrimitiveConversionBufferManager.GetBuffer();
-    // ReSharper disable once MustUseReturnValue
-    stream.Read(handle.Buffer, 0, sizeof(ulong));
+    ThrowEndOfStreamIfNeeded<ulong>(stream.Read(handle.Buffer, 0, sizeof(ulong)));
     fixed (byte* bytes = handle.Buffer)
       (*ptr, ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]) = (bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], *bytes);
 #endif
@@ -1216,7 +1217,11 @@ public static partial class StreamExtensions {
       try {
         unmanagedMemory = Marshal.AllocHGlobal(size);
         Marshal.Copy(buffer, 0, unmanagedMemory, size);
+#if NETCOREAPP
+        var result = Marshal.PtrToStructure<TStruct>(unmanagedMemory);
+#else
         var result = (TStruct)Marshal.PtrToStructure(unmanagedMemory, typeof(TStruct));
+#endif
         return result;
       } finally {
         if (unmanagedMemory != IntPtr.Zero)

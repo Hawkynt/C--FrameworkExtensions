@@ -251,8 +251,9 @@ internal class FileInfoTest {
     [TearDown]
     public void TearDown() {
       // Cleanup the test directory after each test
-      if (Directory.Exists(this._testDirectory))
-        Directory.Delete(this._testDirectory, true);
+      var testDirectory = this._testDirectory;
+      if (testDirectory!=null && Directory.Exists(testDirectory))
+        Directory.Delete(testDirectory, true);
     }
 
     [Test]

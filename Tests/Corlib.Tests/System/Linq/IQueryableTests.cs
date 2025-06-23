@@ -24,7 +24,7 @@ public class IQueryableTests {
   [TestCase("a|b", "A", true, "a")]
   public void FilterIfNeeded(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-        () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(d => d!.Data, filter, ignoreCase).Select(d => d!.Data),
+        () => FromString(input).FilterIfNeeded(d => d!.Data, filter, ignoreCase).AsEnumerable().Select(d => d?.Data),
         ConvertFromStringToTestArray(expected),
         exception
       )
@@ -46,11 +46,20 @@ public class IQueryableTests {
   [TestCase("ab|bc", "BA", true, "ab")]
   public void FilterIfNeeded2(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-      () => ((input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s)))?.AsQueryable()).FilterIfNeeded(filter, ignoreCase, d => d!.Data, d=>d!.DataReversed).Select(d => d!.Data),
+      () => FromString(input).FilterIfNeeded(filter, ignoreCase, d => d!.Data, d=>d!.DataReversed).AsEnumerable().Select(d => d?.Data),
       ConvertFromStringToTestArray(expected),
       exception
     )
   ;
 
+  private static IQueryable<Dummy?>? FromString(string? input) {
+    var data = ConvertFromStringToTestArray(input);
+    if (data == null)
+      return null;
+
+    var dummies = data.Select(s => s == null ? null : new Dummy(s));
+    var query = dummies.AsQueryable();
+    return query;
+  }
 
 }

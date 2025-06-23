@@ -843,8 +843,8 @@ internal static class Scalar<T> {
   private static T SubtractSaturateUInt64(ulong left, ulong right) =>
     Promote(left < right ? 0ul : left - right);
 
-  private static nint MinPointer => IntPtr.Size == 4 ? int.MinValue : (nint)long.MinValue;
-  private static nint MaxPointer => IntPtr.Size == 4 ? int.MaxValue : (nint)long.MaxValue;
-  private static nuint MaxUPointer => UIntPtr.Size == 4 ? uint.MaxValue : (nuint)ulong.MaxValue;
+  private static nint MinPointer => IntPtr.Size == 4 ? int.MinValue : unchecked((nint)long.MinValue);
+  private static nint MaxPointer => IntPtr.Size == 4 ? int.MaxValue : unchecked((nint)long.MaxValue);
+  private static nuint MaxUPointer => UIntPtr.Size == 4 ? uint.MaxValue : unchecked((nuint)ulong.MaxValue);
   
 }

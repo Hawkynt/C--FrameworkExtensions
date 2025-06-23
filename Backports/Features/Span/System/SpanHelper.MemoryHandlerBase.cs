@@ -96,8 +96,10 @@ partial class SpanHelper {
       else if (!IsValueType<T>())
         switch (this) {
           case ManagedArrayHandler<T> mahS when other is ManagedArrayHandler<T> mahT: {
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
             fixed (T* source = mahS.source)
             fixed (T* target = mahT.source) {
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
               var sourcePtr = source + mahS.start;
               var targetPtr = target + mahT.start;
               CopyPointerElements(sourcePtr, targetPtr, count);
@@ -112,7 +114,9 @@ partial class SpanHelper {
 
       return;
 
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
       static void CopyPointerElements(T* source, T* target, int elements) {
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
         // Calculate iterations for chunks of 8 with bit trick (length / 8)
         var iterations = elements >> 3;
 
