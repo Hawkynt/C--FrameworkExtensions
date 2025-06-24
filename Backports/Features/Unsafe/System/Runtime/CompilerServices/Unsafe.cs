@@ -37,8 +37,8 @@ public static unsafe class Unsafe {
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static void* AsPointer<T>(ref T value) {
-    var tr = __makeref(value);
-    return (void*)*(IntPtr*)&tr;
+    fixed (T* ptr = &value)
+      return ptr;
   }
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
