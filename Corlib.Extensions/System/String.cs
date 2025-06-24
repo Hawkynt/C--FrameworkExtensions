@@ -4922,15 +4922,6 @@ public static partial class StringExtensions {
     if (IsNullOrEmpty(@this))
       return @this;
 
-    // see https://github.com/dotnet/runtime/blob/v5.0.3/src/libraries/Common/src/System/HexConverter.cs for the inner workings
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void ByteToHex2(byte value, out char highNibble, out char lowNibble) {
-      var temp = (uint)(((value & 0xF0) << 4) + (value & 0xF) - 0x8989);
-      temp = (uint)(((-(int)temp & 0x7070) >>> 4) + (int)temp + 0xB9B9);
-      lowNibble = (char)(temp & 0xff);
-      highNibble = (char)(temp >> 8);
-    }
-
     var bytes = Encoding.UTF8.GetBytes(@this);
     StringBuilder result = new(bytes.Length * 2);
     foreach (var ch in bytes)
@@ -4943,6 +4934,16 @@ public static partial class StringExtensions {
         result.Append((char)ch);
 
     return result.ToString();
+
+    // see https://github.com/dotnet/runtime/blob/v5.0.3/src/libraries/Common/src/System/HexConverter.cs for the inner workings
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static void ByteToHex2(byte value, out char highNibble, out char lowNibble) {
+      var temp = (uint)(((value & 0xF0) << 4) + (value & 0xF) - 0x8989);
+      temp = (uint)(((-(int)temp & 0x7070) >>> 4) + (int)temp + 0xB9B9);
+      lowNibble = (char)(temp & 0xff);
+      highNibble = (char)(temp >> 8);
+    }
+
   }
 
   internal static byte ConvertHexToByte(char highNibble, char lowNibble) {

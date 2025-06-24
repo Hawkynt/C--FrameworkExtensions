@@ -233,13 +233,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Ceiling(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Ceiling(As<float>(value))
-#else
-      (float)Math.Ceiling(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Ceiling(As<float>(value))),
     TypeCode.Double => Promote(Math.Ceiling(As<double>(value))),
     TypeCode.Decimal => Promote(Math.Ceiling(As<decimal>(value))),
     // For integer types, ceiling is identity
@@ -251,13 +245,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Floor(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Floor(As<float>(value))
-#else
-      (float)Math.Floor(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Floor(As<float>(value))),
     TypeCode.Double => Promote(Math.Floor(As<double>(value))),
     TypeCode.Decimal => Promote(Math.Floor(As<decimal>(value))),
     // For integer types, floor is identity
@@ -269,13 +257,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Round(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Round(As<float>(value))
-#else
-      (float)Math.Round(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Round(As<float>(value))),
     TypeCode.Double => Promote(Math.Round(As<double>(value))),
     TypeCode.Decimal => Promote(Math.Round(As<decimal>(value))),
     // For integer types, floor is identity
@@ -287,13 +269,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Truncate(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Truncate(As<float>(value))
-#else
-      (float)Math.Truncate(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Truncate(As<float>(value))),
     TypeCode.Double => Promote(Math.Truncate(As<double>(value))),
     TypeCode.Decimal => Promote(Math.Truncate(As<decimal>(value))),
     // For integer types, floor is identity
@@ -305,13 +281,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Sqrt(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Sqrt(As<float>(value))
-#else
-      (float)Math.Sqrt(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Sqrt(As<float>(value))),
     TypeCode.Double => Promote(Math.Sqrt(As<double>(value))),
     TypeCode.Decimal => Promote((decimal)Math.Sqrt((double)As<decimal>(value))),
     // For integer types, convert to double, take sqrt, and convert back
@@ -323,13 +293,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Exp(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Exp(As<float>(value))
-#else
-      (float)Math.Exp(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Exp(As<float>(value))),
     TypeCode.Double => Promote(Math.Exp(As<double>(value))),
     TypeCode.Decimal => Promote((decimal)Math.Exp((double)As<decimal>(value))),
     // For integer types, convert to double, calculate, and convert back
@@ -341,13 +305,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Log(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Log(As<float>(value))
-#else
-      (float)Math.Log(As<float>(value))
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Log(As<float>(value))),
     TypeCode.Double => Promote(Math.Log(As<double>(value))),
     TypeCode.Decimal => Promote((decimal)Math.Log((double)As<decimal>(value))),
     // For integer types, convert to double, calculate, and convert back
@@ -359,13 +317,7 @@ internal static class Scalar<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Log2(T value) => TypeCodeCache<T>.Code switch {
-    TypeCode.Single => Promote(
-#if SUPPORTS_MATHF
-      MathF.Log(As<float>(value), 2f)
-#else
-      (float)Math.Log(As<float>(value), 2)
-#endif
-    ),
+    TypeCode.Single => Promote(MathF.Log(As<float>(value), 2f)),
     TypeCode.Double => Promote(Math.Log(As<double>(value), 2)),
     TypeCode.Decimal => Promote((decimal)Math.Log((double)As<decimal>(value), 2)),
     // For integer types, convert to double, calculate, and convert back
@@ -472,11 +424,7 @@ internal static class Scalar<T> {
     TypeCode.Int32 => Promote(As<int>(value) << count),
     TypeCode.UInt64 => Promote(As<ulong>(value) << count),
     TypeCode.Int64 => Promote(As<long>(value) << count),
-#if SUPPORTS_MATHF
     TypeCode.Single => Promote(As<float>(value) * MathF.Pow(2, count)),
-#else
-    TypeCode.Single => Promote((float)(As<float>(value) * Math.Pow(2, count))),
-#endif
     TypeCode.Double => Promote((As<double>(value) * Math.Pow(2, count))),
     _ => ThrowNotSupported<T>()
   };
@@ -491,11 +439,7 @@ internal static class Scalar<T> {
     TypeCode.Int32 => Promote(As<int>(value) >> count),
     TypeCode.UInt64 => Promote(As<ulong>(value) >> count),
     TypeCode.Int64 => Promote(As<long>(value) >> count),
-#if SUPPORTS_MATHF
-  TypeCode.Single => Promote(As<float>(value) / MathF.Pow(2, count)),
-#else
-    TypeCode.Single => Promote((float)(As<float>(value) / Math.Pow(2, count))),
-#endif
+    TypeCode.Single => Promote(As<float>(value) / MathF.Pow(2, count)),
     TypeCode.Double => Promote(As<double>(value) / Math.Pow(2, count)),
     _ => ThrowNotSupported<T>()
   };

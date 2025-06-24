@@ -1472,11 +1472,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Floor(this float @this) => MathF.Floor(@this);
-#else
-  public static float Floor(this float @this) => (float)Math.Floor(@this);
-#endif
 
   /// <summary>
   /// Returns the smallest integral value greater than or equal to the specified single-precision floating-point number.
@@ -1493,11 +1489,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Ceiling(this float @this) => MathF.Ceiling(@this);
-#else
-  public static float Ceiling(this float @this) => (float)Math.Ceiling(@this);
-#endif
 
   /// <summary>
   /// Calculates the integral part of the specified single-precision floating-point number by removing any fractional digits.
@@ -1514,11 +1506,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Truncate(this float @this) => MathF.Truncate(@this);
-#else
-  public static float Truncate(this float @this) => (float)Math.Truncate(@this);
-#endif
 
   /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
   /// <param name="this">A number to be rounded.</param>
@@ -1528,11 +1516,7 @@ public static partial class MathEx {
   ///   returned.
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Round(this float @this) => MathF.Round(@this);
-#else
-  public static float Round(this float @this) => (float)Math.Round(@this);
-#endif
 
   /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
   /// <param name="this">A number to be rounded.</param>
@@ -1546,11 +1530,7 @@ public static partial class MathEx {
   public static float Round(this float @this, int digits) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
-#if SUPPORTS_MATHF
     return MathF.Round(@this, digits);
-#else
-    return (float)Math.Round(@this, digits);
-#endif
   }
 
   /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
@@ -1558,11 +1538,7 @@ public static partial class MathEx {
   /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Round(this float @this, MidpointRounding method) => MathF.Round(@this, method);
-#else
-  public static float Round(this float @this, MidpointRounding method) => (float)Math.Round(@this, method);
-#endif
 
   /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
   /// <param name="this">A number to be rounded.</param>
@@ -1573,11 +1549,7 @@ public static partial class MathEx {
   public static float Round(this float @this, int digits, MidpointRounding method) {
     Against.ValuesOutOfRange(@this, 0, 15);
 
-#if SUPPORTS_MATHF
     return MathF.Round(@this, digits, method);
-#else
-    return (float)Math.Round(@this, digits, method);
-#endif
   }
 
   /// <summary>
@@ -1595,11 +1567,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Log(this float @this, float @base) => MathF.Log(@this, @base);
-#else
-  public static float Log(this float @this, float @base) => (float)Math.Log(@this, @base);
-#endif
 
   /// <summary>
   /// Calculates the logarithm of a specified number in a specified base.
@@ -1757,11 +1725,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Log2(this float @this) => MathF.Log(@this, 2);
-#else
-  public static float Log2(this float @this) => (float)Math.Log(@this, 2);
-#endif
 
   /// <summary>
   /// Calculates the logarithm base 2 of the specified <see langword="double"/> value.
@@ -1790,11 +1754,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATHF
   public static float Exp(this float @this) => MathF.Exp(@this);
-#else
-  public static float Exp(this float @this) => (float)Math.Exp(@this);
-#endif
 
   /// <summary>
   /// Returns e raised to the power of the specified <see langword="double"/> value.

@@ -678,11 +678,7 @@ public static partial class MathEx {
   /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 <#    if(type == "float") {#>
-#if SUPPORTS_MATHF
   public static <#=type#> <#=method#>(this <#=type#> @this) => MathF.<#=method#>(@this);
-#else
-  public static <#=type#> <#=method#>(this <#=type#> @this) => (<#=type#>)Math.<#=method#>(@this);
-#endif
 <#    } else {#>
   public static <#=type#> <#=method#>(this <#=type#> @this) => Math.<#=method#>(@this);
 <#    }#>

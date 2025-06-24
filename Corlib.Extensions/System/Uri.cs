@@ -131,16 +131,34 @@ public static partial class UriExtensions {
 #endif
 
   /// <summary>
-  ///   Reads all text.
+  /// Reads the full textual content from the specified <see cref="Uri"/> using optional HTTP POST and custom headers.
   /// </summary>
-  /// <param name="this">This Uri.</param>
-  /// <param name="encoding">The encoding.</param>
-  /// <param name="retryCount">The retry count.</param>
-  /// <param name="headers">The headers.</param>
-  /// <param name="postValues">The post values.</param>
-  /// <returns>
-  ///   The text of the target url
-  /// </returns>
+  /// <param name="this">The <see cref="Uri"/> to read from.</param>
+  /// <param name="encoding">
+  /// (Optional: defaults to UTF-8) The <see cref="Encoding"/> to use when decoding the response body.
+  /// </param>
+  /// <param name="retryCount">
+  /// (Optional: defaults to 0) The number of retry attempts to make in case of transient failures.
+  /// </param>
+  /// <param name="headers">
+  /// (Optional) A sequence of HTTP headers to include with the request.
+  /// </param>
+  /// <param name="postValues">
+  /// (Optional) A dictionary of key-value pairs to be sent as application/x-www-form-urlencoded POST data.
+  /// </param>
+  /// <returns>The response body as a decoded <see cref="string"/>.</returns>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="WebException">Thrown if the request fails and <paramref name="retryCount"/> is exhausted.</exception>
+  /// <remarks>
+  /// If <paramref name="postValues"/> is <see langword="null"/>, a GET request is made; otherwise, a POST request is performed.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var uri = new Uri("https://example.com/api");
+  /// var content = uri.ReadAllText(encoding: Encoding.UTF8, retryCount: 2);
+  /// Console.WriteLine(content);
+  /// </code>
+  /// </example>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static string ReadAllText(this Uri @this, Encoding encoding = null, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
@@ -192,6 +210,33 @@ public static partial class UriExtensions {
   }
 #endif
 
+  /// <summary>
+  /// Sends an HTTP request to the specified <see cref="Uri"/> and returns the final resolved response URI,
+  /// including any redirections that occurred.
+  /// </summary>
+  /// <param name="this">The target <see cref="Uri"/>.</param>
+  /// <param name="retryCount">
+  /// (Optional: defaults to 0) The number of times to retry the request in case of network failures.
+  /// </param>
+  /// <param name="headers">
+  /// (Optional) A collection of custom <see cref="HttpRequestHeader"/> values to include in the request.
+  /// </param>
+  /// <param name="postValues">
+  /// (Optional) If provided, a POST request with the specified form-encoded data is sent; otherwise, a GET request is performed.
+  /// </param>
+  /// <returns>The resolved <see cref="Uri"/> after completing the request, accounting for HTTP redirects.</returns>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="WebException">Thrown if the HTTP request fails after all retry attempts.</exception>
+  /// <remarks>
+  /// This method can be used to track endpoint redirection behavior or confirm final download URLs.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var original = new Uri("http://example.org/redirect");
+  /// var final = original.GetResponseUri(retryCount: 1);
+  /// Console.WriteLine($"Final location: {final}");
+  /// </code>
+  /// </example>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static Uri GetResponseUri(this Uri @this, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
@@ -306,15 +351,31 @@ public static partial class UriExtensions {
 #endif
 
   /// <summary>
-  ///   Reads all bytes.
+  /// Downloads the raw binary content from the specified <see cref="Uri"/> as a byte array.
   /// </summary>
-  /// <param name="this">This Uri.</param>
-  /// <param name="retryCount">The retry count.</param>
-  /// <param name="headers">The headers.</param>
-  /// <param name="postValues">The post values.</param>
-  /// <returns>
-  ///   The bytes of the target url
-  /// </returns>
+  /// <param name="this">The target <see cref="Uri"/> to read from.</param>
+  /// <param name="retryCount">
+  /// (Optional: defaults to 0) The number of retry attempts in case of transient request failures.
+  /// </param>
+  /// <param name="headers">
+  /// (Optional) A collection of custom <see cref="HttpRequestHeader"/> values to include with the request.
+  /// </param>
+  /// <param name="postValues">
+  /// (Optional) If specified, a POST request with the given form-encoded data is sent; otherwise, a GET request is used.
+  /// </param>
+  /// <returns>The response body as a byte array.</returns>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="WebException">Thrown if the request fails after exhausting all retry attempts.</exception>
+  /// <remarks>
+  /// Use this method to retrieve non-textual data such as images, binaries, or file downloads.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var uri = new Uri("https://example.com/image.png");
+  /// byte[] imageData = uri.ReadAllBytes();
+  /// File.WriteAllBytes("downloaded.png", imageData);
+  /// </code>
+  /// </example>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static byte[] ReadAllBytes(this Uri @this, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
@@ -348,15 +409,36 @@ public static partial class UriExtensions {
   }
 
   /// <summary>
-  ///   Downloads to file.
+  /// Downloads the content from the specified <see cref="Uri"/> and writes it to the given <see cref="FileInfo"/> location.
   /// </summary>
-  /// <param name="this">This Uri.</param>
-  /// <param name="file">The file.</param>
-  /// <param name="overwrite">if set to <c>true</c> overwrites target file.</param>
-  /// <param name="retryCount">The retry count.</param>
-  /// <param name="headers">The headers.</param>
-  /// <param name="postValues">The post values.</param>
-  /// <exception cref="System.Exception">Target file already exists</exception>
+  /// <param name="this">The <see cref="Uri"/> to download from.</param>
+  /// <param name="file">The destination <see cref="FileInfo"/> to save the downloaded content.</param>
+  /// <param name="overwrite">
+  /// (Optional: defaults to <see langword="false"/>) Indicates whether to overwrite the target file if it already exists.
+  /// </param>
+  /// <param name="retryCount">
+  /// (Optional: defaults to 0) Number of retry attempts in case of request failures.
+  /// </param>
+  /// <param name="headers">
+  /// (Optional) Custom <see cref="HttpRequestHeader"/> entries to include in the request.
+  /// </param>
+  /// <param name="postValues">
+  /// (Optional) If provided, sends the request using HTTP POST with the specified form data; otherwise, a GET request is performed.
+  /// </param>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown when <paramref name="file"/> is <see langword="null"/>.</exception>
+  /// <exception cref="IOException">Thrown if the file exists and <paramref name="overwrite"/> is <see langword="false"/>.</exception>
+  /// <exception cref="WebException">Thrown if the request fails after retry attempts are exhausted.</exception>
+  /// <remarks>
+  /// This method is suitable for saving web content to disk, including files retrieved through redirects or form submissions.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var uri = new Uri("https://example.com/report.pdf");
+  /// var file = new FileInfo("report.pdf");
+  /// uri.DownloadToFile(file, overwrite: true);
+  /// </code>
+  /// </example>
   [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
   public static void DownloadToFile(this Uri @this, FileInfo file, bool overwrite = false, int retryCount = 0, IEnumerable<KeyValuePair<HttpRequestHeader, string>> headers = null, IDictionary<string, string> postValues = null) {
     Against.ThisIsNull(@this);
@@ -441,10 +523,22 @@ public static partial class UriExtensions {
 #endif
 
   /// <summary>
-  ///   Gets the base part of the uri.
+  /// Gets the base portion of the specified <see cref="Uri"/>, excluding any path segments, query parameters, or fragments.
   /// </summary>
-  /// <param name="this">This Uri.</param>
-  /// <returns></returns>
+  /// <param name="this">The target <see cref="Uri"/>.</param>
+  /// <returns>
+  /// A new <see cref="Uri"/> containing only the scheme, host, and port (if specified).
+  /// </returns>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <remarks>
+  /// Useful when you want to construct additional relative URIs based on a root or authority.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var uri = new Uri("https://example.com/api/data?id=123");
+  /// var baseUri = uri.BaseUri(); // "https://example.com"
+  /// </code>
+  /// </example>
   public static Uri BaseUri(this Uri @this) {
     Against.ThisIsNull(@this);
 
@@ -460,11 +554,25 @@ public static partial class UriExtensions {
   }
 
   /// <summary>
-  ///   Gets a new uri from this one using a relative path.
+  /// Appends a relative path to the base <see cref="Uri"/> and returns the resulting <see cref="Uri"/>.
   /// </summary>
-  /// <param name="this">This Uri.</param>
-  /// <param name="path">The path.</param>
-  /// <returns></returns>
+  /// <param name="this">The base <see cref="Uri"/> to append to.</param>
+  /// <param name="path">The relative path to append. May include subdirectories or file names.</param>
+  /// <returns>
+  /// A new <see cref="Uri"/> combining the base URI with the specified relative path.
+  /// </returns>
+  /// <exception cref="NullReferenceException">Thrown when <paramref name="this"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentNullException">Thrown when <paramref name="path"/> is <see langword="null"/>.</exception>
+  /// <remarks>
+  /// This method ensures the relative path is resolved correctly, avoiding issues with slashes.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// var baseUri = new Uri("https://example.com/api/");
+  /// var fullUri = baseUri.Path("users/123");
+  /// // fullUri is "https://example.com/api/users/123"
+  /// </code>
+  /// </example>
   public static Uri Path(this Uri @this, string path) {
     Against.ThisIsNull(@this);
 
