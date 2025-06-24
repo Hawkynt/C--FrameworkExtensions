@@ -35,6 +35,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
 * System
   * [Index](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
   * [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
+  * [MathF](https://learn.microsoft.com/dotnet/api/system.mathf)
   * [Range](https://learn.microsoft.com/dotnet/api/system.range)
   * [ReadOnlySpan](https://learn.microsoft.com/dotnet/api/system.readonlyspan-1)&lt;T&gt;
   * [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
