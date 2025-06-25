@@ -130,6 +130,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Type.T4.cs</LastGenOutput>
     </None>
+    <None Update="System\UnsignedMath.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>UnsignedMath.T4.cs</LastGenOutput>
+    </None>
     <Compile Update="Corlib\System\Action.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -279,6 +283,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Type.T4.tt</DependentUpon>
+    </Compile>
+    <Compile Update="System\UnsignedMath.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>UnsignedMath.T4.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
