@@ -1775,7 +1775,23 @@ public static partial class MathEx {
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Cbrt(this float @this) => MathF.Pow(@this, 1f / 3);
+
+  /// <summary>
+  ///   Calculates the cubic root.
+  /// </summary>
+  /// <param name="this">This value.</param>
+  /// <returns>Calculation result</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static double Cbrt(this double @this) => Math.Pow(@this, 1d / 3);
+
+  /// <summary>
+  ///   Calculates the cubic root.
+  /// </summary>
+  /// <param name="this">This value.</param>
+  /// <returns>Calculation result</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Cbrt(this decimal @this) => @this.Pow(1m / 3);
 
   /// <summary>
   ///   Calculates the cotangent.
