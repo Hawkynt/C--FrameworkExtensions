@@ -19,6 +19,9 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
 
 * System
   * [IGrouping](https://learn.microsoft.com/dotnet/api/system.linq.igrouping-2)&lt;out TKey, TElement&gt;
+  * [IParsable](https://learn.microsoft.com/dotnet/api/system.iparsable-1)
+  * [ISpanFormattable](https://learn.microsoft.com/dotnet/api/system.ispanformattable)
+  * [ISpanParsable](https://learn.microsoft.com/dotnet/api/system.ispanparsable-1)
 * System.Collections
   * [IStructuralComparable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralcomparable)
   * [IStructuralEquatable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralequatable)
