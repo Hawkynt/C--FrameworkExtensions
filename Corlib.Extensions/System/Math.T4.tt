@@ -234,7 +234,7 @@ public static partial class MathEx {
   /// <param name="this">This number.</param>
   /// <returns>An estimation of the reciprocal.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> ReciprocalEstimate(<#=type#> @this) => 1 / @this;
+  public static <#=type#> ReciprocalEstimate(this <#=type#> @this) => 1 / @this;
 
   /// <summary>
   /// Determines whether the specified number is odd.
