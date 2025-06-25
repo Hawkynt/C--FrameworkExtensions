@@ -487,6 +487,7 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> Cubed(this <#=type#> @this) => (<#=type#>)<#=(needsChecked ? "unchecked" : string.Empty)#>(@this * @this * @this);
    
+<# if (type != "decimal") { #>
   /// <summary>
   /// Raises the specified <see cref="<#=type#>"/> value to the given exponent.
   /// </summary>
@@ -500,8 +501,10 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Pow(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(<#=(type=="decimal"?"(double)":"")#>@this,<#=(type=="decimal"?"(double)":"")#>exponent);
-    
+  public static <#=type#> Pow(this <#=type#> @this,<#=type#> exponent) => (<#=type#>)Math.Pow(@this, exponent);
+
+<# } #>
+
   /// <summary>
   /// Adds the specified operand to the <see cref="<#=type#>"/> value.
   /// </summary>

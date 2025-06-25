@@ -47,7 +47,14 @@ public static partial class MathEx {
   public const decimal Sqrt7  = 2.64575131106459059050161575364m; // taken from https://en.wikipedia.org/wiki/Square_root_of_7
   public const decimal Sqrt8  = 2.82842712474619009760337744842m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
   public const decimal Sqrt10 = 3.16227766016837933199889354443m; // taken from https://en.wikipedia.org/wiki/Square_root#Square_roots_of_positive_integers
+  public const decimal Ln10   = 2.30258509299404568401799145468m; // taken from https://www.wolframalpha.com/input?i=ln%2810%29
+  public const decimal Ln2    = 0.69314718055994530941723212145m; // taken from https://www.wolframalpha.com/input?i=ln%282%29
 
+  private const int MAX_TAN_ITERATIONS = 100;
+  private const int MAX_ATAN_ITERATIONS = 100;
+  private const int MAX_LOG_ITERATIONS = 100;
+  private const int MAX_EXP_ITERATIONS = 1000;
+  private const decimal DEFAULT_EPSILON = 1E-28m;
 
   /// <summary>
   /// Extracts the lower nibble of the specified byte.
@@ -1333,6 +1340,57 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong ClearBit(this ulong @this, byte index) => @this & ~(1UL << (index & 63));
+  
+  /// <summary>
+  /// Raises a decimal base to a decimal exponent with refined precision.
+  /// </summary>
+  /// <param name="this">The base value.</param>
+  /// <param name="exponent">The exponent value.</param>
+  /// <param name="epsilon">(Optional) The maximum allowed deviation in the result.</param>
+  /// <returns><c>@this</c> raised to the power of <c>exponent</c></returns>
+  /// <exception cref="ArgumentOutOfRangeException">If base is &lt;= 0 or epsilon is negative</exception>
+  /// <remarks>
+  /// Uses identity: a^b = exp(b * ln(a)), refined with Newton iteration.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// decimal value = 2;
+  /// decimal result = value.Pow(3); // result == 8
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Pow(this decimal @this, decimal exponent, decimal epsilon = 0) {
+    Against.NegativeValuesAndZero(@this);
+    Against.NegativeValues(epsilon);
+
+    return exponent switch {
+      0 => 1,
+      1 => @this,
+      < 0 when @this == 0 => AlwaysThrow.ArgumentOutOfRangeException<decimal>(nameof(@this), "Can not raise 0 to a negative power"),
+      _ when @this == 1 => 1,
+      _ when exponent == decimal.Truncate(exponent) && exponent is >= int.MinValue and <= int.MaxValue => Calculate(@this, (int)exponent),
+      _ => Exp(exponent * Log(@this, epsilon: epsilon), epsilon: epsilon)
+    };
+
+    static decimal Calculate(decimal baseValue, int exponent) {
+      switch (exponent) {
+        case 0:
+          return 1;
+        case < 0:
+          return 1 / Calculate(baseValue, -exponent);
+        default:
+          decimal result = 1;
+          while (exponent > 0) {
+            if ((exponent & 1) != 0)
+              result *= baseValue;
+
+            baseValue *= baseValue;
+            exponent >>= 1;
+          }
+          return result;
+      }
+    }
+  }
 
   /// <summary>
   ///   Calculate a more accurate square root, see
@@ -1397,13 +1455,12 @@ public static partial class MathEx {
       return decimal.Zero;
 
     var current = (decimal)Math.Tan((double)@this);
-    const int MAX_ITERATIONS = 100;
-
+    
     var x2 = @this * @this;
     var term = @this;
     var correction = @this;
     var denominator = 1m;
-    for (var i = 0; i < MAX_ITERATIONS && Math.Abs(term) > epsilon; ++i) {
+    for (var i = 0; i < MAX_TAN_ITERATIONS && Math.Abs(term) > epsilon; ++i) {
       denominator += 2m;
       term *= x2 / denominator;
       correction += denominator % 4 == 1 ? term : -term;
@@ -1412,7 +1469,7 @@ public static partial class MathEx {
     current = (current + correction) / 2m;
     return current;
   }
-
+  
   /// <summary>
   /// Computes the arctangent (inverse tangent) of the specified <see langword="decimal"/> value.
   /// </summary>
@@ -1444,14 +1501,13 @@ public static partial class MathEx {
       var current = (decimal)Math.Atan((double)@this);
       decimal previous;
       var iterations = 0;
-      const int MAX_ITERATIONS = 100;
       do {
         previous = current;
         var tanY = Tan(current, epsilon);
         var sec2Y = 1m + tanY * tanY; // sec^2(y) = 1 + tan^2(y)
         current -= (tanY - @this) / sec2Y;
       }
-      while (Math.Abs(current - previous) > epsilon && ++iterations < MAX_ITERATIONS);
+      while (Math.Abs(current - previous) > epsilon && ++iterations < MAX_ATAN_ITERATIONS);
 
       return current;
     }
@@ -1567,7 +1623,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Log(this float @this, float @base) => MathF.Log(@this, @base);
+  public static float LogN(this float @this, float @base) => MathF.Log(@this, @base);
 
   /// <summary>
   /// Calculates the logarithm of a specified number in a specified base.
@@ -1581,7 +1637,23 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Log(this double @this, double @base) => Math.Log(@this, @base);
+  public static double LogN(this double @this, double @base) => Math.Log(@this, @base);
+
+  /// <summary>
+  /// Computes the logarithm with an arbitrary base using the change of base formula.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <param name="base">The logarithm base.</param>
+  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+  /// <returns>The logarithm of the input value with the specified base.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal LogN(this decimal @this, decimal @base, decimal epsilon = 0) {
+    Against.NegativeValuesAndZero(@this);
+    Against.NegativeValuesAndZero(@base);
+    Against.ValuesAreEqual(@base, 1m);
+
+    return @this.Log(epsilon: epsilon) / @base.Log(epsilon: epsilon);
+  }
 
   /// <summary>
   /// Determines whether the specified value is a power of two.
@@ -1646,6 +1718,76 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPowerOfTwo(this ulong @this) => @this != 0 && (@this & (@this - 1)) == 0;
+
+  /// <summary>
+  /// Computes e^x using Taylor series expansion.
+  /// </summary>
+  /// <param name="this">The exponent value.</param>
+  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+  /// <returns>e raised to the power of the input value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Exp(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValues(epsilon);
+
+    if (@this == 0m)
+      return 1m;
+
+    epsilon = epsilon == 0 ? DEFAULT_EPSILON : epsilon;
+
+    // Taylor series: e^x = Σ(x^n / n!) for n=0 to ∞
+    var term = 1m;
+    var result = 1m;
+    var n = 1;
+
+    while (Math.Abs(term) > epsilon && n <= MAX_EXP_ITERATIONS) {
+      term *= @this / n;
+      result += term;
+      ++n;
+    }
+
+    return result;
+  }
+
+  /// <summary>
+  /// Computes the natural logarithm (ln) of a decimal value using Newton-Raphson iteration.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+  /// <returns>The natural logarithm of the input value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Log(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValuesAndZero(@this);
+    Against.NegativeValues(epsilon);
+
+    if (@this == 1m)
+      return 0m;
+
+    // Start with double approximation
+    var current = (decimal)Math.Log((double)@this);
+    decimal previous;
+    var iteration = 0;
+
+    // Newton-Raphson: x_{n+1} = x_n - (e^x_n - target) / e^x_n
+    do {
+      previous = current;
+      var exp = Exp(previous, epsilon);
+      current -= (exp - @this) / exp;
+    } while (Math.Abs(current - previous) > epsilon && ++iteration < MAX_LOG_ITERATIONS);
+
+    return current;
+  }
+
+  /// <summary>
+  /// Computes the base-10 logarithm using the change of base formula.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+  /// <returns>The base-10 logarithm of the input value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Log10(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValuesAndZero(@this);
+    return Log(@this, epsilon) / Ln10;
+  }
 
   /// <summary>
   /// Computes the integer base-2 logarithm of the specified value.
@@ -1739,6 +1881,18 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static double Log2(this double @this) => Math.Log(@this, 2);
+
+  /// <summary>
+  /// Computes the base-2 logarithm using the change of base formula.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+  /// <returns>The base-2 logarithm of the input value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static decimal Log2(this decimal @this, decimal epsilon = 0) {
+    Against.NegativeValuesAndZero(@this);
+    return Log(@this, epsilon) / Ln2;
+  }
 
   /// <summary>
   /// Returns e raised to the power of the specified <see langword="float"/> value.
@@ -1960,7 +2114,98 @@ public static partial class MathEx {
   /// Uses asynchronous tasks if <c>SUPPORTS_ASYNC</c> is defined.
   /// </remarks>
   /// <returns>A sequence of prime numbers as <see cref="ulong"/>.</returns>
-  public static IEnumerable<ulong> EnumeratePrimes => _EnumeratePrimes();
+  public static IEnumerable<ulong> EnumeratePrimes {
+    get {
+      return Enumerate();
+      
+      static IEnumerable<ulong> Enumerate() {
+#if COLOR_PRIME_GENERATION
+        Console.ForegroundColor = ConsoleColor.White;
+#endif
+        yield return 2;
+
+        var buffer = new ulong[128];
+        PrimeSieve sieve = new(buffer);
+        KnownPrimesStorage knownPrimes = new(buffer);
+
+#if COLOR_PRIME_GENERATION
+        Console.ForegroundColor = ConsoleColor.Cyan;
+#endif
+        foreach (var prime in sieve.Enumerate()) {
+          yield return prime;
+          knownPrimes.Add(prime);
+        }
+
+#if COLOR_PRIME_GENERATION
+        Console.ForegroundColor = ConsoleColor.Green;
+#endif
+        foreach (var prime in knownPrimes.Enumerate())
+          yield return prime;
+
+#if COLOR_PRIME_GENERATION
+        Console.ForegroundColor = ConsoleColor.Red;
+#endif
+        foreach (var prime in EnumerateSlowPrimesWithKnowns())
+          yield return prime;
+
+        IEnumerable<ulong> EnumerateSlowPrimesWithKnowns() {
+          var largestKnownPrime = buffer[^1];
+
+          // Start from the square of the last known prime plus 2 (to ensure it's odd)
+          var candidate = largestKnownPrime * largestKnownPrime + 2;
+
+#if SUPPORTS_ASYNC
+
+          var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
+          for (;;) {
+            task.Wait();
+            var isPrime = task.Result;
+
+            if (isPrime)
+              yield return candidate;
+
+            // Ensure we only check odd numbers
+            var next = candidate + 2;
+            if (next < candidate)
+              yield break; // we’re at the end of the ulong range
+
+            candidate = next;
+            task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
+          }
+
+#else
+
+          // Loop until overflow wraps you below 3
+          for (; candidate > 2; candidate += 2)
+            if (IsPrimeWithBufferAndBeyond(candidate))
+              yield return candidate;
+#endif
+
+        }
+
+#if SUPPORTS_ASYNC
+        bool IsPrimeWithBufferAndBeyondT(object state) => IsPrimeWithBufferAndBeyond((ulong)state);
+#endif
+
+        bool IsPrimeWithBufferAndBeyond(ulong candidate) {
+          // 1. Check divisibility with all primes in the buffer
+          // ReSharper disable once LoopCanBeConvertedToQuery
+          foreach (var prime in buffer)
+            if (candidate % prime == 0)
+              return false;
+
+          // 2. If none of the primes in the buffer divide the candidate, 
+          //    check divisibility with numbers (only odd ones) up to the square root of the candidate
+          var sqrtCandidate = (ulong)Math.Sqrt(candidate);
+          for (var i = buffer[^1] + 2; i <= sqrtCandidate; i += 2)
+            if (candidate % i == 0)
+              return false;
+
+          return true;
+        }
+      }
+    }
+  }
 
   /// <summary>
   /// Implements a bit-based sieve of Eratosthenes for odd numbers only,
@@ -2150,90 +2395,4 @@ public static partial class MathEx {
     }
   }
 
-  private static IEnumerable<ulong> _EnumeratePrimes() {
-#if COLOR_PRIME_GENERATION
-    Console.ForegroundColor = ConsoleColor.White;
-#endif
-    yield return 2;
-
-    var buffer = new ulong[128];
-    PrimeSieve sieve = new(buffer);
-    KnownPrimesStorage knownPrimes = new(buffer);
-
-#if COLOR_PRIME_GENERATION
-    Console.ForegroundColor = ConsoleColor.Cyan;
-#endif
-    foreach (var prime in sieve.Enumerate()) {
-      yield return prime;
-      knownPrimes.Add(prime);
-    }
-
-#if COLOR_PRIME_GENERATION
-    Console.ForegroundColor = ConsoleColor.Green;
-#endif
-    foreach (var prime in knownPrimes.Enumerate())
-      yield return prime;
-
-#if COLOR_PRIME_GENERATION
-    Console.ForegroundColor = ConsoleColor.Red;
-#endif
-    foreach (var prime in EnumerateSlowPrimesWithKnowns())
-      yield return prime;
-
-    IEnumerable<ulong> EnumerateSlowPrimesWithKnowns() {
-      var largestKnownPrime = buffer[^1];
-
-      // Start from the square of the last known prime plus 2 (to ensure it's odd)
-      var candidate = largestKnownPrime * largestKnownPrime + 2;
-
-#if SUPPORTS_ASYNC
-
-      var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
-      for (;;) {
-        task.Wait();
-        var isPrime = task.Result;
-
-        if (isPrime)
-          yield return candidate;
-
-        // Ensure we only check odd numbers
-        var next = candidate + 2;
-        if (next < candidate)
-          yield break;        // we’re at the end of the ulong range
-
-        candidate = next;
-        task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
-      }
-
-#else
-      
-      // Loop until overflow wraps you below 3
-      for (; candidate > 2; candidate += 2)
-        if (IsPrimeWithBufferAndBeyond(candidate))
-          yield return candidate;
-#endif
-
-    }
-
-#if SUPPORTS_ASYNC
-    bool IsPrimeWithBufferAndBeyondT(object state) => IsPrimeWithBufferAndBeyond((ulong)state);
-#endif
-
-    bool IsPrimeWithBufferAndBeyond(ulong candidate) {
-      // 1. Check divisibility with all primes in the buffer
-      // ReSharper disable once LoopCanBeConvertedToQuery
-      foreach (var prime in buffer)
-        if (candidate % prime == 0)
-          return false;
-
-      // 2. If none of the primes in the buffer divide the candidate, 
-      //    check divisibility with numbers (only odd ones) up to the square root of the candidate
-      var sqrtCandidate = (ulong)Math.Sqrt(candidate);
-      for (var i = buffer[^1] + 2; i <= sqrtCandidate; i += 2)
-        if (candidate % i == 0)
-          return false;
-
-      return true;
-    }
-  }
 }
