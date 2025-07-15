@@ -62,6 +62,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
   * [Unsafe](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafe)
+* System.Runtime.InteropServices
+  * [MemoryMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.memorymarshal)
 * System.Runtime.Intrinsics
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64)
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64-1)&lt;T&gt;

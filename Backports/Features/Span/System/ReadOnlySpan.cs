@@ -59,6 +59,9 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
 #pragma warning disable CS8500
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe ReadOnlySpan(void* pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)pointer), length) { }
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe ReadOnlySpan(ref T pointer, int length) : this(new SpanHelper.UnmanagedPointerMemoryHandler<T>((T*)Unsafe.AsPointer(ref pointer)), length) { }
 #pragma warning restore CS8500
 
   public int Length { get; }
