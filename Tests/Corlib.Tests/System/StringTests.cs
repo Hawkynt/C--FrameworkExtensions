@@ -72,16 +72,23 @@ public class StringTests {
     Type? Exception = null
   );
 
+  public readonly record struct SentenceSplitTestData(
+    string? Input,
+    CultureInfo? Culture,
+    string[] Expected,
+    Type? Exception = null
+  );
+
   private static IEnumerable<SplitParametersTestData> _TestSplitTestData() {
     yield return new(null, null, null, null, typeof(NullReferenceException));
-    yield return new(string.Empty, string.Empty, null, new[] { string.Empty });
-    yield return new("abc", null, null, new[] { "abc" });
-    yield return new("abc", string.Empty, null, new[] { "abc" });
-    yield return new("abc", "b", null, new[] { "a", "c" });
-    yield return new("abc", "d", null, new[] { "abc" });
-    yield return new("abcbdbe", "b", null, new[] { "a", "c", "d", "e" });
-    yield return new("abcbdbe", "b", 2, new[] { "a", "cbdbe" });
-    yield return new("abcbdbe", "b", 1, new[] { "abcbdbe" });
+    yield return new(string.Empty, string.Empty, null, [string.Empty]);
+    yield return new("abc", null, null, ["abc"]);
+    yield return new("abc", string.Empty, null, ["abc"]);
+    yield return new("abc", "b", null, ["a", "c"]);
+    yield return new("abc", "d", null, ["abc"]);
+    yield return new("abcbdbe", "b", null, ["a", "c", "d", "e"]);
+    yield return new("abcbdbe", "b", 2, ["a", "cbdbe"]);
+    yield return new("abcbdbe", "b", 1, ["abcbdbe"]);
   }
 
   private static IEnumerable<MultipleReplaceTestData> _TestMultipleReplaceTestData() {
@@ -237,6 +244,17 @@ public class StringTests {
     yield return new("test", 'C', StringComparer.CurrentCulture, false);
     yield return new("test", 'C', StringComparer.InvariantCulture, false);
     yield return new("test", 'C', StringComparer.Ordinal, false);
+  }
+
+  private static IEnumerable<SentenceSplitTestData> _TestSentenceSplit() {
+    yield return new("Hello world. How are you?", new("en"), ["Hello world.", "How are you?"]);
+    yield return new("Hi.Hello!No way?", new("en"), ["Hi.", "Hello!", "No way?"]);
+    yield return new("Dr. Smith said so. I agree.", new("en"), ["Dr. Smith said so.", "I agree."]);
+    yield return new("Hallo. Wie geht's dir? z.B. das ist so. Ja!", new("de"), ["Hallo.", "Wie geht's dir?", "z.B. das ist so.", "Ja!"]);
+    yield return new("...!What?No.Way!", new("en"), ["What?", "No.", "Way!"]);
+    yield return new(string.Empty, new("en"), []);
+    yield return new(null, new("en"), []);
+    yield return new("No culture", null, [], typeof(ArgumentNullException));
   }
 
   [Test]
@@ -1260,5 +1278,10 @@ public class StringTests {
   public void RemoveAtEnd(string? input, string? what, StringComparison comparison, string expected, Type? exception = null)
     => ExecuteTest(() => input.RemoveAtEnd(what, comparison), expected, exception)
   ;
+
+  [Test]
+  [TestCaseSource(nameof(_TestSentenceSplit))]
+  public void SentenceSplit(SentenceSplitTestData data)
+    => ExecuteTest(() => data.Input!.TextAnalysisFor(data.Culture!).Sentences, data.Expected, data.Exception);
 
 }

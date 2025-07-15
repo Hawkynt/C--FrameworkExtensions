@@ -65,6 +65,7 @@ public static partial class StringExtensions {
   /// <remarks>
   ///   This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ComputeHash<TAlgorithm>(this string @this) where TAlgorithm : HashAlgorithm, new() {
     using var hashAlgorithm = new TAlgorithm();
     return ComputeHash(@this, hashAlgorithm);
@@ -99,6 +100,7 @@ public static partial class StringExtensions {
   /// <remarks>
   ///   This method uses the UTF-8 encoding to convert the string to a byte array before computing the hash.
   /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ComputeHash(this string @this, HashAlgorithm hashAlgorithm) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(hashAlgorithm);
