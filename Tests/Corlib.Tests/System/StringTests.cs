@@ -1,9 +1,9 @@
-using System.Linq;
-using System.Threading;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
-using NUnit.Framework;
+using System.Threading;
 using static Corlib.Tests.NUnit.TestUtilities;
 using static System.StringExtensions;
 
@@ -251,10 +251,19 @@ public class StringTests {
     yield return new("Hi.Hello!No way?", new("en"), ["Hi.", "Hello!", "No way?"]);
     yield return new("Dr. Smith said so. I agree.", new("en"), ["Dr. Smith said so.", "I agree."]);
     yield return new("Hallo. Wie geht's dir? z.B. das ist so. Ja!", new("de"), ["Hallo.", "Wie geht's dir?", "z.B. das ist so.", "Ja!"]);
-    yield return new("...!What?No.Way!", new("en"), ["What?", "No.", "Way!"]);
+    yield return new("...!What?No.Way!", new("en"), ["...!","What?", "No.", "Way!"]);
     yield return new(string.Empty, new("en"), []);
     yield return new(null, new("en"), []);
     yield return new("No culture", null, [], typeof(ArgumentNullException));
+    yield return new("This sentence has no point", new("en"), ["This sentence has no point"]);
+    yield return new("This has point.", new("en"), ["This has point."]);
+    yield return new("These are two.Second.", new("en"), ["These are two.", "Second."]);
+    yield return new("These are two.second.", new("en"), ["These are two.", "second."]);
+    yield return new("These Also. Second.", new("en"), ["These Also.", "Second."]);
+    yield return new("This is one...", new("en"), ["This is one..."]);
+    yield return new("Those two... Second.", new("en"), ["Those two...", "Second."]);
+    yield return new("Those two, too...Second.", new("en"), ["Those two, too...", "Second."]);
+    yield return new("...!What ? Hey!        OK.", new("en"), ["...!", "What ?", "Hey!", "OK."]);
   }
 
   [Test]

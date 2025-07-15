@@ -45,6 +45,7 @@ partial class StringExtensions {
   /// Console.WriteLine($"Word Count: {analyzer.Words.Length}");
   /// </code>
   /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TextAnalyzer TextAnalysis(this string @this) => new(@this, CultureInfo.CurrentUICulture);
 
   /// <summary>
@@ -72,6 +73,7 @@ partial class StringExtensions {
   /// Console.WriteLine($"Syllables: {analyzer.CountSyllables()}");
   /// </code>
   /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static TextAnalyzer TextAnalysisFor(this string @this, CultureInfo culture) {
     Against.ArgumentIsNull(culture);
 
@@ -107,10 +109,10 @@ partial class StringExtensions {
       ["pt"] = _CountSyllablesRomance
     });
 
-    private static Dictionary<string, (string capitalLetters, string[] abbreviations)> _SentenceSplitterData => StaticMethodLocal<Dictionary<string, (string capitalLetters, string[] abbreviations)>>.GetOrAdd(() => new(StringComparer.OrdinalIgnoreCase) {
-      ["de"] = ("ABCDEFGHIJKLMNOPQRSTUVWXYZAÖÜß", ["z.B.", "u.A.", "d.h.", "bzw.", "sog.", "dr.", "prof."]),
-      ["en"] = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ", ["e.g.", "i.e.", "vs.", "mr.", "mrs.", "ms.", "dr.", "prof."]),
-      [string.Empty] = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ", null)
+    private static Dictionary<string, string[]> _Abbreviations => StaticMethodLocal<Dictionary<string, string[]>>.GetOrAdd(() => new(StringComparer.OrdinalIgnoreCase) {
+      ["de"] = ["z.B.", "u.A.", "d.h.", "bzw.", "sog.", "dr.", "prof.", "usw.", "vgl.", "Nr.", "ca.", "Hr.", "Fr.", "Abs.", "ggf.", "etc.", "i.d.R.", "i.A."],
+      ["en"] = ["e.g.", "i.e.", "vs.", "mr.", "mrs.", "ms.", "dr.", "prof.", "etc.", "cf.", "ca.", "est.", "p.m.", "a.m.", "Inc.", "Ltd.", "Co.", "Jr.", "Sr."],
+      [string.Empty] = null
     });
 
     internal readonly string text;
@@ -167,7 +169,10 @@ partial class StringExtensions {
     /// Console.WriteLine($"Unique words: {distinct.Count()}");
     /// </code>
     /// </example>
-    public IEnumerable<string> DistinctWords => this._distinctWords ??= new HashSet<string>(this.Words, StringComparer.Create(this.culture, ignoreCase: true));
+    public IEnumerable<string> DistinctWords {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => this._distinctWords ??= new HashSet<string>(this.Words, StringComparer.Create(this.culture, ignoreCase: true));
+    }
 
     private IDictionary<string, int> _wordHistogram;
 
@@ -194,6 +199,7 @@ partial class StringExtensions {
     /// </code>
     /// </example>
     public IDictionary<string, int> WordHistogram {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get {
         return this._wordHistogram ??= Invoke();
 
@@ -218,57 +224,42 @@ partial class StringExtensions {
     /// Get the meaningful sentences identified in the current text.
     /// Sentences must contain at least one word-like token (letters, numbers, apostrophes).
     /// </summary>
-
-    // TODO: The current regex-based sentence splitting fails to reliably handle abbreviations
-    // such as "Dr.", "z.B.", or malformed spacing (e.g. "Dr.Max said stuff.").
-    //
-    // Problem:
-    // - Negative lookbehinds for abbreviations are brittle, hard to scale, and limited by .NET's regex engine.
-    // - Regexes fail with overlapping tokens or mixed punctuation, e.g., "z.B. das ist so." or "Dr.Max".
-    // - Abbreviations without trailing whitespace or with unconventional casing break sentence detection.
-    //
-    // Proposed fix (pre/post-processing strategy):
-    // 1. Preprocess the input by replacing all known abbreviations (plus \0 characters) with unique tokens:
-    //    - Each abbreviation becomes a token like "\0N1\0", "\0N2\0", etc.
-    //    - The NUL character \0 is handled specially and always replaced with the fixed token "\0N0\0".
-    // 2. Build a trie (prefix tree) of all known abbreviations and \0:
-    //    - Traverse the input once (O(N)) and insert tokens using the trie matcher.
-    //    - Append unmatched characters and tokens directly to a preallocated StringBuilder.
-    // 3. Perform sentence splitting using simplified regex logic that no longer needs to consider abbreviations.
-    // 4. Postprocess the split segments by replacing all tokens back with their original values using a dictionary.
-    //
-    // Implementation details:
-    // - Use a trie node structure with child nodes and a terminal Abbreviation field.
-    // - Map each token "\0N{index}\0" to the matched abbreviation in a Dictionary<string, string>.
-    // - The fixed token "\0N0\0" is always reserved for \0 and stored in the same map.
-    // - The postprocessor replaces all tokens in one pass via the dictionary.
     public string[] Sentences {
       get {
         return this._sentences ??= this.text.IsNullOrWhiteSpace() ? [] : Invoke().ToArray();
 
         IEnumerable<string> Invoke() {
-          var (letters, abbreviations) = _SentenceSplitterData.TryGetValue(this.culture.TwoLetterISOLanguageName, out var splitter)
+          var abbreviations = _Abbreviations.TryGetValue(this.culture.TwoLetterISOLanguageName, out var splitter)
             ? splitter
-            : _SentenceSplitterData[string.Empty];
+            : _Abbreviations[string.Empty];
 
-          const string NullCode = @"\0";
+          const char TokenIdentifier = '\0';
+          var root = BuildTrie(this.culture, abbreviations, TokenIdentifier);
+          var tokenized = TokenizeAbbreviations(this.text, root, TokenIdentifier, out var tokenMap);
+          var raw = Split(tokenized, TokenIdentifier);
+          var result = raw.Select(sentence => sentence.MultipleReplace(tokenMap));
 
-          // build a trie of abbreviations
-          var root = new TrieNode();
-          if (abbreviations != null)
-            for (var i = 0; i < abbreviations.Length; ++i)
-              root.Insert(abbreviations[i], i + 1);
+          return result;
+        }
 
-          root.Insert(NullCode, 0);
+        static TrieNode BuildTrie(CultureInfo culture, string[] strings, char tokenIdentifier) {
+          var trieNode = new TrieNode(new(culture));
+          if (strings != null)
+            for (var i = 0; i < strings.Length; ++i)
+              trieNode.Insert(strings[i], i + 1);
 
-          // tokenize all abbreviations in one scan
-          var tokenMap = new Dictionary<string, string>();
-          var sb = new StringBuilder(this.text.Length);
-          for (var i = 0; i < this.text.Length;) {
+          trieNode.Insert(tokenIdentifier.ToString(), 0);
+          return trieNode;
+        }
+
+        static string TokenizeAbbreviations(string text, TrieNode root, char tokenIdentifier, out Dictionary<string, string> tokenMap) {
+          tokenMap = new();
+          var sb = new StringBuilder(text.Length);
+          for (var i = 0; i < text.Length;) {
             var node = root;
             int matchLen = 0, matchId = 0, j = i;
             // walk as far as we can
-            while (j < this.text.Length && node.Children.TryGetValue(this.text[j], out var next)) {
+            while (j < text.Length && node.Children.TryGetValue(text[j], out var next)) {
               node = next;
               ++j;
               if (node.TokenId <= 0)
@@ -279,53 +270,89 @@ partial class StringExtensions {
             }
 
             if (matchLen > 0) {
-              var token = $"{NullCode}N{matchId}{NullCode}";
-              tokenMap[token] = this.text.Substring(i, matchLen);
+              var token = $"{tokenIdentifier}N{matchId}{tokenIdentifier}";
+              tokenMap[token] = text.Substring(i, matchLen);
               sb.Append(token);
               i += matchLen;
             } else {
-              sb.Append(this.text[i]);
+              sb.Append(text[i]);
               ++i;
             }
           }
 
-          // simple split on end‐of‐sentence punctuation + maybe whitespace + letter (capital or not)/replacement
-          var pattern = $@"(?<=[\.!\?])\s*";
-          var raw = Regex.Split(sb.ToString(), pattern, RegexOptions.IgnoreCase);
-
-          // restore abbreviations, trim & filter
-          var result = raw
-            .Select(segment => tokenMap.Aggregate(segment, (current, kv) => current.Replace(kv.Key, kv.Value)).Trim())
-            .Where(s => s.Length > 0 && _SPLIT_WORDS.IsMatch(s))
-            ;
-
-          return result;
+          return sb.ToString();
         }
 
+        static IEnumerable<string> Split(string text, char tokenIdentifier) {
+          var start = 0;
+          var i = 0;
+          var len = text.Length;
+
+          while (i < len) {
+            var c = text[i];
+
+            if (IsTerminator(c)) {
+
+              // step forward through any consecutive terminators
+              while (i + 1 < len && IsTerminator(text[i + 1]))
+                ++i;
+
+              // step forward through whitespace
+              var sentenceEnd = i + 1;
+              while (sentenceEnd < len && char.IsWhiteSpace(text[sentenceEnd]))
+                ++sentenceEnd;
+
+              // if next char is likely a sentence start (letter or digit), split here
+              if (sentenceEnd >= len || text[sentenceEnd] == tokenIdentifier || char.IsLetterOrDigit(text[sentenceEnd])) {
+                var sentence = text[start..sentenceEnd].Trim();
+                if (sentence.Length > 0)
+                  yield return sentence;
+
+                start = sentenceEnd;
+                i = sentenceEnd;
+                continue;
+              }
+            }
+
+            ++i;
+          }
+
+          // yield remainder if any
+          if (start < len) {
+            var tail = text[start..].Trim();
+            if (tail.Length > 0)
+              yield return tail;
+          }
+
+          yield break;
+
+          [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+          static bool IsTerminator(char chr) => chr is '.' or '!' or '?';
+        }
       }
     }
 
-    private sealed class CharIgnoreCaseComparer : IEqualityComparer<char> {
-      public static readonly CharIgnoreCaseComparer Instance = new();
-
+    private sealed class CharIgnoreCaseComparer(CultureInfo culture) : IEqualityComparer<char> {
+      
       public bool Equals(char x, char y) => 
-        char.ToUpper(x) == char.ToUpper(y)
-        || char.ToLower(x) == char.ToLower(y)
+        x == y 
+        || char.ToUpper(x, culture) == char.ToUpper(y, culture)
+        || char.ToLower(x, culture) == char.ToLower(y, culture)
         ;
 
-      public int GetHashCode(char c) => char.ToUpperInvariant(c).GetHashCode();
+      public int GetHashCode(char c) => char.ToUpper(c, culture).GetHashCode();
 
     }
 
-    private sealed class TrieNode {
+    private sealed class TrieNode(CharIgnoreCaseComparer comparer) {
       public int TokenId;
-      public readonly Dictionary<char, TrieNode> Children = new(CharIgnoreCaseComparer.Instance);
+      public readonly Dictionary<char, TrieNode> Children = new(comparer);
 
       public void Insert(string abbr, int id) {
         var node = this;
         foreach (var c in abbr) {
           if (!node.Children.TryGetValue(c, out var next)) {
-            next = new();
+            next = new(comparer);
             node.Children[c] = next;
           }
 
