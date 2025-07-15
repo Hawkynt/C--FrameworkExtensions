@@ -28,6 +28,9 @@ public static partial class StreamPolyfills {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
 
+    if (buffer.IsEmpty)
+      return 0;
+
     var size = buffer.Length;
     byte[] token = null;
     try {
@@ -45,6 +48,9 @@ public static partial class StreamPolyfills {
   public static void Write(this Stream @this, ReadOnlySpan<byte> buffer) {
     if (@this == null)
       AlwaysThrow.NullReferenceException(nameof(@this));
+
+    if (buffer.IsEmpty)
+      return;
 
     const int MaxChunkSize = 1024 * 1024; // 1MB
     byte[] rented = null;
