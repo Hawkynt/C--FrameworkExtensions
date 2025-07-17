@@ -208,6 +208,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * IEnumerable&lt;TItem&gt; [Prepend](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.prepend)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
   * IEnumerable&lt;TItem&gt; [Append](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.append)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
   * bool [TryGetNonEnumeratedCount](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.trygetnonenumeratedcount)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; source, out int count)
+  * IEnumerable&lt;TItem&gt; [Zip](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.zip#system-linq-enumerable-zip-3%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-ienumerable%28%28-1%29%29-system-func%28%28-0-1-2%29%29%29)&lt;TFirst, TSecond, TResult&gt;(IEnumerable&lt;TFirst&gt; @this, IEnumerable&lt;TSecond&gt; second, Func&lt;TFirst, TSecond, TResult&gt; resultSelector)
 * System.Random
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64%29)(this Random @this, long maxValue)
