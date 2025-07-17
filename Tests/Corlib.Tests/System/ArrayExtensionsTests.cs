@@ -48,18 +48,6 @@ public class ArrayTests {
   [Test]
   [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
-  [TestCase(2)]
-  [TestCase(4)]
-  [TestCase(8)]
-  [TestCase(16)]
-  [TestCase(32)]
-  [TestCase(64)]
-  [TestCase(128)]
-  [TestCase(256)]
-  [TestCase(512)]
-  [TestCase(1024)]
-  [TestCase(2048)]
-  [TestCase(4096)]
   [TestCase(8192)]
   public void Not_Test(int size, Type? exception = null) {
     var inout = new byte[size];
@@ -73,18 +61,6 @@ public class ArrayTests {
   [Test]
   [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
-  [TestCase(2)]
-  [TestCase(4)]
-  [TestCase(8)]
-  [TestCase(16)]
-  [TestCase(32)]
-  [TestCase(64)]
-  [TestCase(128)]
-  [TestCase(256)]
-  [TestCase(512)]
-  [TestCase(1024)]
-  [TestCase(2048)]
-  [TestCase(4096)]
   [TestCase(8192)]
   public void And_Test(int size, Type? exception = null) {
     var inout = new byte[size];
@@ -102,18 +78,23 @@ public class ArrayTests {
   [Test]
   [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
-  [TestCase(2)]
-  [TestCase(4)]
-  [TestCase(8)]
-  [TestCase(16)]
-  [TestCase(32)]
-  [TestCase(64)]
-  [TestCase(128)]
-  [TestCase(256)]
-  [TestCase(512)]
-  [TestCase(1024)]
-  [TestCase(2048)]
-  [TestCase(4096)]
+  [TestCase(8192)]
+  public void Nand_Test(int size, Type? exception = null) {
+    var inout = new byte[size];
+    var operand = new byte[size];
+    var expected = new byte[size];
+    for (var i = 0; i < inout.Length; ++i) {
+      inout[i] = (byte)i;
+      operand[i] = (byte)~i;
+      expected[i] = (byte)~(inout[i] & operand[i]);
+    }
+
+    ExecuteTest(() => inout.Nand(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
+  }
+
+  [Test]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
+  [TestCase(1)]
   [TestCase(8192)]
   public void Or_Test(int size, Type? exception = null) {
     var inout = new byte[size];
@@ -131,18 +112,23 @@ public class ArrayTests {
   [Test]
   [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
-  [TestCase(2)]
-  [TestCase(4)]
-  [TestCase(8)]
-  [TestCase(16)]
-  [TestCase(32)]
-  [TestCase(64)]
-  [TestCase(128)]
-  [TestCase(256)]
-  [TestCase(512)]
-  [TestCase(1024)]
-  [TestCase(2048)]
-  [TestCase(4096)]
+  [TestCase(8192)]
+  public void Nor_Test(int size, Type? exception = null) {
+    var inout = new byte[size];
+    var operand = new byte[size];
+    var expected = new byte[size];
+    for (var i = 0; i < inout.Length; ++i) {
+      inout[i] = (byte)i;
+      operand[i] = (byte)~i;
+      expected[i] = (byte)~(inout[i] | operand[i]);
+    }
+
+    ExecuteTest(() => inout.Nor(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
+  }
+
+  [Test]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
+  [TestCase(1)]
   [TestCase(8192)]
   public void Xor_Test(int size, Type? exception = null) {
     var inout = new byte[size];
@@ -157,6 +143,23 @@ public class ArrayTests {
     ExecuteTest(() => inout.Xor(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
   }
 
+  [Test]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
+  [TestCase(1)]
+  [TestCase(8192)]
+  public void Equ_Test(int size, Type? exception = null) {
+    var inout = new byte[size];
+    var operand = new byte[size];
+    var expected = new byte[size];
+    for (var i = 0; i < inout.Length; ++i) {
+      inout[i] = (byte)i;
+      operand[i] = (byte)~i;
+      expected[i] = (byte)~(inout[i] ^ operand[i]);
+    }
+
+    ExecuteTest(() => inout.Equ(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
+  }
+  
   [Test]
   [TestCase(0)]
   [TestCase(1)]

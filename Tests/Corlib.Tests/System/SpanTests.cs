@@ -350,6 +350,115 @@ internal class SpanTests {
     Assert.That(source.SequenceEqual(target), Is.False);
   }
 
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void And_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)(x & y)).ToArray();
 
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).And(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().And(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Or_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)(x | y)).ToArray();
+
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Or(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Or(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Xor_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)(x ^ y)).ToArray();
+
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Xor(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Xor(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Nand_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)~(x & y)).ToArray();
+
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Nand(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Nand(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Nor_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)~(x | y)).ToArray();
+
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Nor(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Nor(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Equ_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var o = a.Select(i => (byte)~i).ToArray();
+    var expected = a.Zip(o, (x, y) => (byte)~(x ^ y)).ToArray();
+
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Equ(o, t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Equ(o);
+    Assert.That(a.SequenceEqual(expected));
+  }
+
+  [Test]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
+  public void Not_ShouldWorkAsExpected(int length) {
+    var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
+    var expected = a.Select(i => (byte)~i).ToArray();
+    
+    var t = new byte[length];
+
+    ((ReadOnlySpan<byte>)a.AsSpan()).Not(t);
+    Assert.That(t.SequenceEqual(expected));
+
+    a.AsSpan().Not();
+    Assert.That(a.SequenceEqual(expected));
+  }
 }
 
