@@ -148,7 +148,10 @@ public readonly ref struct Span<T> : IEnumerable<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static implicit operator ReadOnlySpan<T>(Span<T> @this) => new(@this.memoryHandler, @this.Length);
-  
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator Span<T>(T[] @this) => new(@this);
+
 }
 
 #endif
