@@ -17,6 +17,13 @@
 namespace Utilities;
 
 internal static unsafe class Runtime {
+
+#if PLATFORM_X86
+  public static readonly bool Is64BitArchitecture = false;
+#elif PLATFORM_X64
+  public static readonly bool Is64BitArchitecture = true;
+#else
   public static readonly bool Is64BitArchitecture = sizeof(nint) == 8;
+#endif
 
 }

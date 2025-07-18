@@ -1,4 +1,4 @@
-<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -28,6 +28,8 @@
 
   const int MAX_REGISTER_USAGE = 8;
   int MAX_BYTES_PER_LOOP;
+  RegisterType CURRENT_REGISTER_TYPE;
+  int CURRENT_REGISTER_SIZE;
 #>
 #region (c)2010-2042 Hawkynt
 
@@ -92,6 +94,93 @@ public static partial class SpanExtensions {
       _Unmanaged<#=name#>(targetPin, sourcePin, operandPin, (uint)@this.Length);
   }
   
+  // TODO:
+  // Optimize scalar tail and bulk vector copy logic using unrolled fall-through blocks and hardware acceleration:
+  //
+  // 1. **Scalar Tail Handling (≤ MAX_REGISTER_USAGE * sizeof(uint[for 32-bit compiles]/ulong))**
+  //    Generate a switch with `goto`-based fall-through labels to handle small `count` values without vector usage:
+  //      switch (count) {
+  //          case 0: goto End;
+  //          ...
+  //          case 15: goto Do15Bytes;
+  //          ...
+  //      }
+  //      Do17Bytes: *(target + 16) = *(target + 16) <op> *(operand + 16);
+  //      Do16Bytes: {
+  //        var r0 = *(ulong*)target;
+  //        var r1 = *(ulong*)(target + 8);
+  //        r0 = r0 <op> *(ulong*)operand;
+  //        r1 = r1 <op> *(ulong*)(operand + 8);
+  //        *(ulong*)target = r0;
+  //        *(ulong*)(target + 8) = r1;
+  //        goto End;
+  //      }
+  //      Do15Bytes: *(target + 14) = *(target + 14) <op> *(operand + 14);
+  //      Do14Bytes: *(ushort*)(target + 12) = ...
+  //      Do12Bytes: {
+  //        var r0 = *(ulong*)target;
+  //        var e0 = *(uint*)(target + 8);
+  //        r0 = r0 <op> *(ulong*)operand;
+  //        e0 = e0 <op> *(uint*)(operand + 8);
+  //        *(ulong*)target = r0;
+  //        *(uint*)(target + 8) = e0;
+  //        goto End;
+  //      }
+  //      Do11Bytes: *(target + 10) = *(target + 10) <op> *(operand + 10);
+  //      Do10Bytes: {
+  //        var r0 = *(ulong*)target;
+  //        var d0 = *(ushort*)(target + 8);
+  //        r0 = r0 <op> *(ulong*)operand;
+  //        d0 = (ushort)(d0 <op> *(ushort*)(operand + 8));
+  //        *(ulong*)target = r0;
+  //        *(ushort*)(target + 8) = d0;
+  //        goto End;
+  //      }
+  //      ...
+  //      Do1Bytes:  *(byte*)target = ...
+  //      goto End;
+  //
+  //    - Avoid chained jumps (`goto DoX`) — use flat fall-through layout for straight-line execution.
+  //    - Do not use vector types in this section to avoid `vzeroupper`, alignment code, or register spills.
+  //    - Optimize register usage
+  //    - Generate with T4 using `MAX_REGISTER_USAGE` to control unroll depth and widening access patterns.
+  //
+  // 2. **Vectorized Bulk Copy with Unrolled Fallthrough Blocks**
+  //    For count > MAX_REGISTER_USAGE * RegisterSize, emit a separate method for bulk processing using `VectorXXX<T>`.
+  //
+  //    - Use `Vector512.IsHardwareAccelerated`, `Vector256.IsHardwareAccelerated`, etc. as static feature checks.
+  //    - For each width (512, 256, 128), do:
+  //        a) Calculate: `int n = count / RegisterSize`
+  //        b) Dispatch into unrolled copy block using: `switch (n % MAX_REGISTER_USAGE)`
+  //            case 7: goto Do7_Vector512; ...
+  //            case 0: goto Do8_Vector512_Or0;
+  //
+  //        c) Emit unrolled labels:
+  //            Do8_Vector512_Or0:
+  //              Copy block 0
+  //            Do7_Vector512:
+  //              Copy block 1
+  //            ...
+  //            Do1_Vector512:
+  //              Copy block 7
+  //              if (count >= RegisterSize) goto Do8_Vector512_Or0;
+  //
+  //        d) Each label does:
+  //            - Vector load from `sourcePointer + offset`
+  //            - Operation (e.g., `OnesComplement`)
+  //            - Vector store to `targetPointer + offset`
+  //            - Advance pointers and reduce count by RegisterSize
+  //
+  //    - Repeat same structure for 256-bit and 128-bit widths.
+  //    - After this, fall back to scalar tail handling for the remainder.
+  //
+  // 3. **T4 Codegen Notes**
+  //    - Use `MAX_REGISTER_USAGE` to control how many fallthrough labels to emit for both scalar and vector paths.
+  //    - Generate fall-through labels in reverse (e.g. Do8 down to Do1) to keep structure flat.
+  //    - The shared fallthrough blocks handle both:
+  //        a) partial vector blocks (`n % MAX_REGISTER_USAGE`)
+  //        b) repeated blocks (loop via `goto Do8_...`)
+
 
 #if PLATFORM_X86
 
@@ -104,25 +193,9 @@ public static partial class SpanExtensions {
    for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
      GenerateCase(i, math, true, "targetPointer", "operandPointer");
 #>
-
-        default: {
-          var blocks = count / <#=MAX_BYTES_PER_LOOP#>;
-          count %= <#=MAX_BYTES_PER_LOOP#>;
-          do {
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            var r<#=i#> = ((uint*)targetPointer)[<#=i#>];
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            r<#=i#> = <#=math.Replace("*s", $"r{i}").Replace("*o", $"((uint*)operandPointer)[{i}]")#>;
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            ((uint*)targetPointer)[<#=i#>] = r<#=i#>;
-<# } #>
-            targetPointer += <#=MAX_BYTES_PER_LOOP#>;
-            operandPointer += <#=MAX_BYTES_PER_LOOP#>;
-          } while (--blocks > 0);
+        default:
+          _Unmanaged<#=name#>Bulk(ref targetPointer, ref operandPointer, ref count);
           continue;
-        } // default
       } // switch
     // for
     Exit:
@@ -137,26 +210,9 @@ public static partial class SpanExtensions {
    for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
      GenerateCase(i, math, true, "sourcePointer", "operandPointer", "targetPointer");
 #>
-
-        default: {
-          var blocks = count / <#=MAX_BYTES_PER_LOOP#>;
-          count %= <#=MAX_BYTES_PER_LOOP#>;
-          do {
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            var r<#=i#> = ((uint*)sourcePointer)[<#=i#>];
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            r<#=i#> = <#=math.Replace("*s", $"r{i}").Replace("*o", $"((uint*)operandPointer)[{i}]")#>;
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            ((uint*)targetPointer)[<#=i#>] = r<#=i#>;
-<# } #>
-            sourcePointer += <#=MAX_BYTES_PER_LOOP#>;            
-            targetPointer += <#=MAX_BYTES_PER_LOOP#>;
-            operandPointer += <#=MAX_BYTES_PER_LOOP#>;
-          } while (--blocks > 0);
+         default:
+          _Unmanaged<#=name#>Bulk(ref targetPointer, ref sourcePointer, ref operandPointer, ref count);
           continue;
-        } // default
       } // switch
     // for
     Exit:
@@ -174,25 +230,9 @@ public static partial class SpanExtensions {
    for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
      GenerateCase(i, math, false, "targetPointer", "operandPointer");
 #>
-
-        default: {
-          var blocks = count / <#=MAX_BYTES_PER_LOOP#>;
-          count %= <#=MAX_BYTES_PER_LOOP#>;
-          do {
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            var r<#=i#> = ((ulong*)targetPointer)[<#=i#>];
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            r<#=i#> = <#=math.Replace("*s", $"r{i}").Replace("*o", $"((ulong*)operandPointer)[{i}]")#>;
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            ((ulong*)targetPointer)[<#=i#>] = r<#=i#>;
-<# } #>
-            targetPointer += <#=MAX_BYTES_PER_LOOP#>;
-            operandPointer += <#=MAX_BYTES_PER_LOOP#>;
-          } while (--blocks > 0);
+        default:
+          _Unmanaged<#=name#>Bulk(ref targetPointer, ref operandPointer, ref count);
           continue;
-        } // default
       } // switch
     // for
     Exit:
@@ -207,26 +247,9 @@ public static partial class SpanExtensions {
    for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
      GenerateCase(i, math, false, "sourcePointer", "operandPointer", "targetPointer");
 #>
-
-        default: {
-          var blocks = count / <#=MAX_BYTES_PER_LOOP#>;
-          count %= <#=MAX_BYTES_PER_LOOP#>;
-          do {
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            var r<#=i#> = ((ulong*)sourcePointer)[<#=i#>];
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            r<#=i#> = <#=math.Replace("*s", $"r{i}").Replace("*o", $"((ulong*)operandPointer)[{i}]")#>;
-<# } #>
-<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
-            ((ulong*)targetPointer)[<#=i#>] = r<#=i#>;
-<# } #>
-            sourcePointer += <#=MAX_BYTES_PER_LOOP#>;
-            targetPointer += <#=MAX_BYTES_PER_LOOP#>;
-            operandPointer += <#=MAX_BYTES_PER_LOOP#>;
-          } while (--blocks > 0);
+        default:
+          _Unmanaged<#=name#>Bulk(ref targetPointer, ref sourcePointer, ref operandPointer, ref count);
           continue;
-        } // default
       } // switch
     // for
     Exit:
@@ -234,6 +257,188 @@ public static partial class SpanExtensions {
   }
 
 #endif
+
+  private static unsafe void _Unmanaged<#=name#>Bulk(ref byte* targetPointer, ref byte* operandPointer, ref uint count) {
+<# CURRENT_REGISTER_TYPE = RegisterType.QWord; #>
+<# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
+    while (Utilities.Runtime.Is64BitArchitecture && count >= <#=CURRENT_REGISTER_SIZE#>) {
+      var iterationsLeft = (count / <#=CURRENT_REGISTER_SIZE#> /* register size: <#=(CURRENT_REGISTER_SIZE * 8)#> bits */) % <#=MAX_REGISTER_USAGE#>;
+      var bytesProcessedDuringIteration = iterationsLeft * <#=CURRENT_REGISTER_SIZE#>;
+      switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+        case <#=i#>: goto Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+<# } #>
+      }
+
+      Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit:
+<# MAX_BYTES_PER_LOOP = MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE; #>
+      var blockCount = count / <#=MAX_BYTES_PER_LOOP#>;
+      count %= <#=MAX_BYTES_PER_LOOP#>;
+      do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        var <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#>;
+<# } #>
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
+<# } #>
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
+<# } #>
+        targetPointer += <#=MAX_BYTES_PER_LOOP#>;
+      } while (--blockCount > 0);
+      break;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+      Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit: <#=EmitOperation(CURRENT_REGISTER_TYPE, math, "targetPointer", "operandPointer", offset: (i - 1) * CURRENT_REGISTER_SIZE)#>
+<# } #>
+      targetPointer += bytesProcessedDuringIteration;
+      operandPointer += bytesProcessedDuringIteration;
+      count -= bytesProcessedDuringIteration;
+      if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
+        break;
+      
+      goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+    }
+    
+<# CURRENT_REGISTER_TYPE = RegisterType.DWord; #>
+<# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
+    while (count >= <#=CURRENT_REGISTER_SIZE#>) {
+      var iterationsLeft = (count / <#=CURRENT_REGISTER_SIZE#> /* register size: <#=(CURRENT_REGISTER_SIZE * 8)#> bits */) % <#=MAX_REGISTER_USAGE#>;
+      var bytesProcessedDuringIteration = iterationsLeft * <#=CURRENT_REGISTER_SIZE#>;
+      switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+        case <#=i#>: goto Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+<# } #>
+      }
+
+      Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit:
+<# MAX_BYTES_PER_LOOP = MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE; #>
+      var blockCount = count / <#=MAX_BYTES_PER_LOOP#>;
+      count %= <#=MAX_BYTES_PER_LOOP#>;
+      do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        var <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#>;
+<# } #>
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
+<# } #>
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
+<# } #>
+        targetPointer += <#=MAX_BYTES_PER_LOOP#>;
+      } while (--blockCount > 0);
+      break;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+      Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit: <#=EmitOperation(CURRENT_REGISTER_TYPE, math, "targetPointer", "operandPointer", offset: (i - 1) * CURRENT_REGISTER_SIZE)#>
+<# } #>
+      targetPointer += bytesProcessedDuringIteration;
+      operandPointer += bytesProcessedDuringIteration;
+      count -= bytesProcessedDuringIteration;
+      if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
+        break;
+      
+      goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+    }
+        
+    End:
+      return;
+  }
+
+  private static unsafe void _Unmanaged<#=name#>Bulk(ref byte* targetPointer, ref byte* sourcePointer, ref byte* operandPointer, ref uint count) {
+<# CURRENT_REGISTER_TYPE = RegisterType.QWord; #>
+<# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
+    while (Utilities.Runtime.Is64BitArchitecture && count >= <#=CURRENT_REGISTER_SIZE#>) {
+      var iterationsLeft = (count / <#=CURRENT_REGISTER_SIZE#> /* register size: <#=(CURRENT_REGISTER_SIZE * 8)#> bits */) % <#=MAX_REGISTER_USAGE#>;
+      var bytesProcessedDuringIteration = iterationsLeft * <#=CURRENT_REGISTER_SIZE#>;
+      switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+        case <#=i#>: goto Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+<# } #>
+      }
+
+      Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit:
+<# MAX_BYTES_PER_LOOP = MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE; #>
+      var blockCount = count / <#=MAX_BYTES_PER_LOOP#>;
+      count %= <#=MAX_BYTES_PER_LOOP#>;
+      do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        var <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=ReadMemory(CURRENT_REGISTER_TYPE, "sourcePointer", (i * CURRENT_REGISTER_SIZE))#>;
+<# } #>
+        sourcePointer += <#=MAX_BYTES_PER_LOOP#>;
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
+<# } #>
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
+<# } #>
+        targetPointer += <#=MAX_BYTES_PER_LOOP#>;
+      } while (--blockCount > 0);
+      break;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+      Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit: <#=EmitOperation(CURRENT_REGISTER_TYPE, math, "sourcePointer", "operandPointer", "targetPointer", offset: (i - 1) * CURRENT_REGISTER_SIZE)#>
+<# } #>
+      sourcePointer += bytesProcessedDuringIteration;
+      operandPointer += bytesProcessedDuringIteration;
+      targetPointer += bytesProcessedDuringIteration;
+      count -= bytesProcessedDuringIteration;
+      if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
+        break;
+      
+      goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+    }
+    
+<# CURRENT_REGISTER_TYPE = RegisterType.DWord; #>
+<# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
+    while (count >= <#=CURRENT_REGISTER_SIZE#>) {
+      var iterationsLeft = (count / <#=CURRENT_REGISTER_SIZE#> /* register size: <#=(CURRENT_REGISTER_SIZE * 8)#> bits */) % <#=MAX_REGISTER_USAGE#>;
+      var bytesProcessedDuringIteration = iterationsLeft * <#=CURRENT_REGISTER_SIZE#>;
+      switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+        case <#=i#>: goto Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+<# } #>
+      }
+
+      Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit:
+<# MAX_BYTES_PER_LOOP = MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE; #>
+      var blockCount = count / <#=MAX_BYTES_PER_LOOP#>;
+      count %= <#=MAX_BYTES_PER_LOOP#>;
+      do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        var <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=ReadMemory(CURRENT_REGISTER_TYPE, "sourcePointer", (i * CURRENT_REGISTER_SIZE))#>;
+<# } #>
+        sourcePointer += <#=MAX_BYTES_PER_LOOP#>; 
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
+<# } #>
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+        <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
+<# } #>
+        targetPointer += <#=MAX_BYTES_PER_LOOP#>;
+      } while (--blockCount > 0);
+      break;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+      Do<#=i#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit: <#=EmitOperation(CURRENT_REGISTER_TYPE, math, "sourcePointer", "operandPointer", "targetPointer", offset: (i - 1) * CURRENT_REGISTER_SIZE)#>
+<# } #>
+      sourcePointer += bytesProcessedDuringIteration;
+      operandPointer += bytesProcessedDuringIteration;
+      targetPointer += bytesProcessedDuringIteration;
+      count -= bytesProcessedDuringIteration;
+      if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
+        break;
+      
+      goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
+    }
+        
+    End:
+      return;
+  }
 
 <# } #>
 
@@ -269,21 +474,64 @@ public static partial class SpanExtensions {
 }
 
 <#+
-  string EmitOperation<T>(string operation, string sName, string oName, string tName = null, int offset = 0, bool needsCast = false) {
-    
-    var typeName = 
-      typeof(T)  == typeof(byte) ? "byte" :
-      typeof(T)  == typeof(ushort) ? "ushort" :
-      typeof(T)  == typeof(uint) ? "uint" :
-      typeof(T)  == typeof(ulong) ? "ulong" :
-      throw new NotSupportedException()
-      ;
+  private enum RegisterType {
+    Byte,
+    Word,
+    DWord,
+    QWord,
+    DQWord,
+    QQWord,
+    DQQWord,
+  }
 
+  string GetRegisterPrefix(RegisterType type) => type switch {
+    RegisterType.Byte => "b",
+    RegisterType.Word => "x",
+    RegisterType.DWord => "e",
+    RegisterType.QWord => "r",
+    RegisterType.DQWord => "xmm",
+    RegisterType.QQWord => "ymm",
+    RegisterType.DQQWord => "zmm",
+    _ => throw new NotSupportedException()
+  };
+
+  string GetTypeByRegister(RegisterType type) => type switch {
+    RegisterType.Byte => "byte",
+    RegisterType.Word => "ushort",
+    RegisterType.DWord => "uint",
+    RegisterType.QWord => "ulong",
+    RegisterType.DQWord => "Vector128<byte>",
+    RegisterType.QQWord => "Vector256<byte>",
+    RegisterType.DQQWord => "Vector512<byte>",
+    _ => throw new NotSupportedException()
+  };
+
+  int GetRegisterSizeInBytes(RegisterType type) => type switch {
+    RegisterType.Byte => 1,
+    RegisterType.Word => 2,
+    RegisterType.DWord => 4,
+    RegisterType.QWord => 8,
+    RegisterType.DQWord => 16,
+    RegisterType.QQWord => 32,
+    RegisterType.DQQWord => 64,
+    _ => throw new NotSupportedException()
+  };
+
+  string ReadMemory(RegisterType type, string name, int offsetInBytes = 0) {
+    if (offsetInBytes == 0)
+      return type == RegisterType.Byte ? $"*{name}" : $"*({GetTypeByRegister(type)}*){name}";
+
+    var size = GetRegisterSizeInBytes(type);
+    if (offsetInBytes % size == 0)
+      return type == RegisterType.Byte ? $"{name}[{offsetInBytes}]" : $"(({GetTypeByRegister(type)}*){name})[{(offsetInBytes / size)}]";
+
+    return $"*({GetTypeByRegister(type)}*)({name} + {offsetInBytes})";
+  }
+
+  string EmitOperation(RegisterType type, string operation, string sName, string oName, string tName = null, int offset = 0, bool needsCast = false) {
     tName ??= sName;
-    var pointerCast = typeof(T)  == typeof(byte) ? string.Empty : $"({typeName}*)";
-    string MakeAdress(string pName, int offset) => offset == 0 ? pName : $"({pName} + {offset})";
 
-    return $"*{pointerCast}{MakeAdress(tName, offset)} = {(needsCast ? $"({typeName})(" : string.Empty)}{operation.Replace("*s", $"*{pointerCast}{MakeAdress(sName, offset)}").Replace("*o",$"*{pointerCast}{MakeAdress(oName, offset)}")}{(needsCast ? ")" : string.Empty)};";
+    return $"{ReadMemory(type, tName, offset)} = {(needsCast ? $"({GetTypeByRegister(type)})(" : string.Empty)}{operation.Replace("*s", ReadMemory(type, sName, offset)).Replace("*o",ReadMemory(type, oName, offset))}{(needsCast ? ")" : string.Empty)};";
   }
 
   void GenerateCase(int numberOfBytes, string operation, bool force32Bit, string sName, string oName, string tName = null) {
@@ -294,7 +542,7 @@ public static partial class SpanExtensions {
     if (!force32Bit) 
       while(numberOfBytes >= 8) {
 #>
-          <#=EmitOperation<ulong>(operation, sName, oName, tName, offset)#>
+          <#=EmitOperation(RegisterType.QWord, operation, sName, oName, tName, offset)#>
 <#+
         offset += 8;
         numberOfBytes -= 8;
@@ -302,7 +550,7 @@ public static partial class SpanExtensions {
 
     while(numberOfBytes >= 4) {
 #>
-          <#=EmitOperation<uint>(operation, sName, oName, tName, offset)#>
+          <#=EmitOperation(RegisterType.DWord, operation, sName, oName, tName, offset)#>
 <#+
       offset += 4;
       numberOfBytes -= 4;
@@ -310,7 +558,7 @@ public static partial class SpanExtensions {
 
     while(numberOfBytes >= 2) {
 #>
-          <#=EmitOperation<ushort>(operation, sName, oName, tName, offset, true)#>
+          <#=EmitOperation(RegisterType.Word, operation, sName, oName, tName, offset, true)#>
 <#+
       offset += 2;
       numberOfBytes -= 2;
@@ -318,7 +566,7 @@ public static partial class SpanExtensions {
     
     for(; numberOfBytes > 0; ++offset, --numberOfBytes) {
 #>
-          <#=EmitOperation<byte>(operation, sName, oName, tName, offset, true)#>
+          <#=EmitOperation(RegisterType.Byte, operation, sName, oName, tName, offset, true)#>
 <#+
     }
    

@@ -42,6 +42,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Backports\Utilities\Runtime.cs" Link="Utilities\Runtime.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Condition="$(IsNetCore) OR $(IsNetStandard)" Include="System.Reflection.Emit.Lightweight" Version="*" />
     <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
     <ProjectReference Include="..\Backports\Backports.csproj" />
