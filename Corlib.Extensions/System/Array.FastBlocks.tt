@@ -31,8 +31,6 @@
   const int INDEX_LOOP_UNROLL       = 8;               // ldc.i4 8 is the highest opcode available for index operations
   const int BYTE_COUNT_POINTER      = 1 * 1024 * 1024; // we'll use pointer pinning and block-copies when this many bytes need to be copied
   const int ELEMENT_COUNT_BLOCK     = 256;             // we'll use Array.Copy or Buffer.BlockCopy when more than this many elements are present
-  const int UNSAFE_NOT_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe not
-  const int UNSAFE_AND_SWITCH_COUNT = 16;              // what number of bytes to unroll in unsafe and/xor/or
     
   List<TypeData> typeDatas = new();
   typeDatas.Add(new TypeData{ name = "sbyte"  , size = 1, useBlockCopyInsteadOfArrayCopy = true, allowByteConversion = true});
@@ -558,14 +556,6 @@ public static partial class ArrayExtensions {
         
   #endregion
 
-  <#=string.Join("\n  ", EmitProcessor("Xor", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitXorBytes, EmitXorBytes86))#>
-
-  <#=string.Join("\n  ", EmitProcessor("Or", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitOrBytes, EmitOrBytes86))#>
-
-  <#=string.Join("\n  ", EmitProcessor("And", new[]{ "data", "operand" }, UNSAFE_AND_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitAndBytes, EmitAndBytes86))#>
-
-  <#=string.Join("\n  ", EmitProcessor("Not", new[]{ "data" }, UNSAFE_NOT_SWITCH_COUNT, INDEX_LOOP_UNROLL, EmitNegateBytes, EmitNegateBytes86))#>
-
 }
 
 <#+
@@ -827,57 +817,6 @@ IEnumerable<string> EmitSetBytes(int count, string value) {
   
   if(count > 0)
     yield return EmitSetByte(offset, value);
-}
-
-IEnumerable<string> EmitProcessor(string name, string[] operands, int caseCount, int unrollCount, Func<int, IEnumerable<string>> byteEmitter, Func<int, IEnumerable<string>> byteEmitter86 = null) {
-  yield return "#region In-Place " + name;
-  yield return string.Empty;
-  
-  yield return "public static void " + name 
-    + "(this " 
-    + string.Join(", ",operands.Select((n, i) => "byte[] " + (i==0 ? "@this" : n))) 
-    + ") => " + name + "(" 
-    + string.Join(", ",operands.Select((n, i) => (i==0 ? "@this" : n) + ", 0") ) 
-    + ", @this.Length);"
-    ;
-
-  yield return "public static void " + name 
-    + "(this "
-    + string.Join(", ",operands.Select((n, i) => "byte[] " + (i==0 ? "@this" : n) + ", int " + (i==0 ? "o" : n + "O") + "ffset")) 
-    + ", int count) {";
-
-  yield return "  " + EmitThisNullCheck();
-  foreach(var operand in operands.Skip(1))
-    yield return "  " + EmitArgNullCheck(operand);
-
-  yield return "  " + EmitCountTooSmallCheck();
-
-  for (var i = 0; i < operands.Length; ++i)
-    yield return "  " + EmitCountTooLargeCheck(( i ==0 ? "@this" : operands[i] ) + ".Length - " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset");
-
-  var paramList = string.Join(", ", operands.Select((n, i) => ( i ==0 ? "@this" : operands[i] ) + ", " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"));
-  yield return "  _" + name + "Unmanaged(" + paramList + ", count);";
-  yield return "}";
-  yield return string.Empty;
-    
-  yield return "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
-  yield return "private static unsafe void _" + name + "Unmanaged("
-    + string.Join(", ", operands.Select((n, i) => "byte[] " + operands[i] + ", int "+ ( i ==0 ? "o" : operands[i] + "O" ) + "ffset"))
-    +", int count) {"
-    ;
-
-  foreach(var operand in operands)
-    yield return "  fixed(byte* " + operand + "Pointer = " + operand + ")";
-  
-  yield return "    _" + name + "Unmanaged(" + string.Join(", ", operands.Select((n, i) => n + "Pointer + " + ( i ==0 ? "o" : operands[i] + "O" ) + "ffset")) + ", count);";
-  yield return "}";
-  yield return string.Empty;
-  
-  foreach(var line in EmitUnsafeProcessor("_" + name + "Unmanaged(" + string.Join(", ", operands.Select(n => "byte* " + n)) + ", int count)", caseCount, unrollCount, operands, 8, byteEmitter, 4, byteEmitter86))
-    yield return line;
-
-  yield return string.Empty;
-  yield return "#endregion";
 }
 
 IEnumerable<string> EmitUnsafeProcessor(string signature, int caseCount, int unrollCount, string[] variablesToIncrement, int byteBlockCount, Func<int, IEnumerable<string>> byteEmitter, int byteBlockCount86 = 0, Func<int, IEnumerable<string>> byteEmitter86 = null) {

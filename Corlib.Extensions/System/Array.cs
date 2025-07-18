@@ -2246,4 +2246,99 @@ public static partial class ArrayExtensions {
     Against.ThisIsNull(@this);
     return @this.Length <= 1;
   }
+
+
+  #region In-Place Bitwise operations
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this byte[] @this, byte[] operand) => Xor(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).Xor(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this byte[] @this, byte[] operand) => Equ(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).Equ(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this byte[] @this, byte[] operand) => Or(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).Or(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this byte[] @this, byte[] operand) => Nor(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).Nor(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this byte[] @this, byte[] operand) => And(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).And(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this byte[] @this, byte[] operand) => Nand(@this, 0, operand, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this byte[] @this, int offset, byte[] operand, int operandOffset, int count) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(operand);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    Against.CountOutOfRange(count, operand.Length - operandOffset, expression: nameof(count));
+    @this.AsSpan(offset, count).Nand(operand.AsSpan(operandOffset, count));
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Not(this byte[] @this) => Not(@this, 0, @this.Length);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Not(this byte[] @this, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowZero(count);
+    Against.CountOutOfRange(count, @this.Length - offset, expression: nameof(count));
+    @this.AsSpan(offset, count).Not();
+  }
+
+  #endregion
+
 }
