@@ -190,7 +190,7 @@ public static partial class SpanExtensions {
       switch (count) {
         case 0: goto Exit;
 <#
-   for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
      GenerateCase(i, math, true, "targetPointer", "operandPointer");
 #>
         default:
@@ -207,7 +207,7 @@ public static partial class SpanExtensions {
       switch (count) {
         case 0: goto Exit;
 <#
-   for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
      GenerateCase(i, math, true, "sourcePointer", "operandPointer", "targetPointer");
 #>
          default:
@@ -227,7 +227,7 @@ public static partial class SpanExtensions {
       switch (count) {
         case 0: goto Exit;
 <#
-   for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
      GenerateCase(i, math, false, "targetPointer", "operandPointer");
 #>
         default:
@@ -244,7 +244,7 @@ public static partial class SpanExtensions {
       switch (count) {
         case 0: goto Exit;
 <#
-   for (var i = 1; i <= MAX_BYTES_PER_LOOP; ++i)
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
      GenerateCase(i, math, false, "sourcePointer", "operandPointer", "targetPointer");
 #>
         default:
@@ -535,6 +535,16 @@ public static partial class SpanExtensions {
   }
 
   void GenerateCase(int numberOfBytes, string operation, bool force32Bit, string sName, string oName, string tName = null) {
+
+    if ((numberOfBytes & 1) == 1 && numberOfBytes != 1) {
+#>
+        case <#=numberOfBytes#>:
+          <#=EmitOperation(RegisterType.Byte, operation, sName, oName, tName, numberOfBytes - 1, true)#>
+          goto case <#=numberOfBytes - 1#>;
+<#+
+      return;
+    }
+
     int offset = 0;
 #>
         case <#=numberOfBytes#>:
