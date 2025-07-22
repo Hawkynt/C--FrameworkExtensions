@@ -40,6 +40,9 @@ public static partial class BitmapExtensions {
     [PixelFormat.Format16bppArgb1555] = (b, r, f, f2) => new ARGB1555BitmapLocker(b, r, f, f2),
     [PixelFormat.Format16bppGrayScale] = (b, r, f, f2) => new Gray16BitmapLocker(b, r, f, f2),
     [PixelFormat.Format16bppRgb555] = (b, r, f, f2) => new RGB555BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format8bppIndexed] = (b, r, f, f2) => new Indexed8BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format4bppIndexed] = (b, r, f, f2) => new IndexedBitmapLocker(b, r, f, f2),
+    [PixelFormat.Format1bppIndexed] = (b, r, f, f2) => new IndexedBitmapLocker(b, r, f, f2),
   };
 
   #endregion
