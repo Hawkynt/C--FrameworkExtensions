@@ -169,8 +169,8 @@ public class MathExtensionsBitTests {
     public void ReverseBitsQWord(ulong value, ulong expected) => Assert.AreEqual(expected, value.ReverseBits());
 
     [Test]
-    [TestCase(0b_1010_1010, 1, 0b_1010_1011)]
-    [TestCase(0b_1010_1010, 7, 0b_0010_1010)]
+    [TestCase(0b_1010_1000, 1, 0b_1010_1010)]
+    [TestCase(0b_0010_1010, 7, 0b_1010_1010)]
     public void SetBitByte(byte value, byte index, byte expected) => Assert.AreEqual(expected, value.SetBit(index));
 
     [Test]
@@ -184,15 +184,15 @@ public class MathExtensionsBitTests {
     public void FlipBitByte(byte value, byte index, byte expected) => Assert.AreEqual(expected, value.FlipBit(index));
 
     [Test]
-    [TestCase((ushort)0b_1100_1100_1010_1010, (byte)0b_1111, (byte)0b_0000)]
-    public void PairwiseDeinterleaveBitsWord(ushort value, byte oddExpected, byte evenExpected) {
+    [TestCase((ushort)0b_1100_1100_1010_1010, (byte)0b_11111010, (byte)0b_00001010)]
+    public void PairwiseDeinterleaveBitsWord(ushort value, byte evenExpected, byte oddExpected) {
         var (odd, even) = value.PairwiseDeinterleaveBits();
         Assert.AreEqual(oddExpected, odd);
         Assert.AreEqual(evenExpected, even);
     }
 
     [Test]
-    [TestCase(0b_1111_0000, 0, 4, (byte)0b_1111)]
-    [TestCase(0b_1010_1010, 1, 3, (byte)0b_0001_0101)]
+    [TestCase(0b_1010_1111, 0, 4, (byte)0b_1111)]
+    [TestCase(0b_1010_1010, 1, 3, (byte)0b_0000_0101)]
     public void BitsByte(byte value, byte index, byte count, byte expected) => Assert.AreEqual(expected, value.Bits(index, count));
 }

@@ -376,7 +376,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte LeadingZeroCount(this byte @this) => (byte)(@this == 0 ? 8 : BitOperations.LeadingZeroCount(@this) - 24);
+  public static byte LeadingZeroCount(this byte @this) => (byte)(@this == 0 ? 8 : 7 ^ Log2(@this));
 
   /// <summary>
   /// Counts the number of leading zero bits in the specified <see cref="ushort"/> value.
@@ -656,7 +656,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Parity(this byte value) => (CountSetBits(value) & 1) != 0;
+  public static bool Parity(this byte value) => (CountSetBits(value) & 1) == 0;
 
   /// <summary>
   /// Determines whether the number of set bits in the specified <see cref="ushort"/> value is odd (odd parity).
@@ -670,7 +670,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Parity(this ushort value) => (CountSetBits(value) & 1) != 0;
+  public static bool Parity(this ushort value) => (CountSetBits(value) & 1) == 0;
 
   /// <summary>
   /// Determines whether the number of set bits in the specified <see cref="uint"/> value is odd (odd parity).
@@ -684,7 +684,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Parity(this uint value) => (CountSetBits(value) & 1) != 0;
+  public static bool Parity(this uint value) => (CountSetBits(value) & 1) == 0;
 
   /// <summary>
   /// Determines whether the number of set bits in the specified <see cref="ulong"/> value is odd (odd parity).
@@ -698,7 +698,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Parity(this ulong value) => (CountSetBits(value) & 1) != 0;
+  public static bool Parity(this ulong value) => (CountSetBits(value) & 1) == 0;
 
   /// <summary>
   /// Reverses the bit order of the specified <see cref="byte"/> value.
