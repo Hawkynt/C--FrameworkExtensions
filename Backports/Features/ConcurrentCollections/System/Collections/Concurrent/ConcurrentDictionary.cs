@@ -35,6 +35,45 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ConcurrentDictionary(IEqualityComparer<TKey> comparer) => this._items = new(comparer);
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool ContainsKey(TKey key) {
+    lock(this._items)
+      return this._items.ContainsKey(key);
+  }
+
+  public TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory) {
+    lock(this._items)
+      if (this._items.TryGetValue(key, out var value)) {
+        this._items[key] = value = updateValueFactory(key, value);
+        return value;
+      } else
+        this._items.Add(key, addValue);
+
+    return addValue;
+  }
+
+  public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory) {
+    TValue value;
+
+    lock (this._items)
+      if (this._items.TryGetValue(key, out value))
+        this._items[key] = value = updateValueFactory(key, value);
+      else
+        this._items.Add(key, value = addValueFactory(key));
+
+    return value;
+  }
+
+  public TValue GetOrAdd(TKey key, TValue addValue) {
+    lock (this._items) {
+      if (this._items.TryGetValue(key, out var value))
+        return value;
+
+      this._items.Add(key, addValue);
+      return addValue;
+    }
+  }
+
   public TValue GetOrAdd(TKey key, Func<TKey, TValue> creator) {
     lock (this._items) {
       if (this._items.TryGetValue(key, out var value))
@@ -124,6 +163,12 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
 
 #endif
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public KeyValuePair<TKey, TValue>[] ToArray() {
+    lock(this._items)
+      return this._items.ToArray();
+  }
+  
   #region Implementation of IEnumerable
 
   public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
