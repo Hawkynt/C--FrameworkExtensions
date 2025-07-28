@@ -28,6 +28,8 @@ namespace System.Collections.Concurrent;
 public class ConcurrentBag<T> {
   private readonly List<T> _items = [];
 
+  public bool IsEmpty => !this.Any();
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Any() {
     lock (this._items)
