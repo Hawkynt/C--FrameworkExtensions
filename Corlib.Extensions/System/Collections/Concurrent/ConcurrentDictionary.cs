@@ -17,8 +17,6 @@
 
 #endregion
 
-#if SUPPORTS_CONCURRENT_COLLECTIONS
-
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Guard;
@@ -147,5 +145,3 @@ public static partial class ConcurrentDictionaryExtensions {
     return @this.GetOrAdd(key, key);
   }
 }
-
-#endif
