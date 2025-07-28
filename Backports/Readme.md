@@ -132,6 +132,8 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-stringcomparison%29)(this ReadOnlySpan&lt;char&gt; span, ReadOnlySpan&lt;char&gt; value, StringComparison comparisonType)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-span%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
+  * System.Collections.Concurrent.ConcurrentDictionary
+  * TValue [AddOrUpdate](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2.addorupdate#system-collections-concurrent-concurrentdictionary-2-addorupdate-1%28-0-system-func%28%28-0-0-1%29%29-system-func%28%28-0-1-0-1%29%29-0%29)&lt;TKey, TValue, TArg&gt;(this ConcurrentDictionary&lt;TKey, TValue&gt; @this, TKey key, Func&lt;TKey, TArg, TValue&gt; addValueFactory, Func&lt;TKey, TValue, TArg, TValue&gt; updateValueFactory, TArg factoryArgument)
 * System.Collections.Concurrent.ConcurrentQueue
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1.clear)&lt;T&gt;(this ConcurrentQueue&lt;T&gt;)
 * System.Collections.Concurrent.ConcurrentStack
