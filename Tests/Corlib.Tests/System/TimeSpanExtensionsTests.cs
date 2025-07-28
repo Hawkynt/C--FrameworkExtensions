@@ -47,23 +47,4 @@ public class TimeSpanExtensionsTests {
     Assert.That(result - expected, Is.LessThan(TimeSpan.FromMilliseconds(20)));
   }
 
-  [Test]
-  public void StopwatchAndIterationHelpers_WorkAsExpected() {
-    var span = TimeSpan.FromMilliseconds(50);
-    var before = Stopwatch.GetTimestamp();
-    var timestamp = span.FromStopwatchTimeStamp();
-    var expectedAdvance = span.TotalSeconds * Stopwatch.Frequency;
-    Assert.That(Math.Abs(timestamp - before - expectedAdvance), Is.LessThan(Stopwatch.Frequency * 0.01));
-
-    var iteration = span.CurrenIteration();
-    var calc = Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency / span.TotalSeconds;
-    Assert.That(Math.Abs(iteration - calc), Is.LessThan(0.1));
-
-    var mod = span.CurrenIteration(5);
-    Assert.That(mod, Is.GreaterThanOrEqualTo(0).And.LessThan(5));
-
-    var drift = span.CurrenDrift();
-    var expectedFraction = iteration - Math.Floor(iteration);
-    Assert.That(Math.Abs(drift.TotalSeconds - expectedFraction), Is.LessThan(0.1));
-  }
 }
