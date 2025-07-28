@@ -1,7 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
-using static Corlib.Tests.NUnit.TestUtilities;
 using NUnit.Framework;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System.Collections.Generic;
 
@@ -109,84 +110,84 @@ public class EnumerableTests {
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "a")]
-  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetFirst(out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, false, null, typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "b")]
-  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetLast(out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, 0, false, null, typeof(NullReferenceException))]
   [TestCase("", -1, false, null, typeof(IndexOutOfRangeException))]
   [TestCase("a", 1, false, null)]
   [TestCase("a|b|c", 1, true, "b")]
-  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetItem(index, out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a|b", true, "b")]
   [TestCase("b|a", true, "b")]
-  public void TryGetMax(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetMax(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetMax(out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a|b", true, "a")]
   [TestCase("b|a", true, "a")]
-  public void TryGetMin(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetMin(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetMin(out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("ab|ba", true, "ab")]
   [TestCase("ba|ab", true, "ab")]
-  public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i => i![1], out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("ab|ba", true, "ba")]
   [TestCase("ba|ab", true, "ba")]
-  public void TryGetMinBy(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetMinBy(string? input, bool result, string? expected, Type? exception = null) 
+    => ExecuteTest(() => {
       var r = ConvertFromStringToTestArray(input).TryGetMinBy(i => i![1], out var v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    }, (result, expected), exception)
+    ;
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -498,6 +499,165 @@ public class EnumerableTests {
     Assert.That(Enumerable.ToArray(shuffled), Is.Not.EqualTo(shuffled), "Multiple enumerations should yield different ordering");
     Assert.That(shuffled.ToArray(), Is.Not.EqualTo(shuffled.ToArray()), "Multiple materialization should yield different ordering");
     Assert.That(shuffled.ToList(), Is.Not.EqualTo(shuffled.ToList()), "Multiple materialization should yield different ordering");
+  }
+
+  [Test]
+  public void Count_Null_Throws() {
+    IEnumerable source = null!;
+    Assert.That(() => source.Count(), Throws.TypeOf<NullReferenceException>());
+  }
+
+  [Test]
+  public void Count_ReturnsNumberOfElements() {
+    IEnumerable source = new[] { 1, 2, 3 };
+    Assert.That(source.Count(), Is.EqualTo(3));
+  }
+
+  [Test]
+  public void ForEach_InvokesActionForEachItem() {
+    IEnumerable source = new[] { 1, 2, 3 };
+    var list = new List<int>();
+    source.ForEach<int>(list.Add);
+    Assert.That(list, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  public void ForEach_NullAction_Throws() {
+    IEnumerable source = new[] { 1 };
+    Assert.That(() => source.ForEach<int>(null!), Throws.TypeOf<ArgumentNullException>());
+  }
+
+  [Test]
+  public void ConvertAll_ConvertsElements() {
+    IEnumerable source = new[] { 1, 2, 3 };
+    var result = source.ConvertAll<int, string>(i => $"#{i}").Cast<string>().ToArray();
+    Assert.That(result, Is.EqualTo(new[] { "#1", "#2", "#3" }));
+  }
+
+  [Test]
+  public void ConvertAll_NullConverter_Throws() {
+    IEnumerable source = new[] { 1 };
+    Assert.That(
+        () => source.ConvertAll<int, string>(null!).Cast<string>().ToArray(),
+        Throws.TypeOf<ArgumentNullException>());
+  }
+
+  [Test]
+  public void ToObjectArray_ReturnsObjects() {
+    IEnumerable source = new[] { 1, 2 };
+    var result = source.ToObjectArray();
+    Assert.That(result, Is.EqualTo(new object[] { 1, 2 }));
+  }
+
+  [Test]
+  public void ToObjectArray_Null_ReturnsNull() {
+    IEnumerable source = null!;
+    Assert.That(source.ToObjectArray(), Is.Null);
+  }
+
+  [Test]
+  public void Any_WithElements_ReturnsTrue() {
+    IEnumerable source = new[] { 1 };
+    Assert.That(source.Any(), Is.True);
+  }
+
+  [Test]
+  public void Any_Empty_ReturnsFalse() {
+    IEnumerable source = new int[0];
+    Assert.That(source.Any(), Is.False);
+  }
+
+  [Test]
+  public void Any_Null_Throws() {
+    IEnumerable source = null!;
+    Assert.That(() => source.Any(), Throws.TypeOf<NullReferenceException>());
+  }
+
+  [Test]
+  public void ToCache_CachesEnumeration() {
+    var counter = 0;
+
+    var cached = Enumerate().ToCache();
+    Assert.That(counter, Is.EqualTo(0));
+    var first = cached.ToArray();
+    Assert.That(counter, Is.EqualTo(3));
+    var second = cached.ToArray();
+    Assert.That(counter, Is.EqualTo(3));
+    Assert.That(second, Is.EqualTo(first));
+    return;
+
+    IEnumerable<int> Enumerate() {
+      for (var i = 0; i < 3; ++i) {
+        ++counter;
+        yield return i;
+      }
+    }
+
+  }
+
+  [Test]
+  public void ToCache_Null_Throws() {
+    IEnumerable<int> source = null!;
+    Assert.That(() => source.ToCache(), Throws.TypeOf<NullReferenceException>());
+  }
+
+  [Test]
+  public void ToBiDictionary_CreatesDictionary() {
+    var data = new[] { ("a", 1), ("b", 2) };
+    var dict = data.ToBiDictionary(t => t.Item1, t => t.Item2);
+    Assert.That(dict.Count, Is.EqualTo(2));
+    Assert.That(dict["a"], Is.EqualTo(1));
+    Assert.That(dict.Reverse[1], Is.EqualTo("a"));
+  }
+
+  [Test]
+  public void ToBiDictionary_NullEnumerable_Throws() {
+    IEnumerable<(string, int)> source = null!;
+    Assert.That(() => source.ToBiDictionary(t => t.Item1, t => t.Item2), Throws.TypeOf<NullReferenceException>());
+  }
+
+  [Test]
+  public void ToBiDictionary_NullSelectors_Throw() {
+    var data = new[] { ("a", 1) };
+    Assert.That(
+        () => data.ToBiDictionary<(string, int), string, int>(null!, t => t.Item2),
+        Throws.TypeOf<ArgumentNullException>());
+    Assert.That(
+        () => data.ToBiDictionary<(string, int), string, int>(t => t.Item1, null!),
+        Throws.TypeOf<ArgumentNullException>());
+  }
+
+  [Test]
+  public void ToSortableBindingList_ReturnsList() {
+    var data = new[] { 1, 2, 3 };
+    var list = data.ToSortableBindingList();
+    Assert.That(list, Is.InstanceOf<SortableBindingList<int>>());
+    Assert.That(list, Is.EqualTo(data));
+  }
+
+  [Test]
+  public void ToSortableBindingList_Null_Throws() {
+    IEnumerable<int> source = null!;
+    Assert.That(() => source.ToSortableBindingList(), Throws.TypeOf<NullReferenceException>());
+  }
+
+  [Test]
+  public void ToNullIfEmpty_ReturnsNullForEmptyArray() {
+    var result = new int[0].ToNullIfEmpty();
+    Assert.That(result, Is.Null);
+  }
+
+  [Test]
+  public void ToNullIfEmpty_ReturnsSameForNonEmpty() {
+    var input = new[] { 1 };
+    var result = input.ToNullIfEmpty();
+    Assert.That(ReferenceEquals(result, input));
+  }
+
+  [Test]
+  public void ToNullIfEmpty_Null_ReturnsNull() {
+    IEnumerable<int> source = null!;
+    Assert.That(source.ToNullIfEmpty(), Is.Null);
   }
 
 }
