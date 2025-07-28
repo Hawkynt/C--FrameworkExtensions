@@ -27,22 +27,18 @@ namespace System.Numerics;
 /// </summary>
 public static class BitOperations {
 
-  private static readonly int[] _DE_BRUIJN32 = [
-    0, 1, 28, 2, 29, 14, 24, 3,
-    30, 22, 20, 15, 25, 17, 4, 8,
-    31, 27, 13, 23, 21, 19, 16, 7,
-    26, 12, 18, 6, 11, 5, 10, 9
+  private static readonly int[] TrailingZeroCountDeBruijn = [
+    00, 01, 28, 02, 29, 14, 24, 03,
+    30, 22, 20, 15, 25, 17, 04, 08,
+    31, 27, 13, 23, 21, 19, 16, 07,
+    26, 12, 18, 06, 11, 05, 10, 09
   ];
 
-  private static readonly int[] _DE_BRUIJN64 = [
-    0, 1, 2, 53, 3, 7, 54, 27,
-    4, 38, 41, 8, 34, 55, 48, 28,
-    62, 5, 39, 46, 44, 42, 22, 9,
-    24, 35, 59, 56, 49, 18, 29, 11,
-    63, 52, 6, 26, 37, 40, 33, 47,
-    61, 45, 43, 21, 23, 58, 17, 10,
-    51, 25, 36, 32, 60, 20, 57, 16,
-    50, 31, 19, 15, 30, 14, 13, 12
+  private static readonly int[] Log2DeBruijn = [
+    00, 09, 01, 10, 13, 21, 02, 29,
+    11, 14, 16, 18, 22, 25, 03, 30,
+    08, 12, 20, 28, 15, 17, 24, 07,
+    19, 27, 23, 06, 26, 05, 04, 31
   ];
 
   /// <summary>
@@ -185,7 +181,7 @@ public static class BitOperations {
     value |= value >> 8;
     value |= value >> 16;
     var index = (value * 0x07C4ACDDU) >> 27;
-    return _DE_BRUIJN32[index];
+    return Log2DeBruijn[index];
   }
 
   /// <summary>
@@ -195,17 +191,12 @@ public static class BitOperations {
   /// <param name="value">The value.</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int Log2(ulong value) {
-    if (value == 0)
-      return -1;
+    value |= 1;
+    var hi = (uint)(value >> 32);
+    if (hi == 0)
+      return Log2((uint)value);
 
-    value |= value >> 1;
-    value |= value >> 2;
-    value |= value >> 4;
-    value |= value >> 8;
-    value |= value >> 16;
-    value |= value >> 32;
-    var index = (value * 0x03F79D71B4CB0A89UL) >> 58;
-    return _DE_BRUIJN64[index];
+    return 32 + Log2(hi);
   }
 
   /// <summary>
@@ -305,7 +296,7 @@ public static class BitOperations {
 
     var isolated = value & (uint)-(int)value;
     var index = (isolated * 0x077CB531U) >> 27;
-    return _DE_BRUIJN32[index];
+    return TrailingZeroCountDeBruijn[index];
   }
 
   /// <summary>
@@ -323,12 +314,12 @@ public static class BitOperations {
   /// <param name="value">The value.</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int TrailingZeroCount(ulong value) {
-    if (value == 0)
-      return 64;
+    var lo = (uint)value;
 
-    var isolated = value & (ulong)-(long)value;
-    var index = (isolated * 0x0218A392CD3D5DBFUL) >> 58;
-    return _DE_BRUIJN64[index];
+    if (lo == 0)
+      return 32 + TrailingZeroCount((uint)(value >> 32));
+
+    return TrailingZeroCount(lo);
   }
 
   /// <summary>
