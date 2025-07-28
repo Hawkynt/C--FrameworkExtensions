@@ -1293,4 +1293,89 @@ public class StringTests {
   public void SentenceSplit(SentenceSplitTestData data)
     => ExecuteTest(() => data.Input!.TextAnalysisFor(data.Culture!).Sentences, data.Expected, data.Exception);
 
+[Test]
+  [TestCase("Driver={SQL Server};Server=localhost;Database=Test;Uid=sa;Pwd=pass;", "Server=localhost;Database=Test;Uid=sa;Pwd=pass;")]
+  [TestCase("Server=localhost;Driver=MySQL;Database=Test;", "Server=localhost;Database=Test;")]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  public void ToLinq2SqlConnectionString(string? input, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.ToLinq2SqlConnectionString(), expected, exception);
+
+  [Test]
+  [TestCase(null, "NULL")]
+  [TestCase("O'Reilly", "'O''Reilly'")]
+  [TestCase(123, "'123'")]
+  public void MsSqlDataEscape(object? input, string expected)
+    => ExecuteTest(() => input.MsSqlDataEscape(), expected, null);
+
+  [Test]
+  [TestCase(null, null, typeof(NullReferenceException))]
+  [TestCase("", null, typeof(ArgumentException))]
+  [TestCase("Col", "[Col]")]
+  [TestCase("Col]", "[Col]]]")]
+  public void MsSqlIdentifierEscape(string? input, string? expected, Type? exception = null)
+    => ExecuteTest(() => input.MsSqlIdentifierEscape(), expected, exception);
+
+  [Test]
+  public void ParseHostAndPort_PortNumber()
+  {
+    var result = "localhost:1234".ParseHostAndPort();
+    Assert.Multiple(() =>
+    {
+      Assert.That(result, Is.Not.Null);
+      Assert.That(result!.Host, Is.EqualTo("localhost"));
+      Assert.That(result.Port, Is.EqualTo(1234));
+    });
+  }
+
+  [Test]
+  public void ParseHostAndPort_PortName()
+  {
+    var result = "example.com:http".ParseHostAndPort();
+    Assert.Multiple(() =>
+    {
+      Assert.That(result, Is.Not.Null);
+      Assert.That(result!.Host, Is.EqualTo("example.com"));
+      Assert.That(result.Port, Is.EqualTo(80));
+    });
+  }
+
+  [Test]
+  public void ParseHostAndPort_InvalidPort()
+    => Assert.IsNull("example.com:unknown".ParseHostAndPort());
+
+  [Test]
+  [TestCase("abcdef", "a%f", true)]
+  [TestCase("abcdef", "b%", false)]
+  [TestCase("abc", "a_c", true)]
+  public void Like(string input, string pattern, bool expected)
+    => ExecuteTest(() => input.Like(pattern), expected, null);
+
+  [Test]
+  public void LeftUntil_Basic()
+    => ExecuteTest(() => "Hello,World".LeftUntil(","), "Hello", null);
+
+  [Test]
+  public void LeftUntil_NotFound()
+    => ExecuteTest(() => "Hello".LeftUntil(","), "Hello", null);
+
+  [Test]
+  public void RightUntil_Basic()
+    => ExecuteTest(() => "Hello,World".RightUntil(","), "World", null);
+
+  [Test]
+  public void RightUntil_NotFound()
+    => ExecuteTest(() => "Hello".RightUntil(","), "Hello", null);
+
+  [Test]
+  public void QuotedSplit_StringDelimiter()
+    => ExecuteTest(() => string.Join("|", "a,'b,c',\"d,e\"".QuotedSplit(",").ToArray()), "a|b,c|d,e", null);
+
+  [Test]
+  public void QuotedSplit_CharArrayDelimiter()
+    => ExecuteTest(() => string.Join("|", "a;'b;c'".QuotedSplit([',', ';']).ToArray()), "a|b;c", null);
+
+  [Test]
+  public void QuotedSplit_NullString()
+    => Assert.IsEmpty(((string?)null).QuotedSplit(",").ToArray());
+
 }
