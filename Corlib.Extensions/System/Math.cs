@@ -1360,7 +1360,6 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static decimal Pow(this decimal @this, decimal exponent, decimal epsilon = 0) {
-    Against.NegativeValuesAndZero(@this);
     Against.NegativeValues(epsilon);
 
     return exponent switch {
@@ -1432,6 +1431,44 @@ public static partial class MathEx {
     }
   }
 
+  public static decimal Sin(this decimal x, decimal epsilon = 0m) => Cos(x - Pi / 2m, epsilon);
+  
+  public static decimal Cos(this decimal x, decimal epsilon = 0m) {
+    x = ReduceAngle(x);
+
+    var result = 1m;
+    var term = 1m;
+    var x2 = x * x;
+    var sign = -1;
+
+    for (var n = 2; n < MAX_TAN_ITERATIONS; n += 2) {
+      term *= x2 / ((n - 1) * n);
+      var delta = term * sign;
+      result += delta;
+
+      if (Math.Abs(delta) < epsilon)
+        break;
+
+      sign = -sign;
+    }
+
+    return result;
+
+    static decimal ReduceAngle(decimal x) {
+      const decimal TwoPi = 2 * Pi;
+
+      x %= TwoPi;
+
+      // Reduce to [-π, π]
+      if (x < -Pi)
+        x += TwoPi;
+      if (x > Pi)
+        x -= TwoPi;
+
+      return x;
+    }
+  }
+
   /// <summary>
   /// Computes the tangent of the specified <see langword="decimal"/> angle in radians.
   /// </summary>
@@ -1449,27 +1486,13 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   public static decimal Tan(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValues(epsilon);
+    var cos = Cos(@this, epsilon / 10);
+    if (cos == 0)
+      throw new DivideByZeroException("tan(x) undefined at odd multiples of π/2");
 
-    if (@this.IsZero())
-      return decimal.Zero;
-
-    var current = (decimal)Math.Tan((double)@this);
-    
-    var x2 = @this * @this;
-    var term = @this;
-    var correction = @this;
-    var denominator = 1m;
-    for (var i = 0; i < MAX_TAN_ITERATIONS && Math.Abs(term) > epsilon; ++i) {
-      denominator += 2m;
-      term *= x2 / denominator;
-      correction += denominator % 4 == 1 ? term : -term;
-    }
-
-    current = (current + correction) / 2m;
-    return current;
+    return Sin(@this, epsilon / 10) / cos;
   }
-  
+
   /// <summary>
   /// Computes the arctangent (inverse tangent) of the specified <see langword="decimal"/> value.
   /// </summary>
@@ -1584,7 +1607,7 @@ public static partial class MathEx {
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static float Round(this float @this, int digits) {
-    Against.ValuesOutOfRange(@this, 0, 15);
+    Against.ValuesOutOfRange(digits, 0, 15);
 
     return MathF.Round(@this, digits);
   }
@@ -1603,7 +1626,8 @@ public static partial class MathEx {
   /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static float Round(this float @this, int digits, MidpointRounding method) {
-    Against.ValuesOutOfRange(@this, 0, 15);
+    Against.ValuesOutOfRange(digits, 0, 15);
+    Against.UnknownEnumValues(method);
 
     return MathF.Round(@this, digits, method);
   }
@@ -1729,8 +1753,18 @@ public static partial class MathEx {
   public static decimal Exp(this decimal @this, decimal epsilon = 0) {
     Against.NegativeValues(epsilon);
 
-    if (@this == 0m)
-      return 1m;
+    switch (@this) {
+      case 0m:
+        return 1m;
+      case > 0 when @this.Truncate() == @this: {
+        var value = E;
+        while (@this-- > 1)
+          value *= E;
+
+        return value;
+      }
+    }
+
 
     epsilon = epsilon == 0 ? DEFAULT_EPSILON : epsilon;
 
@@ -1929,7 +1963,7 @@ public static partial class MathEx {
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Cbrt(this float @this) => MathF.Pow(@this, 1f / 3);
+  public static float Cbrt(this float @this) => @this < 0 ? -MathF.Pow(-@this, 1f / 3) : MathF.Pow(@this, 1f / 3);
 
   /// <summary>
   ///   Calculates the cubic root.
@@ -1937,7 +1971,7 @@ public static partial class MathEx {
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Cbrt(this double @this) => Math.Pow(@this, 1d / 3);
+  public static double Cbrt(this double @this) => @this < 0 ? -Math.Pow(-@this, 1d / 3) : Math.Pow(@this, 1d / 3);
 
   /// <summary>
   ///   Calculates the cubic root.
@@ -1945,7 +1979,11 @@ public static partial class MathEx {
   /// <param name="this">This value.</param>
   /// <returns>Calculation result</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal Cbrt(this decimal @this) => @this.Pow(1m / 3);
+  public static decimal Cbrt(this decimal @this) => @this switch {
+    > 0 => @this.Pow(1m / 3),
+    0 => 0,
+    < 0 => -(-@this).Pow(1m / 3)
+  };
 
   /// <summary>
   ///   Calculates the cotangent.

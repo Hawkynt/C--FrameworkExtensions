@@ -332,7 +332,11 @@ public static partial class MathEx {
   /// <param name="this">The number.</param>
   /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> Sign(this <#=type#> @this) => <#=(type=="sbyte"||type=="short"?"("+type+")":"")#>(@this < 0 ? -1 : 1);
+  public static <#=type#> Sign(this <#=type#> @this) => <#=(type=="sbyte"||type=="short"?"("+type+")":"")#>(@this switch {
+    > 0 => 1,
+    0 => 0,
+    < 0 => -1
+  });
 
   /// <summary>
   /// Determines whether the specified value is positive (greater than zero).
