@@ -46,66 +46,7 @@ public static partial class ListExtensions {
 
     return @this.Count > 0;
   }
-
-  /// <summary>
-  ///   Tries to get the first item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetFirst<T>(this IList<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[0];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the last item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetLast<T>(this IList<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[^1];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the item at the given index.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IList" /></param>
-  /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetItem<T>(this IList<T> @this, int index, out T result) {
-    Against.ThisIsNull(@this);
-    Against.IndexBelowZero(index);
-
-    if (@this.Count <= index) {
-      result = default;
-      return false;
-    }
-
-    result = @this[index];
-    return true;
-  }
-
+  
   /// <summary>
   ///   Tries to set the first item.
   /// </summary>
@@ -194,66 +135,7 @@ public static partial class ListExtensions {
 
     return @this.Count > 0;
   }
-
-  /// <summary>
-  ///   Tries to get the first item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetFirst<T>(this List<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[0];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the last item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetLast<T>(this List<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[^1];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the item at the given index.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="List{T}" /></param>
-  /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetItem<T>(this List<T> @this, int index, out T result) {
-    Against.ThisIsNull(@this);
-    Against.IndexBelowZero(index);
-
-    if (@this.Count <= index) {
-      result = default;
-      return false;
-    }
-
-    result = @this[index];
-    return true;
-  }
-
+  
   /// <summary>
   ///   Tries to set the first item.
   /// </summary>
@@ -304,65 +186,6 @@ public static partial class ListExtensions {
       return false;
 
     @this[index] = value;
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the first item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetFirst<T>(this IReadOnlyList<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[0];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the last item.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetLast<T>(this IReadOnlyList<T> @this, out T result) {
-    Against.ThisIsNull(@this);
-
-    if (@this.Count <= 0) {
-      result = default;
-      return false;
-    }
-
-    result = @this[^1];
-    return true;
-  }
-
-  /// <summary>
-  ///   Tries to get the item at the given index.
-  /// </summary>
-  /// <typeparam name="T">The type of the item.</typeparam>
-  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
-  /// <param name="index">The items' position</param>
-  /// <param name="result">The value or the <see langword="default" /> for the given datatype.</param>
-  /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
-  public static bool TryGetItem<T>(this IReadOnlyList<T> @this, int index, out T result) {
-    Against.ThisIsNull(@this);
-    Against.IndexBelowZero(index);
-
-    if (@this.Count <= index) {
-      result = default;
-      return false;
-    }
-
-    result = @this[index];
     return true;
   }
 

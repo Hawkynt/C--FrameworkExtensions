@@ -26,6 +26,8 @@ using Guard;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using Utilities;
+
 
 #if SUPPORTS_ASYNC
 using System.Threading.Tasks;
@@ -1463,14 +1465,28 @@ public static partial class EnumerableExtensions {
   /// <returns><see langword="true" /> when the item could be retrieved; otherwise, <see langword="false" />.</returns>
   public static bool TryGetFirst<TItem>(this IEnumerable<TItem> @this, out TItem result) {
     Against.ArgumentIsNull(@this);
-
-    foreach (var item in @this) {
-      result = item;
-      return true;
-    }
-
     result = default;
-    return false;
+    switch (@this) {
+      case TItem[] { Length: > 0 } array: 
+        result = array[0];
+        return true;
+      case IList<TItem> { Count: > 0 } list: 
+        result = list[0];
+        return true;
+#if SUPPORTS_READ_ONLY_COLLECTIONS
+      case IReadOnlyList<TItem> { Count: > 0 } rolist: 
+        result = rolist[0];
+        return true;
+#endif
+      default: {
+        using var enumerator = @this.GetEnumerator();
+        if (!enumerator.MoveNext())
+          return false;
+
+        result = enumerator.Current;
+        return true;
+      }
+    }
   }
 
   /// <summary>
@@ -1484,13 +1500,33 @@ public static partial class EnumerableExtensions {
     Against.ArgumentIsNull(@this);
 
     result = default;
-    var foundItems = false;
-    foreach (var item in @this) {
-      result = item;
-      foundItems = true;
-    }
+    switch (@this) {
+      case TItem[] { Length: > 0 } array:
+        result = array[^1];
+        return true;
 
-    return foundItems;
+      case IList<TItem> { Count: > 0 } list:
+        result = list[^1];
+        return true;
+
+#if SUPPORTS_READ_ONLY_COLLECTIONS
+      case IReadOnlyList<TItem> { Count: > 0 } rolist:
+        result = rolist[^1];
+        return true;
+#endif
+
+      default: {
+        using var enumerator = @this.GetEnumerator();
+        if (!enumerator.MoveNext())
+          return false;
+
+        do
+          result = enumerator.Current;
+        while (enumerator.MoveNext());
+
+        return true;
+      }
+    }
   }
 
   /// <summary>
@@ -1505,18 +1541,33 @@ public static partial class EnumerableExtensions {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(index);
 
-    foreach (var item in @this) {
-      if (index > 0) {
-        --index;
-        continue;
-      }
-
-      result = item;
-      return true;
-    }
-
     result = default;
-    return false;
+    switch (@this) {
+      case TItem[] array when index < array.Length:
+        result = array[index];
+        return true;
+
+      case IList<TItem> list when index < list.Count:
+        result = list[index];
+        return true;
+
+#if SUPPORTS_READ_ONLY_COLLECTIONS
+      case IReadOnlyList<TItem> rolist when index < rolist.Count:
+        result = rolist[index];
+        return true;
+#endif
+
+      default: {
+        using var enumerator = @this.GetEnumerator();
+        do
+          if (!enumerator.MoveNext())
+            return false;
+        while (index-- > 0);
+
+        result = enumerator.Current;
+        return true;
+      }
+    }
   }
 
   /// <summary>
