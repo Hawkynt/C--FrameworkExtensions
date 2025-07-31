@@ -1769,46 +1769,93 @@ public static partial class FileInfoExtensions {
 
 #if SUPPORTS_FILE_ASYNC
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]  
-  public static Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllBytesAsync(@this.FullName, token);
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task<byte[]> ReadAllBytesAsync(this FileInfo @this) => File.ReadAllBytesAsync(@this.FullName);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllLinesAsync(@this.FullName, token);
+  public static Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token) => File.ReadAllBytesAsync(@this.FullName, token);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) => File.ReadAllLinesAsync(@this.FullName, encoding, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this) => File.ReadAllLinesAsync(@this.FullName);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<string> ReadAllTextAsync(this FileInfo @this, CancellationToken token = default) => File.ReadAllTextAsync(@this.FullName, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, CancellationToken token) => File.ReadAllLinesAsync(@this.FullName, token);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) => File.ReadAllTextAsync(@this.FullName, encoding, token);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token = default) => File.WriteAllBytesAsync(@this.FullName, data, token);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, CancellationToken token = default) => File.WriteAllLinesAsync(@this.FullName, data, token);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding, CancellationToken token = default) => File.WriteAllLinesAsync(@this.FullName, data, encoding, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding) => File.ReadAllLinesAsync(@this.FullName, encoding);
   
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllTextAsync(this FileInfo @this, string data, CancellationToken token = default) => File.WriteAllTextAsync(@this.FullName, data, token);
+  public static Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding, CancellationToken token) => File.ReadAllLinesAsync(@this.FullName, encoding, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task<string> ReadAllTextAsync(this FileInfo @this) => File.ReadAllTextAsync(@this.FullName);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task<string> ReadAllTextAsync(this FileInfo @this, CancellationToken token) => File.ReadAllTextAsync(@this.FullName, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding) => File.ReadAllTextAsync(@this.FullName, encoding);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding, CancellationToken token) => File.ReadAllTextAsync(@this.FullName, encoding, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllBytesAsync(this FileInfo @this, byte[] data) => File.WriteAllBytesAsync(@this.FullName, data);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token) => File.WriteAllBytesAsync(@this.FullName, data, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data) => File.WriteAllLinesAsync(@this.FullName, data);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, CancellationToken token) => File.WriteAllLinesAsync(@this.FullName, data, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding) => File.WriteAllLinesAsync(@this.FullName, data, encoding);
   
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding, CancellationToken token = default) => File.WriteAllTextAsync(@this.FullName, data, encoding, token);
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding, CancellationToken token) => File.WriteAllLinesAsync(@this.FullName, data, encoding, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllTextAsync(this FileInfo @this, string data) => File.WriteAllTextAsync(@this.FullName, data);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllTextAsync(this FileInfo @this, string data, CancellationToken token) => File.WriteAllTextAsync(@this.FullName, data, token);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding) => File.WriteAllTextAsync(@this.FullName, data, encoding);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding, CancellationToken token) => File.WriteAllTextAsync(@this.FullName, data, encoding, token);
 
 #elif SUPPORTS_STREAM_ASYNC
 
-  public static async Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token = default) {
+  public static async Task<byte[]> ReadAllBytesAsync(this FileInfo @this) {
+    using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+    var buffer = new byte[stream.Length];
+    await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+    return buffer;
+  }
+
+  public static async Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token) {
     using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
     var buffer = new byte[stream.Length];
     await stream.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
     return buffer;
   }
 
-  public static async Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) {
+  public static async Task<string[]> ReadAllLinesAsync(this FileInfo @this) {
+    var lines = new List<string>();
+    using (var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true))
+    using (var reader = new StreamReader(stream))
+      while (!reader.EndOfStream)
+        lines.Add(await reader.ReadLineAsync().ConfigureAwait(false));
+
+    return lines.ToArray();
+  }
+
+  public static async Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding) {
     var lines = new List<string>();
     using (var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true))
     using (var reader = new StreamReader(stream, encoding))
@@ -1818,18 +1865,59 @@ public static partial class FileInfoExtensions {
     return lines.ToArray();
   }
 
-  public static async Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding, CancellationToken token = default) {
+  public static async Task<string[]> ReadAllLinesAsync(this FileInfo @this, Encoding encoding, CancellationToken token) {
+    var lines = new List<string>();
+    using (var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true))
+    using (var reader = new StreamReader(stream, encoding))
+      while (!reader.EndOfStream) {
+        token.ThrowIfCancellationRequested();
+        lines.Add(await reader.ReadLineAsync().ConfigureAwait(false));
+      }
+
+    return lines.ToArray();
+  }
+
+  public static async Task<string> ReadAllTextAsync(this FileInfo @this) {
+    using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+    using var reader = new StreamReader(stream);
+    return await reader.ReadToEndAsync().ConfigureAwait(false);
+  }
+
+  public static async Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding) {
     using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
     using var reader = new StreamReader(stream, encoding);
     return await reader.ReadToEndAsync().ConfigureAwait(false);
   }
 
-  public static async Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token = default) {
+  public static async Task<string> ReadAllTextAsync(this FileInfo @this, Encoding encoding, CancellationToken token) {
+    using var stream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+    using var reader = new StreamReader(stream, encoding);
+    return await reader.ReadToEndAsync().ConfigureAwait(false);
+  }
+
+  public static async Task WriteAllBytesAsync(this FileInfo @this, byte[] data) {
+    using var stream = new FileStream(@this.FullName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+    await stream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+  }
+
+  public static async Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token) {
     using var stream = new FileStream(@this.FullName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
     await stream.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
   }
 
-  public static async Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding, CancellationToken token = default) {
+  public static async Task WriteAllTextAsync(this FileInfo @this, string data) {
+    using var stream = new FileStream(@this.FullName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+    using var writer = new StreamWriter(stream);
+    await writer.WriteAsync(data).ConfigureAwait(false);
+  }
+
+  public static async Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding) {
+    using var stream = new FileStream(@this.FullName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+    using var writer = new StreamWriter(stream, encoding);
+    await writer.WriteAsync(data).ConfigureAwait(false);
+  }
+
+  public static async Task WriteAllTextAsync(this FileInfo @this, string data, Encoding encoding, CancellationToken token) {
     using var stream = new FileStream(@this.FullName, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
     using var writer = new StreamWriter(stream, encoding);
     await writer.WriteAsync(data).ConfigureAwait(false);
