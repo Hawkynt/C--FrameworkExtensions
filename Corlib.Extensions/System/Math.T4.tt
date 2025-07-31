@@ -335,7 +335,7 @@ public static partial class MathEx {
   public static <#=type#> Sign(this <#=type#> @this) => <#=(type=="sbyte"||type=="short"?"("+type+")":"")#>(@this switch {
     > 0 => 1,
     0 => 0,
-    < 0 => -1
+    < 0 => -1<#=(type=="float"||type=="double"?$", {type}.NaN => {type}.NaN":"")#>
   });
 
   /// <summary>
