@@ -30,22 +30,6 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Collections.Generic;
 
 public static partial class ListExtensions {
-  /// <summary>
-  ///   Implements a faster shortcut for LINQ's .Any()
-  /// </summary>
-  /// <param name="this">This <see cref="IList{T}" /></param>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns>
-  ///   <see langword="true" /> if there is at least one item in the <see cref="IList{T}" />; otherwise,
-  ///   <see langword="false" />.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static bool Any<TItem>(this IList<TItem> @this) {
-    Against.ThisIsNull(@this);
-
-    return @this.Count > 0;
-  }
   
   /// <summary>
   ///   Tries to set the first item.
@@ -101,40 +85,6 @@ public static partial class ListExtensions {
   }
 
 #if SUPPORTS_READ_ONLY_COLLECTIONS
-
-  /// <summary>
-  ///   Implements a faster shortcut for LINQ's .Any()
-  /// </summary>
-  /// <param name="this">This <see cref="IReadOnlyList{T}" /></param>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns>
-  ///   <see langword="true" /> if there is at least one item in the <see cref="IReadOnlyList{T}" />; otherwise,
-  ///   <see langword="false" />.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static bool Any<TItem>(this IReadOnlyList<TItem> @this) {
-    Against.ThisIsNull(@this);
-
-    return @this.Count > 0;
-  }
-
-  /// <summary>
-  ///   Implements a faster shortcut for LINQ's .Any()
-  /// </summary>
-  /// <param name="this">This <see cref="List{T}" /></param>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
-  /// <returns>
-  ///   <see langword="true" /> if there is at least one item in the <see cref="List{T}" />; otherwise,
-  ///   <see langword="false" />.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static bool Any<TItem>(this List<TItem> @this) {
-    Against.ThisIsNull(@this);
-
-    return @this.Count > 0;
-  }
   
   /// <summary>
   ///   Tries to set the first item.
