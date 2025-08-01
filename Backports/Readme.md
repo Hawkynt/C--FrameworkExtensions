@@ -9,7 +9,7 @@
 
 ## Overview
 
-__FrameworkExtensions.Backports__ is a NuGet package that provides a collection of extensions (Polyfills) to ensure that newer compiler features work in older versions of the .NET Framework/Standard/Core. This package allows developers to use modern C# language features and .NET APIs even when working on projects targeting earlier versions.
+__FrameworkExtensions.Backports__ is a NuGet package that provides a collection of extensions (Polyfills) to ensure that newer compiler features work in older versions of the .NET Framework/Standard/Core. This package allows developers to use modern C# language features and .NET APIs even when working on projects targeting earlier versions down to Net2.0.
 
 __Note__: Performance is not a primary concern here. This focuses mainly on functionality and ready-to-be-built without making adjustments to code.
 
@@ -22,11 +22,14 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [IParsable](https://learn.microsoft.com/dotnet/api/system.iparsable-1)
   * [ISpanFormattable](https://learn.microsoft.com/dotnet/api/system.ispanformattable)
   * [ISpanParsable](https://learn.microsoft.com/dotnet/api/system.ispanparsable-1)
+
 * System.Collections
   * [IStructuralComparable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralcomparable)
   * [IStructuralEquatable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralequatable)
+
 * System.Collections.Generic
   * [IReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2)&lt;TKey, TValue&gt;
+
 * System.Runtime.CompilerServices
   * [IAsyncStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.iasyncstatemachine)
   * [ICriticalNotifyCompletion](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.icriticalnotifycompletion)
@@ -44,26 +47,33 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
   * [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
   * [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
+
 * System.Buffers
   * [ArrayPool](https://learn.microsoft.com/dotnet/api/system.buffers.arraypool-1)&lt;T&gt;
+
 * System.Collections.Concurrent
   * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
   * [ConcurrentDictionary](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2)&lt;TKey, TValue&gt;
   * [ConcurrentQueue](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1)&lt;T&gt;
   * [ConcurrentStack](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentstack-1)&lt;T&gt;
+
 * System.Collections.Generic
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
+
 * System.Numerics
   * [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
+
 * System.Runtime.CompilerServices
   * [AsyncTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynctaskmethodbuilder)&lt;T&gt;
   * [ConfiguredTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredtaskawaitable)&lt;T&gt;
   * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
   * [Unsafe](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafe)
+
 * System.Runtime.InteropServices
   * [MemoryMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.memorymarshal)
+
 * System.Runtime.Intrinsics
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64)
   * [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64-1)&lt;T&gt;
@@ -73,8 +83,10 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Vector256](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector256-1)&lt;T&gt;
   * [Vector512](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector512)
   * [Vector512](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector512-1)&lt;T&gt;
+
 * System.Runtime.Intrinsics.Arm
   * [AdvSimd](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.advsimd)
+
 * System.Runtime.Intrinsics.X86
   * [Avx](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx)
   * [Avx2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx2)
@@ -85,6 +97,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * [Sse41](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse41)
   * [Sse42](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse42)
   * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)
+
 * System.Threading
   * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
 
@@ -92,11 +105,13 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
 
 * System.Diagnostics
   * [StackTraceHidden](https://learn.microsoft.com/dotnet/api/system.diagnostics.stacktracehiddenattribute)
+
 * System.Diagnostics.CodeAnalysis
   * [DisallowNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.disallownullattribute)
   * [DoesNotReturn](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnattribute)
   * [NotNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullattribute)
   * [NotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullwhenattribute)
+
 * System.Runtime.CompilerServices
   * [CallerArgumentExpression](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerargumentexpressionattribute)
   * [CallerFilePath](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerfilepathattribute)
@@ -119,6 +134,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-int32-system-int32%29)&lt;T&gt;(this T[] @this, int start, int length)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-index%29)&lt;T&gt;(this T[] @this, Index startIndex)
   * Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-range%29)&lt;T&gt;(this T[] @this, Range range)
+
 * System.ReadOnlySpan
   * bool [SequenceEqual](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sequenceequal#system-memoryextensions-sequenceequal-1%28system-span%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
   * bool [SequenceEqual](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sequenceequal#system-memoryextensions-sequenceequal-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
@@ -132,37 +148,50 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-stringcomparison%29)(this ReadOnlySpan&lt;char&gt; span, ReadOnlySpan&lt;char&gt; value, StringComparison comparisonType)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-span%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
+
 * System.Collections.Concurrent.ConcurrentBag
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1.clear)&lt;T&gt;(this ConcurrentBag&lt;T&gt;)
+
 * System.Collections.Concurrent.ConcurrentDictionary
   * TValue [AddOrUpdate](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2.addorupdate#system-collections-concurrent-concurrentdictionary-2-addorupdate-1%28-0-system-func%28%28-0-0-1%29%29-system-func%28%28-0-1-0-1%29%29-0%29)&lt;TKey, TValue, TArg&gt;(this ConcurrentDictionary&lt;TKey, TValue&gt; @this, TKey key, Func&lt;TKey, TArg, TValue&gt; addValueFactory, Func&lt;TKey, TValue, TArg, TValue&gt; updateValueFactory, TArg factoryArgument)
+
 * System.Collections.Concurrent.ConcurrentQueue
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1.clear)&lt;T&gt;(this ConcurrentQueue&lt;T&gt;)
+
 * System.Collections.Concurrent.ConcurrentStack
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentstack-1.clear)&lt;T&gt;(this ConcurrentStack&lt;T&gt;)
+
 * System.Collections.Generic.IEnumerable
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this)
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
+
 * System.Collections.Generic.KeyValuePair
   * void [Deconstruct](https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair-2.deconstruct)&lt;TKey, TValue&gt;(this KeyValuePair&lt;TKey, TValue&gt; @this, out TKey key, out TValue value)
+
 * System.Collections.Generic.Stack
   * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
+
 * System.DateTimeOffset
   * long [ToUnixTimeMilliseconds](https://learn.microsoft.com/dotnet/api/system.datetimeoffset.tounixtimemilliseconds)(this DateTimeOffset @this)
   * long [ToUnixTimeSeconds](https://learn.microsoft.com/dotnet/api/system.datetimeoffset.tounixtimeseconds)(this DateTimeOffset @this)
+
 * System.Diagnostics
   * void [Restart](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.restart)(this Stopwatch @this)
+
 * System.Enum
   * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
+
 * System.IO.DirectoryInfo
   * IEnumerable&lt;FileSystemInfo&gt; [EnumerateFileSystemInfos](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefilesysteminfos#system-io-directoryinfo-enumeratefilesysteminfos)(this DirectoryInfo @this)
   * IEnumerable&lt;FileInfo&gt; [EnumerateFiles](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefiles#system-io-directoryinfo-enumeratefiles)(this DirectoryInfo @this)
   * IEnumerable&lt;DirectoryInfo&gt; [EnumerateDirectories](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratedirectories#system-io-directoryinfo-enumeratedirectories)(this DirectoryInfo @this)
   * IEnumerable&lt;FileInfo&gt; [EnumerateFiles](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefiles#system-io-directoryinfo-enumeratefiles%28system-string-system-io-searchoption%29)(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
   * IEnumerable&lt;DirectoryInfo&gt; [EnumerateDirectories](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratedirectories#system-io-directoryinfo-enumeratedirectories%28system-string-system-io-searchoption%29)(this DirectoryInfo @this, string searchPattern, SearchOption searchOption)
+
 * System.IO.FileInfo
   * void [MoveTo](https://learn.microsoft.com/dotnet/api/system.io.fileinfo.moveto#system-io-fileinfo-moveto%28system-string-system-boolean%29)(this FileInfo @this, string destFileName, bool overwrite)
+
 * System.IO.Stream
   * void [CopyTo](https://learn.microsoft.com/dotnet/api/system.io.stream.copyto#system-io-stream-copyto%28system-io-stream%29)(this Stream @this, Stream target)
   * void [Flush](https://learn.microsoft.com/dotnet/api/system.io.filestream.flush#system-io-filestream-flush%28system-boolean%29)(this Stream @this, bool flushToDisk)
@@ -173,6 +202,7 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * Task [CopyToAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.copytoasync#system-io-stream-copytoasync%28system-io-stream-system-int32-system-threading-cancellationtoken%29)(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
   * int [Read](https://learn.microsoft.com/dotnet/api/system.io.stream.read#system-io-stream-read%28system-span%28%28system-byte%29%29%29)(this Stream @this, Span&lt;byte&gt; buffer)
   * void [Write](https://learn.microsoft.com/dotnet/api/system.io.stream.write#system-io-stream-write%28system-readonlyspan%28%28system-byte%29%29%29)(this Stream @this, ReadOnlySpan&lt;byte&gt; buffer)
+
 * System.Linq
   * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
   * IEnumerable&lt;TResult&gt; [Cast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.cast)&lt;TResult&gt;(this IEnumerable @this)
@@ -213,10 +243,56 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * IEnumerable&lt;TItem&gt; [Append](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.append)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
   * bool [TryGetNonEnumeratedCount](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.trygetnonenumeratedcount)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; source, out int count)
   * IEnumerable&lt;TItem&gt; [Zip](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.zip#system-linq-enumerable-zip-3%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-ienumerable%28%28-1%29%29-system-func%28%28-0-1-2%29%29%29)&lt;TFirst, TSecond, TResult&gt;(IEnumerable&lt;TFirst&gt; @this, IEnumerable&lt;TSecond&gt; second, Func&lt;TFirst, TSecond, TResult&gt; resultSelector)
+
 * System.Random
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64%29)(this Random @this, long maxValue)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64-system-int64%29)(this Random @this, long minValue, long maxValue)
+
+* System.Reflection.Assembly  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-assembly-system-type%29)(this Assembly element, Type attributeType)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-assembly%29)&lt;T&gt;(this Assembly element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-assembly%29)(this Assembly element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-assembly-system-type%29)(this Assembly element, Type attributeType)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-assembly%29)&lt;T&gt;(this Assembly element)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-assembly-system-type%29)(this Assembly element, Type attributeType)
+
+* System.Reflection.Module  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-module-system-type%29)(this Module element, Type attributeType)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-module%29)&lt;T&gt;(this Module element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-module%29)(this Module element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-module-system-type%29)(this Module element, Type attributeType)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-module%29)&lt;T&gt;(this Module element)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-module-system-type%29)(this Module element, Type attributeType)
+
+* System.Reflection.MemberInfo  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-memberinfo-system-type%29)(this MemberInfo element, Type attributeType)  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-memberinfo-system-type-system-boolean%29)(this MemberInfo element, Type attributeType, bool inherit)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-memberinfo%29)&lt;T&gt;(this MemberInfo element)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-memberinfo-system-boolean%29)&lt;T&gt;(this MemberInfo element, bool inherit)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo%29)(this MemberInfo element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo-system-boolean%29)(this MemberInfo element, bool inherit)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo-system-type%29)(this MemberInfo element, Type attributeType)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo-system-type-system-boolean%29)(this MemberInfo element, Type attributeType, bool inherit)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo%29)&lt;T&gt;(this MemberInfo element)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-memberinfo-system-boolean%29)&lt;T&gt;(this MemberInfo element, bool inherit)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-memberinfo-system-type%29)(this MemberInfo element, Type attributeType)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-memberinfo-system-type-system-boolean%29)(this MemberInfo element, Type attributeType, bool inherit)
+
+* System.Reflection.ParameterInfo  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-parameterinfo-system-type%29)(this ParameterInfo element, Type attributeType)  
+  * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-parameterinfo-system-type-system-boolean%29)(this ParameterInfo element, Type attributeType, bool inherit)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-parameterinfo%29)&lt;T&gt;(this ParameterInfo element)  
+  * T [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-parameterinfo-system-boolean%29)&lt;T&gt;(this ParameterInfo element, bool inherit)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo%29)(this ParameterInfo element)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo-system-boolean%29)(this ParameterInfo element, bool inherit)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo-system-type%29)(this ParameterInfo element, Type attributeType)  
+  * IEnumerable&lt;Attribute&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo-system-type-system-boolean%29)(this ParameterInfo element, Type attributeType, bool inherit)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo%29)&lt;T&gt;(this ParameterInfo element)  
+  * IEnumerable&lt;T&gt; [GetCustomAttributes](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattributes#system-reflection-customattributeextensions-getcustomattributes%28system-reflection-parameterinfo-system-boolean%29)&lt;T&gt;(this ParameterInfo element, bool inherit)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-parameterinfo-system-type%29)(this ParameterInfo element, Type attributeType)  
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.isdefined#system-reflection-customattributeextensions-isdefined%28system-reflection-parameterinfo-system-type-system-boolean%29)(this ParameterInfo element, Type attributeType, bool inherit)
+
 * System.Reflection.MethodInfo
   * Delegate [CreateDelegate](https://learn.microsoft.com/dotnet/api/system.reflection.methodinfo.createdelegate#system-reflection-methodinfo-createdelegate%28system-type%29)(this MethodInfo @this, Type result)
 * System.String
@@ -233,13 +309,16 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
+
 * System.Text.StringBuilder
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
+
 * System.Threading.Tasks
   * TaskAwaiter [GetAwaiter](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.getawaiter#system-threading-tasks-task-getawaiter)(this Task task)
   * TaskAwaiter&lt;TResult&gt; [GetAwaiter](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.getawaiter)&lt;TResult&gt;(this Task&lt;TResult&gt; task)
   * ConfiguredTaskAwaitable [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.configureawait#system-threading-tasks-task-configureawait%28system-boolean%29)(this Task task, bool continueOnCapturedContext)
   * ConfiguredTaskAwaitable&lt;TResult&gt; [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.configureawait#system-threading-tasks-task-1-configureawait%28system-boolean%29)&lt;TResult&gt;(this Task&lt;TResult&gt; task, bool continueOnCapturedContext)
+
 * System.Threading.WaitHandle
   * void [Dispose](https://learn.microsoft.com/dotnet/api/system.threading.waithandle.dispose#system-threading-waithandle-dispose)(this WaitHandle @this)
 
