@@ -415,12 +415,12 @@ public static partial class DirectoryInfoExtensions {
       return true;
 
     try {
-      if (recursive) {
+      if (recursive)
         IO.Directory.CreateDirectory(@this.FullName);
-        @this.Refresh();
-      } else
+      else
         @this.Create();
 
+      @this.Refresh();
       return true;
     } catch (Exception) {
       @this.Refresh();
