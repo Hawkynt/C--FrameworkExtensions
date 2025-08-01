@@ -8,7 +8,7 @@ namespace System.Collections.Generic;
 public class ListTests {
   
   [Test]
-  [TestCase(null,false,null,typeof(NullReferenceException))]
+  [TestCase(null,false,null,typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "a")]
@@ -21,7 +21,7 @@ public class ListTests {
     ;
 
   [Test]
-  [TestCase(null, false, null, typeof(NullReferenceException))]
+  [TestCase(null, false, null, typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "b")]

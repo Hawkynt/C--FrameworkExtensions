@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace System;
 
 [TestFixture]
-public class TimeSpanExtensionsTests {
+public class TimeSpanTests {
   [Test]
   public void NumericExtensionMethods_CreateExpectedTimeSpans() {
     Assert.AreEqual(TimeSpan.FromSeconds(5), 5.Seconds());

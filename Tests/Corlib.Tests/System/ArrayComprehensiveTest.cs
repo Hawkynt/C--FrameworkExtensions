@@ -38,7 +38,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void Fill_ByteArray_NullArray_ThrowsException() {
-    byte[] array = null;
+    byte[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.Fill(42));
   }
 
@@ -58,7 +58,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void Clear_ByteArray_NullArray_ThrowsException() {
-    byte[] array = null;
+    byte[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.Clear());
   }
 
@@ -113,7 +113,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void IndexOfOrMinusOne_ByteArray_NullSource_ThrowsException() {
-    byte[] source = null;
+    byte[]? source = null;
     var pattern = new byte[] { 1, 2 };
     
     Assert.Throws<NullReferenceException>(() => source.IndexOfOrMinusOne(pattern));
@@ -122,7 +122,7 @@ public class ArrayComprehensiveTest {
   [Test]
   public void IndexOfOrMinusOne_ByteArray_NullPattern_ThrowsException() {
     var source = new byte[] { 1, 2, 3 };
-    byte[] pattern = null;
+    byte[]? pattern = null;
     
     Assert.Throws<ArgumentNullException>(() => source.IndexOfOrMinusOne(pattern));
   }
@@ -248,15 +248,15 @@ public class ArrayComprehensiveTest {
   [Test]
   public void SequenceEqual_Arrays_OneNull_ReturnsFalse() {
     var array1 = new byte[] { 1, 2, 3 };
-    byte[] array2 = null;
+    byte[]? array2 = null;
     
     Assert.IsFalse(array1.SequenceEqual(array2));
   }
 
   [Test]
   public void SequenceEqual_Arrays_BothNull_ReturnsTrue() {
-    byte[] array1 = null;
-    byte[] array2 = null;
+    byte[]? array1 = null;
+    byte[]? array2 = null;
     
     Assert.IsTrue(array1.SequenceEqual(array2));
   }
@@ -274,7 +274,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void CompareTo_Arrays_NullSource_ThrowsException() {
-    string[] array1 = null;
+    string[]? array1 = null;
     var array2 = new string[] { "a", "b" };
     
     Assert.Throws<NullReferenceException>(() => array1.CompareTo(array2).ToArray());
@@ -283,7 +283,7 @@ public class ArrayComprehensiveTest {
   [Test]
   public void CompareTo_Arrays_NullOther_ThrowsException() {
     var array1 = new string[] { "a", "b" };
-    string[] array2 = null;
+    string[]? array2 = null;
     
     Assert.Throws<ArgumentNullException>(() => array1.CompareTo(array2).ToArray());
   }
@@ -312,7 +312,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void CopyTo_ByteArray_NullSource_ThrowsException() {
-    byte[] source = null;
+    byte[]? source = null;
     var target = new byte[5];
     
     Assert.Throws<NullReferenceException>(() => source.CopyTo(target));
@@ -321,7 +321,7 @@ public class ArrayComprehensiveTest {
   [Test]
   public void CopyTo_ByteArray_NullTarget_ThrowsException() {
     var source = new byte[] { 1, 2, 3, 4, 5 };
-    byte[] target = null;
+    byte[]? target = null;
     
     Assert.Throws<ArgumentNullException>(() => source.CopyTo(target));
   }
@@ -337,7 +337,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void SafelyClone_Array_NullArray_ReturnsNull() {
-    string[] original = null;
+    string[]? original = null;
     var clone = original.SafelyClone();
     
     Assert.IsNull(clone);
@@ -359,7 +359,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void Not_ByteArray_NullArray_ThrowsException() {
-    byte[] array = null;
+    byte[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.Not());
   }
 
