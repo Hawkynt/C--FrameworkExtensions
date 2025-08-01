@@ -587,10 +587,15 @@ public static partial class TypeExtensions {
         return true;
 
       var stack = new Stack<Type>();
+      var visited = new HashSet<Type>();
+
       stack.Push(type);
 
       while (stack.Count > 0) {
         var current = stack.Pop();
+
+        if (!visited.Add(current))
+          continue; // already visited
 
         foreach (var field in current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
           var fieldType = field.FieldType;
