@@ -297,8 +297,11 @@ public static partial class RandomExtensions {
   ///   This example demonstrates generating random values for int, double, and bool types.
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static T GetValueFor<T>(this Random @this) => (T)TypeExtensions.GetRandomValueFor(typeof(T), true, @this);
-
+  public static T GetValueFor<T>(this Random @this) => @this.Next(_SPECIAL_VALUE_LIKELIHOOD) switch {
+    0 => default,
+    _ => (T)TypeExtensions.GetRandomValueFor(typeof(T), @this.Next(2) <= 0, @this)
+  };
+  
   // When higher -> less likely; must be > 6
   private const int _SPECIAL_VALUE_LIKELIHOOD = 10;
 
