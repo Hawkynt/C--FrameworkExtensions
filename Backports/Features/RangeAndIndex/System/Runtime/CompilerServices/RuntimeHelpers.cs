@@ -29,8 +29,30 @@ public static class RuntimeHelpers {
     return result;
   }
 
+  private static int? _offsetToStringData;
+
   [Obsolete("Dummy für Compiler – nicht aufrufen!", true)]
-  public static int OffsetToStringData => 0;
+  public static int OffsetToStringData {
+    get {
+      return _offsetToStringData ??= Invoke();
+
+      static unsafe int Invoke() {
+        var runtimeString = DateTime.UtcNow.ToString("O");
+
+        fixed (char* charPtr = runtimeString) {
+          var stringPtr = GetObjectAddress(runtimeString);
+          var dataPtr = new IntPtr(charPtr);
+          return (int)(dataPtr.ToInt64() - stringPtr.ToInt64());
+        }
+
+        static IntPtr GetObjectAddress(object obj) {
+          var tr = __makeref(obj);
+          return **(IntPtr**)&tr;
+        }
+      }
+
+    }
+  }
 
 }
 
