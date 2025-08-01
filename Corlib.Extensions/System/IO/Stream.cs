@@ -1019,13 +1019,40 @@ public static partial class StreamExtensions {
     }
   }
 
+  private class ByteEncoding : Encoding {
+
+    public static ByteEncoding Instance => new();
+
+    public override int GetByteCount(char[] chars, int index, int count) => count;
+
+    public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex) {
+      for (var i = 0; i < charCount; ++i)
+        bytes[byteIndex + i] = (byte)chars[charIndex + i];
+
+      return charCount;
+    }
+
+    public override int GetCharCount(byte[] bytes, int index, int count) => count;
+
+    public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) {
+      for (var i = 0; i < byteCount; ++i)
+        chars[charIndex + i] = (char)bytes[byteIndex + i];
+
+      return byteCount;
+    }
+
+    public override int GetMaxByteCount(int charCount) => charCount;
+
+    public override int GetMaxCharCount(int byteCount) => byteCount;
+  }
+
   public static void WriteFixedLengthString(this Stream @this, string data, int length, char padding='\0', Encoding encoding = null) {
     Against.ThisIsNull(@this);
     Against.False(@this.CanWrite);
     Against.ArgumentIsNull(data);
     Against.CountOutOfRange(data.Length,length);
-    
-    encoding??=Encoding.ASCII;
+
+    encoding ??= ByteEncoding.Instance;
     
     var rawData = encoding.GetBytes(data.PadRight(length,padding));
     if (rawData.Length != encoding.GetMaxByteCount(length))
@@ -1038,7 +1065,7 @@ public static partial class StreamExtensions {
     Against.ThisIsNull(@this);
     Against.False(@this.CanRead);
 
-    encoding ??= Encoding.ASCII;
+    encoding ??= ByteEncoding.Instance;
     var buffer = new byte[encoding.GetMaxByteCount(length)];
 
     var bytesRead = @this.Read(buffer, 0, length);
