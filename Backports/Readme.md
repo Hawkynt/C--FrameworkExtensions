@@ -310,6 +310,10 @@ __Note__: Performance is not a primary concern here. This focuses mainly on func
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
 
+* System.RuntimeServices.CompilerServices.RuntimeHelpers
+  * T[] [GetSubArray](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.runtimehelpers.getsubarray)&lt;T&gt;(T[] array, Range range)
+  * int [OffsetToStringData](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.runtimehelpers.offsettostringdata)
+
 * System.Text.StringBuilder
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.clear#system-text-stringbuilder-clear)(this StringBuilder @this)
 
