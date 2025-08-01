@@ -291,6 +291,7 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
 
   public override long Seek(long offset, SeekOrigin origin) {
     Against.UnknownEnumValues(origin);
+    Against.IndexBelowZero(offset);
 
     var target = origin switch {
       SeekOrigin.Begin => offset,
