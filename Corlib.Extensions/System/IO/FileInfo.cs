@@ -2943,7 +2943,13 @@ public static partial class FileInfoExtensions {
   ///   Changes the last write time of the given file to the current date/time.
   /// </summary>
   /// <param name="this">This FileInfo.</param>
-  public static void Touch(this FileInfo @this) => @this.LastWriteTimeUtc = DateTime.UtcNow;
+  public static void Touch(this FileInfo @this) {
+    if (!File.Exists(@this.FullName))
+      using (@this.Create()) { }
+    
+    @this.LastWriteTimeUtc = DateTime.UtcNow;
+    @this.Refresh();
+  }
 
   /// <summary>
   ///   Tries to change the last write time of the given file to the current date/time.
