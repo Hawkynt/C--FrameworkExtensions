@@ -31,6 +31,8 @@ using Microsoft.Win32;
 #endif
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using ParameterInfo = System.Reflection.ParameterInfo;
+using Utilities;
 
 namespace System;
 
@@ -465,13 +467,33 @@ public static partial class TypeExtensions {
   public static string SimpleName(this Type @this, bool useLanguageTypes = false) {
     Against.ThisIsNull(@this);
 
-    var name = @this.FullName;
-    if (name == null)
-      return null;
+    var name = @this.Name;
 
-    name = name.Trim();
-    var index = name.LastIndexOf('.');
-    return index < 0 ? name : name[(index + 1)..];
+    // Convert .NET type names to C# language keywords
+    if (useLanguageTypes)
+      return name switch {
+        "Boolean" => "bool",
+        "Byte" => "byte",
+        "SByte" => "sbyte",
+        "Char" => "char",
+        "Decimal" => "decimal",
+        "Double" => "double",
+        "Single" => "float",
+        "Int32" => "int",
+        "UInt32" => "uint",
+        "Int64" => "long",
+        "UInt64" => "ulong",
+        "Int16" => "short",
+        "UInt16" => "ushort",
+        "IntPtr" => "nint",
+        "UIntPtr" => "nuint",
+        "Object" => "object",
+        "String" => "string",
+        "Void" => "void",
+        _ => name
+      };
+
+    return name;
   }
 
   /// <summary>
@@ -526,13 +548,62 @@ public static partial class TypeExtensions {
     if (type.IsEnum)
       return CreateForEnum(type, entropySource);
 
-    if (type.IsClass)
-      return CreateForRefType(type, allowInstanceCreationForReferenceTypes, entropySource);
+    if (type.IsInterface)
+      return null;
 
-    if (type.IsValueType)
-      return CreateForValueType(type, entropySource);
+    if (type.IsValueType) {
+      if (ContainsReferenceFields(type))
+        return CreateViaConstructor(type, allowInstanceCreationForReferenceTypes, entropySource);
+      return CreateBlittableValue(type, entropySource);
+    }
 
-    throw new NotSupportedException("Unknown type");
+    // Reference type
+    return allowInstanceCreationForReferenceTypes
+      ? CreateViaConstructor(type, true, entropySource)
+      : null;
+
+    static object CreateViaConstructor(Type type, bool allowRefTypes, Random random) {
+      if (!allowRefTypes && type.IsClass)
+        return null;
+
+      var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+      if (ctors.Length == 0)
+        return null;
+
+      var ctor = ctors[random.Next(ctors.Length)];
+      var parameters = ctor.GetParameters()
+        .Select(p => p.ParameterType.GetRandomValue(true))
+        .ToArray();
+
+      try {
+        return ctor.Invoke(parameters);
+      } catch {
+        return null;
+      }
+    }
+
+    static bool ContainsReferenceFields(Type type) {
+      if (!type.IsValueType)
+        return true;
+
+      var stack = new Stack<Type>();
+      stack.Push(type);
+
+      while (stack.Count > 0) {
+        var current = stack.Pop();
+
+        foreach (var field in current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+          var fieldType = field.FieldType;
+
+          if (!fieldType.IsValueType)
+            return true;
+
+          stack.Push(fieldType);
+        }
+      }
+
+      return false;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static object CreateForNullable(Type underlyingType, bool allowInstanceCreationForReferenceTypes, Random entropySource)
@@ -548,7 +619,7 @@ public static partial class TypeExtensions {
         return null;
       }
 
-      var constructors = type.GetConstructors();
+      var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
       if (constructors.Length <= 0) {
         Trace.WriteLine($"[Warning]No public constructors available for type {type.FullName}");
         return null;
@@ -560,7 +631,7 @@ public static partial class TypeExtensions {
       return Activator.CreateInstance(type, parameters);
     }
 
-    static object CreateForValueType(Type type, Random entropySource) {
+    static object CreateBlittableValue(Type type, Random entropySource) {
       var size = Marshal.SizeOf(type);
       var data = new byte[size];
 
@@ -726,7 +797,8 @@ public static partial class TypeExtensions {
     || @this == TypeInt
     || @this == TypeDWord
     || @this == TypeLong
-    || @this == TypeQWord;
+    || @this == TypeQWord
+    || (@this.IsNullable() && IsIntegerType(Nullable.GetUnderlyingType(@this)));
 
   /// <summary>
   ///   Gets the minimum value of an int type.
@@ -753,7 +825,7 @@ public static partial class TypeExtensions {
     if (@this == TypeLong)
       return long.MinValue;
 
-    throw new NotSupportedException();
+    return AlwaysThrow.ArgumentException<decimal>(nameof(@this), "Non-Integer type");
   }
 
   /// <summary>
@@ -780,7 +852,8 @@ public static partial class TypeExtensions {
       return ulong.MaxValue;
     if (@this == TypeLong)
       return long.MaxValue;
-    throw new NotSupportedException();
+    
+    return AlwaysThrow.ArgumentException<decimal>(nameof(@this), "Non-Integer type");
   }
 
   /// <summary>
@@ -816,7 +889,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsFloatType(this Type @this) => @this == TypeFloat || @this == TypeDouble || @this == TypeDecimal;
+  public static bool IsFloatType(this Type @this) => @this == TypeFloat || @this == TypeDouble || @this == TypeDecimal || (@this.IsNullable() && IsFloatType(Nullable.GetUnderlyingType(@this)));
 
   /// <summary>
   ///   Determines whether the specified type is a float type.
@@ -825,7 +898,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is a floating point type; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsDecimalType(this Type @this) => @this == TypeDecimal;
+  public static bool IsDecimalType(this Type @this) => @this == TypeDecimal || (@this.IsNullable() && Nullable.GetUnderlyingType(@this) == TypeDecimal);
 
   /// <summary>
   ///   Determines whether the specified type is a string.
@@ -843,7 +916,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is a boolean type; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsBooleanType(this Type @this) => @this == TypeBool;
+  public static bool IsBooleanType(this Type @this) => @this == TypeBool || (@this.IsNullable() && Nullable.GetUnderlyingType(@this) == TypeBool);
 
   /// <summary>
   ///   Determines whether the specified type is a TimeSpan type.
@@ -852,7 +925,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is a TimeSpan type; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsTimeSpanType(this Type @this) => @this == TypeTimeSpan;
+  public static bool IsTimeSpanType(this Type @this) => @this == TypeTimeSpan || (@this.IsNullable() && Nullable.GetUnderlyingType(@this) == TypeTimeSpan);
 
   /// <summary>
   ///   Determines whether the specified type is a DateTime type.
@@ -861,7 +934,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is a DateTime type; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsDateTimeType(this Type @this) => @this == TypeDateTime;
+  public static bool IsDateTimeType(this Type @this) => @this == TypeDateTime || (@this.IsNullable() && Nullable.GetUnderlyingType(@this) == TypeDateTime);
 
   /// <summary>
   ///   Determines whether the specified type is an enum.
@@ -870,7 +943,7 @@ public static partial class TypeExtensions {
   /// <returns>
   ///   <c>true</c> if the given type is an enum; otherwise, <c>false</c>.
   /// </returns>
-  public static bool IsEnumType(this Type @this) => @this.IsEnum;
+  public static bool IsEnumType(this Type @this) => @this.IsEnum || (@this.IsNullable() && (Nullable.GetUnderlyingType(@this)?.IsEnum ?? false));
 
   /// <summary>
   ///   Determines whether the specified type is nullable.
@@ -1007,78 +1080,300 @@ public static partial class TypeExtensions {
   }
 
   /// <summary>
-  ///   Compares two arrays of types for complete equality.
+  /// Creates an instance of the specified type using constructor parameters.
   /// </summary>
-  /// <param name="array1">The 1st array.</param>
-  /// <param name="array2">The 2nd array.</param>
-  /// <param name="allowImplicitConversion">if set to <c>true</c> [allow implicit conversion].</param>
-  /// <returns>
-  ///   <c>true</c> if both arrays are equal; otherwise, <c>false</c>.
-  /// </returns>
-  private static bool _TypeArrayEquals(TypeWithValue[] array1, ParameterInfo[] array2, bool allowImplicitConversion) {
-    switch (array1) {
-      // if only one of the arrays is null, return false
-      case null when array2 != null:
-      case not null when array2 == null:
-        return false;
-
-      // both arrays are null, return true
-      case null: return true;
-    }
-
-    // no array is null, compare
-    if (array1.Length != array2.Length)
-      return false;
-
-    // compare elements
-    if (allowImplicitConversion) {
-      for (var i = 0; i < array1.Length; ++i)
-        if (!array2[i].ParameterType.IsAssignableFrom(array1[i].Type))
-          return false;
-    } else
-      for (var i = 0; i < array1.Length; ++i)
-        if (array1[i].Type != array2[i].ParameterType)
-          return false;
-
-    return true;
-  }
-
-  /// <summary>
-  ///   Creates an instance from a ctor matching the given parameter types.
-  /// </summary>
-  /// <typeparam name="TType">The type to create.</typeparam>
-  /// <param name="type">The type.</param>
-  /// <param name="parameters">The parameters.</param>
-  /// <returns>
-  ///   Anew types' instance.
-  /// </returns>
+  /// <typeparam name="TType">The target type to create.</typeparam>
+  /// <param name="type">The actual type to instantiate.</param>
+  /// <param name="parameters">Constructor parameters with their types and values.</param>
+  /// <returns>An instance of the specified type.</returns>
+  /// <remarks>
+  /// Constructor resolution order (lower score = higher priority):
+  /// <list type="bullet">
+  /// <item>Exact type matches with exact parameter count - Perfect fit, no conversions needed</item>
+  /// <item>Exact type matches with optional parameters - Same types but using default values</item>
+  /// <item>Implicit conversions with exact parameter count - All parameters convertible, no defaults</item>
+  /// <item>Implicit conversions with optional parameters - Convertible types using some defaults</item>
+  /// <item>Constructors with params arrays (exact types) - Exact matches but using params expansion</item>
+  /// <item>Constructors with params arrays (implicit conversions) - Convertible types with params expansion</item>
+  /// <item>Most specific type matches first - Prefer string over object when both work</item>
+  /// <item>Fewest optional parameters used - Prefer constructors that use more of your provided arguments</item>
+  /// <item>Shortest conversion chain - Direct inheritance over multiple interface implementations</item>
+  /// </list>
+  /// </remarks>
   private static TType _FromConstructor<TType>(Type type, params TypeWithValue[] parameters) {
     Against.ThisIsNull(type);
     Against.False(typeof(TType).IsAssignableFrom(type));
 
     var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-    var matchingCtor = (
-                         // try to find an exact matching ctor first
-                         from i in ctors
-                         let par = i.GetParameters()
-                         where _TypeArrayEquals(parameters, par, false)
-                         select i
-                       ).FirstOrDefault()
-                       ?? (
-                         // if none found, try to get a ctor that could be filled by implicit parameter conversions
-                         from i in ctors
-                         let par = i.GetParameters()
-                         where _TypeArrayEquals(parameters, par, true)
-                         select i
-                       ).FirstOrDefault();
+    // First, look for perfect matches (optimization)
+    var perfectMatch = ctors.FirstOrDefault(IsPerfectMatch);
+    if (perfectMatch != null)
+      return (TType)perfectMatch.Invoke(parameters.Select(p => p.Value).ToArray());
+
+    // Fall back to scored matching
+    var matchingCtor = ctors
+        .Where(CanInvokeConstructor)
+        .OrderBy(GetConstructorScore)
+        .FirstOrDefault();
 
     return matchingCtor == null
-        ? throw new NotSupportedException("No matching ctor found")
-        : (TType)matchingCtor.Invoke(parameters.Select(i => i.Value).ToArray())
-      ;
-  }
+        ? throw new MissingMethodException($"No matching ctor found for {type.Name} with parameters: {string.Join(", ", parameters.Select(p => p.Type?.Name ?? "null").ToArray())}")
+        : (TType)matchingCtor.Invoke(GetInvokeParameters(matchingCtor));
 
+    static bool HasDefaultValue(ParameterInfo p) {
+#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD
+      return p.HasDefaultValue;
+#else
+      return (p.Attributes & ParameterAttributes.Optional)==ParameterAttributes.Optional;
+#endif
+    }
+
+    bool IsPerfectMatch(ConstructorInfo ctor) {
+      var ctorParams = ctor.GetParameters();
+
+      // Perfect match: exact parameter count, exact types, no optionals, no params array
+      if (ctorParams.Length != parameters.Length)
+        return false;
+
+      if (ctorParams.Any(p => HasDefaultValue(p) || p.GetCustomAttribute<ParamArrayAttribute>() != null))
+        return false;
+
+      for (var i = 0; i < parameters.Length; ++i)
+        if (parameters[i].Type != ctorParams[i].ParameterType)
+          return false;
+
+      return true;
+    }
+
+    bool CanInvokeConstructor(ConstructorInfo ctor) {
+      var ctorParams = ctor.GetParameters();
+
+      // Handle params array
+      int requiredParams;
+      if (ctorParams.Length > 0 && ctorParams[^1].GetCustomAttribute<ParamArrayAttribute>() != null) {
+        requiredParams = ctorParams.Length - 1;
+        return parameters.Length >= requiredParams 
+               && CanAssignParameters(ctorParams, allowParamsArray: true);
+      }
+
+      // Handle optional parameters
+      requiredParams = ctorParams.Count(p => !HasDefaultValue(p));
+      if (parameters.Length < requiredParams || parameters.Length > ctorParams.Length)
+        return false;
+
+      return CanAssignParameters(ctorParams, allowParamsArray: false);
+
+      bool CanAssignParameters(ParameterInfo[] ctorParams, bool allowParamsArray) {
+        var compareLength = allowParamsArray ? Math.Min(parameters.Length, ctorParams.Length - 1) : parameters.Length;
+
+        for (var i = 0; i < compareLength; ++i)
+          if (!CanAssignParameter(parameters[i], ctorParams[i].ParameterType))
+            return false;
+
+        if (!allowParamsArray || parameters.Length < ctorParams.Length)
+          return true;
+        // Handle params array elements
+        var paramsElementType = ctorParams[^1].ParameterType.GetElementType();
+        for (var i = ctorParams.Length - 1; i < parameters.Length; ++i)
+          if (!CanAssignParameter(parameters[i], paramsElementType))
+            return false;
+
+        return true;
+      }
+
+      static bool CanAssignParameter(TypeWithValue parameter, Type targetType) {
+        // Handle null values
+        if (parameter.Type == null)
+          return !targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null;
+
+        var sourceType = parameter.Type;
+
+        // Check reference/boxing conversions first
+        if (targetType.IsAssignableFrom(sourceType))
+          return true;
+
+        // Handle nullable types
+        var sourceUnderlying = Nullable.GetUnderlyingType(sourceType) ?? sourceType;
+        var targetUnderlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        if (sourceUnderlying != sourceType || targetUnderlying != targetType)
+          return targetUnderlying.IsAssignableFrom(sourceUnderlying) || HasImplicitConversion(sourceUnderlying, targetUnderlying);
+
+        // Check for implicit conversion operators
+        return HasImplicitConversion(sourceType, targetType);
+
+        static bool HasImplicitConversion(Type from, Type to) {
+          const string IMPLICIT_OPERATOR_METHOD_NAME = "op_Implicit";
+
+          // Handle built-in numeric conversions first
+          if (HasBuiltInImplicitConversion(from, to))
+            return true;
+
+          // Look for op_Implicit on source type (from -> to)
+          var sourceImplicits = from.GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.Name == IMPLICIT_OPERATOR_METHOD_NAME && m.ReturnType == to)
+            .Where(m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == from);
+
+          if (sourceImplicits.Any())
+            return true;
+
+          // Look for op_Implicit on target type (from -> to)  
+          var targetImplicits = to.GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.Name == IMPLICIT_OPERATOR_METHOD_NAME && m.ReturnType == to)
+            .Where(m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == from);
+
+          return targetImplicits.Any();
+
+
+          static bool HasBuiltInImplicitConversion(Type from, Type to) {
+            if (from == to)
+              return true;
+
+            // Built-in implicit numeric conversions per C# spec
+            Dictionary<Type, Type[]> conversions = StaticMethodLocal<Dictionary<Type, Type[]>>.GetOrAdd(() => new() {
+              [typeof(sbyte)] = [typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(byte)] = [typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(short)] = [typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(ushort)] = [typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(int)] = [typeof(long), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(uint)] = [typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(long)] = [typeof(float), typeof(double), typeof(decimal)],
+              [typeof(ulong)] = [typeof(float), typeof(double), typeof(decimal)],
+              [typeof(char)] = [typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(decimal)],
+              [typeof(float)] = [typeof(double)]
+            });
+
+            return conversions.ContainsKey(from) && conversions[from].Contains(to);
+          }
+        }
+      }
+
+    }
+
+    int GetConstructorScore(ConstructorInfo ctor) {
+      var ctorParams = ctor.GetParameters();
+      var hasParamsArray = ctorParams.Length > 0 && ctorParams[^1].GetCustomAttribute<ParamArrayAttribute>() != null;
+      var optionalParametersUsed = Math.Max(0, ctorParams.Length - parameters.Length);
+
+      // Analyze each parameter for scoring
+      var regularParamCount = hasParamsArray ? ctorParams.Length - 1 : ctorParams.Length;
+      var compareLength = Math.Min(parameters.Length, regularParamCount);
+
+      var exactMatches = 0;
+      var implicitConversions = 0;
+      var totalConversionDistance = 0;
+
+      // Score regular parameters
+      for (var i = 0; i < compareLength; i++) {
+        var paramType = ctorParams[i].ParameterType;
+        var argType = parameters[i].Type;
+
+        if (argType == null) {
+          ++implicitConversions;
+          totalConversionDistance += 1;
+        } else if (paramType == argType)
+          ++exactMatches;
+        else if (paramType.IsAssignableFrom(argType)) {
+          ++implicitConversions;
+          totalConversionDistance += GetInheritanceDistance(argType, paramType);
+        }
+      }
+
+      // Score params array elements
+      if (hasParamsArray && parameters.Length > regularParamCount) {
+        var paramsElementType = ctorParams[^1].ParameterType.GetElementType();
+        for (var i = regularParamCount; i < parameters.Length; ++i) {
+          var argType = parameters[i].Type;
+          if (argType == null || paramsElementType != argType) {
+            ++implicitConversions;
+            if (argType != null)
+              totalConversionDistance += GetInheritanceDistance(argType, paramsElementType);
+            else
+              totalConversionDistance += 1;
+          } else
+            ++exactMatches;
+        }
+      }
+
+      var allExactMatches = implicitConversions == 0;
+
+      // Apply resolution order scoring
+      var baseScore = allExactMatches switch {
+        true when optionalParametersUsed == 0 && !hasParamsArray => 0,
+        true when optionalParametersUsed > 0 && !hasParamsArray => 10,
+        false when optionalParametersUsed == 0 && !hasParamsArray => 100,
+        false when optionalParametersUsed > 0 && !hasParamsArray => 200,
+        true when hasParamsArray => 300,
+        false when hasParamsArray => 400,
+        _ => 500
+      };
+
+      // Fine-tune score based on parameter details
+      return baseScore + optionalParametersUsed * 2 + implicitConversions * 5 + totalConversionDistance;
+
+      static int GetInheritanceDistance(Type from, Type to) {
+        if (from == to)
+          return 0;
+
+        var distance = 1;
+        var current = from.BaseType;
+
+        // Check inheritance chain
+        while (current != null && current != to) {
+          ++distance;
+          current = current.BaseType;
+          if (distance > 100)
+            break; // Prevent infinite loops
+        }
+
+        if (current == to)
+          return distance;
+
+        // Check interfaces (less preferred than direct inheritance)
+        if (to.IsInterface && to.IsAssignableFrom(from))
+          return distance + 10;
+
+        return distance + 5; // General assignable but not direct inheritance
+      }
+
+    }
+
+    object[] GetInvokeParameters(ConstructorInfo ctor) {
+      var ctorParams = ctor.GetParameters();
+      var hasParamsArray = ctorParams.Length > 0 && ctorParams[^1].GetCustomAttribute<ParamArrayAttribute>() != null;
+
+      if (!hasParamsArray) {
+        // Simple case - just return the values, filling in defaults as needed
+        var result = new object[ctorParams.Length];
+        for (var i = 0; i < result.Length; ++i)
+          result[i] = i < parameters.Length
+              ? parameters[i].Value
+              : HasDefaultValue(ctorParams[i]) ? ctorParams[i].DefaultValue : null;
+        return result;
+      }
+
+      // Handle params array
+      var regularParamCount = ctorParams.Length - 1;
+      var result2 = new object[ctorParams.Length];
+
+      // Fill regular parameters
+      for (var i = 0; i < regularParamCount; ++i)
+        result2[i] = i < parameters.Length ? parameters[i].Value : ctorParams[i].DefaultValue;
+
+      // Create params array
+      var paramsElementType = ctorParams[^1].ParameterType.GetElementType();
+      var paramsArrayLength = Math.Max(0, parameters.Length - regularParamCount);
+      var paramsArray = Array.CreateInstance(paramsElementType, paramsArrayLength);
+
+      for (var i = 0; i < paramsArrayLength; ++i)
+        paramsArray.SetValue(parameters[regularParamCount + i].Value, i);
+
+      result2[^1] = paramsArray;
+      return result2;
+    }
+  }
+  
 #if NETFRAMEWORK
 
   /// <summary>
