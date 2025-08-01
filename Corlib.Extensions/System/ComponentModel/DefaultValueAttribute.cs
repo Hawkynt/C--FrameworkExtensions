@@ -34,7 +34,13 @@ public static partial class DefaultValueAttributeExtensions {
   /// <param name="flattenHierarchies">if set to <c>true</c> [flatten hierarchies].</param>
   public static void SetPropertiesToDefaultValues<TType>(this TType @this, bool alsoNonPublic = false, bool flattenHierarchies = true) {
     var type = @this is null ? typeof(TType) : @this.GetType();
-    var properties = type.GetProperties(BindingFlags.Instance | (alsoNonPublic ? BindingFlags.NonPublic : 0) | BindingFlags.Public | (flattenHierarchies ? BindingFlags.FlattenHierarchy : 0));
+    var properties = type.GetProperties(
+      BindingFlags.Instance 
+      | (alsoNonPublic ? BindingFlags.NonPublic : 0) 
+      | BindingFlags.Public 
+      | (flattenHierarchies ? BindingFlags.FlattenHierarchy : 0)
+      | (!flattenHierarchies ? BindingFlags.DeclaredOnly : 0)
+      );
     var writableProperties = properties.Where(p => p.CanWrite);
     foreach (var prop in writableProperties) {
       var defaultValueAttributes = prop.GetCustomAttributes(typeof(DefaultValueAttribute), false).OfType<DefaultValueAttribute>();
@@ -49,6 +55,59 @@ public static partial class DefaultValueAttributeExtensions {
         Trace.WriteLine($"Could not set property to default: type:{type}, property:{prop.Name}, value:{value}");
       }
     }
+
+    return;
+
+    static object _TryChangeType(Type targetType, object value) {
+      if (value == null)
+        return null;
+
+      var sourceType = value.GetType();
+      if (sourceType == targetType)
+        return value;
+
+      // Special handling for enums
+      if (targetType.IsEnum)
+        return value is string str ? Enum.Parse(targetType, str) : Enum.ToObject(targetType, value);
+
+      // Use Convert.ChangeType for built-in supported conversions
+      try {
+        if (IsCastableTo(sourceType, targetType))
+          return Convert.ChangeType(value, targetType);
+      } catch {
+        // Fall through
+      }
+
+      // Manually handle numeric conversions
+      if (targetType.IsPrimitive && value is IConvertible convertible) {
+        try {
+          // unchecked avoids overflow exceptions, like regular implicit C# casts
+          return unchecked(targetType switch {
+            not null when targetType == typeof(short) => (short)convertible.ToInt32(null),
+            not null when targetType == typeof(ushort) => (ushort)convertible.ToUInt32(null),
+            not null when targetType == typeof(byte) => (byte)convertible.ToByte(null),
+            not null when targetType == typeof(sbyte) => (sbyte)convertible.ToSByte(null),
+            not null when targetType == typeof(int) => convertible.ToInt32(null),
+            not null when targetType == typeof(uint) => convertible.ToUInt32(null),
+            not null when targetType == typeof(long) => convertible.ToInt64(null),
+            not null when targetType == typeof(ulong) => convertible.ToUInt64(null),
+            not null when targetType == typeof(float) => convertible.ToSingle(null),
+            not null when targetType == typeof(double) => convertible.ToDouble(null),
+            not null when targetType == typeof(decimal) => convertible.ToDecimal(null),
+            not null when targetType == typeof(char) => convertible.ToChar(null),
+            _ => throw new InvalidOperationException()
+          });
+        } catch {
+          // Final fallback: failure
+        }
+      }
+
+      throw new InvalidOperationException($"Cannot convert from {sourceType} to {targetType}");
+
+      bool IsCastableTo(Type from, Type to) =>
+        to.IsAssignableFrom(from) || _IMPLICIT_CONVERSIONS.TryGetValue(to, out var list) && list.Contains(from);
+    }
+
   }
 
   private static readonly Dictionary<Type, Type[]> _IMPLICIT_CONVERSIONS = new() {
@@ -98,43 +157,4 @@ public static partial class DefaultValueAttributeExtensions {
     { typeof(short), [typeof(byte)] }
   };
 
-  private static object _TryChangeType(Type targetType, object value) {
-    if (value == null)
-      return null;
-
-    var sourceType = value.GetType();
-    if (sourceType == targetType)
-      return value;
-
-    if (IsCastableTo(sourceType, targetType))
-      return Convert.ChangeType(value, targetType);
-
-    if (IsIntegerType(targetType) && IsIntegerType(sourceType) && IsSigned(sourceType) && !IsSigned(targetType) && Math.Sign((float)Convert.ChangeType(value, TypeCode.Single)) >= 0)
-      return Convert.ChangeType(value, targetType);
-
-    throw new InvalidOperationException($"Can not convert from {sourceType.FullName} to {targetType.FullName}");
-
-    bool IsCastableTo(Type @this, Type target) {
-      // check inheritance
-      if (target.IsAssignableFrom(@this))
-        return true;
-
-      // check cache
-      if (_IMPLICIT_CONVERSIONS.TryGetValue(target, out var source) && source.Contains(@this))
-        return true;
-
-      return @this.GetMethods(BindingFlags.Public | BindingFlags.Static)
-        .Any(
-          m => m.ReturnType == target &&
-               m.Name == "op_Implicit" ||
-               m.Name == "op_Explicit"
-        );
-    }
-
-    bool IsNullable(Type @this) => @this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Nullable<>);
-
-    bool IsIntegerType(Type @this) => @this == typeof(byte) || @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(ushort) || @this == typeof(int) || @this == typeof(uint) || @this == typeof(long) || @this == typeof(ulong);
-
-    bool IsSigned(Type @this) => @this == typeof(sbyte) || @this == typeof(short) || @this == typeof(int) || @this == typeof(long) || @this == typeof(float) || @this == typeof(double) || @this == typeof(decimal) || (IsNullable(@this) && IsSigned(@this.GetGenericArguments()[0]));
-  }
 }
