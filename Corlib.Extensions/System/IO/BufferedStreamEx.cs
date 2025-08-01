@@ -39,7 +39,15 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
     }
   }
 
-  public override long Length => underlyingStream.Length;
+  public override long Length {
+    get {
+      var bufferedEnd = this._isDirty
+        ? Math.Max(underlyingStream.Length, this._bufferStartPositionInStream + this._bufferLength)
+        : underlyingStream.Length;
+      return bufferedEnd;
+    }
+  }
+
   public override bool CanRead => underlyingStream.CanRead;
   public override bool CanSeek => underlyingStream.CanSeek;
   public override bool CanWrite => underlyingStream.CanWrite;
@@ -291,7 +299,6 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
 
   public override long Seek(long offset, SeekOrigin origin) {
     Against.UnknownEnumValues(origin);
-    Against.IndexBelowZero(offset);
 
     var target = origin switch {
       SeekOrigin.Begin => offset,
