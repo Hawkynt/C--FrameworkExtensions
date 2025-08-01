@@ -805,10 +805,10 @@ public static partial class EnumerableExtensions {
   }
 
   [DebuggerStepThrough]
-  public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(true)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) => !IsNullOrEmpty(@this, predicate);
+  public static bool IsNullOrEmpty<TItem>([NotNullWhen(true)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) => !IsNotNullOrEmpty(@this, predicate);
 
   /// <summary>
-  ///   Determines whether the enumeration is <c>null</c> or empty.
+  ///   Determines whether the enumeration is not <c>null</c> or empty.
   /// </summary>
   /// <typeparam name="TItem">The type of the item.</typeparam>
   /// <param name="this">This Enumeration.</param>
@@ -817,7 +817,7 @@ public static partial class EnumerableExtensions {
   ///   <c>true</c> if the enumeration is <c>null</c> or empty; otherwise, <c>false</c>.
   /// </returns>
   [DebuggerStepThrough]
-  public static bool IsNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
+  public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
     if (predicate == null)
       throw new ArgumentNullException(nameof(predicate));
 
