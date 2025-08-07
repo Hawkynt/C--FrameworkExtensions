@@ -5,7 +5,6 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((uint)0b00000000000000000000000000000001, 0, (uint)0b00000000000000000000000000000001)]
   [TestCase((uint)0b00000000000000000000000000000001, 1, (uint)0b00000000000000000000000000000010)]
@@ -43,10 +42,10 @@ public partial class MathTests {
   [Test]
   [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
   public void BitwiseUInt(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
-    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
-    var wordPack = valuePack.Select(i=>(ushort)(i<<8|i)).ToArray();
-    var dwordPack = wordPack.Select(i => (uint)(i << 16 | i)).ToArray();
-    
+    var valuePack = new[] { self, operand, and, or, xor, nand, nor, equ };
+    var wordPack = valuePack.Select(i => (ushort)((i << 8) | i)).ToArray();
+    var dwordPack = wordPack.Select(i => (uint)((i << 16) | i)).ToArray();
+
     Assert.AreEqual(dwordPack[2], dwordPack[0].And(dwordPack[1]), "And broken");
     Assert.AreEqual(dwordPack[3], dwordPack[0].Or(dwordPack[1]), "Or broken");
     Assert.AreEqual(dwordPack[4], dwordPack[0].Xor(dwordPack[1]), "Xor broken");
@@ -69,5 +68,4 @@ public partial class MathTests {
   [TestCase((uint)0b11111111111111111111111111111111, (uint)0b00000000000000000000000000000010, (uint)0b00000000000000000000000000000001)]
   [TestCase((uint)0b11111111111111111111111111111111, (uint)0b00000000000000000000000000000001, (uint)0b00000000000000000000000000000001)]
   public void ParallelBitExtractDWord(uint value, uint mask, uint expected) => Assert.AreEqual(expected, value.ParallelBitExtract(mask));
-
 }

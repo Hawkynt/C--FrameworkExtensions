@@ -1,14 +1,13 @@
-using NUnit.Framework;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System.Collections.Generic;
 
 [TestFixture]
 public class EnumerableTests {
-
   [Test]
   [TestCase(null, null, typeof(NullReferenceException))]
   [TestCase("", false)]
@@ -110,84 +109,105 @@ public class EnumerableTests {
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "a")]
-  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetFirst(out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetFirst(out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, false, null, typeof(ArgumentNullException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "b")]
-  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetLast(out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetLast(out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, 0, false, null, typeof(NullReferenceException))]
   [TestCase("", -1, false, null, typeof(IndexOutOfRangeException))]
   [TestCase("a", 1, false, null)]
   [TestCase("a|b|c", 1, true, "b")]
-  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetItem(index, out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetItem(index, out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a|b", true, "b")]
   [TestCase("b|a", true, "b")]
-  public void TryGetMax(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetMax(out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetMax(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetMax(out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a|b", true, "a")]
   [TestCase("b|a", true, "a")]
-  public void TryGetMin(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetMin(out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetMin(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetMin(out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("ab|ba", true, "ab")]
   [TestCase("ba|ab", true, "ab")]
-  public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i => i![1], out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetMaxBy(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetMaxBy(i => i![1], out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("ab|ba", true, "ba")]
   [TestCase("ba|ab", true, "ba")]
-  public void TryGetMinBy(string? input, bool result, string? expected, Type? exception = null) 
-    => ExecuteTest(() => {
-      var r = ConvertFromStringToTestArray(input).TryGetMinBy(i => i![1], out var v);
-      return (r, v);
-    }, (result, expected), exception)
-    ;
+  public void TryGetMinBy(string? input, bool result, string? expected, Type? exception = null)
+    => ExecuteTest(
+      () => {
+        var r = ConvertFromStringToTestArray(input).TryGetMinBy(i => i![1], out var v);
+        return (r, v);
+      },
+      (result, expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, null, null, typeof(ArgumentNullException))]
@@ -264,7 +284,8 @@ public class EnumerableTests {
   [TestCase("a|A", "a|A")]
   [TestCase("a|A", "a", StringComparison.OrdinalIgnoreCase)]
   public void ToHashSet(string? input, string? expected, StringComparison? comparison = null, Type? exception = null)
-    => ExecuteTest(() =>
+    => ExecuteTest(
+      () =>
         (
           comparison == null
             ? ConvertFromStringToTestArray(input)!
@@ -309,7 +330,7 @@ public class EnumerableTests {
   [TestCase(null, null, null, typeof(ArgumentNullException))]
   [TestCase("", "a", "a")]
   [TestCase("b", "a", "b")]
-  [TestCase("b|c", "a", "a",typeof(InvalidOperationException))]
+  [TestCase("b|c", "a", "a", typeof(InvalidOperationException))]
   [TestCase("!", "a", null)]
   public void SingleOrDefault(string? input, string? @default, string? expected, Type? exception = null) {
     var self = ConvertFromStringToTestArray(input);
@@ -319,7 +340,7 @@ public class EnumerableTests {
     ExecuteTest(() => self.SingleOrDefault((Func<string?>)null!), expected, typeof(ArgumentNullException));
     ExecuteTest(() => self.SingleOrDefault((Func<IEnumerable<string?>, string?>)null!), expected, typeof(ArgumentNullException));
   }
-  
+
   private sealed class Dummy(string data) {
     public string Data { get; } = data;
     public string DataReversed => new(this.Data.Reverse().ToArray());
@@ -338,11 +359,10 @@ public class EnumerableTests {
   [TestCase("a|b", "A", true, "a")]
   public void FilterIfNeeded(string? input, string? filter, bool ignoreCase, string? expected, Type? exception = null)
     => ExecuteTest(
-        () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(d => d!.Data, filter, ignoreCase).Select(d => d?.Data),
-        ConvertFromStringToTestArray(expected),
-        exception
-      )
-    ;
+      () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(d => d!.Data, filter, ignoreCase).Select(d => d?.Data),
+      ConvertFromStringToTestArray(expected),
+      exception
+    );
 
   [Test]
   [TestCase(null, null, false, null, typeof(NullReferenceException))]
@@ -363,11 +383,10 @@ public class EnumerableTests {
       () => (input == null ? null : ConvertFromStringToTestArray(input)?.Select(s => s == null ? null : new Dummy(s))).FilterIfNeeded(filter, ignoreCase, d => d!.Data, d => d!.DataReversed).Select(d => d?.Data),
       ConvertFromStringToTestArray(expected),
       exception
-    )
-  ;
+    );
 
   [Test]
-  [TestCase(-1,1337)]
+  [TestCase(-1, 1337)]
   [TestCase(0, 1337)]
   [TestCase(1, 1337)]
   [TestCase(2, 1337)]
@@ -387,7 +406,7 @@ public class EnumerableTests {
     // shuffling using the stream should match length and not modify the source
     var outputEnumeration = Enumerable.ToArray(input.Shuffled(new(seed)));
     Assert.That(outputEnumeration.Length, Is.EqualTo(elementCount));
-    Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)),"Should not modify source array");
+    Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)), "Should not modify source array");
 
     // shuffling using ToArray should match length and not modify the source
     var outputArray = input.Shuffled(new(seed)).ToArray();
@@ -400,8 +419,7 @@ public class EnumerableTests {
     Assert.That(input, Is.EqualTo(Enumerable.Range(0, elementCount)), "Should not modify source array");
 
     switch (elementCount) {
-      case <= 0:
-        return;
+      case <= 0: return;
       case 1:
         Assert.That(outputEnumeration[0], Is.EqualTo(input[0]), "One element alone can't be shuffled");
         Assert.That(outputArray[0], Is.EqualTo(input[0]), "One element alone can't be shuffled");
@@ -413,8 +431,8 @@ public class EnumerableTests {
         Assert.That(outputList, Is.EquivalentTo(input), "Shuffling should return all source elements");
         return;
       default:
-        Assert.That(outputEnumeration, Is.Not.EqualTo(input),"Shuffling should yield a different element order");
-        Assert.That(outputEnumeration, Is.EquivalentTo(input),"Shuffling should return all source elements");
+        Assert.That(outputEnumeration, Is.Not.EqualTo(input), "Shuffling should yield a different element order");
+        Assert.That(outputEnumeration, Is.EquivalentTo(input), "Shuffling should return all source elements");
 
         Assert.That(outputArray, Is.Not.EqualTo(input), "Shuffling should yield a different element order");
         Assert.That(outputArray, Is.EquivalentTo(input), "Shuffling should return all source elements");
@@ -425,8 +443,8 @@ public class EnumerableTests {
     }
 
     var shuffled = input.Shuffled(new(seed));
-    Assert.That(Enumerable.ToArray(shuffled), Is.Not.EqualTo(shuffled),"Multiple enumerations should yield different ordering");
-    Assert.That(shuffled.ToArray(),Is.Not.EqualTo(shuffled.ToArray()), "Multiple materialization should yield different ordering");
+    Assert.That(Enumerable.ToArray(shuffled), Is.Not.EqualTo(shuffled), "Multiple enumerations should yield different ordering");
+    Assert.That(shuffled.ToArray(), Is.Not.EqualTo(shuffled.ToArray()), "Multiple materialization should yield different ordering");
     Assert.That(shuffled.ToList(), Is.Not.EqualTo(shuffled.ToList()), "Multiple materialization should yield different ordering");
   }
 
@@ -463,16 +481,15 @@ public class EnumerableTests {
 
     var outputEnumeration = Enumerable.ToArray(input.Shuffled(new(seed)));
     Assert.That(outputEnumeration.Length, Is.EqualTo(elementCount));
-    
+
     var outputArray = input.Shuffled(new(seed)).ToArray();
     Assert.That(outputArray.Length, Is.EqualTo(elementCount));
-    
+
     var outputList = input.Shuffled(new(seed)).ToList();
     Assert.That(outputList.Count, Is.EqualTo(elementCount));
-    
+
     switch (elementCount) {
-      case <= 0:
-        return;
+      case <= 0: return;
       case 1:
         Assert.That(outputEnumeration[0], Is.EqualTo(input.First()), "One element alone can't be shuffled");
         Assert.That(outputArray[0], Is.EqualTo(input.First()), "One element alone can't be shuffled");
@@ -538,8 +555,9 @@ public class EnumerableTests {
   public void ConvertAll_NullConverter_Throws() {
     IEnumerable source = new[] { 1 };
     Assert.That(
-        () => source.ConvertAll<int, string>(null!).Cast<string>().ToArray(),
-        Throws.TypeOf<ArgumentNullException>());
+      () => source.ConvertAll<int, string>(null!).Cast<string>().ToArray(),
+      Throws.TypeOf<ArgumentNullException>()
+    );
   }
 
   [Test]
@@ -592,7 +610,6 @@ public class EnumerableTests {
         yield return i;
       }
     }
-
   }
 
   [Test]
@@ -620,11 +637,13 @@ public class EnumerableTests {
   public void ToBiDictionary_NullSelectors_Throw() {
     var data = new[] { ("a", 1) };
     Assert.That(
-        () => data.ToBiDictionary<(string, int), string, int>(null!, t => t.Item2),
-        Throws.TypeOf<ArgumentNullException>());
+      () => data.ToBiDictionary<(string, int), string, int>(null!, t => t.Item2),
+      Throws.TypeOf<ArgumentNullException>()
+    );
     Assert.That(
-        () => data.ToBiDictionary<(string, int), string, int>(t => t.Item1, null!),
-        Throws.TypeOf<ArgumentNullException>());
+      () => data.ToBiDictionary<(string, int), string, int>(t => t.Item1, null!),
+      Throws.TypeOf<ArgumentNullException>()
+    );
   }
 
   [Test]
@@ -659,5 +678,4 @@ public class EnumerableTests {
     IEnumerable<int> source = null!;
     Assert.That(source.ToNullIfEmpty(), Is.Null);
   }
-
 }

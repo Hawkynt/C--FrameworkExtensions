@@ -6,17 +6,16 @@ namespace Utilities;
 
 [TestFixture]
 internal class ArrayTests {
-
   private static T[] Empty<T>() {
     var assembly = typeof(ArrayExtensions).Assembly;
-    var @class=assembly.NonPublic("Utilities.Array");
+    var @class = assembly.NonPublic("Utilities.Array");
     var method = @class!.NonPublic<T[]>("Empty");
     return method(null)!;
   }
 
   [Test]
   public void EmptyArrayOfTypeIntShouldBeEmptyAndCorrectType() {
-    var result = ArrayTests.Empty<int>();
+    var result = Empty<int>();
     Assert.IsNotNull(result);
     Assert.AreEqual(0, result.Length);
     Assert.IsInstanceOf<int[]>(result);
@@ -24,7 +23,7 @@ internal class ArrayTests {
 
   [Test]
   public void EmptyArrayOfTypeStringShouldBeEmptyAndCorrectType() {
-    var result = ArrayTests.Empty<string>();
+    var result = Empty<string>();
     Assert.IsNotNull(result);
     Assert.AreEqual(0, result.Length);
     Assert.IsInstanceOf<string[]>(result);
@@ -32,7 +31,7 @@ internal class ArrayTests {
 
   [Test]
   public void EmptyArrayOfTypeObjectShouldBeEmptyAndCorrectType() {
-    var result = ArrayTests.Empty<object>();
+    var result = Empty<object>();
     Assert.IsNotNull(result);
     Assert.AreEqual(0, result.Length);
     Assert.IsInstanceOf<object[]>(result);
@@ -40,23 +39,22 @@ internal class ArrayTests {
 
   [Test]
   public void EmptyArraysShouldBeSingletons() {
-    var array1 = ArrayTests.Empty<int>();
-    var array2 = ArrayTests.Empty<int>();
+    var array1 = Empty<int>();
+    var array2 = Empty<int>();
     Assert.AreSame(array1, array2, "Expected single instance for same type");
   }
 
   [Test]
   public void EmptyArraysOfDifferentTypesAreNotSame() {
-    var intArray = ArrayTests.Empty<int>();
-    var doubleArray = ArrayTests.Empty<double>();
+    var intArray = Empty<int>();
+    var doubleArray = Empty<double>();
     Assert.AreNotSame(intArray, doubleArray, "Expected different instances for different types");
   }
 
   [Test]
   public void EmptyArrayShouldHaveNoElements() {
-    var result = ArrayTests.Empty<double>();
+    var result = Empty<double>();
     Assert.AreEqual(0, result.Length);
     Assert.AreEqual(0, result.Count(), "LINQ Count should also be 0");
   }
-
 }

@@ -1,45 +1,45 @@
 ﻿using NUnit.Framework;
 
-namespace System; 
+namespace System;
 
 [TestFixture]
 public class IndexOf {
   [Test]
   public void BothArraysAreEqual() {
-    var byteArray1 = new byte[] {65, 66, 67};
-    var byteArray2 = new byte[] {65, 66, 67};
+    var byteArray1 = new byte[] { 65, 66, 67 };
+    var byteArray2 = new byte[] { 65, 66, 67 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 0);
   }
 
   [Test]
   public void DoesNotContainPattern() {
-    var byteArray1 = new byte[] {65, 66, 67};
-    var byteArray2 = new byte[] {68, 69, 61};
+    var byteArray1 = new byte[] { 65, 66, 67 };
+    var byteArray2 = new byte[] { 68, 69, 61 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, -1);
   }
 
   [Test]
   public void DataToShort() {
-    var byteArray1 = new byte[] {65, 66};
-    var byteArray2 = new byte[] {65, 66, 67};
+    var byteArray1 = new byte[] { 65, 66 };
+    var byteArray2 = new byte[] { 65, 66, 67 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, -1);
   }
 
   [Test]
   public void MatchesAtStart() {
-    var byteArray1 = new byte[] {65, 66, 67};
-    var byteArray2 = new byte[] {65, 66};
+    var byteArray1 = new byte[] { 65, 66, 67 };
+    var byteArray2 = new byte[] { 65, 66 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 0);
   }
 
   [Test]
   public void MatchesAtEnd() {
-    var byteArray1 = new byte[] {65, 66, 67};
-    var byteArray2 = new byte[] {66, 67};
+    var byteArray1 = new byte[] { 65, 66, 67 };
+    var byteArray2 = new byte[] { 66, 67 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 1);
   }
@@ -47,14 +47,14 @@ public class IndexOf {
   [Test]
   public void DataIsEmpty() {
     var byteArray1 = new byte[] { };
-    var byteArray2 = new byte[] {65, 66};
+    var byteArray2 = new byte[] { 65, 66 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, -1);
   }
 
   [Test]
   public void NeedleIsEmpty() {
-    var byteArray1 = new byte[] {65, 66, 67};
+    var byteArray1 = new byte[] { 65, 66, 67 };
     var byteArray2 = new byte[] { };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 0);
@@ -62,23 +62,23 @@ public class IndexOf {
 
   [Test]
   public void SameBytesButShorterPattern() {
-    var byteArray1 = new byte[] {65, 65, 65};
-    var byteArray2 = new byte[] {65, 65};
+    var byteArray1 = new byte[] { 65, 65, 65 };
+    var byteArray2 = new byte[] { 65, 65 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 0);
   }
 
   [Test]
   public void SameBytesSomeWhereImData() {
-    var byteArray1 = new byte[] {63, 62, 65, 65, 65};
-    var byteArray2 = new byte[] {65, 65, 65};
+    var byteArray1 = new byte[] { 63, 62, 65, 65, 65 };
+    var byteArray2 = new byte[] { 65, 65, 65 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2);
     Assert.AreEqual(index, 2);
   }
 
   [Test]
   public void ReferenceComparision() {
-    var byteArray1 = new byte[] {65, 65};
+    var byteArray1 = new byte[] { 65, 65 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray1);
     Assert.AreEqual(index, 0);
   }
@@ -94,14 +94,12 @@ public class IndexOf {
 
   [Test]
   public void DataIsNull() {
-    var byteArray2 = new byte[] { 65, 65,65  };
-    Assert.That(()=> ArrayExtensions.IndexOfOrMinusOne(null, byteArray2),Throws.InstanceOf<NullReferenceException>());
+    var byteArray2 = new byte[] { 65, 65, 65 };
+    Assert.That(() => ArrayExtensions.IndexOfOrMinusOne(null, byteArray2), Throws.InstanceOf<NullReferenceException>());
   }
 
   [Test]
-  public void BothAreNull() {
-    Assert.That(()=> ArrayExtensions.IndexOfOrMinusOne(null, null),Throws.InstanceOf<NullReferenceException>());
-  }
+  public void BothAreNull() => Assert.That(() => ArrayExtensions.IndexOfOrMinusOne(null, null), Throws.InstanceOf<NullReferenceException>());
 
   [Test]
   public void BothAreBigger64k() {
@@ -121,16 +119,16 @@ public class IndexOf {
 
   [Test]
   public void OffsetOutOfBounds() {
-    var byteArray1 = new byte[] {63, 62, 65, 65, 65};
-    var byteArray2 = new byte[] {65, 65, 65};
+    var byteArray1 = new byte[] { 63, 62, 65, 65, 65 };
+    var byteArray2 = new byte[] { 65, 65, 65 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2, 5);
     Assert.AreEqual(index, -1);
   }
 
   [Test]
   public void OffsetInRange() {
-    var byteArray1 = new byte[] {63, 62, 65, 65, 65};
-    var byteArray2 = new byte[] {65, 65, 65};
+    var byteArray1 = new byte[] { 63, 62, 65, 65, 65 };
+    var byteArray2 = new byte[] { 65, 65, 65 };
     var index = byteArray1.IndexOfOrMinusOne(byteArray2, 2);
     Assert.AreEqual(index, 2);
   }

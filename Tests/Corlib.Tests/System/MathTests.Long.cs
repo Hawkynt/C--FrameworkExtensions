@@ -5,12 +5,11 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((long)0b0000000000000000000000000000000000000000000000000000000000000001, 0, 0b0000000000000000000000000000000000000000000000000000000000000001)]
   [TestCase((long)0b0000000000000000000000000000000000000000000000000000000000000001, 1, 0b0000000000000000000000000000000000000000000000000000000000000010)]
   [TestCase((long)0b0100000000000000000000000000000000000000000000000000000000000000, 1, 0b0000000000000000000000000000000000000000000000000000000000000000)]
-  [TestCase(unchecked((long)0x8000000000000000L), 1, (unchecked((long)0x8000000000000000L)))]
+  [TestCase(unchecked((long)0x8000000000000000L), 1, unchecked((long)0x8000000000000000L))]
   [TestCase((long)0b00000000000000000000000000000001, 63, 0b0000000000000000000000000000000000000000000000000000000000000000)]
   [TestCase((long)0b00000000000000000000000000000001, 64, 0b0000000000000000000000000000000000000000000000000000000000000000)]
   [TestCase((long)0b00000000000000000000000000000001, 128, 0b0000000000000000000000000000000000000000000000000000000000000000)]
@@ -46,12 +45,12 @@ public partial class MathTests {
   [Test]
   [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
   public void BitwiseLong(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
-    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
-    var wordPack = valuePack.Select(i=>(ushort)(i<<8|i)).ToArray();
-    var dwordPack = wordPack.Select(i => (uint)(i << 16 | i)).ToArray();
-    var qwordPack = dwordPack.Select(i => ((ulong)i << 32 | i)).ToArray();
+    var valuePack = new[] { self, operand, and, or, xor, nand, nor, equ };
+    var wordPack = valuePack.Select(i => (ushort)((i << 8) | i)).ToArray();
+    var dwordPack = wordPack.Select(i => (uint)((i << 16) | i)).ToArray();
+    var qwordPack = dwordPack.Select(i => ((ulong)i << 32) | i).ToArray();
     var longValues = qwordPack.Select(i => (long)i).ToArray();
-    
+
     Assert.AreEqual(longValues[2], longValues[0].And(longValues[1]), "And broken");
     Assert.AreEqual(longValues[3], longValues[0].Or(longValues[1]), "Or broken");
     Assert.AreEqual(longValues[4], longValues[0].Xor(longValues[1]), "Xor broken");
@@ -59,5 +58,4 @@ public partial class MathTests {
     Assert.AreEqual(longValues[6], longValues[0].Nor(longValues[1]), "Nor broken");
     Assert.AreEqual(longValues[7], longValues[0].Equ(longValues[1]), "Equ broken");
   }
-
 }

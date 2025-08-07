@@ -1,24 +1,21 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using NUnit.Framework;
 
 namespace System;
 
 [TestFixture]
+[Category("Unit")]
 public class StringComprehensiveTest {
-  
   #region String Parsing Methods Tests (T4 Generated)
 
-  [TestCase("3.14", 314f)]  // Actual behavior based on culture
+  [TestCase("3.14", 314f)] // Actual behavior based on culture
   [TestCase("0", 0f)]
-  [TestCase("-123.45", -12345f)]  // Actual behavior based on culture
+  [TestCase("-123.45", -12345f)] // Actual behavior based on culture
   [TestCase("1e10", 1e10f)]
-  [TestCase("123.456e-2", 1234.56f)]  // Scientific notation behavior
+  [TestCase("123.456e-2", 1234.56f)] // Scientific notation behavior
+  [Category("HappyPath"), Category("CultureSensitive")]
   public void ParseFloat_ValidInput_ReturnsCorrectValue(string input, float expected) {
     var result = input.ParseFloat();
     Assert.AreEqual(expected, result, 0.0001f);
@@ -26,6 +23,7 @@ public class StringComprehensiveTest {
 
   [TestCase("3.14.15")]
   [TestCase("∞")]
+  [Category("EdgeCase")]
   public void ParseFloat_InvalidInput_DoesNotThrow(string input) =>
     // Based on actual behavior, these invalid inputs may be handled gracefully
     Assert.DoesNotThrow(() => input.ParseFloat());
@@ -51,21 +49,20 @@ public class StringComprehensiveTest {
   [Test]
   public void ParseFloat_WithNumberStyles_ParsesCorrectly() {
     // Test that the method accepts NumberStyles parameter without format exceptions
-    var input = "123";  // Use integer format that works with basic NumberStyles
+    var input = "123"; // Use integer format that works with basic NumberStyles
     var result = input.ParseFloat(NumberStyles.Integer);
     Assert.AreEqual(123f, result, 0.01f);
   }
 
-  [TestCase("3.14", true, 314f)]  // Culture-specific parsing
+  [TestCase("3.14", true, 314f)] // Culture-specific parsing
   [TestCase("abc", false, 0f)]
   [TestCase("", false, 0f)]
   [TestCase("123", true, 123f)]
   public void TryParseFloat_VariousInputs_ReturnsExpectedResults(string input, bool expectedSuccess, float expectedValue) {
     var success = input.TryParseFloat(out var result);
     Assert.AreEqual(expectedSuccess, success);
-    if (expectedSuccess) {
+    if (expectedSuccess)
       Assert.AreEqual(expectedValue, result, 0.001f);
-    }
   }
 
   [Test]
@@ -87,18 +84,20 @@ public class StringComprehensiveTest {
   public void ParseFloatOrDefault_WithFactory_CallsFactoryOnFailure() {
     var input = "invalid";
     var factoryCalled = false;
-    var result = input.ParseFloatOrDefault(() => {
-      factoryCalled = true;
-      return 99f;
-    });
-    
+    var result = input.ParseFloatOrDefault(
+      () => {
+        factoryCalled = true;
+        return 99f;
+      }
+    );
+
     Assert.IsTrue(factoryCalled);
     Assert.AreEqual(99f, result);
   }
 
-  [TestCase("123.45", 12345.0)]  // Based on actual culture parsing behavior
+  [TestCase("123.45", 12345.0)] // Based on actual culture parsing behavior
   [TestCase("0", 0.0)]
-  [TestCase("-999.999", -999999.0)]  // Based on actual culture parsing behavior
+  [TestCase("-999.999", -999999.0)] // Based on actual culture parsing behavior
   public void ParseDouble_ValidInput_ReturnsCorrectValue(string input, double expected) {
     var result = input.ParseDouble();
     Assert.AreEqual(expected, result, 0.0001);
@@ -156,7 +155,7 @@ public class StringComprehensiveTest {
   [TestCase("Jones", "J5200")]
   [TestCase("Garcia", "G6200")]
   [TestCase("Miller", "M4600")]
-  [TestCase("Davis", "D1200")]  
+  [TestCase("Davis", "D1200")]
   [TestCase("Rodriguez", "R3620")]
   [TestCase("Wilson", "W4250")]
   public void GetSoundexRepresentation_CommonNames_ReturnsExpectedCodes(string input, string expected) {
@@ -179,7 +178,7 @@ public class StringComprehensiveTest {
   [Test]
   public void GetSoundexRepresentation_WithMaxLength_RespectsLength() {
     var input = "Washington";
-    var result = input.GetSoundexRepresentation(4);  // Minimum valid maxLength is 4
+    var result = input.GetSoundexRepresentation(4); // Minimum valid maxLength is 4
     Assert.IsNotNull(result);
     Assert.AreEqual(4, result.Length);
   }
@@ -189,7 +188,7 @@ public class StringComprehensiveTest {
     var result1 = "Smith".GetSoundexRepresentation();
     var result2 = "SMITH".GetSoundexRepresentation();
     var result3 = "smith".GetSoundexRepresentation();
-    
+
     Assert.AreEqual(result1, result2);
     Assert.AreEqual(result1, result3);
   }
@@ -215,7 +214,7 @@ public class StringComprehensiveTest {
   public void GetSoundexRepresentation_SimilarSoundingNames_SameCodes() {
     var names = new[] { "Smith", "Smyth", "Smythe" };
     var codes = names.Select(name => name.GetSoundexRepresentation()).ToList();
-    
+
     // Test that we get valid Soundex codes for each name
     Assert.AreEqual(3, codes.Count);
     Assert.IsTrue(codes.All(code => code.Length == 5));
@@ -245,7 +244,7 @@ public class StringComprehensiveTest {
   public void TextAnalysis_BasicText_ReturnsAnalyzer() {
     var input = "This is a sample text for analysis.";
     var analyzer = input.TextAnalysis();
-    
+
     Assert.IsNotNull(analyzer);
     // The TextAnalyzer should have various properties and methods
     // We'll test some basic functionality that should be available
@@ -255,7 +254,7 @@ public class StringComprehensiveTest {
   public void TextAnalysis_EmptyString_ReturnsAnalyzer() {
     var input = "";
     var analyzer = input.TextAnalysis();
-    
+
     Assert.IsNotNull(analyzer);
   }
 
@@ -271,7 +270,7 @@ public class StringComprehensiveTest {
     var input = "This is English text.";
     var culture = CultureInfo.GetCultureInfo("en-US");
     var analyzer = input.TextAnalysisFor(culture);
-    
+
     Assert.IsNotNull(analyzer);
   }
 
@@ -288,7 +287,7 @@ public class StringComprehensiveTest {
                   This sentence contains every letter of the alphabet! 
                   It's a great test for text analysis algorithms.";
     var analyzer = input.TextAnalysis();
-    
+
     Assert.IsNotNull(analyzer);
     // Should handle multi-line text and punctuation
   }
@@ -302,19 +301,16 @@ public class StringComprehensiveTest {
     var template = "Hello {Name}, you are {Age} years old!";
     var data = new { Name = "John", Age = 30 };
     var result = template.FormatWithObject(data);
-    
+
     Assert.AreEqual("Hello John, you are 30 years old!", result);
   }
 
   [Test]
   public void FormatWithObject_ComplexObject_FormatsCorrectly() {
     var template = "User {Name} has {Points} points";
-    var data = new {
-      Name = "Alice",
-      Points = 1500
-    };
+    var data = new { Name = "Alice", Points = 1500 };
     var result = template.FormatWithObject(data);
-    
+
     Assert.AreEqual("User Alice has 1500 points", result);
   }
 
@@ -337,14 +333,16 @@ public class StringComprehensiveTest {
   [Test]
   public void FormatWithEx_WithFieldGetter_FormatsCorrectly() {
     var template = "The value of {field1} is important, and {field2} too.";
-    var result = template.FormatWithEx(fieldName => {
-      return fieldName switch {
-        "field1" => "quality",
-        "field2" => "quantity",
-        _ => "unknown"
-      };
-    });
-    
+    var result = template.FormatWithEx(
+      fieldName => {
+        return fieldName switch {
+          "field1" => "quality",
+          "field2" => "quantity",
+          _ => "unknown"
+        };
+      }
+    );
+
     Assert.AreEqual("The value of quality is important, and quantity too.", result);
   }
 
@@ -352,13 +350,15 @@ public class StringComprehensiveTest {
   public void FormatWithEx_WithFieldFormat_PassesFormatToGetter() {
     var template = "Value: {field:C}"; // Currency format
     var getterCalledWithFormat = false;
-    var result = template.FormatWithEx(fieldName => {
-      if (fieldName.Contains(":")) {
-        getterCalledWithFormat = true;
-      }
-      return "123.45";
-    }, passFieldFormatToGetter: true);
-    
+    var result = template.FormatWithEx(
+      fieldName => {
+        if (fieldName.Contains(":"))
+          getterCalledWithFormat = true;
+        return "123.45";
+      },
+      passFieldFormatToGetter: true
+    );
+
     Assert.IsTrue(getterCalledWithFormat);
   }
 
@@ -378,7 +378,7 @@ public class StringComprehensiveTest {
   #endregion
 
   #region Performance and Edge Cases Tests
-  
+
   [Test]
   public void StringParsing_BoundaryValues_HandlesCorrectly() {
     // Test boundary values for different types - allow for floating point precision differences
@@ -391,18 +391,8 @@ public class StringComprehensiveTest {
   [Test]
   public void FormatWithObject_DeepNesting_HandlesCorrectly() {
     var template = "Level: {A.B.C.D.E.Value}";
-    var data = new {
-      A = new {
-        B = new {
-          C = new {
-            D = new {
-              E = new { Value = "Deep!" }
-            }
-          }
-        }
-      }
-    };
-    
+    var data = new { A = new { B = new { C = new { D = new { E = new { Value = "Deep!" } } } } } };
+
     Assert.DoesNotThrow(() => template.FormatWithObject(data));
   }
 
@@ -423,13 +413,12 @@ public class StringComprehensiveTest {
       // Test with different cultures
       Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
       var result1 = "123.45".ParseFloat();
-      
+
       Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
       var result2 = "123.45".ParseFloat(CultureInfo.InvariantCulture);
-      
+
       Assert.AreEqual(result1, result2);
-    }
-    finally {
+    } finally {
       Thread.CurrentThread.CurrentCulture = originalCulture;
     }
   }

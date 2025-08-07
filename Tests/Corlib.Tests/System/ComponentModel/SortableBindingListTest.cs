@@ -4,7 +4,6 @@ namespace System.ComponentModel;
 
 [TestFixture]
 public class SortableBindingListTest {
-
   #region nested types
 
   public class Item {
@@ -19,7 +18,6 @@ public class SortableBindingListTest {
     public int IntValue { get; }
     public double DoubleValue { get; }
     public bool BoolValue { get; }
-
   }
 
   #endregion
@@ -33,10 +31,10 @@ public class SortableBindingListTest {
 
   [Test]
   [TestCase(ListSortDirection.Ascending, 1, true, 0)]
-  [TestCase(ListSortDirection.Ascending, 3, true,1)]
-  [TestCase(ListSortDirection.Ascending, 5, true,2)]
-  [TestCase(ListSortDirection.Descending, 1,true, 2)]
-  [TestCase(ListSortDirection.Descending, 3,true, 1)]
+  [TestCase(ListSortDirection.Ascending, 3, true, 1)]
+  [TestCase(ListSortDirection.Ascending, 5, true, 2)]
+  [TestCase(ListSortDirection.Descending, 1, true, 2)]
+  [TestCase(ListSortDirection.Descending, 3, true, 1)]
   [TestCase(ListSortDirection.Descending, 5, true, 0)]
   [TestCase(ListSortDirection.Ascending, 1, false, 2)]
   [TestCase(ListSortDirection.Ascending, 3, false, 2)]
@@ -45,10 +43,9 @@ public class SortableBindingListTest {
   [TestCase(ListSortDirection.Descending, 3, false, 2)]
   [TestCase(ListSortDirection.Descending, 5, false, 2)]
   public void AddTest(ListSortDirection direction, int value, bool isAutoSort, int expected) {
-
     // Arrange
     var numbers = new[] { 2, 4 };
-    var bs = new SortableBindingList<Item> {IsAutomaticallySorted = isAutoSort};
+    var bs = new SortableBindingList<Item> { IsAutomaticallySorted = isAutoSort };
     foreach (var i in numbers)
       bs.Add(_GetItemById(i));
 
@@ -75,8 +72,7 @@ public class SortableBindingListTest {
   [TestCase(ListSortDirection.Descending, 1, false, 2)]
   [TestCase(ListSortDirection.Descending, 3, false, 2)]
   [TestCase(ListSortDirection.Descending, 5, false, 2)]
-  public void AddRangeTest(ListSortDirection direction, int value,bool isAutoSort,int expected) {
-    
+  public void AddRangeTest(ListSortDirection direction, int value, bool isAutoSort, int expected) {
     // Arrange
     var numbers = new[] { 2, 4 };
     var bs = new SortableBindingList<Item> { IsAutomaticallySorted = isAutoSort };
@@ -92,6 +88,4 @@ public class SortableBindingListTest {
     // Assert
     Assert.AreEqual(bs[expected].IntValue, newItem.IntValue);
   }
-
-
 }

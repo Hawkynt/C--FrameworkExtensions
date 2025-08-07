@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using System.Threading;
 
 namespace System.Threading;
 
@@ -10,12 +9,12 @@ internal class InterlockedExTests {
     None = 0,
     A = 1,
     B = 2,
-    C = 4,
+    C = 4
   }
 
   private sealed class TestClass {
     public int Value;
-    public TestClass(int value) => Value = value;
+    public TestClass(int value) => this.Value = value;
   }
 
   [Test]
@@ -123,7 +122,7 @@ internal class InterlockedExTests {
 
   [Test]
   public void Int32_Operations_WorkCorrectly() {
-    int value = 0;
+    var value = 0;
     Assert.AreEqual(0, InterlockedEx.CompareExchange(ref value, 1, 0));
     Assert.AreEqual(1, value);
     Assert.AreEqual(1, InterlockedEx.Exchange(ref value, 2));
@@ -235,7 +234,7 @@ internal class InterlockedExTests {
 
   [Test]
   public void Single_Operations_WorkCorrectly() {
-    float value = 1f;
+    var value = 1f;
     Assert.AreEqual(1f, InterlockedEx.CompareExchange(ref value, 2f, 1f));
     Assert.AreEqual(2f, value);
     Assert.AreEqual(2f, InterlockedEx.Exchange(ref value, 3f));
@@ -252,7 +251,7 @@ internal class InterlockedExTests {
 
   [Test]
   public void Double_Operations_WorkCorrectly() {
-    double value = 1d;
+    var value = 1d;
     Assert.AreEqual(1d, InterlockedEx.CompareExchange(ref value, 2d, 1d));
     Assert.AreEqual(2d, value);
     Assert.AreEqual(2d, InterlockedEx.Exchange(ref value, 3d));
@@ -269,12 +268,12 @@ internal class InterlockedExTests {
 
   [Test]
   public void ShiftOperations_ThrowOnOverflow() {
-    int intVal = 0x40000000;
+    var intVal = 0x40000000;
     Assert.Throws<OverflowException>(() => InterlockedEx.ArithmeticShiftLeft(ref intVal, 1));
     intVal = int.MinValue;
     Assert.Throws<OverflowException>(() => InterlockedEx.LogicalShiftRight(ref intVal, 1));
 
-    long longVal = 0x4000000000000000L;
+    var longVal = 0x4000000000000000L;
     Assert.Throws<OverflowException>(() => InterlockedEx.ArithmeticShiftLeft(ref longVal, 1));
     longVal = long.MinValue;
     Assert.Throws<OverflowException>(() => InterlockedEx.LogicalShiftRight(ref longVal, 1));

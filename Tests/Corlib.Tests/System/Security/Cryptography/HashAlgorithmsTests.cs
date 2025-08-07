@@ -1,22 +1,24 @@
 ﻿#region (c)2010-2042 Hawkynt
+
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
+
 #endregion
 
 using NUnit.Framework;
@@ -26,7 +28,6 @@ namespace System.Security.Cryptography;
 
 [TestFixture]
 public class HashAlgorithmsTests {
-
   [Test]
   [TestCase(32, "", "00000001")]
   [TestCase(32, "a", "00620062")]
@@ -78,7 +79,7 @@ public class HashAlgorithmsTests {
   [TestCase(64, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-", "f5d1f5ebe4c2b494")]
   public void Fletcher(int numberOfBits, string input, string expected)
     => ExecuteTest(() => input.ComputeHash(new Fletcher(numberOfBits)), expected, null);
-  
+
   [Test]
   [TestCase(192, "", "3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3")]
   [TestCase(192, "abc", "2aab1484e8c158f2bfb8c5ff41b57a525129131c957b5f93")]
@@ -97,6 +98,4 @@ public class HashAlgorithmsTests {
   [TestCase(128, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-", "c54034e5b43eb8005848a7e0ae6aac76")]
   public void Tiger(int numberOfBits, string input, string expected)
     => ExecuteTest(() => input.ComputeHash(new Tiger(numberOfBits)), expected, null);
-
 }
-

@@ -21,7 +21,6 @@ using NUnit.Framework;
 namespace System.IO;
 
 internal class BufferedStreamExTests {
-  
   [Test]
   public void BufferedStreamEx_Constructor_CreatesValidStream() {
     using var baseStream = new MemoryStream();
@@ -59,9 +58,8 @@ internal class BufferedStreamExTests {
     var readData = new byte[testData.Length];
     var totalRead = 0;
     var bytesRead = 0;
-    while (totalRead < testData.Length && (bytesRead = bufferedStream.Read(readData, totalRead, testData.Length - totalRead)) > 0) {
+    while (totalRead < testData.Length && (bytesRead = bufferedStream.Read(readData, totalRead, testData.Length - totalRead)) > 0)
       totalRead += bytesRead;
-    }
 
     Assert.That(totalRead, Is.EqualTo(testData.Length));
     Assert.That(readData, Is.EqualTo(testData));
@@ -130,9 +128,8 @@ internal class BufferedStreamExTests {
     var testData = "test data";
     var bytes = Encoding.UTF8.GetBytes(testData);
 
-    using (var bufferedStream = new BufferedStreamEx(baseStream, dontDisposeUnderlyingStream: true)) {
+    using (var bufferedStream = new BufferedStreamEx(baseStream, dontDisposeUnderlyingStream: true))
       bufferedStream.Write(bytes, 0, bytes.Length);
-    }
 
     // Base stream should still be usable
     Assert.That(baseStream.CanRead, Is.True);
@@ -217,5 +214,4 @@ internal class BufferedStreamExTests {
     Assert.That(buf[0], Is.EqualTo(1));
     Assert.That(buf[1], Is.EqualTo(2));
   }
-
 }

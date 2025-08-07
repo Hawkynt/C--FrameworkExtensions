@@ -5,7 +5,6 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((sbyte)0b00000001, 0, 0b00000001)]
   [TestCase((sbyte)0b00000001, 1, 0b00000010)]
@@ -47,9 +46,9 @@ public partial class MathTests {
   [Test]
   [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
   public void BitwiseSByte(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
-    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
-    var sbyteValues = valuePack.Select(i=>(sbyte)i).ToArray();
-    
+    var valuePack = new[] { self, operand, and, or, xor, nand, nor, equ };
+    var sbyteValues = valuePack.Select(i => (sbyte)i).ToArray();
+
     Assert.AreEqual(sbyteValues[2], sbyteValues[0].And(sbyteValues[1]), "And broken");
     Assert.AreEqual(sbyteValues[3], sbyteValues[0].Or(sbyteValues[1]), "Or broken");
     Assert.AreEqual(sbyteValues[4], sbyteValues[0].Xor(sbyteValues[1]), "Xor broken");
@@ -57,5 +56,4 @@ public partial class MathTests {
     Assert.AreEqual(sbyteValues[6], sbyteValues[0].Nor(sbyteValues[1]), "Nor broken");
     Assert.AreEqual(sbyteValues[7], sbyteValues[0].Equ(sbyteValues[1]), "Equ broken");
   }
-
 }

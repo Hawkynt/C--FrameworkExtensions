@@ -5,7 +5,6 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((ushort)0b0000000000000001, 0, (ushort)0b0000000000000001)]
   [TestCase((ushort)0b0000000000000001, 1, (ushort)0b0000000000000010)]
@@ -43,9 +42,9 @@ public partial class MathTests {
   [Test]
   [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
   public void BitwiseUShort(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
-    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
-    var wordPack = valuePack.Select(i=>(ushort)(i<<8|i)).ToArray();
-    
+    var valuePack = new[] { self, operand, and, or, xor, nand, nor, equ };
+    var wordPack = valuePack.Select(i => (ushort)((i << 8) | i)).ToArray();
+
     Assert.AreEqual(wordPack[2], wordPack[0].And(wordPack[1]), "And broken");
     Assert.AreEqual(wordPack[3], wordPack[0].Or(wordPack[1]), "Or broken");
     Assert.AreEqual(wordPack[4], wordPack[0].Xor(wordPack[1]), "Xor broken");
@@ -79,5 +78,4 @@ public partial class MathTests {
   [TestCase((ushort)0b1111111111111111, (ushort)0b0000000000000010, (ushort)0b0000000000000001)]
   [TestCase((ushort)0b1111111111111111, (ushort)0b0000000000000001, (ushort)0b0000000000000001)]
   public void ParallelBitExtractWord(ushort value, ushort mask, ushort expected) => Assert.AreEqual(expected, value.ParallelBitExtract(mask));
-
 }

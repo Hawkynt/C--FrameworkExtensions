@@ -4,10 +4,9 @@ namespace System;
 
 [TestFixture]
 public class MathComprehensiveTest {
-
   private const float _SINGLE_ACCURACY = 1e-6f;
-  private const double _DOUBLE_ACCURACY = 1e-10; 
-  private const decimal _DECIMAL_ACCURACY=1e-20m;
+  private const double _DOUBLE_ACCURACY = 1e-10;
+  private const decimal _DECIMAL_ACCURACY = 1e-20m;
   private const decimal TwoPi = 2 * MathEx.Pi;
   private const decimal HalfPi = MathEx.Pi / 2;
   private const decimal Pi_4 = MathEx.Pi / 4;
@@ -165,12 +164,12 @@ public class MathComprehensiveTest {
   #region Parity and Bit Reversal Tests
 
   [Test]
-  [TestCase((byte)0x00, true)]  // 0 bits set = even parity
+  [TestCase((byte)0x00, true)] // 0 bits set = even parity
   [TestCase((byte)0x01, false)] // 1 bit set = odd parity
-  [TestCase((byte)0x03, true)]  // 2 bits set = even parity
+  [TestCase((byte)0x03, true)] // 2 bits set = even parity
   [TestCase((byte)0x07, false)] // 3 bits set = odd parity
-  [TestCase((byte)0x0F, true)]  // 4 bits set = even parity
-  [TestCase((byte)0xFF, true)]  // 8 bits set = even parity
+  [TestCase((byte)0x0F, true)] // 4 bits set = even parity
+  [TestCase((byte)0xFF, true)] // 8 bits set = even parity
   public void Parity_Byte_ReturnsCorrectParity(byte value, bool expected) => Assert.AreEqual(expected, value.Parity());
 
   [Test]
@@ -226,8 +225,8 @@ public class MathComprehensiveTest {
 
   [Test]
   [TestCase((sbyte)5, (sbyte)3, (sbyte)8)]
-  [TestCase((sbyte)(-5), (sbyte)3, (sbyte)(-2))]
-  [TestCase((sbyte)127, (sbyte)1, (sbyte)(-128))] // Overflow test
+  [TestCase((sbyte)-5, (sbyte)3, (sbyte)-2)]
+  [TestCase((sbyte)127, (sbyte)1, (sbyte)-128)] // Overflow test
   public void Add_SByte_ReturnsCorrectSum(sbyte value, sbyte operand, sbyte expected) => Assert.AreEqual(expected, value.Add(operand));
 
   [Test]
@@ -238,8 +237,8 @@ public class MathComprehensiveTest {
 
   [Test]
   [TestCase((short)1000, (short)500, (short)1500)]
-  [TestCase((short)(-1000), (short)500, (short)(-500))]
-  [TestCase((short)32767, (short)1, (short)(-32768))] // Overflow test
+  [TestCase((short)-1000, (short)500, (short)-500)]
+  [TestCase((short)32767, (short)1, (short)-32768)] // Overflow test
   public void Add_Short_ReturnsCorrectSum(short value, short operand, short expected) => Assert.AreEqual(expected, value.Add(operand));
 
   [Test]
@@ -267,7 +266,7 @@ public class MathComprehensiveTest {
   [Test]
   [TestCase((sbyte)2, (sbyte)4)]
   [TestCase((sbyte)3, (sbyte)9)]
-  [TestCase((sbyte)(-3), (sbyte)9)]
+  [TestCase((sbyte)-3, (sbyte)9)]
   [TestCase((sbyte)0, (sbyte)0)]
   [TestCase((sbyte)1, (sbyte)1)]
   public void Squared_SByte_ReturnsCorrectSquare(sbyte value, sbyte expected) => Assert.AreEqual(expected, value.Squared());
@@ -293,8 +292,8 @@ public class MathComprehensiveTest {
 
   [Test]
   [TestCase((sbyte)5, (sbyte)1)]
-  [TestCase((sbyte)(-5), (sbyte)(-1))]
-  [TestCase((sbyte)0, (sbyte)(0))]
+  [TestCase((sbyte)-5, (sbyte)-1)]
+  [TestCase((sbyte)0, (sbyte)0)]
   public void Sign_SByte_ReturnsCorrectSign(sbyte value, sbyte expected) => Assert.AreEqual(expected, value.Sign());
 
   [Test]
@@ -541,7 +540,7 @@ public class MathComprehensiveTest {
   [TestCase(1.0, 100.0, 1.0)]
   [TestCase(0.0, 5.0, 0.0)]
   [TestCase(-2.0, 5.0, -32)]
-  public void Pow_Decimal_ReturnsCorrectPower(decimal baseValue, decimal exponent, decimal expected) => Assert.That(baseValue.Pow(exponent),Is.EqualTo(expected));
+  public void Pow_Decimal_ReturnsCorrectPower(decimal baseValue, decimal exponent, decimal expected) => Assert.That(baseValue.Pow(exponent), Is.EqualTo(expected));
 
   [Test]
   [TestCase(4.0, 2.0)]
@@ -559,11 +558,11 @@ public class MathComprehensiveTest {
     (-TwoPi, 0m),
     (-MathEx.Pi, 0m),
     (-HalfPi, -1m),
-    (-MathEx.Pi / 3m, -0.8660254037844386467637231707m),   // -π/3
-    (-Pi_4, -0.7071067811865475244008443621m),            // -π/4
-    (-MathEx.Pi / 6m, -0.5m),                              // -π/6
-    (-Pi_8, -0.3826834323650897717284599840m),            // -π/8
-    (-0.0001m, -0.000099999999833333334166666m),      // small angle
+    (-MathEx.Pi / 3m, -0.8660254037844386467637231707m), // -π/3
+    (-Pi_4, -0.7071067811865475244008443621m), // -π/4
+    (-MathEx.Pi / 6m, -0.5m), // -π/6
+    (-Pi_8, -0.3826834323650897717284599840m), // -π/8
+    (-0.0001m, -0.000099999999833333334166666m), // small angle
     (0.0m, 0m),
     (0.0001m, 0.000099999999833333334166666m),
     (Pi_8, 0.3826834323650897717284599840m),
@@ -584,8 +583,11 @@ public class MathComprehensiveTest {
   public void Sin_Decimal_ReturnsCorrectSine() {
     foreach (var (input, expected) in _SINE_TEST_TABLE) {
       var actual = input.Sin();
-      Assert.That(Math.Abs(actual - expected), Is.LessThan(_DECIMAL_ACCURACY),
-        $"Sin({input}) = {actual}, expected {expected}");
+      Assert.That(
+        Math.Abs(actual - expected),
+        Is.LessThan(_DECIMAL_ACCURACY),
+        $"Sin({input}) = {actual}, expected {expected}"
+      );
     }
   }
 
@@ -594,8 +596,11 @@ public class MathComprehensiveTest {
     foreach (var (input, expected) in _SINE_TEST_TABLE) {
       var actual = (input - MathEx.Pi / 2m).Cos();
 
-      Assert.That(Math.Abs(actual - expected), Is.LessThan(_DECIMAL_ACCURACY),
-        $"Cos({input}) = {actual}, expected {expected}");
+      Assert.That(
+        Math.Abs(actual - expected),
+        Is.LessThan(_DECIMAL_ACCURACY),
+        $"Cos({input}) = {actual}, expected {expected}"
+      );
     }
   }
 
@@ -611,30 +616,35 @@ public class MathComprehensiveTest {
       var expectedTan = sin / cos;
       var actual = input.Tan();
 
-      Assert.That(Math.Abs(actual - expectedTan), Is.LessThan(_DECIMAL_ACCURACY),
-        $"Tan({input}) = {actual}, expected {expectedTan}");
+      Assert.That(
+        Math.Abs(actual - expectedTan),
+        Is.LessThan(_DECIMAL_ACCURACY),
+        $"Tan({input}) = {actual}, expected {expectedTan}"
+      );
     }
   }
 
   [Test]
   public void Atan_Decimal_ReturnsCorrectArcTangent() {
-    var testCases = new (decimal input, decimal expected)[]
-    {
+    var testCases = new (decimal input, decimal expected)[] {
       (0.0m, 0.0m),
-      (1.0m, 0.7853981633974483096156608458m),    // π/4
-      (-1.0m, -0.7853981633974483096156608458m),   // -π/4
+      (1.0m, 0.7853981633974483096156608458m), // π/4
+      (-1.0m, -0.7853981633974483096156608458m), // -π/4
       (0.5m, 0.4636476090008061162142562315m),
       (-0.5m, -0.4636476090008061162142562315m),
       (MathEx.Sqrt3, 1.0471975511965977461542144611m), // atan(√3) = π/3
       (-MathEx.Sqrt3, -1.0471975511965977461542144611m),
       (10.0m, 1.471127674303734591852875738m),
-      (-10.0m, -1.471127674303734591852875738m),
+      (-10.0m, -1.471127674303734591852875738m)
     };
 
     foreach (var (input, expected) in testCases) {
       var actual = input.Atan();
-      Assert.That(Math.Abs(actual - expected), Is.LessThan(_DECIMAL_ACCURACY),
-        $"Atan({input}) = {actual}, expected {expected}");
+      Assert.That(
+        Math.Abs(actual - expected),
+        Is.LessThan(_DECIMAL_ACCURACY),
+        $"Atan({input}) = {actual}, expected {expected}"
+      );
     }
   }
 
@@ -642,7 +652,7 @@ public class MathComprehensiveTest {
   public void Exp_Decimal_ReturnsCorrectExponential() {
     Assert.That(0m.Exp(), Is.EqualTo(1m));
     Assert.That(1m.Exp(), Is.EqualTo(2.71828182845904523536028747135m));
-    Assert.That(2m.Exp(),Is.EqualTo(7.3890560989306502272304274608m));
+    Assert.That(2m.Exp(), Is.EqualTo(7.3890560989306502272304274608m));
   }
 
   [Test]
@@ -1080,7 +1090,7 @@ public class MathComprehensiveTest {
 
   [Test]
   public void DividedBy_Int_DivideByZero_ThrowsException() => Assert.Throws<DivideByZeroException>(() => 10.DividedBy(0));
-  
+
   [Test]
   public void Round_Double_InvalidDigits_ThrowsException() {
     Assert.Throws<ArgumentOutOfRangeException>(() => 3.14.Round(-1));

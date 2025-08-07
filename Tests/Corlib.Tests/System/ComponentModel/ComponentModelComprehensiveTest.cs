@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 
@@ -7,7 +8,6 @@ namespace System.ComponentModel;
 
 [TestFixture]
 public class ComponentModelComprehensiveTest {
-
   #region MinValueAttribute Tests
 
   [Test]
@@ -91,19 +91,15 @@ public class ComponentModelComprehensiveTest {
   #region EnumDisplayNameAttribute Tests
 
   public enum TestEnum {
-    [EnumDisplayName("First Value")]
-    FirstValue,
-    
-    [EnumDisplayName("Second Value")]
-    SecondValue,
-    
+    [EnumDisplayName("First Value")] FirstValue,
+
+    [EnumDisplayName("Second Value")] SecondValue,
+
     ThirdValue, // No attribute
-    
-    [EnumDisplayName("")]
-    EmptyName,
-    
-    [EnumDisplayName("  Spaced  ")]
-    SpacedName
+
+    [EnumDisplayName("")] EmptyName,
+
+    [EnumDisplayName("  Spaced  ")] SpacedName
   }
 
   [Test]
@@ -216,7 +212,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ToArray_WithItems_ReturnsCorrectArray() {
     var list = new BindingList<string> { "a", "b", "c" };
     var result = list.ToArray();
-    
+
     Assert.That(result, Is.EqualTo(new[] { "a", "b", "c" }));
     Assert.That(result.Length, Is.EqualTo(3));
   }
@@ -225,7 +221,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ToArray_WithEmptyList_ReturnsEmptyArray() {
     var list = new BindingList<string>();
     var result = list.ToArray();
-    
+
     Assert.That(result, Is.Empty);
     Assert.That(result.Length, Is.EqualTo(0));
   }
@@ -240,7 +236,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ToArray_ModifyingOriginalDoesNotAffectArray() {
     var list = new BindingList<int> { 1, 2, 3 };
     var result = list.ToArray();
-    
+
     list.Add(4);
     Assert.That(result.Length, Is.EqualTo(3));
     Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
@@ -250,7 +246,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_AddRange_WithItems_AddsAllItems() {
     var list = new BindingList<int> { 1, 2 };
     list.AddRange(new[] { 3, 4, 5 });
-    
+
     Assert.That(list.Count, Is.EqualTo(5));
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
   }
@@ -259,7 +255,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_AddRange_WithEmptyEnumerable_DoesNotAddItems() {
     var list = new BindingList<int> { 1, 2 };
     list.AddRange(new int[0]);
-    
+
     Assert.That(list.Count, Is.EqualTo(2));
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 2 }));
   }
@@ -280,7 +276,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveToFront_WithExistingItems_MovesToFront() {
     var list = new BindingList<string> { "a", "b", "c", "d", "e" };
     list.MoveToFront(new[] { "c", "e" });
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { "c", "e", "a", "b", "d" }));
   }
 
@@ -288,7 +284,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveToFront_WithNonExistingItems_IgnoresNonExisting() {
     var list = new BindingList<string> { "a", "b", "c" };
     list.MoveToFront(new[] { "b", "x", "c" });
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { "b", "x", "c", "a" }));
   }
 
@@ -296,7 +292,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveToFront_WithEmptyItems_DoesNothing() {
     var list = new BindingList<int> { 1, 2, 3 };
     list.MoveToFront(new int[0]);
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 2, 3 }));
   }
 
@@ -304,7 +300,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveToBack_WithExistingItems_MovesToBack() {
     var list = new BindingList<string> { "a", "b", "c", "d", "e" };
     list.MoveToBack(new[] { "b", "d" });
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { "a", "c", "e", "b", "d" }));
   }
 
@@ -312,7 +308,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveToBack_WithNonExistingItems_IgnoresNonExisting() {
     var list = new BindingList<string> { "a", "b", "c" };
     list.MoveToBack(new[] { "a", "x", "c" });
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { "b", "a", "x", "c" }));
   }
 
@@ -320,7 +316,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveRelative_WithZeroDelta_DoesNothing() {
     var list = new BindingList<int> { 1, 2, 3, 4, 5 };
     list.MoveRelative(new[] { 2, 4 }, 0);
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
   }
 
@@ -328,7 +324,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveRelative_WithPositiveDelta_MovesForward() {
     var list = new BindingList<string> { "a", "b", "c", "d", "e" };
     list.MoveRelative(new[] { "b", "c" }, 2);
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { "a", "d", "e", "b", "c" }));
   }
 
@@ -336,7 +332,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_MoveRelative_WithLargeDelta_ClampsToEdges() {
     var list = new BindingList<int> { 1, 2, 3, 4, 5 };
     list.MoveRelative(new[] { 3, 4 }, 10);
-    
+
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 2, 5, 3, 4 }));
   }
 
@@ -344,7 +340,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ReplaceAll_WithNewItems_ReplacesAllItems() {
     var list = new BindingList<int> { 1, 2, 3 };
     list.ReplaceAll(new[] { 4, 5, 6, 7 });
-    
+
     Assert.That(list.Count, Is.EqualTo(4));
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 4, 5, 6, 7 }));
   }
@@ -353,27 +349,19 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ReplaceAll_WithEmptyItems_ClearsList() {
     var list = new BindingList<string> { "a", "b", "c" };
     list.ReplaceAll(new string[0]);
-    
+
     Assert.That(list.Count, Is.EqualTo(0));
     Assert.That(list.ToArray(), Is.Empty);
   }
 
   [Test]
   public void BindingListExtensions_RefreshAll_WithUpdatedItems_RefreshesCorrectly() {
-    var list = new BindingList<TestItem> { 
-      new("1", "Item1"), 
-      new("2", "Item2"), 
-      new("3", "Item3") 
-    };
-    
-    var updatedItems = new[] { 
-      new TestItem("2", "Updated2"), 
-      new TestItem("3", "Updated3"), 
-      new TestItem("4", "Item4") 
-    };
-    
+    var list = new BindingList<TestItem> { new("1", "Item1"), new("2", "Item2"), new("3", "Item3") };
+
+    var updatedItems = new[] { new TestItem("2", "Updated2"), new TestItem("3", "Updated3"), new TestItem("4", "Item4") };
+
     list.RefreshAll(updatedItems, item => item.Id, (old, updated) => updated);
-    
+
     Assert.That(list.Count, Is.EqualTo(3));
     Assert.That(list.Any(x => x.Id == "1"), Is.False); // Removed
     Assert.That(list.First(x => x.Id == "2").Name, Is.EqualTo("Updated2")); // Updated
@@ -386,9 +374,9 @@ public class ComponentModelComprehensiveTest {
     var item1 = new TestItem("1", "Item1");
     var item2 = new TestItem("2", "Item2");
     var list = new BindingList<TestItem> { item1, item2 };
-    
+
     list.RefreshAll(new[] { item1, item2 }, item => item.Id, (old, updated) => old);
-    
+
     Assert.That(list.Count, Is.EqualTo(2));
     Assert.That(ReferenceEquals(list[0], item1), Is.True);
     Assert.That(ReferenceEquals(list[1], item2), Is.True);
@@ -398,7 +386,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_RemoveWhere_WithMatchingItems_RemovesItems() {
     var list = new BindingList<int> { 1, 2, 3, 4, 5, 6 };
     var removedCount = list.RemoveWhere(x => x % 2 == 0);
-    
+
     Assert.That(removedCount, Is.EqualTo(3));
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 3, 5 }));
   }
@@ -407,7 +395,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_RemoveWhere_WithNoMatches_RemovesNothing() {
     var list = new BindingList<int> { 1, 3, 5 };
     var removedCount = list.RemoveWhere(x => x % 2 == 0);
-    
+
     Assert.That(removedCount, Is.EqualTo(0));
     Assert.That(list.ToArray(), Is.EqualTo(new[] { 1, 3, 5 }));
   }
@@ -416,7 +404,7 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_RemoveWhere_WithAllMatches_RemovesAll() {
     var list = new BindingList<string> { "test", "hello", "world" };
     var removedCount = list.RemoveWhere(x => x.Length > 0);
-    
+
     Assert.That(removedCount, Is.EqualTo(3));
     Assert.That(list.Count, Is.EqualTo(0));
   }
@@ -425,16 +413,18 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_Overhaul_ExecutesActionAndRestoresEvents() {
     var list = new BindingList<int> { 1, 2, 3 };
     var eventFired = false;
-    
+
     list.ListChanged += (s, e) => eventFired = true;
-    
-    list.Overhaul(l => {
-      l.Add(4);
-      l.Add(5);
-      // Events should be disabled during overhaul
-      Assert.That(eventFired, Is.False);
-    });
-    
+
+    list.Overhaul(
+      l => {
+        l.Add(4);
+        l.Add(5);
+        // Events should be disabled during overhaul
+        Assert.That(eventFired, Is.False);
+      }
+    );
+
     // Event should fire after overhaul completes
     Assert.That(eventFired, Is.True);
     Assert.That(list.Count, Is.EqualTo(5));
@@ -444,12 +434,12 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_Overhaul_WithEventsDisabled_DoesNotRestoreEvents() {
     var list = new BindingList<int> { 1, 2, 3 };
     list.RaiseListChangedEvents = false;
-    
+
     var eventFired = false;
     list.ListChanged += (s, e) => eventFired = true;
-    
+
     list.Overhaul(l => l.Add(4));
-    
+
     Assert.That(eventFired, Is.False);
     Assert.That(list.RaiseListChangedEvents, Is.False);
   }
@@ -458,11 +448,9 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_Overhaul_WithException_RestoresEventState() {
     var list = new BindingList<int> { 1, 2, 3 };
     var originalEventState = list.RaiseListChangedEvents;
-    
-    Assert.Throws<InvalidOperationException>(() => {
-      list.Overhaul(l => throw new InvalidOperationException("Test exception"));
-    });
-    
+
+    Assert.Throws<InvalidOperationException>(() => { list.Overhaul(l => throw new InvalidOperationException("Test exception")); });
+
     Assert.That(list.RaiseListChangedEvents, Is.EqualTo(originalEventState));
   }
 
@@ -473,11 +461,11 @@ public class ComponentModelComprehensiveTest {
   [Test]
   public void BindingListExtensions_Any_PerformanceTest_LargeList() {
     var list = new BindingList<int>(Enumerable.Range(1, 100000).ToList());
-    
-    var sw = global::System.Diagnostics.Stopwatch.StartNew();
+
+    var sw = Stopwatch.StartNew();
     var result = list.Any();
     sw.Stop();
-    
+
     Assert.That(result, Is.True);
     Assert.That(sw.ElapsedMilliseconds, Is.LessThan(10)); // Should be very fast
   }
@@ -486,11 +474,11 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_ToArray_PerformanceTest_LargeList() {
     var sourceArray = Enumerable.Range(1, 50000).ToArray();
     var list = new BindingList<int>(sourceArray);
-    
-    var sw = global::System.Diagnostics.Stopwatch.StartNew();
+
+    var sw = Stopwatch.StartNew();
     var result = list.ToArray();
     sw.Stop();
-    
+
     Assert.That(result.Length, Is.EqualTo(50000));
     Assert.That(sw.ElapsedMilliseconds, Is.LessThan(100));
   }
@@ -499,11 +487,11 @@ public class ComponentModelComprehensiveTest {
   public void BindingListExtensions_AddRange_PerformanceTest_LargeRange() {
     var list = new BindingList<int>();
     var itemsToAdd = Enumerable.Range(1, 10000).ToArray();
-    
-    var sw = global::System.Diagnostics.Stopwatch.StartNew();
+
+    var sw = Stopwatch.StartNew();
     list.AddRange(itemsToAdd);
     sw.Stop();
-    
+
     Assert.That(list.Count, Is.EqualTo(10000));
     Assert.That(sw.ElapsedMilliseconds, Is.LessThan(1000));
   }
@@ -515,10 +503,10 @@ public class ComponentModelComprehensiveTest {
   private class TestItem {
     public string Id { get; }
     public string Name { get; }
-    
+
     public TestItem(string id, string name) {
-      Id = id;
-      Name = name;
+      this.Id = id;
+      this.Name = name;
     }
   }
 
@@ -559,11 +547,11 @@ public class ComponentModelComprehensiveTest {
     [DefaultValue(50)]
     private int PrivateProperty { get; set; }
 
-    public int GetPrivateProperty() => PrivateProperty;
+    public int GetPrivateProperty() => this.PrivateProperty;
   }
 
   private class TestClassWithNumericConversions {
-    [DefaultValue(42)]  // int to byte
+    [DefaultValue(42)] // int to byte
     public byte ByteProperty { get; set; }
 
     [DefaultValue(100)] // int to short
@@ -575,13 +563,13 @@ public class ComponentModelComprehensiveTest {
     [DefaultValue(5.5f)] // float to double
     public double DoubleFromFloatProperty { get; set; }
 
-    [DefaultValue(10)]  // int to decimal
+    [DefaultValue(10)] // int to decimal
     public decimal DecimalProperty { get; set; }
 
-    [DefaultValue(-5)]  // Negative int to signed type
+    [DefaultValue(-5)] // Negative int to signed type
     public sbyte SignedByteProperty { get; set; }
 
-    [DefaultValue(65)]  // int to char
+    [DefaultValue(65)] // int to char
     public char CharProperty { get; set; }
   }
 
@@ -592,16 +580,7 @@ public class ComponentModelComprehensiveTest {
 
   [Test]
   public void DefaultValueAttributeExtensions_SetPropertiesToDefaultValues_SetsAllPublicProperties() {
-    var instance = new TestClassWithDefaultValues {
-      IntProperty = 0,
-      DoubleProperty = 0.0,
-      StringProperty = null,
-      BoolProperty = false,
-      LongProperty = 0L,
-      FloatProperty = 0.0f,
-      NullableProperty = "NotNull",
-      NoDefaultProperty = 999
-    };
+    var instance = new TestClassWithDefaultValues { IntProperty = 0, DoubleProperty = 0.0, StringProperty = null, BoolProperty = false, LongProperty = 0L, FloatProperty = 0.0f, NullableProperty = "NotNull", NoDefaultProperty = 999 };
 
     instance.SetPropertiesToDefaultValues();
 
@@ -682,16 +661,16 @@ public class ComponentModelComprehensiveTest {
     public Action<Delegate, object[]> BeginInvokeCallback { get; set; }
 
     public IAsyncResult BeginInvoke(Delegate method, object[] args) {
-      BeginInvokeCalled = true;
-      BeginInvokeCallback?.Invoke(method, args);
+      this.BeginInvokeCalled = true;
+      this.BeginInvokeCallback?.Invoke(method, args);
       return null;
     }
 
     public object EndInvoke(IAsyncResult result) => null;
 
     public object Invoke(Delegate method, object[] args) {
-      InvokeCalled = true;
-      InvokeCallback?.Invoke(method, args);
+      this.InvokeCalled = true;
+      this.InvokeCallback?.Invoke(method, args);
       return null;
     }
   }
@@ -713,10 +692,8 @@ public class ComponentModelComprehensiveTest {
   public void SynchronizeInvokeExtensions_SafeInvoke_WhenInvokeRequired_Synchronous_CallsInvoke() {
     var mock = new MockSynchronizeInvoke { InvokeRequired = true };
     var actionCalled = false;
-    
-    mock.InvokeCallback = (method, args) => {
-      method.DynamicInvoke(args);
-    };
+
+    mock.InvokeCallback = (method, args) => { method.DynamicInvoke(args); };
 
     var result = mock.SafeInvoke(m => actionCalled = true, async: false);
 
@@ -729,10 +706,8 @@ public class ComponentModelComprehensiveTest {
   public void SynchronizeInvokeExtensions_SafeInvoke_WhenInvokeRequired_Asynchronous_CallsBeginInvoke() {
     var mock = new MockSynchronizeInvoke { InvokeRequired = true };
     var actionCalled = false;
-    
-    mock.BeginInvokeCallback = (method, args) => {
-      method.DynamicInvoke(args);
-    };
+
+    mock.BeginInvokeCallback = (method, args) => { method.DynamicInvoke(args); };
 
     var result = mock.SafeInvoke(m => actionCalled = true, async: true);
 
@@ -756,11 +731,13 @@ public class ComponentModelComprehensiveTest {
     var mock = new MockSynchronizeInvoke { InvokeRequired = false };
     var values = new List<int>();
 
-    mock.SafeInvoke(m => {
-      values.Add(1);
-      values.Add(2);
-      values.Add(3);
-    });
+    mock.SafeInvoke(
+      m => {
+        values.Add(1);
+        values.Add(2);
+        values.Add(3);
+      }
+    );
 
     Assert.That(values, Is.EqualTo(new[] { 1, 2, 3 }));
   }

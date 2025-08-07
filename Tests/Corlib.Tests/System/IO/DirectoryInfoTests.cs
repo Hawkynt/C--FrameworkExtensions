@@ -5,8 +5,7 @@ namespace System.IO;
 
 [TestFixture]
 internal class DirectoryInfoTests {
-
-  private static string Combine(string arg, string[] args) => Combine(new []{arg}.Concat(args).ToArray());
+  private static string Combine(string arg, string[] args) => Combine(new[] { arg }.Concat(args).ToArray());
 
   private static string Combine(string[] args) => string.Join(Path.DirectorySeparatorChar.ToString(), args.Select(i => i.TrimEnd(Path.DirectorySeparatorChar)).ToArray());
 
@@ -55,8 +54,8 @@ internal class DirectoryInfoTests {
   }
 
   [Test]
-  [TestCase(new [] { "subdir1", "subdir2" }, 0)]
-  [TestCase(new [] { "dir1", "dir2", "dir3" }, 0)]
+  [TestCase(new[] { "subdir1", "subdir2" }, 0)]
+  [TestCase(new[] { "dir1", "dir2", "dir3" }, 0)]
   public void Directory_WithSubdirectoriesArray_ValidSubdirectories_ReturnsCorrectDirectoryInfo(string[] subdirectories, int _) {
     var directoryInfo = new DirectoryInfo(Path.GetTempPath());
     var result = directoryInfo.Directory(subdirectories);
@@ -86,8 +85,8 @@ internal class DirectoryInfoTests {
   }
 
   [Test]
-  [TestCase(new [] { "subdir1", "subdir2" }, false)]
-  [TestCase(new [] { "dir1", "dir2", "dir3" }, true)]
+  [TestCase(new[] { "subdir1", "subdir2" }, false)]
+  [TestCase(new[] { "dir1", "dir2", "dir3" }, true)]
   public void Directory_WithExactCase_ValidSubdirectories_ReturnsCorrectDirectoryInfo(string[] subdirectories, bool ignoreCase) {
     var directoryInfo = new DirectoryInfo(Path.GetTempPath());
     var result = directoryInfo.Directory(ignoreCase, subdirectories);
@@ -147,8 +146,8 @@ internal class DirectoryInfoTests {
   }
 
   [Test]
-  [TestCase(new [] { "dir1", "file.txt" }, 0)]
-  [TestCase(new [] { "dir1", "dir2", "file.doc" }, 0)]
+  [TestCase(new[] { "dir1", "file.txt" }, 0)]
+  [TestCase(new[] { "dir1", "dir2", "file.doc" }, 0)]
   public void File_WithFilePathArray_ValidFilePath_ReturnsCorrectFileInfo(string[] filePath, int _) {
     var directoryInfo = new DirectoryInfo(Path.GetTempPath());
     var result = directoryInfo.File(filePath);
@@ -178,8 +177,8 @@ internal class DirectoryInfoTests {
   }
 
   [Test]
-  [TestCase(new [] { "dir1", "file.txt" }, false)]
-  [TestCase(new [] { "dir1", "dir2", "file.doc" }, true)]
+  [TestCase(new[] { "dir1", "file.txt" }, false)]
+  [TestCase(new[] { "dir1", "dir2", "file.doc" }, true)]
   public void File_WithExactCase_ValidFilePath_ReturnsCorrectFileInfo(string[] filePath, bool ignoreCase) {
     var directoryInfo = new DirectoryInfo(Path.GetTempPath());
     var result = directoryInfo.File(ignoreCase, filePath);
@@ -368,5 +367,4 @@ internal class DirectoryInfoTests {
       Assert.That(result.FullName, Is.EqualTo(expectedPath));
     }
   }
-
 }

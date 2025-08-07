@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -6,7 +5,6 @@ namespace System.Collections.Generic;
 
 [TestFixture]
 public class StackExtensionsTests {
-
   #region PullTo(Span<T>) Tests
 
   [Test]
@@ -14,10 +12,10 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     Span<int> buffer = stackalloc int[3];
-    
+
     // Act
     var result = stack.PullTo(buffer);
-    
+
     // Assert
     Assert.AreEqual(0, result.Length);
     Assert.AreEqual(0, stack.Count);
@@ -27,11 +25,11 @@ public class StackExtensionsTests {
   public void PullTo_Span_EmptySpan_ReturnsEmptySpan() {
     // Arrange  
     var stack = new Stack<int>(new[] { 1, 2, 3 });
-    Span<int> emptyBuffer = Span<int>.Empty;
-    
+    var emptyBuffer = Span<int>.Empty;
+
     // Act
     var result = stack.PullTo(emptyBuffer);
-    
+
     // Assert
     Assert.AreEqual(0, result.Length);
     Assert.AreEqual(3, stack.Count);
@@ -44,10 +42,10 @@ public class StackExtensionsTests {
     stack.Push(10);
     stack.Push(20);
     Span<int> buffer = stackalloc int[5];
-    
+
     // Act
     var result = stack.PullTo(buffer);
-    
+
     // Assert
     Assert.AreEqual(2, result.Length);
     Assert.AreEqual(20, result[0]); // LIFO order
@@ -61,12 +59,12 @@ public class StackExtensionsTests {
     var stack = new Stack<int>();
     for (var i = 1; i <= 5; i++)
       stack.Push(i);
-    
+
     Span<int> buffer = stackalloc int[3];
-    
+
     // Act
     var result = stack.PullTo(buffer);
-    
+
     // Assert
     Assert.AreEqual(3, result.Length);
     Assert.AreEqual(5, result[0]); // LIFO order
@@ -84,10 +82,10 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<string>();
     var buffer = new string[3];
-    
+
     // Act
     var count = stack.PullTo(buffer);
-    
+
     // Assert
     Assert.AreEqual(0, count);
     Assert.IsNull(buffer[0]);
@@ -101,10 +99,10 @@ public class StackExtensionsTests {
     stack.Push("B");
     stack.Push("C");
     var buffer = new string[5];
-    
+
     // Act
     var count = stack.PullTo(buffer);
-    
+
     // Assert
     Assert.AreEqual(3, count);
     Assert.AreEqual("C", buffer[0]); // LIFO order
@@ -119,7 +117,7 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     stack.Push(1);
-    
+
     // Act & Assert
     Assert.Throws<ArgumentNullException>(() => stack.PullTo((int[])null));
   }
@@ -136,10 +134,10 @@ public class StackExtensionsTests {
     stack.Push('Y');
     stack.Push('Z');
     var buffer = new char[5];
-    
+
     // Act
     var count = stack.PullTo(buffer, 2);
-    
+
     // Assert
     Assert.AreEqual(3, count);
     Assert.AreEqual('\0', buffer[0]);
@@ -158,10 +156,10 @@ public class StackExtensionsTests {
     stack.Push(2);
     stack.Push(3);
     var buffer = new int[3];
-    
+
     // Act
     var count = stack.PullTo(buffer, 2);
-    
+
     // Assert
     Assert.AreEqual(1, count);
     Assert.AreEqual(3, buffer[2]); // Only room for one item
@@ -174,7 +172,7 @@ public class StackExtensionsTests {
     var stack = new Stack<int>();
     stack.Push(1);
     var buffer = new int[3];
-    
+
     // Act & Assert
     Assert.Throws<IndexOutOfRangeException>(() => stack.PullTo(buffer, 5));
   }
@@ -192,10 +190,10 @@ public class StackExtensionsTests {
     stack.Push(3.3);
     stack.Push(4.4);
     var buffer = new double[5];
-    
+
     // Act
     var count = stack.PullTo(buffer, 1, 2);
-    
+
     // Assert
     Assert.AreEqual(2, count);
     Assert.AreEqual(0.0, buffer[0]);
@@ -212,10 +210,10 @@ public class StackExtensionsTests {
     stack.Push(100);
     stack.Push(200);
     var buffer = new int[5];
-    
+
     // Act
     var count = stack.PullTo(buffer, 0, 5);
-    
+
     // Assert
     Assert.AreEqual(2, count);
     Assert.AreEqual(200, buffer[0]); // LIFO order
@@ -229,7 +227,7 @@ public class StackExtensionsTests {
     var stack = new Stack<int>();
     stack.Push(1);
     var buffer = new int[3];
-    
+
     // Act & Assert
     Assert.Throws<ArgumentOutOfRangeException>(() => stack.PullTo(buffer, 0, 0));
   }
@@ -242,10 +240,10 @@ public class StackExtensionsTests {
   public void PullAll_EmptyStack_ReturnsEmptyArray() {
     // Arrange
     var stack = new Stack<bool>();
-    
+
     // Act
     var result = stack.PullAll();
-    
+
     // Assert
     Assert.AreEqual(0, result.Length);
     Assert.AreEqual(0, stack.Count);
@@ -258,10 +256,10 @@ public class StackExtensionsTests {
     stack.Push("first");
     stack.Push("second");
     stack.Push("third");
-    
+
     // Act
     var result = stack.PullAll();
-    
+
     // Assert
     Assert.AreEqual(3, result.Length);
     Assert.AreEqual("third", result[0]); // LIFO order
@@ -280,10 +278,10 @@ public class StackExtensionsTests {
     var stack = new Stack<int>();
     for (var i = 1; i <= 5; i++)
       stack.Push(i);
-    
+
     // Act
     var result = stack.Pull(3);
-    
+
     // Assert
     Assert.AreEqual(3, result.Length);
     Assert.AreEqual(5, result[0]); // LIFO order
@@ -298,10 +296,10 @@ public class StackExtensionsTests {
     var stack = new Stack<char>();
     stack.Push('A');
     stack.Push('B');
-    
+
     // Act
     var result = stack.Pull(10);
-    
+
     // Assert
     Assert.AreEqual(2, result.Length);
     Assert.AreEqual('B', result[0]); // LIFO order
@@ -314,7 +312,7 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     stack.Push(1);
-    
+
     // Act & Assert
     Assert.Throws<ArgumentOutOfRangeException>(() => stack.Pull(-1));
   }
@@ -330,10 +328,10 @@ public class StackExtensionsTests {
     stack.Push(1);
     stack.Push(2);
     stack.Push(3);
-    
+
     // Act
     var originalTop = stack.Exchange(99);
-    
+
     // Assert
     Assert.AreEqual(3, originalTop);
     Assert.AreEqual(99, stack.Peek());
@@ -344,7 +342,7 @@ public class StackExtensionsTests {
   public void Exchange_EmptyStack_ThrowsInvalidOperationException() {
     // Arrange
     var stack = new Stack<string>();
-    
+
     // Act & Assert
     Assert.Throws<InvalidOperationException>(() => stack.Exchange("test"));
   }
@@ -353,17 +351,17 @@ public class StackExtensionsTests {
 
   #region Invert Tests
 
-  [Test]  
+  [Test]
   public void Invert_StackWithItems_ReversesOrder() {
     // Arrange
     var stack = new Stack<int>();
     stack.Push(1);
     stack.Push(2);
     stack.Push(3);
-    
+
     // Act
     stack.Invert();
-    
+
     // Assert
     Assert.AreEqual(3, stack.Count);
     Assert.AreEqual(1, stack.Pop()); // Should be 1 now (was at bottom)
@@ -375,10 +373,10 @@ public class StackExtensionsTests {
   public void Invert_EmptyStack_NoEffect() {
     // Arrange
     var stack = new Stack<string>();
-    
+
     // Act
     stack.Invert();
-    
+
     // Assert
     Assert.AreEqual(0, stack.Count);
   }
@@ -388,10 +386,10 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<char>();
     stack.Push('X');
-    
+
     // Act
     stack.Invert();
-    
+
     // Assert
     Assert.AreEqual(1, stack.Count);
     Assert.AreEqual('X', stack.Peek());
@@ -406,10 +404,10 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     var items = Enumerable.Empty<int>();
-    
+
     // Act
     stack.AddRange(items);
-    
+
     // Assert
     Assert.AreEqual(0, stack.Count);
   }
@@ -419,10 +417,10 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<string>();
     var items = new[] { "apple", "banana", "cherry" };
-    
+
     // Act
     stack.AddRange(items);
-    
+
     // Assert
     Assert.AreEqual(3, stack.Count);
     Assert.AreEqual("cherry", stack.Pop()); // Last added is on top
@@ -434,7 +432,7 @@ public class StackExtensionsTests {
   public void AddRange_NullEnumerable_ThrowsArgumentNullException() {
     // Arrange
     var stack = new Stack<int>();
-    
+
     // Act & Assert
     Assert.Throws<ArgumentNullException>(() => stack.AddRange(null));
   }
@@ -447,10 +445,10 @@ public class StackExtensionsTests {
   public void Add_ValidItem_AddsToStack() {
     // Arrange
     var stack = new Stack<int>();
-    
+
     // Act
     stack.Add(42);
-    
+
     // Assert
     Assert.AreEqual(1, stack.Count);
     Assert.AreEqual(42, stack.Peek());
@@ -460,11 +458,11 @@ public class StackExtensionsTests {
   public void Add_MultipleItems_MaintainsLIFOOrder() {
     // Arrange
     var stack = new Stack<string>();
-    
+
     // Act
     stack.Add("first");
     stack.Add("second");
-    
+
     // Assert
     Assert.AreEqual(2, stack.Count);
     Assert.AreEqual("second", stack.Pop());
@@ -482,10 +480,10 @@ public class StackExtensionsTests {
     stack.Push(10);
     stack.Push(20);
     stack.Push(30);
-    
+
     // Act
     var result = stack.Fetch();
-    
+
     // Assert
     Assert.AreEqual(30, result);
     Assert.AreEqual(2, stack.Count);
@@ -496,7 +494,7 @@ public class StackExtensionsTests {
   public void Fetch_EmptyStack_ThrowsInvalidOperationException() {
     // Arrange
     var stack = new Stack<string>();
-    
+
     // Act & Assert
     Assert.Throws<InvalidOperationException>(() => stack.Fetch());
   }
@@ -510,7 +508,7 @@ public class StackExtensionsTests {
     // Arrange
     const int itemCount = 50000;
     var stack = new Stack<int>(Enumerable.Range(0, itemCount).Reverse());
-    
+
     // Act & Assert - Should execute quickly without throwing
     var allItems = stack.PullAll();
     Assert.AreEqual(itemCount, allItems.Length);
@@ -524,14 +522,14 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<string>();
     var testItems = new[] { "Alpha", "Beta", "Gamma", "Delta", "Epsilon" };
-    
+
     foreach (var item in testItems)
       stack.Push(item);
-    
+
     // Act
     var firstTwo = stack.Pull(2);
     var remaining = stack.PullAll();
-    
+
     // Assert - LIFO order
     Assert.AreEqual("Epsilon", firstTwo[0]);
     Assert.AreEqual("Delta", firstTwo[1]);
@@ -544,7 +542,7 @@ public class StackExtensionsTests {
   public void StateConsistency_AfterMultipleOperations() {
     // Arrange
     var stack = new Stack<int>();
-    
+
     // Act - Mixed operations
     stack.AddRange(new[] { 1, 2, 3 }); // 3 is on top
     stack.Add(4); // 4 is now on top
@@ -552,7 +550,7 @@ public class StackExtensionsTests {
     var exchangedItem = stack.Exchange(99); // Replace 3 with 99
     var twoItems = stack.Pull(2); // Pull 99 and 2
     stack.Push(5);
-    
+
     // Assert
     Assert.AreEqual(4, topItem);
     Assert.AreEqual(3, exchangedItem);
@@ -567,7 +565,7 @@ public class StackExtensionsTests {
   public void NullStackOperations_ThrowsNullReferenceException() {
     // Arrange
     Stack<int> stack = null;
-    
+
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => stack.Add(1));
     Assert.Throws<NullReferenceException>(() => stack.Fetch());
@@ -580,18 +578,17 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     var largeCollection = Enumerable.Range(0, 10000);
-    
+
     // Act
     stack.AddRange(largeCollection);
-    
+
     // Assert
     Assert.AreEqual(10000, stack.Count);
     Assert.AreEqual(9999, stack.Peek()); // Last added item is on top
-    
+
     // Verify LIFO order is preserved
-    for (var i = 9999; i >= 9900; i--) {
+    for (var i = 9999; i >= 9900; i--)
       Assert.AreEqual(i, stack.Pop());
-    }
   }
 
   [Test]
@@ -599,23 +596,21 @@ public class StackExtensionsTests {
     // Arrange
     var stack = new Stack<int>();
     const int itemCount = 5000;
-    
+
     for (var i = 0; i < itemCount; i++)
       stack.Push(i);
-    
+
     // Act
     stack.Invert();
-    
+
     // Assert
     Assert.AreEqual(itemCount, stack.Count);
     Assert.AreEqual(0, stack.Peek()); // 0 should now be on top
-    
+
     // Verify order is inverted
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 100; i++)
       Assert.AreEqual(i, stack.Pop());
-    }
   }
 
   #endregion
-
 }

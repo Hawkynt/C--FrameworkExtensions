@@ -2,13 +2,13 @@
 using NUnit.Framework;
 
 namespace System.IO;
+
 using static TestUtilities;
 
 [TestFixture]
 internal class FileSystemInfoTest {
-
   /// <summary>
-  /// Tests the RelativeTo routine.
+  ///   Tests the RelativeTo routine.
   /// </summary>
   [TestCase("a/b", "a", ExpectedResult = "b", TestName = "WhenBaseIsParent_ShouldReturnChild")]
   [TestCase("a", "a/b", ExpectedResult = "..", TestName = "WhenBaseIsChild_ShouldReturnParent")]
@@ -17,5 +17,4 @@ internal class FileSystemInfoTest {
   [TestCase("a/b", "a\\b", ExpectedResult = "", TestName = "WhenBaseDiffersBySlashes_ShouldReturnEmpty")]
   [TestCase("\\/A", "//a/b/c", ExpectedResult = "..\\..", TestName = "WhenMixedSlashes_ShouldComputeRelative")]
   public string? TestRelativeTo(string path, string baseDir) => typeof(FileSystemInfoExtensions).NonPublic<string>("_RelativeTo")([path, baseDir]);
-
 }

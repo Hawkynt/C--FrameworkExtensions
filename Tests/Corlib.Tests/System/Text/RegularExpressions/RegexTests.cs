@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System.Text.RegularExpressions;
 
 [TestFixture]
 internal class RegexTests {
-
   [Test]
-  [TestCase(null,RegexOptions.None,null,RegexOptions.None,"",false,typeof(NullReferenceException))]
+  [TestCase(null, RegexOptions.None, null, RegexOptions.None, "", false, typeof(NullReferenceException))]
   [TestCase("abc", RegexOptions.None, null, RegexOptions.None, "", false, typeof(ArgumentNullException))]
   [TestCase("abc", RegexOptions.ECMAScript, "def", RegexOptions.None, "", false, typeof(InvalidOperationException))]
   [TestCase("abc", RegexOptions.None, "def", RegexOptions.CultureInvariant, "", false, typeof(InvalidOperationException))]

@@ -157,14 +157,7 @@ internal class RandomTests {
       return;
     } while (stopwatch.Elapsed < _timeout);
 
-    Assert.Fail($"Failed to generate all types of characters within the allotted time. Results: " +
-                $"Control: {wasControl}, " +
-                $"Number: {wasNumber}, " +
-                $"WhiteSpace: {wasWhiteSpace}, " +
-                $"Letter: {wasLetter}, " +
-                $"Surrogate: {wasSurrogate}, " +
-                $"SingleByte: {wasSingleByte}, " +
-                $"MultiByte: {wasMultiByte}.");
+    Assert.Fail($"Failed to generate all types of characters within the allotted time. Results: " + $"Control: {wasControl}, " + $"Number: {wasNumber}, " + $"WhiteSpace: {wasWhiteSpace}, " + $"Letter: {wasLetter}, " + $"Surrogate: {wasSurrogate}, " + $"SingleByte: {wasSingleByte}, " + $"MultiByte: {wasMultiByte}.");
   }
 
   [Test]
@@ -446,7 +439,7 @@ internal class RandomTests {
   private enum DemoEnum {
     Apple = -1,
     Unknown = 0,
-    Pie = 1,
+    Pie = 1
   }
 
   [Test]
@@ -488,7 +481,7 @@ internal class RandomTests {
 
   private enum SmallDemoEnum : byte {
     Unknown = 0,
-    Apple = 1,
+    Apple = 1
   }
 
   [Test]
@@ -521,7 +514,7 @@ internal class RandomTests {
   [Flags]
   private enum FlagDemoEnum : byte {
     Apple = 1,
-    Pie = 2,
+    Pie = 2
   }
 
   [Test]
@@ -750,7 +743,7 @@ internal class RandomTests {
       var ratio = (double)bitCounts[bit] / iterations;
 
       // Skip highest bits if they're never reachable due to maxValue
-      if ((1UL << bit) > (ulong)maxValue)
+      if (1UL << bit > (ulong)maxValue)
         continue;
 
       Assert.That(
@@ -785,12 +778,12 @@ internal class RandomTests {
         Is.LessThan(0.1),
         $"Autocorrelation at lag {lag} is too high, suggesting a pattern."
       );
-    
+
     return;
-    
+
     static double[] CalculateAutocorrelations(long[] values, int maxLag) {
       var result = new double[maxLag + 1];
-      var mean = values.Select(i=>(double)i).Average();
+      var mean = values.Select(i => (double)i).Average();
       var variance = values.Select(v => (v - mean) * (v - mean)).Average();
 
       for (var lag = 0; lag <= maxLag; ++lag) {
@@ -806,5 +799,4 @@ internal class RandomTests {
       return result;
     }
   }
-  
 }

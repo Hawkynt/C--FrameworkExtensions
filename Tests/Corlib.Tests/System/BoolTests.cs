@@ -4,7 +4,6 @@ namespace System;
 
 [TestFixture]
 public class BoolTests {
-
   [Test]
   [TestCase(false, false, false, false, false, true, true, true)]
   [TestCase(false, true, false, true, true, true, false, false)]

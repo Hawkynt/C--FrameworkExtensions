@@ -5,7 +5,6 @@ namespace System.Collections.Concurrent;
 
 [TestFixture]
 internal class ConcurrentQueueTests {
-
   [Test]
   public void PullTo_Span_ReturnsCorrectItems() {
     var queue = new ConcurrentQueue<int>();
@@ -90,13 +89,13 @@ internal class ConcurrentQueueTests {
   [TestCase(65535)]
   [TestCase(65536)]
   [TestCase(65537)]
-  [TestCase(1<<24)]
+  [TestCase(1 << 24)]
   public void Pull_MaxCount_ReturnsUpToThatMany(int maxCount) {
     var items = Enumerable.Range(1, maxCount).ToArray();
     items.Shuffle();
 
     var queue = new ConcurrentQueue<int>();
-    foreach(var item in items)
+    foreach (var item in items)
       queue.Enqueue(item);
 
     // pull less items than available
@@ -108,8 +107,8 @@ internal class ConcurrentQueueTests {
     var moreItems = queue.Pull(moreItemCount);
 
 
-    Assert.That(lessItems.Length,Is.EqualTo(lessItemCount));
-    Assert.That(lessItems,Is.EqualTo(items.Take(lessItemCount).ToArray()));
+    Assert.That(lessItems.Length, Is.EqualTo(lessItemCount));
+    Assert.That(lessItems, Is.EqualTo(items.Take(lessItemCount).ToArray()));
 
     Assert.That(moreItems.Length, Is.LessThanOrEqualTo(moreItemCount));
     Assert.That(moreItems, Is.EqualTo(items.Skip(lessItemCount).ToArray()));

@@ -4,7 +4,6 @@ namespace System.Collections.Generic;
 
 [TestFixture]
 internal class QueueTests {
-
   [Test]
   public void PullTo_Span_ReturnsCorrectItems() {
     var queue = new Queue<int>();

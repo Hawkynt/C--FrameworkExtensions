@@ -4,7 +4,6 @@ namespace System.Collections.Generic;
 
 [TestFixture]
 public class LinkedListTests {
-  
   [Test]
   public void TestQueueBehavior() {
     var queue = new Queue<int>();
@@ -18,7 +17,7 @@ public class LinkedListTests {
     var y0 = queue.Dequeue();
     var y1 = list.Dequeue();
 
-    Assert.That(y0,Is.EqualTo(y1));
+    Assert.That(y0, Is.EqualTo(y1));
     Assert.That(queue.ToArray(), Is.EqualTo(list.ToArray()));
   }
 
@@ -38,5 +37,4 @@ public class LinkedListTests {
     Assert.That(y0, Is.EqualTo(y1));
     Assert.That(stack.ToArray(), Is.EqualTo(list.ToArray()));
   }
-
 }

@@ -9,7 +9,7 @@ public class FileInfoPolyfillsTests {
   private string? _testDirectory;
   private string? _sourceDirectory;
   private string? _targetDirectory;
-  private string _TestDirectory=>this._testDirectory!;
+  private string _TestDirectory => this._testDirectory!;
   private string _SourceDirectory => this._sourceDirectory!;
   private string _TargetDirectory => this._targetDirectory!;
 
@@ -231,8 +231,10 @@ public class FileInfoPolyfillsTests {
     Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte nicht überschrieben worden sein");
     Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte nicht überschrieben worden sein");
     Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
-    Assert.IsTrue((File.GetAttributes(destPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-                  "Zieldatei sollte immer noch schreibgeschützt sein");
+    Assert.IsTrue(
+      (File.GetAttributes(destPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
+      "Zieldatei sollte immer noch schreibgeschützt sein"
+    );
   }
 
   [Test]
@@ -257,12 +259,18 @@ public class FileInfoPolyfillsTests {
     Assert.AreEqual(destPath, destFile.FullName, "FileInfo.FullName sollte nicht aktualisiert sein");
 
     var attributes = File.GetAttributes(destPath);
-    Assert.IsTrue((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-                  "Zieldatei sollte immer noch schreibgeschützt sein");
-    Assert.IsTrue((attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-                  "Zieldatei sollte immer noch versteckt sein");
-    Assert.IsTrue((attributes & FileAttributes.System) == FileAttributes.System,
-                  "Zieldatei sollte immer noch eine Systemdatei sein");
+    Assert.IsTrue(
+      (attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
+      "Zieldatei sollte immer noch schreibgeschützt sein"
+    );
+    Assert.IsTrue(
+      (attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+      "Zieldatei sollte immer noch versteckt sein"
+    );
+    Assert.IsTrue(
+      (attributes & FileAttributes.System) == FileAttributes.System,
+      "Zieldatei sollte immer noch eine Systemdatei sein"
+    );
   }
 
   [Test]
@@ -311,7 +319,7 @@ public class FileInfoPolyfillsTests {
     var originalPaths = new string[fileCount];
     var destPaths = new string[fileCount];
 
-    for (int i = 0; i < fileCount; i++) {
+    for (var i = 0; i < fileCount; i++) {
       sourceFiles[i] = this.CreateTestFile(this._SourceDirectory, $"source{i}.txt", TestContent + i);
       originalPaths[i] = sourceFiles[i].FullName;
       destPaths[i] = Path.Combine(this._TargetDirectory, $"dest{i}.txt");
@@ -322,32 +330,41 @@ public class FileInfoPolyfillsTests {
     var threads = new Thread[fileCount];
     var exceptions = new Exception[fileCount];
 
-    for (int i = 0; i < fileCount; i++) {
-      int index = i; // Lokale Kopie für Lambda-Ausdruck
-      threads[i] = new(() => {
-        try {
-          sourceFiles[index].MoveTo(destPaths[index], true);
-        } catch (Exception ex) {
-          exceptions[index] = ex;
+    for (var i = 0; i < fileCount; i++) {
+      var index = i; // Lokale Kopie für Lambda-Ausdruck
+      threads[i] = new(
+        () => {
+          try {
+            sourceFiles[index].MoveTo(destPaths[index], true);
+          } catch (Exception ex) {
+            exceptions[index] = ex;
+          }
         }
-      });
+      );
       threads[i].Start();
     }
 
-    foreach (var thread in threads) {
+    foreach (var thread in threads)
       thread.Join();
-    }
 
     // Assert
-    for (int i = 0; i < fileCount; i++) {
+    for (var i = 0; i < fileCount; i++) {
       Assert.IsNull(exceptions[i], $"Operation für Datei {i} sollte erfolgreich sein");
-      Assert.IsFalse(File.Exists(originalPaths[i]),
-        $"Ursprünglicher Dateipfad für Quelldatei {i} sollte nicht mehr existieren");
+      Assert.IsFalse(
+        File.Exists(originalPaths[i]),
+        $"Ursprünglicher Dateipfad für Quelldatei {i} sollte nicht mehr existieren"
+      );
       Assert.IsTrue(File.Exists(destPaths[i]), $"Zieldatei {i} sollte existieren");
-      Assert.AreEqual(TestContent + i, File.ReadAllText(destPaths[i]),
-        $"Zieldatei {i} sollte den korrekten Inhalt haben");
-      Assert.AreEqual(destPaths[i], sourceFiles[i].FullName,
-        $"FileInfo.FullName für Datei {i} sollte aktualisiert sein");
+      Assert.AreEqual(
+        TestContent + i,
+        File.ReadAllText(destPaths[i]),
+        $"Zieldatei {i} sollte den korrekten Inhalt haben"
+      );
+      Assert.AreEqual(
+        destPaths[i],
+        sourceFiles[i].FullName,
+        $"FileInfo.FullName für Datei {i} sollte aktualisiert sein"
+      );
     }
   }
 
@@ -398,6 +415,7 @@ public class FileInfoPolyfillsTests {
     File.WriteAllText(filePath, content, new UTF8Encoding(false));
     return new(filePath);
   }
+
   [Test]
   public void MoveTo_SourceHasAttributes_AttributesArePreserved() {
     // Arrange
@@ -416,10 +434,14 @@ public class FileInfoPolyfillsTests {
     Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
 
     var targetAttributes = File.GetAttributes(destPath);
-    Assert.IsTrue((targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-                "Archive-Attribut sollte auf die Zieldatei übertragen werden");
-    Assert.IsTrue((targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-                "Hidden-Attribut sollte auf die Zieldatei übertragen werden");
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
+      "Archive-Attribut sollte auf die Zieldatei übertragen werden"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+      "Hidden-Attribut sollte auf die Zieldatei übertragen werden"
+    );
   }
 
   [Test]
@@ -441,10 +463,14 @@ public class FileInfoPolyfillsTests {
     Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
 
     var targetAttributes = File.GetAttributes(destPath);
-    Assert.IsTrue((targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-                "Archive-Attribut sollte auf die Zieldatei übertragen werden");
-    Assert.IsTrue((targetAttributes & FileAttributes.System) == FileAttributes.System,
-                "System-Attribut sollte auf die Zieldatei übertragen werden");
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
+      "Archive-Attribut sollte auf die Zieldatei übertragen werden"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.System) == FileAttributes.System,
+      "System-Attribut sollte auf die Zieldatei übertragen werden"
+    );
   }
 
   [Test]
@@ -469,16 +495,24 @@ public class FileInfoPolyfillsTests {
     var targetAttributes = File.GetAttributes(destPath);
 
     // Die Attribute der Quelldatei sollten erhalten bleiben
-    Assert.IsTrue((targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-                "Archive-Attribut der Quelldatei sollte erhalten bleiben");
-    Assert.IsTrue((targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-                "Hidden-Attribut der Quelldatei sollte erhalten bleiben");
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
+      "Archive-Attribut der Quelldatei sollte erhalten bleiben"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+      "Hidden-Attribut der Quelldatei sollte erhalten bleiben"
+    );
 
     // Die Attribute der Zieldatei sollten nicht mehr vorhanden sein
-    Assert.IsFalse((targetAttributes & FileAttributes.System) == FileAttributes.System,
-                "System-Attribut der Zieldatei sollte nicht erhalten bleiben");
-    Assert.IsFalse((targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
-                "Temporary-Attribut der Zieldatei sollte nicht erhalten bleiben");
+    Assert.IsFalse(
+      (targetAttributes & FileAttributes.System) == FileAttributes.System,
+      "System-Attribut der Zieldatei sollte nicht erhalten bleiben"
+    );
+    Assert.IsFalse(
+      (targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
+      "Temporary-Attribut der Zieldatei sollte nicht erhalten bleiben"
+    );
   }
 
   [Test]
@@ -499,8 +533,10 @@ public class FileInfoPolyfillsTests {
     Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
 
     var targetAttributes = File.GetAttributes(destPath);
-    Assert.IsTrue((targetAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-                "ReadOnly-Attribut sollte auf die Zieldatei übertragen werden");
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
+      "ReadOnly-Attribut sollte auf die Zieldatei übertragen werden"
+    );
   }
 
   [Test]
@@ -511,8 +547,7 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
     // Setze mehrere Attribute auf die Quelldatei
-    var sourceAttributes = FileAttributes.Archive | FileAttributes.Hidden |
-                           FileAttributes.System | FileAttributes.Temporary;
+    var sourceAttributes = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary;
     File.SetAttributes(originalPath, sourceAttributes);
 
     // Act
@@ -525,13 +560,21 @@ public class FileInfoPolyfillsTests {
     var targetAttributes = File.GetAttributes(destPath);
 
     // Überprüfe alle Attribute einzeln
-    Assert.IsTrue((targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-                "Archive-Attribut sollte erhalten bleiben");
-    Assert.IsTrue((targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-                "Hidden-Attribut sollte erhalten bleiben");
-    Assert.IsTrue((targetAttributes & FileAttributes.System) == FileAttributes.System,
-                "System-Attribut sollte erhalten bleiben");
-    Assert.IsTrue((targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
-                "Temporary-Attribut sollte erhalten bleiben");
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
+      "Archive-Attribut sollte erhalten bleiben"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
+      "Hidden-Attribut sollte erhalten bleiben"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.System) == FileAttributes.System,
+      "System-Attribut sollte erhalten bleiben"
+    );
+    Assert.IsTrue(
+      (targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
+      "Temporary-Attribut sollte erhalten bleiben"
+    );
   }
 }

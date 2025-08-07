@@ -1,6 +1,6 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 
 namespace System.Collections.Concurrent;
 
@@ -25,7 +25,7 @@ internal class ConcurrentDictionaryTests {
   [Test]
   public void Add_With_Function_Returns_Unique_Keys() {
     var dict = new ConcurrentDictionary<int, string>();
-    int counter = 0;
+    var counter = 0;
     var key1 = dict.Add("a", () => ++counter);
     var key2 = dict.Add("b", () => ++counter);
 

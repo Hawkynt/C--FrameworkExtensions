@@ -1,12 +1,9 @@
-﻿using static Corlib.Tests.NUnit.TestUtilities;
-using NUnit.Framework;
-using System.Linq;
+﻿using NUnit.Framework;
 
 namespace System.Collections.Generic;
 
 [TestFixture]
 public class DictionaryTests {
-
   [Test]
   public void AddOrUpdate_NullDictionary_Throws() {
     Dictionary<string, int>? dict = null;
@@ -200,7 +197,7 @@ public class DictionaryTests {
   public void TryAdd_New_Key_Returns_True_And_Adds_Value() {
     var dict = new Dictionary<string, int>();
 
-    bool result = dict.TryAdd("newKey", 100);
+    var result = dict.TryAdd("newKey", 100);
 
     Assert.IsTrue(result, "TryAdd should return true when adding a new key.");
     Assert.IsTrue(dict.ContainsKey("newKey"), "New key should be added.");
@@ -211,7 +208,7 @@ public class DictionaryTests {
   public void TryAdd_Existing_Key_Returns_False_And_Does_Not_Update() {
     var dict = new Dictionary<string, string> { { "key", "oldValue" } };
 
-    bool result = dict.TryAdd("key", "newValue");
+    var result = dict.TryAdd("key", "newValue");
 
     Assert.IsFalse(result, "TryAdd should return false when the key already exists.");
     Assert.AreEqual("oldValue", dict["key"], "Existing value should remain unchanged.");
@@ -221,8 +218,8 @@ public class DictionaryTests {
   public void TryAdd_Adding_Multiple_New_Keys_Returns_True_For_All() {
     var dict = new Dictionary<int, string>();
 
-    bool result1 = dict.TryAdd(1, "first");
-    bool result2 = dict.TryAdd(2, "second");
+    var result1 = dict.TryAdd(1, "first");
+    var result2 = dict.TryAdd(2, "second");
 
     Assert.IsTrue(result1, "First key should be added successfully.");
     Assert.IsTrue(result2, "Second key should be added successfully.");
@@ -235,7 +232,7 @@ public class DictionaryTests {
     var dict = new Dictionary<object, string>();
     var key = new object();
 
-    bool result = dict.TryAdd(key, "referenceValue");
+    var result = dict.TryAdd(key, "referenceValue");
 
     Assert.IsTrue(result, "TryAdd should return true for reference type keys.");
     Assert.IsTrue(dict.ContainsKey(key), "Reference key should be added.");
@@ -246,7 +243,7 @@ public class DictionaryTests {
   public void TryAdd_Adding_ValueTypeKey_Returns_True_And_Adds_Value() {
     var dict = new Dictionary<int, double>();
 
-    bool result = dict.TryAdd(1, 3.14);
+    var result = dict.TryAdd(1, 3.14);
 
     Assert.IsTrue(result, "TryAdd should return true for value type keys.");
     Assert.IsTrue(dict.ContainsKey(1), "Value type key should be added.");
@@ -257,13 +254,11 @@ public class DictionaryTests {
   public void TryAdd_Concurrent_Additions_Preserve_Integrity() {
     var dict = new Dictionary<int, string>();
 
-    bool result1 = dict.TryAdd(1, "first");
-    bool result2 = dict.TryAdd(1, "second");  // Duplicate key
+    var result1 = dict.TryAdd(1, "first");
+    var result2 = dict.TryAdd(1, "second"); // Duplicate key
 
     Assert.IsTrue(result1, "First key should be added successfully.");
     Assert.IsFalse(result2, "Duplicate key should not be added.");
     Assert.AreEqual("first", dict[1], "Value should remain unchanged after duplicate attempt.");
   }
-
 }
-

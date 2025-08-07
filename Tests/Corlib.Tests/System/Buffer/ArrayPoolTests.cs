@@ -135,7 +135,7 @@ public class ArrayPoolPolyfillTests {
     var array = pool.Rent(10);
 
     // Fill the array with values
-    for (int i = 0; i < array.Length; i++)
+    for (var i = 0; i < array.Length; i++)
       array[i] = 42;
 
     // Act
@@ -154,7 +154,7 @@ public class ArrayPoolPolyfillTests {
     var array = pool.Rent(10);
 
     // Fill the array with values
-    for (int i = 0; i < array.Length; i++)
+    for (var i = 0; i < array.Length; i++)
       array[i] = 42;
 
     // Act
@@ -198,7 +198,7 @@ public class ArrayPoolPolyfillTests {
     var pool = ArrayPool<int>.Create();
     var array = new int[123]; // Not a power of 2
 
-    Assert.That(()=> pool.Return(array),Throws.TypeOf<ArgumentException>());
+    Assert.That(() => pool.Return(array), Throws.TypeOf<ArgumentException>());
   }
 
   [Test]
@@ -220,5 +220,4 @@ public class ArrayPoolPolyfillTests {
     // Assert
     Assert.AreNotSame(intPool, stringPool);
   }
-
 }

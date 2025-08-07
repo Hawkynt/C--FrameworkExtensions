@@ -1,16 +1,15 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using NUnit.Framework;
 
 namespace System.IO;
 
 internal class StreamTest {
-
   private sealed class NonSeekableStream : MemoryStream {
     public override bool CanSeek => false;
   }
@@ -93,10 +92,7 @@ internal class StreamTest {
 
     try {
       // Accept client in a background thread
-      acceptThread = new(() =>
-      {
-        serverClient = listener.AcceptTcpClient();
-      });
+      acceptThread = new(() => { serverClient = listener.AcceptTcpClient(); });
       acceptThread.Start();
 
       client.Connect(IPAddress.Loopback, port);
@@ -205,7 +201,6 @@ internal class StreamTest {
   [TestCase(true)]
   [TestCase(false)]
   public void WriteBool(bool value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -227,7 +222,6 @@ internal class StreamTest {
   [TestCase(byte.MinValue)]
   [TestCase(byte.MaxValue)]
   public void WriteByte(byte value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -248,7 +242,6 @@ internal class StreamTest {
   [TestCase(sbyte.MinValue)]
   [TestCase(sbyte.MaxValue)]
   public void WriteSByte(sbyte value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -272,7 +265,6 @@ internal class StreamTest {
   [TestCase(char.MaxValue)]
   [TestCase(char.MinValue)]
   public void WriteChar(char value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -309,7 +301,6 @@ internal class StreamTest {
   [TestCase((ushort)(1 << 4))]
   [TestCase((ushort)12345)]
   public void WriteUShort(ushort value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -345,7 +336,6 @@ internal class StreamTest {
   [TestCase(short.MaxValue)]
   [TestCase(1 << 8)]
   public void WriteShort(short value) {
-
     // test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -383,7 +373,6 @@ internal class StreamTest {
   [TestCase(1u << 24)]
   [TestCase(1234567890u)]
   public void WriteUInt(uint value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -423,7 +412,6 @@ internal class StreamTest {
   [TestCase(1 << 16)]
   [TestCase(1 << 24)]
   public void WriteInt(int value) {
-
     // test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -467,7 +455,6 @@ internal class StreamTest {
   [TestCase(1UL << 56)]
   [TestCase(12345678910111213ul)]
   public void WriteULong(ulong value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -509,7 +496,6 @@ internal class StreamTest {
   [TestCase(1L << 48)]
   [TestCase(1L << 56)]
   public void WriteLong(long value) {
-
     // test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -554,7 +540,6 @@ internal class StreamTest {
   [TestCase(float.NegativeInfinity)]
   [TestCase(float.NaN)]
   public void WriteFloat(float value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -569,11 +554,10 @@ internal class StreamTest {
     // Test reading
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadFloat32();
-    if (float.IsNaN(value)) {
+    if (float.IsNaN(value))
       Assert.IsTrue(float.IsNaN(readBack));
-    } else {
+    else
       Assert.AreEqual(value, readBack);
-    }
 
     // test writing big endian
     memoryStream.SetLength(0);
@@ -586,11 +570,10 @@ internal class StreamTest {
 
     // test readin big endian
     memoryStream.Position = 0;
-    if (float.IsNaN(value)) {
+    if (float.IsNaN(value))
       Assert.IsTrue(float.IsNaN(memoryStream.ReadFloat32(true)));
-    } else {
+    else
       Assert.AreEqual(value, memoryStream.ReadFloat32(true));
-    }
   }
 
   [Test]
@@ -604,7 +587,6 @@ internal class StreamTest {
   [TestCase(double.NegativeInfinity)]
   [TestCase(double.NaN)]
   public void WriteDouble(double value) {
-
     // Test writing
     using var memoryStream = new MemoryStream();
     memoryStream.Write(value);
@@ -619,11 +601,10 @@ internal class StreamTest {
     // Test reading
     memoryStream.Position = 0;
     var readBack = memoryStream.ReadFloat64();
-    if (double.IsNaN(value)) {
+    if (double.IsNaN(value))
       Assert.IsTrue(double.IsNaN(readBack));
-    } else {
+    else
       Assert.AreEqual(value, readBack);
-    }
 
     // test writing big endian
     memoryStream.SetLength(0);
@@ -636,12 +617,10 @@ internal class StreamTest {
 
     // test readin big endian
     memoryStream.Position = 0;
-    if (double.IsNaN(value)) {
+    if (double.IsNaN(value))
       Assert.IsTrue(double.IsNaN(memoryStream.ReadFloat64(true)));
-    } else {
+    else
       Assert.AreEqual(value, memoryStream.ReadFloat64(true));
-    }
-
   }
 
   [Test]
@@ -821,5 +800,4 @@ internal class StreamTest {
 
     Assert.That(result, Is.EquivalentTo(bytes));
   }
-
 }

@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using System.Diagnostics;
 
 namespace System;
 
@@ -46,5 +45,4 @@ public class TimeSpanTests {
     var result = span.FromUtcNow();
     Assert.That(result - expected, Is.LessThan(TimeSpan.FromMilliseconds(20)));
   }
-
 }

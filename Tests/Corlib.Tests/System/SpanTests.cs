@@ -1,15 +1,12 @@
-﻿using NUnit.Framework;
-using static Corlib.Tests.NUnit.TestUtilities;
-using System.Runtime.InteropServices;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using NUnit.Framework;
 
 namespace System;
 
 [TestFixture]
 internal class SpanTests {
-
-
   private static IEnumerable<int> LengthGenerator(bool allowZero) {
     var min = allowZero ? 0 : 1;
     var max = 256;
@@ -26,7 +23,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public void CopyTo_CopiesCorrectly_ManagedInt(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => i + 1).ToArray();
     var destinationArray = new int[length];
@@ -41,7 +38,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public unsafe void CopyTo_CopiesCorrectly_UnmanagedByte(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => (byte)(i % 255 + 1)).ToArray();
     var destinationArray = new byte[length];
@@ -76,13 +73,23 @@ internal class SpanTests {
       } catch (Exception e) {
         Assert.Fail($"Got exception: {e}");
       }
-
     }
   }
 
   [Test]
   public unsafe void CopyTo_ThrowsArgumentException_OnLengthMismatch() {
-    int[] sourceArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    int[] sourceArray = [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ];
     var destinationArray = new int[5];
 
     fixed (int* sourcePtr = sourceArray)
@@ -98,7 +105,6 @@ internal class SpanTests {
       } catch (Exception e) {
         Assert.Fail($"Got exception: {e}");
       }
-
     }
   }
 
@@ -121,7 +127,18 @@ internal class SpanTests {
 
   [Test]
   public unsafe void CopyTo_PartialCopy() {
-    int[] sourceArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    int[] sourceArray = [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ];
     var destinationArray = new int[10];
 
     fixed (int* sourcePtr = sourceArray)
@@ -149,9 +166,9 @@ internal class SpanTests {
   }
 
   // User-defined reference type
-  private sealed class MyClass(int x,float y) : IEquatable<MyClass> {
-    public readonly int X=x;
-    public readonly float Y=y;
+  private sealed class MyClass(int x, float y) : IEquatable<MyClass> {
+    public readonly int X = x;
+    public readonly float Y = y;
 
     #region Equality members
 
@@ -176,7 +193,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_UserDefinedStruct(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
     var destinationArray = new MyStruct[length];
@@ -193,7 +210,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_Strings(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new string('a', i % 128)).ToArray();
     var destinationArray = new string[length];
@@ -208,7 +225,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public void CopyTo_CopiesCorrectly_ReferenceTypes(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new MyClass(i, i * 1.5f)).ToArray();
     var destinationArray = new MyClass[length];
@@ -223,7 +240,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public unsafe void CopyTo_CopiesCorrectly_BlittableTypes(int length) {
     var sourceArray = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
     var destinationArray = new MyStruct[length];
@@ -250,8 +267,8 @@ internal class SpanTests {
     var sourceSpan = source.AsSpan();
 
     var targetChars = sourceSpan.ToArray();
-    var target=new string(targetChars);
-    
+    var target = new string(targetChars);
+
     Assert.AreEqual(source, target);
   }
 
@@ -280,15 +297,15 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public void SequenceEqual_ShouldEqual_ManagedByte(int length) {
-    ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i=>(byte)~(i & 0xff)).ToArray().AsSpan();
+    ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
     ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
-    Assert.That(source.SequenceEqual(target),Is.True);
+    Assert.That(source.SequenceEqual(target), Is.True);
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public unsafe void SequenceEqual_ShouldEqual_UnmanagedInt(int length) {
     var a = Enumerable.Range(0, length).ToArray();
     var b = Enumerable.Range(0, length).ToArray();
@@ -298,7 +315,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public void SequenceEqual_ShouldEqual_String(int length) {
     var str1 = new string(Enumerable.Range(0, length).Select(i => (char)(65 + i % 26)).ToArray());
     var str2 = new string(Enumerable.Range(0, length).Select(i => (char)(65 + i % 26)).ToArray());
@@ -308,9 +325,9 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public void SequenceEqual_ShouldEqual_ReferenceTypes(int length) {
-    var a = Enumerable.Range(0,length).Select(i=>new MyClass(i,i*1.5f)).ToArray();
+    var a = Enumerable.Range(0, length).Select(i => new MyClass(i, i * 1.5f)).ToArray();
     var b = a.ToList().ToArray();
     var span1 = a.AsSpan();
     var span2 = b.AsSpan();
@@ -318,7 +335,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [true])]
+  [TestCaseSource(nameof(LengthGenerator), [true])]
   public void SequenceEqual_ShouldEqual_UserDefinedStruct(int length) {
     var a = Enumerable.Range(0, length).Select(i => new MyStruct { X = i, Y = i + 0.5f }).ToArray();
     var b = a.ToList().ToArray();
@@ -328,7 +345,7 @@ internal class SpanTests {
   }
 
   [Test]
-  [TestCaseSource(nameof(SpanTests.LengthGenerator), [false])]
+  [TestCaseSource(nameof(LengthGenerator), [false])]
   public void SequenceEqual_ShouldNotEqual_ManagedByte(int length) {
     ReadOnlySpan<byte> source = Enumerable.Range(0, length).Select(i => (byte)~(i & 0xff)).ToArray().AsSpan();
     ReadOnlySpan<byte> target = Enumerable.Range(0, length).Select(i => (byte)(i & 0xff)).ToArray().AsSpan();
@@ -345,7 +362,7 @@ internal class SpanTests {
     Assert.That(source.SequenceEqual(target), Is.False);
 
     temp[^1] = source[^1];
-    temp[temp.Length/2] = (byte)~source[source.Length / 2];
+    temp[temp.Length / 2] = (byte)~source[source.Length / 2];
     target = temp;
     Assert.That(source.SequenceEqual(target), Is.False);
   }
@@ -451,7 +468,7 @@ internal class SpanTests {
   public void Not_ShouldWorkAsExpected(int length) {
     var a = Enumerable.Range(0, length).Select(i => (byte)(i * 7)).ToArray();
     var expected = a.Select(i => (byte)~i).ToArray();
-    
+
     var t = new byte[length];
 
     ((ReadOnlySpan<byte>)a.AsSpan()).Not(t);
@@ -461,4 +478,3 @@ internal class SpanTests {
     Assert.That(a.SequenceEqual(expected));
   }
 }
-

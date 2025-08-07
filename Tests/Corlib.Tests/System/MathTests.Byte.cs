@@ -4,7 +4,6 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((byte)0b00000001, 0, (byte)0b00000001)]
   [TestCase((byte)0b00000001, 1, (byte)0b00000010)]
@@ -68,5 +67,4 @@ public partial class MathTests {
   [TestCase(0b11111111, 0b00000010, 0b00000001)]
   [TestCase(0b11111111, 0b00000001, 0b00000001)]
   public void ParallelBitExtractByte(byte value, byte mask, byte expected) => Assert.AreEqual(expected, value.ParallelBitExtract(mask));
-  
 }

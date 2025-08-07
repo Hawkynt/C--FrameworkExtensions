@@ -55,12 +55,7 @@ public class DateTimeAdditionalTests {
   public void DaysTill_ReturnsInclusiveRange() {
     var start = new DateTime(2024, 1, 1);
     var end = new DateTime(2024, 1, 4);
-    var expected = new[] {
-      new DateTime(2024, 1, 1),
-      new DateTime(2024, 1, 2),
-      new DateTime(2024, 1, 3),
-      new DateTime(2024, 1, 4)
-    };
+    var expected = new[] { new DateTime(2024, 1, 1), new DateTime(2024, 1, 2), new DateTime(2024, 1, 3), new DateTime(2024, 1, 4) };
     CollectionAssert.AreEqual(expected, start.DaysTill(end));
   }
 

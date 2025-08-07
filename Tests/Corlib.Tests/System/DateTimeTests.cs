@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using NUnit.Framework;
 
-namespace System; 
+namespace System;
 
 [TestFixture]
 public class DateTimeTests {
@@ -40,6 +40,4 @@ public class DateTimeTests {
     var result = input.DayInCurrentWeek(dayOfWeek, startDayOfWeek);
     Assert.AreEqual(expected, result);
   }
-
-
 }

@@ -1,12 +1,11 @@
-﻿using NUnit.Framework;
-using System.Linq;
+﻿using System.Linq;
+using NUnit.Framework;
 using static Corlib.Tests.NUnit.TestUtilities;
 
 namespace System.Diagnostics;
 
 [TestFixture]
 public class ProcessTests {
-
   [Test]
   public static void GetParentProcess() {
     if (!IsWindowsPlatform())
@@ -27,7 +26,7 @@ public class ProcessTests {
 
   [Test]
   public static void ParentOfChildren() {
-    if(!IsWindowsPlatform())
+    if (!IsWindowsPlatform())
       Assert.Pass("[Skipped]Not supported on non windows platforms");
 
     var myPid = Process.GetCurrentProcess().Id;
@@ -48,7 +47,7 @@ public class ProcessTests {
   public static void Children() {
     if (!IsWindowsPlatform())
       Assert.Pass("[Skipped]Not supported on non windows platforms");
-    
+
     var myself = Process.GetCurrentProcess();
     int? childId;
     Process? child;
@@ -69,7 +68,7 @@ public class ProcessTests {
   public static void AllChildren() {
     if (!IsWindowsPlatform())
       Assert.Pass("[Skipped]Not supported on non windows platforms");
-    
+
     var myself = Process.GetCurrentProcess();
     int? childId;
     Process? child;
@@ -88,5 +87,4 @@ public class ProcessTests {
 
     Assert.That(child, Is.Not.Null);
   }
-
 }

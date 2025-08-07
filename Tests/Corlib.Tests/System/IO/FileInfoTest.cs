@@ -5,17 +5,16 @@ using NUnit.Framework;
 namespace System.IO;
 
 using static TestUtilities;
-using LineBreakMode=StringExtensions.LineBreakMode;
+using LineBreakMode = StringExtensions.LineBreakMode;
 
 [TestFixture]
 internal class FileInfoTest {
-
   [TestFixture]
   public class FileInProgressTests {
     private const string _TEST_CONTENT = "Test content";
     private const string _NEW_CONTENT = "New content";
     private FileInfo? _sourceFile;
-    
+
     [SetUp]
     public void Setup() {
       // Create a source file for testing
@@ -26,7 +25,7 @@ internal class FileInfoTest {
     [Test]
     public void ShouldCreateTemporaryFile() {
       using var fileInProgress = this._sourceFile.StartWorkInProgress();
-      Assert.IsTrue(File.Exists(this._sourceFile!.FullName+".$$$"));
+      Assert.IsTrue(File.Exists(this._sourceFile!.FullName + ".$$$"));
     }
 
     [Test]
@@ -40,7 +39,7 @@ internal class FileInfoTest {
 
       // Assuming ReplaceWith correctly replaces the source file with temporary file
       Assert.IsFalse(File.Exists(tempFileName));
-      Assert.AreEqual(_NEW_CONTENT,this._sourceFile.ReadAllText());
+      Assert.AreEqual(_NEW_CONTENT, this._sourceFile.ReadAllText());
     }
 
     [Test]
@@ -96,7 +95,7 @@ internal class FileInfoTest {
     }
 
     [Test]
-    [TestCase(0x00, false,TestName = "Single Control Character is no Textfile")]
+    [TestCase(0x00, false, TestName = "Single Control Character is no Textfile")]
     [TestCase(0x65, true, TestName = "Single Letter Character is Textfile")]
     [TestCase(0x0A, true, TestName = "Single Whitespace Character is Textfile")]
     public void SingleCharFile(byte character, bool expected) {
@@ -104,7 +103,7 @@ internal class FileInfoTest {
       try {
         File.WriteAllBytes(tempFile, [character]);
         var fileInfo = new FileInfo(tempFile);
-        Assert.That(fileInfo.IsTextFile(),Is.EqualTo(expected));
+        Assert.That(fileInfo.IsTextFile(), Is.EqualTo(expected));
       } finally {
         File.Delete(tempFile);
       }
@@ -252,7 +251,7 @@ internal class FileInfoTest {
     public void TearDown() {
       // Cleanup the test directory after each test
       var testDirectory = this._testDirectory;
-      if (testDirectory!=null && Directory.Exists(testDirectory))
+      if (testDirectory != null && Directory.Exists(testDirectory))
         Directory.Delete(testDirectory, true);
     }
 
@@ -295,20 +294,18 @@ internal class FileInfoTest {
       Assert.AreEqual("Original destination content", File.ReadAllText(this._backupFile.FullName));
       Assert.AreEqual("Source file content", File.ReadAllText(this._destinationFile.FullName));
     }
-
   }
 
   [TestFixture]
   public class CustomTextReaderTests {
-
     public enum TestEncoding {
       AutoDetectFromBom = -1,
-      Null=0,
+      Null = 0,
       Utf8NoBOM,
       Utf8,
       UnicodeLittleEndianNoBOM,
       UnicodeBigEndian,
-      ASCII,
+      ASCII
     }
 
     [Test]
@@ -334,19 +331,27 @@ internal class FileInfoTest {
     [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
     [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
     public void KeepFirstLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
-      => this._ExecuteTest((f, c, e, l, o,a) => {
-        if (a)
-          f.KeepFirstLines(c, l);
-        else
-          f.KeepFirstLines(c, e, l);
-      }, input, count, testEncoding, newLine, 0,expected, exception)
-    ;
+      => this._ExecuteTest(
+        (f, c, e, l, o, a) => {
+          if (a)
+            f.KeepFirstLines(c, l);
+          else
+            f.KeepFirstLines(c, e, l);
+        },
+        input,
+        count,
+        testEncoding,
+        newLine,
+        0,
+        expected,
+        exception
+      );
 
     [Test]
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, 0, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, 0, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, 0, null, typeof(ArgumentNullException))]
-    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, 0, "",  typeof(ArgumentException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, 0, "", typeof(ArgumentException))]
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, 0, "abc")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "abc\n")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "def")]
@@ -364,25 +369,33 @@ internal class FileInfoTest {
     [TestCase("abc\x009Bde\nf", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, 0, "de\nf")]
     [TestCase("abc\x0076de\nf", 1, TestEncoding.Utf8, LineBreakMode.Zx, 0, "de\nf")]
     [TestCase("abc\0de\nf", 1, TestEncoding.Utf8, LineBreakMode.Null, 0, "de\nf")]
-    [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, -1, "abc\n",typeof(ArgumentOutOfRangeException))]
+    [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, -1, "abc\n", typeof(ArgumentOutOfRangeException))]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\n")]
     [TestCase("abc\ndef\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\ndef\n")]
     [TestCase("abc\ndef\nghi\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\nghi\n")]
     public void KeepLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, int offset, string expected, Type? exception = null)
-      => this._ExecuteTest((f, c, e, l, o, a) => {
-        if (o != 0) {
-          if (a)
-            f.KeepLastLines(c, o, l);
-          else
-            f.KeepLastLines(c, o, e, l);
-        } else{
-          if (a)
-            f.KeepLastLines(c, l);
-          else
-            f.KeepLastLines(c, e, l);
-        }
-      }, input, count, testEncoding, newLine, offset, expected, exception)
-    ;
+      => this._ExecuteTest(
+        (f, c, e, l, o, a) => {
+          if (o != 0) {
+            if (a)
+              f.KeepLastLines(c, o, l);
+            else
+              f.KeepLastLines(c, o, e, l);
+          } else {
+            if (a)
+              f.KeepLastLines(c, l);
+            else
+              f.KeepLastLines(c, e, l);
+          }
+        },
+        input,
+        count,
+        testEncoding,
+        newLine,
+        offset,
+        expected,
+        exception
+      );
 
     [Test]
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
@@ -407,19 +420,27 @@ internal class FileInfoTest {
     [TestCase("abc\x0076de\nf", 1, TestEncoding.Utf8, LineBreakMode.Zx, "de\nf")]
     [TestCase("abc\0de\nf", 1, TestEncoding.Utf8, LineBreakMode.Null, "de\nf")]
     public void RemoveFirstLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
-     => this._ExecuteTest((f, c, e, l,o, a) => {
-       if (a)
-         f.RemoveFirstLines(c, l);
-       else
-         f.RemoveFirstLines(c, e, l);
-     }, input, count, testEncoding, newLine,0, expected, exception)
-   ;
+      => this._ExecuteTest(
+        (f, c, e, l, o, a) => {
+          if (a)
+            f.RemoveFirstLines(c, l);
+          else
+            f.RemoveFirstLines(c, e, l);
+        },
+        input,
+        count,
+        testEncoding,
+        newLine,
+        0,
+        expected,
+        exception
+      );
 
     [Test]
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
-    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "",typeof(ArgumentException))]
+    [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
@@ -437,14 +458,22 @@ internal class FileInfoTest {
     [TestCase("ab\nc\x009Bdef", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "ab\nc\x9B")]
     [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
     [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
-    public void RemoveLastLines(string? input,int count, TestEncoding testEncoding, LineBreakMode newLine,string expected, Type? exception=null) 
-      => this._ExecuteTest((f, c, e, l,o, a) => {
-        if (a)
-          f.RemoveLastLines(c, l);
-        else
-          f.RemoveLastLines(c, e, l);
-      }, input,count,testEncoding,newLine,0,expected,exception)
-      ;
+    public void RemoveLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
+      => this._ExecuteTest(
+        (f, c, e, l, o, a) => {
+          if (a)
+            f.RemoveLastLines(c, l);
+          else
+            f.RemoveLastLines(c, e, l);
+        },
+        input,
+        count,
+        testEncoding,
+        newLine,
+        0,
+        expected,
+        exception
+      );
 
     private void _ExecuteTest(Action<FileInfo?, int, Encoding?, LineBreakMode, int, bool> runner, string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, int offset, string expected, Type? exception = null) {
       Encoding writeEncoding;
@@ -454,47 +483,42 @@ internal class FileInfoTest {
           readEncoding = null;
           writeEncoding = new UTF32Encoding(bigEndian: false, byteOrderMark: true);
           break;
-        case TestEncoding.Utf8NoBOM:
-          readEncoding = writeEncoding = new UTF8Encoding(false);
-          break;
-        case TestEncoding.Utf8:
-          readEncoding = writeEncoding = new UTF8Encoding(true);
-          break;
-        case TestEncoding.UnicodeLittleEndianNoBOM:
-          readEncoding = writeEncoding = new UnicodeEncoding(false, false);
-          break;
-        case TestEncoding.UnicodeBigEndian:
-          readEncoding = writeEncoding = new UnicodeEncoding(true, true);
-          break;
-        case TestEncoding.ASCII:
-          readEncoding = writeEncoding = Encoding.ASCII;
-          break;
+        case TestEncoding.Utf8NoBOM: readEncoding = writeEncoding = new UTF8Encoding(false); break;
+        case TestEncoding.Utf8: readEncoding = writeEncoding = new UTF8Encoding(true); break;
+        case TestEncoding.UnicodeLittleEndianNoBOM: readEncoding = writeEncoding = new UnicodeEncoding(false, false); break;
+        case TestEncoding.UnicodeBigEndian: readEncoding = writeEncoding = new UnicodeEncoding(true, true); break;
+        case TestEncoding.ASCII: readEncoding = writeEncoding = Encoding.ASCII; break;
         case TestEncoding.Null:
           readEncoding = null;
           writeEncoding = Encoding.ASCII;
           break;
-        default:
-          throw new ArgumentOutOfRangeException(nameof(testEncoding), testEncoding, null);
+        default: throw new ArgumentOutOfRangeException(nameof(testEncoding), testEncoding, null);
       }
 
       FileInfo? file;
       if (input == null) {
         file = null;
-        ExecuteTest(() => {
-          runner(file, count, readEncoding, newLine, offset, false);
-          return file.ReadAllText(writeEncoding);
-        }, expected, exception);
+        ExecuteTest(
+          () => {
+            runner(file, count, readEncoding, newLine, offset, false);
+            return file.ReadAllText(writeEncoding);
+          },
+          expected,
+          exception
+        );
       } else {
         using var token = PathExtensions.GetTempFileToken();
         file = token.File;
         file.WriteAllText(input, writeEncoding);
-        ExecuteTest(() => {
-          runner(file, count, readEncoding, newLine, offset, testEncoding == TestEncoding.AutoDetectFromBom);
-          return file.ReadAllText(writeEncoding);
-        }, expected, exception);
+        ExecuteTest(
+          () => {
+            runner(file, count, readEncoding, newLine, offset, testEncoding == TestEncoding.AutoDetectFromBom);
+            return file.ReadAllText(writeEncoding);
+          },
+          expected,
+          exception
+        );
       }
     }
-
   }
-
 }

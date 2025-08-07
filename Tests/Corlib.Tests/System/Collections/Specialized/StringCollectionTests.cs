@@ -1,19 +1,17 @@
-using System.Collections.Specialized;
 using NUnit.Framework;
 
 namespace System.Collections.Specialized;
 
 [TestFixture]
 public class StringCollectionTests {
-
   [Test]
   public void ToArray_EmptyCollection_ReturnsEmptyArray() {
     // Arrange
     var collection = new StringCollection();
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(0, result.Length);
@@ -23,10 +21,10 @@ public class StringCollectionTests {
   public void ToArray_SingleElement_ReturnsArrayWithOneElement() {
     // Arrange
     var collection = new StringCollection { "test" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(1, result.Length);
@@ -37,10 +35,10 @@ public class StringCollectionTests {
   public void ToArray_MultipleElements_ReturnsArrayWithAllElements() {
     // Arrange
     var collection = new StringCollection { "first", "second", "third" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(3, result.Length);
@@ -53,10 +51,10 @@ public class StringCollectionTests {
   public void ToArray_WithNullValues_ReturnsArrayWithNulls() {
     // Arrange
     var collection = new StringCollection { "first", null, "third" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(3, result.Length);
@@ -69,10 +67,10 @@ public class StringCollectionTests {
   public void ToArray_WithEmptyStrings_ReturnsArrayWithEmptyStrings() {
     // Arrange
     var collection = new StringCollection { "", "test", "" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(3, result.Length);
@@ -85,10 +83,10 @@ public class StringCollectionTests {
   public void ToArray_WithDuplicateValues_ReturnsArrayWithDuplicates() {
     // Arrange
     var collection = new StringCollection { "test", "test", "different", "test" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(4, result.Length);
@@ -103,11 +101,11 @@ public class StringCollectionTests {
     // Arrange
     var collection = new StringCollection { "original" };
     var result = collection.ToArray();
-    
+
     // Act
     collection.Add("new");
     collection[0] = "modified";
-    
+
     // Assert
     Assert.AreEqual(1, result.Length);
     Assert.AreEqual("original", result[0]);
@@ -123,10 +121,10 @@ public class StringCollectionTests {
       collection.Add(value);
       expected[i] = value;
     }
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(1000, result.Length);
@@ -137,10 +135,10 @@ public class StringCollectionTests {
   public void ToArray_WithUnicodeStrings_ReturnsCorrectArray() {
     // Arrange
     var collection = new StringCollection { "Hello", "世界", "🌍", "Ñiño" };
-    
+
     // Act
     var result = collection.ToArray();
-    
+
     // Assert
     Assert.IsNotNull(result);
     Assert.AreEqual(4, result.Length);
@@ -154,9 +152,8 @@ public class StringCollectionTests {
   public void ToArray_NullCollection_ThrowsArgumentNullException() {
     // Arrange
     StringCollection collection = null;
-    
+
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => collection.ToArray());
   }
-
 }

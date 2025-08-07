@@ -1,11 +1,10 @@
-﻿using NUnit.Framework;
-using System.Linq;
+﻿using System.Linq;
+using NUnit.Framework;
 
 namespace System.Collections.Concurrent;
 
 [TestFixture]
 internal class ConcurrentStackTests {
-
   [Test]
   public void PullTo_Span_ReturnsTopToBottom() {
     var stack = new ConcurrentStack<int>();

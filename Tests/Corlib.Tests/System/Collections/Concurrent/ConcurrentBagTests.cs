@@ -4,7 +4,6 @@ namespace System.Collections.Concurrent;
 
 [TestFixture]
 internal class ConcurrentBagTests {
-
   [Test]
   public void Clear_Removes_All_Items() {
     ConcurrentBag<int> bag = new();
@@ -25,5 +24,4 @@ internal class ConcurrentBagTests {
     ConcurrentBag<int>? bag = null;
     Assert.Throws<NullReferenceException>(() => bag!.Clear());
   }
-
 }

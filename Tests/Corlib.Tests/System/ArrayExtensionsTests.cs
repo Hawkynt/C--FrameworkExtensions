@@ -7,9 +7,8 @@ namespace System;
 
 [TestFixture]
 public class ArrayTests {
-
   [Test]
-  [TestCase(0,typeof(ArgumentOutOfRangeException))]
+  [TestCase(0, typeof(ArgumentOutOfRangeException))]
   [TestCase(1)]
   [TestCase(2)]
   [TestCase(4)]
@@ -24,17 +23,17 @@ public class ArrayTests {
   [TestCase(2048)]
   [TestCase(4096)]
   [TestCase(8192)]
-  [TestCase(1<<14)]
-  [TestCase(1<<15)]
-  [TestCase(1<<16)]
-  [TestCase(1<<17)]
-  [TestCase(1<<18)]
+  [TestCase(1 << 14)]
+  [TestCase(1 << 15)]
+  [TestCase(1 << 16)]
+  [TestCase(1 << 17)]
+  [TestCase(1 << 18)]
   [TestCase(1 << 19)]
   [TestCase(1 << 20)]
   [TestCase(1 << 21)]
   [TestCase(1 << 22)]
-  [TestCase(1 << 23 - 1)]
-  [TestCase(1 << 24 + 1)]
+  [TestCase(1 << (23 - 1))]
+  [TestCase(1 << (24 + 1))]
   public void CopyBytes_Test(int size, Type? exception = null) {
     var source = new byte[size];
     var target = new byte[size];
@@ -42,7 +41,7 @@ public class ArrayTests {
     for (var i = 0; i < target.Length; ++i)
       expected[i] = source[i] = (byte)~i;
 
-    ExecuteTest(() => source.CopyTo(target),()=> CollectionAssert.AreEqual(target, expected), exception);
+    ExecuteTest(() => source.CopyTo(target), () => CollectionAssert.AreEqual(target, expected), exception);
   }
 
   [Test]
@@ -159,7 +158,7 @@ public class ArrayTests {
 
     ExecuteTest(() => inout.Equ(operand), () => CollectionAssert.AreEqual(inout, expected), exception);
   }
-  
+
   [Test]
   [TestCase(0)]
   [TestCase(1)]
@@ -209,44 +208,50 @@ public class ArrayTests {
     Assert.IsTrue(shouldBeTrue, $"Unequals for length {size}");
   }
 
-[Test]
+  [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "a")]
-  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetFirst(string? input, bool result, string? expected, Type? exception = null) => ExecuteTest(
+    () => {
       string? v = null;
       var r = input == null ? ((string?[])null!).TryGetFirst(out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetFirst(out v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    },
+    (result, expected),
+    exception
+  );
 
   [Test]
   [TestCase(null, false, null, typeof(NullReferenceException))]
   [TestCase("", false, null)]
   [TestCase("a", true, "a")]
   [TestCase("a|b", true, "b")]
-  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetLast(string? input, bool result, string? expected, Type? exception = null) => ExecuteTest(
+    () => {
       string? v = null;
       var r = input == null ? ((string?[])null!).TryGetLast(out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetLast(out v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    },
+    (result, expected),
+    exception
+  );
 
   [Test]
   [TestCase(null, 0, false, null, typeof(NullReferenceException))]
   [TestCase("", -1, false, null, typeof(IndexOutOfRangeException))]
   [TestCase("a", 1, false, null)]
   [TestCase("a|b|c", 1, true, "b")]
-  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) {
-    ExecuteTest(() => {
+  public void TryGetItem(string? input, int index, bool result, string? expected, Type? exception = null) => ExecuteTest(
+    () => {
       string? v = null;
       var r = input == null ? ((string?[])null!).TryGetItem(index, out v) : ConvertFromStringToTestArray(input)?.ToArray().TryGetItem(index, out v);
       return (r, v);
-    }, (result, expected), exception);
-  }
+    },
+    (result, expected),
+    exception
+  );
 
   [Test]
   [TestCase(null, null, null, typeof(NullReferenceException))]
@@ -268,15 +273,22 @@ public class ArrayTests {
       return;
     }
 
-    var ex = ConvertFromStringToTestArray(expected)!.Select(i => i!.Split(',')).Select(t => new {
-      CurrentIndex = int.Parse(t[0]), OtherIndex = int.Parse(t[2]), Type = t[1] switch {
-        "+" => ArrayExtensions.ChangeType.Added,
-        "-" => ArrayExtensions.ChangeType.Removed,
-        "=" => ArrayExtensions.ChangeType.Equal,
-        "*" => ArrayExtensions.ChangeType.Changed,
-        _ => throw new ArgumentOutOfRangeException()
-      }
-    }).ToArray();
+    var ex = ConvertFromStringToTestArray(expected)!
+      .Select(i => i!.Split(','))
+      .Select(
+        t => new {
+          CurrentIndex = int.Parse(t[0]),
+          OtherIndex = int.Parse(t[2]),
+          Type = t[1] switch {
+            "+" => ArrayExtensions.ChangeType.Added,
+            "-" => ArrayExtensions.ChangeType.Removed,
+            "=" => ArrayExtensions.ChangeType.Equal,
+            "*" => ArrayExtensions.ChangeType.Changed,
+            _ => throw new ArgumentOutOfRangeException()
+          }
+        }
+      )
+      .ToArray();
 
     var c = Provider();
     Assert.That(c.Length, Is.EqualTo(ex.Length));
@@ -285,22 +297,19 @@ public class ArrayTests {
       Assert.That(c[i].CurrentIndex, Is.EqualTo(ex[i].CurrentIndex));
       Assert.That(c[i].OtherIndex, Is.EqualTo(ex[i].OtherIndex));
     }
-
   }
 
   [Test]
-  [TestCase(null,null)]
+  [TestCase(null, null)]
   [TestCase("a", "a")]
   [TestCase("!", "!")]
   [TestCase("a|b", "a|b")]
   [TestCase("!|b", "!|b")]
   [TestCase("a|!", "a|!")]
-  public void SafelyClone(string? input, string? output) {
-    ExecuteTest(()=>ConvertFromStringToTestArray(input)?.ToArray().SafelyClone(),ConvertFromStringToTestArray(output)?.ToArray(),null);
-  }
-  
+  public void SafelyClone(string? input, string? output) => ExecuteTest(() => ConvertFromStringToTestArray(input)?.ToArray().SafelyClone(), ConvertFromStringToTestArray(output)?.ToArray(), null);
+
   private static IEnumerable<TestCaseData> _ToHexGenerator() {
-    foreach (var i in new byte[]{0x00,0x01,0x20,0xa0,0x0b,0xcd,0xff}) {
+    foreach (var i in new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff }) {
       yield return new(new[] { i }, true, i.ToString("X2"));
       yield return new(new[] { i }, false, i.ToString("x2"));
     }
@@ -308,14 +317,14 @@ public class ArrayTests {
     yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff }, false, "000120a00bcdff");
     yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff }, true, "000120A00BCDFF");
   }
-  
+
   [Test]
   [TestCaseSource(nameof(_ToHexGenerator))]
-  public void ToHex(byte[] input,bool allUpperCase,string expected) {
+  public void ToHex(byte[] input, bool allUpperCase, string expected) {
     var got = input.ToHex(allUpperCase);
-    Assert.AreEqual(expected,got);
+    Assert.AreEqual(expected, got);
   }
-  
+
   private static IEnumerable<TestCaseData> _ToBinGenerator() {
     foreach (var i in new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xff })
       yield return new(new[] { i }, ToBin(i));
@@ -323,7 +332,6 @@ public class ArrayTests {
     yield return new(new byte[] { 0x00, 0x01, 0x20, 0xa0, 0x0b, 0xcd, 0xef }, "0000 0000   0000 0001   0010 0000   1010 0000   0000 1011   1100 1101   1110 1111".Replace(" ", string.Empty));
 
     static string ToBin(int value) => Convert.ToString(value, 2).PadLeft(8, '0');
-
   }
 
   [Test]
@@ -332,5 +340,4 @@ public class ArrayTests {
     var got = input.ToBin();
     Assert.AreEqual(expected, got);
   }
-
 }

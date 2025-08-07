@@ -5,7 +5,6 @@ namespace System;
 
 [TestFixture]
 public partial class MathTests {
-
   [Test]
   [TestCase((ulong)0b0000000000000000000000000000000000000000000000000000000000000001, 0, (ulong)0b0000000000000000000000000000000000000000000000000000000000000001)]
   [TestCase((ulong)0b0000000000000000000000000000000000000000000000000000000000000001, 1, (ulong)0b0000000000000000000000000000000000000000000000000000000000000010)]
@@ -43,11 +42,11 @@ public partial class MathTests {
   [Test]
   [TestCase(0b00011011, 0b11011000, 0b00011000, 0b11011011, 0b11000011, 0b11100111, 0b00100100, 0b00111100)]
   public void BitwiseULong(byte self, byte operand, byte and, byte or, byte xor, byte nand, byte nor, byte equ) {
-    var valuePack = new []{self, operand, and, or, xor, nand, nor, equ};
-    var wordPack = valuePack.Select(i=>(ushort)(i<<8|i)).ToArray();
-    var dwordPack = wordPack.Select(i => (uint)(i << 16 | i)).ToArray();
-    var qwordPack = dwordPack.Select(i => ((ulong)i << 32 | i)).ToArray();
-    
+    var valuePack = new[] { self, operand, and, or, xor, nand, nor, equ };
+    var wordPack = valuePack.Select(i => (ushort)((i << 8) | i)).ToArray();
+    var dwordPack = wordPack.Select(i => (uint)((i << 16) | i)).ToArray();
+    var qwordPack = dwordPack.Select(i => ((ulong)i << 32) | i).ToArray();
+
     Assert.AreEqual(qwordPack[2], qwordPack[0].And(qwordPack[1]), "And broken");
     Assert.AreEqual(qwordPack[3], qwordPack[0].Or(qwordPack[1]), "Or broken");
     Assert.AreEqual(qwordPack[4], qwordPack[0].Xor(qwordPack[1]), "Xor broken");
@@ -129,5 +128,4 @@ public partial class MathTests {
   [TestCase((ulong)0b1111111111111111111111111111111111111111111111111111111111111111, (ulong)0b0000000000000000000000000000000000000000000000000000000000000010, (ulong)0b0000000000000000000000000000000000000000000000000000000000000001)]
   [TestCase((ulong)0b1111111111111111111111111111111111111111111111111111111111111111, (ulong)0b0000000000000000000000000000000000000000000000000000000000000001, (ulong)0b0000000000000000000000000000000000000000000000000000000000000001)]
   public void ParallelBitExtractQWord(ulong value, ulong mask, ulong expected) => Assert.AreEqual(expected, value.ParallelBitExtract(mask));
-
 }
