@@ -648,9 +648,8 @@ public static partial class StringExtensions {
         len -= (len - (length - start)) & ((length - len) >> 31);
         if (len > 0)
           result = @this[start..(start + len)];
-      } else if (start < length) {
+      } else if (start < length)
         result = @this.Slice(start, 1);
-      }
     }
     return result;
   }
@@ -1862,90 +1861,6 @@ public static partial class StringExtensions {
   }
   
   #endregion
-
-  /// <summary>
-  ///   Converts a word to pascal case.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="culture">The culture to use; defaults to current culture.</param>
-  /// <returns>Something like "CamelCase" from "  camel-case_" </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string ToPascalCase(this string @this, CultureInfo culture = null) {
-    Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, true);
-  }
-  
-  /// <summary>
-  ///   Converts a word to camel case.
-  /// </summary>
-  /// <param name="this">This String.</param>
-  /// <param name="culture">The culture to use; defaults to current culture.</param>
-  /// <returns>Something like "pascalCase" from "  pascal-case_" </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string ToCamelCase(this string @this, CultureInfo culture = null) {
-    Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, false);
-  }
-
-  private static string _ChangeCasing(string input, CultureInfo culture, bool isPascalCase) {
-    if (IsNullOrEmpty(input))
-      return input;
-
-    StringBuilder result = null;
-    var hump = false;
-    var lastCharWasUppercase = false;
-    var handleLetter = HandleFirstLetter;
-    for (var i = 0; i < input.Length; ++i) {
-      var chr = input[i];
-      switch (chr) {
-        case var _ when chr.IsDigit(): {
-          result?.Append(chr);
-          hump = true;
-          continue;
-        }
-        case var _ when !chr.IsLetter(): {
-          result ??= InitBuilder(input, i);
-          hump = true;
-          continue;
-        }
-        default: {
-          var newChar = handleLetter(chr);
-          if (newChar != chr)
-            result ??= InitBuilder(input, i);
-
-          result?.Append(newChar);
-          lastCharWasUppercase = newChar.IsUpper();
-          hump = false;
-          continue;
-        }
-      }
-    }
-
-    return result?.ToString() ?? input;
-    
-    char HandleFirstLetter(char current) {
-      var letter = isPascalCase ? char.ToUpper(current, culture) : char.ToLower(current, culture);
-      handleLetter = HandleNextLetter;
-      return letter;
-    }
-
-    // ReSharper disable once AccessToModifiedClosure
-    char HandleNextLetter(char current) => hump
-      ? current.ToUpper(culture)
-      // ReSharper disable once AccessToModifiedClosure
-      : lastCharWasUppercase
-        ? current.ToLower(culture)
-        : current
-      ;
-
-    static StringBuilder InitBuilder(string input, int len) {
-      var builder = new StringBuilder(input.Length);
-      if (len > 0)
-        builder.Append(input, 0, len);
-
-      return builder;
-    }
-  }
 
   /// <summary>
   ///   Transforms the given connection string into a linq2sql compatible one by removing the driver.
@@ -4576,10 +4491,10 @@ public static partial class StringExtensions {
   /// result = str5.OnlyCaseDiffersFrom(str6, CaseComparison.Ordinal);
   /// Console.WriteLine(result); // Outputs: False
   /// 
-  /// string str7 = "straße";
+  /// string str7 = "straï¿½e";
   /// string str8 = "STRASSE";
   /// result = str7.OnlyCaseDiffersFrom(str8, CaseComparison.CultureSpecific);
-  /// Console.WriteLine(result); // Outputs: True, in a culture where 'ß' is equivalent to 'SS'
+  /// Console.WriteLine(result); // Outputs: True, in a culture where 'ï¿½' is equivalent to 'SS'
   /// </code>
   ///   This example demonstrates how to check if two strings differ only by case, with different case comparison strategies
   ///   affecting the result.
