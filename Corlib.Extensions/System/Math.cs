@@ -1176,6 +1176,9 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static byte FlipBit(this byte @this, byte index) => (byte)(@this ^ (1U << (index & 7)));
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this byte @this, byte index) => (@this & (1U << (index & 7))) != 0;
+
   /// <summary>
   /// Sets the bit at the specified index in the <see cref="byte"/> to 1.
   /// </summary>
@@ -1220,6 +1223,9 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ushort FlipBit(this ushort @this, byte index) => (ushort)(@this ^ (1U << (index & 15)));
+  
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this ushort @this, byte index) => (@this & (1U << (index & 15))) != 0;
 
   /// <summary>
   /// Sets the bit at the specified index in the <see cref="ushort"/> to 1.
@@ -1266,6 +1272,9 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static uint FlipBit(this uint @this, byte index) => @this ^ (1U << (index & 31));
 
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this uint @this, byte index) => (@this & (1U << (index & 31))) != 0;
+
   /// <summary>
   /// Sets the bit at the specified index in the <see cref="uint"/> to 1.
   /// </summary>
@@ -1310,6 +1319,9 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong FlipBit(this ulong @this, byte index) => @this ^ (1UL << (index & 63));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this ulong @this, byte index) => (@this & (1U << (index & 63))) != 0;
 
   /// <summary>
   /// Sets the bit at the specified index in the <see cref="ulong"/> to 1.
@@ -2139,6 +2151,40 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static double Acsc(this double @this) => Math.Asin(1 / @this);
 
+  public static bool IsPrime(this ulong candidate) {
+    switch (candidate) {
+      case < 2:
+        return false;
+      case 2:
+        return true;
+      case var _ when (candidate & 1) == 0: 
+        return false;
+    }
+
+    // Phase 1: trial division with small primes up to ~100
+    // Hardcoded to avoid allocation
+    Span<ulong> smallPrimes = [
+      3, 5, 7, 11, 13, 17, 19, 23,
+      29, 31, 37, 41, 43, 47, 53, 59,
+      61, 67, 71, 73, 79, 83, 89, 97
+    ];
+
+    foreach (var p in smallPrimes) {
+      if (candidate == p)
+        return true;
+      if (candidate % p == 0)
+        return false;
+    }
+
+    // Phase 2: odd trial division up to sqrt(candidate)
+    var sqrt = (ulong)Math.Sqrt(candidate);
+    for (ulong i = 101; i <= sqrt; i += 2)
+      if (candidate % i == 0)
+        return false;
+
+    return true;
+  }
+  
   /// <summary>
   /// Enumerates all prime numbers in the ulong number space starting from 2 using a three-phase approach:
   /// <list type="number">
