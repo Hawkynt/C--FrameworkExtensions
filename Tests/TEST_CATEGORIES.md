@@ -18,7 +18,7 @@ These define HOW the test exercises the code:
 
 ```csharp
 [Category("HappyPath")]      // Normal, expected usage
-[Category("EdgeCase")]       // Boundary conditions, limits, ±1 checks
+[Category("EdgeCase")]       // Boundary conditions, limits, �1 checks
 [Category("Exception")]      // Error handling and exceptions
 ```
 
@@ -124,20 +124,20 @@ dotnet test --filter "Category=EdgeCase|Category=Exception"
 
 ```
 Tests/
-├── Unit/                    # Fast, isolated tests
-│   ├── String/
-│   │   ├── StringTests.cs
-│   │   ├── StringTests.Parsing.cs
-│   │   └── StringTests.Formatting.cs
-│   └── Math/
-│       ├── MathTests.cs
-│       └── MathTests.Bitwise.cs
-├── Integration/            # Multi-component tests
-│   └── IO/
-│       └── FileSystemIntegrationTests.cs
-├── Performance/            # Performance benchmarks
-│   ├── StringPerformanceTests.cs
-│   └── MathPerformanceTests.cs
-└── Regression/            # Bug fix validation
-    └── RemoveFirstLinesRegressionTests.cs
++-- Unit/                    # Fast, isolated tests
+�   +-- String/
+�   �   +-- StringTests.cs
+�   �   +-- StringTests.Parsing.cs
+�   �   +-- StringTests.Formatting.cs
+�   +-- Math/
+�       +-- MathTests.cs
+�       +-- MathTests.Bitwise.cs
++-- Integration/            # Multi-component tests
+�   +-- IO/
+�       +-- FileSystemIntegrationTests.cs
++-- Performance/            # Performance benchmarks
+�   +-- StringPerformanceTests.cs
+�   +-- MathPerformanceTests.cs
++-- Regression/            # Bug fix validation
+    +-- RemoveFirstLinesRegressionTests.cs
 ```
