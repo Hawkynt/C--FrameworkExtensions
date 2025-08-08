@@ -441,18 +441,22 @@ public partial class StringTests {
   [Description("Validates case conversion memory efficiency")]
   public void CaseConversion_MemoryEfficiency_MinimalAllocations() {
     // Arrange
-    const string input = "alreadyInCorrectFormat";
+    string camelInput = "alreadyInCorrectFormat";
+    string pascalInput = "AlreadyInCorrectFormat";
+    string snakeInput = "already_in_correct_format";
+    string kebabInput = "already-in-correct-format";
 
     // Act - these should return the original string without allocation in some cases
-    var camelResult = input.ToCamelCase();
-    var snakeResult = "already_in_correct_format".ToSnakeCase();
-    var kebabResult = "already-in-correct-format".ToKebabCase();
+    var camelResult = camelInput.ToCamelCase();
+    var pascalResult = pascalInput.ToPascalCase();
+    var snakeResult = snakeInput.ToSnakeCase();
+    var kebabResult = kebabInput.ToKebabCase();
 
-    // Assert - verify expected transformations
-    Assert.That(camelResult, Is.EqualTo("alreadyInCorrectFormat"));
-    Assert.That("AlreadyInCorrectFormat".ToPascalCase(), Is.EqualTo("AlreadyInCorrectFormat"));
-    Assert.That(snakeResult, Is.EqualTo("already_in_correct_format"));
-    Assert.That(kebabResult, Is.EqualTo("already-in-correct-format"));
+    // Assert - same instance check (pointer equivalence)
+    Assert.That(camelResult, Is.SameAs(camelInput));
+    Assert.That(pascalResult, Is.SameAs(pascalInput));
+    Assert.That(snakeResult, Is.SameAs(snakeInput));
+    Assert.That(kebabResult, Is.SameAs(kebabInput));
   }
 
   #endregion

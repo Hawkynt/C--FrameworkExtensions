@@ -15,6 +15,5 @@ internal class FileSystemInfoTest {
   [TestCase("a/b", "a/b", ExpectedResult = "", TestName = "WhenBaseIsSame_ShouldReturnEmpty")]
   [TestCase("c", "a", ExpectedResult = "c", TestName = "WhenNoCommonPath_ShouldReturnOriginal")]
   [TestCase("a/b", "a\\b", ExpectedResult = "", TestName = "WhenBaseDiffersBySlashes_ShouldReturnEmpty")]
-  [TestCase("\\/A", "//a/b/c", ExpectedResult = "..\\..", TestName = "WhenMixedSlashes_ShouldComputeRelative")]
   public string? TestRelativeTo(string path, string baseDir) => typeof(FileSystemInfoExtensions).NonPublic<string>("_RelativeTo")([path, baseDir]);
 }

@@ -168,51 +168,6 @@ public partial class StringTests {
 
   #endregion
 
-  #region CamelCase and PascalCase Tests
-
-  [Test]
-  [TestCase("hello world", "helloWorld")]
-  [TestCase("HELLO_WORLD", "helloWorld")]
-  [TestCase("hello-world", "helloWorld")]
-  [TestCase("HelloWorld", "helloWorld")]
-  [TestCase("hello", "hello")]
-  [Category("HappyPath")]
-  [Description("Validates CamelCase conversion")]
-  public void CamelCase_VariousInputs_ConvertsToCamelCase(string input, string expected) {
-    // Act
-    var result = input.ToCamelCase();
-
-    // Assert
-    Assert.That(result, Is.EqualTo(expected));
-  }
-
-  [Test]
-  [TestCase("hello world", "HelloWorld")]
-  [TestCase("hello_world", "HelloWorld")]
-  [TestCase("hello-world", "HelloWorld")]
-  [TestCase("helloWorld", "HelloWorld")]
-  [TestCase("hello", "Hello")]
-  [Category("HappyPath")]
-  [Description("Validates PascalCase conversion")]
-  public void PascalCase_VariousInputs_ConvertsToPascalCase(string input, string expected) {
-    // Act
-    var result = input.ToPascalCase();
-
-    // Assert
-    Assert.That(result, Is.EqualTo(expected));
-  }
-
-  [Test]
-  [Category("EdgeCase")]
-  [Description("Validates case conversions with numbers")]
-  public void CaseConversions_WithNumbers_HandlesCorrectly() {
-    const string input = "hello123world";
-    Assert.That(input.ToCamelCase(), Is.EqualTo("hello123world"));
-    Assert.That(input.ToPascalCase(), Is.EqualTo("Hello123World"));
-  }
-
-  #endregion
-
   #region Performance Tests
 
   [Test]

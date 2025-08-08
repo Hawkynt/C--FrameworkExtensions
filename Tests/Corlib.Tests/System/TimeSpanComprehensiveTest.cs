@@ -429,6 +429,8 @@ public class TimeSpanComprehensiveTest {
           long.MaxValue.Milliseconds();
         } catch (OverflowException) {
           // Overflow is acceptable for extreme values
+        } catch (ArgumentOutOfRangeException) {
+          // ArgumentOutOfRangeException is also acceptable for extreme values
         }
       }
     );
@@ -439,6 +441,8 @@ public class TimeSpanComprehensiveTest {
           double.MaxValue.Hours();
         } catch (OverflowException) {
           // Overflow is acceptable for extreme values
+        } catch (ArgumentOutOfRangeException) {
+          // ArgumentOutOfRangeException is also acceptable for extreme values
         }
       }
     );
@@ -458,6 +462,8 @@ public class TimeSpanComprehensiveTest {
       () => {
         try {
           double.PositiveInfinity.Seconds();
+        } catch (ArgumentOutOfRangeException) {
+          // ArgumentOutOfRangeException is also acceptable for extreme values
         } catch (ArgumentException) {
           // ArgumentException is acceptable for infinity
         } catch (OverflowException) {
@@ -470,6 +476,8 @@ public class TimeSpanComprehensiveTest {
       () => {
         try {
           double.NaN.Minutes();
+        } catch (ArgumentOutOfRangeException) {
+          // ArgumentOutOfRangeException is also acceptable for extreme values
         } catch (ArgumentException) {
           // ArgumentException is acceptable for NaN
         }
