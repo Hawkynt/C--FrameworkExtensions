@@ -529,10 +529,10 @@ partial class StringExtensions {
     var isSnakeOrKebab = separator != NO_SEPARATOR;
     var toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
     var camel = style == CaseStyle.CamelCase;
-    
-    var sb = new StringBuilder(input.Length);
+
     const int MODE_START = 0, MODE_UPPER = 1, MODE_LOWER = 2, MODE_DIGIT = 3, MODE_OTHER = 4;
     int prevType = MODE_START, wordIndex = 0, length = input.Length;
+    StringBuilder? sb = null;
 
     for (var i = 0; i < length; ++i) {
       var c = input[i];
@@ -541,13 +541,21 @@ partial class StringExtensions {
                        : char.IsDigit(c) ? MODE_DIGIT
                        : MODE_OTHER;
 
-      // any non-alnum always breaks
+      // ── DROP “other” chars, except preserve existing correct separators ──
       if (currentType == MODE_OTHER) {
+        if (isSnakeOrKebab && c == separator) {
+          // it’s exactly the separator we want, so leave input as-is (no sb)
+          prevType = MODE_OTHER;
+          continue;
+        }
+
+        // truly unwanted char → transformation
+        sb ??= new StringBuilder(length).Append(input, 0, i);
         prevType = MODE_OTHER;
         continue;
       }
 
-      // look ahead for uppercase-hump logic
+      // look-ahead for hump logic
       var nextType = MODE_START;
       if (i + 1 < length) {
         var nc = input[i + 1];
@@ -570,38 +578,48 @@ partial class StringExtensions {
         _ => true
       };
 
-      if (isNewWord) {
-        if (isSnakeOrKebab && wordIndex > 0)
+      // ── INSERT separator for snake/kebab if—and only if—it wasn’t already there ──
+      if (isNewWord && isSnakeOrKebab && wordIndex > 0)
+        if (!(i > 0 && input[i - 1] == separator)) {
+          sb ??= new StringBuilder(length).Append(input, 0, i);
           sb.Append(separator);
-
-        if (currentType == MODE_DIGIT) {
-          sb.Append(c);
-        } else // letter
-        {
-          var outChar = isSnakeOrKebab
-            ? (toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c))
-            : (camel
-              ? (wordIndex == 0 ? textInfo.ToLower(c) : textInfo.ToUpper(c))
-              : textInfo.ToUpper(c));
-          sb.Append(outChar);
         }
 
+      // ── DETERMINE output character ──
+      char outChar;
+      if (currentType == MODE_DIGIT)
+        outChar = c;
+      else if (isSnakeOrKebab)
+        outChar = toUpper
+          ? textInfo.ToUpper(c)
+          : textInfo.ToLower(c);
+      else if (camel) {
+        if (isNewWord)
+          outChar = wordIndex == 0
+              ? textInfo.ToLower(c)
+              : textInfo.ToUpper(c);
+        else
+          outChar = textInfo.ToLower(c);
+      } else
+        outChar = isNewWord
+          ? textInfo.ToUpper(c)
+          : textInfo.ToLower(c);
+
+      // ── LAZY‐ALLOCATE and append if it diverges ──
+      if (sb is null) {
+        if (outChar != input[i])
+          sb = new StringBuilder(length)
+                   .Append(input, 0, i)
+                   .Append(outChar);
+      } else
+        sb.Append(outChar);
+
+      if (isNewWord)
         ++wordIndex;
-      } else {
-        if (currentType == MODE_DIGIT) {
-          sb.Append(c);
-        } else {
-          var outChar = isSnakeOrKebab
-              ? (toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c))
-              : textInfo.ToLower(c);
-          sb.Append(outChar);
-        }
-      }
 
       prevType = currentType;
     }
 
-    var result = sb.ToString();
-    return result == input ? input : result;
+    return sb?.ToString() ?? input;
   }
 }
