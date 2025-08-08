@@ -185,6 +185,10 @@ public static partial class DirectoryInfoExtensions {
 
     void WorkOnDirectory(DirectoryInfo directory) {
       try {
+        // Check if directory exists before enumerating
+        if (!directory.Exists)
+          return;
+        
         foreach (var item in directory.EnumerateFileSystemInfos())
           switch (item) {
             case FileInfo file:
