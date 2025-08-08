@@ -289,5 +289,17 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# Text-Transformed files
 *.T4.cs
 Corlib.Extensions/System/Array.FastBlocks.cs
+
+# Agents
+/.claude/
+/.gemini/
+/.swarm/
+/CLAUDE.md
+/GEMINI.md
+/LLXPRT.md
+/AGENTS.md
+/CRUSH.md
