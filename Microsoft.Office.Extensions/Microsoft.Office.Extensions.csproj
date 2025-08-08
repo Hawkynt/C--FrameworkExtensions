@@ -30,34 +30,13 @@
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
   
+  <!-- COM references are only supported on .NET Framework targets when using .NET Framework MSBuild -->
+  <!-- Since .NET Core MSBuild can't handle COM references at all, we exclude them entirely -->
+  <!-- For .NET Core/.NET 5+ targets, use NuGet packages instead -->
   <ItemGroup>
-    <COMReference Include="Microsoft.Office.Interop.Excel">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>8</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>00020813-0000-0000-c000-000000000046</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="Microsoft.Office.Interop.Outlook">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>5</VersionMinor>
-      <VersionMajor>9</VersionMajor>
-      <Guid>00062fff-0000-0000-c000-000000000046</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="Microsoft.Office.Interop.Word">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>6</VersionMinor>
-      <VersionMajor>8</VersionMajor>
-      <Guid>00020905-0000-0000-c000-000000000046</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+    <PackageReference Include="Microsoft.Office.Interop.Outlook" Version="15.0.4797.1003" />
+    <PackageReference Include="Microsoft.Office.Interop.Word" Version="15.0.4797.1003" />
   </ItemGroup>
 
   <ItemGroup>
