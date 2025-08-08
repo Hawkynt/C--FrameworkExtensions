@@ -14,10 +14,10 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
+using Guard;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -33,7 +33,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToPascalCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, true);
+    return _ConvertCase(@this, CaseStyle.PascalCase, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -45,7 +45,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToCamelCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, culture ?? CultureInfo.CurrentCulture, false);
+    return _ConvertCase(@this, CaseStyle.CamelCase, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -87,7 +87,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToPascalCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, CultureInfo.InvariantCulture, true);
+    return _ConvertCase(@this, CaseStyle.PascalCase, CultureInfo.InvariantCulture);
   }
 
   /// <summary>
@@ -129,7 +129,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToCamelCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ChangeCasing(@this, CultureInfo.InvariantCulture, false);
+    return _ConvertCase(@this, CaseStyle.CamelCase, CultureInfo.InvariantCulture);
   }
 
   /// <summary>
@@ -177,7 +177,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToSnakeCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, culture ?? CultureInfo.CurrentCulture, '_', false);
+    return _ConvertCase(@this, CaseStyle.SnakeCaseLower, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -226,7 +226,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToUpperSnakeCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, culture ?? CultureInfo.CurrentCulture, '_', true);
+    return _ConvertCase(@this, CaseStyle.SnakeCaseUpper, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -275,7 +275,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToKebabCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, culture ?? CultureInfo.CurrentCulture, '-', false);
+    return _ConvertCase(@this, CaseStyle.KebabCaseLower, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -324,7 +324,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToUpperKebabCase(this string @this, CultureInfo culture = null) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, culture ?? CultureInfo.CurrentCulture, '-', true);
+    return _ConvertCase(@this, CaseStyle.KebabCaseUpper, culture ?? CultureInfo.CurrentCulture);
   }
 
   /// <summary>
@@ -360,7 +360,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToSnakeCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, CultureInfo.InvariantCulture, '_', false);
+    return _ConvertCase(@this, CaseStyle.SnakeCaseLower, CultureInfo.InvariantCulture);
   }
 
   /// <summary>
@@ -396,7 +396,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToUpperSnakeCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, CultureInfo.InvariantCulture, '_', true);
+    return _ConvertCase(@this, CaseStyle.SnakeCaseUpper, CultureInfo.InvariantCulture);
   }
 
   /// <summary>
@@ -436,7 +436,7 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToKebabCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, CultureInfo.InvariantCulture, '-', false);
+    return _ConvertCase(@this, CaseStyle.KebabCaseLower, CultureInfo.InvariantCulture);
   }
 
   /// <summary>
@@ -476,97 +476,140 @@ partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string ToUpperKebabCaseInvariant(this string @this) {
     Against.ThisIsNull(@this);
-    return _ConvertToSeparatedCase(@this, CultureInfo.InvariantCulture, '-', true);
+    return _ConvertCase(@this, CaseStyle.KebabCaseUpper, CultureInfo.InvariantCulture);
   }
 
-  private static string _ChangeCasing(string input, CultureInfo culture, bool isPascalCase) =>
-    _TransformCase(
-      input,
-      culture,
-      isPascalCase ? c => char.ToUpper(c, culture) : c => char.ToLower(c, culture),
-      c => c
-    );
+  private enum CaseStyle {
+    CamelCase,
+    PascalCase,
+    SnakeCaseLower,
+    SnakeCaseUpper,
+    KebabCaseLower,
+    KebabCaseUpper
+  }
 
-  private static string _ConvertToSeparatedCase(string input, CultureInfo culture, char separator, bool uppercase) =>
-    _TransformCase(
-      input,
-      culture,
-      c => uppercase ? char.ToUpper(c, culture) : char.ToLower(c, culture),
-      c => uppercase ? char.ToUpper(c, culture) : char.ToLower(c, culture),
-      separator
-    );
-
-
-  private static string _TransformCase(
-    string input,
-    CultureInfo culture,
-    Func<char, char> firstCharTransform,
-    Func<char, char> restCharTransform,
-    char? separator = null
-  ) {
+  private static string _ConvertCase(string input, CaseStyle style, CultureInfo culture) {
     if (input.IsNullOrEmpty())
       return input;
 
-    var result = new StringBuilder(input.Length);
-    var wordStart = true;
-    var prevWasUpper = false;
+    culture ??= CultureInfo.InvariantCulture;
+    var textInfo = culture.TextInfo;
 
-    for (var i = 0; i < input.Length; ++i) {
+    var useSeparator = style is CaseStyle.SnakeCaseLower or CaseStyle.SnakeCaseUpper
+                                    or CaseStyle.KebabCaseLower or CaseStyle.KebabCaseUpper;
+    var separator = style switch {
+      CaseStyle.SnakeCaseLower or CaseStyle.SnakeCaseUpper => '_',
+      CaseStyle.KebabCaseLower or CaseStyle.KebabCaseUpper => '-',
+      _ => '\0'
+    };
+    var toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
+    var camel = style == CaseStyle.CamelCase;
+    var pascal = style == CaseStyle.PascalCase;
+
+    StringBuilder? sb = null;
+
+    var wordStart = 0;
+    var firstWord = true;
+    var wasDigit = false;
+
+    for (var i = 0; i < input.Length; i++) {
       var c = input[i];
+      var isUpper = char.IsUpper(c);
+      var isLetter = char.IsLetter(c);
+      var isDigit = char.IsDigit(c);
+      var isSeparatorChar = c is '_' or '-';
 
-      if (!char.IsLetterOrDigit(c)) {
-        wordStart = true;
-        prevWasUpper = false;
-        continue;
+      var isBoundary = false;
+
+      if (i > 0) {
+        var prev = input[i - 1];
+
+        if (isSeparatorChar)
+          isBoundary = true;
+        else if ((wasDigit && isLetter) || (char.IsLetter(prev) && isDigit))
+          isBoundary = true;
+        else if (char.IsUpper(prev) && isUpper && i + 1 < input.Length && char.IsLower(input[i + 1]))
+          isBoundary = true;
+        else if (char.IsLower(prev) && isUpper)
+          isBoundary = true;
       }
 
-      if (NeedsSeparator(i)) {
-        if (separator is not null && result.Length > 0)
-          result.Append(separator.Value);
-        wordStart = true;
+      if (isBoundary) {
+        if (sb == null)
+          if (NeedsTransformation(input, wordStart, i - wordStart, firstWord)) {
+            sb = new(input.Length + 4);
+            if (wordStart > 0)
+              sb.Append(input[..wordStart]);
+          }
+
+        if (sb != null)
+          EmitWord(input.Substring(wordStart, i - wordStart), firstWord);
+
+        wordStart = isSeparatorChar ? i + 1 : i;
+        firstWord = false;
       }
 
-      result.Append(wordStart
-        ? firstCharTransform(c)
-        : restCharTransform(c));
-
-      prevWasUpper = char.IsUpper(c);
-      wordStart = false;
+      wasDigit = isDigit;
     }
 
-    return result.ToString();
+    if (sb == null) {
+      if (wordStart == 0 && !NeedsTransformation(input, 0, input.Length, true))
+        return input;
 
-    bool NeedsSeparator(int i) {
-      if (i == 0)
+      sb = new(input.Length + 4);
+      if (wordStart > 0)
+        sb.Append(input[..wordStart]);
+    }
+
+    if (wordStart < input.Length)
+      EmitWord(input[wordStart..], firstWord);
+
+    return sb.ToString();
+
+    // -------- Local methods ----------
+
+    bool NeedsTransformation(string str, int start, int len, bool isFirst) {
+      if (len <= 0)
         return false;
-
-      var prev = input[i - 1];
-      var curr = input[i];
-
-      if (!char.IsLetterOrDigit(prev) || !char.IsLetterOrDigit(curr))
-        return false;
-
-      // Lowercase → Uppercase: normal camelCase boundary
-      if (char.IsLower(prev) && char.IsUpper(curr))
+      var ch = str[start];
+      if (camel && isFirst && char.IsUpper(ch))
         return true;
-
-      // Acronym end: ABCd → split before d
-      if (i > 1 && char.IsUpper(input[i - 2]) && char.IsUpper(prev) && char.IsLower(curr))
+      if (pascal && isFirst && char.IsLower(ch))
         return true;
-
-      // Letter to digit: abc123
-      if (char.IsLetter(prev) && char.IsDigit(curr))
+      if (useSeparator)
         return true;
-
-      // Digit to letter: 123abc
-      if (char.IsDigit(prev) && char.IsLetter(curr))
-        return true;
-
       return false;
     }
 
+    void EmitWord(string word, bool isFirst) {
+      if (word.Length == 0)
+        return;
+
+      if (sb!.Length > 0 && useSeparator)
+        sb.Append(separator);
+
+      if (useSeparator)
+        foreach (var ch in word)
+          sb.Append(toUpper ? textInfo.ToUpper(ch) : textInfo.ToLower(ch));
+      else if (camel || pascal) {
+        var startsWithLetter = char.IsLetter(word[0]);
+        if (!startsWithLetter) {
+          sb.Append(word);
+          return;
+        }
+
+        for (var i = 0; i < word.Length; ++i) {
+          var ch = word[i];
+          if (i == 0) {
+            if (isFirst && camel)
+              sb.Append(textInfo.ToLower(ch));
+            else
+              sb.Append(textInfo.ToUpper(ch));
+          } else
+            sb.Append(ch);
+        }
+      } else
+        sb.Append(word);
+    }
   }
-
-
 }
-
