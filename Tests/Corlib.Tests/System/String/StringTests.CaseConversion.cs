@@ -541,8 +541,8 @@ public partial class StringTests {
       ("XMLHttpRequest", "xmlHttpRequest", "XmlHttpRequest", "xml_http_request", "XML_HTTP_REQUEST", "xml-http-request", "XML-HTTP-REQUEST"),
       ("HTTPSConnection", "httpsConnection", "HttpsConnection", "https_connection", "HTTPS_CONNECTION", "https-connection", "HTTPS-CONNECTION"),
       ("HTML5Parser", "html5Parser", "Html5Parser", "html5_parser", "HTML5_PARSER", "html5-parser", "HTML5-PARSER"),
-      ("getUserID", "getUserID", "GetUserID", "get_user_id", "GET_USER_ID", "get-user-id", "GET-USER-ID"),
-      ("parseJSON", "parseJSON", "ParseJSON", "parse_json", "PARSE_JSON", "parse-json", "PARSE-JSON")
+      ("getUserID", "getUserId", "GetUserId", "get_user_id", "GET_USER_ID", "get-user-id", "GET-USER-ID"),
+      ("parseJSON", "parseJson", "ParseJson", "parse_json", "PARSE_JSON", "parse-json", "PARSE-JSON")
     };
 
     // Act & Assert

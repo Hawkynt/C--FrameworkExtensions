@@ -488,6 +488,30 @@ partial class StringExtensions {
     KebabCaseUpper
   }
 
+  // TODO: The most important thing this method has to get right is detecting words using a DFA
+  // test     -> test              (consecutive run of lowercase)
+  // test123  -> test123           (numbers at word end stay there)
+  // testAb   -> test Ab           (split at uppercase hump)
+  // test-ab  -> test ab           (split at kebap delimiter)
+  // test_ab  -> test ab           (split at snake delimiter)
+  // TEST_ab  -> TEST ab           (consecutive run of uppercase)
+  // TESTAb   -> TEST Ab           (if uc runs terminate with lc, keep the last uc to the lc part)
+  // TestAb   -> Test Ab           (split at uppercase hump)
+  // T$$$     -> T                 (ignore special characters at end)
+  // Test%$T  -> Test T            (ignore special characters, but they break words)
+  // $$Test   -> Test              (ignore special characters at start)
+  // Test-5   -> Test5 / Test 5    (breaker doesnt break trailing numbers, but only when separator is used in output)
+  // Test-5-5 -> Test55 / Test 5 5 (even multiple breakers dont break trailing numbers, but only when separator is used in output)
+  // 5Test    -> 5 Test            (numbers break words)
+  // t        -> t                 (single character words are ok)
+  // 123-123  -> 123123 / 123 123  (numbers cant be broken by delimiters, but only when separator is used in output)
+  // 123--123 -> 123123 / 123 123  (numbers cant be broken by multiple delimiters, but only when separator is used in output)
+  // 123$123  -> 123123 / 123 123  (numbers cant be broken by special characters, but only when separator is used in output)
+  // Tést     -> Tést              (even uc/lc rules of other languages count)
+  // T_T_T    -> T T T             (single character words)
+  // T--T_T   -> T T T             (consecutive breakers dont produce empty words)
+  // T$-T_T   -> T T T             (special characters can break when already broken)
+  // T-$-$-T_ -> T T               (special characters can break when already broken)
   private static string _ConvertCase(string input, CaseStyle style, CultureInfo culture) {
     if (input.IsNullOrEmpty())
       return input;
@@ -495,121 +519,110 @@ partial class StringExtensions {
     culture ??= CultureInfo.InvariantCulture;
     var textInfo = culture.TextInfo;
 
-    var useSeparator = style is CaseStyle.SnakeCaseLower or CaseStyle.SnakeCaseUpper
-                                    or CaseStyle.KebabCaseLower or CaseStyle.KebabCaseUpper;
-    var separator = style switch {
+    const char NO_SEPARATOR = '\0';
+    char separator = style switch {
       CaseStyle.SnakeCaseLower or CaseStyle.SnakeCaseUpper => '_',
       CaseStyle.KebabCaseLower or CaseStyle.KebabCaseUpper => '-',
-      _ => '\0'
+      _ => NO_SEPARATOR
     };
-    var toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
-    var camel = style == CaseStyle.CamelCase;
-    var pascal = style == CaseStyle.PascalCase;
 
-    StringBuilder? sb = null;
+    bool toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
+    bool camel = style == CaseStyle.CamelCase;
+    bool pascal = style == CaseStyle.PascalCase;
+    bool isSnakeOrKebab = separator != NO_SEPARATOR;
+    bool startLower = camel || (!toUpper);
 
-    var wordStart = 0;
-    var firstWord = true;
-    var wasDigit = false;
+    var sb = new StringBuilder(input.Length);
 
-    for (var i = 0; i < input.Length; i++) {
-      var c = input[i];
-      var isUpper = char.IsUpper(c);
-      var isLetter = char.IsLetter(c);
-      var isDigit = char.IsDigit(c);
-      var isSeparatorChar = c is '_' or '-';
+    const int MODE_START = 0, MODE_UPPER = 1, MODE_LOWER = 2, MODE_DIGIT = 3, MODE_OTHER = 4;
+    int prevType = MODE_START, wordIndex = 0, length = input.Length;
 
-      var isBoundary = false;
+    for (int i = 0; i < length; i++) {
+      char c = input[i];
+      int currentType = char.IsUpper(c) ? MODE_UPPER
+                      : char.IsLower(c) ? MODE_LOWER
+                      : char.IsNumber(c) ? MODE_DIGIT
+                                          : MODE_OTHER;
 
-      if (i > 0) {
-        var prev = input[i - 1];
+      if (currentType == MODE_OTHER) {
+        // Skip any non‐alphanumeric; but if it’s between two digits, stay in the number run.
+        int nextType = MODE_START;
+        if (i + 1 < length) {
+          char nc = input[i + 1];
+          nextType = char.IsUpper(nc) ? MODE_UPPER
+                   : char.IsLower(nc) ? MODE_LOWER
+                   : char.IsNumber(nc) ? MODE_DIGIT
+                                        : MODE_OTHER;
+        }
+        if (prevType == MODE_DIGIT && nextType == MODE_DIGIT)
+          continue;
 
-        if (isSeparatorChar)
-          isBoundary = true;
-        else if ((wasDigit && isLetter) || (char.IsLetter(prev) && isDigit))
-          isBoundary = true;
-        else if (char.IsUpper(prev) && isUpper && i + 1 < input.Length && char.IsLower(input[i + 1]))
-          isBoundary = true;
-        else if (char.IsLower(prev) && isUpper)
-          isBoundary = true;
+        prevType = MODE_OTHER;
+        continue;
       }
 
-      if (isBoundary) {
-        if (sb == null)
-          if (NeedsTransformation(input, wordStart, i - wordStart, firstWord)) {
-            sb = new(input.Length + 4);
-            if (wordStart > 0)
-              sb.Append(input[..wordStart]);
-          }
-
-        if (sb != null)
-          EmitWord(input.Substring(wordStart, i - wordStart), firstWord);
-
-        wordStart = isSeparatorChar ? i + 1 : i;
-        firstWord = false;
+      // Look ahead for uppercase hump logic
+      int nextType2 = MODE_START;
+      if (i + 1 < length) {
+        char nc2 = input[i + 1];
+        nextType2 = char.IsUpper(nc2) ? MODE_UPPER
+                  : char.IsLower(nc2) ? MODE_LOWER
+                  : char.IsNumber(nc2) ? MODE_DIGIT
+                                        : MODE_OTHER;
       }
 
-      wasDigit = isDigit;
-    }
+      bool isNewWord;
+      if (currentType == MODE_DIGIT)
+        isNewWord = prevType == MODE_START;
+      else if (currentType == MODE_UPPER)
+        isNewWord = prevType == MODE_START
+                    || prevType == MODE_LOWER
+                    || prevType == MODE_DIGIT
+                    || prevType == MODE_OTHER
+                    || (prevType == MODE_UPPER && nextType2 == MODE_LOWER);
+      else // lowercase
+        isNewWord = prevType == MODE_START
+                    || prevType == MODE_DIGIT
+                    || prevType == MODE_OTHER;
 
-    if (sb == null) {
-      if (wordStart == 0 && !NeedsTransformation(input, 0, input.Length, true))
-        return input;
+      if (isNewWord) {
+        if (isSnakeOrKebab && wordIndex > 0)
+          sb.Append(separator);
 
-      sb = new(input.Length + 4);
-      if (wordStart > 0)
-        sb.Append(input[..wordStart]);
-    }
+        if (currentType == MODE_DIGIT) {
+          sb.Append(c);
+        } else {
+          char outChar;
+          if (isSnakeOrKebab)
+            outChar = toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c);
+          else if (camel)
+            outChar = (wordIndex == 0 ? (startLower ? textInfo.ToLower(c) : textInfo.ToUpper(c))
+                                      : textInfo.ToUpper(c));
+          else // PascalCase
+            outChar = textInfo.ToUpper(c);
 
-    if (wordStart < input.Length)
-      EmitWord(input[wordStart..], firstWord);
-
-    return sb.ToString();
-
-    // -------- Local methods ----------
-
-    bool NeedsTransformation(string str, int start, int len, bool isFirst) {
-      if (len <= 0)
-        return false;
-      var ch = str[start];
-      if (camel && isFirst && char.IsUpper(ch))
-        return true;
-      if (pascal && isFirst && char.IsLower(ch))
-        return true;
-      if (useSeparator)
-        return true;
-      return false;
-    }
-
-    void EmitWord(string word, bool isFirst) {
-      if (word.Length == 0)
-        return;
-
-      if (sb!.Length > 0 && useSeparator)
-        sb.Append(separator);
-
-      if (useSeparator)
-        foreach (var ch in word)
-          sb.Append(toUpper ? textInfo.ToUpper(ch) : textInfo.ToLower(ch));
-      else if (camel || pascal) {
-        var startsWithLetter = char.IsLetter(word[0]);
-        if (!startsWithLetter) {
-          sb.Append(word);
-          return;
+          sb.Append(outChar);
         }
 
-        for (var i = 0; i < word.Length; ++i) {
-          var ch = word[i];
-          if (i == 0) {
-            if (isFirst && camel)
-              sb.Append(textInfo.ToLower(ch));
-            else
-              sb.Append(textInfo.ToUpper(ch));
-          } else
-            sb.Append(ch);
+        ++wordIndex;
+      } else {
+        if (currentType == MODE_DIGIT)
+          sb.Append(c);
+        else {
+          char outChar;
+          if (isSnakeOrKebab)
+            outChar = toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c);
+          else // Camel or Pascal mid‐word
+            outChar = textInfo.ToLower(c);
+
+          sb.Append(outChar);
         }
-      } else
-        sb.Append(word);
+      }
+
+      prevType = currentType;
     }
+
+    var result = sb.ToString();
+    return result == input ? input : result;
   }
 }
