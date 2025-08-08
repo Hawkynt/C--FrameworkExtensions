@@ -520,70 +520,55 @@ partial class StringExtensions {
     var textInfo = culture.TextInfo;
 
     const char NO_SEPARATOR = '\0';
-    char separator = style switch {
+    var separator = style switch {
       CaseStyle.SnakeCaseLower or CaseStyle.SnakeCaseUpper => '_',
       CaseStyle.KebabCaseLower or CaseStyle.KebabCaseUpper => '-',
       _ => NO_SEPARATOR
     };
 
-    bool toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
-    bool camel = style == CaseStyle.CamelCase;
-    bool pascal = style == CaseStyle.PascalCase;
-    bool isSnakeOrKebab = separator != NO_SEPARATOR;
-    bool startLower = camel || (!toUpper);
-
+    var isSnakeOrKebab = separator != NO_SEPARATOR;
+    var toUpper = style is CaseStyle.SnakeCaseUpper or CaseStyle.KebabCaseUpper;
+    var camel = style == CaseStyle.CamelCase;
+    
     var sb = new StringBuilder(input.Length);
-
     const int MODE_START = 0, MODE_UPPER = 1, MODE_LOWER = 2, MODE_DIGIT = 3, MODE_OTHER = 4;
     int prevType = MODE_START, wordIndex = 0, length = input.Length;
 
-    for (int i = 0; i < length; i++) {
-      char c = input[i];
-      int currentType = char.IsUpper(c) ? MODE_UPPER
-                      : char.IsLower(c) ? MODE_LOWER
-                      : char.IsNumber(c) ? MODE_DIGIT
-                                          : MODE_OTHER;
+    for (var i = 0; i < length; ++i) {
+      var c = input[i];
+      var currentType = char.IsUpper(c) ? MODE_UPPER
+                       : char.IsLower(c) ? MODE_LOWER
+                       : char.IsDigit(c) ? MODE_DIGIT
+                       : MODE_OTHER;
 
+      // any non-alnum always breaks
       if (currentType == MODE_OTHER) {
-        // Skip any non‐alphanumeric; but if it’s between two digits, stay in the number run.
-        int nextType = MODE_START;
-        if (i + 1 < length) {
-          char nc = input[i + 1];
-          nextType = char.IsUpper(nc) ? MODE_UPPER
-                   : char.IsLower(nc) ? MODE_LOWER
-                   : char.IsNumber(nc) ? MODE_DIGIT
-                                        : MODE_OTHER;
-        }
-        if (prevType == MODE_DIGIT && nextType == MODE_DIGIT)
-          continue;
-
         prevType = MODE_OTHER;
         continue;
       }
 
-      // Look ahead for uppercase hump logic
-      int nextType2 = MODE_START;
+      // look ahead for uppercase-hump logic
+      var nextType = MODE_START;
       if (i + 1 < length) {
-        char nc2 = input[i + 1];
-        nextType2 = char.IsUpper(nc2) ? MODE_UPPER
-                  : char.IsLower(nc2) ? MODE_LOWER
-                  : char.IsNumber(nc2) ? MODE_DIGIT
-                                        : MODE_OTHER;
+        var nc = input[i + 1];
+        nextType = char.IsUpper(nc) ? MODE_UPPER
+                 : char.IsLower(nc) ? MODE_LOWER
+                 : char.IsDigit(nc) ? MODE_DIGIT
+                 : MODE_OTHER;
       }
 
-      bool isNewWord;
-      if (currentType == MODE_DIGIT)
-        isNewWord = prevType == MODE_START;
-      else if (currentType == MODE_UPPER)
-        isNewWord = prevType == MODE_START
-                    || prevType == MODE_LOWER
-                    || prevType == MODE_DIGIT
-                    || prevType == MODE_OTHER
-                    || (prevType == MODE_UPPER && nextType2 == MODE_LOWER);
-      else // lowercase
-        isNewWord = prevType == MODE_START
-                    || prevType == MODE_DIGIT
-                    || prevType == MODE_OTHER;
+      var isNewWord = currentType switch {
+        MODE_DIGIT => prevType != MODE_DIGIT,
+        MODE_UPPER => prevType == MODE_START
+                      || prevType == MODE_LOWER
+                      || prevType == MODE_DIGIT
+                      || prevType == MODE_OTHER
+                      || (prevType == MODE_UPPER && nextType == MODE_LOWER),
+        MODE_LOWER => prevType == MODE_START
+                      || prevType == MODE_DIGIT
+                      || prevType == MODE_OTHER,
+        _ => true
+      };
 
       if (isNewWord) {
         if (isSnakeOrKebab && wordIndex > 0)
@@ -591,30 +576,24 @@ partial class StringExtensions {
 
         if (currentType == MODE_DIGIT) {
           sb.Append(c);
-        } else {
-          char outChar;
-          if (isSnakeOrKebab)
-            outChar = toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c);
-          else if (camel)
-            outChar = (wordIndex == 0 ? (startLower ? textInfo.ToLower(c) : textInfo.ToUpper(c))
-                                      : textInfo.ToUpper(c));
-          else // PascalCase
-            outChar = textInfo.ToUpper(c);
-
+        } else // letter
+        {
+          var outChar = isSnakeOrKebab
+            ? (toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c))
+            : (camel
+              ? (wordIndex == 0 ? textInfo.ToLower(c) : textInfo.ToUpper(c))
+              : textInfo.ToUpper(c));
           sb.Append(outChar);
         }
 
         ++wordIndex;
       } else {
-        if (currentType == MODE_DIGIT)
+        if (currentType == MODE_DIGIT) {
           sb.Append(c);
-        else {
-          char outChar;
-          if (isSnakeOrKebab)
-            outChar = toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c);
-          else // Camel or Pascal mid‐word
-            outChar = textInfo.ToLower(c);
-
+        } else {
+          var outChar = isSnakeOrKebab
+              ? (toUpper ? textInfo.ToUpper(c) : textInfo.ToLower(c))
+              : textInfo.ToLower(c);
           sb.Append(outChar);
         }
       }
