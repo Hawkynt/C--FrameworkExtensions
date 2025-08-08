@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32002.185
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance", "Tests\Corlib.Tests.Performance\Corlib.Tests.Performance.csproj", "{44FC2350-4999-4A9B-9EDF-CF6AB5639C55}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PresentationCore.Extensions", "PresentationCore.Extensions\PresentationCore.Extensions.csproj", "{18FC3D2F-C94A-4F26-B10B-B447CA29B557}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASP.NET.Extensions", "ASP.NET.Extensions\ASP.NET.Extensions.csproj", "{E38E15AA-7EF9-42FD-AACC-F91368094270}"
@@ -24,8 +26,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Extensions", "Corlib.Extensions\Corlib.Extensions.csproj", "{703EA8A7-E647-45B4-8F94-DB9D4F60F5B6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests", "Tests\Corlib.Tests\Corlib.Tests.csproj", "{3BF2FB63-DE3F-4DA4-AEBD-B968902AD325}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Corlib.Tests.Performance", "Tests\Corlib.Tests.Performance\Corlib.Tests.Performance.csproj", "{44FC2350-4999-4A9B-9EDF-CF6AB5639C55}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalAnnotations", "ExternalAnnotations", "{0A73474B-0AF6-47CF-B596-8E7CDC9AC001}"
 	ProjectSection(SolutionItems) = preProject
