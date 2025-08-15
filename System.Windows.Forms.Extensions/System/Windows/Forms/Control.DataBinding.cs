@@ -22,26 +22,82 @@ namespace System.Windows.Forms;
 partial class ControlExtensions {
 
   private static void _AddBinding<TControl, TSource>(this TControl @this, object bindingSource, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control {
-    const string excMessage = """
-                              Must be an expression like :
-                              (control, source) => control.propertyName == source.dataMember
-                              (control, source) => control.propertyName == (type)source.dataMember
-                              (control, source) => control.propertyName == source.dataMember.ToString()
-                              (control, source) => control.propertyName == source.subMember.dataMember
-                              (control, source) => control.propertyName == (type)source.subMember.dataMember
-                              (control, source) => control.propertyName == source.subMember.dataMember.ToString()
-                              (control, source) => control.propertyName == source.....dataMember
-                              (control, source) => control.propertyName == (type)source.....dataMember
-                              (control, source) => control.propertyName == source.....dataMember.ToString()
-                              """;
+    const string excMessage = @"Must be an expression like :
+(control, source) => control.propertyName == source.dataMember    // Two-way binding
 
-    if (expression.Body is not BinaryExpression { NodeType: ExpressionType.Equal } body)
+// One-way source to control (both forms equivalent):
+(control, source) => control.propertyName < source.dataMember     // control < source
+(control, source) => source.dataMember > control.propertyName     // source > control
+
+// One-way control to source (both forms equivalent):
+(control, source) => control.propertyName > source.dataMember     // control > source  
+(control, source) => source.dataMember < control.propertyName     // source < control
+
+(control, source) => control.propertyName == (type)source.dataMember
+(control, source) => control.propertyName == source.dataMember.ToString()
+(control, source) => control.propertyName == source.subMember.dataMember
+(control, source) => control.propertyName == (type)source.subMember.dataMember
+(control, source) => control.propertyName == source.subMember.dataMember.ToString()
+(control, source) => control.propertyName == source.....dataMember
+(control, source) => control.propertyName == (type)source.....dataMember
+(control, source) => control.propertyName == source.....dataMember.ToString()";
+
+    if (expression.Body is not BinaryExpression { NodeType: ExpressionType.Equal or ExpressionType.LessThan or ExpressionType.GreaterThan } body)
       throw new ArgumentException(excMessage);
 
-    var propertyName = GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
-    var dataMember = GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
+    // Determine which side is control and which is source, then determine binding direction
+    var leftIsControl = GetControlPropertyName(body.Left) != null;
+    var rightIsControl = GetControlPropertyName(body.Right) != null;
+    
+    string propertyName;
+    string dataMember;
+    DataSourceUpdateMode actualMode;
+    ExpressionType bindingDirection;
+    
+    if (leftIsControl && !rightIsControl) {
+      // Left = control, Right = source
+      propertyName = GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
+      dataMember = GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
+      bindingDirection = body.NodeType;
+      
+      // Determine binding direction based on logical relationship
+      actualMode = body.NodeType switch {
+        ExpressionType.LessThan => DataSourceUpdateMode.Never,           // control < source → source-to-control
+        ExpressionType.GreaterThan => DataSourceUpdateMode.OnPropertyChanged, // control > source → control-to-source  
+        ExpressionType.Equal => mode,                                    // control == source → use provided mode
+        _ => throw new ArgumentException(excMessage)
+      };
+    } else if (!leftIsControl && rightIsControl) {
+      // Left = source, Right = control  
+      propertyName = GetControlPropertyName(body.Right) ?? throw new ArgumentException(excMessage);
+      
+      dataMember = GetBindingSourcePropertyName(body.Left) ?? throw new ArgumentException(excMessage);
+      
+      // Determine binding direction based on logical relationship (swapped sides)
+      actualMode = body.NodeType switch {
+        ExpressionType.LessThan => DataSourceUpdateMode.OnPropertyChanged, // source < control → control-to-source
+        ExpressionType.GreaterThan => DataSourceUpdateMode.Never,           // source > control → source-to-control
+        ExpressionType.Equal => mode,                                       // source == control → use provided mode
+        _ => throw new ArgumentException(excMessage)
+      };
+      
+      // Adjust bindingDirection for the FormattingEnabled logic below
+      bindingDirection = body.NodeType switch {
+        ExpressionType.LessThan => ExpressionType.GreaterThan,  // Treat as control-to-source
+        ExpressionType.GreaterThan => ExpressionType.LessThan,  // Treat as source-to-control
+        ExpressionType.Equal => ExpressionType.Equal,
+        _ => throw new ArgumentException(excMessage)
+      };
+    } else {
+      throw new ArgumentException(excMessage);
+    }
 
-    var binding = new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = mode };
+    var binding = new Binding(propertyName, bindingSource, dataMember, true) { DataSourceUpdateMode = actualMode };
+    
+    // For one-way control-to-source binding, we need to prevent initial source-to-control update
+    if (bindingDirection == ExpressionType.GreaterThan)
+      binding.FormattingEnabled = false;
+
     if (customConversionHandler != null)
       binding.Format += customConversionHandler;
 
@@ -66,6 +122,11 @@ partial class ControlExtensions {
         UnaryExpression {
           NodeType: ExpressionType.Convert,
           Operand: MemberExpression { Expression: ParameterExpression parameter } member
+        } when parameter.Type == controlType => member.Member.Name,
+        MethodCallExpression { 
+          Method.Name: nameof(ToString), 
+          Arguments.Count: 0, 
+          Object: MemberExpression { Expression: ParameterExpression parameter } member 
         } when parameter.Type == controlType => member.Member.Name,
         _ => null
       }
@@ -100,6 +161,7 @@ partial class ControlExtensions {
 
   /// <summary>
   /// Adds a data binding to the control based on the specified expression, data source, and optional custom handlers.
+  /// Supports directional binding using comparison operators.
   /// </summary>
   /// <typeparam name="TControl">The type of the control.</typeparam>
   /// <typeparam name="TSource">The type of the data source.</typeparam>
@@ -108,7 +170,9 @@ partial class ControlExtensions {
   /// <param name="expression">
   /// The binding expression, which must be of the form:
   /// <code>
-  /// (control, source) => control.propertyName == source.dataMember
+  /// (control, source) => control.propertyName == source.dataMember  // Two-way binding
+  /// (control, source) => control.propertyName &lt; source.dataMember   // One-way: source to control (read-only)
+  /// (control, source) => control.propertyName &gt; source.dataMember   // One-way: control to source (write-only)
   /// (control, source) => control.propertyName == (type)source.dataMember
   /// (control, source) => control.propertyName == source.dataMember.ToString()
   /// (control, source) => control.propertyName == source.subMember.dataMember
@@ -119,7 +183,7 @@ partial class ControlExtensions {
   /// (control, source) => control.propertyName == source.....dataMember.ToString()
   /// </code>
   /// </param>
-  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode.</param>
+  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode. Ignored for directional bindings (&lt; and &gt;).</param>
   /// <param name="customConversionHandler">(Optional) A custom conversion handler for the binding.</param>
   /// <param name="bindingCompleteCallback">(Optional) A callback to handle the binding complete event.</param>
   /// <exception cref="System.ArgumentException">Thrown if the expression does not match the expected format.</exception>
@@ -127,7 +191,15 @@ partial class ControlExtensions {
   /// <code>
   /// TextBox textBox = new TextBox();
   /// MyDataSource dataSource = new MyDataSource();
+  /// 
+  /// // Two-way binding
   /// textBox.AddBinding(dataSource, (ctrl, src) => ctrl.Text == src.MyProperty);
+  /// 
+  /// // One-way: source updates control only
+  /// textBox.AddBinding(dataSource, (ctrl, src) => ctrl.Text &lt; src.MyProperty);
+  /// 
+  /// // One-way: control updates source only
+  /// textBox.AddBinding(dataSource, (ctrl, src) => ctrl.Text &gt; src.MyProperty);
   /// </code>
   /// </example>
   public static void AddBinding<TControl, TSource>(this TControl @this, TSource source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control
@@ -135,6 +207,7 @@ partial class ControlExtensions {
 
   /// <summary>
   /// Adds a data binding to the control based on the specified expression, data source, and optional custom handlers.
+  /// Supports directional binding using comparison operators.
   /// </summary>
   /// <typeparam name="TControl">The type of the control.</typeparam>
   /// <typeparam name="TSource">The type of the data source.</typeparam>
@@ -143,7 +216,9 @@ partial class ControlExtensions {
   /// <param name="expression">
   /// The binding expression, which must be of the form:
   /// <code>
-  /// (control, source) => control.propertyName == source.dataMember
+  /// (control, source) => control.propertyName == source.dataMember  // Two-way binding
+  /// (control, source) => control.propertyName &lt; source.dataMember   // One-way: source to control (read-only)
+  /// (control, source) => control.propertyName &gt; source.dataMember   // One-way: control to source (write-only)
   /// (control, source) => control.propertyName == (type)source.dataMember
   /// (control, source) => control.propertyName == source.dataMember.ToString()
   /// (control, source) => control.propertyName == source.subMember.dataMember
@@ -154,7 +229,7 @@ partial class ControlExtensions {
   /// (control, source) => control.propertyName == source.....dataMember.ToString()
   /// </code>
   /// </param>
-  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode.</param>
+  /// <param name="mode">(Optional: defaults to <see cref="DataSourceUpdateMode.OnPropertyChanged"/>) The data source update mode. Ignored for directional bindings (&lt; and &gt;).</param>
   /// <param name="customConversionHandler">(Optional) A custom conversion handler for the binding.</param>
   /// <param name="bindingCompleteCallback">(Optional) A callback to handle the binding complete event.</param>
   /// <exception cref="System.ArgumentException">Thrown if the expression does not match the expected format.</exception>
@@ -162,7 +237,15 @@ partial class ControlExtensions {
   /// <code>
   /// TextBox textBox = new TextBox();
   /// object dataSource = new MyDataSource();
+  /// 
+  /// // Two-way binding
   /// textBox.AddBinding&lt;TextBox, MyDataSource&gt;(dataSource, (ctrl, src) => ctrl.Text == src.MyProperty);
+  /// 
+  /// // One-way: source updates control only
+  /// textBox.AddBinding&lt;TextBox, MyDataSource&gt;(dataSource, (ctrl, src) => ctrl.Text &lt; src.MyProperty);
+  /// 
+  /// // One-way: control updates source only
+  /// textBox.AddBinding&lt;TextBox, MyDataSource&gt;(dataSource, (ctrl, src) => ctrl.Text &gt; src.MyProperty);
   /// </code>
   /// </example>
   public static void AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, DataSourceUpdateMode mode = DataSourceUpdateMode.OnPropertyChanged, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control

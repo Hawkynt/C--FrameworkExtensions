@@ -159,6 +159,53 @@ These are only some of the supported features. There are many more available via
     listBox.AddBinding(model, (c, m) => c.SelectedItem == m.Level1.Level2.Level3.ItemValue.ToString());
     ```
 
+  **Directional Binding**:
+
+  The `AddBinding` method supports directional binding using comparison operators to control data flow direction, similar to WPF:
+
+  - **Two-Way Binding** (Default):
+    ```csharp
+    // Data flows both directions: source ↔ control
+    // Both forms are equivalent and supported:
+    textBox.AddBinding(model, (c, m) => c.Text == m.Name);       // control == source
+    textBox.AddBinding(model, (c, m) => m.Name == c.Text);       // source == control
+    
+    // Works with complex expressions too:
+    textBox.AddBinding(model, (c, m) => c.Text == m.Count.ToString());     // control == source.ToString()
+    textBox.AddBinding(model, (c, m) => m.Count.ToString() == c.Text);     // source.ToString() == control
+    
+    numericUpDown.AddBinding(model, (c, m) => c.Value == (decimal)m.IntValue);  // control == (cast)source
+    numericUpDown.AddBinding(model, (c, m) => (decimal)m.IntValue == c.Value);  // (cast)source == control
+    ```
+
+  - **One-Way Source-to-Control** (Read-Only):
+    ```csharp
+    // Data flows only from source to control: source → control
+    // Control changes do not update the source
+    
+    // Both forms are equivalent and supported:
+    label.AddBinding(model, (c, m) => c.Text < m.Status);      // control < source
+    label.AddBinding(model, (c, m) => m.Status > c.Text);      // source > control
+    
+    numericUpDown.AddBinding(model, (c, m) => c.Value < m.Count);  // control < source
+    numericUpDown.AddBinding(model, (c, m) => m.Count > c.Value);  // source > control
+    ```
+
+  - **One-Way Control-to-Source** (Write-Only):
+    ```csharp
+    // Data flows only from control to source: control → source
+    // Source changes do not update the control
+    
+    // Both forms are equivalent and supported:
+    textBox.AddBinding(model, (c, m) => c.Text > m.UserInput);     // control > source
+    textBox.AddBinding(model, (c, m) => m.UserInput < c.Text);     // source < control
+    
+    numericUpDown.AddBinding(model, (c, m) => c.Value > m.UserNumber); // control > source
+    numericUpDown.AddBinding(model, (c, m) => m.UserNumber < c.Value); // source < control
+    ```
+
+  This feature provides fine-grained control over binding behavior and improves performance in scenarios where you need unidirectional data flow. The syntax is intuitive and closely resembles the mathematical relationship between the values.
+
 - **UI-Threading**: Determine whether to use a controls' UI thread to execute code or not. (`Control.SafelyInvoke`/`Control.Async`)
 
   ```cs
