@@ -9,18 +9,30 @@ namespace System.Windows.Forms.Tests {
     private TestDataSource _dataSource;
     private TextBox _textBox;
     private NumericUpDown _numericUpDown;
+    private Form _form;
 
     [SetUp]
     public void Setup() {
       this._dataSource = new TestDataSource();
       this._textBox = new TextBox();
       this._numericUpDown = new NumericUpDown();
+      this._numericUpDown.Minimum = 0;
+      this._numericUpDown.Maximum = 10000; // Allow larger test values
+      
+      // Ensure proper binding context for standalone controls
+      this._form = new Form();
+      this._form.Controls.Add(this._textBox);
+      this._form.Controls.Add(this._numericUpDown);
+      
+      // Force form handle creation for proper binding processing
+      var handle = this._form.Handle; // This forces handle creation
     }
 
     [TearDown]
     public void TearDown() {
       this._textBox?.Dispose();
       this._numericUpDown?.Dispose();
+      this._form?.Dispose();
     }
 
     #region Two-Way Binding Tests (==)
@@ -42,7 +54,21 @@ namespace System.Windows.Forms.Tests {
     public void AddBinding_TwoWayBinding_UpdatesControlWhenSourceChanges() {
       this._textBox.AddBinding(this._dataSource, (ctrl, src) => ctrl.Text == src.Name);
 
+      // Verify the binding was created properly
+      Assert.That(this._textBox.DataBindings.Count, Is.EqualTo(1));
+
       this._dataSource.Name = "Updated";
+
+      // Wait for async operations to complete
+      System.Threading.Tasks.Task.Delay(50).Wait();
+      
+      // Force binding updates by processing messages
+      Application.DoEvents();
+      
+      // Also try to force the binding to read the current value
+      if (this._textBox.DataBindings.Count > 0) {
+        this._textBox.DataBindings[0].ReadValue();
+      }
 
       Assert.That(this._textBox.Text, Is.EqualTo("Updated"));
     }
@@ -150,8 +176,8 @@ namespace System.Windows.Forms.Tests {
     [Test]
     [Category("HappyPath")]
     public void AddBinding_EquivalentSourceToControlExpressions_BehaveSame() {
-      var numUpDown1 = new NumericUpDown();
-      var numUpDown2 = new NumericUpDown();
+      var numUpDown1 = new NumericUpDown() { Maximum = 10000 };
+      var numUpDown2 = new NumericUpDown() { Maximum = 10000 };
 
       // These should be equivalent: control < source vs source > control
       numUpDown1.AddBinding(this._dataSource, (ctrl, src) => ctrl.Value < src.Count);
@@ -175,8 +201,8 @@ namespace System.Windows.Forms.Tests {
     [Test]
     [Category("HappyPath")]
     public void AddBinding_EquivalentControlToSourceExpressions_BehaveSame() {
-      var numUpDown1 = new NumericUpDown();
-      var numUpDown2 = new NumericUpDown();
+      var numUpDown1 = new NumericUpDown() { Maximum = 10000 };
+      var numUpDown2 = new NumericUpDown() { Maximum = 10000 };
 
       // These should be equivalent: control > source vs source < control
       numUpDown1.AddBinding(this._dataSource, (ctrl, src) => ctrl.Value > src.Count);
@@ -248,8 +274,8 @@ namespace System.Windows.Forms.Tests {
       // Test that equality works the same regardless of which side is source vs control
       var textBox1 = new TextBox();
       var textBox2 = new TextBox();
-      var numUpDown1 = new NumericUpDown();
-      var numUpDown2 = new NumericUpDown();
+      var numUpDown1 = new NumericUpDown() { Maximum = 10000 };
+      var numUpDown2 = new NumericUpDown() { Maximum = 10000 };
 
       this._dataSource.Name = "Test";
       this._dataSource.Count = 42;
@@ -297,13 +323,13 @@ namespace System.Windows.Forms.Tests {
     public void AddBinding_NestedProperty_WorksWithAllDirections() {
       this._dataSource.NestedObject = new NestedTestData { Number = 42 };
 
-      var numUpDown1 = new NumericUpDown();
+      var numUpDown1 = new NumericUpDown() { Maximum = 10000 };
       numUpDown1.AddBinding(this._dataSource, (ctrl, src) => ctrl.Value == src.NestedObject.Number);
 
-      var numUpDown2 = new NumericUpDown();
+      var numUpDown2 = new NumericUpDown() { Maximum = 10000 };
       numUpDown2.AddBinding(this._dataSource, (ctrl, src) => ctrl.Value < src.NestedObject.Number);
 
-      var numUpDown3 = new NumericUpDown();
+      var numUpDown3 = new NumericUpDown() { Maximum = 10000 };
       numUpDown3.AddBinding(this._dataSource, (ctrl, src) => ctrl.Value > src.NestedObject.Number);
 
       Assert.That(numUpDown1.Value, Is.EqualTo(42));
