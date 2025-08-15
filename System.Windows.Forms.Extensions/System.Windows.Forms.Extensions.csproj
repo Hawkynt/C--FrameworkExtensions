@@ -38,6 +38,9 @@
   <ItemGroup>
     <PackageReference Include="T4.Build" Version="0.2.4" PrivateAssets="All" />
     
+    <!-- Reference assemblies for .NET Framework 3.5 targeting without requiring full framework installation -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    
     <ProjectReference Include="..\Backports\Backports.csproj" />
     <ProjectReference Include="..\Corlib.Extensions\Corlib.Extensions.csproj" />
 
