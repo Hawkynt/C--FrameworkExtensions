@@ -351,6 +351,39 @@ namespace System.Windows.Forms.Tests {
       Assert.That(ctrl.Value, Is.EqualTo(-815));
     }
 
+    [Test]
+    [Category("Integration")]
+    public void TwoWayBindingsShouldWorkWhenNestedObjectIsReplaced() {
+      var ctrl = this._numericUpDown;
+
+      var data = new TestDataSource { NestedObject = new NestedTestData { Number = 123 } };
+      ctrl.AddBinding(data, (c, d) => c.Value == d.NestedObject.Number);
+      this._UpdateUI();
+      Assert.That(data.NestedObject.Number, Is.EqualTo(123));
+      Assert.That(ctrl.Value, Is.EqualTo(123));
+
+      // Replace the entire nested object - this should trigger NestedObject PropertyChanged
+      data.NestedObject = new NestedTestData { Number = 999 };
+      this._UpdateUI();
+      
+      // Question: Should the binding still work after nested object replacement?
+      // Current expectation: binding should pick up the new nested object's value
+      Assert.That(data.NestedObject.Number, Is.EqualTo(999));
+      Assert.That(ctrl.Value, Is.EqualTo(999), "Control should reflect new nested object's value");
+
+      // Test that changes to the NEW nested object still propagate
+      data.NestedObject.Number = 777;
+      this._UpdateUI();
+      Assert.That(data.NestedObject.Number, Is.EqualTo(777));
+      Assert.That(ctrl.Value, Is.EqualTo(777), "Control should reflect changes to new nested object");
+
+      // Test that control-to-source still works with new nested object
+      ctrl.Value = 555;
+      this._UpdateUI();
+      Assert.That(data.NestedObject.Number, Is.EqualTo(555));
+      Assert.That(ctrl.Value, Is.EqualTo(555));
+    }
+
     #endregion
 
     #region Casted Property Integration Tests

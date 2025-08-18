@@ -149,34 +149,33 @@ partial class ControlExtensions {
     }
     
     
-    // Add manual PropertyChanged handling with proper cleanup
+    // Add manual PropertyChanged handling for all INotifyPropertyChanged sources
+    // This handles initial sync, nested properties, casts, and control-to-source bindings
     var eventHandlers = new List<(INotifyPropertyChanged notifier, PropertyChangedEventHandler handler)>();
     
     if (source is INotifyPropertyChanged notifySource) {
       
-      // TODO: we can do the reflection shit once and create a delegate to directly set or read values which are then used in the OnPropertyChanged handler to get better performance
       void OnPropertyChanged(object sender, PropertyChangedEventArgs e) {
         try {
-          // For nested properties, we need to handle PropertyChanged from any level
-          // e.g., for "NestedObject.Number", we should respond to both "NestedObject" and "Number" changes
-          bool isRelevantChange = string.IsNullOrEmpty(e.PropertyName);
-          
-          if (!isRelevantChange && dataMember.Contains(".")) {
-            var dataParts = dataMember.Split('.');
-            // Check if the changed property is part of our binding path
-            isRelevantChange = dataParts.Contains(e.PropertyName) || e.PropertyName == dataMember;
-          } else if (!isRelevantChange) {
-            // Simple property case
-            isRelevantChange = e.PropertyName == dataMember;
-          }
+          // Check if this property change is relevant to our binding
+          bool isRelevantChange = string.IsNullOrEmpty(e.PropertyName) || 
+                                 e.PropertyName == dataMember ||
+                                 (dataMember.Contains('.') && dataMember.Split('.').Contains(e.PropertyName));
           
           if (isRelevantChange) {
+            // If this is a nested binding and a parent object in the chain changed, rebuild subscriptions
+            if (dataMember.Contains('.') && e.PropertyName != dataMember) {
+              var pathParts = dataMember.Split('.');
+              if (pathParts.Contains(e.PropertyName)) {
+                RebuildNestedSubscriptions(source, dataMember, OnPropertyChanged, eventHandlers);
+              }
+            }
+            
             // Only update control for source-to-control or two-way bindings
             bool shouldUpdateControl = actualMode == DataSourceUpdateMode.Never || 
                                      (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
             
             if (shouldUpdateControl) {
-              // For property changes, we need to re-evaluate the source expression to handle casts and nested properties
               Expression sourceExpression = isLeftControl ? body.Right : body.Left;
               var currentValue = EvaluateSourceExpression(sourceExpression, source);
               var controlProperty = @this.GetType().GetProperty(propertyName);
@@ -194,10 +193,10 @@ partial class ControlExtensions {
       notifySource.PropertyChanged += OnPropertyChanged;
       eventHandlers.Add((notifySource, OnPropertyChanged));
       
-      // Subscribe to nested object PropertyChanged events
-      if (dataMember.Contains(".")) {
+      // Subscribe to nested object PropertyChanged events if needed
+      if (dataMember.Contains('.')) 
         SubscribeToNestedProperties(source, dataMember, OnPropertyChanged, eventHandlers);
-      }
+      
       
       // Initial sync based on binding direction
       if (bindingDirection == ExpressionType.GreaterThan) {
@@ -224,9 +223,9 @@ partial class ControlExtensions {
           }
           
           // For cast expressions in two-way bindings, also write the cast value back to source
-          if (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal && HasCastExpression(sourceExpression)) {
+          if (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal && HasCastExpression(sourceExpression))
             UpdateSourceFromControl(source, dataMember, currentValue);
-          }
+          
         } catch {
           // Ignore initial sync errors
         }
@@ -250,9 +249,8 @@ partial class ControlExtensions {
     bool allowControlToSourceSync = bindingDirection == ExpressionType.GreaterThan || 
                                    (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
     
-    if (allowControlToSourceSync) {
+    if (allowControlToSourceSync)
       AddControlToSourceHandlers(@this, source, propertyName, dataMember);
-    }
     
     return;
 
@@ -406,6 +404,29 @@ partial class ControlExtensions {
         }
       } catch {
         // Ignore subscription errors
+      }
+    }
+    
+    void RebuildNestedSubscriptions(object sourceObj, string memberPath, PropertyChangedEventHandler handler, List<(INotifyPropertyChanged, PropertyChangedEventHandler)> handlers) {
+      try {
+        // First, unsubscribe from all existing nested object handlers (but keep the main source handler)
+        var mainSource = sourceObj as INotifyPropertyChanged;
+        for (int i = handlers.Count - 1; i >= 0; i--) {
+          var (notifier, existingHandler) = handlers[i];
+          if (notifier != mainSource && ReferenceEquals(existingHandler, handler)) {
+            try {
+              notifier.PropertyChanged -= handler;
+              handlers.RemoveAt(i);
+            } catch {
+              // Ignore unsubscribe errors
+            }
+          }
+        }
+        
+        // Now re-subscribe to the current nested objects
+        SubscribeToNestedProperties(sourceObj, memberPath, handler, handlers);
+      } catch {
+        // Ignore rebuild errors
       }
     }
     
