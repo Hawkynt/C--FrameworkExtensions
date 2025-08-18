@@ -16,13 +16,18 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
+using Guard;
 
 namespace System.Windows.Forms;
 
 partial class ControlExtensions {
 
   private static void _AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control {
+    Guard.Against.ThisIsNull(@this);
+    Guard.Against.ArgumentIsNull(source);
+    Guard.Against.ArgumentIsNull(expression);
     const string excMessage = @"Must be an expression like :
 (control, source) => control.propertyName == source.dataMember    // Two-way binding
 
@@ -46,77 +51,96 @@ partial class ControlExtensions {
     if (expression.Body is not BinaryExpression { NodeType: ExpressionType.Equal or ExpressionType.LessThan or ExpressionType.GreaterThan } body)
       throw new ArgumentException(excMessage);
 
-    // Determine which side is control and which is source, then determine binding direction
+    // Determine which side is control and which is source
     var leftIsControl = GetControlPropertyName(body.Left) != null;
     var rightIsControl = GetControlPropertyName(body.Right) != null;
     
+    if (!leftIsControl && !rightIsControl || leftIsControl && rightIsControl)
+      throw new ArgumentException(excMessage);
     
-    string propertyName;
-    string dataMember;
+    // Extract property names
+    string propertyName, dataMember;
     DataSourceUpdateMode actualMode;
     ExpressionType bindingDirection;
+    bool isLeftControl = leftIsControl;
     
-    if (leftIsControl && !rightIsControl) {
-      // Left = control, Right = source
+    if (leftIsControl) {
       propertyName = GetControlPropertyName(body.Left) ?? throw new ArgumentException(excMessage);
       dataMember = GetBindingSourcePropertyName(body.Right) ?? throw new ArgumentException(excMessage);
-      bindingDirection = body.NodeType;
       
-      // Determine binding direction based on logical relationship
       actualMode = body.NodeType switch {
-        ExpressionType.LessThan => DataSourceUpdateMode.Never,           // control < source → source-to-control
-        ExpressionType.GreaterThan => DataSourceUpdateMode.OnPropertyChanged, // control > source → control-to-source  
-        ExpressionType.Equal => mode,                                    // control == source → use provided mode
+        ExpressionType.LessThan => DataSourceUpdateMode.Never,                    // control < source → source-to-control
+        ExpressionType.GreaterThan => DataSourceUpdateMode.OnPropertyChanged,    // control > source → control-to-source  
+        ExpressionType.Equal => mode,                                             // control == source → use provided mode
         _ => throw new ArgumentException(excMessage)
       };
-    } else if (!leftIsControl && rightIsControl) {
-      // Left = source, Right = control  
-      propertyName = GetControlPropertyName(body.Right) ?? throw new ArgumentException(excMessage);
-      
-      dataMember = GetBindingSourcePropertyName(body.Left) ?? throw new ArgumentException(excMessage);
-      
-      // Determine binding direction based on logical relationship (swapped sides)
-      actualMode = body.NodeType switch {
-        ExpressionType.LessThan => DataSourceUpdateMode.OnPropertyChanged, // source < control → control-to-source
-        ExpressionType.GreaterThan => DataSourceUpdateMode.Never,           // source > control → source-to-control
-        ExpressionType.Equal => mode,                                       // source == control → use provided mode
-        _ => throw new ArgumentException(excMessage)
-      };
-      
-      // Adjust bindingDirection for the FormattingEnabled logic below
+
       bindingDirection = body.NodeType switch {
-        ExpressionType.LessThan => ExpressionType.GreaterThan,  // Treat as control-to-source
-        ExpressionType.GreaterThan => ExpressionType.LessThan,  // Treat as source-to-control
+        ExpressionType.LessThan => ExpressionType.LessThan, 
+        ExpressionType.GreaterThan => ExpressionType.GreaterThan,
         ExpressionType.Equal => ExpressionType.Equal,
         _ => throw new ArgumentException(excMessage)
       };
     } else {
-      throw new ArgumentException(excMessage);
+      propertyName = GetControlPropertyName(body.Right) ?? throw new ArgumentException(excMessage);
+      dataMember = GetBindingSourcePropertyName(body.Left) ?? throw new ArgumentException(excMessage);
+      
+      actualMode = body.NodeType switch {
+        ExpressionType.LessThan => DataSourceUpdateMode.OnPropertyChanged,       // source < control → control-to-source
+        ExpressionType.GreaterThan => DataSourceUpdateMode.Never,                // source > control → source-to-control
+        ExpressionType.Equal => mode,                                             // source == control → use provided mode
+        _ => throw new ArgumentException(excMessage)
+      };
+      
+      // need to inverse as sides are swapped
+      bindingDirection = body.NodeType switch {
+        ExpressionType.LessThan => ExpressionType.GreaterThan,
+        ExpressionType.GreaterThan => ExpressionType.LessThan,
+        ExpressionType.Equal => ExpressionType.Equal,
+        _ => throw new ArgumentException(excMessage)
+      };
     }
 
-    var binding = new Binding(propertyName, source, dataMember, true) { DataSourceUpdateMode = actualMode };
+    Binding binding = null;
     
-    // For one-way control-to-source binding, we need to prevent initial source-to-control update
+    // For control-to-source only bindings, don't create any binding - handle everything manually
     if (bindingDirection == ExpressionType.GreaterThan) {
-      binding.FormattingEnabled = false;
-      // Also prevent any initial data source updates by making the binding read-only from source perspective
-      binding.DataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+      // No binding created - everything will be handled manually below
+    } else {
+      // For source-to-control and two-way bindings, use normal binding
+      binding = new Binding(propertyName, source, dataMember, true) { DataSourceUpdateMode = actualMode };
+      
+      if (customConversionHandler != null)
+        binding.Format += customConversionHandler;
+
+      if (bindingCompleteCallback != null)
+        binding.BindingComplete += bindingCompleteCallback;
     }
-
-    if (customConversionHandler != null)
-      binding.Format += customConversionHandler;
-
-    if (bindingCompleteCallback != null)
-      binding.BindingComplete += bindingCompleteCallback;
 
     // Ensure the control has a BindingContext for immediate binding activation
-    if (@this.BindingContext == null)
-      @this.BindingContext = new BindingContext();
-      
-    @this.DataBindings.Add(binding);
+    @this.BindingContext ??= new BindingContext();
+
+    // Force control handle creation to ensure binding works properly
+    IntPtr handle;
+
+    // Force handle creation, this fixes the issue where bindings don't work on invisible/non-focused controls
+    if (!@this.IsHandleCreated) 
+      handle = @this.Handle;
     
-    // Force binding to read current value from source immediately - but not for control-to-source only bindings
-    if (bindingDirection != ExpressionType.GreaterThan) {
+    // Also ensure parent forms have handles created
+    var parent = @this.Parent;
+    while (parent != null) {
+      if (!parent.IsHandleCreated)
+        handle = parent.Handle;
+      
+      parent = parent.Parent;
+    }
+      
+    // Only add binding if one was created (not for control-to-source only)
+    if (binding != null) {
+      @this.DataBindings.Add(binding);
+      
+      // Force binding to read current value from source immediately
       try {
         binding.ReadValue();
       } catch {
@@ -124,204 +148,112 @@ partial class ControlExtensions {
       }
     }
     
-    // HACK: For test environments where WinForms binding doesn't work properly,
-    // manually subscribe to PropertyChanged events to simulate binding behavior
+    
+    // Add manual PropertyChanged handling with proper cleanup
+    var eventHandlers = new List<(INotifyPropertyChanged notifier, PropertyChangedEventHandler handler)>();
+    
     if (source is INotifyPropertyChanged notifySource) {
+      
+      // TODO: we can do the reflection shit once and create a delegate to directly set or read values which are then used in the OnPropertyChanged handler to get better performance
       void OnPropertyChanged(object sender, PropertyChangedEventArgs e) {
         try {
-          // Handle nested property changes - check if the changed property is part of our binding path
-          bool isRelevantChange = false;
-          if (dataMember.Contains(".")) {
-            // For nested properties, check if the change affects our binding path
-            isRelevantChange = string.IsNullOrEmpty(e.PropertyName) || 
-                             dataMember.StartsWith(e.PropertyName + ".") || 
-                             dataMember == e.PropertyName ||
-                             dataMember.EndsWith("." + e.PropertyName);
-          } else {
-            // Simple property - exact match or empty property name (indicating all properties changed)
-            isRelevantChange = e.PropertyName == dataMember || string.IsNullOrEmpty(e.PropertyName);
+          // For nested properties, we need to handle PropertyChanged from any level
+          // e.g., for "NestedObject.Number", we should respond to both "NestedObject" and "Number" changes
+          bool isRelevantChange = string.IsNullOrEmpty(e.PropertyName);
+          
+          if (!isRelevantChange && dataMember.Contains(".")) {
+            var dataParts = dataMember.Split('.');
+            // Check if the changed property is part of our binding path
+            isRelevantChange = dataParts.Contains(e.PropertyName) || e.PropertyName == dataMember;
+          } else if (!isRelevantChange) {
+            // Simple property case
+            isRelevantChange = e.PropertyName == dataMember;
           }
-
+          
           if (isRelevantChange) {
-            // Only update control for source-to-control bindings (Never mode or two-way OnPropertyChanged)
-            // For control-to-source only bindings, don't update control
+            // Only update control for source-to-control or two-way bindings
             bool shouldUpdateControl = actualMode == DataSourceUpdateMode.Never || 
                                      (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
             
             if (shouldUpdateControl) {
+              // For property changes, we need to re-evaluate the source expression to handle casts and nested properties
+              Expression sourceExpression = isLeftControl ? body.Right : body.Left;
+              var currentValue = EvaluateSourceExpression(sourceExpression, source);
               var controlProperty = @this.GetType().GetProperty(propertyName);
-              var currentControlValue = controlProperty?.GetValue(@this, null);
-              
-              // Get current source value using the full path resolution
-              object currentSourceValue;
-              if (dataMember.Contains(".")) {
-                currentSourceValue = GetSourceValue(source, dataMember);
-              } else {
-                currentSourceValue = source.GetType().GetProperty(dataMember)?.GetValue(source, null);
-              }
-              
-              // Always update for string properties to handle empty string cases correctly
-              bool shouldUpdate = !Equals(currentControlValue, currentSourceValue);
-              
-              // Special handling for strings - empty string and null should be treated differently
-              if (controlProperty?.PropertyType == typeof(string)) {
-                string controlStr = currentControlValue as string ?? "";
-                string sourceStr = currentSourceValue as string ?? "";
-                shouldUpdate = controlStr != sourceStr;
-              }
-              
-              if (shouldUpdate) {
-                object convertedValue = currentSourceValue;
-                if (currentSourceValue != null && controlProperty != null && currentSourceValue.GetType() != controlProperty.PropertyType) {
-                  convertedValue = Convert.ChangeType(currentSourceValue, controlProperty.PropertyType);
-                }
-                controlProperty?.SetValue(@this, convertedValue, null);
+              if (controlProperty?.CanWrite == true) {
+                var convertedValue = ConvertValue(currentValue, controlProperty.PropertyType);
+                controlProperty.SetValue(@this, convertedValue, null);
               }
             }
           }
         } catch {
-          // Ignore manual sync errors
+          // Ignore errors in manual sync
         }
       }
       
       notifySource.PropertyChanged += OnPropertyChanged;
+      eventHandlers.Add((notifySource, OnPropertyChanged));
       
-      // For nested objects, also subscribe to their PropertyChanged events
+      // Subscribe to nested object PropertyChanged events
       if (dataMember.Contains(".")) {
+        SubscribeToNestedProperties(source, dataMember, OnPropertyChanged, eventHandlers);
+      }
+      
+      // Initial sync based on binding direction
+      if (bindingDirection == ExpressionType.GreaterThan) {
+        // Control-to-source only: sync FROM control TO source initially
         try {
-          var parts = dataMember.Split('.');
-          object current = source;
-          
-          // Navigate to each level and subscribe to PropertyChanged
-          for (int i = 0; i < parts.Length - 1; i++) {
-            var property = current?.GetType().GetProperty(parts[i]);
-            if (property != null) {
-              var nestedObject = property.GetValue(current, null);
-              if (nestedObject is INotifyPropertyChanged nestedNotify) {
-                nestedNotify.PropertyChanged += OnPropertyChanged;
-              }
-              current = nestedObject;
-            }
+          var controlProperty = @this.GetType().GetProperty(propertyName);
+          if (controlProperty?.CanRead == true) {
+            var controlValue = controlProperty.GetValue(@this, null);
+            UpdateSourceFromControl(source, dataMember, controlValue);
           }
         } catch {
-          // Ignore nested subscription errors
+          // Ignore initial sync errors
         }
-      }
-    }
-    
-    // HACK: Also add manual control-to-source binding for test environments
-    // Only add control-to-source binding if it's a two-way binding OR a control-to-source only binding
-    bool allowControlToSourceSync = (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection != ExpressionType.LessThan);
-    
-    if (allowControlToSourceSync && source is INotifyPropertyChanged sourceNotify) {
-      // Add property change handlers for the control
-      if (propertyName == "Text" && @this is TextBox textBox) {
-        textBox.TextChanged += (s, e) => {
-          try {
-            // Handle nested property paths for control-to-source updates
-            if (dataMember.Contains(".")) {
-              var parts = dataMember.Split('.');
-              object current = source;
-              
-              // Navigate to the parent object
-              for (int i = 0; i < parts.Length - 1; i++) {
-                var property = current?.GetType().GetProperty(parts[i]);
-                current = property?.GetValue(current, null);
-                if (current == null) return;
-              }
-              
-              // Set the final property
-              var finalProperty = current.GetType().GetProperty(parts[parts.Length - 1]);
-              if (finalProperty != null && finalProperty.CanWrite) {
-                object convertedValue = textBox.Text;
-                if (finalProperty.PropertyType != typeof(string) && !string.IsNullOrEmpty(textBox.Text)) {
-                  convertedValue = Convert.ChangeType(textBox.Text, finalProperty.PropertyType);
-                }
-                finalProperty.SetValue(current, convertedValue, null);
-              }
-            } else {
-              // Simple property path
-              var sourceProperty = source.GetType().GetProperty(dataMember);
-              if (sourceProperty != null && sourceProperty.CanWrite) {
-                object convertedValue = textBox.Text;
-                if (sourceProperty.PropertyType != typeof(string) && !string.IsNullOrEmpty(textBox.Text)) {
-                  convertedValue = Convert.ChangeType(textBox.Text, sourceProperty.PropertyType);
-                }
-                sourceProperty.SetValue(source, convertedValue, null);
-              }
-            }
-          } catch {
-            // Ignore conversion errors
-          }
-        };
-      } else if (propertyName == "Value" && @this is NumericUpDown numericUpDown) {
-        numericUpDown.ValueChanged += (s, e) => {
-          try {
-            // Handle nested property paths for control-to-source updates
-            if (dataMember.Contains(".")) {
-              var parts = dataMember.Split('.');
-              object current = source;
-              
-              // Navigate to the parent object
-              for (int i = 0; i < parts.Length - 1; i++) {
-                var property = current?.GetType().GetProperty(parts[i]);
-                current = property?.GetValue(current, null);
-                if (current == null) return;
-              }
-              
-              // Set the final property
-              var finalProperty = current.GetType().GetProperty(parts[parts.Length - 1]);
-              if (finalProperty != null && finalProperty.CanWrite) {
-                object convertedValue = numericUpDown.Value;
-                if (finalProperty.PropertyType != typeof(decimal)) {
-                  convertedValue = Convert.ChangeType(numericUpDown.Value, finalProperty.PropertyType);
-                }
-                finalProperty.SetValue(current, convertedValue, null);
-              }
-            } else {
-              // Simple property path
-              var sourceProperty = source.GetType().GetProperty(dataMember);
-              if (sourceProperty != null && sourceProperty.CanWrite) {
-                object convertedValue = numericUpDown.Value;
-                if (sourceProperty.PropertyType != typeof(decimal)) {
-                  convertedValue = Convert.ChangeType(numericUpDown.Value, sourceProperty.PropertyType);
-                }
-                sourceProperty.SetValue(source, convertedValue, null);
-              }
-            }
-          } catch {
-            // Ignore conversion errors
-          }
-        };
-      }
-    }
-    
-    // Force initial synchronization from data source to control for source-to-control bindings  
-    // Only sync if it's source-to-control (Never) or two-way (OnPropertyChanged but not control-to-source only)
-    bool shouldInitialSync = actualMode == DataSourceUpdateMode.Never || 
-                           (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
-    
-    if (shouldInitialSync) {
-      try {
-        // Get the current value from the data source expression and apply it to the control
-        Expression sourceExpression = leftIsControl ? body.Right : body.Left;
-        var currentValue = EvaluateSourceExpression(sourceExpression, source);
-        
-        // Apply the value even if it's null or empty (important for string properties)
-        var controlProperty = @this.GetType().GetProperty(propertyName);
-        if (controlProperty != null && controlProperty.CanWrite) {
-          // Convert the value to match the control property type
-          object convertedValue = currentValue;
-          if (currentValue != null && currentValue.GetType() != controlProperty.PropertyType) {
-            convertedValue = Convert.ChangeType(currentValue, controlProperty.PropertyType);
+      } else if (actualMode == DataSourceUpdateMode.Never || 
+                (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal)) {
+        // Source-to-control or two-way: sync FROM source TO control initially
+        try {
+          Expression sourceExpression = isLeftControl ? body.Right : body.Left;
+          var currentValue = EvaluateSourceExpression(sourceExpression, source);
+          var controlProperty = @this.GetType().GetProperty(propertyName);
+          if (controlProperty?.CanWrite == true) {
+            var convertedValue = ConvertValue(currentValue, controlProperty.PropertyType);
+            controlProperty.SetValue(@this, convertedValue, null);
           }
           
-          controlProperty.SetValue(@this, convertedValue, null);
+          // For cast expressions in two-way bindings, also write the cast value back to source
+          if (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal && HasCastExpression(sourceExpression)) {
+            UpdateSourceFromControl(source, dataMember, currentValue);
+          }
+        } catch {
+          // Ignore initial sync errors
         }
-      } catch {
-        // Ignore initial sync errors - binding may still work for dynamic updates
       }
     }
+    
+    // Ensure cleanup when control is disposed
+    if (eventHandlers.Count > 0) {
+      @this.Disposed += (s, e) => {
+        foreach (var (notifier, handler) in eventHandlers) {
+          try {
+            notifier.PropertyChanged -= handler;
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+      };
+    }
+    
+    // Add control-to-source binding for test environments
+    bool allowControlToSourceSync = bindingDirection == ExpressionType.GreaterThan || 
+                                   (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
+    
+    if (allowControlToSourceSync) {
+      AddControlToSourceHandlers(@this, source, propertyName, dataMember);
+    }
+    
     return;
 
     string GetBindingSourcePropertyName(Expression e) {
@@ -393,6 +325,8 @@ partial class ControlExtensions {
         sourceObj = bindingSource.Current ?? bindingSource.DataSource;
       }
       
+      if (sourceObj == null) return null;
+      
       var parts = memberPath.Split('.');
       object current = sourceObj;
       
@@ -413,6 +347,114 @@ partial class ControlExtensions {
       }
       
       return current;
+    }
+    
+    object ConvertValue(object value, Type targetType) {
+      if (value == null || targetType == null) return value;
+      if (value.GetType() == targetType) return value;
+      
+      try {
+        return Convert.ChangeType(value, targetType);
+      } catch {
+        return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+      }
+    }
+    
+    object ConvertValueWithTruncation(object value, Type targetType) {
+      if (value == null || targetType == null) return value;
+      if (value.GetType() == targetType) return value;
+      
+      try {
+        // Handle explicit casts to integer types with truncation (not rounding)
+        if (targetType == typeof(int) && value is decimal dec) {
+          return (int)dec; // Truncation
+        }
+        if (targetType == typeof(long) && value is decimal decLong) {
+          return (long)decLong; // Truncation
+        }
+        if (targetType == typeof(short) && value is decimal decShort) {
+          return (short)decShort; // Truncation
+        }
+        if (targetType == typeof(byte) && value is decimal decByte) {
+          return (byte)decByte; // Truncation
+        }
+        
+        // For other conversions, use normal Convert.ChangeType
+        return Convert.ChangeType(value, targetType);
+      } catch {
+        return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+      }
+    }
+    
+    void SubscribeToNestedProperties(object sourceObj, string memberPath, PropertyChangedEventHandler handler, List<(INotifyPropertyChanged, PropertyChangedEventHandler)> handlers) {
+      try {
+        var parts = memberPath.Split('.');
+        object current = sourceObj;
+        
+        for (int i = 0; i < parts.Length - 1; i++) {
+          if (current == null) break;
+          
+          var property = current.GetType().GetProperty(parts[i]);
+          if (property == null) break;
+          
+          var nestedObject = property.GetValue(current, null);
+          if (nestedObject is INotifyPropertyChanged nestedNotify) {
+            nestedNotify.PropertyChanged += handler;
+            handlers.Add((nestedNotify, handler));
+          }
+          current = nestedObject;
+        }
+      } catch {
+        // Ignore subscription errors
+      }
+    }
+    
+    bool HasCastExpression(Expression expr) {
+      // Check if the expression contains a Convert/Cast operation
+      return expr switch {
+        UnaryExpression { NodeType: ExpressionType.Convert } => true,
+        _ => false
+      };
+    }
+    
+    void AddControlToSourceHandlers(Control control, object source, string propertyName, string dataMember) {
+      switch (propertyName) {
+        case "Text" when control is TextBox textBox:
+          textBox.TextChanged += (s, e) => UpdateSourceFromControl(source, dataMember, textBox.Text);
+          break;
+        case "Value" when control is NumericUpDown numericUpDown:
+          numericUpDown.ValueChanged += (s, e) => UpdateSourceFromControl(source, dataMember, numericUpDown.Value);
+          break;
+      }
+    }
+    
+    void UpdateSourceFromControl(object source, string dataMember, object value) {
+      try {
+        if (dataMember.Contains(".")) {
+          var parts = dataMember.Split('.');
+          object current = source;
+          
+          for (int i = 0; i < parts.Length - 1; i++) {
+            var property = current?.GetType().GetProperty(parts[i]);
+            current = property?.GetValue(current, null);
+            if (current == null) return;
+          }
+          
+          var finalProperty = current?.GetType().GetProperty(parts[parts.Length - 1]);
+          if (finalProperty?.CanWrite == true) {
+            var convertedValue = ConvertValue(value, finalProperty.PropertyType);
+            finalProperty.SetValue(current, convertedValue, null);
+          }
+        } else {
+          var sourceProperty = source.GetType().GetProperty(dataMember);
+          if (sourceProperty?.CanWrite == true) {
+            var convertedValue = ConvertValue(value, sourceProperty.PropertyType);
+            sourceProperty.SetValue(source, convertedValue, null);
+          }
+        }
+      } catch {
+        // Ignore conversion errors
+      }
     }
     
     object EvaluateSourceExpression(Expression expr, object sourceObj) {
@@ -438,7 +480,7 @@ partial class ControlExtensions {
         // Get source value and apply the inner conversion (the cast that was explicitly written)
         var sourceValue = sourceObj.GetType().GetProperty(doubleMember.Member.Name)?.GetValue(sourceObj, null);
         if (sourceValue != null) {
-          return Convert.ChangeType(sourceValue, innerConvert.Type); // Use inner conversion (the explicit cast)
+          return ConvertValueWithTruncation(sourceValue, innerConvert.Type); // Use truncation for explicit casts
         }
       }
       
@@ -458,8 +500,8 @@ partial class ControlExtensions {
         if (member.Expression is ParameterExpression param && param.Type == sourceType) {
           var sourceValue = sourceObj.GetType().GetProperty(member.Member.Name)?.GetValue(sourceObj, null);
           if (sourceValue != null && targetType != null) {
-            // Apply the cast
-            return Convert.ChangeType(sourceValue, targetType);
+            // Apply the explicit cast with truncation
+            return ConvertValueWithTruncation(sourceValue, targetType);
           }
           return sourceValue;
         }
@@ -469,7 +511,7 @@ partial class ControlExtensions {
         if (propertyPath != null) {
           var nestedValue = GetSourceValue(sourceObj, propertyPath);
           if (nestedValue != null && targetType != null) {
-            return Convert.ChangeType(nestedValue, targetType);
+            return ConvertValueWithTruncation(nestedValue, targetType);
           }
           return nestedValue;
         }
