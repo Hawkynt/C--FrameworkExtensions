@@ -24,6 +24,15 @@ namespace System.Windows.Forms;
 
 partial class ControlExtensions {
 
+  // High-performance binding information struct
+  private struct BindingInfo {
+    public string DataMember;
+    public bool IsNested;
+    public string[] NestedParts;
+    public bool ShouldUpdateControl;
+    public bool HasCastExpression;
+  }
+
   private static void _AddBinding<TControl, TSource>(this TControl @this, object source, Expression<Func<TControl, TSource, bool>> expression, Type controlType, Type sourceType, DataSourceUpdateMode mode, ConvertEventHandler customConversionHandler = null, BindingCompleteEventHandler bindingCompleteCallback = null) where TControl : Control {
     Guard.Against.ThisIsNull(@this);
     Guard.Against.ArgumentIsNull(source);
@@ -149,40 +158,48 @@ partial class ControlExtensions {
     }
     
     
-    // Add manual PropertyChanged handling for all INotifyPropertyChanged sources
-    // This handles initial sync, nested properties, casts, and control-to-source bindings
+    // Pre-compile fast delegates for blazing performance
+    Expression sourceExpression = isLeftControl ? body.Right : body.Left;
+    var sourcePropertyGetter = CompileSourceGetter(sourceExpression, source.GetType());
+    var controlPropertySetter = CompilePropertySetter(@this.GetType(), propertyName);
+    var controlProperty = @this.GetType().GetProperty(propertyName);
+    var valueConverter = GetValueConverter(controlProperty?.PropertyType);
+    
+    // Pre-analyze binding requirements
+    var bindingInfo = new BindingInfo {
+      DataMember = dataMember,
+      IsNested = dataMember.Contains('.'),
+      NestedParts = dataMember.Contains('.') ? dataMember.Split('.') : null,
+      ShouldUpdateControl = actualMode == DataSourceUpdateMode.Never || 
+                           (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal),
+      HasCastExpression = HasCastExpression(isLeftControl ? body.Right : body.Left)
+    };
+    
+    // Add manual PropertyChanged handling with pre-compiled fast delegates
     var eventHandlers = new List<(INotifyPropertyChanged notifier, PropertyChangedEventHandler handler)>();
     
     if (source is INotifyPropertyChanged notifySource) {
       
       void OnPropertyChanged(object sender, PropertyChangedEventArgs e) {
         try {
-          // Check if this property change is relevant to our binding
-          bool isRelevantChange = string.IsNullOrEmpty(e.PropertyName) || 
-                                 e.PropertyName == dataMember ||
-                                 (dataMember.Contains('.') && dataMember.Split('.').Contains(e.PropertyName));
+          // Fast relevance check - no string operations in hot path
+          if (e.PropertyName != null && 
+              e.PropertyName != bindingInfo.DataMember && 
+              (bindingInfo.NestedParts == null || !IsRelevantNestedChange(e.PropertyName, bindingInfo.NestedParts))) {
+            return;
+          }
           
-          if (isRelevantChange) {
-            // If this is a nested binding and a parent object in the chain changed, rebuild subscriptions
-            if (dataMember.Contains('.') && e.PropertyName != dataMember) {
-              var pathParts = dataMember.Split('.');
-              if (pathParts.Contains(e.PropertyName)) {
-                RebuildNestedSubscriptions(source, dataMember, OnPropertyChanged, eventHandlers);
-              }
-            }
-            
-            // Only update control for source-to-control or two-way bindings
-            bool shouldUpdateControl = actualMode == DataSourceUpdateMode.Never || 
-                                     (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal);
-            
-            if (shouldUpdateControl) {
-              Expression sourceExpression = isLeftControl ? body.Right : body.Left;
-              var currentValue = EvaluateSourceExpression(sourceExpression, source);
-              var controlProperty = @this.GetType().GetProperty(propertyName);
-              if (controlProperty?.CanWrite == true) {
-                var convertedValue = ConvertValue(currentValue, controlProperty.PropertyType);
-                controlProperty.SetValue(@this, convertedValue, null);
-              }
+          // Handle nested object replacement
+          if (bindingInfo.IsNested && e.PropertyName != bindingInfo.DataMember && e.PropertyName != null) {
+            RebuildNestedSubscriptions(source, dataMember, OnPropertyChanged, eventHandlers);
+          }
+          
+          // Fast control update using pre-compiled delegates
+          if (bindingInfo.ShouldUpdateControl) {
+            var sourceValue = sourcePropertyGetter(source);
+            if (sourceValue != null) {
+              var convertedValue = valueConverter(sourceValue);
+              controlPropertySetter(@this, convertedValue);
             }
           }
         } catch {
@@ -202,9 +219,9 @@ partial class ControlExtensions {
       if (bindingDirection == ExpressionType.GreaterThan) {
         // Control-to-source only: sync FROM control TO source initially
         try {
-          var controlProperty = @this.GetType().GetProperty(propertyName);
-          if (controlProperty?.CanRead == true) {
-            var controlValue = controlProperty.GetValue(@this, null);
+          var ctrlProp = @this.GetType().GetProperty(propertyName);
+          if (ctrlProp?.CanRead == true) {
+            var controlValue = ctrlProp.GetValue(@this, null);
             UpdateSourceFromControl(source, dataMember, controlValue);
           }
         } catch {
@@ -214,16 +231,14 @@ partial class ControlExtensions {
                 (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal)) {
         // Source-to-control or two-way: sync FROM source TO control initially
         try {
-          Expression sourceExpression = isLeftControl ? body.Right : body.Left;
           var currentValue = EvaluateSourceExpression(sourceExpression, source);
-          var controlProperty = @this.GetType().GetProperty(propertyName);
           if (controlProperty?.CanWrite == true) {
             var convertedValue = ConvertValue(currentValue, controlProperty.PropertyType);
             controlProperty.SetValue(@this, convertedValue, null);
           }
           
           // For cast expressions in two-way bindings, also write the cast value back to source
-          if (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal && HasCastExpression(sourceExpression))
+          if (actualMode == DataSourceUpdateMode.OnPropertyChanged && bindingDirection == ExpressionType.Equal && bindingInfo.HasCastExpression)
             UpdateSourceFromControl(source, dataMember, currentValue);
           
         } catch {
@@ -435,6 +450,108 @@ partial class ControlExtensions {
       return expr switch {
         UnaryExpression { NodeType: ExpressionType.Convert } => true,
         _ => false
+      };
+    }
+    
+    
+    // Fast relevance check using pre-split array
+    bool IsRelevantNestedChange(string propertyName, string[] nestedParts) {
+      // Use simple loop instead of LINQ for maximum performance
+      for (int i = 0; i < nestedParts.Length; i++) {
+        if (nestedParts[i] == propertyName) {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // Compile high-performance source expression getter that handles casts and nested properties
+    Func<object, object> CompileSourceGetter(Expression sourceExpr, Type sourceType) {
+      try {
+        var sourceParam = Expression.Parameter(typeof(object), "source");
+        var castSource = Expression.Convert(sourceParam, sourceType);
+        
+        // Replace the source parameter in the expression with our casted parameter
+        var replacedExpr = ReplaceParameter(sourceExpr, sourceType, castSource);
+        
+        // Convert result to object for boxing
+        var boxResult = Expression.Convert(replacedExpr, typeof(object));
+        return Expression.Lambda<Func<object, object>>(boxResult, sourceParam).Compile();
+      } catch {
+        return _ => null; // Fallback for compile errors
+      }
+    }
+    
+    // Helper to replace parameter references in expressions
+    Expression ReplaceParameter(Expression expr, Type sourceType, Expression replacement) {
+      return expr switch {
+        ParameterExpression param when param.Type == sourceType => replacement,
+        MemberExpression member => Expression.MakeMemberAccess(
+          member.Expression != null ? ReplaceParameter(member.Expression, sourceType, replacement) : null,
+          member.Member),
+        UnaryExpression unary => Expression.MakeUnary(
+          unary.NodeType, 
+          ReplaceParameter(unary.Operand, sourceType, replacement), 
+          unary.Type),
+        MethodCallExpression method => Expression.Call(
+          method.Object != null ? ReplaceParameter(method.Object, sourceType, replacement) : null,
+          method.Method,
+          method.Arguments.Select(arg => ReplaceParameter(arg, sourceType, replacement))),
+        _ => expr
+      };
+    }
+    
+    // Compile high-performance property setter delegate  
+    Action<object, object> CompilePropertySetter(Type controlType, string propertyName) {
+      try {
+        var controlParam = Expression.Parameter(typeof(object), "control");
+        var valueParam = Expression.Parameter(typeof(object), "value");
+        
+        var castControl = Expression.Convert(controlParam, controlType);
+        var property = controlType.GetProperty(propertyName);
+        if (property == null || !property.CanWrite) return (_, __) => { };
+        
+        var castValue = Expression.Convert(valueParam, property.PropertyType);
+        var setProperty = Expression.Call(castControl, property.GetSetMethod(), castValue);
+        
+        return Expression.Lambda<Action<object, object>>(setProperty, controlParam, valueParam).Compile();
+      } catch {
+        return (_, __) => { }; // Fallback for compile errors
+      }
+    }
+    
+    // Get optimized value converter based on control property type
+    Func<object, object> GetValueConverter(Type controlPropertyType) {
+      if (controlPropertyType == null) {
+        return value => value;
+      }
+      
+      // Pre-compile common conversions for maximum speed
+      if (controlPropertyType == typeof(decimal)) {
+        return value => value switch {
+          decimal d => d,
+          int i => (decimal)i,
+          _ => Convert.ChangeType(value, typeof(decimal))
+        };
+      }
+      if (controlPropertyType == typeof(string)) {
+        return value => value?.ToString() ?? "";
+      }
+      if (controlPropertyType == typeof(int)) {
+        return value => value switch {
+          int i => i,
+          decimal d => (int)d,
+          _ => Convert.ChangeType(value, typeof(int))
+        };
+      }
+      
+      // Fallback to general conversion
+      return value => {
+        try {
+          return Convert.ChangeType(value, controlPropertyType);
+        } catch {
+          return controlPropertyType.IsValueType ? Activator.CreateInstance(controlPropertyType) : null;
+        }
       };
     }
     
