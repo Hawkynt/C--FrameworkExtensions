@@ -933,6 +933,13 @@ public static partial class StringExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Invoke(char c) => c < 32 || c >= 127 || this._invalidFileNameChars.Contains(c);
   }
+      
+  // Reserved names (Windows)
+  private static readonly HashSet<string> _ReservedFileNameBases = new(StringComparer.OrdinalIgnoreCase) {
+    "CON","PRN","AUX","NUL",
+    "COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9",
+    "LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9",
+  };
 
   /// <summary>
   ///   Sanitizes the text to use as a filename.
@@ -943,9 +950,8 @@ public static partial class StringExtensions {
   public static unsafe string SanitizeForFileName(this string @this, char sanitation = '_') {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNullOrEmpty(@this);
-
+        
     var result = @this;
-
     var length = (uint)@this.Length;
     fixed (char* srcPointer = @this) {
       var currentPointer = srcPointer;
@@ -977,6 +983,14 @@ public static partial class StringExtensions {
 
         break;
       }
+    }
+
+    // Reserved names: Check basename without extension (ignore trailing '.' and ' ')
+    var baseName = Path.GetFileNameWithoutExtension(result);
+    if (!string.IsNullOrEmpty(baseName)) {
+      baseName = baseName.TrimEnd(' ', '.');
+      if (_ReservedFileNameBases.Contains(baseName))
+        result = sanitation + result;
     }
 
     return result;

@@ -17,7 +17,7 @@ public class StringComprehensiveTest {
   [TestCase("123.456e-2", 1234.56f)] // Scientific notation behavior
   [Category("HappyPath"), Category("CultureSensitive")]
   public void ParseFloat_ValidInput_ReturnsCorrectValue(string input, float expected) {
-    var result = input.ParseFloat();
+    var result = input.ParseFloat(new CultureInfo("de-DE"));
     Assert.AreEqual(expected, result, 0.0001f);
   }
 
@@ -26,7 +26,7 @@ public class StringComprehensiveTest {
   [Category("EdgeCase")]
   public void ParseFloat_InvalidInput_DoesNotThrow(string input) =>
     // Based on actual behavior, these invalid inputs may be handled gracefully
-    Assert.DoesNotThrow(() => input.ParseFloat());
+    Assert.DoesNotThrow(() => input.ParseFloat(new CultureInfo("de-DE")));
 
   [TestCase("")]
   [TestCase("abc")]
@@ -99,7 +99,7 @@ public class StringComprehensiveTest {
   [TestCase("0", 0.0)]
   [TestCase("-999.999", -999999.0)] // Based on actual culture parsing behavior
   public void ParseDouble_ValidInput_ReturnsCorrectValue(string input, double expected) {
-    var result = input.ParseDouble();
+    var result = input.ParseDouble(new CultureInfo("de-DE"));
     Assert.AreEqual(expected, result, 0.0001);
   }
 
@@ -159,13 +159,13 @@ public class StringComprehensiveTest {
   [TestCase("Rodriguez", "R3620")]
   [TestCase("Wilson", "W4250")]
   public void GetSoundexRepresentation_CommonNames_ReturnsExpectedCodes(string input, string expected) {
-    var result = input.GetSoundexRepresentation();
+    var result = input.GetSoundexRepresentation(new CultureInfo("de-DE"));
     Assert.AreEqual(expected, result);
   }
 
   [Test]
   public void GetSoundexRepresentation_EmptyString_ReturnsEmptyCode() {
-    var result = "".GetSoundexRepresentation();
+    var result = "".GetSoundexRepresentation(new CultureInfo("de-DE"));
     Assert.AreEqual("00000", result);
   }
 

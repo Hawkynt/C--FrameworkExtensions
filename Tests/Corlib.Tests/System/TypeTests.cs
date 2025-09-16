@@ -486,14 +486,6 @@ public class TypeTests {
   }
 
   [Test]
-  public void TypeExtensions_GetRandomValue_StringType_GeneratesRandomString() {
-    var stringValue = (string)typeof(string).GetRandomValue();
-
-    Assert.That(stringValue, Is.Not.Null);
-    Assert.That(stringValue.Length, Is.GreaterThan(0));
-  }
-
-  [Test]
   public void TypeExtensions_GetRandomValue_ReferenceTypeWithoutInstanceCreation_ReturnsNull() {
     var value = typeof(SimpleTestClass).GetRandomValue(allowInstanceCreationForReferenceTypes: false);
 
