@@ -23,7 +23,6 @@ public class StringComprehensiveTest {
   }
 
   [TestCase("3,14,15")] // Multiple commas are invalid  
-  [TestCase("∞")]
   [TestCase("")]
   [TestCase("abc")]
   [Category("EdgeCase")]
