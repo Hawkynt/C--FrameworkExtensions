@@ -234,7 +234,7 @@ public partial class StringTests {
 
   [Test]
   [TestCase("Hello World", "Hello", "Hi", StringComparison.Ordinal, "Hi World")]
-  [TestCase("Test Test Test", "Test", "Best", StringComparison.Ordinal, "Best Best Best")]
+  [TestCase("Test Test Test", "Test", "Best", StringComparison.Ordinal, "Best Test Test")]
   [TestCase("hello world", "HELLO", "Hi", StringComparison.OrdinalIgnoreCase, "Hi world")]
   [TestCase("No Match", "xyz", "abc", StringComparison.Ordinal, "No Match")]
   [Category("HappyPath")]
