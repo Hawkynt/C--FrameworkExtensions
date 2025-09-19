@@ -225,12 +225,11 @@ public static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Repeat(this string @this, int count) {
     Against.ThisIsNull(@this);
-    Against.ArgumentIsNullOrEmpty(@this);
-    Against.CountBelowOrEqualZero(count);
-    Against.ValuesBelowOrEqual(count, 1);
+    Against.CountBelowZero(count);
 
     return count switch {
       0 => string.Empty,
+      _ when @this.Length == 0 => string.Empty,
       _ when @this.Length == 1 => @this[0].Repeat(count),
       1 => @this,
       2 => @this + @this,
@@ -273,7 +272,7 @@ public static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string RemoveFirst(this string @this, int count) {
     Against.ThisIsNull(@this);
-    Against.CountOutOfRange(count, @this.Length);
+    Against.CountBelowZero(count);
 
     return count < @this.Length ? @this[count..] : string.Empty;
   }
@@ -328,7 +327,7 @@ public static partial class StringExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string RemoveLast(this string @this, int count) {
     Against.ThisIsNull(@this);
-    Against.CountOutOfRange(count, @this.Length);
+    Against.CountBelowZero(count);
 
     return count < @this.Length ? @this[..^count] : string.Empty;
   }
