@@ -533,6 +533,7 @@ partial class StringExtensions {
     const int MODE_START = 0, MODE_UPPER = 1, MODE_LOWER = 2, MODE_DIGIT = 3, MODE_OTHER = 4;
     int prevType = MODE_START, wordIndex = 0, length = input.Length;
     StringBuilder? sb = null;
+    bool justAddedSeparator = false;
 
     for (var i = 0; i < length; ++i) {
       var c = input[i];
@@ -541,16 +542,20 @@ partial class StringExtensions {
                        : char.IsDigit(c) ? MODE_DIGIT
                        : MODE_OTHER;
 
-      // ── DROP “other” chars, except preserve existing correct separators ──
+      // ── DROP "other" chars, except preserve existing correct separators ──
       if (currentType == MODE_OTHER) {
         if (isSnakeOrKebab && c == separator) {
-          // it’s exactly the separator we want, so leave input as-is (no sb)
+          // it's exactly the separator we want, so leave input as-is (no sb) unless we're already transforming
+          if (sb != null)
+            sb.Append(separator);
+          justAddedSeparator = true;
           prevType = MODE_OTHER;
           continue;
         }
 
         // truly unwanted char → transformation
         sb ??= new StringBuilder(length).Append(input, 0, i);
+        justAddedSeparator = false;
         prevType = MODE_OTHER;
         continue;
       }
@@ -578,12 +583,14 @@ partial class StringExtensions {
         _ => true
       };
 
-      // ── INSERT separator for snake/kebab if—and only if—it wasn’t already there ──
-      if (isNewWord && isSnakeOrKebab && wordIndex > 0)
-        if (!(i > 0 && input[i - 1] == separator)) {
-          sb ??= new StringBuilder(length).Append(input, 0, i);
-          sb.Append(separator);
-        }
+      // ── INSERT separator for snake/kebab if—and only if—it wasn't already there ──
+      if (isNewWord && isSnakeOrKebab && wordIndex > 0 && !justAddedSeparator) {
+        sb ??= new StringBuilder(length).Append(input, 0, i);
+        sb.Append(separator);
+        justAddedSeparator = true;
+      } else if (!isNewWord || !isSnakeOrKebab) {
+        justAddedSeparator = false;
+      }
 
       // ── DETERMINE output character ──
       char outChar;
@@ -613,6 +620,10 @@ partial class StringExtensions {
                    .Append(outChar);
       } else
         sb.Append(outChar);
+
+      // Reset separator flag after adding actual character
+      if (currentType != MODE_OTHER)
+        justAddedSeparator = false;
 
       if (isNewWord)
         ++wordIndex;
