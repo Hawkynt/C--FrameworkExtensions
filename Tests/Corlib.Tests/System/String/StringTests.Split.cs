@@ -34,16 +34,19 @@ public partial class StringTests {
     yield return new("trailing,", ",", null, new[] { "trailing", "" });
     yield return new(",leading", ",", null, new[] { "", "leading" });
     yield return new(",,empty,,", ",", null, new[] { "", "", "empty", "", "" });
+    yield return new("test", null, null, new[] { "test" });
+    yield return new("test abc", null, null, new[] { "test", "abc" });
+    yield return new("abc\ntest", "", null, new[] { "abc", "test" });
 
     // Max parameter cases
     yield return new("a,b,c,d", ",", 2, new[] { "a", "b,c,d" });
     yield return new("a,b,c,d", ",", 3, new[] { "a", "b", "c,d" });
-    yield return new("a,b,c,d", ",", 0, new[] { "a,b,c,d" });
+    yield return new("a,b,c,d", ",", 0, new string[0] );
     yield return new("a,b,c,d", ",", 10, new[] { "a", "b", "c", "d" });
 
     // Exception cases
-    yield return new(null, ",", null, null, typeof(ArgumentNullException));
-    yield return new("test", null, null, null, typeof(ArgumentNullException));
+    yield return new(null, ",", null, null, typeof(NullReferenceException));
+    
   }
 
   #endregion

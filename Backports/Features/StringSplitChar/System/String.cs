@@ -35,14 +35,15 @@ public static partial class StringPolyfills {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split([separator], count, options)
-  ;
+    => separator is { Length: not 0 }
+      ? @this.Split([separator], count, options)  // null => whitespace semantics
+      : @this.Split((char[])null, count, options);  // explicit string separator
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split([separator], options)
-  ;
-
+    => separator is { Length: not 0 }
+      ? @this.Split([separator], options)         // null => whitespace semantics
+      : @this.Split((char[])null, options);         // explicit string separator
 }
 
 #endif
