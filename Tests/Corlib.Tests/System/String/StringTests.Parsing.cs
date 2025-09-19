@@ -37,7 +37,7 @@ public partial class StringTests {
     // Arrange
     Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
     const string input = "1.23e-4";
-    const float expected = 0.0123f;
+    const float expected = 0.000123f;
 
     // Act
     var result = input.ParseFloat();
@@ -105,6 +105,7 @@ public partial class StringTests {
   public void ParseDouble_VeryLargeNumber_ReturnsCorrectValue() {
     // Arrange
     const string input = "1.7976931348623157E+308"; // Near Double.MaxValue
+    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
     // Act
     var result = input.ParseDouble();

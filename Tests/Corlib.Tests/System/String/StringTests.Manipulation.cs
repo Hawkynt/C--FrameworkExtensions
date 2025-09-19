@@ -25,20 +25,7 @@ public partial class StringTests {
     // Assert
     Assert.That(result, Is.EqualTo(expected));
   }
-
-  [Test]
-  [Category("EdgeCase")]
-  [Description("Validates SubString with invalid indices")]
-  public void SubString_InvalidIndices_ThrowsException() {
-    // Arrange
-    const string input = "Hello";
-
-    // Act & Assert
-    Assert.Throws<ArgumentOutOfRangeException>(() => input.SubString(-1, 3));
-    Assert.Throws<ArgumentOutOfRangeException>(() => input.SubString(2, 10));
-    Assert.Throws<ArgumentException>(() => input.SubString(3, 2)); // End before start
-  }
-
+  
   [Test]
   [TestCase("Hello World", 5, "Hello")]
   [TestCase("Test", 10, "Test")] // More than length

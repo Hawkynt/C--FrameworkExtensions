@@ -10,27 +10,27 @@ namespace System;
 public class StringComprehensiveTest {
   #region String Parsing Methods Tests (T4 Generated)
 
-  [TestCase("3.14", 314f)] // Actual behavior based on culture
+  [TestCase("3,14", 3.14f)] // German decimal format with comma
   [TestCase("0", 0f)]
-  [TestCase("-123.45", -12345f)] // Actual behavior based on culture
+  [TestCase("-123,45", -123.45f)] // German decimal format with comma
   [TestCase("1e10", 1e10f)]
-  [TestCase("123.456e-2", 1234.56f)] // Scientific notation behavior
+  [TestCase("123,456e-2", 1.23456f)] // Scientific notation with German decimal
   [Category("HappyPath"), Category("CultureSensitive")]
   public void ParseFloat_ValidInput_ReturnsCorrectValue(string input, float expected) {
-    var result = input.ParseFloat(new CultureInfo("de-DE"));
+    Thread.CurrentThread.CurrentCulture = new("de-DE");
+    var result = input.ParseFloat();
     Assert.AreEqual(expected, result, 0.0001f);
   }
 
-  [TestCase("3.14.15")]
+  [TestCase("3,14,15")] // Multiple commas are invalid  
   [TestCase("∞")]
-  [Category("EdgeCase")]
-  public void ParseFloat_InvalidInput_DoesNotThrow(string input) =>
-    // Based on actual behavior, these invalid inputs may be handled gracefully
-    Assert.DoesNotThrow(() => input.ParseFloat(new CultureInfo("de-DE")));
-
   [TestCase("")]
   [TestCase("abc")]
-  public void ParseFloat_InvalidInput_ThrowsException(string input) => Assert.Throws<FormatException>(() => input.ParseFloat());
+  [Category("EdgeCase")]
+  public void ParseFloat_InvalidInput_ThrowsException(string input) {
+    Thread.CurrentThread.CurrentCulture = new("de-DE");
+    Assert.Throws<FormatException>(() => input.ParseFloat());
+  }
 
   [Test]
   public void ParseFloat_NullString_ThrowsException() {
@@ -54,15 +54,30 @@ public class StringComprehensiveTest {
     Assert.AreEqual(123f, result, 0.01f);
   }
 
-  [TestCase("3.14", true, 314f)] // Culture-specific parsing
+  [TestCase("123", true, 123f)]
   [TestCase("abc", false, 0f)]
   [TestCase("", false, 0f)]
-  [TestCase("123", true, 123f)]
+  [Category("HappyPath")]
   public void TryParseFloat_VariousInputs_ReturnsExpectedResults(string input, bool expectedSuccess, float expectedValue) {
+    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
     var success = input.TryParseFloat(out var result);
     Assert.AreEqual(expectedSuccess, success);
     if (expectedSuccess)
       Assert.AreEqual(expectedValue, result, 0.001f);
+  }
+
+  [Test]
+  [Category("CultureSensitive")]
+  public void TryParseFloat_CultureSpecific_ParsesCorrectly() {
+    // Test with German culture
+    var success = "3,14".TryParseFloat(new CultureInfo("de-DE"), out var result);
+    Assert.IsTrue(success);
+    Assert.AreEqual(3.14f, result, 0.001f);
+    
+    // Test with US culture  
+    success = "3.14".TryParseFloat(new CultureInfo("en-US"), out result);
+    Assert.IsTrue(success);
+    Assert.AreEqual(3.14f, result, 0.001f);
   }
 
   [Test]
@@ -95,11 +110,12 @@ public class StringComprehensiveTest {
     Assert.AreEqual(99f, result);
   }
 
-  [TestCase("123.45", 12345.0)] // Based on actual culture parsing behavior
+  [TestCase("123,45", 123.45)] // German decimal format with comma
   [TestCase("0", 0.0)]
-  [TestCase("-999.999", -999999.0)] // Based on actual culture parsing behavior
+  [TestCase("-999,999", -999.999)] // German decimal format with comma
   public void ParseDouble_ValidInput_ReturnsCorrectValue(string input, double expected) {
-    var result = input.ParseDouble(new CultureInfo("de-DE"));
+    Thread.CurrentThread.CurrentCulture = new("de-DE");
+    var result = input.ParseDouble();
     Assert.AreEqual(expected, result, 0.0001);
   }
 
@@ -382,6 +398,7 @@ public class StringComprehensiveTest {
   [Test]
   public void StringParsing_BoundaryValues_HandlesCorrectly() {
     // Test boundary values for different types - allow for floating point precision differences
+    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
     Assert.AreEqual(float.MaxValue, float.MaxValue.ToString().ParseFloat(), float.MaxValue * 0.0001f);
     Assert.AreEqual(float.MinValue, float.MinValue.ToString().ParseFloat(), Math.Abs(float.MinValue * 0.0001f));
     Assert.AreEqual(byte.MaxValue, byte.MaxValue.ToString().ParseByte());
@@ -407,17 +424,19 @@ public class StringComprehensiveTest {
   }
 
   [Test]
+  [Category("CultureSensitive")]
   public void StringParsing_CultureInvariant_ConsistentResults() {
     var originalCulture = Thread.CurrentThread.CurrentCulture;
     try {
-      // Test with different cultures
+      // Test that InvariantCulture parsing gives consistent results regardless of current culture
       Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-      var result1 = "123.45".ParseFloat();
+      var result1 = "123.45".ParseFloat(CultureInfo.InvariantCulture);
 
       Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
       var result2 = "123.45".ParseFloat(CultureInfo.InvariantCulture);
 
       Assert.AreEqual(result1, result2);
+      Assert.AreEqual(123.45f, result1, 0.001f);
     } finally {
       Thread.CurrentThread.CurrentCulture = originalCulture;
     }
