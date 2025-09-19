@@ -555,41 +555,35 @@ public static partial class StringExtensions {
   /// </example>
   public static string SubString(this string @this, int start, int end = 0) {
     Against.ThisIsNull(@this);
-    
-    var result = string.Empty;
+
+
     var length = @this.Length;
+    if (length == 0)
+      return string.Empty;
 
-    // ReSharper disable once InvertIf (perf-opt)
-    if (length > 0) {
-      // if (start < 0) start += length
-      // if (end <= 0) end += length
-      var startMask = start;
-      var endMask = end - 1;
-      startMask >>= 31;
-      endMask >>= 31;
-      startMask &= length;
-      endMask &= length;
-      start += startMask;
-      end += endMask;
+    // if (start < 0) start += length;
+    var startMask = start >> 31;          // -1 if start < 0 else 0
+    start += length & startMask;
 
-      // if (start < 0) start = 0
-      startMask = ~start;
-      startMask >>= 31;
-      start &= startMask;
+    // if (start < 0) start = 0;
+    start &= ~(start >> 31);
 
-      if (start != end) {
-        var len = end - start;
+    // if (end <= 0) end += length;   (0 -> length, -1 -> length-1, etc.)
+    var endMask = (end - 1) >> 31;        // -1 if end <= 0 else 0
+    end += length & endMask;
 
-        // if (len > length) len = length - start
-        len -= (len - (length - start)) & ((length - len) >> 31);
+    // inclusive length
+    var len = end - start + 1;
 
-        if (len > 0)
-          result = @this.Substring(start, len);
-      } else
-        result = @this[start].ToString();
-    }
+    // clamp upper bound: len = min(len, length - start)
+    var maxLen = length - start;
+    var overMask = (maxLen - len) >> 31;               // -1 if len > maxLen
+    len -= (len - maxLen) & overMask;
 
-    return result;
+    // clamp lower bound: len = max(len, 0)
+    len &= ~(len >> 31);
+
+    return len == 0 ? string.Empty : @this.Substring(start, len);
   }
 
   /// <summary>

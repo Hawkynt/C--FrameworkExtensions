@@ -12,7 +12,7 @@ public partial class StringTests {
   #region Substring Operations Tests
 
   [Test]
-  [TestCase("Hello World", 2, 6, "llo Wo")]
+  [TestCase("Hello World", 2, 6, "llo W")]
   [TestCase("Test", 0, 4, "Test")]
   [TestCase("Test", 1, 2, "es")]
   [TestCase("A", 0, 1, "A")]

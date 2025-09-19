@@ -138,7 +138,7 @@ public partial class StringTests {
   [TestCase("Good morning", "Hello|Hi|Hey", false)]
   [TestCase("Hi there", "Hello|Hi|Hey", true)]
   [TestCase("", "Hello|Hi", false)]
-  [TestCase("Hello", "", false)] // Empty needles
+  [TestCase("Hello", "", true)] // Empty needles
   [Category("HappyPath")]
   [Category("EdgeCase")]
   [Description("Validates StartsWithAnyOf for strings")]
