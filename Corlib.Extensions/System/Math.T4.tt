@@ -922,6 +922,58 @@ public static partial class MathEx {
 <#}#>
 #endif
 
+  #region Clamping
+
+<#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>
+  /// <summary>
+  /// Clamps the specified value between a minimum and maximum value.
+  /// </summary>
+  /// <param name="this">The value to clamp.</param>
+  /// <param name="min">The minimum allowed value.</param>
+  /// <param name="max">The maximum allowed value.</param>
+  /// <returns>The clamped value: min if <paramref name="this"/> &lt; min, max if <paramref name="this"/> &gt; max, otherwise <paramref name="this"/>.</returns>
+  /// <exception cref="ArgumentException">Thrown when <paramref name="max"/> is less than <paramref name="min"/>.</exception>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = <#= type == "float" ? "15.5f" : type == "double" ? "15.5" : type == "decimal" ? "15.5m" : "15" #>;
+  /// <#=type#> result = value.Clamp(<#= type == "float" ? "10f, 20f" : type == "double" ? "10.0, 20.0" : type == "decimal" ? "10m, 20m" : "10, 20" #>); // result = <#= type == "float" ? "15.5f" : type == "double" ? "15.5" : type == "decimal" ? "15.5m" : "15" #>
+  /// <#=type#> clamped = <#= type == "float" ? "25f" : type == "double" ? "25.0" : type == "decimal" ? "25m" : "25" #>.Clamp(<#= type == "float" ? "10f, 20f" : type == "double" ? "10.0, 20.0" : type == "decimal" ? "10m, 20m" : "10, 20" #>); // result = <#= type == "float" ? "20f" : type == "double" ? "20.0" : type == "decimal" ? "20m" : "20" #>
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if SUPPORTS_MATH_CLAMP
+  public static <#=type#> Clamp(this <#=type#> @this, <#=type#> min, <#=type#> max) => Math.Clamp(@this, min, max);
+#else
+  public static <#=type#> Clamp(this <#=type#> @this, <#=type#> min, <#=type#> max) {
+    Against.ValuesBelow(max, min);
+    return @this < min ? min : @this > max ? max : @this;
+  }
+#endif
+
+  /// <summary>
+  /// Clamps the specified value between a minimum and maximum value without parameter validation.
+  /// This is a high-performance variant that does not check if <paramref name="max"/> &gt;= <paramref name="min"/>.
+  /// </summary>
+  /// <param name="this">The value to clamp.</param>
+  /// <param name="min">The minimum allowed value.</param>
+  /// <param name="max">The maximum allowed value.</param>
+  /// <returns>The clamped value: min if <paramref name="this"/> &lt; min, max if <paramref name="this"/> &gt; max, otherwise <paramref name="this"/>.</returns>
+  /// <remarks>
+  /// This method does not validate that <paramref name="max"/> &gt;= <paramref name="min"/>. If <paramref name="max"/> &lt; <paramref name="min"/>, the behavior is undefined.
+  /// Use this method when you are certain the parameters are valid and need maximum performance.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// <#=type#> value = <#= type == "float" ? "15.5f" : type == "double" ? "15.5" : type == "decimal" ? "15.5m" : "15" #>;
+  /// <#=type#> result = value.ClampUnchecked(<#= type == "float" ? "10f, 20f" : type == "double" ? "10.0, 20.0" : type == "decimal" ? "10m, 20m" : "10, 20" #>); // result = <#= type == "float" ? "15.5f" : type == "double" ? "15.5" : type == "decimal" ? "15.5m" : "15" #>
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static <#=type#> ClampUnchecked(this <#=type#> @this, <#=type#> min, <#=type#> max) => @this < min ? min : @this > max ? max : @this;
+
+<#}#>
+  #endregion
+
   #region fast min/max/avg
 
 <#foreach (var type in new[]{"sbyte","byte","short","ushort","int","uint","long","ulong","float","double","decimal"}){#>

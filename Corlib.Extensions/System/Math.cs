@@ -1176,39 +1176,6 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static byte FlipBit(this byte @this, byte index) => (byte)(@this ^ (1U << (index & 7)));
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool GetBit(this byte @this, byte index) => (@this & (1U << (index & 7))) != 0;
-
-  /// <summary>
-  /// Sets the bit at the specified index in the <see cref="byte"/> to 1.
-  /// </summary>
-  /// <param name="this">The source byte.</param>
-  /// <param name="index">The bit index (0–7). Values outside the range are masked with 7.</param>
-  /// <returns>A new <see cref="byte"/> with the specified bit set.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0b_0000_0000;
-  /// byte result = value.SetBit(1); // result == 0b_0000_0010
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte SetBit(this byte @this, byte index) => (byte)(@this | (1U << (index & 7)));
-
-  /// <summary>
-  /// Clears (sets to 0) the bit at the specified index in the <see cref="byte"/>.
-  /// </summary>
-  /// <param name="this">The source byte.</param>
-  /// <param name="index">The bit index (0–7). Values outside the range are masked with 7.</param>
-  /// <returns>A new <see cref="byte"/> with the specified bit cleared.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0b_1111_1111;
-  /// byte result = value.ClearBit(2); // result == 0b_1111_1011
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte ClearBit(this byte @this, byte index) => (byte)(@this & ~(1U << (index & 7)));
-
   /// <summary>
   /// Toggles (inverts) the bit at the specified index in the <see cref="ushort"/> value.
   /// </summary>
@@ -1223,39 +1190,6 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ushort FlipBit(this ushort @this, byte index) => (ushort)(@this ^ (1U << (index & 15)));
-  
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool GetBit(this ushort @this, byte index) => (@this & (1U << (index & 15))) != 0;
-
-  /// <summary>
-  /// Sets the bit at the specified index in the <see cref="ushort"/> to 1.
-  /// </summary>
-  /// <param name="this">The source ushort.</param>
-  /// <param name="index">The bit index (0–15). Values outside the range are masked with 15.</param>
-  /// <returns>A new <see cref="ushort"/> with the specified bit set.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0;
-  /// ushort result = value.SetBit(3); // result == 0b_0000_0000_0000_1000
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort SetBit(this ushort @this, byte index) => (ushort)(@this | (1U << (index & 15)));
-
-  /// <summary>
-  /// Clears (sets to 0) the bit at the specified index in the <see cref="ushort"/>.
-  /// </summary>
-  /// <param name="this">The source ushort.</param>
-  /// <param name="index">The bit index (0–15). Values outside the range are masked with 15.</param>
-  /// <returns>A new <see cref="ushort"/> with the specified bit cleared.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0xFFFF;
-  /// ushort result = value.ClearBit(15); // result == 0x7FFF
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort ClearBit(this ushort @this, byte index) => (ushort)(@this & ~(1U << (index & 15)));
 
   /// <summary>
   /// Toggles (inverts) the bit at the specified index in the <see cref="uint"/> value.
@@ -1271,39 +1205,6 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static uint FlipBit(this uint @this, byte index) => @this ^ (1U << (index & 31));
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool GetBit(this uint @this, byte index) => (@this & (1U << (index & 31))) != 0;
-
-  /// <summary>
-  /// Sets the bit at the specified index in the <see cref="uint"/> to 1.
-  /// </summary>
-  /// <param name="this">The source uint.</param>
-  /// <param name="index">The bit index (0–31). Values outside the range are masked with 31.</param>
-  /// <returns>A new <see cref="uint"/> with the specified bit set.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0U;
-  /// uint result = value.SetBit(30); // result == 1U &lt;&lt; 30
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint SetBit(this uint @this, byte index) => @this | (1U << (index & 31));
-
-  /// <summary>
-  /// Clears (sets to 0) the bit at the specified index in the <see cref="uint"/>.
-  /// </summary>
-  /// <param name="this">The source uint.</param>
-  /// <param name="index">The bit index (0–31). Values outside the range are masked with 31.</param>
-  /// <returns>A new <see cref="uint"/> with the specified bit cleared.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0xFFFFFFFF;
-  /// uint result = value.ClearBit(0); // result == 0xFFFFFFFE
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint ClearBit(this uint @this, byte index) => @this & ~(1U << (index & 31));
 
   /// <summary>
   /// Toggles (inverts) the bit at the specified index in the <see cref="ulong"/> value.
@@ -1321,7 +1222,61 @@ public static partial class MathEx {
   public static ulong FlipBit(this ulong @this, byte index) => @this ^ (1UL << (index & 63));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this byte @this, byte index) => (@this & (1U << (index & 7))) != 0;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this ushort @this, byte index) => (@this & (1U << (index & 15))) != 0;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this uint @this, byte index) => (@this & (1U << (index & 31))) != 0;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool GetBit(this ulong @this, byte index) => (@this & (1U << (index & 63))) != 0;
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="byte"/> to 1.
+  /// </summary>
+  /// <param name="this">The source byte.</param>
+  /// <param name="index">The bit index (0–7). Values outside the range are masked with 7.</param>
+  /// <returns>A new <see cref="byte"/> with the specified bit set.</returns>
+  /// <example>
+  /// <code>
+  /// byte value = 0b_0000_0000;
+  /// byte result = value.SetBit(1); // result == 0b_0000_0010
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte SetBit(this byte @this, byte index) => (byte)(@this | (1U << (index & 7)));
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="ushort"/> to 1.
+  /// </summary>
+  /// <param name="this">The source ushort.</param>
+  /// <param name="index">The bit index (0–15). Values outside the range are masked with 15.</param>
+  /// <returns>A new <see cref="ushort"/> with the specified bit set.</returns>
+  /// <example>
+  /// <code>
+  /// ushort value = 0;
+  /// ushort result = value.SetBit(3); // result == 0b_0000_0000_0000_1000
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort SetBit(this ushort @this, byte index) => (ushort)(@this | (1U << (index & 15)));
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="uint"/> to 1.
+  /// </summary>
+  /// <param name="this">The source uint.</param>
+  /// <param name="index">The bit index (0–31). Values outside the range are masked with 31.</param>
+  /// <returns>A new <see cref="uint"/> with the specified bit set.</returns>
+  /// <example>
+  /// <code>
+  /// uint value = 0U;
+  /// uint result = value.SetBit(30); // result == 1U &lt;&lt; 30
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint SetBit(this uint @this, byte index) => @this | (1U << (index & 31));
 
   /// <summary>
   /// Sets the bit at the specified index in the <see cref="ulong"/> to 1.
@@ -1339,6 +1294,51 @@ public static partial class MathEx {
   public static ulong SetBit(this ulong @this, byte index) => @this | (1UL << (index & 63));
 
   /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="byte"/>.
+  /// </summary>
+  /// <param name="this">The source byte.</param>
+  /// <param name="index">The bit index (0–7). Values outside the range are masked with 7.</param>
+  /// <returns>A new <see cref="byte"/> with the specified bit cleared.</returns>
+  /// <example>
+  /// <code>
+  /// byte value = 0b_1111_1111;
+  /// byte result = value.ClearBit(2); // result == 0b_1111_1011
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ClearBit(this byte @this, byte index) => (byte)(@this & ~(1U << (index & 7)));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="ushort"/>.
+  /// </summary>
+  /// <param name="this">The source ushort.</param>
+  /// <param name="index">The bit index (0–15). Values outside the range are masked with 15.</param>
+  /// <returns>A new <see cref="ushort"/> with the specified bit cleared.</returns>
+  /// <example>
+  /// <code>
+  /// ushort value = 0xFFFF;
+  /// ushort result = value.ClearBit(15); // result == 0x7FFF
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort ClearBit(this ushort @this, byte index) => (ushort)(@this & ~(1U << (index & 15)));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="uint"/>.
+  /// </summary>
+  /// <param name="this">The source uint.</param>
+  /// <param name="index">The bit index (0–31). Values outside the range are masked with 31.</param>
+  /// <returns>A new <see cref="uint"/> with the specified bit cleared.</returns>
+  /// <example>
+  /// <code>
+  /// uint value = 0xFFFFFFFF;
+  /// uint result = value.ClearBit(0); // result == 0xFFFFFFFE
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint ClearBit(this uint @this, byte index) => @this & ~(1U << (index & 31));
+
+  /// <summary>
   /// Clears (sets to 0) the bit at the specified index in the <see cref="ulong"/>.
   /// </summary>
   /// <param name="this">The source ulong.</param>
@@ -1352,7 +1352,689 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong ClearBit(this ulong @this, byte index) => @this & ~(1UL << (index & 63));
+
+  /// <summary>
+  /// Performs linear interpolation between two byte values using a normalized byte parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, normalized to byte range (0 = <paramref name="this"/>, 255 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// byte start = 100;
+  /// byte end = 200;
+  /// byte half = start.Lerp(end, 128); // result ≈ 150 (halfway point)
+  /// byte quarter = start.Lerp(end, 64); // result ≈ 125 (quarter point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte Lerp(this byte @this, byte b, byte t) => (byte)(@this + (b - @this) * t / byte.MaxValue);
+
+  /// <summary>
+  /// Performs linear interpolation between two ushort values using a normalized ushort parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, normalized to ushort range (0 = <paramref name="this"/>, 65535 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ushort start = 1000;
+  /// ushort end = 9000;
+  /// ushort half = start.Lerp(end, 32768); // result ≈ 5000 (halfway point)
+  /// ushort third = start.Lerp(end, 21845); // result ≈ 3667 (one-third point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort Lerp(this ushort @this, ushort b, ushort t) {
+    var invT = (uint)ushort.MaxValue - t;
+    return (ushort)((@this * invT + (uint)b * t) / ushort.MaxValue);
+  }
+
+  /// <summary>
+  /// Performs linear interpolation between two uint values using a normalized uint parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, normalized to uint range (0 = <paramref name="this"/>, 4294967295 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// uint start = 1000000;
+  /// uint end = 9000000;
+  /// uint half = start.Lerp(end, 2147483648); // result ≈ 5000000 (halfway point)
+  /// uint tenth = start.Lerp(end, 429496730); // result ≈ 1800000 (one-tenth point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint Lerp(this uint @this, uint b, uint t) {
+    var invT = (ulong)uint.MaxValue - t;
+    return (uint)((@this * invT + (ulong)b * t) / uint.MaxValue);
+  }
+
+  /// <summary>
+  /// Performs linear interpolation between two ulong values using a normalized ulong parameter.
+  /// Uses 128-bit precision arithmetic to avoid overflow.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, normalized to ulong range (0 = <paramref name="this"/>, 18446744073709551615 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ulong start = 1000000000000UL;
+  /// ulong end = 9000000000000UL;
+  /// ulong half = start.Lerp(end, 9223372036854775808UL); // result ≈ 5000000000000 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong Lerp(this ulong @this, ulong b, ulong t) =>
+    t switch {
+      0 => @this,
+      ulong.MaxValue => b,
+      _ when @this == b => @this,
+      > 1 when (ulong.MaxValue / t) is var denom && @this < b && (b - @this) > denom => @this + (b - @this) / denom,
+      > 1 when (ulong.MaxValue / t) is var denom && (@this - b) > denom => @this - (@this - b) / denom,
+      _ when @this < b => @this + (b - @this) * t / ulong.MaxValue,
+      _ => @this - (@this - b) * t / ulong.MaxValue
+    };
+
+  /// <summary>
+  /// Performs linear interpolation between two byte values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// byte start = 100;
+  /// byte end = 200;
+  /// byte half = start.Lerp(end, 0.5f); // result = 150 (halfway point)
+  /// byte quarter = start.Lerp(end, 0.25f); // result = 125 (quarter point)
+  /// byte clamped = start.Lerp(end, 1.5f); // result = 200 (clamped to 1.0)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte Lerp(this byte @this, byte b, float t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two byte values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// byte start = 100;
+  /// byte end = 200;
+  /// byte precise = start.Lerp(end, 0.333); // result ≈ 133 (one-third point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte Lerp(this byte @this, byte b, double t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two byte values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// byte start = 100;
+  /// byte end = 200;
+  /// byte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 250 (50% beyond end)
+  /// byte negative = start.LerpUnclamped(end, -0.5f); // result = 50 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LerpUnclamped(this byte @this, byte b, float t) => (byte)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two byte values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// byte start = 100;
+  /// byte end = 200;
+  /// byte extrapolated = start.LerpUnclamped(end, 1.25); // result = 225 (25% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LerpUnclamped(this byte @this, byte b, double t) => (byte)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two sbyte values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// sbyte start = -50;
+  /// sbyte end = 50;
+  /// sbyte result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static sbyte Lerp(this sbyte @this, sbyte b, float t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two sbyte values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// sbyte start = -50;
+  /// sbyte end = 50;
+  /// sbyte result = start.Lerp(end, 0.25); // result = -25 (quarter point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static sbyte Lerp(this sbyte @this, sbyte b, double t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two sbyte values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// sbyte start = -50;
+  /// sbyte end = 50;
+  /// sbyte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 100 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static sbyte LerpUnclamped(this sbyte @this, sbyte b, float t) => (sbyte)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two sbyte values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// sbyte start = -50;
+  /// sbyte end = 50;
+  /// sbyte extrapolated = start.LerpUnclamped(end, -0.5); // result = -100 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static sbyte LerpUnclamped(this sbyte @this, sbyte b, double t) => (sbyte)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two ushort values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ushort start = 1000;
+  /// ushort end = 2000;
+  /// ushort result = start.Lerp(end, 0.75f); // result = 1750 (three-quarters point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort Lerp(this ushort @this, ushort b, float t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two ushort values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ushort start = 1000;
+  /// ushort end = 2000;
+  /// ushort result = start.Lerp(end, 0.333); // result ≈ 1333 (one-third point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort Lerp(this ushort @this, ushort b, double t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two ushort values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// ushort start = 1000;
+  /// ushort end = 2000;
+  /// ushort extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort LerpUnclamped(this ushort @this, ushort b, float t) => (ushort)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two ushort values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// ushort start = 1000;
+  /// ushort end = 2000;
+  /// ushort extrapolated = start.LerpUnclamped(end, -0.25); // result = 750 (25% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ushort LerpUnclamped(this ushort @this, ushort b, double t) => (ushort)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two short values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// short start = -1000;
+  /// short end = 1000;
+  /// short result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static short Lerp(this short @this, short b, float t) => (short)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two short values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// short start = -1000;
+  /// short end = 1000;
+  /// short result = start.Lerp(end, 0.666); // result ≈ 332 (two-thirds point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static short Lerp(this short @this, short b, double t) => (short)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two short values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// short start = -1000;
+  /// short end = 1000;
+  /// short extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static short LerpUnclamped(this short @this, short b, float t) => (short)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two short values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// short start = -1000;
+  /// short end = 1000;
+  /// short extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static short LerpUnclamped(this short @this, short b, double t) => (short)(@this + (b - @this) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two uint values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// uint start = 1000000;
+  /// uint end = 2000000;
+  /// uint result = start.Lerp(end, 0.75f); // result = 1750000 (three-quarters point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint Lerp(this uint @this, uint b, float t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two uint values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// uint start = 1000000;
+  /// uint end = 2000000;
+  /// uint result = start.Lerp(end, 0.333); // result ≈ 1333000 (one-third point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint Lerp(this uint @this, uint b, double t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two uint values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// uint start = 1000000;
+  /// uint end = 2000000;
+  /// uint extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint LerpUnclamped(this uint @this, uint b, float t) => (uint)(@this + (long)(b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two uint values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// uint start = 1000000;
+  /// uint end = 2000000;
+  /// uint extrapolated = start.LerpUnclamped(end, -0.25); // result = 750000 (25% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static uint LerpUnclamped(this uint @this, uint b, double t) => (uint)(@this + (long)(b - @this) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two int values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// int start = -500000;
+  /// int end = 500000;
+  /// int result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Lerp(this int @this, int b, float t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
+
+  /// <summary>
+  /// Performs linear interpolation between two int values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// int start = -500000;
+  /// int end = 500000;
+  /// int result = start.Lerp(end, 0.8); // result = 300000 (80% towards end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Lerp(this int @this, int b, double t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two int values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// int start = -500000;
+  /// int end = 500000;
+  /// int extrapolated = start.LerpUnclamped(end, 1.5f); // result = 1000000 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int LerpUnclamped(this int @this, int b, float t) => (int)(@this + (long)(b - @this) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two int values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// int start = -500000;
+  /// int end = 500000;
+  /// int extrapolated = start.LerpUnclamped(end, -0.5); // result = -1000000 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int LerpUnclamped(this int @this, int b, double t) => (int)(@this + (long)(b - @this) * t);
   
+  /// <summary>
+  /// Performs linear interpolation between two ulong values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ulong start = 1000000000UL;
+  /// ulong end = 2000000000UL;
+  /// ulong result = start.Lerp(end, 0.5f); // result = 1500000000 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong Lerp(this ulong @this, ulong b, float t) {
+    var clampedT = t.ClampUnchecked(0f, 1f);
+    return b >= @this ?
+        @this + (ulong)((b - @this) * clampedT) :
+        @this - (ulong)((@this - b) * clampedT);
+  }
+
+  /// <summary>
+  /// Performs linear interpolation between two ulong values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// ulong start = 1000000000UL;
+  /// ulong end = 2000000000UL;
+  /// ulong result = start.Lerp(end, 0.25); // result = 1250000000 (quarter point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong Lerp(this ulong @this, ulong b, double t) {
+    var clampedT = t.ClampUnchecked(0.0, 1.0);
+    return b >= @this ?
+        @this + (ulong)((b - @this) * clampedT) :
+        @this - (ulong)((@this - b) * clampedT);
+  }
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two ulong values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// ulong start = 1000000000UL;
+  /// ulong end = 2000000000UL;
+  /// ulong extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000000 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong LerpUnclamped(this ulong @this, ulong b, float t) =>
+      b >= @this ?
+          @this + (ulong)((b - @this) * t) :
+          @this - (ulong)((@this - b) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two ulong values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// ulong start = 1000000000UL;
+  /// ulong end = 2000000000UL;
+  /// ulong extrapolated = start.LerpUnclamped(end, -0.5); // result = 500000000 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ulong LerpUnclamped(this ulong @this, ulong b, double t) =>
+      b >= @this ?
+          @this + (ulong)((b - @this) * t) :
+          @this - (ulong)((@this - b) * t);
+
+  /// <summary>
+  /// Performs linear interpolation between two long values using a floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// long start = -1000000000L;
+  /// long end = 1000000000L;
+  /// long result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static long Lerp(this long @this, long b, float t) {
+    var clampedT = t.ClampUnchecked(0f, 1f);
+    return b >= @this ?
+        @this + (long)((ulong)(b - @this) * clampedT) :
+        @this - (long)((ulong)(@this - b) * clampedT);
+  }
+
+  /// <summary>
+  /// Performs linear interpolation between two long values using a double-precision floating-point parameter.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+  /// <example>
+  /// <code>
+  /// long start = -1000000000L;
+  /// long end = 1000000000L;
+  /// long result = start.Lerp(end, 0.75); // result = 500000000 (three-quarters point)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static long Lerp(this long @this, long b, double t) {
+    var clampedT = t.ClampUnchecked(0.0, 1.0);
+    return b >= @this ?
+        @this + (long)((ulong)(b - @this) * clampedT) :
+        @this - (long)((ulong)(@this - b) * clampedT);
+  }
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two long values using a floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// long start = -1000000000L;
+  /// long end = 1000000000L;
+  /// long extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000000000 (50% beyond end)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static long LerpUnclamped(this long @this, long b, float t) =>
+      b >= @this ?
+          @this + (long)((ulong)(b - @this) * t) :
+          @this - (long)((ulong)(@this - b) * t);
+
+  /// <summary>
+  /// Performs unclamped linear interpolation between two long values using a double-precision floating-point parameter.
+  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+  /// </summary>
+  /// <param name="this">The starting value.</param>
+  /// <param name="b">The ending value.</param>
+  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+  /// <returns>The interpolated/extrapolated value.</returns>
+  /// <example>
+  /// <code>
+  /// long start = -1000000000L;
+  /// long end = 1000000000L;
+  /// long extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000000000 (50% before start)
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static long LerpUnclamped(this long @this, long b, double t) =>
+      b >= @this ?
+          @this + (long)((ulong)(b - @this) * t) :
+          @this - (long)((ulong)(@this - b) * t);
+
   /// <summary>
   /// Raises a decimal base to a decimal exponent with refined precision.
   /// </summary>
