@@ -1430,15 +1430,19 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong Lerp(this ulong @this, ulong b, ulong t) =>
-    t switch {
-      0 => @this,
-      ulong.MaxValue => b,
-      _ when @this == b => @this,
-      > 1 when (ulong.MaxValue / t) is var denom && @this < b && (b - @this) > denom => @this + (b - @this) / denom,
-      > 1 when (ulong.MaxValue / t) is var denom && (@this - b) > denom => @this - (@this - b) / denom,
-      _ when @this < b => @this + (b - @this) * t / ulong.MaxValue,
-      _ => @this - (@this - b) * t / ulong.MaxValue
-    };
+    t == 0UL ? @this 
+      : t == ulong.MaxValue ? b 
+      : @this == b ? @this
+      : @this < b && b - @this is var du
+      ? t > 1UL && ulong.MaxValue / t is var denom && du > denom
+        ? @this + du / denom
+        : @this + du * t / ulong.MaxValue
+      : @this - b is var dd
+        ? t > 1UL && ulong.MaxValue / t is var denom2 && dd > denom2
+          ? @this - dd / denom2
+          : @this - dd * t / ulong.MaxValue
+        : @this // unreachable fallback
+  ;
 
   /// <summary>
   /// Performs linear interpolation between two byte values using a floating-point parameter.
