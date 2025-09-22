@@ -1429,20 +1429,47 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong Lerp(this ulong @this, ulong b, ulong t) =>
-    t == 0UL ? @this 
-      : t == ulong.MaxValue ? b 
-      : @this == b ? @this
-      : @this < b && b - @this is var du
-      ? t > 1UL && ulong.MaxValue / t is var denom && du > denom
-        ? @this + du / denom
-        : @this + du * t / ulong.MaxValue
-      : @this - b is var dd
-        ? t > 1UL && ulong.MaxValue / t is var denom2 && dd > denom2
-          ? @this - dd / denom2
-          : @this - dd * t / ulong.MaxValue
-        : @this // unreachable fallback
-  ;
+  public static ulong Lerp(this ulong @this, ulong b, ulong t) {
+    // direction mask (all-ones if a>b)
+    var gt = @this > b ? 1UL : 0UL;
+    var m = 0UL - gt;
+
+    // swap so that aa <= bb
+    var d = (@this ^ b) & m;
+    var aa = @this ^ d;
+    var bb = b ^ d;
+    var du = bb - aa;               // distance >= 0
+
+    // 64x64 -> 128 multiply (du * t)
+    var x0 = (uint)du;
+    var x1 = (uint)(du >> 32);
+    var y0 = (uint)t;
+    var y1 = (uint)(t >> 32);
+
+    var p00 = (ulong)x0 * y0;
+    var p01 = (ulong)x0 * y1;
+    var p10 = (ulong)x1 * y0;
+    var p11 = (ulong)x1 * y1;
+
+    var mid = p01 + p10;
+    var carryMid = mid < p01 ? 1UL : 0UL;          // carry from p01+p10
+
+    var midL = mid << 32;
+    var lo = p00 + midL;
+    var c0 = lo < p00 ? 1UL : 0UL;
+
+    // include (carryMid << 32) into hi
+    var hi = p11 + (mid >> 32) + c0 + (carryMid << 32);
+
+    // q = floor((du*t) / (2^64 - 1)) using Mersenne property
+    var geM = lo >= (ulong.MaxValue - hi) ? 1UL : 0UL; // (hi+lo) >= M ?
+    var q = hi + geM;
+
+    // apply direction (add if a<=b, subtract if a>b)
+    var add = @this + q;
+    var sub = @this - q;
+    return (add & ~m) | (sub & m);
+  }
 
   /// <summary>
   /// Performs linear interpolation between two byte values using a floating-point parameter.
