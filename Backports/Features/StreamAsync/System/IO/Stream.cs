@@ -97,8 +97,8 @@ public static partial class StreamPolyfills {
 
     return Invoke(@this, buffer, offset, count, cancellationToken);
 
-    static Task<int> Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-      var tcs = new TaskCompletionSource<int>();
+    static Task Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+      var tcs = new TaskCompletionSource<bool>();
       if (cancellationToken.IsCancellationRequested) {
         tcs.TrySetCanceled();
         return tcs.Task;
@@ -122,10 +122,10 @@ public static partial class StreamPolyfills {
       }
 
       static void OnWriteComplete(IAsyncResult ar) {
-        var (stream, tcs) = ((Stream, TaskCompletionSource<int>))ar.AsyncState;
+        var (stream, tcs) = ((Stream, TaskCompletionSource<bool>))ar.AsyncState;
         try {
-          var bytesRead = stream.EndRead(ar);
-          tcs.TrySetResult(bytesRead);
+          stream.EndWrite(ar);
+          tcs.TrySetResult(true);
         } catch (Exception ex) {
           tcs.TrySetException(ex);
         }
