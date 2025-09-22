@@ -261,12 +261,27 @@ public class TimeSpanComprehensiveTest {
   public void TimeSpanExtensions_FromStopwatchTimeStamp_UsesHighPrecisionTiming() {
     var timeSpan = 100.Milliseconds();
 
+    // Get the current timestamp before the operation
+    var timestampBefore = Stopwatch.GetTimestamp();
+    
     // This method uses Stopwatch.GetTimestamp() + timeSpan
     var result = timeSpan.FromStopwatchTimeStamp();
+    
+    // Get timestamp after the operation
+    var timestampAfter = Stopwatch.GetTimestamp();
 
-    // TODO: Should return a long that's reasonably close to current time + timeSpan
-    // The exact value depends on Stopwatch implementation, but should be valid
-    Assert.Pass("Needs implementation");
+    // The result should be approximately timestampBefore + (timeSpan in ticks)
+    var expectedTicks = (long)(timeSpan.TotalSeconds * Stopwatch.Frequency);
+    var expectedMin = timestampBefore + expectedTicks;
+    var expectedMax = timestampAfter + expectedTicks;
+
+    // Result should be between the expected range (accounting for small timing differences)
+    Assert.That(result, Is.GreaterThanOrEqualTo(expectedMin));
+    Assert.That(result, Is.LessThanOrEqualTo(expectedMax));
+    
+    // Verify the result is a reasonable timestamp value (should be positive and large)
+    Assert.That(result, Is.GreaterThan(timestampBefore));
+    Assert.That(result, Is.TypeOf<long>());
   }
 
   #endregion
