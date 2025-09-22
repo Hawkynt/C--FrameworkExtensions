@@ -56,7 +56,7 @@ public class IOComprehensiveTest {
 
   private FileInfo CreateTestFile(string content = "test content", string extension = ".txt") {
     var fileName = Path.Combine(this._tempDirectory, $"test_{Guid.NewGuid():N}{extension}");
-    File.WriteAllText(fileName, content, Encoding.UTF8);
+    File.WriteAllText(fileName, content, new UTF8Encoding(false)); // No BOM
     this._tempFiles.Add(fileName);
     return new FileInfo(fileName);
   }
