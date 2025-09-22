@@ -560,6 +560,9 @@ public static partial class FileInfoExtensions {
     using var sourceStream = new FileStream(@this.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: BUFFER_SIZE_IN_BYTES, useAsync: true);
     using var destinationStream = new FileStream(targetFile.FullName, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: BUFFER_SIZE_IN_BYTES, useAsync: true);
     await sourceStream.CopyToAsync(destinationStream, BUFFER_SIZE_IN_BYTES, token).ConfigureAwait(false);
+    
+    // Refresh the target file's info to reflect the new state
+    targetFile.Refresh();
   }
 
 #endif
