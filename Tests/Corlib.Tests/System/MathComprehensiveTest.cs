@@ -815,7 +815,7 @@ public class MathComprehensiveTest {
   public void Log2_Byte_ReturnsCorrectResult(byte value, int expected) => Assert.AreEqual(expected, value.Log2());
 
   [Test]
-  public void Log2_Byte_Zero_Returns_Minus_One() => Assert.AreEqual(((byte)0).Log2(), -1);
+  public void Log2_Byte_Zero_Returns_Zero() => Assert.AreEqual(((byte)0).Log2(), 0);
 
   [Test]
   [TestCase((ushort)1, 0)]
