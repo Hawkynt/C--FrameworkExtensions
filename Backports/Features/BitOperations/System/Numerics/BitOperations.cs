@@ -173,7 +173,7 @@ public static class BitOperations {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int Log2(uint value) {
     if (value == 0)
-      return -1;
+      return 0;
 
     value |= value >> 1;
     value |= value >> 2;
@@ -191,12 +191,14 @@ public static class BitOperations {
   /// <param name="value">The value.</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static int Log2(ulong value) {
-    value |= 1;
+    if (value == 0)
+      return 0;
+    
     var hi = (uint)(value >> 32);
-    if (hi == 0)
-      return Log2((uint)value);
-
-    return 32 + Log2(hi);
+    return hi == 0 
+      ? BitOperations.Log2((uint)value) 
+      : 32 + BitOperations.Log2(hi)
+      ;
   }
 
   /// <summary>
