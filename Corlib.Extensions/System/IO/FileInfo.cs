@@ -2947,6 +2947,9 @@ public static partial class FileInfoExtensions {
     if (!File.Exists(@this.FullName))
       using (@this.Create()) { }
     
+    if ((@this.Attributes & FileAttributes.ReadOnly) != 0)
+      throw new IOException("File is read-only");
+
     @this.LastWriteTimeUtc = DateTime.UtcNow;
     @this.Refresh();
   }
