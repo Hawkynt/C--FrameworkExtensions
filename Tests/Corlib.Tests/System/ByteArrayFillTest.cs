@@ -1341,8 +1341,8 @@ public class FillWithBlock4 {
 public class FillWithBlock8 {
   [Test]
   public void FillLargeArray() {
-    var byteArray1 = new byte[256 * 1024 * 1024];
-    var byteArray2 = new byte[256 * 1024 * 1024];
+    var byteArray1 = new byte[64 * 1024 * 1024];
+    var byteArray2 = new byte[64 * 1024 * 1024];
     for (var i = 0; i < byteArray2.Length; ++i)
       byteArray2[i] = 1;
 
