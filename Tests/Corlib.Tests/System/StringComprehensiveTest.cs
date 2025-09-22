@@ -227,8 +227,9 @@ public class StringComprehensiveTest {
 
   [Test]
   public void GetSoundexRepresentation_SimilarSoundingNames_SameCodes() {
+    var culture = CultureInfo.GetCultureInfo("de-DE");
     var names = new[] { "Smith", "Smyth", "Smythe" };
-    var codes = names.Select(name => name.GetSoundexRepresentation()).ToList();
+    var codes = names.Select(name => name.GetSoundexRepresentation(culture)).ToList();
 
     // Test that we get valid Soundex codes for each name
     Assert.AreEqual(3, codes.Count);
