@@ -33,7 +33,7 @@ public class StringComprehensiveTest {
 
   [Test]
   public void ParseFloat_NullString_ThrowsException() {
-    string input = null;
+    string? input = null;
     Assert.Throws<NullReferenceException>(() => input.ParseFloat());
   }
 
@@ -81,7 +81,7 @@ public class StringComprehensiveTest {
 
   [Test]
   public void TryParseFloat_NullString_ThrowsException() {
-    string input = null;
+    string? input = null;
     Assert.Throws<NullReferenceException>(() => input.TryParseFloat(out var result));
   }
 
@@ -186,7 +186,7 @@ public class StringComprehensiveTest {
 
   [Test]
   public void GetSoundexRepresentation_NullString_ThrowsException() {
-    string input = null;
+    string? input = null;
     Assert.Throws<NullReferenceException>(() => input.GetSoundexRepresentation());
   }
 
@@ -276,7 +276,7 @@ public class StringComprehensiveTest {
 
   [Test]
   public void TextAnalysis_NullString_HandlesGracefully() {
-    string input = null;
+    string? input = null;
     // Based on the actual behavior, it may handle nulls gracefully
     Assert.DoesNotThrow(() => input.TextAnalysis());
   }
@@ -293,7 +293,7 @@ public class StringComprehensiveTest {
   [Test]
   public void TextAnalysisFor_NullCulture_ThrowsException() {
     var input = "test";
-    CultureInfo culture = null;
+    CultureInfo? culture = null;
     Assert.Throws<ArgumentNullException>(() => input.TextAnalysisFor(culture));
   }
 
@@ -333,7 +333,7 @@ public class StringComprehensiveTest {
   [Test]
   public void FormatWithObject_NullObject_HandlesGracefully() {
     var template = "Hello {Name}";
-    object data = null;
+    object? data = null;
     // Based on actual behavior, it may handle nulls gracefully
     Assert.DoesNotThrow(() => template.FormatWithObject(data));
   }
@@ -380,14 +380,14 @@ public class StringComprehensiveTest {
 
   [Test]
   public void FormatWithEx_NullTemplate_ThrowsException() {
-    string template = null;
+    string? template = null;
     Assert.Throws<NullReferenceException>(() => template.FormatWithEx(f => "value"));
   }
 
   [Test]
   public void FormatWithEx_NullFieldGetter_ThrowsException() {
     var template = "Hello {field}";
-    Func<string, object> getter = null;
+    Func<string, object>? getter = null;
     Assert.Throws<ArgumentNullException>(() => template.FormatWithEx(getter));
   }
 

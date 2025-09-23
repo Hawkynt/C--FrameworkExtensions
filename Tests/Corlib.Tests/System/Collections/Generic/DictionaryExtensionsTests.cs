@@ -53,7 +53,7 @@ public class DictionaryExtensionsTests {
   public void AddRange_ParamsObjectArray_NullArray_NoEffect() {
     // Arrange
     var dictionary = new Dictionary<string, int>();
-    object[] nullArray = null;
+    object[]? nullArray = null;
 
     // Act
     dictionary.AddRange(nullArray);
@@ -127,7 +127,7 @@ public class DictionaryExtensionsTests {
   [Test]
   public void AddRange_NullDictionary_ThrowsArgumentNullException() {
     // Arrange
-    Dictionary<string, int> dictionary = null;
+    Dictionary<string, int>? dictionary = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => dictionary.AddRange("key", 1));
@@ -142,7 +142,7 @@ public class DictionaryExtensionsTests {
     // Arrange
     var dictionary = new Dictionary<string, int> { { "key1", 42 } };
     var actionExecuted = false;
-    string capturedKey = null;
+    string? capturedKey = null;
     var capturedValue = 0;
 
     // Act

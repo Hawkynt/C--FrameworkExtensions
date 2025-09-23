@@ -637,7 +637,7 @@ public class TypeTests {
   public void TypeExtensions_GetFieldOrPropertyAttributeValue_NullGetter_ThrowsArgumentNullException() {
     var type = typeof(AttributedTestClass);
 
-    Assert.Throws<ArgumentNullException>(() => { type.GetFieldOrPropertyAttributeValue<DescriptionAttribute, string>("TestField", null); });
+    Assert.Throws<ArgumentNullException>(() => { type.GetFieldOrPropertyAttributeValue<DescriptionAttribute, string>("TestField", null!); });
   }
 
   [Test]

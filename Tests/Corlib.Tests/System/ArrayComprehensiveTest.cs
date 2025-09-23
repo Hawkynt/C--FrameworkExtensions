@@ -196,7 +196,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void TryGetFirst_Array_Null_ThrowsException() {
-    string[] array = null;
+    string[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.TryGetFirst(out var value));
   }
 
@@ -220,7 +220,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void TryGetLast_Array_Null_ThrowsException() {
-    string[] array = null;
+    string[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.TryGetLast(out var value));
   }
 
@@ -250,7 +250,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void TryGetItem_Array_Null_ThrowsException() {
-    string[] array = null;
+    string[]? array = null;
     Assert.Throws<NullReferenceException>(() => array.TryGetItem(0, out var value));
   }
 
@@ -514,7 +514,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void ToHex_ByteArray_NullArray_ReturnsNull() {
-    byte[] array = null;
+    byte[]? array = null;
     var result = array.ToHex();
     Assert.IsNull(result);
   }
@@ -536,7 +536,7 @@ public class ArrayComprehensiveTest {
 
   [Test]
   public void ToBin_ByteArray_NullArray_ReturnsNull() {
-    byte[] array = null;
+    byte[]? array = null;
     var result = array.ToBin();
     Assert.IsNull(result);
   }

@@ -202,10 +202,10 @@ public class StringDictionaryTests {
   [Test]
   public void AddOrUpdate_NullDictionary_ThrowsArgumentNullException() {
     // Arrange
-    StringDictionary dictionary = null;
+    StringDictionary? dictionary = null;
 
     // Act & Assert
-    Assert.Throws<NullReferenceException>(() => dictionary.AddOrUpdate("key", "value"));
+    Assert.Throws<NullReferenceException>(() => dictionary!.AddOrUpdate("key", "value"));
   }
 
   [Test]

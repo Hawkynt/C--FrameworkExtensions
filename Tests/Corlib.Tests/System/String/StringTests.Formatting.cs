@@ -60,7 +60,7 @@ public partial class StringTests {
   [Description("Validates FormatWith with null template")]
   public void FormatWith_NullTemplate_ThrowsArgumentNullException() {
     // Arrange
-    string template = null;
+    string? template = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => template.FormatWith("test"));
@@ -159,7 +159,7 @@ public partial class StringTests {
   [Description("Validates case methods handle null")]
   public void CaseMethods_NullInput_ThrowsArgumentNullException() {
     // Arrange
-    string input = null;
+    string? input = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => input.UpperFirstInvariant());

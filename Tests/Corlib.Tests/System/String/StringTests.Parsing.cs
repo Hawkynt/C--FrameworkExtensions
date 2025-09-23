@@ -73,7 +73,7 @@ public partial class StringTests {
   [Description("Validates ParseFloat throws on null input")]
   public void ParseFloat_Null_ThrowsNullReferenceException() {
     // Arrange
-    string input = null;
+    string? input = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => input.ParseFloat());
@@ -119,7 +119,7 @@ public partial class StringTests {
   [Description("Validates ParseDouble throws on null input")]
   public void ParseDouble_Null_ThrowsNullReferenceException() {
     // Arrange
-    string input = null;
+    string? input = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => input.ParseDouble());

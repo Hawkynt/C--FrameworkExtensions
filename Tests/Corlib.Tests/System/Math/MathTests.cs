@@ -37,7 +37,7 @@ public partial class MathTests {
   [Category("Exception")]
   [Description("Validates Min/Max handle null array")]
   public void MinMax_NullArray_ThrowsArgumentNullException() {
-    byte[] nullArray = null;
+    byte[]? nullArray = null;
     Assert.Throws<NullReferenceException>(() => Min(nullArray));
     Assert.Throws<NullReferenceException>(() => Max(nullArray));
   }

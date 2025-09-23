@@ -564,7 +564,7 @@ public class StackExtensionsTests {
   [Test]
   public void NullStackOperations_ThrowsNullReferenceException() {
     // Arrange
-    Stack<int> stack = null;
+    Stack<int>? stack = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => stack.Add(1));

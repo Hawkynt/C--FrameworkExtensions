@@ -484,7 +484,7 @@ public class QueueExtensionsTests {
   [Test]
   public void NullQueueOperations_ThrowsNullReferenceException() {
     // Arrange
-    Queue<int> queue = null;
+    Queue<int>? queue = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => queue.Add(1));

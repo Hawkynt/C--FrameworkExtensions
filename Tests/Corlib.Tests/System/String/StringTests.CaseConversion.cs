@@ -274,7 +274,7 @@ public partial class StringTests {
   [Description("Validates case conversion methods handle null input")]
   public void CaseConversionMethods_NullInput_ThrowsNullReferenceException() {
     // Arrange
-    string input = null;
+    string? input = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => input.ToCamelCase());

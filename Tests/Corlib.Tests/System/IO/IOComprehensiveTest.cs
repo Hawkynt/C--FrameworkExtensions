@@ -13,9 +13,9 @@ namespace System.IO;
 
 [TestFixture]
 public class IOComprehensiveTest {
-  private string _tempDirectory;
-  private List<string> _tempFiles;
-  private List<string> _tempDirectories;
+  private string _tempDirectory = null!;
+  private List<string> _tempFiles = null!;
+  private List<string> _tempDirectories = null!;
 
   [SetUp]
   public void Setup() {
@@ -61,7 +61,7 @@ public class IOComprehensiveTest {
     return new FileInfo(fileName);
   }
 
-  private DirectoryInfo CreateTestDirectory(string subPath = null) {
+  private DirectoryInfo CreateTestDirectory(string? subPath = null) {
     var dirPath = subPath != null
       ? Path.Combine(this._tempDirectory, subPath)
       : Path.Combine(this._tempDirectory, $"testdir_{Guid.NewGuid():N}");
@@ -544,7 +544,7 @@ public class IOComprehensiveTest {
 
     Assert.That(subDir.Exists, Is.True);
     Assert.That(subDir.Name, Is.EqualTo("newsubdir"));
-    Assert.That(subDir.Parent.FullName, Is.EqualTo(dir.FullName));
+    Assert.That(subDir.Parent!.FullName, Is.EqualTo(dir.FullName));
   }
 
   [Test]
@@ -846,7 +846,7 @@ public class IOComprehensiveTest {
 
     var oldName = originalFile.FullName;
     originalFile.RenameTo(newName);
-    var renamedFile = new FileInfo(Path.Combine(originalFile.DirectoryName, newName));
+    var renamedFile = new FileInfo(Path.Combine(originalFile.DirectoryName!, newName));
 
     Assert.That(File.Exists(oldName), Is.False);
     Assert.That(renamedFile.Exists, Is.True);
@@ -1285,7 +1285,7 @@ public class IOComprehensiveTest {
     using var token = PathExtensions.GetTempDirectoryToken(dirName, this._tempDirectory);
 
     Assert.That(token.Directory.Name, Is.EqualTo(dirName));
-    Assert.That(token.Directory.Parent.FullName, Is.EqualTo(this._tempDirectory));
+    Assert.That(token.Directory.Parent!.FullName, Is.EqualTo(this._tempDirectory));
     Assert.That(token.Directory.Exists, Is.True);
   }
 

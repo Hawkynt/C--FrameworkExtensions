@@ -27,7 +27,7 @@ public class EnumerableComprehensiveTest {
 
   private class TestItem {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     public double Value { get; set; }
 
     public override string ToString() => $"{this.Name}({this.Id})";
@@ -97,7 +97,7 @@ public class EnumerableComprehensiveTest {
 
   [Test]
   public void EnumerableExtensions_PrependAppend_NullSource_ThrowsException() {
-    IEnumerable<int> source = null;
+    IEnumerable<int>? source = null;
 
     Assert.Throws<ArgumentNullException>(() => source.Prepend(1, 2).ToArray());
     Assert.Throws<ArgumentNullException>(() => source.Append(1, 2).ToArray());
@@ -244,7 +244,7 @@ public class EnumerableComprehensiveTest {
 
   [Test]
   public void EnumerableExtensions_IsNullOrEmpty_NullEnumerable_ReturnsTrue() {
-    IEnumerable<int> source = null;
+    IEnumerable<int>? source = null;
 
     Assert.That(source.IsNullOrEmpty(), Is.True);
   }
@@ -975,7 +975,7 @@ public class EnumerableComprehensiveTest {
 
   [Test]
   public void EdgeCase_NullEnumerableOperations_ThrowAppropriateExceptions() {
-    IEnumerable<int> nullEnumerable = null;
+    IEnumerable<int>? nullEnumerable = null;
 
     Assert.Throws<ArgumentNullException>(() => nullEnumerable.Prepend(1, 2).ToArray());
     Assert.Throws<ArgumentNullException>(() => nullEnumerable.Append(1, 2).ToArray());

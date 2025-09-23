@@ -151,7 +151,7 @@ public class StringCollectionTests {
   [Test]
   public void ToArray_NullCollection_ThrowsArgumentNullException() {
     // Arrange
-    StringCollection collection = null;
+    StringCollection? collection = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => collection.ToArray());

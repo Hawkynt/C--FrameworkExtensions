@@ -204,7 +204,7 @@ public class ComponentModelComprehensiveTest {
 
   [Test]
   public void BindingListExtensions_Any_WithNullList_ThrowsException() {
-    BindingList<int> list = null;
+    BindingList<int>? list = null;
     Assert.Throws<NullReferenceException>(() => list.Any());
   }
 
@@ -228,7 +228,7 @@ public class ComponentModelComprehensiveTest {
 
   [Test]
   public void BindingListExtensions_ToArray_WithNullList_ThrowsException() {
-    BindingList<string> list = null;
+    BindingList<string>? list = null;
     Assert.Throws<NullReferenceException>(() => list.ToArray());
   }
 
@@ -262,14 +262,14 @@ public class ComponentModelComprehensiveTest {
 
   [Test]
   public void BindingListExtensions_AddRange_WithNullList_ThrowsException() {
-    BindingList<int> list = null;
+    BindingList<int>? list = null;
     Assert.Throws<NullReferenceException>(() => list.AddRange(new[] { 1, 2 }));
   }
 
   [Test]
   public void BindingListExtensions_AddRange_WithNullItems_ThrowsException() {
     var list = new BindingList<int>();
-    Assert.Throws<ArgumentNullException>(() => list.AddRange(null));
+    Assert.Throws<ArgumentNullException>(() => list.AddRange(null!));
   }
 
   [Test]
@@ -596,7 +596,7 @@ public class ComponentModelComprehensiveTest {
 
   [Test]
   public void DefaultValueAttributeExtensions_SetPropertiesToDefaultValues_WithNullInstance_DoesNotThrow() {
-    TestClassWithDefaultValues instance = null;
+    TestClassWithDefaultValues? instance = null;
     Assert.DoesNotThrow(() => instance.SetPropertiesToDefaultValues());
   }
 
@@ -719,7 +719,7 @@ public class ComponentModelComprehensiveTest {
   [Test]
   public void SynchronizeInvokeExtensions_SafeInvoke_PassesCorrectInstance() {
     var mock = new MockSynchronizeInvoke { InvokeRequired = false };
-    MockSynchronizeInvoke passedInstance = null;
+    MockSynchronizeInvoke? passedInstance = null;
 
     mock.SafeInvoke(m => passedInstance = m);
 
@@ -769,7 +769,7 @@ public class ComponentModelComprehensiveTest {
   public void SortableBindingList_AddItem_RaisesCollectionChangedEvent() {
     var list = new SortableBindingList<string>();
     var eventRaised = false;
-    NotifyCollectionChangedEventArgs eventArgs = null;
+    NotifyCollectionChangedEventArgs? eventArgs = null;
     
     ((INotifyCollectionChanged)list).CollectionChanged += (sender, args) => {
       eventRaised = true;

@@ -88,7 +88,7 @@ public partial class StringTests {
   [Description("Validates Contains throws on null haystack")]
   public void Contains_NullHaystack_ThrowsArgumentNullException() {
     // Arrange
-    string input = null;
+    string? input = null;
 
     // Act & Assert
     Assert.Throws<NullReferenceException>(() => input.Contains("test", StringComparison.Ordinal));
