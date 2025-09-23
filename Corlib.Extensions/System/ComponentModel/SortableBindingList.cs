@@ -33,6 +33,15 @@ namespace System.ComponentModel;
 /// </summary>
 /// <typeparam name="TValue">The type of the value.</typeparam>
 public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectionChanged {
+  #region fields
+  
+  private TValue _lastRemovedItem;
+  private int _lastRemovedIndex = -1;
+  private TValue _lastChangedOldItem;
+  private int _lastChangedIndex = -1;
+  
+  #endregion
+  
   #region nested types
 
   private static class StableSorter {
@@ -205,6 +214,24 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
 
   #region Overrides of BindingList<TValue>
 
+  protected override void RemoveItem(int index) {
+    // Cache the item before removing it for CollectionChanged event
+    if (index >= 0 && index < this.Count) {
+      this._lastRemovedItem = this[index];
+      this._lastRemovedIndex = index;
+    }
+    base.RemoveItem(index);
+  }
+
+  protected override void SetItem(int index, TValue item) {
+    // Cache the old item before replacing it for CollectionChanged event
+    if (index >= 0 && index < this.Count) {
+      this._lastChangedOldItem = this[index];
+      this._lastChangedIndex = index;
+    }
+    base.SetItem(index, item);
+  }
+
   protected override void OnListChanged(ListChangedEventArgs e) {
     if (this._ReApplySortIfNeeded()) {
       base.OnListChanged(new(ListChangedType.Reset, -1));
@@ -212,8 +239,22 @@ public class SortableBindingList<TValue> : BindingList<TValue>, INotifyCollectio
     } else {
       base.OnListChanged(e);
 
-      // TODO: only fire whats needed
-      this.OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
+      // Map ListChangedType to NotifyCollectionChangedAction
+      NotifyCollectionChangedEventArgs collectionChangedArgs = e.ListChangedType switch {
+        ListChangedType.ItemAdded => new(NotifyCollectionChangedAction.Add, this[e.NewIndex], e.NewIndex),
+        ListChangedType.ItemDeleted when this._lastRemovedIndex == e.NewIndex => new(NotifyCollectionChangedAction.Remove, this._lastRemovedItem, e.NewIndex),
+        ListChangedType.ItemChanged when this._lastChangedIndex == e.NewIndex => new(NotifyCollectionChangedAction.Replace, this[e.NewIndex], this._lastChangedOldItem, e.NewIndex),
+        ListChangedType.ItemMoved => new(NotifyCollectionChangedAction.Move, this[e.NewIndex], e.NewIndex, e.OldIndex),
+        _ => new(NotifyCollectionChangedAction.Reset)
+      };
+      
+      this.OnCollectionChanged(collectionChangedArgs);
+      
+      // Clear cached values after use
+      this._lastRemovedItem = default;
+      this._lastRemovedIndex = -1;
+      this._lastChangedOldItem = default;
+      this._lastChangedIndex = -1;
     }
   }
 
