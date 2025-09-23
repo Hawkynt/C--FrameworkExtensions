@@ -180,9 +180,9 @@ public partial class MathTests {
   [Category("Exception")]
   [Description("Validates Clamp throws when max < min")]
   public void Clamp_MaxLessThanMin_ThrowsArgumentException() {
-    Assert.Throws<ArgumentOutOfRangeException>(() => 15.Clamp(20, 10), "Should throw when max < min");
-    Assert.Throws<ArgumentOutOfRangeException>(() => 15.5f.Clamp(20.0f, 10.0f), "Should throw when max < min for float");
-    Assert.Throws<ArgumentOutOfRangeException>(() => 15.5.Clamp(20.0, 10.0), "Should throw when max < min for double");
+    Assert.Throws<ArgumentException>(() => 15.Clamp(20, 10), "Should throw when max < min");
+    Assert.Throws<ArgumentException>(() => 15.5f.Clamp(20.0f, 10.0f), "Should throw when max < min for float");
+    Assert.Throws<ArgumentException>(() => 15.5.Clamp(20.0, 10.0), "Should throw when max < min for double");
   }
 
   [Test]
