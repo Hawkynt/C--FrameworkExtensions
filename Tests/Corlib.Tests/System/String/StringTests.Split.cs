@@ -24,25 +24,37 @@ public partial class StringTests {
 
   private static IEnumerable<SplitParametersTestData> GetSplitTestData() {
     // Happy path cases
-    yield return new("a,b,c", ",", null, new[] { "a", "b", "c" });
-    yield return new("hello world", " ", null, new[] { "hello", "world" });
-    yield return new("one;two;three", ";", null, new[] { "one", "two", "three" });
+    yield return new("a,b,c", ",", null, ["a", "b", "c"]);
+    yield return new("hello world", " ", null, ["hello", "world"]);
+    yield return new("one;two;three", ";", null, ["one", "two", "three"]);
 
     // Edge cases
-    yield return new("", ",", null, new[] { "" });
-    yield return new("no-delimiter", ",", null, new[] { "no-delimiter" });
-    yield return new("trailing,", ",", null, new[] { "trailing", "" });
-    yield return new(",leading", ",", null, new[] { "", "leading" });
-    yield return new(",,empty,,", ",", null, new[] { "", "", "empty", "", "" });
-    yield return new("test", null, null, new[] { "test" });
-    yield return new("test abc", null, null, new[] { "test", "abc" });
-    yield return new("abc\ntest", "", null, new[] { "abc", "test" });
+    yield return new("", ",", null, [""]);
+    yield return new("no-delimiter", ",", null, ["no-delimiter"]);
+    yield return new("trailing,", ",", null, ["trailing", ""]);
+    yield return new(",leading", ",", null, ["", "leading"]);
+    yield return new(",,empty,,", ",", null, ["", "", "empty", "", ""]);
+    
+    // Null separator should split on whitespace - consistent behavior using char.IsWhiteSpace
+    yield return new("test", null, null, ["test"]);
+    yield return new("test abc", null, null, ["test abc"]);
+    yield return new("test abc", null, 2, ["test abc"]);
+    yield return new("test\tabc", null, null, ["test\tabc"]);
+    yield return new("test\nabc", null, null, ["test\nabc"]);
+    yield return new("test\r\nabc", null, null, ["test\r\nabc"]); // \r and \n are separate whitespace chars
+    yield return new("  test  abc  ", null, null, ["  test  abc  "]);
+    
+    // Empty separator should split on whitespace - consistent behavior using char.IsWhiteSpace  
+    yield return new("test", "", null, ["test"]);
+    yield return new("test abc", "", null, ["test abc"]);
+    yield return new("test\tabc", "", null, ["test\tabc"]);
+    yield return new("abc\ntest", "", null, ["abc\ntest"]);
 
     // Max parameter cases
-    yield return new("a,b,c,d", ",", 2, new[] { "a", "b,c,d" });
-    yield return new("a,b,c,d", ",", 3, new[] { "a", "b", "c,d" });
+    yield return new("a,b,c,d", ",", 2, ["a", "b,c,d"]);
+    yield return new("a,b,c,d", ",", 3, ["a", "b", "c,d"]);
     yield return new("a,b,c,d", ",", 0, new string[0] );
-    yield return new("a,b,c,d", ",", 10, new[] { "a", "b", "c", "d" });
+    yield return new("a,b,c,d", ",", 10, ["a", "b", "c", "d"]);
 
     // Exception cases
     yield return new(null, ",", null, null, typeof(NullReferenceException));
@@ -185,6 +197,34 @@ public partial class StringTests {
 
     // Assert
     CollectionAssert.AreEqual(new[] { "", "" }, result);
+  }
+
+  #endregion
+
+  #region Whitespace Split Consistency Tests
+  
+  [Test]
+  [Category("EdgeCase")]
+  [Description("Validates behavior is consistent across null and empty separators")]
+  public void Split_NullVsEmptySeparator_ProducesSameResults() {
+    // Arrange
+    var testInputs = new[] {
+      "single",
+      "two words",
+      "three\tword\ttest",
+      "\tleading",
+      "trailing\t",
+      "\tmultiple\twhitespace\t"
+    };
+
+    foreach (var input in testInputs) {
+      // Act
+      var nullResult = input.Split((string?)null);
+      var emptyResult = input.Split("");
+
+      // Assert
+      CollectionAssert.AreEqual(nullResult, emptyResult, $"Mismatch for input: '{input}'");
+    }
   }
 
   #endregion
