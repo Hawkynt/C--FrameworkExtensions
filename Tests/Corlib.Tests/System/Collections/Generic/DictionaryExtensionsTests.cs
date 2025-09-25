@@ -121,7 +121,7 @@ public class DictionaryExtensionsTests {
     var dictionary = new Dictionary<string, int>();
 
     // Act & Assert
-    Assert.Throws<ArgumentNullException>(() => dictionary.AddRange((IEnumerable<KeyValuePair<string, int>>)null));
+    Assert.Throws<ArgumentNullException>(() => dictionary.AddRange((IEnumerable<KeyValuePair<string, int>>)null!));
   }
 
   [Test]
@@ -196,7 +196,7 @@ public class DictionaryExtensionsTests {
     var dictionary = new Dictionary<string, int> { { "key1", 42 } };
 
     // Act & Assert
-    Assert.Throws<ArgumentNullException>(() => dictionary.HasKeyDo("key1", (Action<string, int>)null));
+    Assert.Throws<ArgumentNullException>(() => dictionary.HasKeyDo("key1", (Action<string, int>)null!));
   }
 
   #endregion

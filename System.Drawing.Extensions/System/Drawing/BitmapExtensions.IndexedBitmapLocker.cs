@@ -23,12 +23,13 @@ public static partial class BitmapExtensions {
     : BitmapLockerBase(bitmap, rect, flags, format) {
 
     private readonly Color[] _palette = bitmap.Palette.Entries;
+    private readonly PixelFormat _format = format;
 
-    protected override int _BytesPerPixel => format switch {
+    protected override int _BytesPerPixel => this._format switch {
       PixelFormat.Format8bppIndexed => 1,
       PixelFormat.Format4bppIndexed => 0, // packed 2 pixels per byte
       PixelFormat.Format1bppIndexed => 0, // packed 8 pixels per byte
-      _ => throw new NotSupportedException($"Unsupported indexed format: {format}")
+      _ => throw new NotSupportedException($"Unsupported indexed format: {this._format}")
     };
 
     public override unsafe Color this[int x, int y] {
@@ -37,14 +38,14 @@ public static partial class BitmapExtensions {
         var data = this.BitmapData;
         var stride = data.Stride;
         var ptr = (byte*)data.Scan0 + y * stride;
-        if(format == PixelFormat.Format4bppIndexed) {
+        if(this._format == PixelFormat.Format4bppIndexed) {
           var index = x >> 1;
           var highNibble = (x & 1) == 0;
           var val = highNibble ? ptr[index] >> 4 : ptr[index] & 0x0F;
           return this._palette[val];
         }
 
-        if(format == PixelFormat.Format1bppIndexed) {
+        if(this._format == PixelFormat.Format1bppIndexed) {
           var index = x >> 3;
           var bit = 7 - (x & 7);
           var val = (ptr[index] >> bit) & 1;
@@ -61,7 +62,7 @@ public static partial class BitmapExtensions {
         var stride = data.Stride;
         var ptr = (byte*)data.Scan0 + y * stride;
         
-        switch (format) {
+        switch (this._format) {
           case PixelFormat.Format4bppIndexed: {
             var index = x >> 1;
             ptr[index] = (x & 1) == 0 

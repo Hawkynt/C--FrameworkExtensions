@@ -110,7 +110,7 @@ public class QueueExtensionsTests {
     var queue = new Queue<int>(new[] { 1, 2, 3 });
 
     // Act & Assert
-    Assert.Throws<ArgumentNullException>(() => queue.PullTo((int[])null));
+    Assert.Throws<ArgumentNullException>(() => queue.PullTo((int[])null!));
   }
 
   #endregion

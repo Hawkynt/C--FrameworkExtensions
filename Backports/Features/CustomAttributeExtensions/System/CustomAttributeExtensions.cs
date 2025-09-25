@@ -77,7 +77,7 @@ public static class CustomAttributeExtensions {
   /// <paramref name="element" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this Assembly element) where T : Attribute => (T)element.GetCustomAttribute(typeof(T));
+  public static T? GetCustomAttribute<T>(this Assembly element) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T));
 
   /// <summary>Retrieves a custom attribute of a specified type that is applied to a specified module.</summary>
   /// <param name="element">The module to inspect.</param>
@@ -86,7 +86,7 @@ public static class CustomAttributeExtensions {
   /// <paramref name="element" /> is <see langword="null" />.</exception>
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this Module element) where T : Attribute => (T)element.GetCustomAttribute(typeof(T));
+  public static T? GetCustomAttribute<T>(this Module element) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T));
 
   /// <summary>Retrieves a custom attribute of a specified type that is applied to a specified member.</summary>
   /// <param name="element">The member to inspect.</param>
@@ -98,7 +98,7 @@ public static class CustomAttributeExtensions {
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <exception cref="T:System.TypeLoadException">A custom attribute type cannot be loaded.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this MemberInfo element) where T : Attribute => (T)element.GetCustomAttribute(typeof(T));
+  public static T? GetCustomAttribute<T>(this MemberInfo element) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T));
 
   /// <summary>Retrieves a custom attribute of a specified type that is applied to a specified parameter.</summary>
   /// <param name="element">The parameter to inspect.</param>
@@ -110,7 +110,7 @@ public static class CustomAttributeExtensions {
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <exception cref="T:System.TypeLoadException">A custom attribute type cannot be loaded.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this ParameterInfo element) where T : Attribute => (T)element.GetCustomAttribute(typeof(T));
+  public static T? GetCustomAttribute<T>(this ParameterInfo element) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T));
 
   /// <summary>Retrieves a custom attribute of a specified type that is applied to a specified member, and optionally inspects the ancestors of that member.</summary>
   /// <param name="element">The member to inspect.</param>
@@ -162,7 +162,7 @@ public static class CustomAttributeExtensions {
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <exception cref="T:System.TypeLoadException">A custom attribute type cannot be loaded.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this MemberInfo element, bool inherit) where T : Attribute => (T)element.GetCustomAttribute(typeof(T), inherit);
+  public static T? GetCustomAttribute<T>(this MemberInfo element, bool inherit) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T), inherit);
 
   /// <summary>Retrieves a custom attribute of a specified type that is applied to a specified parameter, and optionally inspects the ancestors of that parameter.</summary>
   /// <param name="element">The parameter to inspect.</param>
@@ -176,7 +176,7 @@ public static class CustomAttributeExtensions {
   /// <exception cref="T:System.Reflection.AmbiguousMatchException">More than one of the requested attributes was found.</exception>
   /// <exception cref="T:System.TypeLoadException">A custom attribute type cannot be loaded.</exception>
   /// <returns>A custom attribute that matches <paramref name="T" />, or <see langword="null" /> if no such attribute is found.</returns>
-  public static T? GetCustomAttribute<T>(this ParameterInfo element, bool inherit) where T : Attribute => (T)element.GetCustomAttribute(typeof(T), inherit);
+  public static T? GetCustomAttribute<T>(this ParameterInfo element, bool inherit) where T : Attribute => (T?)element.GetCustomAttribute(typeof(T), inherit);
 
   /// <summary>Retrieves a collection of custom attributes that are applied to a specified assembly.</summary>
   /// <param name="element">The assembly to inspect.</param>

@@ -119,7 +119,7 @@ public class StackExtensionsTests {
     stack.Push(1);
 
     // Act & Assert
-    Assert.Throws<ArgumentNullException>(() => stack.PullTo((int[])null));
+    Assert.Throws<ArgumentNullException>(() => stack.PullTo((int[])null!));
   }
 
   #endregion

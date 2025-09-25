@@ -643,7 +643,7 @@ public class EnumComprehensiveTest {
   #region Edge Cases and Error Handling Tests
 
   [Test]
-  public void StringExtensions_ParseEnum_NullString_ThrowsArgumentNullException() => Assert.Throws<ArgumentNullException>(() => { ((string)null).ParseEnum<BasicEnum>(); });
+  public void StringExtensions_ParseEnum_NullString_ThrowsArgumentNullException() => Assert.Throws<ArgumentNullException>(() => { ((string)null!).ParseEnum<BasicEnum>(); });
 
   [Test]
   public void StringExtensions_ParseEnum_EmptyString_ThrowsArgumentException() => Assert.Throws<ArgumentException>(() => { "".ParseEnum<BasicEnum>(); });
@@ -653,7 +653,7 @@ public class EnumComprehensiveTest {
 
   [Test]
   public void StringExtensions_TryParseEnum_NullString_ReturnsFalse() {
-    var success = ((string)null).TryParseEnum<BasicEnum>(out var result);
+    var success = ((string)null!).TryParseEnum<BasicEnum>(out var result);
 
     Assert.That(success, Is.False);
     Assert.That(result, Is.EqualTo(default(BasicEnum)));
@@ -669,23 +669,23 @@ public class EnumComprehensiveTest {
 
   [Test]
   public void StringExtensions_ParseEnumOrDefault_NullString_ReturnsDefault() {
-    var result = ((string)null).ParseEnumOrDefault<BasicEnum>(BasicEnum.Third);
+    var result = ((string)null!).ParseEnumOrDefault<BasicEnum>(BasicEnum.Third);
 
     Assert.That(result, Is.EqualTo(BasicEnum.Third));
   }
 
   [Test]
   public void StringExtensions_ParseEnumOrNull_NullString_ReturnsNull() {
-    var result = ((string)null).ParseEnumOrNull<BasicEnum>();
+    var result = ((string)null!).ParseEnumOrNull<BasicEnum>();
 
     Assert.That(result, Is.Null);
   }
 
   [Test]
-  public void StringExtensions_ParseEnum_AttributeBased_NullString_ThrowsArgumentNullException() => Assert.Throws<NullReferenceException>(() => { ((string)null).ParseEnum<AttributedEnum, DescriptionAttribute>(attr => attr.Description); });
+  public void StringExtensions_ParseEnum_AttributeBased_NullString_ThrowsArgumentNullException() => Assert.Throws<NullReferenceException>(() => { ((string)null!).ParseEnum<AttributedEnum, DescriptionAttribute>(attr => attr.Description); });
 
   [Test]
-  public void StringExtensions_ParseEnum_AttributeBased_NullSelector_ThrowsArgumentNullException() => Assert.Throws<ArgumentNullException>(() => { "test".ParseEnum<AttributedEnum, DescriptionAttribute>((Func<DescriptionAttribute, string>)null); });
+  public void StringExtensions_ParseEnum_AttributeBased_NullSelector_ThrowsArgumentNullException() => Assert.Throws<ArgumentNullException>(() => { "test".ParseEnum<AttributedEnum, DescriptionAttribute>((Func<DescriptionAttribute, string>)null!); });
 
   [Test]
   public void StringExtensions_ParseEnum_AttributeBased_WithAttributeReturningNull_HandlesGracefully() {

@@ -20,7 +20,7 @@ namespace System;
 
 public interface ISpanFormattable : IFormattable {
 
-  string ToString(string format, IFormatProvider formatProvider);
+  new string ToString(string format, IFormatProvider formatProvider);
   public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider);
 
 }
