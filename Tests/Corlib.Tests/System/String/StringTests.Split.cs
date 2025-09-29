@@ -12,6 +12,127 @@ namespace System.String;
 [TestFixture]
 [Category("Unit")]
 public partial class StringTests {
+
+  // Helper to shorten assertions
+  private static void AreEqual(string[] actual, params string[] expected)
+      => Assert.That(actual, Is.EqualTo(expected), $"Actual: [{string.Join(", ", actual)}]");
+
+  private const string Sample = "a,,b";
+
+  // ----------------------------
+  // Counted overload
+  // ----------------------------
+
+  [TestCase(null, -1, StringSplitOptions.None)]
+  [TestCase("", -1, StringSplitOptions.None)]
+  [TestCase(",", -1, StringSplitOptions.None)]
+  [TestCase(",", -1, StringSplitOptions.RemoveEmptyEntries)]
+  public void Split_StringSeparator_Count_NegativeCount_Throws(string? separator, int count, StringSplitOptions options) {
+    Assert.Throws<ArgumentOutOfRangeException>(() => Sample.Split(separator, count, options));
+  }
+
+  [TestCase(null, 0, StringSplitOptions.None)]
+  [TestCase("", 0, StringSplitOptions.None)]
+  [TestCase(",", 0, StringSplitOptions.None)]
+  [TestCase(",", 0, StringSplitOptions.RemoveEmptyEntries)]
+  public void Split_StringSeparator_Count_ZeroCount_AlwaysEmpty(string? separator, int count, StringSplitOptions options) {
+    AreEqual(Sample.Split(separator, count, options));
+  }
+
+  // null / empty separator => "no split" semantics
+  [TestCase(null, 1, StringSplitOptions.None)]
+  [TestCase("", 1, StringSplitOptions.None)]
+  [TestCase(null, 2, StringSplitOptions.None)]
+  [TestCase("", 2, StringSplitOptions.None)]
+  [TestCase(null, 1, StringSplitOptions.RemoveEmptyEntries)]
+  [TestCase("", 1, StringSplitOptions.RemoveEmptyEntries)]
+  [TestCase(null, 2, StringSplitOptions.RemoveEmptyEntries)]
+  [TestCase("", 2, StringSplitOptions.RemoveEmptyEntries)]
+  public void Split_StringSeparator_Count_NullOrEmpty_NoSplit(string? separator, int count, StringSplitOptions options) {
+    AreEqual(Sample.Split(separator, count, options), Sample);
+  }
+
+  // Non-empty separator, count=1 -> no split, whole string returned
+  [TestCase(StringSplitOptions.None)]
+  [TestCase(StringSplitOptions.RemoveEmptyEntries)]
+  public void Split_StringSeparator_Count_NonEmpty_Count1(StringSplitOptions options) {
+    AreEqual(Sample.Split(",", 1, options), Sample);
+  }
+
+  // Non-empty separator, count=2
+  [Test]
+  public void Split_StringSeparator_Count_NonEmpty_Count2_None() {
+    // With None: keep empties; remainder is the tail (including leading comma that created empty)
+    AreEqual(Sample.Split(",", 2, StringSplitOptions.None), "a", ",b");
+  }
+
+  [Test]
+  public void Split_StringSeparator_Count_NonEmpty_Count2_RemoveEmpty() {
+    // With RemoveEmptyEntries: skip empty mid-segment, pack tail without the empties
+    AreEqual(Sample.Split(",", 2, StringSplitOptions.RemoveEmptyEntries), "a", "b");
+  }
+
+  // ----------------------------
+  // No-count overload
+  // ----------------------------
+
+  // null/empty => no split
+  [TestCase(null, StringSplitOptions.None)]
+  [TestCase("", StringSplitOptions.None)]
+  [TestCase(null, StringSplitOptions.RemoveEmptyEntries)]
+  [TestCase("", StringSplitOptions.RemoveEmptyEntries)]
+  public void Split_StringSeparator_NoCount_NullOrEmpty_NoSplit(string? separator, StringSplitOptions options) {
+    AreEqual(Sample.Split(separator, options), Sample);
+  }
+
+  // non-empty => split all
+  [Test]
+  public void Split_StringSeparator_NoCount_NonEmpty_None() {
+    AreEqual(Sample.Split(",", StringSplitOptions.None), "a", "", "b");
+  }
+
+  [Test]
+  public void Split_StringSeparator_NoCount_NonEmpty_RemoveEmpty() {
+    AreEqual(Sample.Split(",", StringSplitOptions.RemoveEmptyEntries), "a", "b");
+  }
+
+  // ----------------------------
+  // Empty source edge-cases for null/empty separator
+  // ----------------------------
+
+  [TestCase(null)]
+  [TestCase("")]
+  public void Split_EmptySource_Count_NullOrEmpty_RemoveEmpty_EmptyResult(string? separator) {
+    const string s = "";
+    // count = 0 => empty; count > 0 => RemoveEmptyEntries drops the sole (empty) segment
+    AreEqual(s.Split(separator, 0, StringSplitOptions.RemoveEmptyEntries));
+    AreEqual(s.Split(separator, 1, StringSplitOptions.RemoveEmptyEntries));
+    AreEqual(s.Split(separator, 2, StringSplitOptions.RemoveEmptyEntries));
+  }
+
+  [TestCase(null)]
+  [TestCase("")]
+  public void Split_EmptySource_Count_NullOrEmpty_None_SingleEmptyUnlessCountZero(string? separator) {
+    const string s = "";
+    AreEqual(s.Split(separator, 0, StringSplitOptions.None));
+    AreEqual(s.Split(separator, 1, StringSplitOptions.None), "");
+    AreEqual(s.Split(separator, 2, StringSplitOptions.None), "");
+  }
+
+  [TestCase(null)]
+  [TestCase("")]
+  public void Split_EmptySource_NoCount_NullOrEmpty_RemoveEmpty_EmptyResult(string? separator) {
+    const string s = "";
+    AreEqual(s.Split(separator, StringSplitOptions.RemoveEmptyEntries));
+  }
+
+  [TestCase(null)]
+  [TestCase("")]
+  public void Split_EmptySource_NoCount_NullOrEmpty_None_SingleEmpty(string? separator) {
+    const string s = "";
+    AreEqual(s.Split(separator, StringSplitOptions.None), "");
+  }
+
   #region Split Test Data
 
   public record struct SplitParametersTestData(

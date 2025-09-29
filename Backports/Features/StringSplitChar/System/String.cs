@@ -17,6 +17,7 @@
 #if !SUPPORTS_STRING_SPLIT_CHAR
 
 using System.Runtime.CompilerServices;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -34,10 +35,15 @@ public static partial class StringPolyfills {
   ;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None)
-    => separator is { Length: not 0 }
-      ? @this.Split([separator], count, options)
-      : [@this];
+  public static string[] Split(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None) => 
+    separator is { Length: not 0 }
+    ? @this.Split([separator], count, options)
+    : count switch {
+      < 0 => AlwaysThrow.ArgumentOutOfRangeException<string[]>(nameof(count)),
+      0 => [],
+      > 0 when string.IsNullOrEmpty(@this) && (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries => [],
+      _ => [@this]
+    };
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string[] Split(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
