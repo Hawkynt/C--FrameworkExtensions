@@ -14,7 +14,7 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if !SUPPORTS_SPAN
+#if !SUPPORTS_SPAN && !OFFICIAL_SPAN
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;

@@ -13,7 +13,7 @@
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-#if !SUPPORTS_SPAN
+#if !SUPPORTS_SPAN && !OFFICIAL_SPAN
 
 using Guard;
 using System.Runtime.CompilerServices;

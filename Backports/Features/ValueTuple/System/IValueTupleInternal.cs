@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VALUE_TUPLE
+#if !SUPPORTS_VALUE_TUPLE && !OFFICIAL_VALUE_TUPLE
 
 using System.Collections;
 

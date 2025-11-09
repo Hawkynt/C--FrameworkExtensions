@@ -16,7 +16,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#if !SUPPORTS_ARRAYPOOL
+#if !SUPPORTS_ARRAYPOOL && !OFFICIAL_ARRAYPOOL
 
 using System.Runtime.CompilerServices;
 using System.Threading;
