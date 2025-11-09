@@ -42,54 +42,62 @@
 
   <!-- Official Microsoft Backport Packages -->
   <!-- These are included as dependencies so users only need to reference FrameworkExtensions.Backports -->
+  <!-- Each package has its own PropertyGroup (for compilation symbols) and ItemGroup (for package references) -->
 
-  <!-- .NET Framework 4.0 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+  <!-- System.ValueTuple - Provides ValueTuple types for older frameworks -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
     <DefineConstants>$(DefineConstants);OFFICIAL_VALUE_TUPLE</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
-  <!-- .NET Framework 4.5-4.8 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_SPAN;OFFICIAL_MEMORY;OFFICIAL_ARRAYPOOL;OFFICIAL_UNSAFE;OFFICIAL_VECTOR;OFFICIAL_VALUETASK</DefineConstants>
+  <!-- System.Memory - Provides Span<T>, ReadOnlySpan<T>, Memory<T>, MemoryMarshal -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_SPAN;OFFICIAL_MEMORY</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_VALUE_TUPLE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_HASHCODE</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
-    <PackageReference Include="System.Buffers" Version="4.5.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'" />
   </ItemGroup>
 
-  <!-- .NET Standard 2.0 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_SPAN;OFFICIAL_MEMORY;OFFICIAL_ARRAYPOOL;OFFICIAL_UNSAFE;OFFICIAL_VECTOR;OFFICIAL_VALUETASK;OFFICIAL_HASHCODE</DefineConstants>
+  <!-- System.Buffers - Provides ArrayPool<T> -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_ARRAYPOOL</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Buffers" Version="4.5.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
 
-  <!-- .NET Standard 2.1 and .NET Core 3.1 -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+  <!-- System.Runtime.CompilerServices.Unsafe - Provides Unsafe class -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
     <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <!-- System.Numerics.Vectors - Provides Vector<T> types -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_VECTOR</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+  </ItemGroup>
+
+  <!-- System.Threading.Tasks.Extensions - Provides ValueTask -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_VALUETASK</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+  </ItemGroup>
+
+  <!-- Microsoft.Bcl.HashCode - Provides HashCode -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_HASHCODE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
