@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_CALLER_MEMBER_NAME
+#if !SUPPORTS_CALLER_MEMBER_NAME && !OFFICIAL_CALLER_MEMBER_NAME
 
 namespace System.Runtime.CompilerServices;
 

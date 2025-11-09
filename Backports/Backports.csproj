@@ -44,6 +44,22 @@
   <!-- These are included as dependencies so users only need to reference FrameworkExtensions.Backports -->
   <!-- Each package has its own PropertyGroup (for compilation symbols) and ItemGroup (for package references) -->
 
+  <!-- Microsoft.Bcl - Provides CallerMemberName, IProgress, Tuple extensions for .NET 4.0 (DEPRECATED but still relevant) -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_CALLER_MEMBER_NAME</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+    <PackageReference Include="Microsoft.Bcl" Version="1.1.10" />
+  </ItemGroup>
+
+  <!-- Microsoft.Bcl.Async - Provides TaskAwaiter and async/await support for .NET 4.0 (DEPRECATED but still relevant) -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_TASK_AWAITER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+  </ItemGroup>
+
   <!-- System.ValueTuple - Provides ValueTuple types for older frameworks -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
     <DefineConstants>$(DefineConstants);OFFICIAL_VALUE_TUPLE</DefineConstants>

@@ -33,6 +33,7 @@ This approach means:
 
 The following official Microsoft packages are conditionally referenced based on your target framework:
 
+**Active Packages:**
 - **System.Memory** - Provides `Span<T>`, `ReadOnlySpan<T>`, `Memory<T>`, and `MemoryMarshal` (.NET Framework 4.5+, .NET Standard 2.0)
 - **System.Buffers** - Provides `ArrayPool<T>` (.NET Framework 4.5+, .NET Standard 2.0)
 - **System.ValueTuple** - Provides `ValueTuple` types (.NET Framework 4.0+)
@@ -40,6 +41,12 @@ The following official Microsoft packages are conditionally referenced based on 
 - **System.Numerics.Vectors** - Provides `Vector` types (.NET Framework 4.5+, .NET Standard 2.0)
 - **System.Threading.Tasks.Extensions** - Provides `ValueTask` (.NET Framework 4.5+, .NET Standard 2.0)
 - **Microsoft.Bcl.HashCode** - Provides `HashCode` (.NET Framework 4.6.1+, .NET Standard 2.0)
+
+**Deprecated Packages (still included for compatibility):**
+- **Microsoft.Bcl** - Provides `CallerMemberNameAttribute` and related attributes (.NET Framework 4.0 only)
+- **Microsoft.Bcl.Async** - Provides `TaskAwaiter` and async/await support (.NET Framework 4.0 only)
+
+> **Note:** Microsoft.Bcl and Microsoft.Bcl.Async are officially deprecated but are still included for .NET Framework 4.0 to avoid conflicts with existing projects that may reference these packages.
 
 For target frameworks where these packages are not available (e.g., .NET Framework 2.0/3.5), custom implementations are provided.
 

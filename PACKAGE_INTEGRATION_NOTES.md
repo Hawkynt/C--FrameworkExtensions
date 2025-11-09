@@ -30,6 +30,16 @@ This ensures that when an official package is referenced, both the package and t
 
 **Packages and Symbols:**
 
+- **Microsoft.Bcl** (v1.1.10) → `OFFICIAL_CALLER_MEMBER_NAME` ⚠️ DEPRECATED
+  - Target: .NET Framework 4.0
+  - Provides: CallerMemberNameAttribute, CallerFilePathAttribute, CallerLineNumberAttribute, IProgress<T>, Tuple extensions
+  - Note: Deprecated but still included for .NET 4.0 compatibility
+
+- **Microsoft.Bcl.Async** (v1.0.168) → `OFFICIAL_TASK_AWAITER` ⚠️ DEPRECATED
+  - Target: .NET Framework 4.0
+  - Provides: TaskAwaiter, async/await language support, Task-based extension methods
+  - Note: Deprecated but still included for .NET 4.0 compatibility
+
 - **System.ValueTuple** (v4.5.0) → `OFFICIAL_VALUE_TUPLE`
   - Target: .NET Framework 4.0
   - Target: .NET Framework 4.5-4.6.2
@@ -88,6 +98,8 @@ This ensures custom implementations are only compiled when:
 - We're not using an official package (`!OFFICIAL_*`)
 
 **Affected symbols:**
+- `SUPPORTS_CALLER_MEMBER_NAME` / `OFFICIAL_CALLER_MEMBER_NAME`
+- `SUPPORTS_TASK_AWAITER` / `OFFICIAL_TASK_AWAITER`
 - `SUPPORTS_SPAN` / `OFFICIAL_SPAN`
 - `SUPPORTS_VALUE_TUPLE` / `OFFICIAL_VALUE_TUPLE`
 - `SUPPORTS_UNSAFE` / `OFFICIAL_UNSAFE`
