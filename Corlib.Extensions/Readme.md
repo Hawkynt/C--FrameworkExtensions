@@ -1,6 +1,4 @@
-# Corlib Extensions 🚀
-
-> **Just a small .NET extension library - 3,300+ high-performance extension methods with aggressive optimizations.**
+# Corlib Extensions
 
 [![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml)
 [![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
@@ -10,36 +8,36 @@
 
 ## Overview
 
-This is probably the most comprehensive .NET extension library ever created, extending virtually every .NET core type with thousands of carefully optimized extension methods. It represents years of development effort to create the ultimate productivity enhancement for .NET developers, featuring aggressive performance optimizations, comprehensive functionality, and cross-platform compatibility.
+Extension methods for core .NET types, providing additional functionality across strings, collections, math, I/O, threading, and other common operations. Supports .NET 3.5 through .NET 9.0.
 
-### 🎯 Key Features
+### Key Features
 
-- **3,300+ Extension Methods** across virtually every .NET type
+- **3,300+ Extension Methods** across common .NET types
   - **600+ String extensions** - parsing, formatting, case conversion, text analysis, phonetics
-  - **900+ Math & Numeric extensions** - all numeric types with SIMD optimizations and hardware intrinsics
-  - **300+ Array extensions** - high-performance operations, slicing, advanced algorithms  
-  - **400+ I/O extensions** - FileInfo, DirectoryInfo, Stream, and comprehensive file system operations
+  - **900+ Math & Numeric extensions** - numeric types with SIMD optimizations and hardware intrinsics
+  - **300+ Array extensions** - array operations, slicing, algorithms
+  - **400+ I/O extensions** - FileInfo, DirectoryInfo, Stream operations
   - **350+ Collection extensions** - Dictionary, List, HashSet, concurrent collections, LINQ enhancements
-  - **200+ Threading extensions** - advanced Interlocked operations, task management, synchronization
-  - **550+ Additional extensions** - DateTime, TimeSpan, reflection, data access, networking, and all core types
+  - **200+ Threading extensions** - Interlocked operations, task management, synchronization
+  - **550+ Additional extensions** - DateTime, TimeSpan, reflection, data access, networking
 
-### 🏆 Unprecedented Scope
+### Technical Details
 
-- **T4 Code Generation** - Extensive use of T4 templates for generating type-safe methods across all numeric types
-- **Hardware-Optimized** - SIMD operations, hardware intrinsics, unsafe code for maximum performance
-- **Enterprise-Grade** - Atomic operations, thread-safety, robust error handling, comprehensive validation
-- **Modern C# Features** - Nullable reference types, spans, ranges, pattern matching, latest language features
-- **Universal Compatibility** - Supports .NET 3.5 through .NET 9.0 with conditional compilation
-- **Zero Dependencies** - Only depends on FrameworkExtensions.Backports for backported language features
-- **Production-Ready** - Extensive unit, integration, performance, and regression testing
+- **T4 Code Generation** - Type-safe methods generated across numeric types
+- **Performance Optimizations** - SIMD operations, hardware intrinsics, unsafe code where beneficial
+- **Thread Safety** - Atomic operations, concurrent collection support
+- **Modern C# Features** - Nullable reference types, spans, ranges, pattern matching
+- **Multi-Framework Support** - .NET 3.5 through .NET 9.0 with conditional compilation
+- **Dependencies** - Requires FrameworkExtensions.Backports for backported language features
+- **Testing** - Unit, integration, performance, and regression tests
 
 ---
 
-## 📚 Methods - Extension Methods by Type
+## Extension Methods by Type
 
 ### Array Extensions (`TItem[]`)
 
-300+ enhanced array operations with aggressive performance optimizations
+Array operations with performance optimizations
 
 #### Core Operations
 
@@ -84,7 +82,7 @@ This is probably the most comprehensive .NET extension library ever created, ext
 
 ### String Extensions (`string`)
 
-600+ comprehensive string manipulation methods - the most complete string library ever created
+String manipulation methods covering parsing, formatting, and text analysis
 
 #### Case Conversion (12 methods)
 
@@ -210,11 +208,11 @@ Generated via T4 templates for 15 data types: Float, Double, Decimal, Byte, SByt
 
 ### Collection Extensions (`Collections`, `Generic Collections`, `Concurrent Collections`)
 
-350+ methods for enhanced collection operations - comprehensive collection manipulation
+Methods for collection operations including dictionaries, lists, and concurrent collections
 
-#### Dictionary Extensions (`IDictionary<TKey, TValue>`) - 34 methods
+#### Dictionary Extensions (`IDictionary<TKey, TValue>`)
 
-Thread-safe and performance-optimized dictionary operations
+Dictionary operations with thread-safety support
 
 - **`AddRange(keyValuePairs)`** - Bulk addition operations
 - **`GetValueOrDefault(key, defaultValue)`** - Safe value retrieval
@@ -225,44 +223,44 @@ Thread-safe and performance-optimized dictionary operations
 - **`TryUpdate(key, newValue, comparisonValue)`** - Conditional updates
 - **`CompareTo(other, keyComparer, valueComparer)`** - Dictionary comparison
 
-#### Generic Collection Extensions - 213+ methods
+#### Generic Collection Extensions
 
-Comprehensive extensions for List, HashSet, Queue, Stack, LinkedList, and more
+Extensions for List, HashSet, Queue, Stack, LinkedList, and related types
 
-- **List Extensions (28 methods)** - TrySetFirst/Last/Item, RemoveEvery, Swap, Shuffle, Permutate, BinarySearchIndex variants
-- **HashSet Extensions (4 methods)** - CompareTo, ContainsNot, TryAdd, TryRemove
-- **Queue Extensions (10 methods)** - PullTo variants, PullAll, Pull, AddRange, Add, Fetch, TryDequeue
-- **Stack Extensions (11 methods)** - PullTo variants, PullAll, Pull, Exchange, Invert, AddRange, Add, Fetch
-- **LinkedList Extensions (9 methods)** - Enhanced navigation and manipulation
-- **Collection Extensions (9 methods)** - General ICollection<T> utilities
-- **Enumerable Extensions (~115+ methods)** - T4-generated LINQ-style operations
-- **KeyValuePair Extensions (1 method)** - Reverse key-value pairs
+- **List Extensions** - TrySetFirst/Last/Item, RemoveEvery, Swap, Shuffle, Permutate, BinarySearchIndex variants
+- **HashSet Extensions** - CompareTo, ContainsNot, TryAdd, TryRemove
+- **Queue Extensions** - PullTo variants, PullAll, Pull, AddRange, Add, Fetch, TryDequeue
+- **Stack Extensions** - PullTo variants, PullAll, Pull, Exchange, Invert, AddRange, Add, Fetch
+- **LinkedList Extensions** - Navigation and manipulation
+- **Collection Extensions** - General ICollection<T> utilities
+- **Enumerable Extensions** - T4-generated LINQ-style operations
+- **KeyValuePair Extensions** - Reverse key-value pairs
 
-#### Concurrent Collection Extensions - 21 methods
+#### Concurrent Collection Extensions
 
-Thread-safe collection operations for high-performance concurrent scenarios
+Thread-safe collection operations for concurrent scenarios
 
-- **ConcurrentDictionary Extensions (7 methods)** - Enhanced atomic operations
-- **ConcurrentQueue Extensions (6 methods)** - Advanced queue operations with bulk processing
-- **ConcurrentStack Extensions (8 methods)** - Enhanced stack operations with safety guarantees
+- **ConcurrentDictionary Extensions** - Atomic operations
+- **ConcurrentQueue Extensions** - Queue operations with bulk processing
+- **ConcurrentStack Extensions** - Stack operations with safety guarantees
 
-#### Specialized Collection Extensions - 14 methods
+#### Specialized Collection Extensions
 
-- **StringDictionary Extensions (1 method)** - String-specific dictionary optimizations
-- **StringCollection Extensions (1 method)** - String collection utilities
-- **BitArray Extensions (2 methods)** - Bit manipulation operations
-- **LINQ Extensions (8 methods)** - IQueryable enhancements
-- **ObjectModel Collection Extensions (2 methods)** - Observable collections
+- **StringDictionary Extensions** - String-specific dictionary operations
+- **StringCollection Extensions** - String collection utilities
+- **BitArray Extensions** - Bit manipulation operations
+- **LINQ Extensions** - IQueryable enhancements
+- **ObjectModel Collection Extensions** - Observable collections
 
 ---
 
 ### File System Extensions
 
-400+ methods for comprehensive file system operations
+File system operations including FileInfo, DirectoryInfo, and Stream extensions
 
 #### FileInfo Extensions (`FileInfo`)
 
-Advanced file operations with async support and performance optimizations
+File operations with async support
 
 #### File Operations
 
@@ -285,7 +283,7 @@ Advanced file operations with async support and performance optimizations
 
 #### DirectoryInfo Extensions (`DirectoryInfo`)
 
-Enhanced directory operations and navigation
+Directory operations and navigation
 
 #### Directory Management
 
@@ -312,35 +310,35 @@ Enhanced directory operations and navigation
 
 #### Stream Extensions (`Stream`)
 
-70+ methods for enhanced stream operations
+Stream operations for various data types
 
-- **Primitive I/O Operations** - Read/Write for all primitive types (bool, byte, short, int, long, float, double, decimal)
-- **Endianness Support** - Big-endian and little-endian operations for cross-platform compatibility
-- **String Operations** - Length-prefixed, zero-terminated, and fixed-length string reading/writing
-- **Advanced Reading** - Struct serialization, positioned reads with seek origin support
-- **Async Operations** - Complete async/await support for all positioned operations
+- **Primitive I/O Operations** - Read/Write for primitive types (bool, byte, short, int, long, float, double, decimal)
+- **Endianness Support** - Big-endian and little-endian operations
+- **String Operations** - Length-prefixed, zero-terminated, and fixed-length strings
+- **Struct Operations** - Struct serialization, positioned reads with seek origin support
+- **Async Operations** - Async/await support for positioned operations
 - **Stream Analysis** - End-of-stream detection, stream-to-array conversion
-- **Buffer Management** - High-performance buffer management using thread-static and shared buffers
+- **Buffer Management** - Buffer management using thread-static and shared buffers
 
 #### Path & FileSystem Extensions
 
-20+ methods for path manipulation and file system utilities
+Path manipulation and file system utilities
 
-- **Temporary Resource Management** - Advanced temporary file/directory creation with auto-cleanup
-- **Cross-Platform Support** - Multi-OS temporary directory resolution (Windows, Linux, macOS, etc.)
+- **Temporary Resource Management** - Temporary file/directory creation with auto-cleanup
+- **Cross-Platform Support** - Multi-OS temporary directory resolution
 - **UNC Path Operations** - Network path parsing and manipulation
-- **Relative Path Calculation** - Calculate relative paths between file system objects
+- **Relative Path Calculation** - Relative paths between file system objects
 - **Volume Operations** - System volume enumeration and mount point management
 
 ---
 
 ### Math & Numeric Extensions
 
-900+ mathematical operations
+Mathematical operations for numeric types
 
-#### Bit Manipulation Extensions (60+ methods)
+#### Bit Manipulation Extensions
 
-Comprehensive bitwise operations with hardware intrinsics support
+Bitwise operations with hardware intrinsics support
 
 - **`LowerHalf()` / `UpperHalf()`** - Extract lower/upper bit portions from multi-byte types
 - **`RotateLeft(count)` / `RotateRight(count)`** - Bitwise rotation for all integer types
@@ -355,9 +353,9 @@ Comprehensive bitwise operations with hardware intrinsics support
 - **`IsPowerOfTwo()`** - Fast power-of-2 testing using bitwise AND tricks
 - **`And()` / `Or()` / `Xor()` / `Not()` / `Nand()` / `Nor()`** - Bitwise logical operations
 
-#### Advanced Mathematical Functions (80+ methods)
+#### Advanced Mathematical Functions
 
-High-precision implementations with custom algorithms
+Mathematical functions with precision implementations
 
 **Standard Math Functions:**
 
@@ -368,7 +366,7 @@ High-precision implementations with custom algorithms
 - **`LogN(base)` / `Log()` / `Log10()` / `Log2()`** - Logarithmic functions
 - **`Exp()`** - Exponential function with Taylor series for decimal precision
 
-**Trigonometric Functions (30+ methods):**
+**Trigonometric Functions:**
 
 - **`Sin()` / `Cos()` / `Tan()`** - Basic trigonometric functions
 - **`Sinh()` / `Cosh()` / `Tanh()`** - Hyperbolic functions
@@ -379,9 +377,9 @@ High-precision implementations with custom algorithms
 - **`Arsinh()` / `Arcosh()` / `Artanh()`** - Inverse hyperbolic functions
 - **`Acot()` / `Asec()` / `Acsc()` / `Arcoth()` / `Arsech()` / `Arcsch()`** - Extended inverse functions
 
-#### Arithmetic Operations (200+ methods)
+#### Arithmetic Operations
 
-Generated for all numeric types: byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
+Operations for numeric types: byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
 
 **Basic Arithmetic:**
 
@@ -396,9 +394,9 @@ Generated for all numeric types: byte, sbyte, short, ushort, int, uint, long, ul
 - **`ArithmeticShiftLeft()` / `ArithmeticShiftRight()`** - Sign-preserving bit shifts
 - **`LogicalShiftLeft()` / `LogicalShiftRight()`** - Zero-fill bit shifts
 
-#### Comparison & Range Operations (180+ methods)
+#### Comparison & Range Operations
 
-Comprehensive comparison operations for all numeric types
+Comparison operations for numeric types
 
 **Value State Checks:**
 
@@ -415,113 +413,111 @@ Comprehensive comparison operations for all numeric types
 - **`IsNumeric()` / `IsNonNumeric()`** - Validity checking for calculations
 - **`ReciprocalEstimate()`** - Fast reciprocal approximation using hardware instructions
 
-#### Type-Safe Unsigned Wrappers (135 methods)
+#### Type-Safe Unsigned Wrappers
 
 UnsignedFloat, UnsignedDouble, UnsignedDecimal - compile-time negative value prevention
 
-**Complete Arithmetic Support:**
+**Arithmetic Support:**
 
-- All standard operators (+, -, *, /, %) with overflow checking
-- Complete comparison operators with optimized implementations  
+- Standard operators (+, -, *, /, %) with overflow checking
+- Comparison operators
 - Implicit conversions from unsigned integer types
 - Explicit conversions from signed types with validation
 - `IComparable`, `IConvertible`, `IFormattable` interface implementations
-- Modern .NET support: `ISpanParsable`, `ISpanFormattable` for .NET 7+
+- `ISpanParsable`, `ISpanFormattable` support for .NET 7+
 
 **Mathematical Operations:**
 
-- All standard math functions adapted for unsigned constraints
-- Special handling for operations that could produce negative results
-- Performance optimizations leveraging the non-negative guarantee
+- Standard math functions adapted for unsigned constraints
+- Handling for operations that could produce negative results
 
-#### Utility Extensions (94 methods)
+#### Utility Extensions
 
-**SIMD-Optimized Operations:**
+**Operations:**
 
-- **`Min()` / `Max()`** - Hardware-accelerated min/max operations using unsafe code
-- **`Bits()`** - Get IEEE 754 bit representation for floating-point types
-- **`Equ()`** - High-precision equality comparison with configurable epsilon
+- **`Min()` / `Max()`** - Min/max operations
+- **`Bits()`** - IEEE 754 bit representation for floating-point types
+- **`Equ()`** - Equality comparison with configurable epsilon
 
-**Repetition Extensions (32 methods):**
+**Repetition Extensions:**
 
-For all integer types (byte through long)
+For integer types (byte through long)
 
-- **`Times(Action)`** - Execute action N times (optimized loop unrolling)
+- **`Times(Action)`** - Execute action N times
 - **`Times(Action<T>)`** - Execute action N times with index parameter
-- **`Times(string)`** - Repeat string N times with StringBuilder optimization
-- **`Times(char)`** - Repeat character N times using efficient string constructor
+- **`Times(string)`** - Repeat string N times
+- **`Times(char)`** - Repeat character N times
 
-#### Key Performance Features
+#### Performance Features
 
-1. **Hardware Intrinsics Integration** - Leverages modern CPU features (SIMD, FMA, etc.)
-2. **Aggressive Inlining** - Extensive use of `MethodImplOptions.AggressiveInlining`
-3. **Custom High-Precision Algorithms** - Taylor series, Newton-Raphson methods for decimal precision
-4. **Overflow Detection** - Safe arithmetic operations with overflow checking
-5. **Epsilon-Based Comparisons** - Configurable precision for floating-point operations
-6. **SIMD Optimizations** - Vectorized operations where hardware supports it
-7. **Lookup Tables** - Pre-computed tables for bit manipulation operations
-8. **Branch Reduction** - Optimized conditional logic using bitwise tricks
+- Hardware intrinsics integration (SIMD, FMA, etc.)
+- Aggressive inlining using `MethodImplOptions.AggressiveInlining`
+- High-precision algorithms (Taylor series, Newton-Raphson methods)
+- Overflow detection for safe arithmetic
+- Epsilon-based comparisons for floating-point operations
+- SIMD optimizations where hardware supports it
+- Lookup tables for bit manipulation operations
+- Branch reduction using bitwise operations
 
 ---
 
 ### DateTime & TimeSpan Extensions
 
-Enhanced date and time manipulation
+Date and time manipulation
 
-- **DateTime Operations** - Advanced date/time arithmetic and formatting
-- **TimeSpan Operations** - Enhanced duration calculations and utilities
+- **DateTime Operations** - Date/time arithmetic and formatting
+- **TimeSpan Operations** - Duration calculations and utilities
 
 ---
 
 ### Threading & Task Extensions
 
-200+ methods for advanced concurrent programming and synchronization
+Concurrent programming and synchronization utilities
 
-#### Task Management Extensions - 8 methods
+#### Task Management Extensions
 
-- **`DeferredTask` (2 methods)** - Lazy task execution with dependency management
-- **`ScheduledTask` (1 method)** - Cron-like scheduled task execution  
-- **`Sequential` (1 method)** - Sequential task processor with ordering guarantees
-- **`Task` (1 method)** - Enhanced task utilities
-- **`Future<T>` (1 method)** - Future/promise pattern implementation
-- **Related task utilities (2 methods)** - Additional task management features
+- **`DeferredTask`** - Lazy task execution with dependency management
+- **`ScheduledTask`** - Scheduled task execution
+- **`Sequential`** - Sequential task processor with ordering guarantees
+- **`Task`** - Task utilities
+- **`Future<T>`** - Future/promise pattern implementation
 
-#### Interlocked Extensions - 49 methods
+#### Interlocked Extensions
 
-Advanced atomic operations with enum support and flag manipulation
+Atomic operations with enum support and flag manipulation
 
-- **Standard Atomic Operations (15 methods)** - Enhanced versions of standard Interlocked operations
-- **T4-Generated Enum Operations (34 methods)** - Type-safe atomic operations for enums:
-  - **Flag Operations** - Set, clear, toggle, and test flags atomically
-  - **Enum Arithmetic** - Add, subtract, increment, decrement enum values safely
-  - **Conditional Updates** - CompareExchange operations with strong typing
-  - **Read Operations** - Type-safe atomic reads with memory barriers
+- **Standard Atomic Operations** - Interlocked operations
+- **T4-Generated Enum Operations** - Type-safe atomic operations for enums:
+  - Flag operations (set, clear, toggle, test atomically)
+  - Enum arithmetic (add, subtract, increment, decrement)
+  - Conditional updates (CompareExchange with strong typing)
+  - Read operations (atomic reads with memory barriers)
 
-#### Synchronization Primitives - 8 methods
+#### Synchronization Primitives
 
-Enhanced synchronization with advanced features
+Synchronization with thread-safety features
 
-- **`SemaphoreSlim` Extensions (2 methods)** - Enhanced semaphore operations
-- **`ManualResetEvent` Extensions (1 method)** - Event signaling utilities
-- **`Thread` Extensions (3 methods)** - Thread management and utilities
-- **`Timer` Extensions (3 methods)** - Enhanced timer operations
+- **`SemaphoreSlim` Extensions** - Semaphore operations
+- **`ManualResetEvent` Extensions** - Event signaling utilities
+- **`Thread` Extensions** - Thread management and utilities
+- **`Timer` Extensions** - Timer operations
 
-#### Advanced Threading Utilities
+#### Threading Utilities
 
-- **`CallOnTimeout`** - Timeout-based callback execution with cancellation
-- **`Event`** - Enhanced event signaling with multiple listeners
-- **`HighPrecisionTimer`** - High-resolution timing for performance-critical code
+- **`CallOnTimeout`** - Timeout-based callback execution
+- **`Event`** - Event signaling with multiple listeners
+- **`HighPrecisionTimer`** - High-resolution timing
 
 ---
 
 ### Reflection & Type Extensions
 
-Advanced reflection utilities with performance optimizations
+Reflection utilities for types and metadata
 
 #### Type Operations
 
-- **Enhanced type inspection** and metadata operations
-- **Assembly Extensions** - Advanced assembly operations
+- Type inspection and metadata operations
+- **Assembly Extensions** - Assembly operations
 - **MethodInfo Extensions** - Method reflection utilities
 - **PropertyInfo Extensions** - Property reflection utilities
 
@@ -529,27 +525,27 @@ Advanced reflection utilities with performance optimizations
 
 ### Data & ComponentModel Extensions
 
-Enhanced data binding and database operations
+Data binding and database operations
 
 #### Data Extensions
 
-- **`DataRecord` / `DataRow` / `DataTable` Extensions** - Enhanced data operations
-- **LINQ to Data Extensions** - Advanced querying
+- **`DataRecord` / `DataRow` / `DataTable` Extensions** - Data operations
+- **LINQ to Data Extensions** - Querying utilities
 - **SQL Client Extensions** - Database utilities
 
 #### ComponentModel Extensions
 
-- **`BindingList` / `SortableBindingList`** - Enhanced data binding
-- **Property Change Notifications** - Advanced MVVM support
+- **`BindingList` / `SortableBindingList`** - Data binding
+- **Property Change Notifications** - MVVM support
 - **Attribute Extensions** - Metadata utilities
 
 ---
 
-## 🔧 Types - New Types Added to the System
+## New Types
 
 ### Collection Types
 
-High-performance collection implementations
+Collection implementations for specialized use cases
 
 #### Array Utilities
 
@@ -677,26 +673,26 @@ Essential utility types for common programming patterns
 
 ---
 
-## 🚀 Performance Features
+## Performance Features
 
-### Aggressive Optimizations
+### Optimizations
 
-- **Unsafe Code Blocks** - Direct memory manipulation for maximum performance
-- **SIMD-like Operations** - Vectorized operations using block processing
-- **Aggressive Inlining** - Extensive use of `MethodImplOptions.AggressiveInlining`
+- **Unsafe Code Blocks** - Direct memory manipulation for performance
+- **SIMD Operations** - Vectorized operations using block processing
+- **Aggressive Inlining** - Use of `MethodImplOptions.AggressiveInlining`
 - **Stack Allocation** - `stackalloc` for temporary buffers
 - **Span<T> and Memory<T>** - Modern .NET memory management
 
 ### Memory Efficiency
 
-- **Zero-Allocation Paths** - Many operations avoid heap allocations
+- **Reduced Allocations** - Operations designed to avoid unnecessary heap allocations
 - **Object Pooling** - Reusable object patterns where applicable
-- **Block-based Operations** - `Block32`, `Block64` for efficient memory operations
-- **Bounds Check Elimination** - Careful loop construction to help JIT optimize
+- **Block-based Operations** - `Block32`, `Block64` for memory operations
+- **Bounds Check Elimination** - Loop construction to help JIT optimize
 
 ---
 
-## 🔧 Installation & Usage
+## Installation & Usage
 
 ```xml
 <PackageReference Include="FrameworkExtensions.Corlib" Version="*" />
@@ -729,9 +725,9 @@ var hash = file.ComputeSHA256Hash();
 
 ---
 
-## 🎯 Target Frameworks
+## Target Frameworks
 
-Full multi-targeting support:
+Multi-targeting support:
 
 - .NET Framework: `net35`, `net40`, `net45`, `net48`
 - .NET Standard: `netstandard2.0`
@@ -739,57 +735,45 @@ Full multi-targeting support:
 
 ---
 
-## 🌟 Unprecedented Scale & Impact
+## Library Statistics
 
-### By The Numbers
+### Overview
 
-- **3,300+ Extension Methods** - More than most other .NET extension libraries
-- **50+ .NET Types Extended** - Covers virtually every major .NET type
-- **15+ Data Types** - Type-safe parsing for all common data types
-- **Multiple .NET Versions** - Universal compatibility from .NET 3.5 to .NET 9.0
-- **Years of Development** - Represents thousands of hours of optimization and testing
-- **Production-Ready** - Used in enterprise applications already
+- **3,300+ Extension Methods** across common .NET types
+- **50+ .NET Types Extended** covering major framework types
+- **15+ Data Types** with type-safe parsing support
+- **Multiple .NET Versions** from .NET 3.5 to .NET 9.0
 
-### Performance Engineering
+### Technical Features
 
-- **Hardware Intrinsics** - Leverages CPU-specific optimizations (SIMD, FMA, etc.)
+- **Hardware Intrinsics** - CPU-specific optimizations (SIMD, FMA, etc.)
 - **Unsafe Code Optimization** - Direct memory manipulation where beneficial
-- **T4 Code Generation** - Eliminates runtime overhead through compile-time generation
-- **Aggressive Inlining** - Micro-optimizations throughout the codebase
-- **Memory Pool Usage** - Reduces garbage collection pressure
-- **Branch Reduction** - Optimized conditional logic using bitwise operations
+- **T4 Code Generation** - Compile-time code generation
+- **Aggressive Inlining** - Micro-optimizations throughout
+- **Memory Pool Usage** - Reduced garbage collection pressure
+- **Branch Reduction** - Conditional logic using bitwise operations
 
-### Enterprise Features
+### Design Principles
 
 - **Thread-Safe Operations** - Atomic operations and concurrent collection support
-- **Robust Error Handling** - Comprehensive validation with meaningful error messages
-- **Cultural Awareness** - Proper globalization support for international applications
+- **Error Handling** - Validation with meaningful error messages
+- **Globalization Support** - Cultural awareness for international applications
 - **Backwards Compatibility** - Supports legacy .NET Framework applications
-- **Zero Breaking Changes** - Additive-only API design philosophy
-
-### Developer Productivity Impact
-
-This library eliminates the need to write thousands of lines of boilerplate code:
-
-- **String manipulation** - No more custom parsing or formatting logic
-- **Mathematical operations** - Advanced algorithms ready to use
-- **Collection handling** - Sophisticated data structure operations
-- **File system operations** - Enterprise-grade I/O with async support
-- **Threading utilities** - Complex synchronization made simple
+- **Additive API Design** - No breaking changes philosophy
 
 ---
 
-## 📈 Testing & Quality
+## Testing & Quality
 
-- **600+ Unit Tests** with comprehensive coverage
-- **Performance Benchmarks** for critical operations  
+- **600+ Unit Tests** with coverage metrics
+- **Performance Benchmarks** for critical operations
 - **Cross-Platform CI/CD** on Windows, Linux, and macOS
-- **Memory Leak Testing** for all allocation-heavy operations
+- **Memory Leak Testing** for allocation-heavy operations
 - **Thread Safety Testing** for concurrent operations
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines on:
 
@@ -800,6 +784,6 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines on:
 
 ---
 
-## 📄 License
+## License
 
 [LGPL-3.0-or-later](https://licenses.nuget.org/LGPL-3.0-or-later) - Use freely, contribute back improvements.
