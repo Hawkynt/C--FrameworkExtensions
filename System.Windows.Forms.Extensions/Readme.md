@@ -8,11 +8,11 @@
 [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Windows.Forms)](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms/)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
-This repository contains various C# extension methods and utilities for enhancing the functionality of existing .NET types, within the `System.Windows.Forms` namespace. These extensions aim to simplify common tasks, improve performance, and enhance the user experience of Windows Forms applications.
+Extension methods and utilities for the `System.Windows.Forms` namespace, providing additional functionality for Windows Forms applications.
 
-# Notable features showcasing
+# Features
 
-These are only some of the supported features. There are many more available via extension methods. So don't hesitate to utilize IntelliSense within your IDE.
+Additional features are available via extension methods. Use IntelliSense to explore available methods.
 
 ## Control Extensions
 
@@ -306,7 +306,7 @@ These can be used on the data records used as `DataSource` for the `DataGridView
 
 #### Record-Based (Applies to Full Row)
 
-##### ConditionalRowHidden
+##### DataGridViewConditionalRowHidden
 
 Conditionally hides rows based on specified criteria.
 
@@ -314,7 +314,7 @@ Conditionally hides rows based on specified criteria.
 |--------------------|---------|------------------|-------------|
 | IsHiddenWhen       | string  | bool propertyname | The name of the boolean property that determines whether the row should be hidden. |
 
-##### FullMergedRow
+##### DataGridViewFullMergedRow
 
 Merges multiple cells into a single cell spanning multiple columns.
 
@@ -324,7 +324,7 @@ Merges multiple cells into a single cell spanning multiple columns.
 | ForeColor               | string  | colorstring      | The foreground color for the merged row, specified as a color string (e.g., "Red", "#FF0000"). |
 | TextSize                | float   | float value      | The size of the text in the merged row. |
 
-##### RowHeight
+##### DataGridViewRowHeight
 
 Sets the height of the rows.
 
@@ -334,7 +334,7 @@ Sets the height of the rows.
 | RowHeightEnabledProperty| string  | bool propertyname | The name of the boolean property that determines whether custom row height is enabled. |
 | RowHeightProperty       | string  | int propertyname | The name of the property that provides the custom row height. |
 
-##### RowSelectable
+##### DataGridViewRowSelectable
 
 Specifies if the row can be selected.
 
@@ -342,7 +342,7 @@ Specifies if the row can be selected.
 |-------------------------|---------|------------------|-------------|
 | ConditionProperty       | string  | bool propertyname | The name of the boolean property that determines whether the row can be selected. |
 
-##### RowStyle
+##### DataGridViewRowStyle
 
 Applies a specific style to the entire row.
 
@@ -361,7 +361,7 @@ Applies a specific style to the entire row.
 
 #### Property-Based (Applies to Cell)
 
-##### ConditionalReadOnly
+##### DataGridViewConditionalReadOnly
 
 Makes cells read-only based on specified conditions.
 
@@ -369,7 +369,7 @@ Makes cells read-only based on specified conditions.
 |-------------------|---------|------------------|-------------|
 | IsReadOnlyWhen    | string  | bool propertyname | The name of the boolean property that determines whether the cell is read-only. |
 
-##### SupportsConditionalImageAttribute
+##### DataGridViewSupportsConditionalImage
 
 Shows an image next to a cell's text based on specified conditions.
 
@@ -378,7 +378,7 @@ Shows an image next to a cell's text based on specified conditions.
 | ImagePropertyName       | string  | Image propertyname | The name of the property that provides the image for the cell. |
 | ConditionalPropertyName | string  | bool propertyname  | The name of the boolean property that determines whether the image should be displayed. |
 
-##### CellDisplayText
+##### DataGridViewCellDisplayText
 
 Sets the display text of a cell.
 
@@ -386,7 +386,7 @@ Sets the display text of a cell.
 |-------------|---------|---------------------|-------------|
 | PropertyName| string  | string propertyname | The name of the property that provides the display text for the cell. |
 
-##### CellStyle
+##### DataGridViewCellStyle
 
 Applies a specific style to a cell.
 
@@ -402,7 +402,7 @@ Applies a specific style to a cell.
 | BackColorPropertyName   | string                     | Color? propertyname        | The name of the property that provides the background color for the cell. |
 | WrapModePropertyName    | string                     | DataGridViewTriState propertyname | The name of the property that provides the wrap mode for the cell. |
 
-##### CellToolTip
+##### DataGridViewCellTooltip
 
 Sets a tooltip for the cell.
 
@@ -413,7 +413,7 @@ Sets a tooltip for the cell.
 | ConditionalPropertyName | string  | bool propertyname   | The name of the boolean property that determines whether the tooltip should be displayed. |
 | Format                  | string  | string value        | The format string applied to the tooltip text. |
 
-##### Clickable
+##### DataGridViewClickable
 
 Makes the cell clickable and defines click behavior.
 
@@ -422,7 +422,7 @@ Makes the cell clickable and defines click behavior.
 | OnClickMethodName       | string  | void methodname()    | The name of the method to be called when the cell is clicked. |
 | OnDoubleClickMethodName | string  | void methodname()    | The name of the method to be called when the cell is double-clicked. |
 
-##### ColumnSortMode
+##### DataGridViewColumnSortMode
 
 Sets the sort mode for the column.
 
@@ -430,7 +430,7 @@ Sets the sort mode for the column.
 |-----------|-----------------------------|--------------------------------|-------------|
 | SortMode  | DataGridViewColumnSortMode  | DataGridViewColumnSortMode value | The sort mode for the column. |
 
-##### ColumnWidth
+##### DataGridViewColumnWidth
 
 Sets the width of the column.
 
@@ -443,7 +443,7 @@ Sets the width of the column.
 
 #### Property-Based (Applies to Column Type)
 
-##### ButtonColumn
+##### DataGridViewButtonColumn
 
 Generates a button column for the property.
 
@@ -452,13 +452,13 @@ Generates a button column for the property.
 | OnClickMethodName       | string  | void methodname()    | The name of the method to be called when the button is clicked. |
 | IsEnabledWhenPropertyName | string | bool propertyname    | The name of the boolean property that determines whether the button is enabled. |
 
-##### CheckboxColumn
+##### DataGridViewCheckboxColumn
 
 Generates a checkbox column for the property.
 
 No additional parameters required.
 
-##### ComboboxColumn
+##### DataGridViewComboboxColumn
 
 Generates a combobox column for the property.
 
@@ -469,7 +469,7 @@ Generates a combobox column for the property.
 | ValueMember             | string  | string propertyname  | The name of the property in the data source items that provides the value for the combobox. |
 | DisplayMember           | string  | string propertyname  | The name of the property in the data source items that provides the display text for the combobox. |
 
-##### ImageColumn
+##### DataGridViewImageColumn
 
 Generates an image column for the property.
 
@@ -480,7 +480,7 @@ Generates an image column for the property.
 | OnClickMethodName       | string  | void methodname()    | The name of the method to be called when the image is clicked. |
 | OnDoubleClickMethodName | string  | void methodname()    | The name of the method to be called when the image is double-clicked. |
 
-##### MultiImageColumn
+##### DataGridViewMultiImageColumn
 
 Generates a multi-image column for the property.
 
@@ -498,7 +498,7 @@ Generates a multi-image column for the property.
 | MarginRight             | int     | int value            | The right margin between the images. |
 | MarginBottom            | int     | int value            | The bottom margin between the images. |
 
-##### NumericUpDownColumn
+##### DataGridViewNumericUpDownColumn
 
 Generates a numericupdown column for the property.
 
@@ -509,7 +509,7 @@ Generates a numericupdown column for the property.
 | Increment               | double  | double value         | The amount to increment or decrement the value when the up or down buttons are clicked. |
 | DecimalPlaces           | int     | int value            | The number of decimal places to display. |
 
-##### ProgressBarColumn
+##### DataGridViewProgressBarColumn
 
 Generates a progressbar column for the property.
 
@@ -518,7 +518,7 @@ Generates a progressbar column for the property.
 | Minimum                 | double  | double value         | The minimum value of the progress bar. |
 | Maximum                 | double  | double value         | The maximum value of the progress bar. |
 
-##### ImageAndTextColumn
+##### DataGridViewImageAndTextColumn
 
 Generates an image and text column for the property.
 
