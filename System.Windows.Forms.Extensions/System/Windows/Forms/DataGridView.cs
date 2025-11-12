@@ -481,7 +481,7 @@ public static partial class DataGridViewExtensions {
       Name = column.Name,
       DataPropertyName = column.DataPropertyName,
       HeaderText = column.HeaderText,
-      ReadOnly = true,
+      ReadOnly = column.ReadOnly,
       DisplayIndex = column.DisplayIndex,
       Width = column.Width,
       AutoSizeMode = column.AutoSizeMode,
