@@ -35,6 +35,52 @@ Extension methods for core .NET types, providing additional functionality across
 
 ## Extension Methods by Type
 
+> **Completeness Note**: This README serves as a comprehensive reference document covering all major extension method categories and new types in the library. While the library contains lots of extension methods (many T4-generated for all numeric types), this documentation provides:
+> - All extension method **categories** with representative methods
+> - All **new types** (classes, structs, records, interfaces, enums)
+> - Complete coverage of **public API surface**
+>
+> For specific overload details and parameter variations, use IntelliSense in your IDE.
+
+### Object Extensions (`object`)
+
+General-purpose object manipulation and reflection utilities
+
+- **Null Checking** - `IsNull()`, `IsNotNull()` - Null reference checks with nullable annotations
+- **Type Checking** - `Is<T>()`, `TypeIsAnyOf()` - Runtime type verification and pattern matching
+- **Type Casting** - `As<T>()` - Safe type casting with generic support
+- **Conditional Operations** - `IsTrue()`, `IsFalse()`, `IsAnyOf()` - Predicate-based conditionals and set membership
+- **Conditional Execution** - `WhenNull()`, `WhenNotNull()` - Execute actions based on null state
+- **Reflection Access** - `GetProperties()`, `GetFields()` - Retrieve object members with filtering options
+- **State Management** - `ResetDefaultValues()` - Reset object fields/properties to their default values
+
+### Boolean Extensions (`bool`)
+
+Boolean logic and conditional operations
+
+- **Logical Operations** - `And()`, `Or()`, `Xor()`, `Nand()`, `Nor()`, `Equ()`, `Not()` - Functional-style boolean operations
+- **Conditional Execution** - `When()`, `WhenTrue()`, `WhenFalse()` - Execute actions/functions based on boolean value (supports both Action and Func variants)
+- **String Conversion** - `ToYesOrNoString()`, `ToOneOrZeroString()`, `ToTrueOrFalseString()` - Convert to human-readable strings
+
+### Char Extensions (`char`)
+
+Character testing and manipulation
+
+- **Whitespace** - `IsWhiteSpace()`, `IsNullOrWhiteSpace()`, `IsNotNullOrWhiteSpace()` - Whitespace checking including null character
+- **Digit Classification** - `IsDigit()`, `IsNotDigit()` - Check if character is a digit
+- **Case Classification** - `IsUpper()`, `IsNotUpper()`, `IsLower()`, `IsNotLower()` - Case checking
+- **Letter Classification** - `IsLetter()`, `IsNotLetter()` - Check if character is a letter
+- **Control Characters** - `IsControl()`, `IsNotControl()`, `IsControlButNoWhiteSpace()` - Control character detection
+- **Case Conversion** - `ToUpper()`, `ToLower()` - Case conversion with optional culture parameter
+- **Set Membership** - `IsAnyOf()` - Check if character is in a set
+- **Repetition** - `Repeat(count)` - Create string by repeating character N times
+
+### Nullable Extensions (`T?`)
+
+Operations for nullable value types
+
+- **Null Checking** - `IsNull()`, `IsNotNull()` - Check if nullable has value (with NotNullWhen attributes)
+
 ### Array Extensions (`TItem[]`)
 
 Array operations with performance optimizations
@@ -84,74 +130,95 @@ Array operations with performance optimizations
 
 String manipulation methods covering parsing, formatting, and text analysis
 
-#### Case Conversion (12 methods)
+#### Case Conversion
 
-- **`ToPascalCase(culture)` / `ToPascalCaseInvariant()`** - Convert to PascalCase with intelligent word boundary detection
-- **`ToCamelCase(culture)` / `ToCamelCaseInvariant()`** - Convert to camelCase with acronym handling
-- **`ToSnakeCase(culture)` / `ToSnakeCaseInvariant()`** - Convert to snake_case with Unicode support
-- **`ToUpperSnakeCase(culture)` / `ToUpperSnakeCaseInvariant()`** - Convert to UPPER_SNAKE_CASE
-- **`ToKebabCase(culture)` / `ToKebabCaseInvariant()`** - Convert to kebab-case
-- **`ToUpperKebabCase(culture)` / `ToUpperKebabCaseInvariant()`** - Convert to UPPER-KEBAB-CASE
-- **`UpperFirst(culture)` / `UpperFirstInvariant()`** - Capitalize first character only
-- **`LowerFirst(culture)` / `LowerFirstInvariant()`** - Lowercase first character only
+Intelligent case transformations with word boundary detection
 
-#### String Manipulation & Modification (25+ methods)
+- **`ToPascalCase()` / `ToPascalCaseInvariant()`** - Convert to PascalCase (e.g., "hello_world" → "HelloWorld")
+- **`ToCamelCase()` / `ToCamelCaseInvariant()`** - Convert to camelCase (e.g., "hello_world" → "helloWorld")
+- **`ToSnakeCase()` / `ToSnakeCaseInvariant()`** - Convert to snake_case (e.g., "HelloWorld" → "hello_world")
+- **`ToUpperSnakeCase()` / `ToUpperSnakeCaseInvariant()`** - Convert to UPPER_SNAKE_CASE (e.g., "HelloWorld" → "HELLO_WORLD")
+- **`ToKebabCase()` / `ToKebabCaseInvariant()`** - Convert to kebab-case (e.g., "HelloWorld" → "hello-world")
+- **`ToUpperKebabCase()` / `ToUpperKebabCaseInvariant()`** - Convert to UPPER-KEBAB-CASE (e.g., "HelloWorld" → "HELLO-WORLD")
+- **`UpperFirst()` / `UpperFirstInvariant()`** - Capitalize first character only (e.g., "hello" → "Hello")
+- **`LowerFirst()` / `LowerFirstInvariant()`** - Lowercase first character only (e.g., "Hello" → "hello")
 
-- **`ExchangeAt(index, replacement)`** - Replace characters/strings at specific positions with span optimizations
-- **`ExchangeAt(index, count, replacement)`** - Replace ranges with pattern matching
-- **`Repeat(count)`** - Optimized string repetition with StringBuilder for large counts
-- **`RemoveFirst(count)` / `RemoveLast(count)`** - Remove characters from start/end
-- **`RemoveAtStart(what, comparison)` / `RemoveAtEnd(what, comparison)`** - Conditional prefix/suffix removal
-- **`SubString(start, end)`** - Alternative substring with end parameter
-- **`Left(count)` / `Right(count)`** - Get leftmost/rightmost portions safely
-- **`Split(int)` / `Split(Regex)`** - Advanced splitting into fixed-size chunks or regex patterns
+#### String Manipulation & Modification
 
-#### Replace Operations (15+ methods)
+Common string transformations and editing operations
 
-- **`ReplaceFirst(what, replacement, comparison)`** - Replace first occurrence with comparison options
-- **`ReplaceLast(what, replacement, comparison)`** - Replace last occurrence
-- **`MultipleReplace(KeyValuePair<string, object>[])`** - Bulk replacement operations
-- **`MultipleReplace(string, string[])`** - Replace multiple patterns with single value
-- **`ReplaceRegex(pattern, replacement, options)`** - Regex-based replacement
-- **`Replace(Regex, string)` / `Replace(string, string, int, StringComparison)`** - Advanced replacement with limits
+- **`ExchangeAt(index, replacement)`** - Replace character at specific position (e.g., "hello".ExchangeAt(1, 'a') → "hallo")
+- **`ExchangeAt(index, count, replacement)`** - Replace substring range (e.g., "hello".ExchangeAt(1, 2, "ay") → "haylo")
+- **`Repeat(count)`** - Repeat string N times (e.g., "ab".Repeat(3) → "ababab")
+- **`RemoveFirst(count)` / `RemoveLast(count)`** - Remove N characters from start/end (e.g., "hello".RemoveFirst(2) → "llo")
+- **`RemoveAtStart(what)` / `RemoveAtEnd(what)`** - Remove specific prefix/suffix (e.g., "hello".RemoveAtEnd("lo") → "hel")
+- **`SubString(start, end)`** - Alternative substring using end index instead of length
+- **`Left(count)` / `Right(count)`** - Get N leftmost/rightmost characters safely (returns shorter if string too short)
+- **`Split(int)` / `Split(Regex)`** - Split into fixed-size chunks or by regex pattern
 
-#### StartsWith/EndsWith Operations (50+ methods)
+#### Replace Operations
 
-- **`StartsWith(char/string, StringComparison/StringComparer)`** - Enhanced prefix checking
-- **`StartsNotWith()` variants** - Negative prefix checking
-- **`StartsWithAny()/StartsNotWithAny()`** - Multiple prefix checking with various comparison options
-- **`EndsWith(char/string, StringComparison/StringComparer)`** - Enhanced suffix checking
-- **`EndsNotWith()` variants** - Negative suffix checking  
-- **`EndsWithAny()/EndsNotWithAny()`** - Multiple suffix checking
+Flexible string replacement methods
 
-#### Contains & Search Operations (40+ methods)
+- **`ReplaceFirst(what, replacement)`** - Replace only first occurrence (e.g., "hello".ReplaceFirst("l", "L") → "heLlo")
+- **`ReplaceLast(what, replacement)`** - Replace only last occurrence (e.g., "hello".ReplaceLast("l", "L") → "helLo")
+- **`MultipleReplace(dict)`** - Replace multiple patterns at once (e.g., "a b c".MultipleReplace({{"a","x"},{"b","y"}}) → "x y c")
+- **`MultipleReplace(target, replacements)`** - Replace target with one of many values
+- **`ReplaceRegex(pattern, replacement)`** - Regex-based replacement with capture groups
+- **`Replace()` with limits** - Limit number of replacements (e.g., Replace("l", "L", maxCount: 1))
 
-- **`Contains()` variants** - Enhanced contains with comparison options
-- **`ContainsNot()` / `ContainsAll()` / `ContainsAny()` / `ContainsNotAny()`** - Advanced set operations
-- **`IndexOf()` variants** - Enhanced searching with culture support
-- **`IsAnyOf()` / `IsNotAnyOf()`** - Set membership testing
+#### StartsWith/EndsWith Operations
 
-#### Null & State Checking (15+ methods)
+Comprehensive prefix and suffix checking with flexible comparison
 
-- **`IsNull()` / `IsNotNull()`** - Null checking
-- **`IsEmpty()` / `IsNotEmpty()`** - Empty string checking
-- **`IsNullOrEmpty()` / `IsNotNullOrEmpty()`** - Combined null/empty checks
-- **`IsNullOrWhiteSpace()` / `IsNotNullOrWhiteSpace()`** - Whitespace checking
-- **`IsWhiteSpace()` / `IsNotWhiteSpace()`** - Whitespace-only checking
-- **`DefaultIf()` variants** - Conditional default value provision
+- **`StartsWith()`** - Check if string starts with char/string (supports StringComparison)
+- **`StartsNotWith()`** - Negated prefix check
+- **`StartsWithAny()`** - Check if starts with any of multiple values (e.g., "hello".StartsWithAny("hi", "he") → true)
+- **`StartsNotWithAny()`** - Check if doesn't start with any value
+- **`EndsWith()`** - Check if string ends with char/string (supports StringComparison)
+- **`EndsNotWith()`** - Negated suffix check
+- **`EndsWithAny()`** - Check if ends with any of multiple values
+- **`EndsNotWithAny()`** - Check if doesn't end with any value
 
-#### Text Processing & Analysis (15+ methods)
+#### Contains & Search Operations
 
-- **`SanitizeForFileName(sanitation)`** - Make strings safe for file systems
-- **`GetSoundexRepresentation(length, culture)`** - Phonetic matching with German/English rules
-- **`TextAnalysis()` / `TextAnalysisFor(culture)`** - Comprehensive linguistic analysis:
-  - Word extraction and tokenization
-  - Sentence segmentation with abbreviation handling  
-  - Syllable counting (German, English, Romance languages)
-  - Word frequency histograms and distinct word analysis
-- **Text similarity and comparison methods**
-- **Line breaking and text wrapping utilities**
-- **Truncation methods with various options**
+Advanced substring searching and set membership
+
+- **`Contains()`** - Check if string contains substring (with StringComparison support)
+- **`ContainsNot()`** - Check if string doesn't contain substring
+- **`ContainsAll()`** - Check if contains all of multiple substrings (e.g., "hello world".ContainsAll("hello", "world") → true)
+- **`ContainsAny()`** - Check if contains any of multiple substrings
+- **`ContainsNotAny()`** - Check if doesn't contain any of multiple substrings
+- **`IndexOf()` variants** - Enhanced searching with culture/comparison options
+- **`IsAnyOf()`** - Check if string equals any in a set (e.g., "cat".IsAnyOf("dog", "cat", "bird") → true)
+- **`IsNotAnyOf()`** - Check if string doesn't equal any in a set
+
+#### Null & State Checking
+
+Comprehensive null, empty, and whitespace validation
+
+- **`IsNull()` / `IsNotNull()`** - Check if string is null
+- **`IsEmpty()` / `IsNotEmpty()`** - Check if string is "" (empty but not null)
+- **`IsNullOrEmpty()` / `IsNotNullOrEmpty()`** - Combined null or empty check
+- **`IsNullOrWhiteSpace()` / `IsNotNullOrWhiteSpace()`** - Check for null, empty, or only whitespace
+- **`IsWhiteSpace()` / `IsNotWhiteSpace()`** - Check if string contains only whitespace (but not empty)
+- **`DefaultIf()` / `DefaultIfEmpty()` / `DefaultIfNullOrEmpty()`** - Return default value based on state (e.g., "".DefaultIfEmpty("N/A") → "N/A")
+
+#### Text Processing & Analysis
+
+Linguistic analysis and text processing utilities
+
+- **`SanitizeForFileName()`** - Remove/replace invalid filesystem characters (e.g., "file:name".SanitizeForFileName() → "file_name")
+- **`GetSoundexRepresentation()`** - Phonetic encoding for fuzzy matching (e.g., "Robert".GetSoundexRepresentation() → "R163")
+- **`TextAnalysis()`** - Comprehensive text analysis returning:
+  - **Word Count** - Total words and unique words
+  - **Sentence Count** - Number of sentences (handles abbreviations)
+  - **Syllable Count** - Syllables per word (multi-language support)
+  - **Word Frequency** - Histogram of word occurrences
+  - **Readability Metrics** - Flesch-Kincaid, Gunning Fog, etc.
+- **`Truncate()`** - Shorten text with ellipsis (e.g., "Long text".Truncate(8) → "Long te...")
+- **`WordWrap()`** - Wrap text to specified line width
+- **`RemoveDiacritics()`** - Remove accents and diacritical marks (e.g., "café" → "cafe")
 
 #### Cryptography & Hashing (2 methods)
 
@@ -203,6 +270,87 @@ Generated via T4 templates for 15 data types: Float, Double, Decimal, Byte, SByt
 - **`CopyTo(Span<char> target)`** - Copy to span for zero-allocation scenarios
 - **Span-based operations** with `ReadOnlySpan<char>` support
 - **Performance-optimized implementations** using `stackalloc` for small strings
+
+---
+
+### Enum Extensions (`Enum`)
+
+Enhanced enum operations with attribute support
+
+- **Attribute Access** - `GetFieldDescription<T>()`, `GetFieldDisplayName<T>()`, `GetFieldAttribute<T,TAttr>()` - Retrieve attributes from enum values
+- **String Conversion** - `ToString<T,TAttr>()`, `ToStringOrDefault<T,TAttr>()` - Convert enum to string using attribute values
+- **Parsing** - `ParseEnum<T,TAttr>()`, `ParseEnumOrDefault<T,TAttr>()` - Parse strings to enum values via attributes
+- **Flag Operations** - `HasFlag()`, `SetFlag()`, `ClearFlag()`, `ToggleFlag()` - Manipulate flag enums
+- **Enumeration** - `GetValues()`, `GetNames()`, `GetFlags()` - Retrieve all enum values/names/flags
+
+### Random Extensions (`Random`)
+
+Advanced random generation with type-specific methods
+
+- **Password Generation** - `GeneratePassword()` - Generate secure passwords with customizable rules
+- **Boolean** - `GetBoolean()` - Random true/false values
+- **Dice Rolling** - `RollADice()` - Simulate dice rolls (default 6-sided)
+- **Type-Specific Generators** - `GetValueFor<T>()` - Generate random value for any supported type
+- **Integer Ranges** - `GetInt8()`, `GetInt16()`, `GetInt32()`, `GetInt64()`, `GetUInt8()`, `GetUInt16()`, `GetUInt32()`, `GetUInt64()` - Full range random integers
+- **Floating-Point** - `GetFloat()`, `GetDouble()`, `GetDecimal()` - Random floating-point with control over special values (NaN, Infinity)
+- **Characters** - `GetChar()` - Random character with filters (ASCII, control chars, whitespace, surrogates)
+- **Strings** - `GetString()` - Random strings with length constraints
+- **Ranged Double** - `NextDouble(min, max)` - Random double within specified range
+
+### Console Extensions (`Console`)
+
+Enhanced console I/O operations
+
+- **Colored Output** - `WriteLineColored()`, `WriteColored()` - Write text with foreground/background colors
+- **Formatted Output** - `WriteLineFormatted()` - Write formatted text with color codes
+- **Input** - `ReadLineSecure()` - Read input without echoing (for passwords)
+- **Progress Indicators** - `WriteProgress()` - Display progress bars and indicators
+
+### Convert Extensions
+
+Additional encoding and conversion utilities
+
+- **Base91 Encoding** - `ToBase91String()`, `FromBase91String()` - Efficient base91 encoding (more compact than base64)
+- **Quoted-Printable** - `ToQuotedPrintableString()`, `FromQuotedPrintableString()` - Email-compatible encoding
+
+### Uri Extensions (`Uri`)
+
+Web resource access and manipulation
+
+- **Content Retrieval** - `ReadAllText()`, `ReadAllBytes()` - Download content from URIs
+- **Async Operations** - `ReadAllTextTaskAsync()`, `ReadAllBytesTaskAsync()` - Asynchronous download methods
+- **File Download** - `DownloadToFile()` - Download content directly to file
+- **URI Manipulation** - `BaseUri()`, `Path()` - Construct and manipulate URIs
+- **Response Handling** - `GetResponseUri()` - Get final URI after redirects
+- **HTTP Support** - Custom headers, POST data, retry logic for all methods
+
+### StringBuilder Extensions (`StringBuilder`)
+
+StringBuilder manipulation and utilities
+
+- **Character Operations** - `Append()` overloads for various types
+- **Line Operations** - `AppendLine()` variants with formatting
+- **Conditional Append** - `AppendIf()`, `AppendLineIf()` - Conditional appending
+- **Modification** - `Replace()`, `Remove()`, `Insert()` - Enhanced manipulation methods
+- **Inspection** - `Contains()`, `StartsWith()`, `EndsWith()` - Content checking
+
+### Regex Extensions (`Regex`, `Match`)
+
+Regular expression utilities
+
+- **Match Operations** - `MatchAll()`, `GetMatches()` - Retrieve all matches
+- **Replace Operations** - `ReplaceWith()` - Functional replacement patterns
+- **Testing** - `IsMatch()`, `HasMatch()` - Pattern testing
+- **Group Access** - `GetGroupValue()`, `GetGroupValues()` - Extract capture groups
+- **Match Extensions** - `GetValue()`, `GetValues()` - Value extraction from Match objects
+
+### CultureInfo Extensions (`CultureInfo`)
+
+Culture and localization utilities
+
+- **Culture Operations** - `IsNeutral()`, `IsSpecific()` - Culture type checks
+- **Hierarchy** - `GetParent()`, `GetAncestors()` - Culture hierarchy navigation
+- **Comparison** - `IsAncestorOf()`, `IsDescendantOf()` - Culture relationship checks
 
 ---
 
@@ -320,6 +468,38 @@ Stream operations for various data types
 - **Stream Analysis** - End-of-stream detection, stream-to-array conversion
 - **Buffer Management** - Buffer management using thread-static and shared buffers
 
+#### BinaryReader Extensions (`BinaryReader`)
+
+Binary reading utilities
+
+- **Extended Reads** - `ReadBytes()`, `ReadString()` with various encodings
+- **Positioned Reading** - Read at specific positions without seeking
+- **Array Reading** - Read arrays of primitives efficiently
+
+#### TextReader Extensions (`TextReader`)
+
+Text reading utilities
+
+- **Line Operations** - `ReadLines()`, `ReadAllLines()` - Enumerate or read all lines
+- **Buffered Reading** - `ReadBlock()` - Read fixed-size blocks
+- **Async Operations** - Async versions of read operations
+
+#### DriveInfo Extensions (`DriveInfo`)
+
+Drive information and management
+
+- **Drive Operations** - `GetFreeSpace()`, `GetTotalSpace()` - Space queries
+- **Drive Checks** - `IsReady()`, `IsFixed()`, `IsRemovable()` - Drive type checking
+- **Volume Information** - `GetVolumeLabel()`, `SetVolumeLabel()` - Label management
+
+#### Volume Extensions (`Volume`)
+
+System volume enumeration and management
+
+- **Volume Discovery** - Enumerate all system volumes
+- **Mount Point Operations** - Get/set volume mount points
+- **Volume Properties** - Access volume-specific information
+
 #### Path & FileSystem Extensions
 
 Path manipulation and file system utilities
@@ -328,7 +508,6 @@ Path manipulation and file system utilities
 - **Cross-Platform Support** - Multi-OS temporary directory resolution
 - **UNC Path Operations** - Network path parsing and manipulation
 - **Relative Path Calculation** - Relative paths between file system objects
-- **Volume Operations** - System volume enumeration and mount point management
 
 ---
 
@@ -461,12 +640,48 @@ For integer types (byte through long)
 
 ---
 
-### DateTime & TimeSpan Extensions
+### DateTime Extensions (`DateTime`)
 
-Date and time manipulation
+Comprehensive date and time operations
 
-- **DateTime Operations** - Date/time arithmetic and formatting
-- **TimeSpan Operations** - Duration calculations and utilities
+- **Day Boundaries** - `StartOfDay()`, `EndOfDay()` - Get start/end of current day
+- **Week Operations** - `AddWeeks()`, `DateOfDayOfCurrentWeek()`, `StartOfWeek()`, `DayInCurrentWeek()` - Week-based calculations
+- **Month Boundaries** - `FirstDayOfMonth()`, `LastDayOfMonth()` - Get first/last day of month
+- **Year Boundaries** - `FirstDayOfYear()`, `LastDayOfYear()` - Get first/last day of year
+- **Comparison** - `Max()`, `Min()` - Compare and return min/max dates
+- **Date Ranges** - `DaysTill()` - Enumerate days between dates
+- **Subtraction Methods** - `SubstractTicks()`, `SubstractMilliseconds()`, `SubstractSeconds()`, `SubstractMinutes()`, `SubstractHours()`, `SubstractDays()` - Subtraction alternatives to Add with negative values
+- **Formatting** - Culture-aware formatting and parsing
+
+### TimeSpan Extensions (`TimeSpan`)
+
+Duration calculations and utilities
+
+- **Arithmetic** - `Multiply()`, `Divide()` - Scalar multiplication and division
+- **Comparison** - `IsPositive()`, `IsNegative()`, `IsZero()` - Duration state checks
+- **Formatting** - `ToHumanReadable()` - Convert to friendly format (e.g., "2 hours, 30 minutes")
+- **Conversion** - `TotalWeeks()` - Get total weeks as double
+
+### Type Extensions (`Type`)
+
+Type reflection and inspection utilities
+
+- **Type Constants** - `TypeVoid`, `TypeBool`, `TypeChar`, `TypeString`, etc. - Static type references
+- **Castability** - `IsCastableTo()` - Check if type can be cast to another
+- **Hierarchy** - `GetBaseTypes()`, `GetInterfaces()` - Enumerate type hierarchy
+- **Attributes** - `HasAttribute<T>()`, `GetAttribute<T>()` - Attribute presence and retrieval
+- **Type Checks** - `IsNumeric()`, `IsNullable()`, `IsEnum()`, `IsDelegate()` - Common type category checks
+- **Generic Support** - `GetGenericArguments()`, `IsGenericType()` - Generic type inspection
+- **Default Values** - `GetDefault()` - Get default value for type
+
+### BitConverter Extensions
+
+Enhanced byte array conversion
+
+- **Primitive Types** - `ToSByte()`, `ToByte()`, `ToShort()`, `ToChar()` - Convert byte arrays to primitives
+- **Nullable Support** - `ToNSByte()`, `ToNByte()`, `ToNChar()` - Convert to nullable primitives with null marker
+- **Reverse Operations** - `GetBytes()` - Convert primitives (including nullables) to byte arrays
+- **Endianness Control** - Methods for both big-endian and little-endian conversions
 
 ---
 
@@ -510,16 +725,128 @@ Synchronization with thread-safety features
 
 ---
 
-### Reflection & Type Extensions
+### Diagnostics Extensions
 
-Reflection utilities for types and metadata
+Process and performance monitoring utilities
 
-#### Type Operations
+#### Process Extensions (`Process`)
 
-- Type inspection and metadata operations
-- **Assembly Extensions** - Assembly operations
-- **MethodInfo Extensions** - Method reflection utilities
-- **PropertyInfo Extensions** - Property reflection utilities
+- **Process Management** - `Kill()`, `WaitForExit()` - Process lifecycle management
+- **Priority** - `SetPriority()`, `GetPriority()` - Process priority management
+- **Information** - `GetCommandLine()`, `GetParent()` - Process information retrieval
+
+#### ProcessStartInfo Extensions (`ProcessStartInfo`)
+
+- **Fluent Configuration** - Fluent API for configuring process start parameters
+- **Argument Building** - `AddArgument()`, `AddArguments()` - Argument list building
+- **Environment** - `AddEnvironmentVariable()` - Environment variable management
+
+#### Stopwatch Extensions (`Stopwatch`)
+
+- **Measurement** - `Measure()` - Measure execution time of actions
+- **Reset Operations** - `RestartWith()` - Reset and start with new measurement
+- **Timing Utilities** - `GetElapsedAndRestart()` - Get elapsed time and restart
+
+---
+
+### Reflection Extensions
+
+Advanced reflection utilities for types and metadata
+
+#### Assembly Extensions (`Assembly`)
+
+- **Attribute Access** - `GetCustomAttribute<T>()`, `GetCustomAttributes<T>()`, `HasAttribute<T>()` - Retrieve assembly-level attributes
+- **Type Discovery** - `GetLoadableTypes()`, `GetTypesImplementing<T>()` - Find types within assemblies
+- **Version Info** - `GetFileVersion()`, `GetProductVersion()` - Retrieve version information
+
+#### MethodInfo Extensions (`MethodInfo`)
+
+- **Invocation** - `Invoke<T>()` - Type-safe method invocation
+- **Signature Matching** - `MatchesSignature()` - Compare method signatures
+- **Extension Method Detection** - `IsExtensionMethod()` - Check if method is an extension method
+- **Attribute Retrieval** - `GetCustomAttribute<T>()` - Get method attributes
+
+#### PropertyInfo Extensions (`PropertyInfo`)
+
+- **Value Access** - `GetValue<T>()`, `SetValue<T>()` - Type-safe property access
+- **Attribute Retrieval** - `GetCustomAttribute<T>()` - Get property attributes
+- **Backing Field Access** - `GetBackingField()` - Access compiler-generated backing fields
+
+#### FieldInfo Extensions (`FieldInfo`)
+
+- **Value Access** - `GetValue<T>()`, `SetValue<T>()` - Type-safe field access
+- **Attribute Retrieval** - `GetCustomAttribute<T>()` - Get field attributes
+
+#### ParameterInfo Extensions (`ParameterInfo`)
+
+- **Attribute Access** - `GetCustomAttribute<T>()`, `HasAttribute<T>()` - Retrieve parameter attributes
+- **Default Values** - `GetDefaultValue<T>()` - Get parameter default value
+
+---
+
+### Networking Extensions
+
+Network-related utilities and operations
+
+#### IPAddress Extensions (`IPAddress`)
+
+- **Address Manipulation** - `IsInRange()`, `IsPrivate()`, `IsLoopback()` - IP address classification
+- **Subnet Operations** - `GetNetworkAddress()`, `GetBroadcastAddress()` - Calculate network addresses
+- **Conversion** - `ToUInt32()`, `ToBytes()` - Convert IP addresses to numeric formats
+
+#### WebHeaderCollection Extensions (`WebHeaderCollection`)
+
+- **Header Access** - Simplified access to common HTTP headers
+- **Bulk Operations** - `AddRange()`, `SetRange()` - Add/set multiple headers at once
+
+### Security Extensions
+
+Cryptographic and security utilities
+
+#### HashAlgorithm Extensions
+
+- **File Hashing** - `ComputeHash()` - Compute file hashes
+- **Stream Hashing** - `ComputeHash()` - Compute stream hashes
+- **String Hashing** - Extensions for computing hashes from strings
+
+#### SecureString Extensions (`SecureString`)
+
+- **Conversion** - `ToUnsecureString()`, `ToByteArray()` - Convert SecureString to usable formats
+- **Comparison** - `EqualsSecure()` - Secure string comparison
+
+---
+
+### LINQ Extensions
+
+Enhanced LINQ operations and queries
+
+#### IQueryable Extensions (`IQueryable<T>`)
+
+- **Query Building** - `Where()`, `OrderBy()`, `Select()` enhancements
+- **Paging** - `Skip()`, `Take()` - Pagination support
+- **Expression Utilities** - Expression tree manipulation
+
+#### Enumerable Extensions (See Collection Extensions)
+
+Comprehensive LINQ-style operations documented in Collections section above
+
+---
+
+### XML Extensions
+
+XML manipulation and querying utilities
+
+#### XmlNode Extensions (`XmlNode`)
+
+- **Navigation** - `GetChildNodes()`, `GetDescendants()` - Node traversal
+- **Query** - `SelectNodes()`, `SelectSingleNode()` enhancements
+- **Modification** - `AddChild()`, `RemoveChild()` - Node manipulation
+- **Attribute Access** - `GetAttribute()`, `SetAttribute()` - Attribute management
+
+#### XmlAttributeCollection Extensions (`XmlAttributeCollection`)
+
+- **Collection Operations** - Enhanced attribute collection manipulation
+- **Lookup** - `ContainsAttribute()`, `TryGetAttribute()` - Attribute retrieval
 
 ---
 
