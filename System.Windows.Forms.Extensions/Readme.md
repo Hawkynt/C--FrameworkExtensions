@@ -10,9 +10,9 @@
 
 Extension methods and utilities for the `System.Windows.Forms` namespace, providing additional functionality for Windows Forms applications.
 
-# Features
+> **Completeness Note**: This README documents all major extension categories, custom control types, and DataGridView attributes. The library extends most Windows Forms controls with additional functionality. For specific method overloads, use IntelliSense in your IDE.
 
-Additional features are available via extension methods. Use IntelliSense to explore available methods.
+# Features
 
 ## Control Extensions
 
