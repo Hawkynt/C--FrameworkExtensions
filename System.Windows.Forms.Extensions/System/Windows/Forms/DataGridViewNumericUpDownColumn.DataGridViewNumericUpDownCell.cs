@@ -69,10 +69,33 @@ public partial class DataGridViewNumericUpDownColumn {
     private decimal _maximum; // Caches the value of the Maximum property
     private bool _useThousandsSeparator; // Caches the value of the ThousandsSeparator property
 
+    private string _decimalPlacesPropertyName; // Property name for binding DecimalPlaces
+    private string _incrementPropertyName; // Property name for binding Increment
+    private string _minimumPropertyName; // Property name for binding Minimum
+    private string _maximumPropertyName; // Property name for binding Maximum
+    private string _useThousandsSeparatorPropertyName; // Property name for binding UseThousandsSeparator
+
     /// <summary>
     ///   Constructor for the DataGridViewNumericUpDownCell cell type
     /// </summary>
-    public DataGridViewNumericUpDownCell() {
+    public DataGridViewNumericUpDownCell() : this(null, null, null, null, null) {
+    }
+
+    /// <summary>
+    ///   Constructor for the DataGridViewNumericUpDownCell cell type with property bindings
+    /// </summary>
+    public DataGridViewNumericUpDownCell(
+      string decimalPlacesPropertyName,
+      string incrementPropertyName,
+      string minimumPropertyName,
+      string maximumPropertyName,
+      string useThousandsSeparatorPropertyName
+    ) {
+      this._decimalPlacesPropertyName = decimalPlacesPropertyName;
+      this._incrementPropertyName = incrementPropertyName;
+      this._minimumPropertyName = minimumPropertyName;
+      this._maximumPropertyName = maximumPropertyName;
+      this._useThousandsSeparatorPropertyName = useThousandsSeparatorPropertyName;
       
       // a thread specific bitmap used for the painting of the non-edited cells
       _renderingBitmap ??= new(
@@ -204,6 +227,11 @@ public partial class DataGridViewNumericUpDownColumn {
       result.Maximum = this.Maximum;
       result.Minimum = this.Minimum;
       result.UseThousandsSeparator = this.UseThousandsSeparator;
+      result._decimalPlacesPropertyName = this._decimalPlacesPropertyName;
+      result._incrementPropertyName = this._incrementPropertyName;
+      result._maximumPropertyName = this._maximumPropertyName;
+      result._minimumPropertyName = this._minimumPropertyName;
+      result._useThousandsSeparatorPropertyName = this._useThousandsSeparatorPropertyName;
       return result;
     }
 
@@ -355,11 +383,62 @@ public partial class DataGridViewNumericUpDownColumn {
         return;
 
       numericUpDown.BorderStyle = BorderStyle.None;
-      numericUpDown.DecimalPlaces = this.DecimalPlaces;
-      numericUpDown.Increment = this.Increment;
-      numericUpDown.Maximum = this.Maximum;
-      numericUpDown.Minimum = this.Minimum;
-      numericUpDown.ThousandsSeparator = this.UseThousandsSeparator;
+
+      // Apply property bindings if available, otherwise use cell properties
+      var owningRowDataBoundItem = this.OwningRow?.DataBoundItem;
+      if (owningRowDataBoundItem != null) {
+        numericUpDown.DecimalPlaces = DataGridViewExtensions.GetPropertyValueOrDefault(
+          owningRowDataBoundItem,
+          this._decimalPlacesPropertyName,
+          this.DecimalPlaces,
+          this.DecimalPlaces,
+          this.DecimalPlaces,
+          this.DecimalPlaces
+        );
+
+        numericUpDown.Increment = DataGridViewExtensions.GetPropertyValueOrDefault(
+          owningRowDataBoundItem,
+          this._incrementPropertyName,
+          this.Increment,
+          this.Increment,
+          this.Increment,
+          this.Increment
+        );
+
+        numericUpDown.Maximum = DataGridViewExtensions.GetPropertyValueOrDefault(
+          owningRowDataBoundItem,
+          this._maximumPropertyName,
+          this.Maximum,
+          this.Maximum,
+          this.Maximum,
+          this.Maximum
+        );
+
+        numericUpDown.Minimum = DataGridViewExtensions.GetPropertyValueOrDefault(
+          owningRowDataBoundItem,
+          this._minimumPropertyName,
+          this.Minimum,
+          this.Minimum,
+          this.Minimum,
+          this.Minimum
+        );
+
+        numericUpDown.ThousandsSeparator = DataGridViewExtensions.GetPropertyValueOrDefault(
+          owningRowDataBoundItem,
+          this._useThousandsSeparatorPropertyName,
+          this.UseThousandsSeparator,
+          this.UseThousandsSeparator,
+          this.UseThousandsSeparator,
+          this.UseThousandsSeparator
+        );
+      } else {
+        numericUpDown.DecimalPlaces = this.DecimalPlaces;
+        numericUpDown.Increment = this.Increment;
+        numericUpDown.Maximum = this.Maximum;
+        numericUpDown.Minimum = this.Minimum;
+        numericUpDown.ThousandsSeparator = this.UseThousandsSeparator;
+      }
+
       numericUpDown.Text = initialFormattedValue as string ?? string.Empty;
     }
 

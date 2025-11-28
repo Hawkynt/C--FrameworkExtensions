@@ -27,6 +27,7 @@ namespace System.Windows.Forms;
 /// </summary>
 /// <example>
 /// <code>
+/// // Example 1: Static configuration
 /// // Define a custom class for the data grid view rows
 /// public class DataRow
 /// {
@@ -48,7 +49,7 @@ namespace System.Windows.Forms;
 ///     DataSource = dataRows
 /// };
 ///
-/// // Create a DataGridViewNumericUpDownColumn and add it to the DataGridView
+/// // Create a DataGridViewNumericUpDownColumn with static configuration
 /// var numericUpDownColumn = new DataGridViewNumericUpDownColumn
 /// {
 ///     Name = "NumericUpDownColumn",
@@ -62,9 +63,104 @@ namespace System.Windows.Forms;
 /// };
 /// dataGridView.Columns.Add(numericUpDownColumn);
 /// </code>
+/// <code>
+/// // Example 2: Dynamic configuration using property bindings
+/// // Define a custom class for the data grid view rows with per-row configuration
+/// public class DynamicDataRow
+/// {
+///     public int Id { get; set; }
+///     public string Name { get; set; }
+///     public decimal Value { get; set; }
+///     public decimal MinValue { get; set; }
+///     public decimal MaxValue { get; set; }
+///     public decimal StepSize { get; set; }
+///     public int Precision { get; set; }
+///     public bool ShowThousands { get; set; }
+/// }
+///
+/// // Create an array of DynamicDataRow instances with different configurations
+/// var dynamicDataRows = new[]
+/// {
+///     new DynamicDataRow { Id = 1, Name = "Row 1", Value = 10, MinValue = 0, MaxValue = 100, StepSize = 1, Precision = 0, ShowThousands = false },
+///     new DynamicDataRow { Id = 2, Name = "Row 2", Value = 25.50m, MinValue = 0, MaxValue = 50, StepSize = 0.5m, Precision = 2, ShowThousands = true }
+/// };
+///
+/// // Create a DataGridView and set its data source
+/// var dataGridView = new DataGridView
+/// {
+///     DataSource = dynamicDataRows
+/// };
+///
+/// // Create a DataGridViewNumericUpDownColumn with property bindings for per-row configuration
+/// var numericUpDownColumn = new DataGridViewNumericUpDownColumn(
+///     decimalPlacesPropertyName: nameof(DynamicDataRow.Precision),
+///     incrementPropertyName: nameof(DynamicDataRow.StepSize),
+///     maximumPropertyName: nameof(DynamicDataRow.MaxValue),
+///     minimumPropertyName: nameof(DynamicDataRow.MinValue),
+///     useThousandsSeparatorPropertyName: nameof(DynamicDataRow.ShowThousands)
+/// )
+/// {
+///     Name = "DynamicNumericUpDownColumn",
+///     HeaderText = "Value",
+///     DataPropertyName = nameof(DynamicDataRow.Value)
+/// };
+/// dataGridView.Columns.Add(numericUpDownColumn);
+/// </code>
 /// </example>
-public partial class DataGridViewNumericUpDownColumn()
-  : DataGridViewColumn(new DataGridViewNumericUpDownCell()) {
+public partial class DataGridViewNumericUpDownColumn : DataGridViewColumn {
+
+  /// <summary>
+  /// Gets the name of the property to use for the <see cref="DecimalPlaces"/> value.
+  /// </summary>
+  public string DecimalPlacesPropertyName { get; }
+
+  /// <summary>
+  /// Gets the name of the property to use for the <see cref="Increment"/> value.
+  /// </summary>
+  public string IncrementPropertyName { get; }
+
+  /// <summary>
+  /// Gets the name of the property to use for the <see cref="Maximum"/> value.
+  /// </summary>
+  public string MaximumPropertyName { get; }
+
+  /// <summary>
+  /// Gets the name of the property to use for the <see cref="Minimum"/> value.
+  /// </summary>
+  public string MinimumPropertyName { get; }
+
+  /// <summary>
+  /// Gets the name of the property to use for the <see cref="UseThousandsSeparator"/> value.
+  /// </summary>
+  public string UseThousandsSeparatorPropertyName { get; }
+
+  /// <summary>
+  /// Initializes a new instance of the <see cref="DataGridViewNumericUpDownColumn"/> class.
+  /// </summary>
+  /// <param name="decimalPlacesPropertyName">The name of the property to use for the decimal places value.</param>
+  /// <param name="incrementPropertyName">The name of the property to use for the increment value.</param>
+  /// <param name="maximumPropertyName">The name of the property to use for the maximum value.</param>
+  /// <param name="minimumPropertyName">The name of the property to use for the minimum value.</param>
+  /// <param name="useThousandsSeparatorPropertyName">The name of the property to use for the thousands separator value.</param>
+  public DataGridViewNumericUpDownColumn(
+    string decimalPlacesPropertyName = null,
+    string incrementPropertyName = null,
+    string maximumPropertyName = null,
+    string minimumPropertyName = null,
+    string useThousandsSeparatorPropertyName = null
+  ) : base(new DataGridViewNumericUpDownCell(
+    decimalPlacesPropertyName,
+    incrementPropertyName,
+    minimumPropertyName,
+    maximumPropertyName,
+    useThousandsSeparatorPropertyName
+  )) {
+    this.DecimalPlacesPropertyName = decimalPlacesPropertyName;
+    this.IncrementPropertyName = incrementPropertyName;
+    this.MaximumPropertyName = maximumPropertyName;
+    this.MinimumPropertyName = minimumPropertyName;
+    this.UseThousandsSeparatorPropertyName = useThousandsSeparatorPropertyName;
+  }
 
   /// <summary>
   /// Represents the implicit cell that gets cloned when adding rows to the grid.
@@ -179,5 +275,32 @@ public partial class DataGridViewNumericUpDownColumn()
   ///   Returns a standard compact string representation of the column.
   /// </summary>
   public override string ToString() => $"DataGridViewNumericUpDownColumn {{ Name = {this.Name}, Index = {this.Index.ToString(CultureInfo.CurrentCulture)} }}";
+
+  /// <summary>
+  /// Creates an exact copy of this column.
+  /// </summary>
+  public override object Clone() {
+    var result = new DataGridViewNumericUpDownColumn(
+      this.DecimalPlacesPropertyName,
+      this.IncrementPropertyName,
+      this.MaximumPropertyName,
+      this.MinimumPropertyName,
+      this.UseThousandsSeparatorPropertyName
+    ) {
+      Name = this.Name,
+      DisplayIndex = this.DisplayIndex,
+      HeaderText = this.HeaderText,
+      DataPropertyName = this.DataPropertyName,
+      AutoSizeMode = this.AutoSizeMode,
+      SortMode = this.SortMode,
+      FillWeight = this.FillWeight,
+      DecimalPlaces = this.DecimalPlaces,
+      Increment = this.Increment,
+      Maximum = this.Maximum,
+      Minimum = this.Minimum,
+      UseThousandsSeparator = this.UseThousandsSeparator
+    };
+    return result;
+  }
 
 }
