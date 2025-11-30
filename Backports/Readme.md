@@ -13,6 +13,43 @@ __FrameworkExtensions.Backports__ is a NuGet package that provides a collection 
 
 __Note__: Performance is not a primary concern here. This focuses mainly on functionality and ready-to-be-built without making adjustments to code.
 
+## Architecture
+
+### Official Package Integration
+
+To avoid conflicts with official Microsoft BCL backport packages and ensure optimal compatibility, **FrameworkExtensions.Backports** uses a hybrid approach:
+
+- **When official packages exist**: For target frameworks where Microsoft provides official backport packages (such as System.Memory, System.Buffers, System.ValueTuple, etc.), this package automatically references and uses those official implementations.
+
+- **When official packages don't exist**: For older target frameworks (like .NET Framework 2.0, 3.5) or for features not covered by official packages, this package provides custom backport implementations.
+
+This approach means:
+- ✅ **Users only need to reference `FrameworkExtensions.Backports`** - all necessary dependencies are included automatically
+- ✅ **No package conflicts** - official implementations are used when available, avoiding type conflicts
+- ✅ **Better performance and compatibility** - official Microsoft implementations are optimized and thoroughly tested
+- ✅ **Seamless experience** - the same API surface works across all target frameworks
+
+### Official Packages Included
+
+The following official Microsoft packages are conditionally referenced based on your target framework:
+
+**Active Packages:**
+- **System.Memory** - Provides `Span<T>`, `ReadOnlySpan<T>`, `Memory<T>`, and `MemoryMarshal` (.NET Framework 4.5+, .NET Standard 2.0)
+- **System.Buffers** - Provides `ArrayPool<T>` (.NET Framework 4.5+, .NET Standard 2.0)
+- **System.ValueTuple** - Provides `ValueTuple` types (.NET Framework 4.0+)
+- **System.Runtime.CompilerServices.Unsafe** - Provides the `Unsafe` class (.NET Framework 4.5+, .NET Standard 1.0+)
+- **System.Numerics.Vectors** - Provides `Vector` types (.NET Framework 4.5+, .NET Standard 2.0)
+- **System.Threading.Tasks.Extensions** - Provides `ValueTask` (.NET Framework 4.5+, .NET Standard 2.0)
+- **Microsoft.Bcl.HashCode** - Provides `HashCode` (.NET Framework 4.6.1+, .NET Standard 2.0)
+
+**Deprecated Packages (still included for compatibility):**
+- **Microsoft.Bcl** - Provides `CallerMemberNameAttribute` and related attributes (.NET Framework 4.0 only)
+- **Microsoft.Bcl.Async** - Provides `TaskAwaiter` and async/await support (.NET Framework 4.0 only)
+
+> **Note:** Microsoft.Bcl and Microsoft.Bcl.Async are officially deprecated but are still included for .NET Framework 4.0 to avoid conflicts with existing projects that may reference these packages.
+
+For target frameworks where these packages are not available (e.g., .NET Framework 2.0/3.5), custom implementations are provided.
+
 ## Features
 
 ### Interfaces

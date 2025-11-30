@@ -181,8 +181,8 @@ as the last line before </Project> like
         
         <!-- Core 9.0 -->
         <DefineConstants Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('9.0')))) &gt;= 0">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT;                                                                                                                                                                                                                   </DefineConstants>
-        
-    
+
+
     </PropertyGroup>
     
     <!-- HINT: This is for debugging! You can invoke this part by executing 'msbuild /t:ShowProperties' in the VS Developer Command Line -->

@@ -16,7 +16,7 @@
 
 using System.Runtime.CompilerServices;
 
-#if !SUPPORTS_ARRAYPOOL
+#if !SUPPORTS_ARRAYPOOL && !OFFICIAL_ARRAYPOOL
 
 namespace System.Buffers;
 using MethodImplOptions = Utilities.MethodImplOptions;

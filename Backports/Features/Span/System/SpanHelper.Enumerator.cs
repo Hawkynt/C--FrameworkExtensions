@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_SPAN
+#if !SUPPORTS_SPAN && !OFFICIAL_SPAN
 
 using System.Collections;
 using System.Collections.Generic;

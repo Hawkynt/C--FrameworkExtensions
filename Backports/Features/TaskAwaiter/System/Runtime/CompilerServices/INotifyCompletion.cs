@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_TASK_AWAITER && SUPPORTS_ASYNC
+#if !SUPPORTS_TASK_AWAITER && !OFFICIAL_TASK_AWAITER && SUPPORTS_ASYNC
 namespace System.Runtime.CompilerServices;
 
 public interface INotifyCompletion {

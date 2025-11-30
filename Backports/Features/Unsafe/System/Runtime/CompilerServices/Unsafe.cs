@@ -14,7 +14,7 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if !SUPPORTS_UNSAFE
+#if !SUPPORTS_UNSAFE && !OFFICIAL_UNSAFE
 
 using MethodImplOptionsEx = Utilities.MethodImplOptions;
 
