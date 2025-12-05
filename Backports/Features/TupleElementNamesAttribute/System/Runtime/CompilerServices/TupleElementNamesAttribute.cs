@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_TUPLE_ELEMENT_NAMES_ATTRIBUTE
+#if !SUPPORTS_TUPLE_ELEMENT_NAMES_ATTRIBUTE && !OFFICIAL_VALUE_TUPLE
 
 namespace System.Runtime.CompilerServices;
 
