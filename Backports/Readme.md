@@ -64,7 +64,12 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [IStructuralComparable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralcomparable)
   * [IStructuralEquatable](https://learn.microsoft.com/dotnet/api/system.collections.istructuralequatable)
 
+* System
+  * [IAsyncDisposable](https://learn.microsoft.com/dotnet/api/system.iasyncdisposable)
+
 * System.Collections.Generic
+  * [IAsyncEnumerable](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1)&lt;T&gt;
+  * [IAsyncEnumerator](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerator-1)&lt;T&gt;
   * [IReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2)&lt;TKey, TValue&gt;
 
 * System.Runtime.CompilerServices
@@ -102,7 +107,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
 
 * System.Runtime.CompilerServices
+  * [AsyncIteratorMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratormethodbuilder)
   * [AsyncTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynctaskmethodbuilder)&lt;T&gt;
+  * [ConfiguredCancelableAsyncEnumerable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredcancelableasyncenumerable-1)&lt;T&gt;
   * [ConfiguredTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredtaskawaitable)&lt;T&gt;
   * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
@@ -144,17 +151,39 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [StackTraceHidden](https://learn.microsoft.com/dotnet/api/system.diagnostics.stacktracehiddenattribute)
 
 * System.Diagnostics.CodeAnalysis
+  * [AllowNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.allownullattribute)
+  * [ConstantExpected](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.constantexpectedattribute)
   * [DisallowNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.disallownullattribute)
   * [DoesNotReturn](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnattribute)
+  * [DoesNotReturnIf](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnifattribute)
+  * [Experimental](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.experimentalattribute)
+  * [MaybeNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.maybenullattribute)
+  * [MaybeNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.maybenullwhenattribute)
+  * [MemberNotNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.membernotnullattribute)
+  * [MemberNotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.membernotnullwhenattribute)
   * [NotNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullattribute)
   * [NotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullwhenattribute)
+  * [SetsRequiredMembers](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.setsrequiredmembersattribute)
+  * [StringSyntax](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.stringsyntaxattribute)
+  * [UnscopedRef](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.unscopedrefattribute)
 
 * System.Runtime.CompilerServices
+  * [AsyncIteratorStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratorstatemachineattribute)
   * [CallerArgumentExpression](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerargumentexpressionattribute)
   * [CallerFilePath](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerfilepathattribute)
   * [CallerLineNumber](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerlinenumberattribute)
   * [CallerMemberName](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callermembernameattribute)
+  * [CollectionBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.collectionbuilderattribute)
+  * [CompilerFeatureRequired](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.compilerfeaturerequiredattribute)
+  * [EnumeratorCancellation](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.enumeratorcancellationattribute)
   * [Extension](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.extensionattribute)
+  * [InlineArray](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.inlinearrayattribute)
+  * [InterpolatedStringHandler](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.interpolatedstringhandlerattribute)
+  * [InterpolatedStringHandlerArgument](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.interpolatedstringhandlerargumentattribute)
+  * [ModuleInitializer](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.moduleinitializerattribute)
+  * [OverloadResolutionPriority](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.overloadresolutionpriorityattribute)
+  * [RefSafetyRules](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.refsafetyrulesattribute)
+  * [RequiredMember](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.requiredmemberattribute)
   * [TupleElementNames](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.tupleelementnamesattribute)
 
 ### Delegates
@@ -162,6 +191,52 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System
   * [Func](https://learn.microsoft.com/dotnet/api/system.func-1)&lt;T&gt; (up to 16 types)
   * [Action](https://learn.microsoft.com/dotnet/api/system.action)&lt;T&gt; (up to 16 types)
+
+### Static Methods
+
+* System.Array
+  * T[] [Empty](https://learn.microsoft.com/dotnet/api/system.array.empty)&lt;T&gt;()
+  * void [Fill](https://learn.microsoft.com/dotnet/api/system.array.fill#system-array-fill-1%28-0%28%29--0%29)&lt;T&gt;(T[] array, T value)
+  * void [Fill](https://learn.microsoft.com/dotnet/api/system.array.fill#system-array-fill-1%28-0%28%29--0-system-int32-system-int32%29)&lt;T&gt;(T[] array, T value, int startIndex, int count)
+
+* System.IO.Path
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string%29)(string path1, string path2)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string%29)(string path1, string path2, string path3)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string-system-string%29)(string path1, string path2, string path3, string path4)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string%28%29%29)(params string[] paths)
+  * string [GetRelativePath](https://learn.microsoft.com/dotnet/api/system.io.path.getrelativepath)(string relativeTo, string path)
+
+* System.Math
+  * T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
+
+* System.Random
+  * Random [Shared](https://learn.microsoft.com/dotnet/api/system.random.shared) (static property)
+
+* System.String
+  * string [Create](https://learn.microsoft.com/dotnet/api/system.string.create)&lt;TState&gt;(int length, TState state, SpanAction&lt;char, TState&gt; action)
+
+* System.ArgumentNullException
+  * void [ThrowIfNull](https://learn.microsoft.com/dotnet/api/system.argumentnullexception.throwifnull)(object? argument, string? paramName = null)
+  * void [ThrowIfNull](https://learn.microsoft.com/dotnet/api/system.argumentnullexception.throwifnull)(void* argument, string? paramName = null)
+
+* System.ArgumentException
+  * void [ThrowIfNullOrEmpty](https://learn.microsoft.com/dotnet/api/system.argumentexception.throwifnullorempty)(string? argument, string? paramName = null)
+  * void [ThrowIfNullOrWhiteSpace](https://learn.microsoft.com/dotnet/api/system.argumentexception.throwifnullorwhitespace)(string? argument, string? paramName = null)
+
+* System.ArgumentOutOfRangeException
+  * void [ThrowIfZero](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifzero)&lt;T&gt;(T value, string? paramName = null)
+  * void [ThrowIfNegative](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifnegative)&lt;T&gt;(T value, string? paramName = null)
+  * void [ThrowIfNegativeOrZero](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifnegativeorzero)&lt;T&gt;(T value, string? paramName = null)
+  * void [ThrowIfGreaterThan](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifgreaterthan)&lt;T&gt;(T value, T other, string? paramName = null)
+  * void [ThrowIfGreaterThanOrEqual](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifgreaterthanorequal)&lt;T&gt;(T value, T other, string? paramName = null)
+  * void [ThrowIfLessThan](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwiflessthan)&lt;T&gt;(T value, T other, string? paramName = null)
+  * void [ThrowIfLessThanOrEqual](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwiflessthanorequal)&lt;T&gt;(T value, T other, string? paramName = null)
+  * void [ThrowIfEqual](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifequal)&lt;T&gt;(T value, T other, string? paramName = null)
+  * void [ThrowIfNotEqual](https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception.throwifnotequal)&lt;T&gt;(T value, T other, string? paramName = null)
+
+* System.ObjectDisposedException
+  * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, object instance)
+  * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, Type type)
 
 ### Methods
 
@@ -280,11 +355,26 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * IEnumerable&lt;TItem&gt; [Append](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.append)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, TItem item)
   * bool [TryGetNonEnumeratedCount](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.trygetnonenumeratedcount)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; source, out int count)
   * IEnumerable&lt;TItem&gt; [Zip](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.zip#system-linq-enumerable-zip-3%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-ienumerable%28%28-1%29%29-system-func%28%28-0-1-2%29%29%29)&lt;TFirst, TSecond, TResult&gt;(IEnumerable&lt;TFirst&gt; @this, IEnumerable&lt;TSecond&gt; second, Func&lt;TFirst, TSecond, TResult&gt; resultSelector)
+  * IEnumerable&lt;TSource[]&gt; [Chunk](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.chunk)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, int size)
+  * IEnumerable&lt;TSource&gt; [DistinctBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.distinctby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
+  * IEnumerable&lt;TSource&gt; [ExceptBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.exceptby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; first, IEnumerable&lt;TKey&gt; second, Func&lt;TSource, TKey&gt; keySelector)
+  * IEnumerable&lt;TSource&gt; [IntersectBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.intersectby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; first, IEnumerable&lt;TKey&gt; second, Func&lt;TSource, TKey&gt; keySelector)
+  * IEnumerable&lt;TSource&gt; [UnionBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.unionby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; first, IEnumerable&lt;TSource&gt; second, Func&lt;TSource, TKey&gt; keySelector)
+  * IOrderedEnumerable&lt;T&gt; [Order](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.order)&lt;T&gt;(this IEnumerable&lt;T&gt; source)
+  * IOrderedEnumerable&lt;T&gt; [OrderDescending](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.orderdescending)&lt;T&gt;(this IEnumerable&lt;T&gt; source)
+  * IEnumerable&lt;(int Index, TSource Item)&gt; [Index](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.index)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
+  * IEnumerable&lt;KeyValuePair&lt;TKey, int&gt;&gt; [CountBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.countby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
+  * IEnumerable&lt;KeyValuePair&lt;TKey, TAccumulate&gt;&gt; [AggregateBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.aggregateby)&lt;TSource, TKey, TAccumulate&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector, Func&lt;TKey, TAccumulate&gt; seed, Func&lt;TAccumulate, TSource, TAccumulate&gt; func)
 
 * System.Random
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64%29)(this Random @this, long maxValue)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64-system-int64%29)(this Random @this, long minValue, long maxValue)
+  * float [NextSingle](https://learn.microsoft.com/dotnet/api/system.random.nextsingle)(this Random @this)
+  * T[] [GetItems](https://learn.microsoft.com/dotnet/api/system.random.getitems)&lt;T&gt;(this Random @this, T[] choices, int length)
+  * void [GetItems](https://learn.microsoft.com/dotnet/api/system.random.getitems)&lt;T&gt;(this Random @this, ReadOnlySpan&lt;T&gt; choices, Span&lt;T&gt; destination)
+  * void [Shuffle](https://learn.microsoft.com/dotnet/api/system.random.shuffle)&lt;T&gt;(this Random @this, T[] values)
+  * void [Shuffle](https://learn.microsoft.com/dotnet/api/system.random.shuffle)&lt;T&gt;(this Random @this, Span&lt;T&gt; values)
 
 * System.Reflection.Assembly  
   * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-assembly-system-type%29)(this Assembly element, Type attributeType)  
@@ -333,6 +423,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Reflection.MethodInfo
   * Delegate [CreateDelegate](https://learn.microsoft.com/dotnet/api/system.reflection.methodinfo.createdelegate#system-reflection-methodinfo-createdelegate%28system-type%29)(this MethodInfo @this, Type result)
 * System.String
+  * int [GetHashCode](https://learn.microsoft.com/dotnet/api/system.string.gethashcode#system-string-gethashcode%28system-stringcomparison%29)(this string @this, StringComparison comparisonType)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-string-system-stringcomparison%29)(this string @this, string value, StringComparison comparisonType)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-char%29)(this string @this, char value)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-char-system-stringcomparison%29)(this string @this, char value, StringComparison comparisonType)

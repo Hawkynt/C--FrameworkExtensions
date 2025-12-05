@@ -3293,11 +3293,27 @@ public static partial class FileInfoExtensions {
       return false;
 
     const int BUFFER_SIZE = 65536;
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
     var buffer = stackalloc byte[BUFFER_SIZE];
     int size;
     using (var fileStream = @this.OpenRead())
       size = fileStream.Read(new Span<byte>(buffer, BUFFER_SIZE));
 
+    return _IsTextFileCore(buffer, size);
+  }
+#else
+    var byteArray = new byte[BUFFER_SIZE];
+    int size;
+    using (var fileStream = @this.OpenRead())
+      size = fileStream.Read(byteArray, 0, BUFFER_SIZE);
+
+    fixed (byte* buffer = byteArray)
+      return _IsTextFileCore(buffer, size);
+  }
+#endif
+
+  private static unsafe bool _IsTextFileCore(byte* buffer, int size) {
     switch (size) {
       case 0: return false;
       case 1: return !((char)buffer[0]).IsControlButNoWhiteSpace();

@@ -25,16 +25,12 @@ using Guard;
 
 namespace System;
 
-public static partial class RandomPolyfills {
+public static partial class RandomExtensions {
+  extension(Random @this) {
   /// <summary>Returns a non-negative random integer.</summary>
-  /// <param name="this">The <see cref="Random" /> instance used to generate the random value.</param>
   /// <returns>A 64-bit signed integer that is greater than or equal to 0 and less than <see cref="long.MaxValue" />.</returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long NextInt64(this Random @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-
+  public long NextInt64() {
     // Collect raw bits from Next() calls
     var high = (ulong)@this.Next();
     var mid = (ulong)@this.Next();
@@ -66,7 +62,6 @@ public static partial class RandomPolyfills {
   }
 
   /// <summary>Returns a non-negative random integer that is less than the specified maximum.</summary>
-  /// <param name="this">The <see cref="Random" /> instance used to generate the random value.</param>
   /// <param name="maxValue">
   ///   The exclusive upper bound of the random number to be generated. <paramref name="maxValue" />
   ///   must be greater than or equal to 0.
@@ -77,12 +72,9 @@ public static partial class RandomPolyfills {
   ///   includes 0 but not <paramref name="maxValue" />. However, if <paramref name="maxValue" /> equals 0,
   ///   <paramref name="maxValue" /> is returned.
   /// </returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxValue" /> is less than 0.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long NextInt64(this Random @this, long maxValue) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
+  public long NextInt64(long maxValue) {
     if (maxValue < 0)
       AlwaysThrow.ArgumentOutOfRangeException(nameof(maxValue));
 
@@ -90,8 +82,8 @@ public static partial class RandomPolyfills {
     return maxValue switch {
       0 => 0,
       <= int.MaxValue when (maxValue & maxValueMinusOne) == 0 => @this.Next() & maxValueMinusOne,
-      <= int.MaxValue => SmallModuloRejectionSampling(@this,maxValue),
-      _ when (maxValue & maxValueMinusOne) == 0 => NextInt64(@this) & maxValueMinusOne,
+      <= int.MaxValue => SmallModuloRejectionSampling(@this, maxValue),
+      _ when (maxValue & maxValueMinusOne) == 0 => @this.NextInt64() & maxValueMinusOne,
       _ => ModuloRejectionSampling(@this, maxValue)
     };
 
@@ -109,7 +101,7 @@ public static partial class RandomPolyfills {
       long result;
       var maxAcceptable = long.MaxValue - long.MaxValue % limit;
       do
-        result = NextInt64(random);
+        result = random.NextInt64();
       while (result >= maxAcceptable);
 
       return result % limit;
@@ -117,7 +109,6 @@ public static partial class RandomPolyfills {
   }
 
   /// <summary>Returns a random integer that is within a specified range.</summary>
-  /// <param name="this">The <see cref="Random" /> instance used to generate the random value.</param>
   /// <param name="minValue">The inclusive lower bound of the random number returned.</param>
   /// <param name="maxValue">
   ///   The exclusive upper bound of the random number returned. <paramref name="maxValue" /> must be
@@ -129,19 +120,17 @@ public static partial class RandomPolyfills {
   ///   but not <paramref name="maxValue" />. If minValue equals <paramref name="maxValue" />, <paramref name="minValue" />
   ///   is returned.
   /// </returns>
-  /// <exception cref="NullReferenceException">Thrown if <paramref name="this" /> is <see langword="null" />.</exception>
   /// <exception cref="ArgumentOutOfRangeException">
   ///   <paramref name="minValue" /> is greater than <paramref name="maxValue" />
   ///   .
   /// </exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long NextInt64(this Random @this, long minValue, long maxValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+  public long NextInt64(long minValue, long maxValue) {
     if (maxValue < minValue)
       AlwaysThrow.ArgumentOutOfRangeException(nameof(maxValue));
 
-    return minValue + NextInt64(@this, maxValue - minValue);
+    return minValue + @this.NextInt64(maxValue - minValue);
+  }
   }
 }
 
