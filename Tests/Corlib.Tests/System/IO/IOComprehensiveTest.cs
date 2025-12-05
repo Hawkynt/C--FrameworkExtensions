@@ -1317,7 +1317,7 @@ public class IOComprehensiveTest {
   [Test]
   public void PathExtensions_TemporaryTokens_CustomFileName_CreatesWithSpecifiedName() {
     var customName = "custom_test.tmp";
-    using var token = PathExtensions.GetTempFileToken(customName);
+    using var token = PathExtensions.GetTempFileToken(customName, this._tempDirectory);
 
     Assert.That(token.File.Name, Is.EqualTo(customName));
     Assert.That(token.File.Exists, Is.True);
