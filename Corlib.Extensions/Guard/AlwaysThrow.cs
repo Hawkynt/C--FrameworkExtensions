@@ -474,4 +474,28 @@ internal static class AlwaysThrow {
   [DoesNotReturn]
   public static void ObjectDisposedException(string objectName, [CallerMemberName] string caller = null) =>
     ObjectDisposedException<Dummy>(objectName, caller);
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static TDummy NotSupportedException<TDummy>(string message = null, [CallerMemberName] string caller = null) =>
+    throw new NotSupportedException($"{(caller == null ? string.Empty : caller + ":")}{message ?? "This operation is not supported."}");
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void NotSupportedException(string message = null, [CallerMemberName] string caller = null) =>
+    NotSupportedException<Dummy>(message, caller);
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static TDummy NotImplementedException<TDummy>(string message = null, [CallerMemberName] string caller = null) =>
+    throw new NotImplementedException($"{(caller == null ? string.Empty : caller + ":")}{message ?? "This operation is not implemented."}");
+
+  [DebuggerHidden]
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  [DoesNotReturn]
+  public static void NotImplementedException(string message = null, [CallerMemberName] string caller = null) =>
+    NotImplementedException<Dummy>(message, caller);
 }
