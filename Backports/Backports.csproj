@@ -29,6 +29,12 @@
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
 
   <ItemGroup>
+    <Compile Remove="Features\Vector\**" />
+    <EmbeddedResource Remove="Features\Vector\**" />
+    <None Remove="Features\Vector\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
     <Compile Include="..\Corlib.Extensions\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
   </ItemGroup>
@@ -171,7 +177,6 @@
 
   <ItemGroup>
     <Folder Include="Features\Unsafe\System\Runtime\CompilerServices\" />
-    <Folder Include="Features\Vector\System\Numerics\" />
     <Folder Include="Guard\" />
   </ItemGroup>
 
