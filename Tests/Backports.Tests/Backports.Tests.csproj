@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net20 excluded: NUnit test infrastructure requires net35+ -->
+    <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
+    <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
+    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <SelfContained>false</SelfContained>
+    <IsPackable>false</IsPackable>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <SuppressTfmSupportBuildErrors>True</SuppressTfmSupportBuildErrors>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+
+  <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
+
+  <!-- NUnit Test Framework -->
+  <ItemGroup>
+    <!-- Microsoft.NET.Test.Sdk - version depends on target framework -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net5.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netstandard2.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net462'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" Condition="$(TargetFramework) == 'net45'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net40'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net35'" />
+
+    <!-- NUnit - use older versions for older frameworks -->
+    <!-- NUnit 3.11.0 is the last version supporting net35 -->
+    <PackageReference Include="NUnit" Version="3.11.0" Condition="$(TargetFramework) == 'net35'" />
+    <PackageReference Include="NUnit" Version="3.*" Condition="$(TargetFramework) != 'net35'" />
+    <!-- NUnit3TestAdapter 5.x requires net462+, use 4.x for net40/net45 -->
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" Condition="$(TargetFramework) == 'net35'" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.2" Condition="$(TargetFramework) == 'net40' OR $(TargetFramework) == 'net45'" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.*" Condition="$(TargetFramework) != 'net35' AND $(TargetFramework) != 'net40' AND $(TargetFramework) != 'net45'" />
+
+    <!-- Reference assemblies for older .NET Framework versions -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+
+    <!-- Explicit dependencies for test host compatibility -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- That's exactly how we want it, only one reference, the rest is auto-magic-voodoo -->
+    <ProjectReference Include="..\..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <!-- Exclude test files that conflict with NUnit's polyfills for net35 -->
+  <ItemGroup Condition="$(TargetFramework) == 'net35'">
+    <Compile Remove="LazyTests.cs" />
+    <Compile Remove="LinqTests.cs" />
+    <Compile Remove="LinqExtendedTests.cs" />
+    <Compile Remove="CollectionTests.cs" />
+  </ItemGroup>
+
+</Project>

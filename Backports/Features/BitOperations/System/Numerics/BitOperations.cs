@@ -41,51 +41,6 @@ public static class BitOperations {
     19, 27, 23, 06, 26, 05, 04, 31
   ];
 
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsPow2(int value) => (value & (value - 1)) == 0 && value > 0;
-
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
-  public static bool IsPow2(uint value) => (value & (value - 1)) == 0 && value != 0;
-
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsPow2(long value) => (value & (value - 1)) == 0 && value > 0;
-
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
-  public static bool IsPow2(ulong value) => (value & (value - 1)) == 0 && value != 0;
-
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsPow2(nint value) => (value & (value - 1)) == 0 && value > 0;
-
-  /// <summary>
-  /// Evaluate whether a given integral value is a power of 2.
-  /// </summary>
-  /// <param name="value">The value.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
-  public static bool IsPow2(nuint value) => (value & (value - 1)) == 0 && value != 0;
-
   /// <summary>Round the given integral value up to a power of 2.</summary>
   /// <param name="value">The value.</param>
   /// <returns>

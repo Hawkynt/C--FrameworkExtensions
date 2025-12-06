@@ -19,7 +19,6 @@
 
 #if !SUPPORTS_TO_HASHSET
 
-using Guard;
 using System.Diagnostics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 using System.Runtime.CompilerServices;
@@ -27,39 +26,39 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic;
 
 public static partial class EnumerablePolyfills {
-  /// <summary>
-  ///   Creates a hash set from the given enumeration.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the item.</typeparam>
-  /// <param name="this">This enumeration.</param>
-  /// <returns>A hashset</returns>
-  [DebuggerStepThrough]
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    // ReSharper disable once UseCollectionExpression
-    return new(@this);
+  extension<TItem>(IEnumerable<TItem> @this) {
+
+    /// <summary>
+    ///   Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <returns>A hashset</returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<TItem> ToHashSet() {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      // ReSharper disable once UseCollectionExpression
+      return new(@this);
+    }
+
+    /// <summary>
+    ///   Creates a hash set from the given enumeration.
+    /// </summary>
+    /// <param name="comparer">The comparer.</param>
+    /// <returns>
+    ///   A hashset
+    /// </returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<TItem> ToHashSet(IEqualityComparer<TItem> comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return new(@this, comparer);
+    }
+
   }
 
-  /// <summary>
-  ///   Creates a hash set from the given enumeration.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the item.</typeparam>
-  /// <param name="this">This enumeration.</param>
-  /// <param name="comparer">The comparer.</param>
-  /// <returns>
-  ///   A hashset
-  /// </returns>
-  [DebuggerStepThrough]
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static HashSet<TItem> ToHashSet<TItem>(this IEnumerable<TItem> @this, IEqualityComparer<TItem> comparer) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-
-    return new(@this, comparer);
-  }
 }
 
 #endif

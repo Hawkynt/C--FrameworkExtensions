@@ -25,93 +25,89 @@ using System.Collections.Generic;
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
-  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    foreach (var item in @this)
-      return item;
+  extension<TSource>(IEnumerable<TSource> @this) {
 
-    return defaultValue;
-  }
+    public TSource FirstOrDefault(TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
 
-  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-    if (predicate == null)
-      AlwaysThrow.ArgumentNullException(nameof(predicate));
-
-    foreach (var item in @this)
-      if (predicate(item))
+      foreach (var item in @this)
         return item;
 
-    return defaultValue;
-  }
-
-  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-
-    var result = defaultValue;
-    var found = false;
-    foreach (var item in @this) {
-      if (found)
-        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
-
-      result = item;
-      found = true;
+      return defaultValue;
     }
 
-    return found ? result : defaultValue;
-  }
+    public TSource FirstOrDefault(Func<TSource, bool> predicate, TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(predicate);
 
-  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-    if (predicate == null)
-      AlwaysThrow.ArgumentNullException(nameof(predicate));
+      foreach (var item in @this)
+        if (predicate(item))
+          return item;
 
-    var result = defaultValue;
-    var found = false;
-    foreach (var item in @this) {
-      if (!predicate(item))
-        continue;
-
-      if (found)
-        AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
-
-      result = item;
-      found = true;
+      return defaultValue;
     }
 
-    return found ? result : defaultValue;
-  }
+    public TSource SingleOrDefault(TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
 
+      var result = defaultValue;
+      var found = false;
+      foreach (var item in @this) {
+        if (found)
+          AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
 
-  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+        result = item;
+        found = true;
+      }
 
-    var result = defaultValue;
-    foreach (var item in @this)
-      result = item;
+      return found ? result : defaultValue;
+    }
 
-    return result;
-  }
+    public TSource SingleOrDefault(Func<TSource, bool> predicate, TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(predicate);
 
-  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate, TSource defaultValue) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-    if (predicate == null)
-      AlwaysThrow.ArgumentNullException(nameof(predicate));
+      var result = defaultValue;
+      var found = false;
+      foreach (var item in @this) {
+        if (!predicate(item))
+          continue;
 
-    var result = defaultValue;
-    foreach (var item in @this)
-      if (predicate(item))
+        if (found)
+          AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
+
+        result = item;
+        found = true;
+      }
+
+      return found ? result : defaultValue;
+    }
+
+    public TSource LastOrDefault(TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      var result = defaultValue;
+      foreach (var item in @this)
         result = item;
 
-    return result;
+      return result;
+    }
+
+    public TSource LastOrDefault(Func<TSource, bool> predicate, TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(predicate);
+
+      var result = defaultValue;
+      foreach (var item in @this)
+        if (predicate(item))
+          result = item;
+
+      return result;
+    }
+
   }
+
 }
 
 #endif

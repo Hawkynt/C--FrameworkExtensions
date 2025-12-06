@@ -26,7 +26,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ArgumentOutOfRangeExceptionExtensions {
+public static partial class ArgumentOutOfRangeExceptionPolyfills {
   extension(ArgumentOutOfRangeException) {
 
     /// <summary>

@@ -23,215 +23,192 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
-  /// <summary>
-  /// Returns an enumerable that incorporates the element's index into a tuple.
-  /// </summary>
-  /// <typeparam name="TSource">The type of the elements of <paramref name="source"/>.</typeparam>
-  /// <param name="source">The source enumerable providing the elements.</param>
-  /// <returns>An enumerable of tuples containing the zero-based index and the element.</returns>
-  /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-  public static IEnumerable<(int Index, TSource Item)> Index<TSource>(this IEnumerable<TSource> source) {
-    if (source == null)
-      AlwaysThrow.ArgumentNullException(nameof(source));
 
-    return _IndexIterator(source);
-  }
+  extension<TSource>(IEnumerable<TSource> @this) {
 
-  private static IEnumerable<(int Index, TSource Item)> _IndexIterator<TSource>(IEnumerable<TSource> source) {
-    var index = 0;
-    foreach (var item in source)
-      yield return (index++, item);
-  }
+    /// <summary>
+    /// Returns an enumerable that incorporates the element's index into a tuple.
+    /// </summary>
+    /// <returns>An enumerable of tuples containing the zero-based index and the element.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="@this"/> is <see langword="null"/>.</exception>
+    public IEnumerable<(int Index, TSource Item)> Index() {
+      ArgumentNullException.ThrowIfNull(@this);
 
-  /// <summary>
-  /// Counts the elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <param name="source">A sequence that contains elements to be counted.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <returns>An enumerable containing the count of elements for each key.</returns>
-  /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<KeyValuePair<TKey, int>> CountBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
-    => CountBy(source, keySelector, null);
+      return Invoke(@this);
 
-  /// <summary>
-  /// Counts the elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <param name="source">A sequence that contains elements to be counted.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <param name="keyComparer">An equality comparer to compare keys.</param>
-  /// <returns>An enumerable containing the count of elements for each key.</returns>
-  /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-  public static IEnumerable<KeyValuePair<TKey, int>> CountBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
-    if (source == null)
-      AlwaysThrow.ArgumentNullException(nameof(source));
-    if (keySelector == null)
-      AlwaysThrow.ArgumentNullException(nameof(keySelector));
-
-    return _CountByIterator(source, keySelector, keyComparer);
-  }
-
-  private static IEnumerable<KeyValuePair<TKey, int>> _CountByIterator<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
-    var countByKey = new Dictionary<TKey, int>(keyComparer);
-    foreach (var item in source) {
-      var key = keySelector(item);
-      if (countByKey.TryGetValue(key, out var count))
-        countByKey[key] = count + 1;
-      else
-        countByKey[key] = 1;
+      static IEnumerable<(int Index, TSource Item)> Invoke(IEnumerable<TSource> source) {
+        var index = 0;
+        foreach (var item in source)
+          yield return (index++, item);
+      }
     }
 
-    foreach (var kvp in countByKey)
-      yield return kvp;
-  }
+    /// <summary>
+    /// Counts the elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <returns>An enumerable containing the count of elements for each key.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="@this"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector)
+      => @this.CountBy(keySelector, null);
 
-  /// <summary>
-  /// Aggregates elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
-  /// <param name="source">A sequence that contains elements to be aggregated.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <param name="seed">A function to create the initial accumulator value for a key.</param>
-  /// <param name="func">An accumulator function to be invoked on each element.</param>
-  /// <returns>An enumerable containing the aggregate value for each key.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TSource, TKey, TAccumulate>(
-    this IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    Func<TKey, TAccumulate> seed,
-    Func<TAccumulate, TSource, TAccumulate> func
-  ) => AggregateBy(source, keySelector, seed, func, null);
+    /// <summary>
+    /// Counts the elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <param name="keyComparer">An equality comparer to compare keys.</param>
+    /// <returns>An enumerable containing the count of elements for each key.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="@this"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
+    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
 
-  /// <summary>
-  /// Aggregates elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
-  /// <param name="source">A sequence that contains elements to be aggregated.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <param name="seed">A function to create the initial accumulator value for a key.</param>
-  /// <param name="func">An accumulator function to be invoked on each element.</param>
-  /// <param name="keyComparer">An equality comparer to compare keys.</param>
-  /// <returns>An enumerable containing the aggregate value for each key.</returns>
-  public static IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TSource, TKey, TAccumulate>(
-    this IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    Func<TKey, TAccumulate> seed,
-    Func<TAccumulate, TSource, TAccumulate> func,
-    IEqualityComparer<TKey> keyComparer
-  ) {
-    if (source == null)
-      AlwaysThrow.ArgumentNullException(nameof(source));
-    if (keySelector == null)
-      AlwaysThrow.ArgumentNullException(nameof(keySelector));
-    if (seed == null)
-      AlwaysThrow.ArgumentNullException(nameof(seed));
-    if (func == null)
-      AlwaysThrow.ArgumentNullException(nameof(func));
+      return Invoke(@this, keySelector, keyComparer);
 
-    return _AggregateByIterator(source, keySelector, seed, func, keyComparer);
-  }
+      static IEnumerable<KeyValuePair<TKey, int>> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
+        var countByKey = new Dictionary<TKey, int>(keyComparer);
+        foreach (var item in source) {
+          var key = keySelector(item);
+          if (countByKey.TryGetValue(key, out var count))
+            countByKey[key] = count + 1;
+          else
+            countByKey[key] = 1;
+        }
 
-  private static IEnumerable<KeyValuePair<TKey, TAccumulate>> _AggregateByIterator<TSource, TKey, TAccumulate>(
-    IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    Func<TKey, TAccumulate> seed,
-    Func<TAccumulate, TSource, TAccumulate> func,
-    IEqualityComparer<TKey> keyComparer
-  ) {
-    var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
-    foreach (var item in source) {
-      var key = keySelector(item);
-      if (!dict.TryGetValue(key, out var accumulate))
-        accumulate = seed(key);
-
-      dict[key] = func(accumulate, item);
+        foreach (var kvp in countByKey)
+          yield return kvp;
+      }
     }
 
-    foreach (var kvp in dict)
-      yield return kvp;
-  }
+    /// <summary>
+    /// Aggregates elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <param name="seed">A function to create the initial accumulator value for a key.</param>
+    /// <param name="func">An accumulator function to be invoked on each element.</param>
+    /// <returns>An enumerable containing the aggregate value for each key.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TKey, TAccumulate>(
+      Func<TSource, TKey> keySelector,
+      Func<TKey, TAccumulate> seed,
+      Func<TAccumulate, TSource, TAccumulate> func
+    ) => @this.AggregateBy(keySelector, seed, func, null);
 
-  /// <summary>
-  /// Aggregates elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
-  /// <param name="source">A sequence that contains elements to be aggregated.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <param name="seed">The initial accumulator value for all keys.</param>
-  /// <param name="func">An accumulator function to be invoked on each element.</param>
-  /// <returns>An enumerable containing the aggregate value for each key.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TSource, TKey, TAccumulate>(
-    this IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    TAccumulate seed,
-    Func<TAccumulate, TSource, TAccumulate> func
-  ) => AggregateBy(source, keySelector, seed, func, null);
+    /// <summary>
+    /// Aggregates elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <param name="seed">A function to create the initial accumulator value for a key.</param>
+    /// <param name="func">An accumulator function to be invoked on each element.</param>
+    /// <param name="keyComparer">An equality comparer to compare keys.</param>
+    /// <returns>An enumerable containing the aggregate value for each key.</returns>
+    public IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TKey, TAccumulate>(
+      Func<TSource, TKey> keySelector,
+      Func<TKey, TAccumulate> seed,
+      Func<TAccumulate, TSource, TAccumulate> func,
+      IEqualityComparer<TKey> keyComparer
+    ) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
+      ArgumentNullException.ThrowIfNull(seed);
+      ArgumentNullException.ThrowIfNull(func);
 
-  /// <summary>
-  /// Aggregates elements of a sequence by key.
-  /// </summary>
-  /// <typeparam name="TSource">The type of elements of <paramref name="source"/>.</typeparam>
-  /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-  /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
-  /// <param name="source">A sequence that contains elements to be aggregated.</param>
-  /// <param name="keySelector">A function to extract the key from each element.</param>
-  /// <param name="seed">The initial accumulator value for all keys.</param>
-  /// <param name="func">An accumulator function to be invoked on each element.</param>
-  /// <param name="keyComparer">An equality comparer to compare keys.</param>
-  /// <returns>An enumerable containing the aggregate value for each key.</returns>
-  public static IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TSource, TKey, TAccumulate>(
-    this IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    TAccumulate seed,
-    Func<TAccumulate, TSource, TAccumulate> func,
-    IEqualityComparer<TKey> keyComparer
-  ) {
-    if (source == null)
-      AlwaysThrow.ArgumentNullException(nameof(source));
-    if (keySelector == null)
-      AlwaysThrow.ArgumentNullException(nameof(keySelector));
-    if (func == null)
-      AlwaysThrow.ArgumentNullException(nameof(func));
+      return Invoke(@this, keySelector, seed, func, keyComparer);
 
-    return _AggregateByWithSeedValueIterator(source, keySelector, seed, func, keyComparer);
-  }
+      static IEnumerable<KeyValuePair<TKey, TAccumulate>> Invoke(
+        IEnumerable<TSource> source,
+        Func<TSource, TKey> keySelector,
+        Func<TKey, TAccumulate> seed,
+        Func<TAccumulate, TSource, TAccumulate> func,
+        IEqualityComparer<TKey> keyComparer
+      ) {
+        var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
+        foreach (var item in source) {
+          var key = keySelector(item);
+          if (!dict.TryGetValue(key, out var accumulate))
+            accumulate = seed(key);
 
-  private static IEnumerable<KeyValuePair<TKey, TAccumulate>> _AggregateByWithSeedValueIterator<TSource, TKey, TAccumulate>(
-    IEnumerable<TSource> source,
-    Func<TSource, TKey> keySelector,
-    TAccumulate seed,
-    Func<TAccumulate, TSource, TAccumulate> func,
-    IEqualityComparer<TKey> keyComparer
-  ) {
-    var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
-    foreach (var item in source) {
-      var key = keySelector(item);
-      if (!dict.TryGetValue(key, out var accumulate))
-        accumulate = seed;
+          dict[key] = func(accumulate, item);
+        }
 
-      dict[key] = func(accumulate, item);
+        foreach (var kvp in dict)
+          yield return kvp;
+      }
     }
 
-    foreach (var kvp in dict)
-      yield return kvp;
+    /// <summary>
+    /// Aggregates elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <param name="seed">The initial accumulator value for all keys.</param>
+    /// <param name="func">An accumulator function to be invoked on each element.</param>
+    /// <returns>An enumerable containing the aggregate value for each key.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TKey, TAccumulate>(
+      Func<TSource, TKey> keySelector,
+      TAccumulate seed,
+      Func<TAccumulate, TSource, TAccumulate> func
+    ) => @this.AggregateBy(keySelector, seed, func, null);
+
+    /// <summary>
+    /// Aggregates elements of a sequence by key.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
+    /// <typeparam name="TAccumulate">The type of the accumulator value.</typeparam>
+    /// <param name="keySelector">A function to extract the key from each element.</param>
+    /// <param name="seed">The initial accumulator value for all keys.</param>
+    /// <param name="func">An accumulator function to be invoked on each element.</param>
+    /// <param name="keyComparer">An equality comparer to compare keys.</param>
+    /// <returns>An enumerable containing the aggregate value for each key.</returns>
+    public IEnumerable<KeyValuePair<TKey, TAccumulate>> AggregateBy<TKey, TAccumulate>(
+      Func<TSource, TKey> keySelector,
+      TAccumulate seed,
+      Func<TAccumulate, TSource, TAccumulate> func,
+      IEqualityComparer<TKey> keyComparer
+    ) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
+      ArgumentNullException.ThrowIfNull(func);
+
+      return Invoke(@this, keySelector, seed, func, keyComparer);
+
+      static IEnumerable<KeyValuePair<TKey, TAccumulate>> Invoke(
+        IEnumerable<TSource> source,
+        Func<TSource, TKey> keySelector,
+        TAccumulate seed,
+        Func<TAccumulate, TSource, TAccumulate> func,
+        IEqualityComparer<TKey> keyComparer
+      ) {
+        var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
+        foreach (var item in source) {
+          var key = keySelector(item);
+          if (!dict.TryGetValue(key, out var accumulate))
+            accumulate = seed;
+
+          dict[key] = func(accumulate, item);
+        }
+
+        foreach (var kvp in dict)
+          yield return kvp;
+      }
+    }
+
   }
+
 }
 
 #endif

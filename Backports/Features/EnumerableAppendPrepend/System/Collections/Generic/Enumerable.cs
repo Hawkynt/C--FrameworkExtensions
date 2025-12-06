@@ -21,61 +21,60 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
-  /// <summary>
-  ///   Appends a single item to the beginning of the <see cref="IEnumerable{T}" />.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items</typeparam>
-  /// <param name="this">This <see cref="IEnumerable{T}" /></param>
-  /// <param name="item">The item to append</param>
-  /// <returns>A new <see cref="IEnumerable{T}" /> with the added item</returns>
-  /// <exception cref="ArgumentNullException">
-  ///   When the given <see cref="IEnumerable{T}" /> is <see langword="null" />
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<TItem> Prepend<TItem>(this IEnumerable<TItem> @this, TItem item) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this, item);
+  extension<TItem>(IEnumerable<TItem> @this) {
 
-    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem item) {
-      yield return item;
+    /// <summary>
+    ///   Appends a single item to the beginning of the <see cref="IEnumerable{T}" />.
+    /// </summary>
+    /// <param name="item">The item to prepend</param>
+    /// <returns>A new <see cref="IEnumerable{T}" /> with the added item</returns>
+    /// <exception cref="ArgumentNullException">
+    ///   When the given <see cref="IEnumerable{T}" /> is <see langword="null" />
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TItem> Prepend(TItem item) {
+      ArgumentNullException.ThrowIfNull(@this);
 
-      foreach (var i in @this)
-        yield return i;
+      return Invoke(@this, item);
+
+      static IEnumerable<TItem> Invoke(IEnumerable<TItem> source, TItem item) {
+        yield return item;
+
+        foreach (var i in source)
+          yield return i;
+      }
     }
+
+    /// <summary>
+    ///   Appends a single item to the end of the <see cref="IEnumerable{T}" />.
+    /// </summary>
+    /// <param name="item">The item to append</param>
+    /// <returns>A new <see cref="IEnumerable{T}" /> with the added item</returns>
+    /// <exception cref="ArgumentNullException">
+    ///   When the given <see cref="IEnumerable{T}" /> is <see langword="null" />
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TItem> Append(TItem item) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, item);
+
+      static IEnumerable<TItem> Invoke(IEnumerable<TItem> source, TItem item) {
+        foreach (var i in source)
+          yield return i;
+
+        yield return item;
+      }
+    }
+
   }
 
-  /// <summary>
-  ///   Appends a single item to the end of the <see cref="IEnumerable{T}" />.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items</typeparam>
-  /// <param name="this">This <see cref="IEnumerable{T}" /></param>
-  /// <param name="item">The item to append</param>
-  /// <returns>A new <see cref="IEnumerable{T}" /> with the added item</returns>
-  /// <exception cref="ArgumentNullException">
-  ///   When the given <see cref="IEnumerable{T}" /> is <see langword="null" />
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<TItem> Append<TItem>(this IEnumerable<TItem> @this, TItem item) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-
-    return Invoke(@this, item);
-
-    static IEnumerable<TItem> Invoke(IEnumerable<TItem> @this, TItem item) {
-      foreach (var i in @this)
-        yield return i;
-
-      yield return item;
-    }
-  }
 }
 
 #endif

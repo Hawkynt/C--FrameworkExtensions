@@ -50,9 +50,9 @@ public static class MathF {
   public static int Sign(float x) {
     var bits = _SingleToInt32Bits(x);
     var magnitude = bits & MAGNITUDE_MASK;
-    var signBit = bits >> 31;
-    var isZero = magnitude == 0 ? 1 : 0;
-    return (1 | -signBit) & ~isZero;
+    if (magnitude == 0)
+      return 0;
+    return (bits >> 31) | 1; // -1 for negative, 1 for positive
   }
 
   public static float BitDecrement(float x) {

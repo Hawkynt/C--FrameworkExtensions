@@ -23,7 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class MemoryExtensions {
+public static partial class MemoryPolyfills {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Span<T> AsSpan<T>(this T[] @this) => new(@this);

@@ -25,7 +25,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ArgumentNullExceptionExtensions {
+public static partial class ArgumentNullExceptionPolyfills {
   extension(ArgumentNullException) {
 
     /// <summary>

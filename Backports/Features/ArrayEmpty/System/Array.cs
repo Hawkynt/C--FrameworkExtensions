@@ -24,7 +24,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ArrayExtensions {
+public static partial class ArrayPolyfills {
   extension(Array) {
     /// <summary>
     /// Returns an empty array.

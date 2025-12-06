@@ -24,7 +24,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class MathExtensions {
+public static partial class MathPolyfills {
   extension(Math) {
   /// <summary>
   /// Returns value clamped to the inclusive range of min and max.

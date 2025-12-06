@@ -25,7 +25,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ObjectDisposedExceptionExtensions {
+public static partial class ObjectDisposedExceptionPolyfills {
   extension(ObjectDisposedException) {
 
     /// <summary>

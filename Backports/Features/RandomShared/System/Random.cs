@@ -25,18 +25,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-// TODO: Static extension properties cause a compiler crash in .NET 10.0.100 SDK
 // Keep as polyfill class until compiler bug is fixed
 public static partial class RandomPolyfills {
   [ThreadStatic]
   private static Random _threadLocalRandom;
 
-  /// <summary>
-  /// Provides a thread-safe <see cref="Random"/> instance that may be used concurrently from any thread.
-  /// </summary>
-  public static Random Shared {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => _threadLocalRandom ??= new(Environment.TickCount ^ Thread.CurrentThread.ManagedThreadId);
+  extension(Random) {
+
+    /// <summary>
+    /// Provides a thread-safe <see cref="Random"/> instance that may be used concurrently from any thread.
+    /// </summary>
+    public static Random Shared {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => _threadLocalRandom ??= new(Environment.TickCount ^ Thread.CurrentThread.ManagedThreadId);
+    }
+
   }
 }
 

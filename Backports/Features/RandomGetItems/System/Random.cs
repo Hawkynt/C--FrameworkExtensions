@@ -23,7 +23,7 @@ using Guard;
 
 namespace System;
 
-public static partial class RandomExtensions {
+public static partial class RandomPolyfills {
   extension(Random @this) {
     /// <summary>
     /// Fills the elements of a specified span with items chosen at random from the provided set of choices.
@@ -51,12 +51,10 @@ public static partial class RandomExtensions {
     /// <exception cref="ArgumentException"><paramref name="choices"/> is empty.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is negative.</exception>
     public T[] GetItems<T>(T[] choices, int length) {
-      if (choices == null)
-        AlwaysThrow.ArgumentNullException(nameof(choices));
+      ArgumentNullException.ThrowIfNull(choices);
       if (choices.Length == 0)
         AlwaysThrow.ArgumentException("The choices array is empty.", nameof(choices));
-      if (length < 0)
-        AlwaysThrow.ArgumentOutOfRangeException(nameof(length), "Non-negative number required.");
+      ArgumentOutOfRangeException.ThrowIfNegative(length);
 
       var result = new T[length];
       for (var i = 0; i < length; ++i)

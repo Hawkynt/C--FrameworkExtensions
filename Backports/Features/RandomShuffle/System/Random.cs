@@ -19,11 +19,9 @@
 
 #if !SUPPORTS_RANDOM_SHUFFLE
 
-using Guard;
-
 namespace System;
 
-public static partial class RandomExtensions {
+public static partial class RandomPolyfills {
   extension(Random @this) {
     /// <summary>
     /// Performs an in-place shuffle of an array.
@@ -32,8 +30,7 @@ public static partial class RandomExtensions {
     /// <param name="values">The array to shuffle.</param>
     /// <exception cref="ArgumentNullException"><paramref name="values"/> is <see langword="null"/>.</exception>
     public void Shuffle<T>(T[] values) {
-      if (values == null)
-        AlwaysThrow.ArgumentNullException(nameof(values));
+      ArgumentNullException.ThrowIfNull(values);
 
       var n = values.Length;
       for (var i = n - 1; i > 0; --i) {

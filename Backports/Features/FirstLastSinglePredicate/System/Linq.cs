@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_FIRSTLASTSINGLE_PREDICATE
+
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -26,17 +27,21 @@ namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-    => FirstOrDefault(@this, predicate, default);
+  extension<TSource>(IEnumerable<TSource> @this) {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-    => SingleOrDefault(@this, predicate, default);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TSource FirstOrDefault(Func<TSource, bool> predicate)
+      => @this.FirstOrDefault(predicate, default);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> @this, Func<TSource, bool> predicate)
-    => LastOrDefault(@this, predicate, default);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TSource SingleOrDefault(Func<TSource, bool> predicate)
+      => @this.SingleOrDefault(predicate, default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TSource LastOrDefault(Func<TSource, bool> predicate)
+      => @this.LastOrDefault(predicate, default);
+
+  }
 
 }
 

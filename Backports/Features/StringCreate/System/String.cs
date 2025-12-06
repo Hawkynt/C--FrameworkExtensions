@@ -25,7 +25,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class StringExtensions {
+public static partial class StringPolyfills {
   extension(string) {
   /// <summary>
   /// Creates a new string with a specific length and initializes it after creation by using the specified callback.

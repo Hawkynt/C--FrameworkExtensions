@@ -18,12 +18,11 @@
 #endregion
 
 using System.Runtime.CompilerServices;
-using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.IO;
 
-public static partial class PathExtensions {
+public static partial class PathPolyfills {
   extension(Path) {
 
 #if !SUPPORTS_PATH_JOIN
@@ -76,7 +75,9 @@ public static partial class PathExtensions {
   /// <param name="paths">An array of paths.</param>
   /// <returns>The concatenated path.</returns>
   public static string Join(params string[] paths) {
-    if (paths == null || paths.Length == 0)
+    if (paths == null)
+      throw new ArgumentNullException(nameof(paths));
+    if (paths.Length == 0)
       return string.Empty;
 
     var result = paths[0] ?? string.Empty;
@@ -130,11 +131,10 @@ public static partial class PathExtensions {
   /// <param name="path">The destination path.</param>
   /// <returns>The relative path, or <paramref name="path"/> if the paths don't share the same root.</returns>
   /// <exception cref="ArgumentNullException"><paramref name="relativeTo"/> or <paramref name="path"/> is <see langword="null"/>.</exception>
+  /// <exception cref="ArgumentException"><paramref name="relativeTo"/> or <paramref name="path"/> is empty.</exception>
   public static string GetRelativePath(string relativeTo, string path) {
-    if (string.IsNullOrEmpty(relativeTo))
-      AlwaysThrow.ArgumentNullException(nameof(relativeTo));
-    if (string.IsNullOrEmpty(path))
-      AlwaysThrow.ArgumentNullException(nameof(path));
+    ArgumentException.ThrowIfNullOrEmpty(relativeTo);
+    ArgumentException.ThrowIfNullOrEmpty(path);
 
     relativeTo = Path.GetFullPath(relativeTo);
     path = Path.GetFullPath(path);

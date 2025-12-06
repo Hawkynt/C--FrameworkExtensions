@@ -25,7 +25,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ArrayExtensions {
+public static partial class ArrayPolyfills {
   extension(Array) {
   /// <summary>
   /// Assigns the given value of type <typeparamref name="T"/> to each element of the specified array.
@@ -36,8 +36,7 @@ public static partial class ArrayExtensions {
   /// <exception cref="ArgumentNullException"><paramref name="array"/> is <see langword="null"/>.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Fill<T>(T[] array, T value) {
-    if (array == null)
-      AlwaysThrow.ArgumentNullException(nameof(array));
+    ArgumentNullException.ThrowIfNull(array);
 
     for (var i = 0; i < array.Length; ++i)
       array[i] = value;
@@ -60,12 +59,9 @@ public static partial class ArrayExtensions {
   /// </exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static void Fill<T>(T[] array, T value, int startIndex, int count) {
-    if (array == null)
-      AlwaysThrow.ArgumentNullException(nameof(array));
-    if (startIndex < 0)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(startIndex), "Non-negative number required.");
-    if (count < 0)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(count), "Non-negative number required.");
+    ArgumentNullException.ThrowIfNull(array);
+    ArgumentOutOfRangeException.ThrowIfNegative(startIndex);
+    ArgumentOutOfRangeException.ThrowIfNegative(count);
     if (startIndex + count > array.Length)
       AlwaysThrow.ArgumentException("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection.", nameof(count));
 

@@ -24,7 +24,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class RandomExtensions {
+public static partial class RandomPolyfills {
   extension(Random @this) {
     /// <summary>
     /// Returns a random floating-point number that is greater than or equal to 0.0, and less than 1.0.

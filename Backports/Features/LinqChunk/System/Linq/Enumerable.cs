@@ -29,41 +29,44 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Linq;
 
 public static partial class EnumerablePolyfills {
-  /// <summary>
-  /// Splits the elements of a sequence into chunks of size at most <paramref name="size"/>.
-  /// </summary>
-  /// <typeparam name="TSource">The type of the elements of source.</typeparam>
-  /// <param name="source">An <see cref="IEnumerable{T}"/> whose elements to chunk.</param>
-  /// <param name="size">Maximum size of each chunk.</param>
-  /// <returns>An <see cref="IEnumerable{T}"/> that contains the elements the input sequence split into chunks of size <paramref name="size"/>.</returns>
-  /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-  /// <exception cref="ArgumentOutOfRangeException"><paramref name="size"/> is below 1.</exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<TSource[]> Chunk<TSource>(this IEnumerable<TSource> source, int size) {
-    if (source == null)
-      AlwaysThrow.ArgumentNullException(nameof(source));
-    if (size < 1)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(size), "Size must be at least 1.");
 
-    return _ChunkIterator(source, size);
-  }
+  extension<TSource>(IEnumerable<TSource> @this) {
 
-  private static IEnumerable<TSource[]> _ChunkIterator<TSource>(IEnumerable<TSource> source, int size) {
-    using var enumerator = source.GetEnumerator();
-    while (enumerator.MoveNext()) {
-      var chunk = new TSource[size];
-      chunk[0] = enumerator.Current;
+    /// <summary>
+    /// Splits the elements of a sequence into chunks of size at most <paramref name="size"/>.
+    /// </summary>
+    /// <param name="size">Maximum size of each chunk.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> that contains the elements the input sequence split into chunks of size <paramref name="size"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="@this"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="size"/> is below 1.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource[]> Chunk(int size) {
+      ArgumentNullException.ThrowIfNull(@this);
+      if (size < 1)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(size), "Size must be at least 1.");
 
-      var i = 1;
-      for (; i < size && enumerator.MoveNext(); ++i)
-        chunk[i] = enumerator.Current;
+      return Invoke(@this, size);
 
-      if (i < size)
-        Array.Resize(ref chunk, i);
+      static IEnumerable<TSource[]> Invoke(IEnumerable<TSource> source, int size) {
+        using var enumerator = source.GetEnumerator();
+        while (enumerator.MoveNext()) {
+          var chunk = new TSource[size];
+          chunk[0] = enumerator.Current;
 
-      yield return chunk;
+          var i = 1;
+          for (; i < size && enumerator.MoveNext(); ++i)
+            chunk[i] = enumerator.Current;
+
+          if (i < size)
+            Array.Resize(ref chunk, i);
+
+          yield return chunk;
+        }
+      }
     }
+
   }
+
 }
 
 #endif

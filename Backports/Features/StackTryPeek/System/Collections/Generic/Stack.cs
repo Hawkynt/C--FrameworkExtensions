@@ -51,7 +51,7 @@ public static partial class StackPolyfills {
       return false;
     }
 
-    result = @this.Pop();
+    result = @this.Peek();
     return true;
   }
 }

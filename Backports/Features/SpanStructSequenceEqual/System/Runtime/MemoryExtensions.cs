@@ -23,7 +23,7 @@ namespace System;
 
 public struct __NOT_EQUATABLE_MARKER;
 
-public static partial class MemoryExtensions {
+public static partial class MemoryPolyfills {
 
   /// <summary>Determines whether two sequences are equal by comparing the elements using an <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</summary>
   /// <param name="span">The first sequence to compare.</param>

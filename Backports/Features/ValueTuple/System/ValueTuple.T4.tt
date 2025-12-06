@@ -181,7 +181,7 @@ for (int i = 1; i <= arity; i++) {
 ///   Provides extension methods for <see cref="Tuple" /> instances to interop with C# tuples features (deconstruction
 ///   syntax, converting from and to <see cref="ValueTuple" />).
 /// </summary>
-partial class TupleExtensions {
+partial class TuplePolyfills {
 <#
 int Max = 21;
 

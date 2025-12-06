@@ -25,7 +25,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class MemoryExtensions {
+public static partial class MemoryPolyfills {
 
   /// <summary>
   /// Reports the zero-based index of the last occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.

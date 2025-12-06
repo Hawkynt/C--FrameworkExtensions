@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_THROWIFNULLOREMPTY
+#if !SUPPORTS_THROWIFNULLOREMPTY || !SUPPORTS_THROWIFNULLORWHITESPACE
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -25,8 +25,10 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
-public static partial class ArgumentExceptionExtensions {
+public static partial class ArgumentExceptionPolyfills {
   extension(ArgumentException) {
+
+#if !SUPPORTS_THROWIFNULLOREMPTY
 
     /// <summary>
     /// Throws an exception if <paramref name="argument"/> is <see langword="null"/> or empty.
@@ -41,6 +43,16 @@ public static partial class ArgumentExceptionExtensions {
         _ThrowNullOrEmpty(argument, paramName);
     }
 
+    [DoesNotReturn]
+    private static void _ThrowNullOrEmpty(string? argument, string? paramName) {
+      ArgumentNullException.ThrowIfNull(argument, paramName);
+      throw new ArgumentException("The value cannot be an empty string.", paramName);
+    }
+
+#endif
+
+#if !SUPPORTS_THROWIFNULLORWHITESPACE
+
     /// <summary>
     /// Throws an exception if <paramref name="argument"/> is <see langword="null"/>, empty, or consists only of white-space characters.
     /// </summary>
@@ -52,12 +64,6 @@ public static partial class ArgumentExceptionExtensions {
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null) {
       if (_IsNullOrWhiteSpace(argument))
         _ThrowNullOrWhiteSpace(argument, paramName);
-    }
-
-    [DoesNotReturn]
-    private static void _ThrowNullOrEmpty(string? argument, string? paramName) {
-      ArgumentNullException.ThrowIfNull(argument, paramName);
-      throw new ArgumentException("The value cannot be an empty string.", paramName);
     }
 
     [DoesNotReturn]
@@ -80,6 +86,8 @@ public static partial class ArgumentExceptionExtensions {
 
       return true;
     }
+#endif
+
 #endif
 
   }

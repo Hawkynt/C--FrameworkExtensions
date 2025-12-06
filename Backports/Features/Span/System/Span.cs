@@ -75,7 +75,7 @@ public readonly ref struct Span<T> : IEnumerable<T> {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
       if ((uint)index >= (uint)this.Length)
-        AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
+        AlwaysThrow.IndexOutOfRangeException();
 
       return ref this.memoryHandler.GetRef(index);
     }

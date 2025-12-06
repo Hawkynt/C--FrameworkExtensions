@@ -25,7 +25,7 @@ using Guard;
 
 namespace System;
 
-public static partial class RandomExtensions {
+public static partial class RandomPolyfills {
   extension(Random @this) {
   /// <summary>Returns a non-negative random integer.</summary>
   /// <returns>A 64-bit signed integer that is greater than or equal to 0 and less than <see cref="long.MaxValue" />.</returns>
