@@ -157,7 +157,7 @@ public static partial class ImageExtensions {
       if (width != height || !_SUPPORTED_ICON_RESOLUTIONS.Contains(targetRes)) {
         var longestEdge = Math.Max(width, height);
         var nextBiggerIconSize = _SUPPORTED_ICON_RESOLUTIONS.FirstOrDefault(r => r > longestEdge);
-        var nextLessIconSize = _SUPPORTED_ICON_RESOLUTIONS.Reverse().FirstOrDefault(r => r < longestEdge);
+        var nextLessIconSize = Enumerable.Reverse(_SUPPORTED_ICON_RESOLUTIONS).FirstOrDefault(r => r < longestEdge);
 
         if (nextBiggerIconSize == 0)
 
