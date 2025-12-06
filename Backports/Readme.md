@@ -90,8 +90,20 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
   * [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
 
+* System
+  * [Memory](https://learn.microsoft.com/dotnet/api/system.memory-1)&lt;T&gt;
+  * [ReadOnlyMemory](https://learn.microsoft.com/dotnet/api/system.readonlymemory-1)&lt;T&gt;
+  * [MemoryHandle](https://learn.microsoft.com/dotnet/api/system.buffers.memoryhandle)
+  * [SequencePosition](https://learn.microsoft.com/dotnet/api/system.sequenceposition)
+
 * System.Buffers
   * [ArrayPool](https://learn.microsoft.com/dotnet/api/system.buffers.arraypool-1)&lt;T&gt;
+  * [IMemoryOwner](https://learn.microsoft.com/dotnet/api/system.buffers.imemoryowner-1)&lt;T&gt;
+  * [MemoryManager](https://learn.microsoft.com/dotnet/api/system.buffers.memorymanager-1)&lt;T&gt;
+  * [MemoryPool](https://learn.microsoft.com/dotnet/api/system.buffers.memorypool-1)&lt;T&gt;
+  * [ReadOnlySequence](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequence-1)&lt;T&gt;
+  * [ReadOnlySequenceSegment](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequencesegment-1)&lt;T&gt;
+  * [SequenceReader](https://learn.microsoft.com/dotnet/api/system.buffers.sequencereader-1)&lt;T&gt;
 
 * System.Collections.Concurrent
   * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
@@ -544,6 +556,22 @@ public class Program
     }
 }
 ```
+
+## Planned Features
+
+The goal is to make Backports **compiler-complete** for older targets with the same runtime functionality as modern .NET.
+
+### Test Coverage
+
+* Add comprehensive tests for all existing polyfills
+* Add tests for Memory<T>, MemoryPool<T>, ReadOnlySequence<T>, Vector128/256/512<T>
+* Ensure test parity across all target frameworks (net35-net9.0)
+
+## Known Issues
+
+* **net2.0** - Hard to write unit tests for as I didn't have an nunit compatible nuget package at hand.
+* **netstandard2.0/2.1 test targets** - These are API specifications, not runtimes. Tests compile but cannot execute directly; functionality is verified via compatible runtimes (netcoreapp3.1, net5.0+)
+* **.NET SDK 10.0 test platform** - VSTest 18.x has compatibility issues with older .NET Core runtimes when running from CLI; Visual Studio Test Explorer handles this better
 
 ## Contributing
 
