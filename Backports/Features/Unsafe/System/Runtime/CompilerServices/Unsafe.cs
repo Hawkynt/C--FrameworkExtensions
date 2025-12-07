@@ -38,7 +38,7 @@ public static unsafe class Unsafe {
       CachedTypeCode.UInt64 or CachedTypeCode.Int64 or CachedTypeCode.Double => 8,
       CachedTypeCode.Decimal => 16,
       CachedTypeCode.Pointer or CachedTypeCode.UPointer => IntPtr.Size,
-      _ => InteropServices.Marshal.SizeOf(typeof(T))
+      _ => sizeof(T)
     }
   ;
 
