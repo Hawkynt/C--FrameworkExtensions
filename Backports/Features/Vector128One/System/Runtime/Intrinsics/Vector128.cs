@@ -17,6 +17,7 @@
 #if !SUPPORTS_VECTOR_128_ONE
 
 using System.Runtime.CompilerServices;
+using Guard;
 using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 using CachedTypeCode = Utilities.CachedTypeCode;
@@ -32,21 +33,60 @@ public static class Vector128OnePolyfills {
     /// <summary>Gets a new <see cref="Vector128{T}"/> with all elements initialized to one.</summary>
     public static Vector128<T> One {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => TypeCodeCache<T>.Code switch {
-        CachedTypeCode.Byte => Unsafe.As<Vector128<byte>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((byte)1))),
-        CachedTypeCode.SByte => Unsafe.As<Vector128<sbyte>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((sbyte)1))),
-        CachedTypeCode.Int16 => Unsafe.As<Vector128<short>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((short)1))),
-        CachedTypeCode.UInt16 => Unsafe.As<Vector128<ushort>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((ushort)1))),
-        CachedTypeCode.Int32 => Unsafe.As<Vector128<int>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1))),
-        CachedTypeCode.UInt32 => Unsafe.As<Vector128<uint>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1u))),
-        CachedTypeCode.Int64 => Unsafe.As<Vector128<long>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1L))),
-        CachedTypeCode.UInt64 => Unsafe.As<Vector128<ulong>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1uL))),
-        CachedTypeCode.Single => Unsafe.As<Vector128<float>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1.0f))),
-        CachedTypeCode.Double => Unsafe.As<Vector128<double>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1.0))),
-        CachedTypeCode.Pointer => Unsafe.As<Vector128<long>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1L))),
-        CachedTypeCode.UPointer => Unsafe.As<Vector128<ulong>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(1uL))),
-        _ => throw new NotSupportedException($"Type {typeof(T)} is not supported")
-      };
+      get {
+        switch (TypeCodeCache<T>.Code) {
+          case CachedTypeCode.Byte: {
+            var temp = Vector128.Create((byte)1);
+            return Unsafe.As<Vector128<byte>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.SByte: {
+            var temp = Vector128.Create((sbyte)1);
+            return Unsafe.As<Vector128<sbyte>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Int16: {
+            var temp = Vector128.Create((short)1);
+            return Unsafe.As<Vector128<short>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.UInt16: {
+            var temp = Vector128.Create((ushort)1);
+            return Unsafe.As<Vector128<ushort>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Int32: {
+            var temp = Vector128.Create(1);
+            return Unsafe.As<Vector128<int>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.UInt32: {
+            var temp = Vector128.Create(1u);
+            return Unsafe.As<Vector128<uint>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Int64: {
+            var temp = Vector128.Create(1L);
+            return Unsafe.As<Vector128<long>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.UInt64: {
+            var temp = Vector128.Create(1uL);
+            return Unsafe.As<Vector128<ulong>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Single: {
+            var temp = Vector128.Create(1.0f);
+            return Unsafe.As<Vector128<float>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Double: {
+            var temp = Vector128.Create(1.0);
+            return Unsafe.As<Vector128<double>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.Pointer: {
+            var temp = Vector128.Create(1L);
+            return Unsafe.As<Vector128<long>, Vector128<T>>(ref temp);
+          }
+          case CachedTypeCode.UPointer: {
+            var temp = Vector128.Create(1uL);
+            return Unsafe.As<Vector128<ulong>, Vector128<T>>(ref temp);
+          }
+          default:
+            return AlwaysThrow.NotSupportedException<Vector128<T>>($"Type {typeof(T)} is not supported");
+        }
+      }
     }
   }
 

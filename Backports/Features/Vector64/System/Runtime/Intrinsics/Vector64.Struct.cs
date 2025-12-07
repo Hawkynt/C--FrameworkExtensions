@@ -85,12 +85,12 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
   public Vector64(T value) {
     _ThrowIfNotSupported();
     var size = Unsafe.SizeOf<T>();
-    var mask = (1UL << (size * 8)) - 1;
+    var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
     var chunk = Unsafe.As<T, ulong>(ref value) & mask;
     ulong val = 0;
     for (var i = 0; i < Count; ++i)
       val |= chunk << (i * size * 8);
-    
+
     this._value = val;
   }
 
@@ -98,7 +98,7 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
     get {
       ulong val = 0;
       var size = Unsafe.SizeOf<T>();
-      var mask = (1UL << (size * 8)) - 1;
+      var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
       for (var i = 0; i < Count; ++i) {
         var tval = Scalar<T>.From(i);
         var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
@@ -113,8 +113,9 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
       if ((uint)index >= Count)
         AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
-      var shift = index * Unsafe.SizeOf<T>() * 8;
-      var mask = (1UL << (Unsafe.SizeOf<T>() * 8)) - 1;
+      var size = Unsafe.SizeOf<T>();
+      var shift = index * size * 8;
+      var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
       var piece = (this._value >> shift) & mask;
       return Unsafe.As<ulong, T>(ref piece);
     }
@@ -288,7 +289,7 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
   [MethodImpl(MethodImplOptions.NoInlining)]
   private static void _ThrowIfNotSupported() {
     if (!IsSupported)
-      throw new NotSupportedException("Unsupported vector type");
+      AlwaysThrow.NotSupportedException("Unsupported vector type");
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)] 

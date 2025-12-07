@@ -274,7 +274,7 @@ public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct 
   [MethodImpl(MethodImplOptions.NoInlining)]
   private static void _ThrowIfNotSupported() {
     if (!IsSupported)
-      throw new NotSupportedException("Unsupported vector type");
+      AlwaysThrow.NotSupportedException("Unsupported vector type");
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

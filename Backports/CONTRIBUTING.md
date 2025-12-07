@@ -55,6 +55,90 @@ When we reference official Microsoft NuGet packages, we use `OFFICIAL_` flags:
 | `OFFICIAL_MEMORY` | System.Memory | net45+ (when package is referenced) |
 | `OFFICIAL_VALUE_TUPLE` | System.ValueTuple | net40+ (when package is referenced) |
 
+### Designing Feature Flags
+
+Use feature flags to describe **runtime/API capability**, not “where the code lives”. A few rules:
+
+- **All-or-nothing features**: use a single flag like `SUPPORTS_MATHF`. Either the runtime provides the full type/API or it doesn’t.
+- **Layered / partially supported features**: split the feature into meaningful levels:
+  - `SUPPORTS_<FEATURE>_BASE` – the minimal type or API shape that exists on some runtimes.
+  - `SUPPORTS_<FEATURE>_FULL` – the full API as it existed in the first “complete” runtime.
+  - `SUPPORTS_<FEATURE>_ADVANCED` (or more specific suffixes) – new members added in later runtimes.
+- **Flags are monotonic**: newer runtimes define *all* relevant flags for a feature (BASE + FULL + ADVANCED), never just the latest one.
+- **Polyfill logic**:
+  - Base type polyfill files are guarded by `#if !SUPPORTS_<FEATURE>_BASE`.
+  - Extension layers for missing members are guarded by `#if !SUPPORTS_<FEATURE>_FULL`, `#if !SUPPORTS_<FEATURE>_ADVANCED`, etc.
+- **Official packages**: use `OFFICIAL_<FEATURE>` flags only to express “the API is provided by a package instead of the runtime”; they follow the same BASE/FULL/ADVANCED idea where needed.
+
+### Handling Partial Framework Support
+
+When a type exists only in a reduced form on some targets and is missing entirely on others, don’t duplicate entire type definitions per framework or bury the codebase under `#if` branches. Define a single feature flag for the minimal API shared by all partial implementations, implement that minimal layer once, and then add missing members—instance methods, properties, static members, and even operators—through separate extension blocks guarded by additional feature flags. Frameworks with no implementation get the base polyfill plus every extension layer; frameworks with partial support define only the base flag and automatically pick up the missing APIs; fully modern frameworks define all flags and skip all polyfills. This incremental layering keeps the code organized, avoids redundancy, and ensures each framework gets exactly the pieces it needs.
+
+```csharp
+// Layer 0: minimal type for targets lacking any implementation.
+#if !SUPPORTS_EXAMPLE_BASE
+
+namespace System;
+
+public readonly struct Example(int value) : IEquatable<Example> {
+  public int Value => value;
+  public bool Equals(Example other) => value == other.value;
+  public override bool Equals(object o) => o is Example e && Equals(e);
+}
+
+#endif
+
+// Layer 1: APIs missing from partial runtimes.
+#if !SUPPORTS_EXAMPLE_FULL
+
+public static class ExampleBaseExtensions {
+
+  extension(Example instance) {
+    public bool IsZero => instance.Value == 0;
+    public Example Increment() => new(instance.Value + 1);
+  }
+
+  extension(Example) {
+    public static Example Zero => new(0);
+    public static Example FromInt32(int v) => new(v);
+
+    // Extension operator
+    public static Example operator +(Example l, Example r) => new(l.Value + r.Value);
+  }
+
+}
+
+#endif
+
+// Layer 2: newest APIs, added by extension if the runtime lacks them.
+#if !SUPPORTS_EXAMPLE_ADVANCED
+
+public static class ExampleAdvancedExtensions {
+
+  extension(Example instance) {
+    public Example Clamp(Example min, Example max)
+      => instance.Value < min.Value ? min :
+         instance.Value > max.Value ? max :
+         instance;
+  }
+
+  extension(Example) {
+    public static Example Max(Example l, Example r) => l.Value >= r.Value ? l : r;
+  }
+
+}
+
+#endif
+```
+
+This pattern scales cleanly, keeps each feature layer isolated, and allows complete reconstruction of the modern API surface—including instance members, static members, properties, and operators—without fragmenting the codebase with multi-branch conditionals.
+
+In VersionSpecificSymbols.Common.prop you then wire the flags so that:
+
+- Old targets: no flags → get the base struct + all extension layers.
+- Targets with partial runtime support: SUPPORTS_EXAMPLE_BASE only → skip the struct, but still get extension layers.
+- Targets with full runtime support: SUPPORTS_EXAMPLE_BASE and SUPPORTS_EXAMPLE_FULL and SUPPORTS_EXAMPLE_ADVANCED → skip all polyfill layers entirely.
+
 ## Folder Structure
 
 Each feature lives in its own folder under `Features/`:
@@ -281,10 +365,49 @@ public void LeadingZeroCount_WithZero_Returns32() { ... }
 public void LeadingZeroCount_WithMaxValue_ReturnsZero() { ... }
 ```
 
+### Test Design (No Feature Flags, No Target Switches)
+
+Tests must validate that **the final API surface and behavior are identical** regardless of whether it comes from the runtime, from official packages, or from polyfills.
+
+That means:
+
+- **Do not use `#if` in tests** for `SUPPORTS_*`, `OFFICIAL_*`, or `TargetFramework` checks.
+- **Do not skip tests on old frameworks** just because a feature is polyfilled there.
+- **Write tests only against the public API** as documented by Microsoft; the tests must pass:
+  - when the API is fully native,
+  - when the API is partially native + partially polyfilled via extensions,
+  - when the API is fully polyfilled.
+
+Bad test example (do **not** do this):
+
+```csharp
+#if SUPPORTS_EXAMPLE_BASE
+[Test]
+public void Example_Zero_IsZero() {
+  Assert.That(Example.Zero.IsZero, Is.True);
+}
+#endif
+```
+
+Good test example (what you actually want):
+
+```csharp
+[Test]
+public void Example_Zero_IsZero() {
+  var zero = Example.Zero;
+  Assert.That(zero.IsZero, Is.True);
+}
+```
+
+If a test fails on *any* target, the implementation or flag wiring is wrong – not the test. The tests are the contract that the final API surface is the same everywhere.
+
 ### Framework Coverage
 
 Tests run on multiple target frameworks. Ensure your tests work on:
-- net45, net48 (Framework)
+
+- net20, net35 (Framework)
+- net40, net45, net48 (Framework)
+- netstandard2.0, netstandard2.1 (Standard)
 - netcoreapp3.1 (Core)
 - net5.0 through net9.0
 
@@ -323,6 +446,9 @@ public static class TargetTypePolyfills {
 
     // Static property appears as TargetType.StaticPropertyName
     public static PropertyType StaticPropertyName => /* implementation */;
+
+    // Static operator
+    public static TargetType operator +(TargetType left, TargetType right) => /* implementation */;
   }
 
 }

@@ -67,4 +67,11 @@
     <Compile Remove="CollectionTests.cs" />
   </ItemGroup>
 
+  <!-- Exclude VectorComprehensiveTests for frameworks where Vector types exist but lack indexer support -->
+  <!-- C# 14 extension blocks don't support indexers yet (CS9282), so we can't polyfill vector[i] syntax -->
+  <!-- These frameworks have the Vector types but without the indexer added in .NET 7 -->
+  <ItemGroup Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'">
+    <Compile Remove="VectorComprehensiveTests.cs" />
+  </ItemGroup>
+
 </Project>

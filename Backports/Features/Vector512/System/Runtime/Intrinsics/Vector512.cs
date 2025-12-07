@@ -254,14 +254,6 @@ public static class Vector512 {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static T[] ToArray<T>(this Vector512<T> vector) where T : struct {
-    var result = new T[Vector512<T>.Count];
-    for (var i = 0; i < Vector512<T>.Count; ++i)
-      result[i] = vector[i];
-    return result;
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T ToScalar<T>(this Vector512<T> vector) where T : struct => vector[0];
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

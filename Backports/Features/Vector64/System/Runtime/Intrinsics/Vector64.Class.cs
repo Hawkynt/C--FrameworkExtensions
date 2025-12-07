@@ -982,6 +982,7 @@ public static class Vector64 {
   /// <exception cref="NotSupportedException">The type of <paramref name="left" /> and <paramref name="right" /> (<typeparamref name="T" />) is not supported.</exception>
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  [OverloadResolutionPriority(1)]
   public static Vector64<T> Equals<T>(Vector64<T> left, Vector64<T> right) {
     SkipInit(out Vector64<T> result);
 

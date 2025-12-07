@@ -28,8 +28,6 @@ namespace Backports.Tests;
 [Category("Vector")]
 public class VectorTests {
 
-#if SUPPORTS_VECTOR_64 || !SUPPORTS_VECTOR_64_TYPE
-
   #region Vector64<T> - Basic Properties
 
   [Test]
@@ -254,7 +252,7 @@ public class VectorTests {
   public void Vector64_Equals_SameValues_ReturnsAllBitsSet() {
     var left = Vector64.Create(5);
     var right = Vector64.Create(5);
-    var result = Vector64.Equals(left, right);
+    var result = Vector64.Equals<int>(left, right);
 
     Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-1));
   }
@@ -330,22 +328,7 @@ public class VectorTests {
     Assert.That(Vector64.ToScalar(vector), Is.EqualTo(42));
   }
 
-  [Test]
-  [Category("HappyPath")]
-  public void Vector64_ToArray_CreatesArray() {
-    var vector = Vector64.Create(7);
-    var array = vector.ToArray();
-
-    Assert.That(array.Length, Is.EqualTo(2));
-    Assert.That(array[0], Is.EqualTo(7));
-    Assert.That(array[1], Is.EqualTo(7));
-  }
-
   #endregion
-
-#endif
-
-#if SUPPORTS_VECTOR_128 || !SUPPORTS_VECTOR_128_TYPE
 
   #region Vector128<T> - Basic Properties
 
@@ -638,7 +621,7 @@ public class VectorTests {
   public void Vector128_Equals_SameValues_ReturnsAllBitsSet() {
     var left = Vector128.Create(5);
     var right = Vector128.Create(5);
-    var result = Vector128.Equals(left, right);
+    var result = Vector128.Equals<int>(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
       Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-1));
@@ -649,7 +632,7 @@ public class VectorTests {
   public void Vector128_Equals_DifferentValues_ReturnsZero() {
     var left = Vector128.Create(5);
     var right = Vector128.Create(10);
-    var result = Vector128.Equals(left, right);
+    var result = Vector128.Equals<int>(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
       Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0));
@@ -731,17 +714,6 @@ public class VectorTests {
     Assert.That(Vector128.ToScalar(vector), Is.EqualTo(42));
   }
 
-  [Test]
-  [Category("HappyPath")]
-  public void Vector128_ToArray_CreatesArray() {
-    var vector = Vector128.Create(7);
-    var array = vector.ToArray();
-
-    Assert.That(array.Length, Is.EqualTo(4));
-    for (var i = 0; i < 4; ++i)
-      Assert.That(array[i], Is.EqualTo(7));
-  }
-
   #endregion
 
   #region Vector128<T> - Type Conversion
@@ -790,10 +762,6 @@ public class VectorTests {
   }
 
   #endregion
-
-#endif
-
-#if SUPPORTS_VECTOR_256 || !SUPPORTS_VECTOR_256_TYPE
 
   #region Vector256<T> - Basic Properties
 
@@ -978,7 +946,7 @@ public class VectorTests {
   public void Vector256_Equals_SameValues_ReturnsAllBitsSet() {
     var left = Vector256.Create(5);
     var right = Vector256.Create(5);
-    var result = Vector256.Equals(left, right);
+    var result = Vector256.Equals<int>(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
       Assert.That(Vector256.GetElement(result, i), Is.EqualTo(-1));
@@ -1312,7 +1280,5 @@ public class VectorTests {
   }
 
   #endregion
-
-#endif
 
 }
