@@ -16,6 +16,7 @@
 
 #if !SUPPORTS_UNSAFE && !OFFICIAL_UNSAFE
 
+using Utilities;
 using MethodImplOptionsEx = Utilities.MethodImplOptions;
 
 namespace System.Runtime.CompilerServices;
@@ -27,7 +28,19 @@ public static unsafe class Unsafe {
   public static void SkipInit<T>(out T result) => result = default;
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-  public static int SizeOf<T>() => sizeof(T);
+  public static int SizeOf<T>() =>
+    // sizeof(T) doesn't work reliably for generic type parameters in older .NET Framework
+    // Use type switching for known primitive types, fall back to Marshal.SizeOf
+    TypeCodeCache<T>.Code switch {
+      CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.Boolean => 1,
+      CachedTypeCode.UInt16 or CachedTypeCode.Int16 or CachedTypeCode.Char => 2,
+      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.Single => 4,
+      CachedTypeCode.UInt64 or CachedTypeCode.Int64 or CachedTypeCode.Double => 8,
+      CachedTypeCode.Decimal => 16,
+      CachedTypeCode.Pointer or CachedTypeCode.UPointer => IntPtr.Size,
+      _ => InteropServices.Marshal.SizeOf(typeof(T))
+    }
+  ;
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   internal static T* NullPtr<T>() => (T*)IntPtr.Zero;
@@ -85,13 +98,9 @@ public static unsafe class Unsafe {
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static ref T AsRef<T>(in T source) {
-    return ref AsRefInternal(source);
-
-    [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-    static ref T AsRefInternal(T source) {
-      var tr = __makeref(source);
-      return ref *(T*)*(IntPtr*)&tr;
-    }
+    // Get pointer to the 'in' parameter directly - 'in' is passed by reference internally
+    fixed (T* ptr = &source)
+      return ref *ptr;
   }
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]

@@ -34,6 +34,7 @@ internal enum CachedTypeCode {
   Decimal,
   Pointer,
   UPointer,
+  Boolean
 }
 
 internal static class TypeCodeCache<T> {
@@ -54,6 +55,7 @@ internal static class TypeCodeCache<T> {
       typeof(T) == typeof(decimal) ? CachedTypeCode.Decimal :
       typeof(T) == typeof(nint) ? CachedTypeCode.Pointer :
       typeof(T) == typeof(nuint) ? CachedTypeCode.UPointer :
+      typeof(T) == typeof(bool) ? CachedTypeCode.Boolean :
       CachedTypeCode.Unknown;
   }
 }
