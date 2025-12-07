@@ -16,41 +16,33 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-
   <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
 
   <!-- NUnit Test Framework -->
   <ItemGroup>
     <!-- Microsoft.NET.Test.Sdk - version depends on target framework -->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net5.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netstandard2.1'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net48'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net462'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" Condition="$(TargetFramework) == 'net45'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net5.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netstandard2.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net462'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net40'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net35'" />
 
-    <!-- NUnit - use older versions for older frameworks -->
-    <!-- NUnit 3.11.0 is the last version supporting net35 -->
-    <PackageReference Include="NUnit" Version="3.11.0" Condition="$(TargetFramework) == 'net35'" />
-    <PackageReference Include="NUnit" Version="3.*" Condition="$(TargetFramework) != 'net35'" />
-    <!-- NUnit3TestAdapter 5.x requires net462+, use 4.x for net40/net45 -->
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" Condition="$(TargetFramework) == 'net35'" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.2" Condition="$(TargetFramework) == 'net40' OR $(TargetFramework) == 'net45'" />
-    <PackageReference Include="NUnit3TestAdapter" Version="5.*" Condition="$(TargetFramework) != 'net35' AND $(TargetFramework) != 'net40' AND $(TargetFramework) != 'net45'" />
+    <PackageReference Include="NUnit" Version="3.*" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.*" />
 
     <!-- Reference assemblies for older .NET Framework versions -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
 
     <!-- Explicit dependencies for test host compatibility -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-
 
   </ItemGroup>
 

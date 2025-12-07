@@ -32,11 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net9.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net8.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net7.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net6.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net5.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net48'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net462'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
@@ -45,6 +46,9 @@
 
     <PackageReference Include="NUnit" Version="3.*" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.3.*" />
+
+    <!-- Explicit dependencies for test host compatibility -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
