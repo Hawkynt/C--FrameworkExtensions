@@ -70,6 +70,39 @@ Use feature flags to describe **runtime/API capability**, not “where the code 
   - Extension layers for missing members are guarded by `#if !SUPPORTS_<FEATURE>_FULL`, `#if !SUPPORTS_<FEATURE>_ADVANCED`, etc.
 - **Official packages**: use `OFFICIAL_<FEATURE>` flags only to express “the API is provided by a package instead of the runtime”; they follow the same BASE/FULL/ADVANCED idea where needed.
 
+### Practical Feature Flag Naming
+
+In practice, feature flags are named after **logical capability blocks**, not after some global, perfectly consistent taxonomy. The unit you care about is: “what set of APIs do I want to treat as one on/off switch?”. That leads to three common patterns:
+
+1. **Group flags (most common)**  
+   A flag covers a *cluster* of related members and sometimes multiple types that conceptually belong together and should either all exist or all be missing.  
+   - Example: `SUPPORTS_VECTOR_BASIC` might cover the core `Vector128<T>`/`Vector256<T>` types, a small set of factory methods, and basic arithmetic.
+   - Example: `SUPPORTS_TASK_RUN` could mean “we have `Task.Run(...)` in the shape we rely on”, even if that pulls in a couple of overloads.
+
+   Rule of thumb: if consumers would reasonably say “either I have this feature or I don’t”, it gets a single group flag named after that feature.
+
+2. **Single-API flags (fine-grained shims)**  
+   Sometimes the smallest useful unit really is a single method or tiny surface, usually when it was added later or is optional even on newer runtimes.  
+   - Example: `SUPPORTS_STRING_ISNULLORWHITESPACE`
+   - Example: `SUPPORTS_SPAN_FILL`
+
+   In that case, name the flag after the method (or property/operator group) exactly. The flag then means: “this particular API is present and behaves like the official one”.
+
+3. **Layered / second-iteration flags**  
+   Some features grow in layers: v1 has the type and a few members, later versions add more operators, helpers, or whole extra behavior. The first layer gets the “base” name; later layers get their own flags named after the layer’s *role*, not its internal history.  
+   - Example:  
+     - `SUPPORTS_VECTOR_BASE` – minimal usable vector API.  
+     - `SUPPORTS_VECTOR_OPERATORS` – adds arithmetic/comparison operators.  
+     - `SUPPORTS_VECTOR_ADVANCED` – adds newer helpers like `Clamp`, `Max`, etc.
+
+   Older runtimes define none of these, mid-tier runtimes might define only `SUPPORTS_VECTOR_BASE`, and the newest ones define all of them.
+
+General rules to keep you from inventing nonsense:
+
+- Name flags after **what you conceptually get**, not how it’s implemented.
+- One flag should always mean “this *logical block* of API is fully usable” – whether that’s one method or ten.
+- If you find yourself needing `SUPPORTS_FOO` and `SUPPORTS_FOO_BUT_NOT_BAR`, you’ve already lost. Split them into two clean blocks: `SUPPORTS_FOO` and `SUPPORTS_FOO_BAR`, wire them monotonically, and layer the polyfills accordingly.
+
 ### Handling Partial Framework Support
 
 When a type exists only in a reduced form on some targets and is missing entirely on others, don’t duplicate entire type definitions per framework or bury the codebase under `#if` branches. Define a single feature flag for the minimal API shared by all partial implementations, implement that minimal layer once, and then add missing members—instance methods, properties, static members, and even operators—through separate extension blocks guarded by additional feature flags. Frameworks with no implementation get the base polyfill plus every extension layer; frameworks with partial support define only the base flag and automatically pick up the missing APIs; fully modern frameworks define all flags and skip all polyfills. This incremental layering keeps the code organized, avoids redundancy, and ensures each framework gets exactly the pieces it needs.
@@ -133,11 +166,11 @@ public static class ExampleAdvancedExtensions {
 
 This pattern scales cleanly, keeps each feature layer isolated, and allows complete reconstruction of the modern API surface—including instance members, static members, properties, and operators—without fragmenting the codebase with multi-branch conditionals.
 
-In VersionSpecificSymbols.Common.prop you then wire the flags so that:
+In `VersionSpecificSymbols.Common.prop` you then wire the flags so that:
 
 - Old targets: no flags → get the base struct + all extension layers.
-- Targets with partial runtime support: SUPPORTS_EXAMPLE_BASE only → skip the struct, but still get extension layers.
-- Targets with full runtime support: SUPPORTS_EXAMPLE_BASE and SUPPORTS_EXAMPLE_FULL and SUPPORTS_EXAMPLE_ADVANCED → skip all polyfill layers entirely.
+- Targets with partial runtime support: `SUPPORTS_EXAMPLE_BASE` only → skip the struct, but still get extension layers.
+- Targets with full runtime support: `SUPPORTS_EXAMPLE_BASE` and `SUPPORTS_EXAMPLE_FULL` and `SUPPORTS_EXAMPLE_ADVANCED` → skip all polyfill layers entirely.
 
 ## Folder Structure
 
@@ -174,6 +207,13 @@ Backports/
 └── ReadMe.md
 ```
 
+In practice this does **not** mean you must always use a single giant `BASE/FULL/ADVANCED` file. The pattern is:
+
+- One flag that describes the **existence of the base type or minimal API** (e.g. `SUPPORTS_EXAMPLE` or `SUPPORTS_EXAMPLE_BASE`).
+- Additional flags for each **independent capability block** you care about, which may be a layer (`SUPPORTS_EXAMPLE_FULL`, `SUPPORTS_EXAMPLE_ADVANCED`) or a fine-grained shim (`SUPPORTS_STRING_ISNULLORWHITESPACE`, `SUPPORTS_EXAMPLE_CLAMP`, etc.).
+
+Each such flag is treated as its **own feature**: it gets its own small extension file (or very tight group of files) under the feature folder. That way you can selectively light up well-defined API pieces depending on what a given target already provides, without ever needing huge “full vs advanced” monoliths or files with multiple unrelated `#if` blocks.
+
 ### Folder Naming Rules
 
 1. **Feature folder name** should match the feature concept (e.g., `Memory`, `Span`, `ThrowIfNull`)
@@ -203,16 +243,42 @@ Features/
         └── YourType.cs
 ```
 
-### Step 3: Add Feature Flag to VersionSpecificSymbols.Common.prop
+### Step 3: Add Feature Flags
 
-Add your feature flag to the appropriate framework sections:
+Feature flags must be added inside `<DefineConstants>` blocks in `VersionSpecificSymbols.Common.prop`.
+Two constraints apply:
+
+1. **No line breaks are allowed inside the `<DefineConstants>` value.**
+   MSBuild’s symbol parser is notoriously brittle: newline characters can trigger warnings, mis-tokenize symbols, or yield silently undefined feature flags.
+
+2. **We intentionally insert large whitespace gaps between symbols.**
+   This is *not* cosmetic. Modern editors only soft-wrap long lines when the line exceeds a certain width.
+   By padding the line with wide whitespace blocks, each symbol visually appears on its own line when soft-wrapped — while still remaining a single physical line for MSBuild.
+   Single spaces do *not* achieve this; the line stays too short and becomes unreadable.
+
+Correct formatting example (mirroring real project usage):
 
 ```xml
-<!-- Core 7.0 -->
-<DefineConstants Condition="...">$(DefineConstants);
-    SUPPORTS_YOUR_FEATURE;
-</DefineConstants>
+<!-- Framework 3.5 -->
+<DefineConstants Condition="$(IsNetCore) OR $(IsNetStandard) OR ($(IsNetFramework) AND $([System.Version]::Parse('$(NetFrameworkVersion)').CompareTo($([System.Version]::Parse('3.5')))) &gt;= 0)">$(DefineConstants);                                                                                                                                                                                                                   SUPPORTS_ACTION_FUNC;                                                                                                                                                                                                                   SUPPORTS_EXTENSIONS;                                                                                                                                                                                                                   </DefineConstants>
 ```
+
+Important notes:
+
+- **This is a single logical line** as far as MSBuild is concerned.
+  The apparent “multiple lines” above are just editor soft-wrapping created by extremely long whitespace padding.
+- **Do not insert actual newlines between symbols.**
+- **Use long runs of spaces** (20–300, doesn’t matter) to force editors to wrap each symbol visually.
+- **Do not use tabs.** Tabs behave inconsistently across editors and can break wrapping expectations.
+- **Never forget $(DefineConstants) first.** Otherwise you're dropping all previous symbols that might already been defined.
+
+If you add a new feature:
+
+- append it after the previous symbol on the same soft-wrapped “line”,
+- separated by a long block of spaces to maintain readability,
+- inside the appropriate framework block based on where the capability exists.
+
+This formatting discipline is required. Without it, contributors will check in newline-broken DefineConstants lists that compile differently across IDEs, build agents, and CI environments.
 
 ### Step 4: Implement the Polyfill
 
@@ -335,11 +401,14 @@ AlwaysThrow.ArgumentNullException(nameof(parameter));
 ### Performance Code
 
 When using unsafe code:
+
 1. Mark methods with `[MethodImpl(MethodImplOptions.AggressiveInlining)]` where appropriate
 2. Use `Unsafe.As<TFrom, TTo>()` for type reinterpretation
 3. Wrap in `#if UNSAFE` if needed for specific targets
 
 ## Testing Requirements
+
+Tests are **completely feature-flag agnostic**: they target the final API surface only and must compile and pass on every target without any conditional compilation nor test skipping.
 
 ### Test Organization
 
@@ -375,6 +444,9 @@ That means:
 - **Do not skip tests on old frameworks** just because a feature is polyfilled there.
 - **Write tests only against the public API** as documented by Microsoft; the tests must pass:
   - when the API is fully native,
+  - when the API is fully implemented using official NuGet packages,
+  - when the API is partially implemented via official packages + partially polyfilled,
+  - when the API is partially native + partially official packages + partially polyfilled,
   - when the API is partially native + partially polyfilled via extensions,
   - when the API is fully polyfilled.
 
@@ -400,6 +472,8 @@ public void Example_Zero_IsZero() {
 ```
 
 If a test fails on *any* target, the implementation or flag wiring is wrong – not the test. The tests are the contract that the final API surface is the same everywhere.
+Tests are written once, against the full/latest official API surface, and must compile and pass unchanged on all target frameworks.
+If you feel the need to add a feature flag or target check to a test, stop – fix the implementation or the flag wiring instead.
 
 ### Framework Coverage
 
@@ -415,7 +489,7 @@ Tests run on multiple target frameworks. Ensure your tests work on:
 
 ### Extensions
 
-C# 14+ introduces extension members that allow extending types with methods, properties, indexers, and static members. Use this syntax because it improves readability and organization and we have the latest compiler always at hand anyways.
+C# 14+ introduces extension members that allow extending types with methods, properties, indexers, static members, and even operators. Use this syntax because it improves readability and organization and we have the latest compiler always at hand anyways.
 
 ```csharp
 #if !SUPPORTS_FEATURE
@@ -424,31 +498,19 @@ public static class TargetTypePolyfills {
 
   // Instance extension block - extends instances of TargetType
   extension(TargetType instance) {
-    // Extension method
-    public ReturnType MethodName(OtherType param) {
-      // 'instance' refers to the extended instance
-      return instance.SomeProperty;
-    }
-
-    // Extension property
+    public ReturnType MethodName(OtherType param) => instance.SomeProperty;
     public PropertyType PropertyName => instance.SomeValue;
-
-    // Extension indexer
     public ElementType this[int index] => instance.GetItem(index);
   }
 
-  // Static extension block - adds static members to TargetType
+  // Static extension block - adds static members and operators to TargetType
   extension(TargetType) {
-    // Static method appears as TargetType.StaticMethodName()
-    public static ReturnType StaticMethodName(OtherType param) {
-      // Implementation
-    }
-
-    // Static property appears as TargetType.StaticPropertyName
+    public static ReturnType StaticMethodName(OtherType param) => /* implementation */;
     public static PropertyType StaticPropertyName => /* implementation */;
 
-    // Static operator
-    public static TargetType operator +(TargetType left, TargetType right) => /* implementation */;
+    // Extension operator
+    public static TargetType operator +(TargetType left, TargetType right)
+      => /* implementation */;
   }
 
 }
@@ -467,20 +529,17 @@ public static class EnumerablePolyfills {
   extension<TSource>(IEnumerable<TSource> source)
     where TSource : IEquatable<TSource> {
 
-    // Extension method using the block's type parameter
     public IEnumerable<TSource> Where(Func<TSource, bool> predicate) {
       foreach (var element in source)
         if (predicate(element))
           yield return element;
     }
 
-    // Extension property
     public TSource FirstOrDefault => source.FirstOrDefault();
   }
 
   // Method with additional generic parameters (like Select)
   extension<TSource>(IEnumerable<TSource> source) {
-    // TSource comes from the block, TResult is method-specific
     public IEnumerable<TResult> Select<TResult>(Func<TSource, TResult> selector) {
       foreach (var element in source)
         yield return selector(element);
@@ -542,8 +601,8 @@ public readonly struct YourStruct<T> : IEquatable<YourStruct<T>> where T : struc
 
 ## Checklist for New Features
 
-- [ ] Feature flag added to `VersionSpecificSymbols.Common.prop`
-- [ ] Code wrapped in `#if !SUPPORTS_FEATURE`
+- [ ] Feature flags added to `VersionSpecificSymbols.Common.prop` (`SUPPORTS_FEATURE` for all-or-nothing, or `SUPPORTS_FEATURE_BASE/FULL/...` for layered features)
+- [ ] Polyfill files guarded with the appropriate `#if !SUPPORTS_...` conditions (BASE/FULL/ADVANCED as described above)
 - [ ] File header with license included
 - [ ] Namespace matches official .NET namespace
 - [ ] API matches official API exactly (names, signatures, behavior)
