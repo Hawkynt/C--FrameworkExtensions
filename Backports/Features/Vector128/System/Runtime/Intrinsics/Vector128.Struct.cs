@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VECTOR_128_TYPE
+#if SUPPORTS_VECTOR_128_TYPE && !SUPPORTS_VECTOR_128_BASE
 
 using System.Globalization;
 using System.Runtime.CompilerServices;

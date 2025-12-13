@@ -23,7 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Runtime.Intrinsics {
 
 /// <summary>
-/// Polyfill for Vector128 AllBitsSet property (added in .NET 7.0).
+/// Polyfill for Vector128 AllBitsSet property (added in .NET 5.0).
 /// </summary>
 public static class Vector128AllBitsSetPolyfills {
 
@@ -31,7 +31,7 @@ public static class Vector128AllBitsSetPolyfills {
     /// <summary>Gets a new <see cref="Vector128{T}"/> with all bits set to 1.</summary>
     public static Vector128<T> AllBitsSet {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Unsafe.As<Vector128<byte>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create(byte.MaxValue)));
+      get => Unsafe.As<Vector128<byte>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((byte)byte.MaxValue)));
     }
   }
 

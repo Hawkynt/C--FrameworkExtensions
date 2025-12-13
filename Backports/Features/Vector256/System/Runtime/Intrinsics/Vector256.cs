@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VECTOR_256_TYPE
+#if SUPPORTS_VECTOR_256_TYPE && !SUPPORTS_VECTOR_256_BASE
 
 using System.Runtime.CompilerServices;
 using Guard;
@@ -30,7 +30,7 @@ namespace System.Runtime.Intrinsics {
 /// <summary>
 /// Provides a set of static methods for creating and working with 256-bit vectors.
 /// </summary>
-public static class Vector256 {
+public static partial class Vector256 {
   internal const int Size = 32;
   internal const int Alignment = 32;
 

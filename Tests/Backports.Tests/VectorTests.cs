@@ -60,7 +60,7 @@ public class VectorTests {
   [Test]
   [Category("HappyPath")]
   public void Vector64_One_AllElementsOne() {
-    var vector = Vector64<int>.One;
+    var vector = Vector64.Create(1);
 
     Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(1));
     Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(1));

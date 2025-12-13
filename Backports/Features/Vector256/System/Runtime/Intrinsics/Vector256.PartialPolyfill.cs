@@ -28,7 +28,7 @@ namespace System.Runtime.Intrinsics;
 /// Partial polyfill for Vector256 static methods and extension operators on .NET Core 3.0-6.
 /// The Vector256 type exists but many methods and all operators were added in .NET 7.
 /// </summary>
-public static class Vector256Polyfills {
+public static partial class Vector256Polyfills {
 
   // Static extension methods for Vector256 class
   extension(Vector256) {
@@ -290,6 +290,71 @@ public static class Vector256Polyfills {
       for (var i = 0; i < count; ++i) {
         var value = Scalar<T>.Floor(Vector256.GetElement(vector, i));
         result = Vector256.WithElement(result, i, value);
+      }
+      return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector256<T> Load<T>(T* source) where T : unmanaged
+      => Unsafe.ReadUnaligned<Vector256<T>>(source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector256<T> LoadUnsafe<T>(ref T source) where T : struct
+      => Unsafe.ReadUnaligned<Vector256<T>>(ref Unsafe.As<T, byte>(ref source));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void Store<T>(Vector256<T> source, T* destination) where T : unmanaged
+      => Unsafe.WriteUnaligned(destination, source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void StoreUnsafe<T>(Vector256<T> source, ref T destination) where T : struct
+      => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector256<T> Shuffle<T>(Vector256<T> vector, Vector256<T> indices) where T : struct {
+      var count = Vector256<T>.Count;
+      Unsafe.SkipInit(out Vector256<T> result);
+      for (var i = 0; i < count; ++i) {
+        var idx = Convert.ToInt32(Vector256.GetElement(indices, i)) & (count - 1);
+        result = Vector256.WithElement(result, i, Vector256.GetElement(vector, idx));
+      }
+      return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint ExtractMostSignificantBits<T>(Vector256<T> vector) where T : struct {
+      var bytes = Unsafe.As<Vector256<T>, (ulong, ulong, ulong, ulong)>(ref vector);
+      uint result = 0;
+      var elementSize = Unsafe.SizeOf<T>();
+
+      if (elementSize == 1) {
+        for (var i = 0; i < 8; ++i) {
+          if (((bytes.Item1 >> (i * 8 + 7)) & 1) != 0) result |= 1u << i;
+          if (((bytes.Item2 >> (i * 8 + 7)) & 1) != 0) result |= 1u << (i + 8);
+          if (((bytes.Item3 >> (i * 8 + 7)) & 1) != 0) result |= 1u << (i + 16);
+          if (((bytes.Item4 >> (i * 8 + 7)) & 1) != 0) result |= 1u << (i + 24);
+        }
+      } else if (elementSize == 2) {
+        for (var i = 0; i < 4; ++i) {
+          if (((bytes.Item1 >> (i * 16 + 15)) & 1) != 0) result |= 1u << i;
+          if (((bytes.Item2 >> (i * 16 + 15)) & 1) != 0) result |= 1u << (i + 4);
+          if (((bytes.Item3 >> (i * 16 + 15)) & 1) != 0) result |= 1u << (i + 8);
+          if (((bytes.Item4 >> (i * 16 + 15)) & 1) != 0) result |= 1u << (i + 12);
+        }
+      } else if (elementSize == 4) {
+        if (((bytes.Item1 >> 31) & 1) != 0) result |= 1u;
+        if (((bytes.Item1 >> 63) & 1) != 0) result |= 2u;
+        if (((bytes.Item2 >> 31) & 1) != 0) result |= 4u;
+        if (((bytes.Item2 >> 63) & 1) != 0) result |= 8u;
+        if (((bytes.Item3 >> 31) & 1) != 0) result |= 16u;
+        if (((bytes.Item3 >> 63) & 1) != 0) result |= 32u;
+        if (((bytes.Item4 >> 31) & 1) != 0) result |= 64u;
+        if (((bytes.Item4 >> 63) & 1) != 0) result |= 128u;
+      } else if (elementSize == 8) {
+        if (((bytes.Item1 >> 63) & 1) != 0) result |= 1u;
+        if (((bytes.Item2 >> 63) & 1) != 0) result |= 2u;
+        if (((bytes.Item3 >> 63) & 1) != 0) result |= 4u;
+        if (((bytes.Item4 >> 63) & 1) != 0) result |= 8u;
       }
       return result;
     }

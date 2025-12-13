@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VECTOR_128_TYPE
+#if SUPPORTS_VECTOR_128_TYPE && !SUPPORTS_VECTOR_128_BASE
 
 using System.Runtime.CompilerServices;
 using Guard;
@@ -30,7 +30,7 @@ namespace System.Runtime.Intrinsics {
 /// <summary>
 /// Provides a set of static methods for creating and working with 128-bit vectors.
 /// </summary>
-public static class Vector128 {
+public static partial class Vector128 {
   internal const int Size = 16;
   internal const int Alignment = 16;
 
@@ -164,7 +164,7 @@ public static class Vector128 {
   }
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T GetElement<T>(this Vector128<T> vector, int index) where T : struct => vector[index];
+  public static T GetElement<T>(this Vector128<T> vector, int index) where T : struct => vector.GetElementUnsafe(index);
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   internal static T GetElementUnsafe<T>(in this Vector128<T> vector, int index) where T : struct {
@@ -248,7 +248,7 @@ public static class Vector128 {
     return result;
   }
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T ToScalar<T>(this Vector128<T> vector) where T : struct => vector[0];
+  public static T ToScalar<T>(this Vector128<T> vector) where T : struct => vector.GetElementUnsafe(0);
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   public static Vector128<T> WithElement<T>(this Vector128<T> vector, int index, T value) where T : struct {

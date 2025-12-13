@@ -549,6 +549,19 @@ internal static class Scalar<T> {
 
   // TODO: chars, pointer,upointer
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int ToInt32(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Byte => As<byte>(value),
+    CachedTypeCode.SByte => As<sbyte>(value),
+    CachedTypeCode.UInt16 => As<ushort>(value),
+    CachedTypeCode.Int16 => As<short>(value),
+    CachedTypeCode.UInt32 => (int)As<uint>(value),
+    CachedTypeCode.Int32 => As<int>(value),
+    CachedTypeCode.UInt64 => (int)As<ulong>(value),
+    CachedTypeCode.Int64 => (int)As<long>(value),
+    _ => ThrowNotSupported<int>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T From<TFrom>(TFrom value) {
     if (TypeCodeCache<T>.Code == TypeCodeCache<TFrom>.Code)
       return As<T, TFrom>(value);

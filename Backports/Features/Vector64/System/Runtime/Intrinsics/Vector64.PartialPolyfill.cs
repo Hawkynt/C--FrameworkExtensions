@@ -28,7 +28,7 @@ namespace System.Runtime.Intrinsics;
 /// Partial polyfill for Vector64 static methods and extension operators on .NET Core 3.1-6.
 /// The Vector64 type exists but many methods and all operators were added in .NET 7.
 /// </summary>
-public static class Vector64Polyfills {
+public static partial class Vector64Polyfills {
 
   // Static extension methods for Vector64 class
   extension(Vector64) {
@@ -270,6 +270,54 @@ public static class Vector64Polyfills {
       for (var i = 0; i < count; ++i) {
         var value = Scalar<T>.Floor(Vector64.GetElement(vector, i));
         result = Vector64.WithElement(result, i, value);
+      }
+      return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<T> Load<T>(T* source) where T : unmanaged
+      => Unsafe.ReadUnaligned<Vector64<T>>(source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<T> LoadUnsafe<T>(ref T source) where T : struct
+      => Unsafe.ReadUnaligned<Vector64<T>>(ref Unsafe.As<T, byte>(ref source));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void Store<T>(Vector64<T> source, T* destination) where T : unmanaged
+      => Unsafe.WriteUnaligned(destination, source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void StoreUnsafe<T>(Vector64<T> source, ref T destination) where T : struct
+      => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Shuffle<T>(Vector64<T> vector, Vector64<T> indices) where T : struct {
+      var count = Vector64<T>.Count;
+      Unsafe.SkipInit(out Vector64<T> result);
+      for (var i = 0; i < count; ++i) {
+        var idx = Convert.ToInt32(Vector64.GetElement(indices, i)) & (count - 1);
+        result = Vector64.WithElement(result, i, Vector64.GetElement(vector, idx));
+      }
+      return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint ExtractMostSignificantBits<T>(Vector64<T> vector) where T : struct {
+      var bytes = Unsafe.As<Vector64<T>, ulong>(ref vector);
+      uint result = 0;
+      var elementSize = Unsafe.SizeOf<T>();
+
+      if (elementSize == 1) {
+        for (var i = 0; i < 8; ++i)
+          if (((bytes >> (i * 8 + 7)) & 1) != 0) result |= 1u << i;
+      } else if (elementSize == 2) {
+        for (var i = 0; i < 4; ++i)
+          if (((bytes >> (i * 16 + 15)) & 1) != 0) result |= 1u << i;
+      } else if (elementSize == 4) {
+        if (((bytes >> 31) & 1) != 0) result |= 1u;
+        if (((bytes >> 63) & 1) != 0) result |= 2u;
+      } else if (elementSize == 8) {
+        if (((bytes >> 63) & 1) != 0) result |= 1u;
       }
       return result;
     }

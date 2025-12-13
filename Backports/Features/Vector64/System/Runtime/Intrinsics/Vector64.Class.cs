@@ -1,4 +1,4 @@
-﻿#if !SUPPORTS_VECTOR_64_TYPE
+﻿#if SUPPORTS_VECTOR_64_TYPE && !SUPPORTS_VECTOR_64_BASE
 // This file is part of Hawkynt's .NET Framework extensions.
 // 
 // Hawkynt's .NET Framework extensions are free software:
@@ -27,7 +27,7 @@ namespace System.Runtime.Intrinsics {
 /// </summary>
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-public static class Vector64 {
+public static partial class Vector64 {
   internal const int Size = 8;
 
   internal const int Alignment = 8;

@@ -23,7 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Runtime.Intrinsics {
 
 /// <summary>
-/// Polyfill for Vector64 AllBitsSet property (added in .NET 7.0).
+/// Polyfill for Vector64 AllBitsSet property (added in .NET 5.0).
 /// </summary>
 public static class Vector64AllBitsSetPolyfills {
 

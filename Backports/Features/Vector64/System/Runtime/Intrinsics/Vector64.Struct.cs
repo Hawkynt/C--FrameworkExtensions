@@ -13,7 +13,7 @@
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
-#if !SUPPORTS_VECTOR_64_TYPE
+#if SUPPORTS_VECTOR_64_TYPE && !SUPPORTS_VECTOR_64_BASE
 
 using System.Globalization;
 using System.Runtime.CompilerServices;

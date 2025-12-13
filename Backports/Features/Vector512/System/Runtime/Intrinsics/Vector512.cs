@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VECTOR_512
+#if SUPPORTS_VECTOR_512 && !SUPPORTS_VECTOR_512_BASE
 
 using System.Runtime.CompilerServices;
 using Guard;
@@ -28,7 +28,7 @@ namespace System.Runtime.Intrinsics;
 /// <summary>
 /// Provides a set of static methods for creating and working with 512-bit vectors.
 /// </summary>
-public static class Vector512 {
+public static partial class Vector512 {
   internal const int Size = 64;
   internal const int Alignment = 64;
 

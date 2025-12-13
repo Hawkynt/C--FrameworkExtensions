@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_VECTOR_512
+#if SUPPORTS_VECTOR_512 && !SUPPORTS_VECTOR_512_BASE
 
 using System.Globalization;
 using System.Runtime.CompilerServices;

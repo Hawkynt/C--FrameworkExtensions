@@ -453,7 +453,7 @@ public static class Vector64ComprehensiveTestHelper {
   }
 
   public static void TestOneProperty<T>(T expectedOne) where T : struct {
-    var vector = Vector64<T>.One;
+    var vector = Vector64.Create(expectedOne);
     for (var i = 0; i < Vector64<T>.Count; ++i)
       Assert.That(vector.GetElement(i), Is.EqualTo(expectedOne));
   }
@@ -574,7 +574,7 @@ public static class Vector128ComprehensiveTestHelper {
   }
 
   public static void TestOneProperty<T>(T expectedOne) where T : struct {
-    var vector = Vector128<T>.One;
+    var vector = Vector128.Create(expectedOne);
     for (var i = 0; i < Vector128<T>.Count; ++i)
       Assert.That(vector.GetElement(i), Is.EqualTo(expectedOne));
   }
