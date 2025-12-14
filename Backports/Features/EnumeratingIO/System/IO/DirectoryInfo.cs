@@ -28,68 +28,71 @@ namespace System.IO;
 
 public static partial class DirectoryInfoPolyfills {
   
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfos(this DirectoryInfo @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+  extension(DirectoryInfo @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<FileSystemInfo> EnumerateFileSystemInfos() {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this);
+      return Invoke(@this);
 
-    static IEnumerable<FileSystemInfo> Invoke(DirectoryInfo @this) {
-      foreach (var entry in @this.GetFileSystemInfos())
-        yield return entry;
+      static IEnumerable<FileSystemInfo> Invoke(DirectoryInfo @this) {
+        foreach (var entry in @this.GetFileSystemInfos())
+          yield return entry;
+      }
     }
-  }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<FileInfo> EnumerateFiles() {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this);
+      return Invoke(@this);
 
-    static IEnumerable<FileInfo> Invoke(DirectoryInfo @this) {
-      foreach (var entry in @this.GetFiles())
-        yield return entry;
+      static IEnumerable<FileInfo> Invoke(DirectoryInfo @this) {
+        foreach (var entry in @this.GetFiles())
+          yield return entry;
+      }
     }
-  }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<DirectoryInfo> EnumerateDirectories() {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this);
+      return Invoke(@this);
 
-    static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this) {
-      foreach (var entry in @this.GetDirectories())
-        yield return entry;
+      static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this) {
+        foreach (var entry in @this.GetDirectories())
+          yield return entry;
+      }
     }
-  }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<FileInfo> EnumerateFiles(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<FileInfo> EnumerateFiles(string searchPattern, SearchOption searchOption) {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this, searchPattern, searchOption);
+      return Invoke(@this, searchPattern, searchOption);
 
-    static IEnumerable<FileInfo> Invoke(DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-      foreach (var entry in @this.GetFiles(searchPattern, searchOption))
-        yield return entry;
+      static IEnumerable<FileInfo> Invoke(DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
+        foreach (var entry in @this.GetFiles(searchPattern, searchOption))
+          yield return entry;
+      }
     }
-  }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<DirectoryInfo> EnumerateDirectories(this DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<DirectoryInfo> EnumerateDirectories(string searchPattern, SearchOption searchOption) {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    return Invoke(@this, searchPattern, searchOption);
+      return Invoke(@this, searchPattern, searchOption);
 
-    static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
-      foreach (var entry in @this.GetDirectories(searchPattern, searchOption))
-        yield return entry;
+      static IEnumerable<DirectoryInfo> Invoke(DirectoryInfo @this, string searchPattern, SearchOption searchOption) {
+        foreach (var entry in @this.GetDirectories(searchPattern, searchOption))
+          yield return entry;
+      }
     }
   }
 }

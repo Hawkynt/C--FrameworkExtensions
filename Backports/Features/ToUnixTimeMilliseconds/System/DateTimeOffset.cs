@@ -33,18 +33,20 @@ public static partial class DateTimeOffsetPolyfills {
   private const long UnixEpochSeconds = UnixEpochTicks / TimeSpan.TicksPerSecond; // 62,135,596,800
   private const long UnixEpochMilliseconds = UnixEpochTicks / TimeSpan.TicksPerMillisecond; // 62,135,596,800,000
 
-  /// <summary>Returns the number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
-  /// <returns>The number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
-  [DebuggerStepThrough]
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long ToUnixTimeMilliseconds(this DateTimeOffset @this) => @this.UtcDateTime.Ticks / TimeSpan.TicksPerMillisecond - UnixEpochMilliseconds;
+  extension(DateTimeOffset @this)
+  {
+    /// <summary>Returns the number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
+    /// <returns>The number of milliseconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ToUnixTimeMilliseconds() => @this.UtcDateTime.Ticks / TimeSpan.TicksPerMillisecond - UnixEpochMilliseconds;
 
-  /// <summary>Returns the number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
-  /// <returns>The number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
-  [DebuggerStepThrough]
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long ToUnixTimeSeconds(this DateTimeOffset @this) => @this.UtcDateTime.Ticks / TimeSpan.TicksPerSecond - UnixEpochSeconds;
-
+    /// <summary>Returns the number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</summary>
+    /// <returns>The number of seconds that have elapsed since 1970-01-01T00:00:00.000Z.</returns>
+    [DebuggerStepThrough]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ToUnixTimeSeconds() => @this.UtcDateTime.Ticks / TimeSpan.TicksPerSecond - UnixEpochSeconds;
+  }
 }
 
 

@@ -14,17 +14,20 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if SUPPORTS_CONCURRENT_COLLECTIONS && !SUPPORTS_CONCURRENT_COLLECTIONS_CLEAR
+#if !SUPPORTS_CONCURRENT_COLLECTIONS_CLEAR
 
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentBagPolyfills {
-  public static void Clear<T>(this ConcurrentBag<T> @this) {
-    if (@this == null)
-      throw new NullReferenceException();
+  extension<T>(ConcurrentBag<T> @this)
+  {
+    public void Clear() {
+      if (@this == null)
+        throw new NullReferenceException();
 
-    while (@this.TryTake(out _))
-      ;
+      while (@this.TryTake(out _))
+        ;
+    }
   }
 }
 

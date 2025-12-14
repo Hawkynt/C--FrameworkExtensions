@@ -24,52 +24,54 @@ using System.Buffers;
 namespace System.IO;
 
 public static partial class StreamPolyfills {
-  public static int Read(this Stream @this, Span<byte> buffer) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
+  extension(Stream @this)
+  {
+    public int Read(Span<byte> buffer) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
 
-    if (buffer.IsEmpty)
-      return 0;
+      if (buffer.IsEmpty)
+        return 0;
 
-    var size = buffer.Length;
-    byte[] token = null;
-    try {
-      token = ArrayPool<byte>.Shared.Rent(size);
-      var bytesRead = @this.Read(token, 0, size);
-      token.AsSpan()[..bytesRead].CopyTo(buffer[..bytesRead]);
-      return bytesRead;
-    } finally {
-      if (token != null)
-        ArrayPool<byte>.Shared.Return(token);
-    }
-
-  }
-
-  public static void Write(this Stream @this, ReadOnlySpan<byte> buffer) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
-
-    if (buffer.IsEmpty)
-      return;
-
-    const int MaxChunkSize = 1024 * 1024; // 1MB
-    byte[] rented = null;
-    try {
-      rented = ArrayPool<byte>.Shared.Rent(MaxChunkSize);
-      var span = rented.AsSpan(0, MaxChunkSize);
-      while (!buffer.IsEmpty) {
-        var chunkSize = Math.Min(buffer.Length, MaxChunkSize);
-        buffer[..chunkSize].CopyTo(span[..chunkSize]);
-        @this.Write(rented, 0, chunkSize);
-        buffer = buffer[chunkSize..];
+      var size = buffer.Length;
+      byte[] token = null;
+      try {
+        token = ArrayPool<byte>.Shared.Rent(size);
+        var bytesRead = @this.Read(token, 0, size);
+        token.AsSpan()[..bytesRead].CopyTo(buffer[..bytesRead]);
+        return bytesRead;
+      } finally {
+        if (token != null)
+          ArrayPool<byte>.Shared.Return(token);
       }
-    } finally {
-      if (rented != null)
-        ArrayPool<byte>.Shared.Return(rented);
+
     }
 
-  }
+    public void Write(ReadOnlySpan<byte> buffer) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
 
+      if (buffer.IsEmpty)
+        return;
+
+      const int MaxChunkSize = 1024 * 1024; // 1MB
+      byte[] rented = null;
+      try {
+        rented = ArrayPool<byte>.Shared.Rent(MaxChunkSize);
+        var span = rented.AsSpan(0, MaxChunkSize);
+        while (!buffer.IsEmpty) {
+          var chunkSize = Math.Min(buffer.Length, MaxChunkSize);
+          buffer[..chunkSize].CopyTo(span[..chunkSize]);
+          @this.Write(rented, 0, chunkSize);
+          buffer = buffer[chunkSize..];
+        }
+      } finally {
+        if (rented != null)
+          ArrayPool<byte>.Shared.Return(rented);
+      }
+
+    }
+  }
 }
 
 #endif

@@ -83,126 +83,94 @@ public static partial class Vector64 {
     return result;
   }
 
-  /// <summary>Reinterprets a <see cref="Vector64{TFrom}" /> as a new <see cref="Vector64{TTo}" />.</summary>
+  /// <param name="vector">The vector to reinterpret.</param>
   /// <typeparam name="TFrom">The type of the elements in the input vector.</typeparam>
-  /// <typeparam name="TTo">The type of the elements in the output vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{TTo}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) or the type of the target (<typeparamref name="TTo" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<TTo> As<TFrom, TTo>(this Vector64<TFrom> vector) {
-    Vector64<TFrom>.ThrowIfNotSupported();
-    Vector64<TTo>.ThrowIfNotSupported();
+  extension<TFrom>(Vector64<TFrom> vector)
+  {
+    /// <summary>Reinterprets a <see cref="Vector64{TFrom}" /> as a new <see cref="Vector64{TTo}" />.</summary>
+    /// <typeparam name="TTo">The type of the elements in the output vector.</typeparam>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{TTo}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) or the type of the target (<typeparamref name="TTo" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<TTo> As<TTo>() {
+      Vector64<TFrom>.ThrowIfNotSupported();
+      Vector64<TTo>.ThrowIfNotSupported();
 
-    return Unsafe.As<Vector64<TFrom>, Vector64<TTo>>(ref vector);
+      return Unsafe.As<Vector64<TFrom>, Vector64<TTo>>(ref vector);
+    }
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Byte}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Byte}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<byte> AsByte() => vector.As<TFrom, byte>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Double}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Double}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<double> AsDouble() => vector.As<TFrom, double>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int16}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int16}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<short> AsInt16() => vector.As<TFrom, short>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int32}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int32}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<int> AsInt32() => vector.As<TFrom, int>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int64}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int64}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<long> AsInt64() => vector.As<TFrom, long>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{IntPtr}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{IntPtr}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<nint> AsNInt() => vector.As<TFrom, nint>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UIntPtr}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UIntPtr}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<nuint> AsNUInt() => vector.As<TFrom, nuint>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{SByte}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{SByte}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<sbyte> AsSByte() => vector.As<TFrom, sbyte>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Single}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Single}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<float> AsSingle() => vector.As<TFrom, float>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt16}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt16}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<ushort> AsUInt16() => vector.As<TFrom, ushort>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt32}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt32}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<uint> AsUInt32() => vector.As<TFrom, uint>();
+
+    /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt64}" />.</summary>
+    /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt64}" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="TFrom" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<ulong> AsUInt64() => vector.As<TFrom, ulong>();
   }
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Byte}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Byte}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<byte> AsByte<T>(this Vector64<T> vector) => vector.As<T, byte>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Double}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Double}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<double> AsDouble<T>(this Vector64<T> vector) => vector.As<T, double>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int16}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int16}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<short> AsInt16<T>(this Vector64<T> vector) => vector.As<T, short>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int32}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int32}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<int> AsInt32<T>(this Vector64<T> vector) => vector.As<T, int>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Int64}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Int64}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<long> AsInt64<T>(this Vector64<T> vector) => vector.As<T, long>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{IntPtr}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{IntPtr}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<nint> AsNInt<T>(this Vector64<T> vector) => vector.As<T, nint>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UIntPtr}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UIntPtr}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<nuint> AsNUInt<T>(this Vector64<T> vector) => vector.As<T, nuint>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{SByte}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{SByte}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<sbyte> AsSByte<T>(this Vector64<T> vector) => vector.As<T, sbyte>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{Single}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{Single}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<float> AsSingle<T>(this Vector64<T> vector) => vector.As<T, float>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt16}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt16}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<ushort> AsUInt16<T>(this Vector64<T> vector) => vector.As<T, ushort>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt32}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt32}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<uint> AsUInt32<T>(this Vector64<T> vector) => vector.As<T, uint>();
-
-  /// <summary>Reinterprets a <see cref="Vector64{T}" /> as a new <see cref="Vector64{UInt64}" />.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to reinterpret.</param>
-  /// <returns><paramref name="vector" /> reinterpreted as a new <see cref="Vector64{UInt64}" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<ulong> AsUInt64<T>(this Vector64<T> vector) => vector.As<T, ulong>();
 
   /// <summary>Computes the bitwise-and of two vectors.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
@@ -414,58 +382,57 @@ public static partial class Vector64 {
     return result;
   }
 
-  /// <summary>Copies a <see cref="Vector64{T}" /> to a given array.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector to be copied.</param>
-  /// <param name="destination">The array to which <paramref name="vector" /> is copied.</param>
-  /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
-  /// <exception cref="NullReferenceException"><paramref name="destination" /> is <c>null</c>.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector64<T> vector, T[] destination) {
-    // We explicitly don't check for `null` because historically this has thrown `NullReferenceException` for perf reasons
-
-    if (destination.Length < Vector64<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
-
-    Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination[0]), vector);
-  }
-
-  /// <summary>Copies a <see cref="Vector64{T}" /> to a given array starting at the specified index.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to be copied.</param>
-  /// <param name="destination">The array to which <paramref name="vector" /> is copied.</param>
-  /// <param name="startIndex">The starting index of <paramref name="destination" /> which <paramref name="vector" /> will be copied to.</param>
-  /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
-  /// <exception cref="ArgumentOutOfRangeException"><paramref name="startIndex" /> is negative or greater than the length of <paramref name="destination" />.</exception>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
-  /// <exception cref="NullReferenceException"><paramref name="destination" /> is <c>null</c>.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector64<T> vector, T[] destination, int startIndex) {
-    // We explicitly don't check for `null` because historically this has thrown `NullReferenceException` for perf reasons
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Copies a <see cref="Vector64{T}" /> to a given array.</summary>
+    /// <param name="destination">The array to which <paramref name="vector" /> is copied.</param>
+    /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
+    /// <exception cref="NullReferenceException"><paramref name="destination" /> is <c>null</c>.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(T[] destination) {
+      // We explicitly don't check for `null` because historically this has thrown `NullReferenceException` for perf reasons
 
-    if ((uint)startIndex >= (uint)destination.Length)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(startIndex));
+      if (destination.Length < Vector64<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
 
-    if (destination.Length - startIndex < Vector64<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+      Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination[0]), vector);
+    }
 
-    Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination[startIndex]), vector);
-  }
+    /// <summary>Copies a <see cref="Vector64{T}" /> to a given array starting at the specified index.</summary>
+    /// <param name="destination">The array to which <paramref name="vector" /> is copied.</param>
+    /// <param name="startIndex">The starting index of <paramref name="destination" /> which <paramref name="vector" /> will be copied to.</param>
+    /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="startIndex" /> is negative or greater than the length of <paramref name="destination" />.</exception>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
+    /// <exception cref="NullReferenceException"><paramref name="destination" /> is <c>null</c>.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(T[] destination, int startIndex) {
+      // We explicitly don't check for `null` because historically this has thrown `NullReferenceException` for perf reasons
 
-  /// <summary>Copies a <see cref="Vector64{T}" /> to a given span.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to be copied.</param>
-  /// <param name="destination">The span to which <paramref name="vector" /> is copied.</param>
-  /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector64<T> vector, Span<T> destination) {
-    if (destination.Length < Vector64<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+      if ((uint)startIndex >= (uint)destination.Length)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(startIndex));
 
-    for (var i = 0; i < Vector64<T>.Count; ++i)
-      destination[i] = vector[i];
+      if (destination.Length - startIndex < Vector64<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+
+      Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination[startIndex]), vector);
+    }
+
+    /// <summary>Copies a <see cref="Vector64{T}" /> to a given span.</summary>
+    /// <param name="destination">The span to which <paramref name="vector" /> is copied.</param>
+    /// <exception cref="ArgumentException">The length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</exception>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(Span<T> destination) {
+      if (destination.Length < Vector64<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+
+      for (var i = 0; i < Vector64<T>.Count; ++i)
+        destination[i] = vector[i];
+    }
   }
 
   /// <summary>Creates a new <see cref="Vector64{T}" /> instance with all elements initialized to the specified value.</summary>
@@ -1043,19 +1010,22 @@ public static partial class Vector64 {
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   public static Vector64<float> Exp(Vector64<float> vector) => Exp<float>(vector);
 
-  /// <summary>Extracts the most significant bit from each element in a vector.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector whose elements should have their most significant bit extracted.</param>
-  /// <returns>The packed most significant bits extracted from the elements in <paramref name="vector" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static uint ExtractMostSignificantBits<T>(this Vector64<T> vector) {
-    uint result = 0;
-    for (var i = 0; i < Vector64<T>.Count; ++i)
-      if (Scalar<T>.ExtractMostSignificantBit(vector.GetElement(i)))
-        result |= 1u << i;
+  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Extracts the most significant bit from each element in a vector.</summary>
+    /// <returns>The packed most significant bits extracted from the elements in <paramref name="vector" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public uint ExtractMostSignificantBits() {
+      uint result = 0;
+      for (var i = 0; i < Vector64<T>.Count; ++i)
+        if (Scalar<T>.ExtractMostSignificantBit(vector.GetElement(i)))
+          result |= 1u << i;
 
-    return result;
+      return result;
+    }
   }
 
   /// <summary>Computes the floor of each element in a vector.</summary>
@@ -1101,20 +1071,22 @@ public static partial class Vector64 {
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   public static Vector64<double> Floor(Vector64<double> vector) => Floor<double>(vector);
 
-  /// <summary>Gets the element at the specified index.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector to get the element from.</param>
-  /// <param name="index">The index of the element to get.</param>
-  /// <returns>The value of the element at <paramref name="index" />.</returns>
-  /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> was less than zero or greater than the number of elements.</exception>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Gets the element at the specified index.</summary>
+    /// <param name="index">The index of the element to get.</param>
+    /// <returns>The value of the element at <paramref name="index" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> was less than zero or greater than the number of elements.</exception>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public T GetElement(int index) {
+      if ((uint)index >= (uint)Vector64<T>.Count)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T GetElement<T>(this Vector64<T> vector, int index) {
-    if ((uint)index >= (uint)Vector64<T>.Count)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
-
-    return vector.GetElementUnsafe(index);
+      return vector.GetElementUnsafe(index);
+    }
   }
 
   /// <summary>Compares two vectors to determine which is greater on a per-element basis.</summary>
@@ -2083,66 +2055,61 @@ public static partial class Vector64 {
   }
 
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type ('T')
-  /// <summary>Stores a vector at the given destination.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="source">The vector that will be stored.</param>
-  /// <param name="destination">The destination at which <paramref name="source" /> will be stored.</param>
-  /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static unsafe void Store<T>(this Vector64<T> source, T* destination) => source.StoreUnsafe(ref *destination);
-
-  /// <summary>Stores a vector at the given aligned destination.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="source">The vector that will be stored.</param>
-  /// <param name="destination">The aligned destination at which <paramref name="source" /> will be stored.</param>
-  /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static unsafe void StoreAligned<T>(this Vector64<T> source, T* destination) {
-    Vector64<T>.ThrowIfNotSupported();
+  extension<T>(Vector64<T> source)
+  {
+    /// <summary>Stores a vector at the given destination.</summary>
+    /// <param name="destination">The destination at which <paramref name="source" /> will be stored.</param>
+    /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public unsafe void Store(T* destination) => source.StoreUnsafe(ref *destination);
 
-    if ((nuint)destination % Alignment != 0)
-      throw new AccessViolationException();
+    /// <summary>Stores a vector at the given aligned destination.</summary>
+    /// <param name="destination">The aligned destination at which <paramref name="source" /> will be stored.</param>
+    /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public unsafe void StoreAligned(T* destination) {
+      Vector64<T>.ThrowIfNotSupported();
 
-    *(Vector64<T>*)destination = source;
+      if ((nuint)destination % Alignment != 0)
+        throw new AccessViolationException();
+
+      *(Vector64<T>*)destination = source;
+    }
+
+    /// <summary>Stores a vector at the given aligned destination.</summary>
+    /// <param name="destination">The aligned destination at which <paramref name="source" /> will be stored.</param>
+    /// <remarks>This method may bypass the cache on certain platforms.</remarks>
+    /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public unsafe void StoreAlignedNonTemporal(T* destination) => source.StoreAligned(destination);
+
+    /// <summary>Stores a vector at the given destination.</summary>
+    /// <param name="destination">The destination at which <paramref name="source" /> will be stored.</param>
+    /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void StoreUnsafe(ref T destination) {
+      Vector64<T>.ThrowIfNotSupported();
+
+      ref var address = ref Unsafe.As<T, byte>(ref destination);
+      Unsafe.WriteUnaligned(ref address, source);
+    }
+
+    /// <summary>Stores a vector at the given destination.</summary>
+    /// <param name="destination">The destination to which <paramref name="elementOffset" /> will be added before the vector will be stored.</param>
+    /// <param name="elementOffset">The element offset from <paramref name="destination" /> from which the vector will be stored.</param>
+    /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void StoreUnsafe(ref T destination, nuint elementOffset) {
+      Vector64<T>.ThrowIfNotSupported();
+
+      destination = ref Unsafe.Add(ref destination, (nint)elementOffset);
+      Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
+    }
   }
 
-  /// <summary>Stores a vector at the given aligned destination.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="source">The vector that will be stored.</param>
-  /// <param name="destination">The aligned destination at which <paramref name="source" /> will be stored.</param>
-  /// <remarks>This method may bypass the cache on certain platforms.</remarks>
-  /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static unsafe void StoreAlignedNonTemporal<T>(this Vector64<T> source, T* destination) => source.StoreAligned(destination);
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type ('T')
-
-  /// <summary>Stores a vector at the given destination.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="source">The vector that will be stored.</param>
-  /// <param name="destination">The destination at which <paramref name="source" /> will be stored.</param>
-  /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void StoreUnsafe<T>(this Vector64<T> source, ref T destination) {
-    Vector64<T>.ThrowIfNotSupported();
-
-    ref var address = ref Unsafe.As<T, byte>(ref destination);
-    Unsafe.WriteUnaligned(ref address, source);
-  }
-
-  /// <summary>Stores a vector at the given destination.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="source">The vector that will be stored.</param>
-  /// <param name="destination">The destination to which <paramref name="elementOffset" /> will be added before the vector will be stored.</param>
-  /// <param name="elementOffset">The element offset from <paramref name="destination" /> from which the vector will be stored.</param>
-  /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void StoreUnsafe<T>(this Vector64<T> source, ref T destination, nuint elementOffset) {
-    Vector64<T>.ThrowIfNotSupported();
-
-    destination = ref Unsafe.Add(ref destination, (nint)elementOffset);
-    Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
-  }
 
   /// <summary>Subtracts two vectors to compute their difference.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
@@ -2170,66 +2137,70 @@ public static partial class Vector64 {
     return sum;
   }
 
-  /// <summary>Converts the given vector to a scalar containing the value of the first element.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector to get the first element from.</param>
-  /// <returns>A scalar <typeparamref name="T" /> containing the value of the first element.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T ToScalar<T>(this Vector64<T> vector) {
-    Vector64<T>.ThrowIfNotSupported();
-
-    return vector.GetElementUnsafe(0);
-  }
-
-  /// <summary>Converts the given vector to a new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of the given vector and the upper 64-bits initialized to zero.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to extend.</param>
-  /// <returns>A new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of <paramref name="vector" /> and the upper 64-bits initialized to zero.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Converts the given vector to a scalar containing the value of the first element.</summary>
+    /// <returns>A scalar <typeparamref name="T" /> containing the value of the first element.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public T ToScalar() {
+      Vector64<T>.ThrowIfNotSupported();
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector128<T> ToVector128<T>(this Vector64<T> vector) where T : struct {
-    Vector64<T>.ThrowIfNotSupported();
-    var result = Vector128<T>.Zero;
-    Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
-    return result;
+      return vector.GetElementUnsafe(0);
+    }
   }
 
-  /// <summary>Converts the given vector to a new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of the given vector and the upper 64-bits left uninitialized.</summary>
+  /// <param name="vector">The vector to extend.</param>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  /// <param name="vector">The vector to extend.</param>
-  /// <returns>A new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of <paramref name="vector" /> and the upper 64-bits left uninitialized.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+  extension<T>(Vector64<T> vector) where T : struct
+  {
+    /// <summary>Converts the given vector to a new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of the given vector and the upper 64-bits initialized to zero.</summary>
+    /// <returns>A new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of <paramref name="vector" /> and the upper 64-bits initialized to zero.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector128<T> ToVector128() {
+      Vector64<T>.ThrowIfNotSupported();
+      var result = Vector128<T>.Zero;
+      Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
+      return result;
+    }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector128<T> ToVector128Unsafe<T>(this Vector64<T> vector) where T : struct {
-    Vector64<T>.ThrowIfNotSupported();
+    /// <summary>Converts the given vector to a new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of the given vector and the upper 64-bits left uninitialized.</summary>
+    /// <returns>A new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of <paramref name="vector" /> and the upper 64-bits left uninitialized.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector128<T> ToVector128Unsafe() {
+      Vector64<T>.ThrowIfNotSupported();
 
-    // This relies on us stripping the "init" flag from the ".locals"
-    // declaration to let the upper bits be uninitialized.
+      // This relies on us stripping the "init" flag from the ".locals"
+      // declaration to let the upper bits be uninitialized.
 
-    SkipInit(out Vector128<T> result);
-    Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
-    return result;
+      SkipInit(out Vector128<T> result);
+      Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
+      return result;
+    }
   }
 
-  /// <summary>Tries to copy a <see cref="Vector{T}" /> to a given span.</summary>
-  /// <typeparam name="T">The type of the input vector.</typeparam>
   /// <param name="vector">The vector to copy.</param>
-  /// <param name="destination">The span to which <paramref name="destination" /> is copied.</param>
-  /// <returns><c>true</c> if <paramref name="vector" /> was successfully copied to <paramref name="destination" />; otherwise, <c>false</c> if the length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</returns>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static bool TryCopyTo<T>(this Vector64<T> vector, Span<T> destination) {
-    if (destination.Length < Vector64<T>.Count)
-      return false;
+  /// <typeparam name="T">The type of the input vector.</typeparam>
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Tries to copy a <see cref="Vector{T}" /> to a given span.</summary>
+    /// <param name="destination">The span to which <paramref name="destination" /> is copied.</param>
+    /// <returns><c>true</c> if <paramref name="vector" /> was successfully copied to <paramref name="destination" />; otherwise, <c>false</c> if the length of <paramref name="destination" /> is less than <see cref="Vector64{T}.Count" />.</returns>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> and <paramref name="destination" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public bool TryCopyTo(Span<T> destination) {
+      if (destination.Length < Vector64<T>.Count)
+        return false;
 
-    for (var i = 0; i < Vector64<T>.Count; ++i)
-      destination[i] = vector[i];
+      for (var i = 0; i < Vector64<T>.Count; ++i)
+        destination[i] = vector[i];
 
-    return true;
+      return true;
+    }
   }
 
   /// <summary>Widens a <see cref="Vector64{Byte}" /> into two <see cref="Vector64{UInt16} " />.</summary>
@@ -2490,22 +2461,25 @@ public static partial class Vector64 {
     return upper;
   }
 
-  /// <summary>Creates a new <see cref="Vector64{T}" /> with the element at the specified index set to the specified value and the remaining elements set to the same value as that in the given vector.</summary>
-  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector to get the remaining elements from.</param>
-  /// <param name="index">The index of the element to set.</param>
-  /// <param name="value">The value to set the element to.</param>
-  /// <returns>A <see cref="Vector64{T}" /> with the value of the element at <paramref name="index" /> set to <paramref name="value" /> and the remaining elements set to the same value as that in <paramref name="vector" />.</returns>
-  /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> was less than zero or greater than the number of elements.</exception>
-  /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector64<T> WithElement<T>(this Vector64<T> vector, int index, T value) {
-    if ((uint)index >= (uint)Vector64<T>.Count)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
+  /// <typeparam name="T">The type of the elements in the vector.</typeparam>
+  extension<T>(Vector64<T> vector)
+  {
+    /// <summary>Creates a new <see cref="Vector64{T}" /> with the element at the specified index set to the specified value and the remaining elements set to the same value as that in the given vector.</summary>
+    /// <param name="index">The index of the element to set.</param>
+    /// <param name="value">The value to set the element to.</param>
+    /// <returns>A <see cref="Vector64{T}" /> with the value of the element at <paramref name="index" /> set to <paramref name="value" /> and the remaining elements set to the same value as that in <paramref name="vector" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> was less than zero or greater than the number of elements.</exception>
+    /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector64<T> WithElement(int index, T value) {
+      if ((uint)index >= (uint)Vector64<T>.Count)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
-    var result = vector;
-    result.SetElementUnsafe(index, value);
-    return result;
+      var result = vector;
+      result.SetElementUnsafe(index, value);
+      return result;
+    }
   }
 
   /// <summary>Computes the exclusive-or of two vectors.</summary>
@@ -2517,20 +2491,22 @@ public static partial class Vector64 {
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   public static Vector64<T> Xor<T>(Vector64<T> left, Vector64<T> right) => left ^ right;
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  internal static T GetElementUnsafe<T>(in this Vector64<T> vector, int index) {
-    Debug.Assert(index >= 0 && index < Vector64<T>.Count);
-    ref var address = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
-    return Unsafe.Add(ref address, index);
-  }
+  extension<T>(in Vector64<T> vector)
+  {
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    internal T GetElementUnsafe(int index) {
+      Debug.Assert(index >= 0 && index < Vector64<T>.Count);
+      ref var address = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      return Unsafe.Add(ref address, index);
+    }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  internal static void SetElementUnsafe<T>(in this Vector64<T> vector, int index, T value) {
-    Debug.Assert(index >= 0 && index < Vector64<T>.Count);
-    ref var address = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
-    Unsafe.Add(ref address, index) = value;
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    internal void SetElementUnsafe(int index, T value) {
+      Debug.Assert(index >= 0 && index < Vector64<T>.Count);
+      ref var address = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      Unsafe.Add(ref address, index) = value;
+    }
   }
-
 }
 }
 #endif

@@ -29,27 +29,30 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class StringPolyfills {
-  /// <summary>
-  /// Returns the hash code for this string using the specified rules.
-  /// </summary>
   /// <param name="value">The string.</param>
-  /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
-  /// <returns>A 32-bit signed integer hash code.</returns>
-  /// <exception cref="ArgumentException"><paramref name="comparisonType"/> is not a <see cref="StringComparison"/> value.</exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int GetHashCode(this string value, StringComparison comparisonType) {
-    if (value == null)
-      AlwaysThrow.ArgumentNullException(nameof(value));
+  extension(string value)
+  {
+    /// <summary>
+    /// Returns the hash code for this string using the specified rules.
+    /// </summary>
+    /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
+    /// <returns>A 32-bit signed integer hash code.</returns>
+    /// <exception cref="ArgumentException"><paramref name="comparisonType"/> is not a <see cref="StringComparison"/> value.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetHashCode(StringComparison comparisonType) {
+      if (value == null)
+        AlwaysThrow.ArgumentNullException(nameof(value));
 
-    return comparisonType switch {
-      StringComparison.CurrentCulture => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.None),
-      StringComparison.CurrentCultureIgnoreCase => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.IgnoreCase),
-      StringComparison.InvariantCulture => CultureInfo.InvariantCulture.CompareInfo.GetHashCode(value, CompareOptions.None),
-      StringComparison.InvariantCultureIgnoreCase => CultureInfo.InvariantCulture.CompareInfo.GetHashCode(value, CompareOptions.IgnoreCase),
-      StringComparison.Ordinal => value.GetHashCode(),
-      StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase.GetHashCode(value),
-      _ => AlwaysThrow.ArgumentOutOfRangeException<int>(nameof(comparisonType), $"The value '{comparisonType}' is not a valid StringComparison value."),
-    };
+      return comparisonType switch {
+        StringComparison.CurrentCulture => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.None),
+        StringComparison.CurrentCultureIgnoreCase => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.IgnoreCase),
+        StringComparison.InvariantCulture => CultureInfo.InvariantCulture.CompareInfo.GetHashCode(value, CompareOptions.None),
+        StringComparison.InvariantCultureIgnoreCase => CultureInfo.InvariantCulture.CompareInfo.GetHashCode(value, CompareOptions.IgnoreCase),
+        StringComparison.Ordinal => value.GetHashCode(),
+        StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase.GetHashCode(value),
+        _ => AlwaysThrow.ArgumentOutOfRangeException<int>(nameof(comparisonType), $"The value '{comparisonType}' is not a valid StringComparison value."),
+      };
+    }
   }
 }
 

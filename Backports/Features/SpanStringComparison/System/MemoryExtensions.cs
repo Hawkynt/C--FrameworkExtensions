@@ -26,17 +26,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class MemoryPolyfills {
-
-  /// <summary>
-  /// Reports the zero-based index of the last occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.
-  /// </summary>
   /// <param name="span">The source span.</param>
-  /// <param name="value">The value to seek within the source span.</param>
-  /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
-  /// <returns>The index of the last occurrence of the value in the span. If not found, returns -1.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int LastIndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType)
-    => span.ToString().LastIndexOf(value.ToString(), comparisonType);
+  extension(ReadOnlySpan<char> span)
+  {
+    /// <summary>
+    /// Reports the zero-based index of the last occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.
+    /// </summary>
+    /// <param name="value">The value to seek within the source span.</param>
+    /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
+    /// <returns>The index of the last occurrence of the value in the span. If not found, returns -1.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int LastIndexOf(ReadOnlySpan<char> value, StringComparison comparisonType)
+      => span.ToString().LastIndexOf(value.ToString(), comparisonType);
+  }
 
 }
 

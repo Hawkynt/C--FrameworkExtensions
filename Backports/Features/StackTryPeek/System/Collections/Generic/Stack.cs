@@ -26,33 +26,36 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic;
 
 public static partial class StackPolyfills {
-  /// <summary>
-  ///   Returns a value that indicates whether there is an object at the top of the <see cref="Stack{T}" />, and if one is
-  ///   present, copies it to the <paramref name="result" /> parameter. The object is not removed from the
-  ///   <see cref="Stack{T}" />.
-  /// </summary>
-  /// <typeparam name="TItem">The type of the items.</typeparam>
   /// <param name="this">This <see cref="Stack{T}" /></param>
-  /// <param name="result">
-  ///   If present, the object at the top of the <see cref="Stack{T}" />; otherwise, the default value of
-  ///   T.
-  /// </param>
-  /// <returns>
-  ///   <see langword="true" /> if there is an object at the top of the <see cref="Stack{T}" />;
-  ///   <see langword="false" /> if the <see cref="Stack{T}" /> is empty.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool TryPeek<TItem>(this Stack<TItem> @this, out TItem result) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+  /// <typeparam name="TItem">The type of the items.</typeparam>
+  extension<TItem>(Stack<TItem> @this)
+  {
+    /// <summary>
+    ///   Returns a value that indicates whether there is an object at the top of the <see cref="Stack{T}" />, and if one is
+    ///   present, copies it to the <paramref name="result" /> parameter. The object is not removed from the
+    ///   <see cref="Stack{T}" />.
+    /// </summary>
+    /// <param name="result">
+    ///   If present, the object at the top of the <see cref="Stack{T}" />; otherwise, the default value of
+    ///   T.
+    /// </param>
+    /// <returns>
+    ///   <see langword="true" /> if there is an object at the top of the <see cref="Stack{T}" />;
+    ///   <see langword="false" /> if the <see cref="Stack{T}" /> is empty.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryPeek(out TItem result) {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    if (@this.Count < 1) {
-      result = default;
-      return false;
+      if (@this.Count < 1) {
+        result = default;
+        return false;
+      }
+
+      result = @this.Peek();
+      return true;
     }
-
-    result = @this.Peek();
-    return true;
   }
 }
 

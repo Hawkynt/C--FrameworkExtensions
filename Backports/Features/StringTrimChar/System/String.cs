@@ -25,46 +25,45 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class StringPolyfills {
-
-  /// <summary>
-  /// Removes all leading and trailing instances of a character from the current string.
-  /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="trimChar">The character to remove.</param>
-  /// <returns>The string that remains after all instances of the trimChar character are removed from the start and end of the current string.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string Trim(this string @this, char trimChar) {
-    if (@this == null)
-      throw new NullReferenceException();
-    return @this.Trim(new[] { trimChar });
-  }
+  extension(string @this)
+  {
+    /// <summary>
+    /// Removes all leading and trailing instances of a character from the current string.
+    /// </summary>
+    /// <param name="trimChar">The character to remove.</param>
+    /// <returns>The string that remains after all instances of the trimChar character are removed from the start and end of the current string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string Trim(char trimChar) {
+      if (@this == null)
+        throw new NullReferenceException();
+      return @this.Trim(new[] { trimChar });
+    }
 
-  /// <summary>
-  /// Removes all leading instances of a character from the current string.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="trimChar">The character to remove.</param>
-  /// <returns>The string that remains after all instances of the trimChar character are removed from the start of the current string.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string TrimStart(this string @this, char trimChar) {
-    if (@this == null)
-      throw new NullReferenceException();
-    return @this.TrimStart(new[] { trimChar });
-  }
+    /// <summary>
+    /// Removes all leading instances of a character from the current string.
+    /// </summary>
+    /// <param name="trimChar">The character to remove.</param>
+    /// <returns>The string that remains after all instances of the trimChar character are removed from the start of the current string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string TrimStart(char trimChar) {
+      if (@this == null)
+        throw new NullReferenceException();
+      return @this.TrimStart(new[] { trimChar });
+    }
 
-  /// <summary>
-  /// Removes all trailing instances of a character from the current string.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="trimChar">The character to remove.</param>
-  /// <returns>The string that remains after all instances of the trimChar character are removed from the end of the current string.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string TrimEnd(this string @this, char trimChar) {
-    if (@this == null)
-      throw new NullReferenceException();
-    return @this.TrimEnd(new[] { trimChar });
+    /// <summary>
+    /// Removes all trailing instances of a character from the current string.
+    /// </summary>
+    /// <param name="trimChar">The character to remove.</param>
+    /// <returns>The string that remains after all instances of the trimChar character are removed from the end of the current string.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string TrimEnd(char trimChar) {
+      if (@this == null)
+        throw new NullReferenceException();
+      return @this.TrimEnd(new[] { trimChar });
+    }
   }
-
 }
 
 #endif

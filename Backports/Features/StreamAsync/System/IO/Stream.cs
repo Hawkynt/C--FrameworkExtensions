@@ -28,142 +28,144 @@ namespace System.IO;
 
 public static partial class StreamPolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadAsync(this Stream @this, byte[] buffer, int offset, int count) => ReadAsync(@this, buffer, offset, count, CancellationToken.None);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<int> ReadAsync(byte[] buffer, int offset, int count) => ReadAsync(@this, buffer, offset, count, CancellationToken.None);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
-    if (!@this.CanRead)
-      AlwaysThrow.InvalidOperationException("Can not read source");
-    if (offset < 0)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
-    if (count < 0 || count > buffer.Length - offset)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
+      if (!@this.CanRead)
+        AlwaysThrow.InvalidOperationException("Can not read source");
+      if (offset < 0)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
+      if (count < 0 || count > buffer.Length - offset)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
 
-    return Invoke(@this, buffer, offset, count, cancellationToken);
+      return Invoke(@this, buffer, offset, count, cancellationToken);
 
-    static Task<int> Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-      var tcs = new TaskCompletionSource<int>();
-      if (cancellationToken.IsCancellationRequested) {
-        tcs.TrySetCanceled();
-        return tcs.Task;
-      }
-
-      try {
-        cancellationToken.Register(OnCancellationRequested);
-        stream.BeginRead(buffer, offset, count, OnReadComplete, (stream, tcs));
-      } catch (Exception ex) {
-        tcs.TrySetException(ex);
-      }
-
-      return tcs.Task;
-
-      void OnCancellationRequested() {
-        try {
+      static Task<int> Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+        var tcs = new TaskCompletionSource<int>();
+        if (cancellationToken.IsCancellationRequested) {
           tcs.TrySetCanceled();
-        } catch (Exception ex) {
-          tcs.TrySetException(ex);
+          return tcs.Task;
         }
-      }
 
-      static void OnReadComplete(IAsyncResult ar) {
-        var (stream, tcs) = ((Stream, TaskCompletionSource<int>))ar.AsyncState;
         try {
-          var bytesRead = stream.EndRead(ar);
-          tcs.TrySetResult(bytesRead);
+          cancellationToken.Register(OnCancellationRequested);
+          stream.BeginRead(buffer, offset, count, OnReadComplete, (stream, tcs));
         } catch (Exception ex) {
           tcs.TrySetException(ex);
         }
-      }
 
-    }
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count) => WriteAsync(@this, buffer, offset, count, CancellationToken.None);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAsync(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
-    if (!@this.CanWrite)
-      AlwaysThrow.InvalidOperationException("Can not write destination");
-    if (offset < 0)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
-    if (count < 0 || count > buffer.Length - offset)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
-
-    return Invoke(@this, buffer, offset, count, cancellationToken);
-
-    static Task Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-      var tcs = new TaskCompletionSource<bool>();
-      if (cancellationToken.IsCancellationRequested) {
-        tcs.TrySetCanceled();
         return tcs.Task;
+
+        void OnCancellationRequested() {
+          try {
+            tcs.TrySetCanceled();
+          } catch (Exception ex) {
+            tcs.TrySetException(ex);
+          }
+        }
+
+        static void OnReadComplete(IAsyncResult ar) {
+          var (stream, tcs) = ((Stream, TaskCompletionSource<int>))ar.AsyncState;
+          try {
+            var bytesRead = stream.EndRead(ar);
+            tcs.TrySetResult(bytesRead);
+          } catch (Exception ex) {
+            tcs.TrySetException(ex);
+          }
+        }
+
       }
+    }
 
-      try {
-        cancellationToken.Register(OnCancellationRequested);
-        stream.BeginWrite(buffer, offset, count, OnWriteComplete, (stream, tcs));
-      } catch (Exception ex) {
-        tcs.TrySetException(ex);
-      }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task WriteAsync(byte[] buffer, int offset, int count) => WriteAsync(@this, buffer, offset, count, CancellationToken.None);
 
-      return tcs.Task;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
+      if (!@this.CanWrite)
+        AlwaysThrow.InvalidOperationException("Can not write destination");
+      if (offset < 0)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(offset));
+      if (count < 0 || count > buffer.Length - offset)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
 
-      void OnCancellationRequested() {
-        try {
+      return Invoke(@this, buffer, offset, count, cancellationToken);
+
+      static Task Invoke(Stream stream, byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+        var tcs = new TaskCompletionSource<bool>();
+        if (cancellationToken.IsCancellationRequested) {
           tcs.TrySetCanceled();
-        } catch (Exception ex) {
-          tcs.TrySetException(ex);
+          return tcs.Task;
         }
-      }
 
-      static void OnWriteComplete(IAsyncResult ar) {
-        var (stream, tcs) = ((Stream, TaskCompletionSource<bool>))ar.AsyncState;
         try {
-          stream.EndWrite(ar);
-          tcs.TrySetResult(true);
+          cancellationToken.Register(OnCancellationRequested);
+          stream.BeginWrite(buffer, offset, count, OnWriteComplete, (stream, tcs));
         } catch (Exception ex) {
           tcs.TrySetException(ex);
         }
-      }
 
-    }
-  }
+        return tcs.Task;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task CopyToAsync(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
-    if (destination == null)
-      AlwaysThrow.ArgumentNullException(nameof(destination));
-    if (bufferSize <= 0)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(bufferSize));
-    if (!@this.CanRead)
-      AlwaysThrow.InvalidOperationException("Can not read source");
-    if (!destination.CanWrite)
-      AlwaysThrow.InvalidOperationException("Can not write destination");
+        void OnCancellationRequested() {
+          try {
+            tcs.TrySetCanceled();
+          } catch (Exception ex) {
+            tcs.TrySetException(ex);
+          }
+        }
 
-    return Invoke(@this, destination, bufferSize, cancellationToken);
+        static void OnWriteComplete(IAsyncResult ar) {
+          var (stream, tcs) = ((Stream, TaskCompletionSource<bool>))ar.AsyncState;
+          try {
+            stream.EndWrite(ar);
+            tcs.TrySetResult(true);
+          } catch (Exception ex) {
+            tcs.TrySetException(ex);
+          }
+        }
 
-    static async Task Invoke(Stream source, Stream target, int bufferSize, CancellationToken token) {
-      var currentBuffer = new byte[bufferSize];
-      var nextBuffer = new byte[bufferSize];
-
-      var bytesRead = await source.ReadAsync(currentBuffer, 0, bufferSize, token).ConfigureAwait(false);
-      while (bytesRead > 0) {
-        var nextReadTask = source.ReadAsync(nextBuffer, 0, bufferSize, token).ConfigureAwait(false);
-        await target.WriteAsync(currentBuffer, 0, bytesRead, token).ConfigureAwait(false);
-        bytesRead = await nextReadTask;
-
-        (currentBuffer, nextBuffer) = (nextBuffer, currentBuffer);
       }
     }
-  }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
+      if (destination == null)
+        AlwaysThrow.ArgumentNullException(nameof(destination));
+      if (bufferSize <= 0)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(bufferSize));
+      if (!@this.CanRead)
+        AlwaysThrow.InvalidOperationException("Can not read source");
+      if (!destination.CanWrite)
+        AlwaysThrow.InvalidOperationException("Can not write destination");
+
+      return Invoke(@this, destination, bufferSize, cancellationToken);
+
+      static async Task Invoke(Stream source, Stream target, int bufferSize, CancellationToken token) {
+        var currentBuffer = new byte[bufferSize];
+        var nextBuffer = new byte[bufferSize];
+
+        var bytesRead = await source.ReadAsync(currentBuffer, 0, bufferSize, token).ConfigureAwait(false);
+        while (bytesRead > 0) {
+          var nextReadTask = source.ReadAsync(nextBuffer, 0, bufferSize, token).ConfigureAwait(false);
+          await target.WriteAsync(currentBuffer, 0, bytesRead, token).ConfigureAwait(false);
+          bytesRead = await nextReadTask;
+
+          (currentBuffer, nextBuffer) = (nextBuffer, currentBuffer);
+        }
+      }
+    }
+  }
 }
 
 #endif

@@ -27,14 +27,17 @@ namespace System.Reflection;
 
 public static partial class MethodInfoPolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Delegate CreateDelegate(this MethodInfo @this, Type result) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
-    if (result == null)
-      AlwaysThrow.ArgumentNullException(nameof(result));
+  extension(MethodInfo @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Delegate CreateDelegate(Type result) {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
+      if (result == null)
+        AlwaysThrow.ArgumentNullException(nameof(result));
 
-    return Delegate.CreateDelegate(result, @this);
+      return Delegate.CreateDelegate(result, @this);
+    }
   }
 }
 

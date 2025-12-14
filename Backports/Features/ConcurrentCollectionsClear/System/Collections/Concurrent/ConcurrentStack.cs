@@ -14,14 +14,17 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if SUPPORTS_CONCURRENT_COLLECTIONS && !SUPPORTS_CONCURRENT_COLLECTIONS_CLEAR
+#if !SUPPORTS_CONCURRENT_COLLECTIONS_CLEAR
 
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentStackPolyfills {
-  public static void Clear<T>(this ConcurrentStack<T> @this) {
-    while (@this.TryPop(out _))
-      ;
+  extension<T>(ConcurrentStack<T> @this)
+  {
+    public void Clear() {
+      while (@this.TryPop(out _))
+        ;
+    }
   }
 }
 

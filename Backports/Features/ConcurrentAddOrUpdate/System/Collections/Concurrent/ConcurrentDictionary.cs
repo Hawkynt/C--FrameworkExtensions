@@ -14,18 +14,21 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if !SUPPORTS_CONCURRENT_ADDORUPDATE && SUPPORTS_CONCURRENT_COLLECTIONS
+#if !SUPPORTS_CONCURRENT_ADDORUPDATE
 
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentDictionary {
 
-  public static TValue AddOrUpdate<TKey, TValue, TArg>(this ConcurrentDictionary<TKey, TValue> @this, TKey key, Func<TKey, TArg, TValue> addValueFactory, Func<TKey, TValue, TArg, TValue> updateValueFactory, TArg factoryArgument) 
-    => @this.AddOrUpdate(
-    key,
-    k => addValueFactory(k, factoryArgument),
-    (k, existing) => updateValueFactory(k, existing, factoryArgument))
+  extension<TKey, TValue>(ConcurrentDictionary<TKey, TValue> @this)
+  {
+    public TValue AddOrUpdate<TArg>(TKey key, Func<TKey, TArg, TValue> addValueFactory, Func<TKey, TValue, TArg, TValue> updateValueFactory, TArg factoryArgument) 
+      => @this.AddOrUpdate(
+        key,
+        k => addValueFactory(k, factoryArgument),
+        (k, existing) => updateValueFactory(k, existing, factoryArgument))
     ;
+  }
 
 }
 

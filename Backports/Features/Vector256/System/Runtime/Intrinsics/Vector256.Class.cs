@@ -64,49 +64,52 @@ public static partial class Vector256 {
     return new(left._v0 & ~right._v0, left._v1 & ~right._v1, left._v2 & ~right._v2, left._v3 & ~right._v3);
   }
 
-  /// <summary>Reinterprets a vector as a new vector type.</summary>
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<TTo> As<TFrom, TTo>(this Vector256<TFrom> vector) where TFrom : struct where TTo : struct {
-    Vector256<TFrom>.ThrowIfNotSupported();
-    Vector256<TTo>.ThrowIfNotSupported();
-    return Unsafe.As<Vector256<TFrom>, Vector256<TTo>>(ref vector);
+  extension<TFrom>(Vector256<TFrom> vector) where TFrom : struct
+  {
+    /// <summary>Reinterprets a vector as a new vector type.</summary>
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<TTo> As<TTo>() where TTo : struct {
+      Vector256<TFrom>.ThrowIfNotSupported();
+      Vector256<TTo>.ThrowIfNotSupported();
+      return Unsafe.As<Vector256<TFrom>, Vector256<TTo>>(ref vector);
+    }
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<byte> AsByte() => vector.As<TFrom, byte>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<double> AsDouble() => vector.As<TFrom, double>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<short> AsInt16() => vector.As<TFrom, short>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<int> AsInt32() => vector.As<TFrom, int>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<long> AsInt64() => vector.As<TFrom, long>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<nint> AsNInt() => vector.As<TFrom, nint>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<nuint> AsNUInt() => vector.As<TFrom, nuint>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<sbyte> AsSByte() => vector.As<TFrom, sbyte>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<float> AsSingle() => vector.As<TFrom, float>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<ushort> AsUInt16() => vector.As<TFrom, ushort>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<uint> AsUInt32() => vector.As<TFrom, uint>();
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<ulong> AsUInt64() => vector.As<TFrom, ulong>();
   }
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<byte> AsByte<T>(this Vector256<T> vector) where T : struct => vector.As<T, byte>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<double> AsDouble<T>(this Vector256<T> vector) where T : struct => vector.As<T, double>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<short> AsInt16<T>(this Vector256<T> vector) where T : struct => vector.As<T, short>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<int> AsInt32<T>(this Vector256<T> vector) where T : struct => vector.As<T, int>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<long> AsInt64<T>(this Vector256<T> vector) where T : struct => vector.As<T, long>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<nint> AsNInt<T>(this Vector256<T> vector) where T : struct => vector.As<T, nint>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<nuint> AsNUInt<T>(this Vector256<T> vector) where T : struct => vector.As<T, nuint>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<sbyte> AsSByte<T>(this Vector256<T> vector) where T : struct => vector.As<T, sbyte>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<float> AsSingle<T>(this Vector256<T> vector) where T : struct => vector.As<T, float>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<ushort> AsUInt16<T>(this Vector256<T> vector) where T : struct => vector.As<T, ushort>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<uint> AsUInt32<T>(this Vector256<T> vector) where T : struct => vector.As<T, uint>();
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<ulong> AsUInt64<T>(this Vector256<T> vector) where T : struct => vector.As<T, ulong>();
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
   public static Vector256<T> BitwiseAnd<T>(Vector256<T> left, Vector256<T> right) where T : struct => left & right;
@@ -134,31 +137,34 @@ public static partial class Vector256 {
     return new(lowerBytes.Item1, lowerBytes.Item2, upperBytes.Item1, upperBytes.Item2);
   }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector256<T> vector, Span<T> destination) where T : struct {
-    if (destination.Length < Vector256<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+  extension<T>(Vector256<T> vector) where T : struct
+  {
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(Span<T> destination) {
+      if (destination.Length < Vector256<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
 
-    for (var i = 0; i < Vector256<T>.Count; ++i)
-      destination[i] = vector[i];
-  }
+      for (var i = 0; i < Vector256<T>.Count; ++i)
+        destination[i] = vector[i];
+    }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector256<T> vector, T[] destination) where T : struct {
-    if (destination.Length < Vector256<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(T[] destination) {
+      if (destination.Length < Vector256<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
 
-    for (var i = 0; i < Vector256<T>.Count; ++i)
-      destination[i] = vector[i];
-  }
+      for (var i = 0; i < Vector256<T>.Count; ++i)
+        destination[i] = vector[i];
+    }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo<T>(this Vector256<T> vector, T[] destination, int index) where T : struct {
-    if (destination.Length - index < Vector256<T>.Count)
-      AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(T[] destination, int index) {
+      if (destination.Length - index < Vector256<T>.Count)
+        AlwaysThrow.ArgumentException(nameof(destination), "Destination too short");
 
-    for (var i = 0; i < Vector256<T>.Count; ++i)
-      destination[index + i] = vector[i];
+      for (var i = 0; i < Vector256<T>.Count; ++i)
+        destination[index + i] = vector[i];
+    }
   }
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
@@ -194,19 +200,25 @@ public static partial class Vector256 {
     return result;
   }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T GetElement<T>(this Vector256<T> vector, int index) where T : struct => vector[index];
-
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  internal static T GetElementUnsafe<T>(in this Vector256<T> vector, int index) where T : struct {
-    ref var address = ref Unsafe.As<Vector256<T>, T>(ref Unsafe.AsRef(in vector));
-    return Unsafe.Add(ref address, index);
+  extension<T>(Vector256<T> vector) where T : struct
+  {
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public T GetElement(int index) => vector[index];
   }
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  internal static void SetElementUnsafe<T>(in this Vector256<T> vector, int index, T value) where T : struct {
-    ref var address = ref Unsafe.As<Vector256<T>, T>(ref Unsafe.AsRef(in vector));
-    Unsafe.Add(ref address, index) = value;
+  extension<T>(in Vector256<T> vector) where T : struct
+  {
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    internal T GetElementUnsafe(int index) {
+      ref var address = ref Unsafe.As<Vector256<T>, T>(ref Unsafe.AsRef(in vector));
+      return Unsafe.Add(ref address, index);
+    }
+
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    internal void SetElementUnsafe(int index, T value) {
+      ref var address = ref Unsafe.As<Vector256<T>, T>(ref Unsafe.AsRef(in vector));
+      Unsafe.Add(ref address, index) = value;
+    }
   }
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
@@ -278,17 +290,20 @@ public static partial class Vector256 {
       result = Scalar<T>.Add(result, vector.GetElementUnsafe(index));
     return result;
   }
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static T ToScalar<T>(this Vector256<T> vector) where T : struct => vector[0];
+  extension<T>(Vector256<T> vector) where T : struct
+  {
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public T ToScalar() => vector[0];
 
-  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector256<T> WithElement<T>(this Vector256<T> vector, int index, T value) where T : struct {
-    if ((uint)index >= Vector256<T>.Count)
-      AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
+    [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+    public Vector256<T> WithElement(int index, T value) {
+      if ((uint)index >= Vector256<T>.Count)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
-    var result = vector;
-    result.SetElementUnsafe(index, value);
-    return result;
+      var result = vector;
+      result.SetElementUnsafe(index, value);
+      return result;
+    }
   }
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]

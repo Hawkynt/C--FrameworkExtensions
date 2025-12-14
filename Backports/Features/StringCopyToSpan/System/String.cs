@@ -25,39 +25,39 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class StringPolyfills {
-
-  /// <summary>
-  /// Copies the contents of this string into the destination span.
-  /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="destination">The span to copy items into.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void CopyTo(this string @this, Span<char> destination) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (@this.Length > destination.Length)
-      throw new ArgumentException("Destination span is too small.", nameof(destination));
+  extension(string @this)
+  {
+    /// <summary>
+    /// Copies the contents of this string into the destination span.
+    /// </summary>
+    /// <param name="destination">The span to copy items into.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void CopyTo(Span<char> destination) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (@this.Length > destination.Length)
+        throw new ArgumentException("Destination span is too small.", nameof(destination));
 
-    @this.AsSpan().CopyTo(destination);
+      @this.AsSpan().CopyTo(destination);
+    }
+
+    /// <summary>
+    /// Attempts to copy the contents of this string into the destination span.
+    /// </summary>
+    /// <param name="destination">The span to copy items into.</param>
+    /// <returns>true if the copy operation was successful; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryCopyTo(Span<char> destination) {
+      if (@this == null)
+        throw new NullReferenceException();
+      if (@this.Length > destination.Length)
+        return false;
+
+      @this.AsSpan().CopyTo(destination);
+      return true;
+    }
   }
-
-  /// <summary>
-  /// Attempts to copy the contents of this string into the destination span.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="destination">The span to copy items into.</param>
-  /// <returns>true if the copy operation was successful; otherwise, false.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool TryCopyTo(this string @this, Span<char> destination) {
-    if (@this == null)
-      throw new NullReferenceException();
-    if (@this.Length > destination.Length)
-      return false;
-
-    @this.AsSpan().CopyTo(destination);
-    return true;
-  }
-
 }
 
 #endif

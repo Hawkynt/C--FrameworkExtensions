@@ -22,8 +22,11 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Collections.Generic;
 public static class KeyValuePairPolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> @this, out TKey key, out TValue value) => (key, value) = (@this.Key, @this.Value);
+  extension<TKey, TValue>(KeyValuePair<TKey, TValue> @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Deconstruct(out TKey key, out TValue value) => (key, value) = (@this.Key, @this.Value);
+  }
   
 }
 

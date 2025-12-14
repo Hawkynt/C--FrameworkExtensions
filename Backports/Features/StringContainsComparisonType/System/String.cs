@@ -26,39 +26,41 @@ using System.Runtime.CompilerServices;
 namespace System;
 
 public static partial class StringPolyfills {
-  /// <summary>
-  ///   Returns a value indicating whether a specified string occurs within this string, using the specified comparison
-  ///   rules.
-  /// </summary>
   /// <param name="this">This <see cref="string" /></param>
-  /// <param name="value">The string to seek.</param>
-  /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
-  /// <returns>
-  ///   <see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if
-  ///   <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Contains(this string @this, string value, StringComparison comparisonType) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
-    if (value == null)
-      AlwaysThrow.ArgumentNullException(nameof(value));
+  extension(string @this)
+  {
+    /// <summary>
+    ///   Returns a value indicating whether a specified string occurs within this string, using the specified comparison
+    ///   rules.
+    /// </summary>
+    /// <param name="value">The string to seek.</param>
+    /// <param name="comparisonType">One of the enumeration values that specifies the rules to use in the comparison.</param>
+    /// <returns>
+    ///   <see langword="true" /> if the <paramref name="value" /> parameter occurs within this string, or if
+    ///   <paramref name="value" /> is the empty string (""); otherwise, <see langword="false" />.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Contains(string value, StringComparison comparisonType) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
+      if (value == null)
+        AlwaysThrow.ArgumentNullException(nameof(value));
 
-    if (value.Length <= 0)
-      return true;
+      if (value.Length <= 0)
+        return true;
 
-    if (value.Length > @this.Length)
-      return false;
+      if (value.Length > @this.Length)
+        return false;
 
-    return @this.IndexOf(value, comparisonType) >= 0;
+      return @this.IndexOf(value, comparisonType) >= 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Contains(char value) => @this.IndexOf(value) >= 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Contains(char value, StringComparison comparisonType) => @this.IndexOf(value.ToString(), comparisonType) >= 0;
   }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Contains(this string @this, char value) => @this.IndexOf(value) >= 0;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool Contains(this string @this, char value, StringComparison comparisonType) => @this.IndexOf(value.ToString(), comparisonType) >= 0;
-  
 }
 
 #endif

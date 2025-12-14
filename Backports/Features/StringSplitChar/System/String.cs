@@ -24,35 +24,38 @@ namespace System;
 
 public static partial class StringPolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, char separator, int count, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split([separator], count, options)
-  ;
+  extension(string @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string[] Split(char separator, int count, StringSplitOptions options = StringSplitOptions.None)
+      => @this.Split([separator], count, options)
+    ;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, char separator, StringSplitOptions options = StringSplitOptions.None)
-    => @this.Split([separator], options)
-  ;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string[] Split(char separator, StringSplitOptions options = StringSplitOptions.None)
+      => @this.Split([separator], options)
+    ;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, string separator, int count, StringSplitOptions options = StringSplitOptions.None) => 
-    separator is { Length: not 0 }
-    ? @this.Split([separator], count, options)
-    : count switch {
-      < 0 => AlwaysThrow.ArgumentOutOfRangeException<string[]>(nameof(count)),
-      0 => [],
-      > 0 when string.IsNullOrEmpty(@this) && (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries => [],
-      _ => [@this]
-    };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string[] Split(string separator, int count, StringSplitOptions options = StringSplitOptions.None) => 
+      separator is { Length: not 0 }
+        ? @this.Split([separator], count, options)
+        : count switch {
+          < 0 => AlwaysThrow.ArgumentOutOfRangeException<string[]>(nameof(count)),
+          0 => [],
+          > 0 when string.IsNullOrEmpty(@this) && (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries => [],
+          _ => [@this]
+        };
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string[] Split(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
-    => separator is { Length: not 0 }
-      ? @this.Split([separator], options)
-      : (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries 
-        ? @this.Split((char[])null, options) 
-        : [@this]
-  ;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string[] Split(string separator, StringSplitOptions options = StringSplitOptions.None)
+      => separator is { Length: not 0 }
+        ? @this.Split([separator], options)
+        : (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries 
+          ? @this.Split((char[])null, options) 
+          : [@this]
+    ;
+  }
 }
 
 #endif

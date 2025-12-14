@@ -28,8 +28,11 @@ namespace System;
 
 public static partial class EnumPolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool HasFlag<T>(this T @this, T flag) where T : unmanaged, Enum => HasFlagHelper<T>.HasFlag(@this, flag);
+  extension<T>(T @this) where T : unmanaged, Enum
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasFlag(T flag) => HasFlagHelper<T>.HasFlag(@this, flag);
+  }
 
   private static class HasFlagHelper<T> where T : unmanaged, Enum {
     public static readonly Func<T, T, bool> HasFlag = _CreateImplementation();

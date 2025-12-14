@@ -165,66 +165,68 @@ public static partial class Matrix4x4Polyfills {
 
   #region Row Accessors
 
-  /// <summary>
-  /// Gets the specified row of the matrix as a Vector4.
-  /// </summary>
   /// <param name="this">The matrix.</param>
-  /// <param name="index">The row index (0-3).</param>
-  /// <returns>The row as a Vector4.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 3.
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Vector4 GetRow(this Matrix4x4 @this, int index)
-    => index switch {
-      0 => new(@this.M11, @this.M12, @this.M13, @this.M14),
-      1 => new(@this.M21, @this.M22, @this.M23, @this.M24),
-      2 => new(@this.M31, @this.M32, @this.M33, @this.M34),
-      3 => new(@this.M41, @this.M42, @this.M43, @this.M44),
-      _ => throw new ArgumentOutOfRangeException(nameof(index))
-    };
+  extension(Matrix4x4 @this)
+  {
+    /// <summary>
+    /// Gets the specified row of the matrix as a Vector4.
+    /// </summary>
+    /// <param name="index">The row index (0-3).</param>
+    /// <returns>The row as a Vector4.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 3.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector4 GetRow(int index)
+      => index switch {
+        0 => new(@this.M11, @this.M12, @this.M13, @this.M14),
+        1 => new(@this.M21, @this.M22, @this.M23, @this.M24),
+        2 => new(@this.M31, @this.M32, @this.M33, @this.M34),
+        3 => new(@this.M41, @this.M42, @this.M43, @this.M44),
+        _ => throw new ArgumentOutOfRangeException(nameof(index))
+      };
 
-  /// <summary>
-  /// Creates a new Matrix4x4 with the specified row replaced.
-  /// </summary>
-  /// <param name="this">The matrix.</param>
-  /// <param name="index">The row index (0-3).</param>
-  /// <param name="value">The new row value.</param>
-  /// <returns>A new matrix with the specified row changed.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 3.
-  /// </exception>
-  public static Matrix4x4 WithRow(this Matrix4x4 @this, int index, Vector4 value) {
-    var result = @this;
-    switch (index) {
-      case 0:
-        result.M11 = value.X;
-        result.M12 = value.Y;
-        result.M13 = value.Z;
-        result.M14 = value.W;
-        break;
-      case 1:
-        result.M21 = value.X;
-        result.M22 = value.Y;
-        result.M23 = value.Z;
-        result.M24 = value.W;
-        break;
-      case 2:
-        result.M31 = value.X;
-        result.M32 = value.Y;
-        result.M33 = value.Z;
-        result.M34 = value.W;
-        break;
-      case 3:
-        result.M41 = value.X;
-        result.M42 = value.Y;
-        result.M43 = value.Z;
-        result.M44 = value.W;
-        break;
-      default:
-        throw new ArgumentOutOfRangeException(nameof(index));
+    /// <summary>
+    /// Creates a new Matrix4x4 with the specified row replaced.
+    /// </summary>
+    /// <param name="index">The row index (0-3).</param>
+    /// <param name="value">The new row value.</param>
+    /// <returns>A new matrix with the specified row changed.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 3.
+    /// </exception>
+    public Matrix4x4 WithRow(int index, Vector4 value) {
+      var result = @this;
+      switch (index) {
+        case 0:
+          result.M11 = value.X;
+          result.M12 = value.Y;
+          result.M13 = value.Z;
+          result.M14 = value.W;
+          break;
+        case 1:
+          result.M21 = value.X;
+          result.M22 = value.Y;
+          result.M23 = value.Z;
+          result.M24 = value.W;
+          break;
+        case 2:
+          result.M31 = value.X;
+          result.M32 = value.Y;
+          result.M33 = value.Z;
+          result.M34 = value.W;
+          break;
+        case 3:
+          result.M41 = value.X;
+          result.M42 = value.Y;
+          result.M43 = value.Z;
+          result.M44 = value.W;
+          break;
+        default:
+          throw new ArgumentOutOfRangeException(nameof(index));
+      }
+      return result;
     }
-    return result;
   }
 
   #endregion
@@ -267,49 +269,52 @@ public static partial class Matrix4x4Polyfills {
 
   }
 
-  /// <summary>
-  /// Creates a new Matrix4x4 with the first row replaced.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 WithX(this Matrix4x4 @this, Vector4 value) => new(
-    value.X, value.Y, value.Z, value.W,
-    @this.M21, @this.M22, @this.M23, @this.M24,
-    @this.M31, @this.M32, @this.M33, @this.M34,
-    @this.M41, @this.M42, @this.M43, @this.M44
-  );
+  extension(Matrix4x4 @this)
+  {
+    /// <summary>
+    /// Creates a new Matrix4x4 with the first row replaced.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix4x4 WithX(Vector4 value) => new(
+      value.X, value.Y, value.Z, value.W,
+      @this.M21, @this.M22, @this.M23, @this.M24,
+      @this.M31, @this.M32, @this.M33, @this.M34,
+      @this.M41, @this.M42, @this.M43, @this.M44
+    );
 
-  /// <summary>
-  /// Creates a new Matrix4x4 with the second row replaced.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 WithY(this Matrix4x4 @this, Vector4 value) => new(
-    @this.M11, @this.M12, @this.M13, @this.M14,
-    value.X, value.Y, value.Z, value.W,
-    @this.M31, @this.M32, @this.M33, @this.M34,
-    @this.M41, @this.M42, @this.M43, @this.M44
-  );
+    /// <summary>
+    /// Creates a new Matrix4x4 with the second row replaced.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix4x4 WithY(Vector4 value) => new(
+      @this.M11, @this.M12, @this.M13, @this.M14,
+      value.X, value.Y, value.Z, value.W,
+      @this.M31, @this.M32, @this.M33, @this.M34,
+      @this.M41, @this.M42, @this.M43, @this.M44
+    );
 
-  /// <summary>
-  /// Creates a new Matrix4x4 with the third row replaced.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 WithZ(this Matrix4x4 @this, Vector4 value) => new(
-    @this.M11, @this.M12, @this.M13, @this.M14,
-    @this.M21, @this.M22, @this.M23, @this.M24,
-    value.X, value.Y, value.Z, value.W,
-    @this.M41, @this.M42, @this.M43, @this.M44
-  );
+    /// <summary>
+    /// Creates a new Matrix4x4 with the third row replaced.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix4x4 WithZ(Vector4 value) => new(
+      @this.M11, @this.M12, @this.M13, @this.M14,
+      @this.M21, @this.M22, @this.M23, @this.M24,
+      value.X, value.Y, value.Z, value.W,
+      @this.M41, @this.M42, @this.M43, @this.M44
+    );
 
-  /// <summary>
-  /// Creates a new Matrix4x4 with the fourth row replaced.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 WithW(this Matrix4x4 @this, Vector4 value) => new(
-    @this.M11, @this.M12, @this.M13, @this.M14,
-    @this.M21, @this.M22, @this.M23, @this.M24,
-    @this.M31, @this.M32, @this.M33, @this.M34,
-    value.X, value.Y, value.Z, value.W
-  );
+    /// <summary>
+    /// Creates a new Matrix4x4 with the fourth row replaced.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix4x4 WithW(Vector4 value) => new(
+      @this.M11, @this.M12, @this.M13, @this.M14,
+      @this.M21, @this.M22, @this.M23, @this.M24,
+      @this.M31, @this.M32, @this.M33, @this.M34,
+      value.X, value.Y, value.Z, value.W
+    );
+  }
 
   #endregion
 

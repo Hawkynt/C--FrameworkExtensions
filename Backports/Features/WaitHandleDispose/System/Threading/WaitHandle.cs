@@ -28,13 +28,16 @@ namespace System.Threading;
 
 public static partial class WaitHandlePolyfills {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Dispose(this WaitHandle @this) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
+  extension(WaitHandle @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Dispose() {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
 
-    var method = @this.GetType().GetMethod("Dispose", BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-    method?.Invoke(@this, []);
+      var method = @this.GetType().GetMethod("Dispose", BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+      method?.Invoke(@this, []);
+    }
   }
 }
 

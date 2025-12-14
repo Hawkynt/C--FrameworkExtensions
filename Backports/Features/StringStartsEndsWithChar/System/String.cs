@@ -25,33 +25,33 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System;
 
 public static partial class StringPolyfills {
-
-  /// <summary>
-  /// Determines whether this string instance starts with the specified character.
-  /// </summary>
   /// <param name="this">This string.</param>
-  /// <param name="value">The character to compare.</param>
-  /// <returns>true if value matches the beginning of this string; otherwise, false.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool StartsWith(this string @this, char value) {
-    if (@this == null)
-      throw new NullReferenceException();
-    return @this.Length > 0 && @this[0] == value;
-  }
+  extension(string @this)
+  {
+    /// <summary>
+    /// Determines whether this string instance starts with the specified character.
+    /// </summary>
+    /// <param name="value">The character to compare.</param>
+    /// <returns>true if value matches the beginning of this string; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool StartsWith(char value) {
+      if (@this == null)
+        throw new NullReferenceException();
+      return @this.Length > 0 && @this[0] == value;
+    }
 
-  /// <summary>
-  /// Determines whether the end of this string instance matches the specified character.
-  /// </summary>
-  /// <param name="this">This string.</param>
-  /// <param name="value">The character to compare.</param>
-  /// <returns>true if value matches the end of this string; otherwise, false.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool EndsWith(this string @this, char value) {
-    if (@this == null)
-      throw new NullReferenceException();
-    return @this.Length > 0 && @this[@this.Length - 1] == value;
+    /// <summary>
+    /// Determines whether the end of this string instance matches the specified character.
+    /// </summary>
+    /// <param name="value">The character to compare.</param>
+    /// <returns>true if value matches the end of this string; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool EndsWith(char value) {
+      if (@this == null)
+        throw new NullReferenceException();
+      return @this.Length > 0 && @this[@this.Length - 1] == value;
+    }
   }
-
 }
 
 #endif

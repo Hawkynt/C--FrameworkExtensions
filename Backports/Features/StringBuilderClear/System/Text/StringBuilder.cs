@@ -27,12 +27,15 @@ namespace System.Text;
 
 public static partial class StringBuilderPolyfills {
   
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Clear(this StringBuilder @this) {
-    if (@this == null)
-      AlwaysThrow.ArgumentNullException(nameof(@this));
+  extension(StringBuilder @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear() {
+      if (@this == null)
+        AlwaysThrow.ArgumentNullException(nameof(@this));
 
-    @this.Length = 0;
+      @this.Length = 0;
+    }
   }
 }
 

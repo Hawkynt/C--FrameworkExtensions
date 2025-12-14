@@ -35,48 +35,49 @@ public static partial class QuaternionPolyfills {
     get => new(0, 0, 0, 0);
   }
 
-  /// <summary>
-  /// Gets the element at the specified index.
-  /// </summary>
   /// <param name="this">The quaternion.</param>
-  /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
-  /// <returns>The element at the specified index.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 3.
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float GetElement(this Quaternion @this, int index)
-    => index switch {
-      0 => @this.X,
-      1 => @this.Y,
-      2 => @this.Z,
-      3 => @this.W,
-      _ => throw new ArgumentOutOfRangeException(nameof(index))
-    };
+  extension(Quaternion @this)
+  {
+    /// <summary>
+    /// Gets the element at the specified index.
+    /// </summary>
+    /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
+    /// <returns>The element at the specified index.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 3.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float GetElement(int index)
+      => index switch {
+        0 => @this.X,
+        1 => @this.Y,
+        2 => @this.Z,
+        3 => @this.W,
+        _ => throw new ArgumentOutOfRangeException(nameof(index))
+      };
 
-  /// <summary>
-  /// Creates a new Quaternion with the element at the specified index replaced.
-  /// </summary>
-  /// <param name="this">The quaternion.</param>
-  /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
-  /// <param name="value">The new value.</param>
-  /// <returns>A new quaternion with the specified element changed.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 3.
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Quaternion WithElement(this Quaternion @this, int index, float value) {
-    var result = @this;
-    switch (index) {
-      case 0: result.X = value; break;
-      case 1: result.Y = value; break;
-      case 2: result.Z = value; break;
-      case 3: result.W = value; break;
-      default: throw new ArgumentOutOfRangeException(nameof(index));
+    /// <summary>
+    /// Creates a new Quaternion with the element at the specified index replaced.
+    /// </summary>
+    /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
+    /// <param name="value">The new value.</param>
+    /// <returns>A new quaternion with the specified element changed.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 3.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Quaternion WithElement(int index, float value) {
+      var result = @this;
+      switch (index) {
+        case 0: result.X = value; break;
+        case 1: result.Y = value; break;
+        case 2: result.Z = value; break;
+        case 3: result.W = value; break;
+        default: throw new ArgumentOutOfRangeException(nameof(index));
+      }
+      return result;
     }
-    return result;
   }
-
 }
 
 #endif

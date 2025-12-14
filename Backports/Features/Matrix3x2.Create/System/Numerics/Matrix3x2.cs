@@ -73,54 +73,56 @@ public static partial class Matrix3x2Polyfills {
 
   #region Row Accessors
 
-  /// <summary>
-  /// Gets the specified row of the matrix as a Vector2.
-  /// </summary>
   /// <param name="this">The matrix.</param>
-  /// <param name="index">The row index (0-2).</param>
-  /// <returns>The row as a Vector2.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 2.
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Vector2 GetRow(this Matrix3x2 @this, int index)
-    => index switch {
-      0 => new(@this.M11, @this.M12),
-      1 => new(@this.M21, @this.M22),
-      2 => new(@this.M31, @this.M32),
-      _ => throw new ArgumentOutOfRangeException(nameof(index))
-    };
+  extension(Matrix3x2 @this)
+  {
+    /// <summary>
+    /// Gets the specified row of the matrix as a Vector2.
+    /// </summary>
+    /// <param name="index">The row index (0-2).</param>
+    /// <returns>The row as a Vector2.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 2.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetRow(int index)
+      => index switch {
+        0 => new(@this.M11, @this.M12),
+        1 => new(@this.M21, @this.M22),
+        2 => new(@this.M31, @this.M32),
+        _ => throw new ArgumentOutOfRangeException(nameof(index))
+      };
 
-  /// <summary>
-  /// Creates a new Matrix3x2 with the specified row replaced.
-  /// </summary>
-  /// <param name="this">The matrix.</param>
-  /// <param name="index">The row index (0-2).</param>
-  /// <param name="value">The new row value.</param>
-  /// <returns>A new matrix with the specified row changed.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  /// <paramref name="index"/> is less than 0 or greater than 2.
-  /// </exception>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 WithRow(this Matrix3x2 @this, int index, Vector2 value) {
-    var result = @this;
-    switch (index) {
-      case 0:
-        result.M11 = value.X;
-        result.M12 = value.Y;
-        break;
-      case 1:
-        result.M21 = value.X;
-        result.M22 = value.Y;
-        break;
-      case 2:
-        result.M31 = value.X;
-        result.M32 = value.Y;
-        break;
-      default:
-        throw new ArgumentOutOfRangeException(nameof(index));
+    /// <summary>
+    /// Creates a new Matrix3x2 with the specified row replaced.
+    /// </summary>
+    /// <param name="index">The row index (0-2).</param>
+    /// <param name="value">The new row value.</param>
+    /// <returns>A new matrix with the specified row changed.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0 or greater than 2.
+    /// </exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3x2 WithRow(int index, Vector2 value) {
+      var result = @this;
+      switch (index) {
+        case 0:
+          result.M11 = value.X;
+          result.M12 = value.Y;
+          break;
+        case 1:
+          result.M21 = value.X;
+          result.M22 = value.Y;
+          break;
+        case 2:
+          result.M31 = value.X;
+          result.M32 = value.Y;
+          break;
+        default:
+          throw new ArgumentOutOfRangeException(nameof(index));
+      }
+      return result;
     }
-    return result;
   }
 
   #endregion
@@ -155,35 +157,36 @@ public static partial class Matrix3x2Polyfills {
 
   }
 
-  /// <summary>
-  /// Creates a new Matrix3x2 with the first row replaced.
-  /// </summary>
   /// <param name="this">The matrix.</param>
-  /// <param name="value">The new first row.</param>
-  /// <returns>A new matrix with the first row changed.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 WithX(this Matrix3x2 @this, Vector2 value)
-    => new(value.X, value.Y, @this.M21, @this.M22, @this.M31, @this.M32);
+  extension(Matrix3x2 @this)
+  {
+    /// <summary>
+    /// Creates a new Matrix3x2 with the first row replaced.
+    /// </summary>
+    /// <param name="value">The new first row.</param>
+    /// <returns>A new matrix with the first row changed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3x2 WithX(Vector2 value)
+      => new(value.X, value.Y, @this.M21, @this.M22, @this.M31, @this.M32);
 
-  /// <summary>
-  /// Creates a new Matrix3x2 with the second row replaced.
-  /// </summary>
-  /// <param name="this">The matrix.</param>
-  /// <param name="value">The new second row.</param>
-  /// <returns>A new matrix with the second row changed.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 WithY(this Matrix3x2 @this, Vector2 value)
-    => new(@this.M11, @this.M12, value.X, value.Y, @this.M31, @this.M32);
+    /// <summary>
+    /// Creates a new Matrix3x2 with the second row replaced.
+    /// </summary>
+    /// <param name="value">The new second row.</param>
+    /// <returns>A new matrix with the second row changed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3x2 WithY(Vector2 value)
+      => new(@this.M11, @this.M12, value.X, value.Y, @this.M31, @this.M32);
 
-  /// <summary>
-  /// Creates a new Matrix3x2 with the third row replaced.
-  /// </summary>
-  /// <param name="this">The matrix.</param>
-  /// <param name="value">The new third row.</param>
-  /// <returns>A new matrix with the third row changed.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 WithZ(this Matrix3x2 @this, Vector2 value)
-    => new(@this.M11, @this.M12, @this.M21, @this.M22, value.X, value.Y);
+    /// <summary>
+    /// Creates a new Matrix3x2 with the third row replaced.
+    /// </summary>
+    /// <param name="value">The new third row.</param>
+    /// <returns>A new matrix with the third row changed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3x2 WithZ(Vector2 value)
+      => new(@this.M11, @this.M12, @this.M21, @this.M22, value.X, value.Y);
+  }
 
   #endregion
 

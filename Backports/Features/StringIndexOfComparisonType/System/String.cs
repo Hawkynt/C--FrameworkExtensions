@@ -27,12 +27,15 @@ namespace System;
 
 public static partial class StringPolyfills {
   
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int IndexOf(this string @this, char value, StringComparison comparisonType) {
-    if (@this == null)
-      AlwaysThrow.NullReferenceException(nameof(@this));
+  extension(string @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int IndexOf(char value, StringComparison comparisonType) {
+      if (@this == null)
+        AlwaysThrow.NullReferenceException(nameof(@this));
     
-    return @this.IndexOf(value.ToString(), comparisonType);
+      return @this.IndexOf(value.ToString(), comparisonType);
+    }
   }
 
 }
