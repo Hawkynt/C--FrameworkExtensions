@@ -55,10 +55,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
-
-#if SUPPORTS_VECTOR_512 || SUPPORTS_VECTOR_256 || SUPPORTS_VECTOR_128
 using System.Runtime.Intrinsics;
-#endif
 
 using Guard;
 
